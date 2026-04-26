@@ -6,7 +6,7 @@ import {
   readLatestRun,
   writeRunSummary,
 } from "./lib/run-artifacts";
-import type {RenderManifest} from "@paper-to-video/shared-types";
+import type {CoverImageAsset, RenderManifest} from "@paper-to-video/shared-types";
 
 const DEFAULT_RENDER_MANIFEST = path.resolve("data/generated-meta/demo-paper-001.render.json");
 const DEFAULT_OUTPUT = path.resolve("output/videos/demo-paper-001.mp4");
@@ -70,8 +70,30 @@ const prepareStaticAssets = async (manifest: RenderManifest): Promise<RenderMani
     }),
   );
 
+  const coverImage = await (async (): Promise<CoverImageAsset | undefined> => {
+    if (!manifest.coverImage) {
+      return undefined;
+    }
+
+    if (manifest.coverImage.source === "remote") {
+      return manifest.coverImage;
+    }
+
+    const sourcePath = path.resolve(manifest.coverImage.path);
+    const extension = path.extname(sourcePath) || ".png";
+    const fileName = `cover-image${extension}`;
+    const targetPath = path.join(generatedImagesDir, fileName);
+    await fs.copyFile(sourcePath, targetPath);
+
+    return {
+      ...manifest.coverImage,
+      path: `generated-images/${fileName}`,
+    };
+  })();
+
   return {
     ...manifest,
+    coverImage,
     audioAssets,
     imageAssets,
   };

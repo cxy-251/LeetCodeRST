@@ -160,6 +160,7 @@ const main = async () => {
     width: manifest.output.width,
     height: manifest.output.height,
     totalFrames: cursor,
+    coverImage: manifest.coverImage,
     paper: manifest.paper,
     theme: manifest.theme,
     voice: manifest.voice,

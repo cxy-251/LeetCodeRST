@@ -101,6 +101,12 @@ export type ImageAsset = {
   styleTag?: string;
 };
 
+export type CoverImageAsset = {
+  source: "local" | "remote";
+  path: string;
+  alt?: string;
+};
+
 export type AudioSegment = {
   id: string;
   text: string;
@@ -154,6 +160,7 @@ export type RenderManifest = {
   width: number;
   height: number;
   totalFrames: number;
+  coverImage?: CoverImageAsset;
   paper: ProductionManifest["paper"];
   theme: ProductionManifest["theme"];
   voice: ProductionManifest["voice"];

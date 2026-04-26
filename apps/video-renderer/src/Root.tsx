@@ -1,16 +1,31 @@
 import React from "react";
-import {AbsoluteFill, Audio, Sequence, staticFile, useCurrentFrame, useVideoConfig} from "remotion";
+import {AbsoluteFill, Audio, Img, Sequence, staticFile, useCurrentFrame, useVideoConfig} from "remotion";
 import {getSceneBody, getSceneBullets, getSceneTitle, getThemePalette} from "@paper-to-video/content-pipeline";
-import type {AudioAsset, RenderManifest, RenderScene, SubtitleSegment} from "@paper-to-video/shared-types";
+import type {AudioAsset, CoverImageAsset, RenderManifest, RenderScene, SubtitleSegment} from "@paper-to-video/shared-types";
 
 const findSubtitle = (segments: SubtitleSegment[], frame: number) =>
   segments.find((segment) => frame >= segment.startFrame && frame < segment.endFrame);
 
-const Background: React.FC<{themeId: string; sceneFrame: number}> = ({themeId, sceneFrame}) => {
+const resolveCoverImageSrc = (coverImage?: CoverImageAsset) => {
+  if (!coverImage?.path) {
+    return null;
+  }
+
+  return coverImage.source === "remote" ? coverImage.path : staticFile(coverImage.path);
+};
+
+const Background: React.FC<{
+  themeId: string;
+  sceneFrame: number;
+  sceneType: RenderScene["type"];
+  coverImage?: CoverImageAsset;
+}> = ({themeId, sceneFrame, sceneType, coverImage}) => {
   const palette = getThemePalette(themeId);
   const glowX = 15 + (sceneFrame % 160) * 0.38;
   const glowY = 18 + (sceneFrame % 220) * 0.18;
   const accentAlpha = sceneFrame % 120 < 60 ? "88" : "66";
+  const coverSrc = resolveCoverImageSrc(coverImage);
+  const isHero = sceneType === "hero";
 
   return (
     <AbsoluteFill
@@ -23,9 +38,31 @@ const Background: React.FC<{themeId: string; sceneFrame: number}> = ({themeId, s
         `,
       }}
     >
+      {coverSrc ? (
+        <AbsoluteFill style={{overflow: "hidden"}}>
+          <Img
+            src={coverSrc}
+            style={{
+              width: "100%",
+              height: "100%",
+              objectFit: "cover",
+              opacity: isHero ? 0.9 : 0.38,
+              filter: isHero ? "contrast(1.02) saturate(1.02)" : "blur(26px) saturate(0.88) brightness(0.55)",
+              transform: isHero ? "scale(1.02)" : "scale(1.12)",
+            }}
+          />
+          <AbsoluteFill
+            style={{
+              background: isHero
+                ? "linear-gradient(90deg, rgba(6,10,16,0.08) 0%, rgba(6,10,16,0.40) 46%, rgba(6,10,16,0.78) 100%)"
+                : "linear-gradient(180deg, rgba(5,10,16,0.62) 0%, rgba(5,10,16,0.72) 100%)",
+            }}
+          />
+        </AbsoluteFill>
+      ) : null}
       <AbsoluteFill
         style={{
-          opacity: 0.28,
+          opacity: coverSrc && !isHero ? 0.16 : 0.28,
           backgroundImage: `
             linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
             linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)
@@ -55,10 +92,17 @@ const SceneCard: React.FC<{
     manifest.subtitleSegments.filter((segment) => segment.sceneId === scene.id),
     absoluteFrame,
   );
+  const coverSrc = resolveCoverImageSrc(manifest.coverImage);
+  const isHero = scene.type === "hero";
 
   return (
     <AbsoluteFill>
-      <Background themeId={manifest.theme.id} sceneFrame={sceneFrame} />
+      <Background
+        themeId={manifest.theme.id}
+        sceneFrame={sceneFrame}
+        sceneType={scene.type}
+        coverImage={manifest.coverImage}
+      />
       <AbsoluteFill
         style={{
           padding: 72,
@@ -77,6 +121,27 @@ const SceneCard: React.FC<{
             transform: `translateY(${lift}px)`,
           }}
         >
+          {isHero && coverSrc ? (
+            <div
+              style={{
+                width: 148,
+                height: 148,
+                borderRadius: 999,
+                overflow: "hidden",
+                border: "3px solid rgba(255,255,255,0.18)",
+                boxShadow: "0 24px 64px rgba(0,0,0,0.28)",
+              }}
+            >
+              <Img
+                src={coverSrc}
+                style={{
+                  width: "100%",
+                  height: "100%",
+                  objectFit: "cover",
+                }}
+              />
+            </div>
+          ) : null}
           <div style={{fontSize: 26, letterSpacing: 4, color: theme.accent}}>
             {manifest.paper.paperId} · AI Paper Digest
           </div>
@@ -96,21 +161,23 @@ const SceneCard: React.FC<{
             </div>
           ) : null}
         </div>
-        <div
-          style={{
-            fontSize: 28,
-            lineHeight: 1.45,
-            color: theme.fg,
-            padding: "24px 28px",
-            borderRadius: 28,
-            backgroundColor: theme.panel,
-            border: "1px solid rgba(255,255,255,0.08)",
-            minHeight: 120,
-            opacity: 0.98,
-          }}
-        >
-          {subtitle?.text ?? `配音与字幕会根据 scene 音频自动同步，当前场景时长约 ${(scene.durationInFrames / fps).toFixed(1)}s`}
-        </div>
+        {subtitle ? (
+          <div
+            style={{
+              fontSize: 28,
+              lineHeight: 1.45,
+              color: theme.fg,
+              padding: "24px 28px",
+              borderRadius: 28,
+              backgroundColor: theme.panel,
+              border: "1px solid rgba(255,255,255,0.08)",
+              minHeight: 120,
+              opacity: 0.98,
+            }}
+          >
+            {subtitle.text}
+          </div>
+        ) : null}
       </AbsoluteFill>
     </AbsoluteFill>
   );
