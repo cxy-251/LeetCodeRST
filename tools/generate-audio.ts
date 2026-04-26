@@ -1,7 +1,13 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import {spawn} from "node:child_process";
-import type {AudioAsset, ProductionManifest, RenderManifest} from "@paper-to-video/shared-types";
+import type {
+  AudioAsset,
+  ProductionManifest,
+  RenderManifest,
+  RenderScene,
+  SubtitleSegment,
+} from "@paper-to-video/shared-types";
 
 const DEFAULT_PRODUCTION_MANIFEST = path.resolve("data/manifests/demo-paper.json");
 const DEFAULT_RENDER_MANIFEST = path.resolve("data/generated-meta/demo-paper-001.render.json");
@@ -41,6 +47,8 @@ const estimateSegments = (text: string) => {
   });
 };
 
+const msToFrames = (ms: number, fps: number) => Math.max(1, Math.round((ms / 1000) * fps));
+
 const createMockAudioAsset = async (sceneId: string, text: string) => {
   const segments = estimateSegments(text);
   const durationMs = segments.length > 0 ? segments[segments.length - 1].endMs : 1000;
@@ -52,6 +60,63 @@ const createMockAudioAsset = async (sceneId: string, text: string) => {
     sceneId,
     segments,
   } satisfies AudioAsset;
+};
+
+const rebuildTimeline = (
+  renderManifest: RenderManifest,
+  audioAssets: AudioAsset[],
+): Pick<RenderManifest, "scenes" | "subtitleSegments" | "totalFrames"> => {
+  let cursor = 0;
+  const subtitleSegments: SubtitleSegment[] = [];
+
+  const scenes = renderManifest.scenes.map<RenderScene>((scene) => {
+    const audioAsset = audioAssets.find((asset) => asset.sceneId === scene.id);
+    const enterFrames = scene.timing.enterFrames;
+    const exitFrames = scene.timing.exitFrames;
+    const audioFrames = audioAsset ? msToFrames(audioAsset.durationMs, renderManifest.fps) : 0;
+    const holdFrames = Math.max(24, audioFrames);
+    const durationInFrames = enterFrames + holdFrames + exitFrames;
+    const fromFrame = cursor;
+
+    const nextScene: RenderScene = {
+      ...scene,
+      fromFrame,
+      durationInFrames,
+      timing: {
+        ...scene.timing,
+        holdFrames,
+        audioOffsetFrames: enterFrames,
+      },
+    };
+
+    if (audioAsset) {
+      const sceneSubtitleSegments = audioAsset.segments.map<SubtitleSegment>((segment, index) => {
+        const startFrame = fromFrame + enterFrames + msToFrames(segment.startMs, renderManifest.fps);
+        const endFrame = fromFrame + enterFrames + msToFrames(segment.endMs, renderManifest.fps);
+
+        return {
+          id: `${scene.id}-subtitle-${index + 1}`,
+          sceneId: scene.id,
+          text: segment.text,
+          startFrame,
+          endFrame: Math.min(fromFrame + durationInFrames, Math.max(startFrame + 1, endFrame)),
+          emphasisLevel: index === 0 ? 2 : 1,
+        };
+      });
+
+      nextScene.subtitleSegmentIds = sceneSubtitleSegments.map((segment) => segment.id);
+      subtitleSegments.push(...sceneSubtitleSegments);
+    }
+
+    cursor += durationInFrames;
+    return nextScene;
+  });
+
+  return {
+    scenes,
+    subtitleSegments,
+    totalFrames: cursor,
+  };
 };
 
 const main = async () => {
@@ -116,6 +181,7 @@ const main = async () => {
   const nextManifest: RenderManifest = {
     ...renderManifest,
     audioAssets,
+    ...rebuildTimeline(renderManifest, audioAssets),
   };
 
   await fs.writeFile(renderManifestPath, JSON.stringify(nextManifest, null, 2), "utf-8");
