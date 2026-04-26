@@ -12,4 +12,8 @@ data/generated-images/*
 data/generated-meta/*
 output/previews/*
 output/videos/*
+public/generated-audio/*
+public/generated-images/*
+apps/video-renderer/public/generated-audio/*
+apps/video-renderer/public/generated-images/*
 !.gitkeep

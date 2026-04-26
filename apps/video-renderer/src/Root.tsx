@@ -1,5 +1,5 @@
 import React from "react";
-import {AbsoluteFill, Audio, Sequence, useCurrentFrame, useVideoConfig} from "remotion";
+import {AbsoluteFill, Audio, Sequence, staticFile, useCurrentFrame, useVideoConfig} from "remotion";
 import {getSceneBody, getSceneBullets, getSceneTitle, getThemePalette} from "@paper-to-video/content-pipeline";
 import type {AudioAsset, RenderManifest, RenderScene, SubtitleSegment} from "@paper-to-video/shared-types";
 
@@ -131,7 +131,7 @@ const SceneAudio: React.FC<{audioAssets: AudioAsset[]; scenes: RenderScene[]}> =
             (scenes.find((scene) => scene.id === asset.sceneId)?.timing.audioOffsetFrames ?? 0)
           }
         >
-          <Audio src={asset.filePath} />
+          <Audio src={staticFile(asset.filePath)} />
         </Sequence>
       ))}
     </>
