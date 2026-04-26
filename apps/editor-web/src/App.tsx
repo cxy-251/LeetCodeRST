@@ -13,13 +13,21 @@ import {
   ThreeLifeEffect,
 } from "@paper-to-video/content-pipeline";
 import {renderTemplateZone} from "@paper-to-video/timeline-engine";
-import type {BackgroundEffectId, BackgroundImageLayoutId, RenderManifest} from "@paper-to-video/shared-types";
+import type {BackgroundEffectId, RenderManifest} from "@paper-to-video/shared-types";
 
 const formatSeconds = (frames: number, fps: number) => `${(frames / fps).toFixed(1)}s`;
 
 declare const __LATEST_RUN_FILE__: string;
 declare const __DEFAULT_RENDER_MANIFEST__: string;
 declare const __WORKSPACE_ROOT__: string;
+
+type PreviewRoute = {
+  description: string;
+  href: string;
+  id: string;
+  loadManifest: () => Promise<RenderManifest>;
+  title: string;
+};
 
 const buildLocalAssetSrc = (relativePath?: string) => {
   if (!relativePath) {
@@ -37,6 +45,35 @@ const fetchJson = async <T,>(absolutePath: string) => {
 
   return (await response.json()) as T;
 };
+
+const loadLatestManifest = async () => {
+  const latestRun = await fetchJson<{
+    renderManifestPath: string;
+  }>(__LATEST_RUN_FILE__);
+
+  return fetchJson<RenderManifest>(latestRun.renderManifestPath);
+};
+
+const loadDefaultManifest = async () => fetchJson<RenderManifest>(__DEFAULT_RENDER_MANIFEST__);
+
+const previewRoutes: PreviewRoute[] = [
+  {
+    id: "latest-run",
+    href: "/previews/latest",
+    title: "Latest Run Preview",
+    description: "读取 output/latest-run.json 指向的最新产物，用来验证本地案例和最新模板编排。",
+    loadManifest: loadLatestManifest,
+  },
+  {
+    id: "repo-demo",
+    href: "/previews/demo",
+    title: "Repository Demo",
+    description: "读取仓库内默认 render manifest，作为稳定基线案例。",
+    loadManifest: loadDefaultManifest,
+  },
+];
+
+const findPreviewRoute = (pathname: string) => previewRoutes.find((route) => route.href === pathname) ?? null;
 
 const PreviewEffectLayer: React.FC<{
   effectId: BackgroundEffectId;
@@ -142,43 +179,73 @@ const PreviewEffectLayer: React.FC<{
   return <div className="preview-effect-layer preview-effect-layer--soft" />;
 };
 
-export const App: React.FC = () => {
+const AppIndex: React.FC<{
+  currentPath: string;
+  navigate: (href: string) => void;
+}> = ({currentPath, navigate}) => {
+  return (
+    <div className="index-shell">
+      <div className="index-hero">
+        <div className="eyebrow">PaperToVideo</div>
+        <h1>Preview Index</h1>
+        <p>首页现在作为预览索引。不同组合版本会挂到各自的子路径下，当前这个站点已经支持继续往里扩更多模板、主题和案例。</p>
+      </div>
+
+      <div className="index-grid">
+        {previewRoutes.map((route) => (
+          <button
+            key={route.id}
+            className="index-card"
+            onClick={() => navigate(route.href)}
+            type="button"
+          >
+            <span className="index-card__path">{route.href}</span>
+            <strong>{route.title}</strong>
+            <span>{route.description}</span>
+            <span className="index-card__cta">
+              {currentPath === route.href ? "Open now" : "Open preview"}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const PreviewPage: React.FC<{
+  navigate: (href: string) => void;
+  route: PreviewRoute;
+}> = ({navigate, route}) => {
   const [manifest, setManifest] = useState<RenderManifest | null>(null);
   const [activeSceneId, setActiveSceneId] = useState("");
   const [previewFrame, setPreviewFrame] = useState(0);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   useEffect(() => {
     let cancelled = false;
 
-    const loadManifest = async () => {
-      try {
-        const latestRun = await fetchJson<{
-          renderManifestPath: string;
-        }>(__LATEST_RUN_FILE__);
-
-        const nextManifest = await fetchJson<RenderManifest>(latestRun.renderManifestPath);
-        if (!cancelled) {
-          setManifest(nextManifest);
-          setActiveSceneId(nextManifest.scenes[0]?.id ?? "");
+    route
+      .loadManifest()
+      .then((nextManifest) => {
+        if (cancelled) {
+          return;
         }
-        return;
-      } catch {
-        const fallback = await fetchJson<RenderManifest>(__DEFAULT_RENDER_MANIFEST__);
-        if (!cancelled) {
-          setManifest(fallback);
-          setActiveSceneId(fallback.scenes[0]?.id ?? "");
-        }
-      }
-    };
 
-    loadManifest().catch((error) => {
-      console.error(error);
-    });
+        setManifest(nextManifest);
+        setActiveSceneId(nextManifest.scenes[0]?.id ?? "");
+        setErrorMessage(null);
+      })
+      .catch((error: unknown) => {
+        console.error(error);
+        if (!cancelled) {
+          setErrorMessage(error instanceof Error ? error.message : "Failed to load manifest");
+        }
+      });
 
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [route]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -200,8 +267,22 @@ export const App: React.FC = () => {
     [activeScene?.id, manifest],
   );
 
+  if (errorMessage) {
+    return (
+      <div className="app-loading">
+        <div className="loading-card">
+          <strong>Failed to load preview</strong>
+          <span>{errorMessage}</span>
+          <button className="back-link" onClick={() => navigate("/")} type="button">
+            Back to index
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (!manifest || !activeScene) {
-    return <div className="app-loading">Loading latest render manifest...</div>;
+    return <div className="app-loading">Loading preview manifest...</div>;
   }
 
   const palette = getThemePalette(manifest.theme.id);
@@ -258,15 +339,18 @@ export const App: React.FC = () => {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="sidebar__header">
+          <button className="back-link" onClick={() => navigate("/")} type="button">
+            Back to index
+          </button>
           <div className="eyebrow">PaperToVideo</div>
           <h1>{manifest.paper.title}</h1>
-          <p>用 React 预览多场景论文短视频页面，后续这里会继续接 AI 总结、配图和时间轴编辑。</p>
+          <p>{route.description}</p>
         </div>
 
         <div className="meta-grid">
           <div>
-            <span>Paper ID</span>
-            <strong>{manifest.paper.paperId}</strong>
+            <span>Route</span>
+            <strong>{route.href}</strong>
           </div>
           <div>
             <span>Theme</span>
@@ -366,4 +450,35 @@ export const App: React.FC = () => {
       </main>
     </div>
   );
+};
+
+export const App: React.FC = () => {
+  const [currentPath, setCurrentPath] = useState(() => window.location.pathname);
+
+  useEffect(() => {
+    const onPopState = () => {
+      setCurrentPath(window.location.pathname);
+    };
+
+    window.addEventListener("popstate", onPopState);
+    return () => {
+      window.removeEventListener("popstate", onPopState);
+    };
+  }, []);
+
+  const navigate = (href: string) => {
+    if (href === currentPath) {
+      return;
+    }
+
+    window.history.pushState({}, "", href);
+    setCurrentPath(href);
+  };
+
+  const route = findPreviewRoute(currentPath);
+  if (!route) {
+    return <AppIndex currentPath={currentPath} navigate={navigate} />;
+  }
+
+  return <PreviewPage navigate={navigate} route={route} />;
 };
