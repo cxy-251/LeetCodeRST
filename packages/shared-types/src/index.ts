@@ -47,6 +47,7 @@ export type ProductionScene = {
     | "ending";
   contentRef: string;
   narrationText: string;
+  content?: Record<string, unknown>;
   imagePrompt?: string;
   imageAssetId?: string;
   backgroundPresetId: string;
@@ -83,4 +84,76 @@ export type ProductionManifest = {
     volume?: string;
   };
   scenes: ProductionScene[];
+};
+
+export type ImageAsset = {
+  id: string;
+  prompt: string;
+  localPath: string;
+  provider: string;
+  width?: number;
+  height?: number;
+  styleTag?: string;
+};
+
+export type AudioSegment = {
+  id: string;
+  text: string;
+  startMs: number;
+  endMs: number;
+  role: "narration" | "subtitle";
+};
+
+export type AudioAsset = {
+  id: string;
+  filePath: string;
+  durationMs: number;
+  sceneId: string;
+  segments: AudioSegment[];
+};
+
+export type SubtitleSegment = {
+  id: string;
+  sceneId: string;
+  text: string;
+  startFrame: number;
+  endFrame: number;
+  emphasisLevel?: number;
+};
+
+export type SceneTiming = {
+  enterFrames: number;
+  holdFrames: number;
+  exitFrames: number;
+  audioOffsetFrames: number;
+};
+
+export type RenderScene = {
+  id: string;
+  type: ProductionScene["type"];
+  fromFrame: number;
+  durationInFrames: number;
+  backgroundPresetId: string;
+  motionPresetId: string;
+  imageAssetIds: string[];
+  audioSegmentIds: string[];
+  subtitleSegmentIds: string[];
+  content: Record<string, unknown>;
+  timing: SceneTiming;
+};
+
+export type RenderManifest = {
+  projectId: string;
+  seed: number;
+  fps: number;
+  width: number;
+  height: number;
+  totalFrames: number;
+  paper: ProductionManifest["paper"];
+  theme: ProductionManifest["theme"];
+  voice: ProductionManifest["voice"];
+  scenes: RenderScene[];
+  audioAssets: AudioAsset[];
+  imageAssets: ImageAsset[];
+  subtitleSegments: SubtitleSegment[];
 };

@@ -8,6 +8,12 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "baseUrl": "."
+    "baseUrl": ".",
+    "lib": ["ES2022", "DOM"],
+    "types": ["node"],
+    "paths": {
+      "@paper-to-video/shared-types": ["packages/shared-types/src/index.ts"],
+      "@paper-to-video/content-pipeline": ["packages/content-pipeline/src/index.ts"]
+    }
   }
 }

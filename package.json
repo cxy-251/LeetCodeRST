@@ -2,10 +2,33 @@
   "name": "paper-to-video",
   "version": "0.1.0",
   "private": true,
-  "packageManager": "pnpm@10.0.0",
+  "packageManager": "npm@11.6.0",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "build:video": "tsx tools/build-video.ts",
-    "compose:manifest": "tsx tools/compose-manifest.ts",
-    "generate:audio": "tsx tools/generate-audio.ts"
+    "build:video": "node --import tsx tools/build-video.ts",
+    "compose:manifest": "node --import tsx tools/compose-manifest.ts",
+    "generate:audio": "node --import tsx tools/generate-audio.ts",
+    "generate:audio:mock": "node --import tsx tools/generate-audio.ts --mock",
+    "dev:editor": "vite --config apps/editor-web/vite.config.ts",
+    "render:preview": "remotion studio apps/video-renderer/src/index.tsx",
+    "render:video": "node --import tsx tools/build-video.ts data/generated-meta/demo-paper-001.render.json output/videos/demo-paper-001.mp4"
+  },
+  "dependencies": {
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "remotion": "^4.0.366"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^5.0.4",
+    "@remotion/cli": "^4.0.366",
+    "@types/node": "^24.9.1",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3",
+    "vite": "^7.1.10"
   }
 }
