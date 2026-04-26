@@ -104,14 +104,17 @@ const LAYOUT_TONES: Record<
 
 const lerp = (from: number, to: number, progress: number) => from + (to - from) * progress;
 
-export const getCoverLayoutConfig = (layoutId: BackgroundImageLayoutId) => {
+export const getCoverLayoutConfig = (
+  layoutId: BackgroundImageLayoutId,
+  panTravelPercent = 0.82,
+) => {
   const point = LAYOUT_POINTS[layoutId];
   const tone = LAYOUT_TONES[layoutId];
   return {
     objectPosition: `${point.x}% ${point.y}%`,
     scale: point.scale,
-    translateX: (50 - point.x) * 0.82,
-    translateY: (50 - point.y) * 0.82,
+    translateX: (50 - point.x) * panTravelPercent,
+    translateY: (50 - point.y) * panTravelPercent,
     blurPx: tone.blurPx,
     opacity: tone.opacity,
     brightness: tone.brightness,
@@ -124,10 +127,12 @@ export const getInterpolatedCoverLayoutConfig = ({
   fromLayoutId,
   toLayoutId,
   progress,
+  panTravelPercent = 0.82,
 }: {
   fromLayoutId: BackgroundImageLayoutId;
   toLayoutId: BackgroundImageLayoutId;
   progress: number;
+  panTravelPercent?: number;
 }) => {
   const fromPoint = LAYOUT_POINTS[fromLayoutId];
   const toPoint = LAYOUT_POINTS[toLayoutId];
@@ -137,8 +142,16 @@ export const getInterpolatedCoverLayoutConfig = ({
   return {
     objectPosition: `${lerp(fromPoint.x, toPoint.x, progress)}% ${lerp(fromPoint.y, toPoint.y, progress)}%`,
     scale: lerp(fromPoint.scale, toPoint.scale, progress),
-    translateX: lerp((50 - fromPoint.x) * 0.82, (50 - toPoint.x) * 0.82, progress),
-    translateY: lerp((50 - fromPoint.y) * 0.82, (50 - toPoint.y) * 0.82, progress),
+    translateX: lerp(
+      (50 - fromPoint.x) * panTravelPercent,
+      (50 - toPoint.x) * panTravelPercent,
+      progress,
+    ),
+    translateY: lerp(
+      (50 - fromPoint.y) * panTravelPercent,
+      (50 - toPoint.y) * panTravelPercent,
+      progress,
+    ),
     blurPx: lerp(fromTone.blurPx, toTone.blurPx, progress),
     opacity: lerp(fromTone.opacity, toTone.opacity, progress),
     brightness: lerp(fromTone.brightness, toTone.brightness, progress),
@@ -273,18 +286,20 @@ export const buildCellularLifeCells = ({
   globalFrame,
   activationFrame,
   seed,
+  stepEveryFrames = 2,
 }: {
   cols: number;
   rows: number;
   globalFrame: number;
   activationFrame: number;
   seed: number;
+  stepEveryFrames?: number;
 }): LifeCell[] => {
   if (globalFrame < activationFrame) {
     return [];
   }
 
-  const steps = Math.max(0, Math.floor((globalFrame - activationFrame) / 2));
+  const steps = Math.max(0, Math.floor((globalFrame - activationFrame) / Math.max(1, stepEveryFrames)));
   const origin = getCellularLaunchOrigin();
   const state = getLifeStateAtStep({
     cols,

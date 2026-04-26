@@ -174,6 +174,7 @@ const main = async () => {
     paper: manifest.paper,
     theme: manifest.theme,
     voice: manifest.voice,
+    modules: manifest.modules,
     scenes,
     audioAssets: [],
     imageAssets: [],

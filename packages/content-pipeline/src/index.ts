@@ -8,6 +8,14 @@ export {
   resolveSceneBackgroundEffectId,
   resolveSceneBackgroundImageLayoutId,
 } from "./visual-system";
+export {
+  DEFAULT_BACKGROUND_MOTION,
+  DEFAULT_CELLULAR_EFFECT,
+  DEFAULT_TEXT_MOTIONS,
+  resolveBackgroundMotionConfig,
+  resolveCellularEffectConfig,
+  resolveTextMotionConfig,
+} from "./module-api";
 
 export type ThemePalette = {
   bg: string;

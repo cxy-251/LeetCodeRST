@@ -51,6 +51,37 @@ export type BackgroundEffectId =
   | "cellular-launch"
   | "cellular-life";
 
+export type TextMotionId = "fade-up" | "slide-up" | "stagger-rise" | "hard-cut";
+
+export type TextMotionConfig = {
+  enterFrames: number;
+  maxLiftPx: number;
+  minOpacity: number;
+  bodyDelayFrames: number;
+  bulletsStaggerFrames: number;
+};
+
+export type BackgroundMotionConfig = {
+  overscanPercent: number;
+  panTravelPercent: number;
+};
+
+export type CellularEffectConfig = {
+  cellColumns: number;
+  cellRows: number;
+  stepEveryFrames: number;
+  activationDelayFrames: number;
+  cellPadding: number;
+  cornerRadius: number;
+  edgeMode: "wrap";
+};
+
+export type VisualModuleConfig = {
+  textMotions?: Partial<Record<TextMotionId, Partial<TextMotionConfig>>>;
+  backgroundMotion?: Partial<BackgroundMotionConfig>;
+  cellularEffect?: Partial<CellularEffectConfig>;
+};
+
 export type ProductionScene = {
   id: string;
   type:
@@ -69,7 +100,7 @@ export type ProductionScene = {
   backgroundPresetId: string;
   backgroundImageLayoutId?: BackgroundImageLayoutId;
   backgroundEffectId?: BackgroundEffectId;
-  motionPresetId: string;
+  motionPresetId: TextMotionId;
   durationStrategy: "auto-by-audio" | "fixed";
   fixedDurationMs?: number;
 };
@@ -106,6 +137,7 @@ export type ProductionManifest = {
     pitch: string;
     volume?: string;
   };
+  modules?: VisualModuleConfig;
   scenes: ProductionScene[];
 };
 
@@ -165,7 +197,7 @@ export type RenderScene = {
   backgroundPresetId: string;
   backgroundImageLayoutId: BackgroundImageLayoutId;
   backgroundEffectId: BackgroundEffectId;
-  motionPresetId: string;
+  motionPresetId: TextMotionId;
   imageAssetIds: string[];
   audioSegmentIds: string[];
   subtitleSegmentIds: string[];
@@ -184,6 +216,7 @@ export type RenderManifest = {
   paper: ProductionManifest["paper"];
   theme: ProductionManifest["theme"];
   voice: ProductionManifest["voice"];
+  modules?: VisualModuleConfig;
   scenes: RenderScene[];
   audioAssets: AudioAsset[];
   imageAssets: ImageAsset[];

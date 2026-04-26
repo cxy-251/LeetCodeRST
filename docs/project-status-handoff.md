@@ -114,6 +114,10 @@ npm run render:video
 16. 生命游戏网格密度已进一步提高，当前版本改为更细小的全屏细胞块，而不是大块砖格
 17. 生命游戏边界规则已改为环绕式拓展，细胞碰到边缘会从另一侧继续传播
 18. 背景图运动已从 `object-position` 弱位移改成“大图平移取景”，便于直接看出页面间坐标滑动
+19. 文本动效、背景运动、生命游戏参数已开始通过 `manifest.modules` 外置化，不再只写死在组件内部
+20. 已新增模块 API 文档：
+   - `docs/modular-visual-apis.md`
+21. 当前 renderer 与 editor 都已经开始读取这套模块参数
 
 ---
 
@@ -179,6 +183,7 @@ npm run render:video
 9. 当前 `cellular-life` 已经拆成独立 effect 层，但仍属于“生命游戏风格原型”，还不是真正的 WebGL 版本
 10. 当前 effect 层虽然已经连续运行，但底层实现仍是 SVG/DOM 原型，还没有切换到 Three.js / WebGL
 11. 最新 local run 已重新 compose 到 `20260427-064800`，用于验证“更密细胞 + 环绕边界 + 大图平移取景”
+12. 最新公开 demo run 已重新 compose 到 `20260427-070553`，用于验证模块参数外置化后的默认行为
 
 ### 视觉方向问题
 
@@ -197,10 +202,10 @@ npm run render:video
 
 建议严格按这个顺序继续：
 
-1. 验证新的更密生命游戏轨道在 editor 和最终视频里是否更接近“全屏区域”感
-2. 验证环绕边界规则是否符合“从另一端拓展”的主观观感
-3. 验证大图平移取景是否已经明显可见
-4. 确认本地专用 manifest 在整条链路上稳定生效
+1. 继续把更多参数从组件内常量迁移到 `manifest.modules`
+2. 给文本组件补更明显的切换与离场动效
+3. 确认本地专用 manifest 在整条链路上稳定生效
+4. 为新增 effect / background / text motion 建立统一 registry 扩展方式
 5. 把当前连续 effect 轨道升级为真正的 Three.js / WebGL 实现
 
 ---

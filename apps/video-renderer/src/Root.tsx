@@ -10,6 +10,9 @@ import {
   getSceneTitle,
   getSceneVisualIds,
   getThemePalette,
+  resolveBackgroundMotionConfig,
+  resolveCellularEffectConfig,
+  resolveTextMotionConfig,
 } from "@paper-to-video/content-pipeline";
 import type {
   AudioAsset,
@@ -38,15 +41,18 @@ const GameOfLifeEffect: React.FC<{
   width: number;
   height: number;
   seed: number;
-}> = ({absoluteFrame, activationFrame, width, height, seed}) => {
-  const cols = 44;
-  const rows = 78;
+  modules?: RenderManifest["modules"];
+}> = ({absoluteFrame, activationFrame, width, height, seed, modules}) => {
+  const cellularConfig = resolveCellularEffectConfig(modules);
+  const cols = cellularConfig.cellColumns;
+  const rows = cellularConfig.cellRows;
   const cells = buildCellularLifeCells({
     cols,
     rows,
     globalFrame: absoluteFrame,
     activationFrame,
     seed,
+    stepEveryFrames: cellularConfig.stepEveryFrames,
   });
   const cellWidth = width / cols;
   const cellHeight = height / rows;
@@ -56,7 +62,7 @@ const GameOfLifeEffect: React.FC<{
       <svg viewBox={`0 0 ${width} ${height}`} width="100%" height="100%" preserveAspectRatio="none">
         {cells.map((cell) => {
           const fill = cell.tone === 1 ? "rgba(87,216,196,0.42)" : "rgba(255,255,255,0.22)";
-          const inset = cell.age >= 3 ? 1.1 : 0.5;
+          const inset = cell.age >= 3 ? cellularConfig.cellPadding * 2.2 : cellularConfig.cellPadding;
           return (
             <rect
               key={`${cell.x}-${cell.y}`}
@@ -64,7 +70,7 @@ const GameOfLifeEffect: React.FC<{
               y={cell.y * cellHeight + inset}
               width={Math.max(1.2, cellWidth - inset * 2)}
               height={Math.max(1.2, cellHeight - inset * 2)}
-              rx={Math.max(0.8, cell.age * 0.45)}
+              rx={Math.max(0.8, cell.age * cellularConfig.cornerRadius)}
               fill={fill}
             />
           );
@@ -79,24 +85,28 @@ const BackgroundImageLayer: React.FC<{
   fromLayoutId: BackgroundImageLayoutId;
   toLayoutId: BackgroundImageLayoutId;
   progress: number;
-}> = ({coverSrc, fromLayoutId, toLayoutId, progress}) => {
+  overscanPercent: number;
+  panTravelPercent: number;
+}> = ({coverSrc, fromLayoutId, toLayoutId, progress, overscanPercent, panTravelPercent}) => {
   if (!coverSrc || toLayoutId === "gradient-default") {
     return null;
   }
 
   const config =
     fromLayoutId === toLayoutId
-      ? getCoverLayoutConfig(toLayoutId)
-      : getInterpolatedCoverLayoutConfig({fromLayoutId, toLayoutId, progress});
+      ? getCoverLayoutConfig(toLayoutId, panTravelPercent)
+      : getInterpolatedCoverLayoutConfig({fromLayoutId, toLayoutId, progress, panTravelPercent});
+  const overscan = `${100 + overscanPercent}%`;
+  const offset = `${-(overscanPercent / 2)}%`;
   return (
     <AbsoluteFill style={{overflow: "hidden"}}>
       <Img
         src={coverSrc}
         style={{
-          width: "136%",
-          height: "136%",
-          left: "-18%",
-          top: "-18%",
+          width: overscan,
+          height: overscan,
+          left: offset,
+          top: offset,
           position: "absolute",
           objectFit: "cover",
           objectPosition: "center center",
@@ -117,7 +127,8 @@ const BackgroundEffectLayer: React.FC<{
   activationFrame: number;
   themeId: string;
   seed: number;
-}> = ({effectId, sceneFrame, absoluteFrame, activationFrame, themeId, seed}) => {
+  modules?: RenderManifest["modules"];
+}> = ({effectId, sceneFrame, absoluteFrame, activationFrame, themeId, seed, modules}) => {
   const palette = getThemePalette(themeId);
   const {width, height} = useVideoConfig();
 
@@ -129,6 +140,7 @@ const BackgroundEffectLayer: React.FC<{
         width={width}
         height={height}
         seed={seed}
+        modules={modules}
       />
     );
   }
@@ -145,6 +157,7 @@ const BackgroundEffectLayer: React.FC<{
           width={width}
           height={height}
           seed={seed}
+          modules={modules}
         />
         {!ready ? (
           <AbsoluteFill
@@ -247,7 +260,8 @@ const Background: React.FC<{
   activationFrame: number;
   coverImage?: CoverImageAsset;
   seed: number;
-}> = ({themeId, sceneFrame, absoluteFrame, scene, previousLayoutId, activationFrame, coverImage, seed}) => {
+  modules?: RenderManifest["modules"];
+}> = ({themeId, sceneFrame, absoluteFrame, scene, previousLayoutId, activationFrame, coverImage, seed, modules}) => {
   const palette = getThemePalette(themeId);
   const glowX = 15 + (sceneFrame % 160) * 0.38;
   const glowY = 18 + (sceneFrame % 220) * 0.18;
@@ -256,6 +270,7 @@ const Background: React.FC<{
   const {backgroundImageLayoutId, backgroundEffectId} = getSceneVisualIds(scene);
   const usesCoverImage = backgroundImageLayoutId !== "gradient-default";
   const motionProgress = Math.min(1, Math.max(0, sceneFrame / Math.max(1, scene.durationInFrames - 1)));
+  const backgroundMotion = resolveBackgroundMotionConfig(modules);
 
   return (
     <AbsoluteFill
@@ -276,6 +291,8 @@ const Background: React.FC<{
         fromLayoutId={previousLayoutId}
         toLayoutId={backgroundImageLayoutId}
         progress={motionProgress}
+        overscanPercent={backgroundMotion.overscanPercent}
+        panTravelPercent={backgroundMotion.panTravelPercent}
       />
       <BackgroundEffectLayer
         effectId={backgroundEffectId}
@@ -284,6 +301,7 @@ const Background: React.FC<{
         activationFrame={activationFrame}
         themeId={themeId}
         seed={seed}
+        modules={modules}
       />
     </AbsoluteFill>
   );
@@ -298,9 +316,10 @@ const SceneCard: React.FC<{
   const theme = getThemePalette(manifest.theme.id);
   const sceneFrame = localFrame;
   const absoluteFrame = scene.fromFrame + localFrame;
-  const enterFrames = Math.max(1, scene.timing.enterFrames);
-  const contentOpacity = Math.min(1, Math.max(0.28, sceneFrame / Math.max(6, enterFrames * 0.55)));
-  const lift = Math.max(0, 14 - sceneFrame * 2.4);
+  const textMotion = resolveTextMotionConfig(scene.motionPresetId, manifest.modules);
+  const contentProgress = Math.min(1, sceneFrame / Math.max(1, textMotion.enterFrames));
+  const contentOpacity = Math.min(1, Math.max(textMotion.minOpacity, contentProgress));
+  const lift = Math.max(0, textMotion.maxLiftPx * (1 - contentProgress));
   const bullets = getSceneBullets(scene);
   const subtitle = findSubtitle(
     manifest.subtitleSegments.filter((segment) => segment.sceneId === scene.id),
@@ -315,7 +334,8 @@ const SceneCard: React.FC<{
     : "cover-full";
   const launchScene =
     manifest.scenes.find((item) => getSceneVisualIds(item).backgroundEffectId === "cellular-launch") ?? null;
-  const activationFrame = (launchScene?.fromFrame ?? 0) + 36;
+  const activationFrame =
+    (launchScene?.fromFrame ?? 0) + resolveCellularEffectConfig(manifest.modules).activationDelayFrames;
 
   return (
     <AbsoluteFill>
@@ -328,6 +348,7 @@ const SceneCard: React.FC<{
         activationFrame={activationFrame}
         coverImage={manifest.coverImage}
         seed={manifest.seed}
+        modules={manifest.modules}
       />
       <AbsoluteFill
         style={{
@@ -374,13 +395,48 @@ const SceneCard: React.FC<{
           <div style={{fontSize: 78, lineHeight: 1.08, fontWeight: 700, maxWidth: 860}}>
             {getSceneTitle(scene)}
           </div>
-          <div style={{fontSize: 34, lineHeight: 1.5, maxWidth: 860, color: "#dbe7f5"}}>
+          <div
+            style={{
+              fontSize: 34,
+              lineHeight: 1.5,
+              maxWidth: 860,
+              color: "#dbe7f5",
+              opacity: Math.min(
+                1,
+                Math.max(
+                  textMotion.minOpacity,
+                  (sceneFrame - textMotion.bodyDelayFrames) / Math.max(1, textMotion.enterFrames),
+                ),
+              ),
+              transform: `translateY(${Math.max(0, lift - textMotion.bodyDelayFrames)}px)`,
+            }}
+          >
             {getSceneBody(scene)}
           </div>
           {bullets.length > 0 ? (
             <div style={{display: "flex", flexDirection: "column", gap: 18, maxWidth: 860}}>
-              {bullets.map((bullet) => (
-                <div key={bullet} style={{fontSize: 30, lineHeight: 1.5, color: "#ecf6ff"}}>
+              {bullets.map((bullet, index) => (
+                <div
+                  key={bullet}
+                  style={{
+                    fontSize: 30,
+                    lineHeight: 1.5,
+                    color: "#ecf6ff",
+                    opacity: Math.min(
+                      1,
+                      Math.max(
+                        textMotion.minOpacity,
+                        (sceneFrame - textMotion.bodyDelayFrames - index * textMotion.bulletsStaggerFrames) /
+                          Math.max(1, textMotion.enterFrames),
+                      ),
+                    ),
+                    transform: `translateY(${Math.max(
+                      0,
+                      textMotion.maxLiftPx -
+                        Math.max(0, sceneFrame - index * textMotion.bulletsStaggerFrames) * 1.3,
+                    )}px)`,
+                  }}
+                >
                   {"• "}{bullet}
                 </div>
               ))}

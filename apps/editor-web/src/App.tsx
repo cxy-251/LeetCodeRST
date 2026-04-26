@@ -9,6 +9,9 @@ import {
   getSceneTitle,
   getSceneVisualIds,
   getThemePalette,
+  resolveBackgroundMotionConfig,
+  resolveCellularEffectConfig,
+  resolveTextMotionConfig,
 } from "@paper-to-video/content-pipeline";
 import type {BackgroundEffectId, BackgroundImageLayoutId, RenderManifest} from "@paper-to-video/shared-types";
 
@@ -39,10 +42,19 @@ const PreviewGameOfLifeEffect: React.FC<{
   absoluteFrame: number;
   activationFrame: number;
   seed: number;
-}> = ({absoluteFrame, activationFrame, seed}) => {
-  const cols = 36;
-  const rows = 64;
-  const cells = buildCellularLifeCells({cols, rows, globalFrame: absoluteFrame, activationFrame, seed});
+  modules?: RenderManifest["modules"];
+}> = ({absoluteFrame, activationFrame, seed, modules}) => {
+  const cellularConfig = resolveCellularEffectConfig(modules);
+  const cols = cellularConfig.cellColumns;
+  const rows = cellularConfig.cellRows;
+  const cells = buildCellularLifeCells({
+    cols,
+    rows,
+    globalFrame: absoluteFrame,
+    activationFrame,
+    seed,
+    stepEveryFrames: cellularConfig.stepEveryFrames,
+  });
   const cellWidth = 100 / cols;
   const cellHeight = 100 / rows;
 
@@ -50,7 +62,7 @@ const PreviewGameOfLifeEffect: React.FC<{
     <svg className="preview-effect-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
       {cells.map((cell) => {
         const fill = cell.tone === 1 ? "rgba(87,216,196,0.44)" : "rgba(255,255,255,0.24)";
-        const inset = cell.age >= 3 ? 0.18 : 0.08;
+        const inset = cell.age >= 3 ? cellularConfig.cellPadding * 0.36 : cellularConfig.cellPadding * 0.16;
         return (
           <rect
             key={`${cell.x}-${cell.y}`}
@@ -58,7 +70,7 @@ const PreviewGameOfLifeEffect: React.FC<{
             y={cell.y * cellHeight + inset}
             width={Math.max(0.18, cellWidth - inset * 2)}
             height={Math.max(0.18, cellHeight - inset * 2)}
-            rx={0.12}
+            rx={cellularConfig.cornerRadius * 0.2}
             fill={fill}
           />
         );
@@ -73,9 +85,17 @@ const PreviewEffectLayer: React.FC<{
   absoluteFrame: number;
   activationFrame: number;
   seed: number;
-}> = ({effectId, frame, absoluteFrame, activationFrame, seed}) => {
+  modules?: RenderManifest["modules"];
+}> = ({effectId, frame, absoluteFrame, activationFrame, seed, modules}) => {
   if (effectId === "cellular-life") {
-    return <PreviewGameOfLifeEffect absoluteFrame={absoluteFrame} activationFrame={activationFrame} seed={seed} />;
+    return (
+      <PreviewGameOfLifeEffect
+        absoluteFrame={absoluteFrame}
+        activationFrame={activationFrame}
+        seed={seed}
+        modules={modules}
+      />
+    );
   }
 
   if (effectId === "cellular-launch") {
@@ -84,7 +104,12 @@ const PreviewEffectLayer: React.FC<{
     const ready = absoluteFrame >= activationFrame;
     return (
       <>
-        <PreviewGameOfLifeEffect absoluteFrame={absoluteFrame} activationFrame={activationFrame} seed={seed} />
+        <PreviewGameOfLifeEffect
+          absoluteFrame={absoluteFrame}
+          activationFrame={activationFrame}
+          seed={seed}
+          modules={modules}
+        />
         {!ready ? (
           <div
             className="preview-launch-button"
@@ -219,6 +244,8 @@ export const App: React.FC = () => {
   const palette = getThemePalette(manifest.theme.id);
   const bullets = getSceneBullets(activeScene);
   const {backgroundImageLayoutId, backgroundEffectId} = getSceneVisualIds(activeScene);
+  const backgroundMotion = resolveBackgroundMotionConfig(manifest.modules);
+  const textMotion = resolveTextMotionConfig(activeScene.motionPresetId, manifest.modules);
   const activeSceneIndex = manifest.scenes.findIndex((scene) => scene.id === activeScene.id);
   const previousScene = activeSceneIndex > 0 ? manifest.scenes[activeSceneIndex - 1] : null;
   const previousLayoutId = previousScene ? getSceneVisualIds(previousScene).backgroundImageLayoutId : "cover-full";
@@ -226,17 +253,18 @@ export const App: React.FC = () => {
   const sceneMotionProgress = previewFrame / sceneDuration;
   const layoutConfig =
     previousLayoutId === backgroundImageLayoutId
-      ? getCoverLayoutConfig(backgroundImageLayoutId)
+      ? getCoverLayoutConfig(backgroundImageLayoutId, backgroundMotion.panTravelPercent)
       : getInterpolatedCoverLayoutConfig({
           fromLayoutId: previousLayoutId,
           toLayoutId: backgroundImageLayoutId,
           progress: Math.min(1, Math.max(0, sceneMotionProgress)),
+          panTravelPercent: backgroundMotion.panTravelPercent,
         });
   const usesCoverImage = backgroundImageLayoutId !== "gradient-default";
   const absolutePreviewFrame = activeScene.fromFrame + previewFrame;
   const launchScene =
     manifest.scenes.find((scene) => getSceneVisualIds(scene).backgroundEffectId === "cellular-launch") ?? null;
-  const activationFrame = (launchScene?.fromFrame ?? 0) + 36;
+  const activationFrame = (launchScene?.fromFrame ?? 0) + resolveCellularEffectConfig(manifest.modules).activationDelayFrames;
   const coverImageSrc =
     manifest.coverImage?.source === "remote"
       ? manifest.coverImage.path
@@ -307,10 +335,10 @@ export const App: React.FC = () => {
                   alt={manifest.coverImage?.alt ?? "cover"}
                   className="preview-cover-layer__img"
                   style={{
-                    width: "136%",
-                    height: "136%",
-                    left: "-18%",
-                    top: "-18%",
+                    width: `${100 + backgroundMotion.overscanPercent}%`,
+                    height: `${100 + backgroundMotion.overscanPercent}%`,
+                    left: `-${backgroundMotion.overscanPercent / 2}%`,
+                    top: `-${backgroundMotion.overscanPercent / 2}%`,
                     position: "absolute",
                     objectPosition: "center center",
                     opacity: layoutConfig.opacity,
@@ -326,17 +354,64 @@ export const App: React.FC = () => {
                   absoluteFrame={absolutePreviewFrame}
                   activationFrame={activationFrame}
                   seed={manifest.seed}
+                  modules={manifest.modules}
                 />
               </div>
             ) : null}
             <div className="slide-top">
-              <div className="slide-kicker">{manifest.paper.paperId} · AI Paper Digest</div>
-              <h2>{getSceneTitle(activeScene)}</h2>
-              <p>{getSceneBody(activeScene)}</p>
+              <div
+                className="slide-kicker"
+                style={{
+                  opacity: Math.min(1, Math.max(textMotion.minOpacity, previewFrame / Math.max(1, textMotion.enterFrames))),
+                  transform: `translateY(${Math.max(0, textMotion.maxLiftPx * (1 - previewFrame / Math.max(1, textMotion.enterFrames)))}px)`,
+                }}
+              >
+                {manifest.paper.paperId} · AI Paper Digest
+              </div>
+              <h2
+                style={{
+                  opacity: Math.min(1, Math.max(textMotion.minOpacity, previewFrame / Math.max(1, textMotion.enterFrames))),
+                  transform: `translateY(${Math.max(0, textMotion.maxLiftPx * (1 - previewFrame / Math.max(1, textMotion.enterFrames)))}px)`,
+                }}
+              >
+                {getSceneTitle(activeScene)}
+              </h2>
+              <p
+                style={{
+                  opacity: Math.min(
+                    1,
+                    Math.max(
+                      textMotion.minOpacity,
+                      (previewFrame - textMotion.bodyDelayFrames) / Math.max(1, textMotion.enterFrames),
+                    ),
+                  ),
+                  transform: `translateY(${Math.max(0, textMotion.maxLiftPx - previewFrame)}px)`,
+                }}
+              >
+                {getSceneBody(activeScene)}
+              </p>
               {bullets.length > 0 ? (
                 <div className="bullet-list">
-                  {bullets.map((bullet) => (
-                    <div key={bullet} className="bullet-item">
+                  {bullets.map((bullet, index) => (
+                    <div
+                      key={bullet}
+                      className="bullet-item"
+                      style={{
+                        opacity: Math.min(
+                          1,
+                          Math.max(
+                            textMotion.minOpacity,
+                            (previewFrame - textMotion.bodyDelayFrames - index * textMotion.bulletsStaggerFrames) /
+                              Math.max(1, textMotion.enterFrames),
+                          ),
+                        ),
+                        transform: `translateY(${Math.max(
+                          0,
+                          textMotion.maxLiftPx -
+                            Math.max(0, previewFrame - index * textMotion.bulletsStaggerFrames) * 0.8,
+                        )}px)`,
+                      }}
+                    >
                       <span className="bullet-dot" />
                       <span>{bullet}</span>
                     </div>
