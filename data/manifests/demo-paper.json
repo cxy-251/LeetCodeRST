@@ -52,7 +52,7 @@
         "title": "论文在解决什么问题？",
         "body": "如何让生成模型同时理解视觉风格和页面布局，而不是只会生成一张好看的图。"
       },
-      "backgroundPresetId": "grid-pulse",
+      "backgroundPresetId": "cover-grid-drift",
       "motionPresetId": "slide-up",
       "durationStrategy": "auto-by-audio"
     },
@@ -69,7 +69,7 @@
           "提升复杂图文页面生成稳定性"
         ]
       },
-      "backgroundPresetId": "aurora",
+      "backgroundPresetId": "cover-soft-focus",
       "motionPresetId": "fade-up",
       "durationStrategy": "auto-by-audio"
     },
@@ -86,7 +86,7 @@
           "对短视频和营销素材生成很有启发"
         ]
       },
-      "backgroundPresetId": "noise-gradient",
+      "backgroundPresetId": "cover-noise-bloom",
       "motionPresetId": "stagger-rise",
       "durationStrategy": "auto-by-audio"
     },
@@ -99,7 +99,7 @@
         "title": "一句话结论",
         "body": "真正实用的生成模型，不只是会画图，还要会组织信息。"
       },
-      "backgroundPresetId": "aurora",
+      "backgroundPresetId": "cover-soft-focus",
       "motionPresetId": "fade-up",
       "durationStrategy": "auto-by-audio"
     }

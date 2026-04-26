@@ -6,6 +6,7 @@ import renderManifest from "../../../data/generated-meta/demo-paper-001.render.j
 const manifest = renderManifest as RenderManifest;
 
 const formatSeconds = (frames: number, fps: number) => `${(frames / fps).toFixed(1)}s`;
+const coverImageSrc = manifest.coverImage?.path ? `/${manifest.coverImage.path}` : null;
 
 export const App: React.FC = () => {
   const [activeSceneId, setActiveSceneId] = useState(manifest.scenes[0]?.id ?? "");
@@ -22,6 +23,8 @@ export const App: React.FC = () => {
 
   const palette = getThemePalette(manifest.theme.id);
   const bullets = getSceneBullets(activeScene);
+  const isHero = activeScene.type === "hero";
+  const isCoverDerived = activeScene.backgroundPresetId.startsWith("cover-");
 
   return (
     <div className="app-shell">
@@ -78,6 +81,22 @@ export const App: React.FC = () => {
               background: `radial-gradient(circle at 20% 20%, ${palette.accent}33, transparent 28%), linear-gradient(135deg, ${palette.bg}, #10253a 48%, #081018)`,
             }}
           >
+            {coverImageSrc ? (
+              <div className="preview-cover-layer">
+                <img
+                  alt={manifest.coverImage?.alt ?? "cover"}
+                  className={
+                    isHero
+                      ? "preview-cover-layer__img preview-cover-layer__img--hero"
+                      : isCoverDerived
+                        ? "preview-cover-layer__img preview-cover-layer__img--blur"
+                        : "preview-cover-layer__img preview-cover-layer__img--soft"
+                  }
+                  src={coverImageSrc}
+                />
+                <div className={isHero ? "preview-cover-layer__shade preview-cover-layer__shade--hero" : "preview-cover-layer__shade"} />
+              </div>
+            ) : null}
             <div className="slide-top">
               <div className="slide-kicker">{manifest.paper.paperId} · AI Paper Digest</div>
               <h2>{getSceneTitle(activeScene)}</h2>
