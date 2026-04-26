@@ -2,6 +2,8 @@ import React, {useEffect, useMemo, useState} from "react";
 import {
   buildCellularLifeCells,
   getCoverLayoutConfig,
+  getCellularLaunchOrigin,
+  getInterpolatedCoverLayoutConfig,
   getSceneBody,
   getSceneBullets,
   getSceneTitle,
@@ -34,13 +36,13 @@ const fetchJson = async <T,>(absolutePath: string) => {
 };
 
 const PreviewGameOfLifeEffect: React.FC<{
-  frame: number;
-  layoutId: BackgroundImageLayoutId;
+  absoluteFrame: number;
+  activationFrame: number;
   seed: number;
-}> = ({frame, layoutId, seed}) => {
+}> = ({absoluteFrame, activationFrame, seed}) => {
   const cols = 14;
   const rows = 24;
-  const cells = buildCellularLifeCells({cols, rows, frame, seed, layoutId});
+  const cells = buildCellularLifeCells({cols, rows, globalFrame: absoluteFrame, activationFrame, seed});
   const cellWidth = 100 / cols;
   const cellHeight = 100 / rows;
 
@@ -67,12 +69,41 @@ const PreviewGameOfLifeEffect: React.FC<{
 
 const PreviewEffectLayer: React.FC<{
   effectId: BackgroundEffectId;
-  layoutId: BackgroundImageLayoutId;
   frame: number;
+  absoluteFrame: number;
+  activationFrame: number;
   seed: number;
-}> = ({effectId, layoutId, frame, seed}) => {
+}> = ({effectId, frame, absoluteFrame, activationFrame, seed}) => {
   if (effectId === "cellular-life") {
-    return <PreviewGameOfLifeEffect frame={frame} layoutId={layoutId} seed={seed} />;
+    return <PreviewGameOfLifeEffect absoluteFrame={absoluteFrame} activationFrame={activationFrame} seed={seed} />;
+  }
+
+  if (effectId === "cellular-launch") {
+    const buttonOrigin = getCellularLaunchOrigin();
+    const pulse = 1 + Math.sin(frame / 7) * 0.04;
+    const ready = absoluteFrame >= activationFrame;
+    return (
+      <>
+        <PreviewGameOfLifeEffect absoluteFrame={absoluteFrame} activationFrame={activationFrame} seed={seed} />
+        {!ready ? (
+          <div
+            className="preview-launch-button"
+            style={{
+              transform: `translate(${(buttonOrigin.x - 0.5) * 110}px, ${(buttonOrigin.y - 0.5) * 110}px) scale(${pulse})`,
+            }}
+          >
+            Start Life Simulation
+          </div>
+        ) : (
+          <div
+            className="preview-effect-layer"
+            style={{
+              background: `radial-gradient(circle at ${buttonOrigin.x * 100}% ${buttonOrigin.y * 100}%, rgba(87,216,196,0.12) 0%, transparent ${Math.min(34, 8 + (absoluteFrame - activationFrame) * 0.16)}%)`,
+            }}
+          />
+        )}
+      </>
+    );
   }
 
   if (effectId === "grid-drift") {
@@ -188,8 +219,24 @@ export const App: React.FC = () => {
   const palette = getThemePalette(manifest.theme.id);
   const bullets = getSceneBullets(activeScene);
   const {backgroundImageLayoutId, backgroundEffectId} = getSceneVisualIds(activeScene);
-  const layoutConfig = getCoverLayoutConfig(backgroundImageLayoutId);
+  const activeSceneIndex = manifest.scenes.findIndex((scene) => scene.id === activeScene.id);
+  const previousScene = activeSceneIndex > 0 ? manifest.scenes[activeSceneIndex - 1] : null;
+  const previousLayoutId = previousScene ? getSceneVisualIds(previousScene).backgroundImageLayoutId : "cover-full";
+  const sceneDuration = Math.max(1, activeScene.durationInFrames);
+  const sceneMotionProgress = previewFrame / sceneDuration;
+  const layoutConfig =
+    previousLayoutId === backgroundImageLayoutId
+      ? getCoverLayoutConfig(backgroundImageLayoutId)
+      : getInterpolatedCoverLayoutConfig({
+          fromLayoutId: previousLayoutId,
+          toLayoutId: backgroundImageLayoutId,
+          progress: Math.min(1, Math.max(0, sceneMotionProgress)),
+        });
   const usesCoverImage = backgroundImageLayoutId !== "gradient-default";
+  const absolutePreviewFrame = activeScene.fromFrame + previewFrame;
+  const launchScene =
+    manifest.scenes.find((scene) => getSceneVisualIds(scene).backgroundEffectId === "cellular-launch") ?? null;
+  const activationFrame = (launchScene?.fromFrame ?? 0) + 36;
   const coverImageSrc =
     manifest.coverImage?.source === "remote"
       ? manifest.coverImage.path
@@ -270,8 +317,9 @@ export const App: React.FC = () => {
                 <div className="preview-cover-layer__shade" style={{background: layoutConfig.shade}} />
                 <PreviewEffectLayer
                   effectId={backgroundEffectId}
-                  layoutId={backgroundImageLayoutId}
                   frame={previewFrame}
+                  absoluteFrame={absolutePreviewFrame}
+                  activationFrame={activationFrame}
                   seed={manifest.seed}
                 />
               </div>

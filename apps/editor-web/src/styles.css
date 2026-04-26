@@ -202,6 +202,26 @@ button {
   height: 100%;
 }
 
+.preview-launch-button {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 260px;
+  margin-left: -130px;
+  margin-top: -28px;
+  padding: 18px 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.16);
+  background: rgba(5,12,20,0.58);
+  color: #f4f7fb;
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  box-shadow: 0 0 0 10px rgba(87,216,196,0.08), 0 18px 48px rgba(0,0,0,0.28);
+  z-index: 1;
+}
+
 .preview-effect-layer--soft {
   background:
     linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0)),

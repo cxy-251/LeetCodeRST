@@ -2,7 +2,8 @@ import type {RenderScene} from "@paper-to-video/shared-types";
 export {
   buildCellularLifeCells,
   getCoverLayoutConfig,
-  getEffectAnchor,
+  getCellularLaunchOrigin,
+  getInterpolatedCoverLayoutConfig,
   getSceneVisualIds,
   resolveSceneBackgroundEffectId,
   resolveSceneBackgroundImageLayoutId,

@@ -45,89 +45,105 @@ export const resolveSceneBackgroundImageLayoutId = (
   return "gradient-default";
 };
 
-export const getCoverLayoutConfig = (layoutId: BackgroundImageLayoutId) => {
-  switch (layoutId) {
-    case "cover-full":
-      return {
-        objectPosition: "center center",
-        scale: 1.02,
-        blurPx: 0,
-        opacity: 0.92,
-        brightness: 0.96,
-        saturation: 1.02,
-        shade: "linear-gradient(90deg, rgba(6,10,16,0.06) 0%, rgba(6,10,16,0.38) 46%, rgba(6,10,16,0.72) 100%)",
-      };
-    case "cover-focus-tl":
-      return {
-        objectPosition: "18% 18%",
-        scale: 1.34,
-        blurPx: 5,
-        opacity: 0.76,
-        brightness: 0.62,
-        saturation: 0.96,
-        shade: "linear-gradient(180deg, rgba(5,10,16,0.36) 0%, rgba(5,10,16,0.54) 100%)",
-      };
-    case "cover-focus-tr":
-      return {
-        objectPosition: "82% 18%",
-        scale: 1.34,
-        blurPx: 5,
-        opacity: 0.76,
-        brightness: 0.62,
-        saturation: 0.96,
-        shade: "linear-gradient(180deg, rgba(5,10,16,0.36) 0%, rgba(5,10,16,0.54) 100%)",
-      };
-    case "cover-focus-br":
-      return {
-        objectPosition: "80% 82%",
-        scale: 1.36,
-        blurPx: 6,
-        opacity: 0.76,
-        brightness: 0.6,
-        saturation: 0.96,
-        shade: "linear-gradient(180deg, rgba(5,10,16,0.38) 0%, rgba(5,10,16,0.56) 100%)",
-      };
-    case "cover-focus-bl":
-      return {
-        objectPosition: "20% 82%",
-        scale: 1.36,
-        blurPx: 6,
-        opacity: 0.76,
-        brightness: 0.6,
-        saturation: 0.96,
-        shade: "linear-gradient(180deg, rgba(5,10,16,0.38) 0%, rgba(5,10,16,0.56) 100%)",
-      };
-    case "gradient-default":
-    default:
-      return {
-        objectPosition: "center center",
-        scale: 1.04,
-        blurPx: 8,
-        opacity: 0.58,
-        brightness: 0.58,
-        saturation: 0.94,
-        shade: "linear-gradient(180deg, rgba(5,10,16,0.46) 0%, rgba(5,10,16,0.64) 100%)",
-      };
-  }
+const LAYOUT_POINTS: Record<BackgroundImageLayoutId, {x: number; y: number; scale: number}> = {
+  "gradient-default": {x: 50, y: 50, scale: 1.04},
+  "cover-full": {x: 50, y: 50, scale: 1.02},
+  "cover-focus-tl": {x: 18, y: 18, scale: 1.34},
+  "cover-focus-tr": {x: 82, y: 18, scale: 1.34},
+  "cover-focus-br": {x: 80, y: 82, scale: 1.36},
+  "cover-focus-bl": {x: 20, y: 82, scale: 1.36},
 };
 
-export const getEffectAnchor = (layoutId: BackgroundImageLayoutId) => {
-  switch (layoutId) {
-    case "cover-focus-tl":
-      return {x: 0.24, y: 0.24};
-    case "cover-focus-tr":
-      return {x: 0.76, y: 0.24};
-    case "cover-focus-br":
-      return {x: 0.76, y: 0.76};
-    case "cover-focus-bl":
-      return {x: 0.24, y: 0.76};
-    case "cover-full":
-      return {x: 0.5, y: 0.42};
-    case "gradient-default":
-    default:
-      return {x: 0.5, y: 0.5};
-  }
+const LAYOUT_TONES: Record<
+  BackgroundImageLayoutId,
+  {blurPx: number; opacity: number; brightness: number; saturation: number; shade: string}
+> = {
+  "gradient-default": {
+    blurPx: 8,
+    opacity: 0.58,
+    brightness: 0.58,
+    saturation: 0.94,
+    shade: "linear-gradient(180deg, rgba(5,10,16,0.46) 0%, rgba(5,10,16,0.64) 100%)",
+  },
+  "cover-full": {
+    blurPx: 0,
+    opacity: 0.92,
+    brightness: 0.96,
+    saturation: 1.02,
+    shade: "linear-gradient(90deg, rgba(6,10,16,0.06) 0%, rgba(6,10,16,0.38) 46%, rgba(6,10,16,0.72) 100%)",
+  },
+  "cover-focus-tl": {
+    blurPx: 5,
+    opacity: 0.76,
+    brightness: 0.62,
+    saturation: 0.96,
+    shade: "linear-gradient(180deg, rgba(5,10,16,0.36) 0%, rgba(5,10,16,0.54) 100%)",
+  },
+  "cover-focus-tr": {
+    blurPx: 5,
+    opacity: 0.76,
+    brightness: 0.62,
+    saturation: 0.96,
+    shade: "linear-gradient(180deg, rgba(5,10,16,0.36) 0%, rgba(5,10,16,0.54) 100%)",
+  },
+  "cover-focus-br": {
+    blurPx: 6,
+    opacity: 0.76,
+    brightness: 0.6,
+    saturation: 0.96,
+    shade: "linear-gradient(180deg, rgba(5,10,16,0.38) 0%, rgba(5,10,16,0.56) 100%)",
+  },
+  "cover-focus-bl": {
+    blurPx: 6,
+    opacity: 0.76,
+    brightness: 0.6,
+    saturation: 0.96,
+    shade: "linear-gradient(180deg, rgba(5,10,16,0.38) 0%, rgba(5,10,16,0.56) 100%)",
+  },
 };
+
+const lerp = (from: number, to: number, progress: number) => from + (to - from) * progress;
+
+export const getCoverLayoutConfig = (layoutId: BackgroundImageLayoutId) => {
+  const point = LAYOUT_POINTS[layoutId];
+  const tone = LAYOUT_TONES[layoutId];
+  return {
+    objectPosition: `${point.x}% ${point.y}%`,
+    scale: point.scale,
+    blurPx: tone.blurPx,
+    opacity: tone.opacity,
+    brightness: tone.brightness,
+    saturation: tone.saturation,
+    shade: tone.shade,
+  };
+};
+
+export const getInterpolatedCoverLayoutConfig = ({
+  fromLayoutId,
+  toLayoutId,
+  progress,
+}: {
+  fromLayoutId: BackgroundImageLayoutId;
+  toLayoutId: BackgroundImageLayoutId;
+  progress: number;
+}) => {
+  const fromPoint = LAYOUT_POINTS[fromLayoutId];
+  const toPoint = LAYOUT_POINTS[toLayoutId];
+  const fromTone = LAYOUT_TONES[fromLayoutId];
+  const toTone = LAYOUT_TONES[toLayoutId];
+
+  return {
+    objectPosition: `${lerp(fromPoint.x, toPoint.x, progress)}% ${lerp(fromPoint.y, toPoint.y, progress)}%`,
+    scale: lerp(fromPoint.scale, toPoint.scale, progress),
+    blurPx: lerp(fromTone.blurPx, toTone.blurPx, progress),
+    opacity: lerp(fromTone.opacity, toTone.opacity, progress),
+    brightness: lerp(fromTone.brightness, toTone.brightness, progress),
+    saturation: lerp(fromTone.saturation, toTone.saturation, progress),
+    shade: progress < 0.5 ? fromTone.shade : toTone.shade,
+  };
+};
+
+export const getCellularLaunchOrigin = () => ({x: 0.5, y: 0.62});
 
 type LifeCell = {
   x: number;
@@ -135,6 +151,12 @@ type LifeCell = {
   age: number;
   tone: number;
 };
+
+type LifeCacheValue = {
+  states: number[][][];
+};
+
+const lifeCache = new Map<string, LifeCacheValue>();
 
 const hashNoise = (x: number, y: number, seed: number) => {
   const value = Math.sin(x * 12.9898 + y * 78.233 + seed * 37.719) * 43758.5453;
@@ -145,8 +167,8 @@ const buildInitialLifeState = (
   cols: number,
   rows: number,
   seed: number,
-  anchorX: number,
-  anchorY: number,
+  originX: number,
+  originY: number,
 ) => {
   const state = Array.from({length: rows}, () => Array.from({length: cols}, () => 0));
 
@@ -154,13 +176,14 @@ const buildInitialLifeState = (
     for (let x = 0; x < cols; x += 1) {
       const nx = x / Math.max(1, cols - 1);
       const ny = y / Math.max(1, rows - 1);
-      const dx = nx - anchorX;
-      const dy = ny - anchorY;
-      const distance = Math.sqrt(dx * dx + dy * dy);
-      const ellipse = (dx * dx) / 0.08 + (dy * dy) / 0.13;
-      const probability = 0.62 - distance * 0.7 + (ellipse < 1 ? 0.24 : -0.16);
+      const dx = nx - originX;
+      const dy = ny - originY;
+      const radial = Math.sqrt(dx * dx + dy * dy);
+      const ring = Math.abs(radial - 0.09);
+      const primary = radial < 0.11 ? 0.68 : 0.12;
+      const secondary = ring < 0.03 ? 0.2 : 0;
       const noise = hashNoise(x, y, seed);
-      state[y][x] = noise < probability ? 1 : 0;
+      state[y][x] = noise < primary + secondary ? 1 : 0;
     }
   }
 
@@ -207,26 +230,68 @@ const stepLife = (grid: number[][]) => {
   return next;
 };
 
-export const buildCellularLifeCells = ({
+const cloneGrid = (grid: number[][]) => grid.map((row) => [...row]);
+
+const getLifeStateAtStep = ({
   cols,
   rows,
-  frame,
+  step,
   seed,
-  layoutId,
+  originX,
+  originY,
 }: {
   cols: number;
   rows: number;
-  frame: number;
+  step: number;
   seed: number;
-  layoutId: BackgroundImageLayoutId;
-}): LifeCell[] => {
-  const anchor = getEffectAnchor(layoutId);
-  const steps = Math.max(1, Math.floor(frame / 4) % 18);
-  let state = buildInitialLifeState(cols, rows, seed, anchor.x, anchor.y);
+  originX: number;
+  originY: number;
+}) => {
+  const cacheKey = `${cols}x${rows}:${seed}:${originX.toFixed(3)}:${originY.toFixed(3)}`;
+  let cacheValue = lifeCache.get(cacheKey);
 
-  for (let index = 0; index < steps; index += 1) {
-    state = stepLife(state);
+  if (!cacheValue) {
+    cacheValue = {
+      states: [buildInitialLifeState(cols, rows, seed, originX, originY)],
+    };
+    lifeCache.set(cacheKey, cacheValue);
   }
+
+  while (cacheValue.states.length <= step) {
+    const previous = cacheValue.states[cacheValue.states.length - 1];
+    cacheValue.states.push(stepLife(previous));
+  }
+
+  return cloneGrid(cacheValue.states[step]);
+};
+
+export const buildCellularLifeCells = ({
+  cols,
+  rows,
+  globalFrame,
+  activationFrame,
+  seed,
+}: {
+  cols: number;
+  rows: number;
+  globalFrame: number;
+  activationFrame: number;
+  seed: number;
+}): LifeCell[] => {
+  if (globalFrame < activationFrame) {
+    return [];
+  }
+
+  const steps = Math.max(0, Math.floor((globalFrame - activationFrame) / 2));
+  const origin = getCellularLaunchOrigin();
+  const state = getLifeStateAtStep({
+    cols,
+    rows,
+    step: steps,
+    seed,
+    originX: origin.x,
+    originY: origin.y,
+  });
 
   const cells: LifeCell[] = [];
   for (let y = 0; y < rows; y += 1) {
@@ -247,7 +312,9 @@ export const buildCellularLifeCells = ({
   return cells;
 };
 
-export const getSceneVisualIds = (scene: Pick<RenderScene, "backgroundImageLayoutId" | "backgroundEffectId" | "backgroundPresetId">) => {
+export const getSceneVisualIds = (
+  scene: Pick<RenderScene, "backgroundImageLayoutId" | "backgroundEffectId" | "backgroundPresetId">,
+) => {
   return {
     backgroundImageLayoutId:
       scene.backgroundImageLayoutId ??

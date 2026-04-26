@@ -48,6 +48,7 @@ export type BackgroundEffectId =
   | "aurora"
   | "grid-drift"
   | "noise-bloom"
+  | "cellular-launch"
   | "cellular-life";
 
 export type ProductionScene = {

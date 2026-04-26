@@ -3,6 +3,8 @@ import {AbsoluteFill, Audio, Img, Sequence, staticFile, useCurrentFrame, useVide
 import {
   buildCellularLifeCells,
   getCoverLayoutConfig,
+  getCellularLaunchOrigin,
+  getInterpolatedCoverLayoutConfig,
   getSceneBody,
   getSceneBullets,
   getSceneTitle,
@@ -31,20 +33,20 @@ const resolveCoverImageSrc = (coverImage?: CoverImageAsset) => {
 };
 
 const GameOfLifeEffect: React.FC<{
-  frame: number;
+  absoluteFrame: number;
+  activationFrame: number;
   width: number;
   height: number;
-  layoutId: BackgroundImageLayoutId;
   seed: number;
-}> = ({frame, width, height, layoutId, seed}) => {
+}> = ({absoluteFrame, activationFrame, width, height, seed}) => {
   const cols = 18;
   const rows = 32;
   const cells = buildCellularLifeCells({
     cols,
     rows,
-    frame,
+    globalFrame: absoluteFrame,
+    activationFrame,
     seed,
-    layoutId,
   });
   const cellWidth = width / cols;
   const cellHeight = height / rows;
@@ -74,13 +76,18 @@ const GameOfLifeEffect: React.FC<{
 
 const BackgroundImageLayer: React.FC<{
   coverSrc: string | null;
-  layoutId: BackgroundImageLayoutId;
-}> = ({coverSrc, layoutId}) => {
-  if (!coverSrc || layoutId === "gradient-default") {
+  fromLayoutId: BackgroundImageLayoutId;
+  toLayoutId: BackgroundImageLayoutId;
+  progress: number;
+}> = ({coverSrc, fromLayoutId, toLayoutId, progress}) => {
+  if (!coverSrc || toLayoutId === "gradient-default") {
     return null;
   }
 
-  const config = getCoverLayoutConfig(layoutId);
+  const config =
+    fromLayoutId === toLayoutId
+      ? getCoverLayoutConfig(toLayoutId)
+      : getInterpolatedCoverLayoutConfig({fromLayoutId, toLayoutId, progress});
   return (
     <AbsoluteFill style={{overflow: "hidden"}}>
       <Img
@@ -102,16 +109,76 @@ const BackgroundImageLayer: React.FC<{
 
 const BackgroundEffectLayer: React.FC<{
   effectId: BackgroundEffectId;
-  layoutId: BackgroundImageLayoutId;
   sceneFrame: number;
+  absoluteFrame: number;
+  activationFrame: number;
   themeId: string;
   seed: number;
-}> = ({effectId, layoutId, sceneFrame, themeId, seed}) => {
+}> = ({effectId, sceneFrame, absoluteFrame, activationFrame, themeId, seed}) => {
   const palette = getThemePalette(themeId);
   const {width, height} = useVideoConfig();
 
   if (effectId === "cellular-life") {
-    return <GameOfLifeEffect frame={sceneFrame} width={width} height={height} layoutId={layoutId} seed={seed} />;
+    return (
+      <GameOfLifeEffect
+        absoluteFrame={absoluteFrame}
+        activationFrame={activationFrame}
+        width={width}
+        height={height}
+        seed={seed}
+      />
+    );
+  }
+
+  if (effectId === "cellular-launch") {
+    const buttonOrigin = getCellularLaunchOrigin();
+    const pulse = 1 + Math.sin(sceneFrame / 7) * 0.04;
+    const ready = absoluteFrame >= activationFrame;
+    return (
+      <>
+        <GameOfLifeEffect
+          absoluteFrame={absoluteFrame}
+          activationFrame={activationFrame}
+          width={width}
+          height={height}
+          seed={seed}
+        />
+        {!ready ? (
+          <AbsoluteFill
+            style={{
+              justifyContent: "center",
+              alignItems: "center",
+              pointerEvents: "none",
+            }}
+          >
+            <div
+              style={{
+                width: 320,
+                padding: "22px 28px",
+                borderRadius: 999,
+                border: "1px solid rgba(255,255,255,0.16)",
+                background: "rgba(5,12,20,0.58)",
+                color: "#f4f7fb",
+                fontSize: 28,
+                letterSpacing: 1,
+                textAlign: "center",
+                boxShadow: "0 0 0 12px rgba(87,216,196,0.08), 0 18px 48px rgba(0,0,0,0.28)",
+                transform: `translate(${(buttonOrigin.x - 0.5) * 120}px, ${(buttonOrigin.y - 0.5) * 120}px) scale(${pulse})`,
+              }}
+            >
+              Start Life Simulation
+            </div>
+          </AbsoluteFill>
+        ) : (
+          <AbsoluteFill
+            style={{
+              pointerEvents: "none",
+              background: `radial-gradient(circle at ${buttonOrigin.x * 100}% ${buttonOrigin.y * 100}%, rgba(87,216,196,0.12) 0%, transparent ${Math.min(34, 8 + (absoluteFrame - activationFrame) * 0.16)}%)`,
+            }}
+          />
+        )}
+      </>
+    );
   }
 
   if (effectId === "grid-drift") {
@@ -171,10 +238,13 @@ const BackgroundEffectLayer: React.FC<{
 const Background: React.FC<{
   themeId: string;
   sceneFrame: number;
+  absoluteFrame: number;
   scene: RenderScene;
+  previousLayoutId: BackgroundImageLayoutId;
+  activationFrame: number;
   coverImage?: CoverImageAsset;
   seed: number;
-}> = ({themeId, sceneFrame, scene, coverImage, seed}) => {
+}> = ({themeId, sceneFrame, absoluteFrame, scene, previousLayoutId, activationFrame, coverImage, seed}) => {
   const palette = getThemePalette(themeId);
   const glowX = 15 + (sceneFrame % 160) * 0.38;
   const glowY = 18 + (sceneFrame % 220) * 0.18;
@@ -182,6 +252,7 @@ const Background: React.FC<{
   const coverSrc = resolveCoverImageSrc(coverImage);
   const {backgroundImageLayoutId, backgroundEffectId} = getSceneVisualIds(scene);
   const usesCoverImage = backgroundImageLayoutId !== "gradient-default";
+  const motionProgress = Math.min(1, Math.max(0, sceneFrame / Math.max(1, scene.durationInFrames - 1)));
 
   return (
     <AbsoluteFill
@@ -197,11 +268,17 @@ const Background: React.FC<{
               `,
       }}
     >
-      <BackgroundImageLayer coverSrc={coverSrc} layoutId={backgroundImageLayoutId} />
+      <BackgroundImageLayer
+        coverSrc={coverSrc}
+        fromLayoutId={previousLayoutId}
+        toLayoutId={backgroundImageLayoutId}
+        progress={motionProgress}
+      />
       <BackgroundEffectLayer
         effectId={backgroundEffectId}
-        layoutId={backgroundImageLayoutId}
         sceneFrame={sceneFrame}
+        absoluteFrame={absoluteFrame}
+        activationFrame={activationFrame}
         themeId={themeId}
         seed={seed}
       />
@@ -228,13 +305,24 @@ const SceneCard: React.FC<{
   );
   const coverSrc = resolveCoverImageSrc(manifest.coverImage);
   const isHero = scene.type === "hero";
+  const sceneIndex = manifest.scenes.findIndex((item) => item.id === scene.id);
+  const previousScene = sceneIndex > 0 ? manifest.scenes[sceneIndex - 1] : null;
+  const previousLayoutId = previousScene
+    ? getSceneVisualIds(previousScene).backgroundImageLayoutId
+    : "cover-full";
+  const launchScene =
+    manifest.scenes.find((item) => getSceneVisualIds(item).backgroundEffectId === "cellular-launch") ?? null;
+  const activationFrame = (launchScene?.fromFrame ?? 0) + 36;
 
   return (
     <AbsoluteFill>
       <Background
         themeId={manifest.theme.id}
         sceneFrame={sceneFrame}
+        absoluteFrame={absoluteFrame}
         scene={scene}
+        previousLayoutId={previousLayoutId}
+        activationFrame={activationFrame}
         coverImage={manifest.coverImage}
         seed={manifest.seed}
       />
