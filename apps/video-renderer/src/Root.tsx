@@ -1,7 +1,23 @@
 import React from "react";
 import {AbsoluteFill, Audio, Img, Sequence, staticFile, useCurrentFrame, useVideoConfig} from "remotion";
-import {getSceneBody, getSceneBullets, getSceneTitle, getThemePalette} from "@paper-to-video/content-pipeline";
-import type {AudioAsset, CoverImageAsset, RenderManifest, RenderScene, SubtitleSegment} from "@paper-to-video/shared-types";
+import {
+  buildCellularLifeCells,
+  getCoverLayoutConfig,
+  getSceneBody,
+  getSceneBullets,
+  getSceneTitle,
+  getSceneVisualIds,
+  getThemePalette,
+} from "@paper-to-video/content-pipeline";
+import type {
+  AudioAsset,
+  BackgroundEffectId,
+  BackgroundImageLayoutId,
+  CoverImageAsset,
+  RenderManifest,
+  RenderScene,
+  SubtitleSegment,
+} from "@paper-to-video/shared-types";
 
 const findSubtitle = (segments: SubtitleSegment[], frame: number) =>
   segments.find((segment) => frame >= segment.startFrame && frame < segment.endFrame);
@@ -14,169 +30,181 @@ const resolveCoverImageSrc = (coverImage?: CoverImageAsset) => {
   return coverImage.source === "remote" ? coverImage.path : staticFile(coverImage.path);
 };
 
+const GameOfLifeEffect: React.FC<{
+  frame: number;
+  width: number;
+  height: number;
+  layoutId: BackgroundImageLayoutId;
+  seed: number;
+}> = ({frame, width, height, layoutId, seed}) => {
+  const cols = 18;
+  const rows = 32;
+  const cells = buildCellularLifeCells({
+    cols,
+    rows,
+    frame,
+    seed,
+    layoutId,
+  });
+  const cellWidth = width / cols;
+  const cellHeight = height / rows;
+
+  return (
+    <AbsoluteFill style={{pointerEvents: "none"}}>
+      <svg viewBox={`0 0 ${width} ${height}`} width="100%" height="100%" preserveAspectRatio="none">
+        {cells.map((cell) => {
+          const fill = cell.tone === 1 ? "rgba(87,216,196,0.42)" : "rgba(255,255,255,0.22)";
+          const inset = cell.age >= 3 ? 5 : 3;
+          return (
+            <rect
+              key={`${cell.x}-${cell.y}`}
+              x={cell.x * cellWidth + inset}
+              y={cell.y * cellHeight + inset}
+              width={Math.max(4, cellWidth - inset * 2)}
+              height={Math.max(4, cellHeight - inset * 2)}
+              rx={Math.max(2, cell.age)}
+              fill={fill}
+            />
+          );
+        })}
+      </svg>
+    </AbsoluteFill>
+  );
+};
+
+const BackgroundImageLayer: React.FC<{
+  coverSrc: string | null;
+  layoutId: BackgroundImageLayoutId;
+}> = ({coverSrc, layoutId}) => {
+  if (!coverSrc || layoutId === "gradient-default") {
+    return null;
+  }
+
+  const config = getCoverLayoutConfig(layoutId);
+  return (
+    <AbsoluteFill style={{overflow: "hidden"}}>
+      <Img
+        src={coverSrc}
+        style={{
+          width: "100%",
+          height: "100%",
+          objectFit: "cover",
+          objectPosition: config.objectPosition,
+          opacity: config.opacity,
+          filter: `blur(${config.blurPx}px) saturate(${config.saturation}) brightness(${config.brightness})`,
+          transform: `scale(${config.scale})`,
+        }}
+      />
+      <AbsoluteFill style={{background: config.shade}} />
+    </AbsoluteFill>
+  );
+};
+
+const BackgroundEffectLayer: React.FC<{
+  effectId: BackgroundEffectId;
+  layoutId: BackgroundImageLayoutId;
+  sceneFrame: number;
+  themeId: string;
+  seed: number;
+}> = ({effectId, layoutId, sceneFrame, themeId, seed}) => {
+  const palette = getThemePalette(themeId);
+  const {width, height} = useVideoConfig();
+
+  if (effectId === "cellular-life") {
+    return <GameOfLifeEffect frame={sceneFrame} width={width} height={height} layoutId={layoutId} seed={seed} />;
+  }
+
+  if (effectId === "grid-drift") {
+    return (
+      <AbsoluteFill
+        style={{
+          opacity: 0.38,
+          backgroundImage: `
+            linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.07) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(87,216,196,0.14) 0%, transparent 40%, rgba(255,255,255,0.08) 100%)
+          `,
+          backgroundSize: "44px 44px, 44px 44px, 100% 100%",
+          backgroundPosition: `${(sceneFrame * 0.8) % 44}px ${(sceneFrame * 0.3) % 44}px, ${(sceneFrame * 0.8) % 44}px ${(sceneFrame * 0.3) % 44}px, 0 0`,
+        }}
+      />
+    );
+  }
+
+  if (effectId === "noise-bloom") {
+    return (
+      <AbsoluteFill
+        style={{
+          opacity: 0.92,
+          background: `
+            radial-gradient(circle at ${22 + (sceneFrame % 24)}% 24%, rgba(87,216,196,0.18) 0%, transparent 24%),
+            radial-gradient(circle at 80% ${68 + (sceneFrame % 16) * 0.4}%, rgba(255,255,255,0.12) 0%, transparent 18%)
+          `,
+        }}
+      />
+    );
+  }
+
+  if (effectId === "aurora") {
+    return (
+      <AbsoluteFill
+        style={{
+          background: `
+            radial-gradient(circle at 18% 22%, ${palette.accent}22 0%, transparent 22%),
+            radial-gradient(circle at 82% 76%, rgba(255,255,255,0.10) 0%, transparent 18%)
+          `,
+        }}
+      />
+    );
+  }
+
+  return (
+    <AbsoluteFill
+      style={{
+        background: "linear-gradient(180deg, rgba(255,255,255,0.03), rgba(255,255,255,0))",
+        opacity: 0.8,
+      }}
+    />
+  );
+};
+
 const Background: React.FC<{
   themeId: string;
   sceneFrame: number;
-  backgroundPresetId: string;
-  sceneType: RenderScene["type"];
+  scene: RenderScene;
   coverImage?: CoverImageAsset;
-}> = ({themeId, sceneFrame, backgroundPresetId, sceneType, coverImage}) => {
+  seed: number;
+}> = ({themeId, sceneFrame, scene, coverImage, seed}) => {
   const palette = getThemePalette(themeId);
   const glowX = 15 + (sceneFrame % 160) * 0.38;
   const glowY = 18 + (sceneFrame % 220) * 0.18;
   const accentAlpha = sceneFrame % 120 < 60 ? "88" : "66";
   const coverSrc = resolveCoverImageSrc(coverImage);
-  const isHero = sceneType === "hero";
-  const usesCoverBlur = backgroundPresetId.startsWith("cover-");
-
-  const presetStyle = (() => {
-    switch (backgroundPresetId) {
-      case "cover-cellular-mask":
-        return {
-          imageOpacity: 0.26,
-          imageFilter: "blur(22px) grayscale(0.24) saturate(0.78) brightness(0.42)",
-          imageTransform: "scale(1.16)",
-          overlayOpacity: 0.1,
-          extraOverlay:
-            "radial-gradient(circle at 20% 22%, rgba(87,216,196,0.12) 0%, transparent 20%), radial-gradient(circle at 72% 76%, rgba(255,255,255,0.08) 0%, transparent 16%)",
-        };
-      case "cover-grid-drift":
-        return {
-          imageOpacity: 0.36,
-          imageFilter: "blur(24px) saturate(0.82) brightness(0.58)",
-          imageTransform: "scale(1.12) translateX(-1.5%)",
-          overlayOpacity: 0.24,
-          extraOverlay:
-            "linear-gradient(90deg, rgba(87,216,196,0.04) 0%, transparent 38%, rgba(255,255,255,0.04) 100%)",
-        };
-      case "cover-noise-bloom":
-        return {
-          imageOpacity: 0.4,
-          imageFilter: "blur(34px) saturate(0.9) brightness(0.52)",
-          imageTransform: "scale(1.18)",
-          overlayOpacity: 0.12,
-          extraOverlay:
-            "radial-gradient(circle at 22% 24%, rgba(87,216,196,0.12) 0%, transparent 24%), radial-gradient(circle at 80% 70%, rgba(255,255,255,0.07) 0%, transparent 18%)",
-        };
-      case "cover-soft-focus":
-      default:
-        return {
-          imageOpacity: 0.34,
-          imageFilter: "blur(28px) saturate(0.86) brightness(0.56)",
-          imageTransform: "scale(1.14)",
-          overlayOpacity: 0.16,
-          extraOverlay: "",
-        };
-    }
-  })();
-
-  const cellularMaskLayer =
-    coverSrc && backgroundPresetId === "cover-cellular-mask" ? (
-      <>
-        <AbsoluteFill
-          style={{
-            opacity: 0.82,
-            backgroundImage: `
-              radial-gradient(circle, rgba(87,216,196,0.78) 0 28%, transparent 32%),
-              radial-gradient(circle, rgba(255,255,255,0.22) 0 20%, transparent 26%)
-            `,
-            backgroundSize: "28px 28px, 52px 52px",
-            backgroundPosition: `${(sceneFrame * 0.9) % 28}px ${(sceneFrame * 0.45) % 28}px, ${-((sceneFrame * 0.6) % 52)}px ${((sceneFrame * 0.35) % 52)}px`,
-            mixBlendMode: "screen",
-            maskImage: `url(${coverSrc})`,
-            WebkitMaskImage: `url(${coverSrc})`,
-            maskSize: "cover",
-            WebkitMaskSize: "cover",
-            maskPosition: "center",
-            WebkitMaskPosition: "center",
-            maskRepeat: "no-repeat",
-            WebkitMaskRepeat: "no-repeat",
-            filter: "contrast(1.2) saturate(1.18)",
-          }}
-        />
-        <AbsoluteFill
-          style={{
-            opacity: 0.24,
-            backgroundImage:
-              "linear-gradient(rgba(255,255,255,0.32) 1px, transparent 1px), linear-gradient(90deg, rgba(87,216,196,0.22) 1px, transparent 1px)",
-            backgroundSize: "22px 22px",
-            backgroundPosition: `${(sceneFrame * 0.7) % 22}px ${(sceneFrame * 0.25) % 22}px`,
-            maskImage: `url(${coverSrc})`,
-            WebkitMaskImage: `url(${coverSrc})`,
-            maskSize: "cover",
-            WebkitMaskSize: "cover",
-            maskPosition: "center",
-            WebkitMaskPosition: "center",
-            maskRepeat: "no-repeat",
-            WebkitMaskRepeat: "no-repeat",
-          }}
-        />
-      </>
-    ) : null;
+  const {backgroundImageLayoutId, backgroundEffectId} = getSceneVisualIds(scene);
+  const usesCoverImage = backgroundImageLayoutId !== "gradient-default";
 
   return (
     <AbsoluteFill
       style={{
-        background: `
-          linear-gradient(115deg, rgba(255,255,255,0.04) 0%, transparent 30%),
-          radial-gradient(circle at ${glowX}% ${glowY}%, ${palette.accent}${accentAlpha} 0%, transparent 24%),
-          radial-gradient(circle at 78% 82%, rgba(255,255,255,0.06) 0%, transparent 18%),
-          linear-gradient(135deg, ${palette.bg}, #10253a 48%, #081018)
-        `,
+        background:
+          usesCoverImage
+            ? "linear-gradient(180deg, #050c13 0%, #071019 100%)"
+            : `
+                linear-gradient(115deg, rgba(255,255,255,0.04) 0%, transparent 30%),
+                radial-gradient(circle at ${glowX}% ${glowY}%, ${palette.accent}${accentAlpha} 0%, transparent 24%),
+                radial-gradient(circle at 78% 82%, rgba(255,255,255,0.06) 0%, transparent 18%),
+                linear-gradient(135deg, ${palette.bg}, #10253a 48%, #081018)
+              `,
       }}
     >
-      {coverSrc ? (
-        <AbsoluteFill style={{overflow: "hidden"}}>
-          <Img
-            src={coverSrc}
-            style={{
-              width: "100%",
-              height: "100%",
-              objectFit: "cover",
-              opacity: isHero ? 0.9 : presetStyle.imageOpacity,
-              filter: isHero ? "contrast(1.02) saturate(1.02)" : presetStyle.imageFilter,
-              transform: isHero ? "scale(1.02)" : presetStyle.imageTransform,
-            }}
-          />
-          <AbsoluteFill
-            style={{
-              background: isHero
-                ? "linear-gradient(90deg, rgba(6,10,16,0.08) 0%, rgba(6,10,16,0.40) 46%, rgba(6,10,16,0.78) 100%)"
-                : "linear-gradient(180deg, rgba(5,10,16,0.62) 0%, rgba(5,10,16,0.72) 100%)",
-            }}
-          />
-          {!isHero && presetStyle.extraOverlay ? (
-            <AbsoluteFill
-              style={{
-                background: presetStyle.extraOverlay,
-                opacity: 0.85,
-              }}
-            />
-          ) : null}
-        </AbsoluteFill>
-      ) : null}
-      {cellularMaskLayer}
-      <AbsoluteFill
-        style={{
-          opacity: coverSrc && !isHero ? presetStyle.overlayOpacity : 0.28,
-          backgroundImage: `
-            linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)
-          `,
-          backgroundSize: backgroundPresetId === "cover-grid-drift" ? "56px 56px" : "64px 64px",
-          maskImage: "linear-gradient(180deg, rgba(0,0,0,0.85), rgba(0,0,0,0.25))",
-        }}
+      <BackgroundImageLayer coverSrc={coverSrc} layoutId={backgroundImageLayoutId} />
+      <BackgroundEffectLayer
+        effectId={backgroundEffectId}
+        layoutId={backgroundImageLayoutId}
+        sceneFrame={sceneFrame}
+        themeId={themeId}
+        seed={seed}
       />
-      {!coverSrc || !usesCoverBlur ? (
-        <AbsoluteFill
-          style={{
-            background:
-              backgroundPresetId === "noise-gradient"
-                ? "radial-gradient(circle at 18% 22%, rgba(87,216,196,0.12) 0%, transparent 20%), radial-gradient(circle at 82% 76%, rgba(255,255,255,0.06) 0%, transparent 16%)"
-                : "transparent",
-          }}
-        />
-      ) : null}
     </AbsoluteFill>
   );
 };
@@ -206,9 +234,9 @@ const SceneCard: React.FC<{
       <Background
         themeId={manifest.theme.id}
         sceneFrame={sceneFrame}
-        backgroundPresetId={scene.backgroundPresetId}
-        sceneType={scene.type}
+        scene={scene}
         coverImage={manifest.coverImage}
+        seed={manifest.seed}
       />
       <AbsoluteFill
         style={{

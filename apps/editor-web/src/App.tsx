@@ -1,31 +1,203 @@
-import React, {useMemo, useState} from "react";
-import {getSceneBody, getSceneBullets, getSceneTitle, getThemePalette} from "@paper-to-video/content-pipeline";
-import type {RenderManifest} from "@paper-to-video/shared-types";
-import renderManifest from "../../../data/generated-meta/demo-paper-001.render.json";
-
-const manifest = renderManifest as RenderManifest;
+import React, {useEffect, useMemo, useState} from "react";
+import {
+  buildCellularLifeCells,
+  getCoverLayoutConfig,
+  getSceneBody,
+  getSceneBullets,
+  getSceneTitle,
+  getSceneVisualIds,
+  getThemePalette,
+} from "@paper-to-video/content-pipeline";
+import type {BackgroundEffectId, BackgroundImageLayoutId, RenderManifest} from "@paper-to-video/shared-types";
 
 const formatSeconds = (frames: number, fps: number) => `${(frames / fps).toFixed(1)}s`;
-const coverImageSrc = manifest.coverImage?.path ? `/${manifest.coverImage.path}` : null;
+
+declare const __LATEST_RUN_FILE__: string;
+declare const __DEFAULT_RENDER_MANIFEST__: string;
+declare const __WORKSPACE_ROOT__: string;
+
+const buildLocalAssetSrc = (relativePath?: string) => {
+  if (!relativePath) {
+    return null;
+  }
+
+  return `/@fs${__WORKSPACE_ROOT__}/${relativePath}`;
+};
+
+const fetchJson = async <T,>(absolutePath: string) => {
+  const response = await fetch(`/@fs${absolutePath}`);
+  if (!response.ok) {
+    throw new Error(`Failed to fetch ${absolutePath}: ${response.status}`);
+  }
+
+  return (await response.json()) as T;
+};
+
+const PreviewGameOfLifeEffect: React.FC<{
+  frame: number;
+  layoutId: BackgroundImageLayoutId;
+  seed: number;
+}> = ({frame, layoutId, seed}) => {
+  const cols = 14;
+  const rows = 24;
+  const cells = buildCellularLifeCells({cols, rows, frame, seed, layoutId});
+  const cellWidth = 100 / cols;
+  const cellHeight = 100 / rows;
+
+  return (
+    <svg className="preview-effect-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
+      {cells.map((cell) => {
+        const fill = cell.tone === 1 ? "rgba(87,216,196,0.44)" : "rgba(255,255,255,0.24)";
+        const inset = cell.age >= 3 ? 0.7 : 0.4;
+        return (
+          <rect
+            key={`${cell.x}-${cell.y}`}
+            x={cell.x * cellWidth + inset}
+            y={cell.y * cellHeight + inset}
+            width={Math.max(0.8, cellWidth - inset * 2)}
+            height={Math.max(0.8, cellHeight - inset * 2)}
+            rx={0.6}
+            fill={fill}
+          />
+        );
+      })}
+    </svg>
+  );
+};
+
+const PreviewEffectLayer: React.FC<{
+  effectId: BackgroundEffectId;
+  layoutId: BackgroundImageLayoutId;
+  frame: number;
+  seed: number;
+}> = ({effectId, layoutId, frame, seed}) => {
+  if (effectId === "cellular-life") {
+    return <PreviewGameOfLifeEffect frame={frame} layoutId={layoutId} seed={seed} />;
+  }
+
+  if (effectId === "grid-drift") {
+    return (
+      <div
+        className="preview-effect-layer"
+        style={{
+          opacity: 0.38,
+          backgroundImage: `
+            linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(255,255,255,0.07) 1px, transparent 1px),
+            linear-gradient(90deg, rgba(87,216,196,0.14) 0%, transparent 40%, rgba(255,255,255,0.08) 100%)
+          `,
+          backgroundSize: "44px 44px, 44px 44px, 100% 100%",
+          backgroundPosition: `${(frame * 0.8) % 44}px ${(frame * 0.3) % 44}px, ${(frame * 0.8) % 44}px ${(frame * 0.3) % 44}px, 0 0`,
+        }}
+      />
+    );
+  }
+
+  if (effectId === "noise-bloom") {
+    return (
+      <div
+        className="preview-effect-layer"
+        style={{
+          opacity: 0.92,
+          background: `
+            radial-gradient(circle at ${22 + (frame % 24)}% 24%, rgba(87,216,196,0.18) 0%, transparent 24%),
+            radial-gradient(circle at 80% ${68 + (frame % 16) * 0.4}%, rgba(255,255,255,0.12) 0%, transparent 18%)
+          `,
+        }}
+      />
+    );
+  }
+
+  if (effectId === "aurora") {
+    return (
+      <div
+        className="preview-effect-layer"
+        style={{
+          background:
+            "radial-gradient(circle at 18% 22%, rgba(87,216,196,0.14) 0%, transparent 22%), radial-gradient(circle at 82% 76%, rgba(255,255,255,0.1) 0%, transparent 18%)",
+        }}
+      />
+    );
+  }
+
+  return <div className="preview-effect-layer preview-effect-layer--soft" />;
+};
 
 export const App: React.FC = () => {
-  const [activeSceneId, setActiveSceneId] = useState(manifest.scenes[0]?.id ?? "");
+  const [manifest, setManifest] = useState<RenderManifest | null>(null);
+  const [activeSceneId, setActiveSceneId] = useState("");
+  const [previewFrame, setPreviewFrame] = useState(0);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const loadManifest = async () => {
+      try {
+        const latestRun = await fetchJson<{
+          renderManifestPath: string;
+        }>(__LATEST_RUN_FILE__);
+
+        const nextManifest = await fetchJson<RenderManifest>(latestRun.renderManifestPath);
+        if (!cancelled) {
+          setManifest(nextManifest);
+          setActiveSceneId(nextManifest.scenes[0]?.id ?? "");
+        }
+        return;
+      } catch {
+        const fallback = await fetchJson<RenderManifest>(__DEFAULT_RENDER_MANIFEST__);
+        if (!cancelled) {
+          setManifest(fallback);
+          setActiveSceneId(fallback.scenes[0]?.id ?? "");
+        }
+      }
+    };
+
+    loadManifest().catch((error) => {
+      console.error(error);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setPreviewFrame((frame) => (frame + 1) % 240);
+    }, 100);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, []);
 
   const activeScene = useMemo(
-    () => manifest.scenes.find((scene) => scene.id === activeSceneId) ?? manifest.scenes[0],
-    [activeSceneId],
+    () => manifest?.scenes.find((scene) => scene.id === activeSceneId) ?? manifest?.scenes[0] ?? null,
+    [activeSceneId, manifest],
   );
 
   const activeSubtitles = useMemo(
-    () => manifest.subtitleSegments.filter((segment) => segment.sceneId === activeScene.id),
-    [activeScene],
+    () => manifest?.subtitleSegments.filter((segment) => segment.sceneId === activeScene?.id) ?? [],
+    [activeScene?.id, manifest],
   );
+
+  if (!manifest || !activeScene) {
+    return <div className="app-loading">Loading latest render manifest...</div>;
+  }
 
   const palette = getThemePalette(manifest.theme.id);
   const bullets = getSceneBullets(activeScene);
-  const isHero = activeScene.type === "hero";
-  const isCoverDerived = activeScene.backgroundPresetId.startsWith("cover-");
-  const isCellular = activeScene.backgroundPresetId === "cover-cellular-mask";
+  const {backgroundImageLayoutId, backgroundEffectId} = getSceneVisualIds(activeScene);
+  const layoutConfig = getCoverLayoutConfig(backgroundImageLayoutId);
+  const usesCoverImage = backgroundImageLayoutId !== "gradient-default";
+  const coverImageSrc =
+    manifest.coverImage?.source === "remote"
+      ? manifest.coverImage.path
+      : buildLocalAssetSrc(manifest.coverImage?.path);
+  const stageBackground =
+    usesCoverImage
+      ? "linear-gradient(180deg, #050c13 0%, #071019 100%)"
+      : `radial-gradient(circle at 20% 20%, ${palette.accent}33, transparent 28%), linear-gradient(135deg, ${palette.bg}, #10253a 48%, #081018)`;
 
   return (
     <div className="app-shell">
@@ -79,26 +251,29 @@ export const App: React.FC = () => {
             className="slide-preview"
             style={{
               color: palette.fg,
-              background: `radial-gradient(circle at 20% 20%, ${palette.accent}33, transparent 28%), linear-gradient(135deg, ${palette.bg}, #10253a 48%, #081018)`,
+              background: stageBackground,
             }}
           >
             {coverImageSrc ? (
               <div className="preview-cover-layer">
                 <img
                   alt={manifest.coverImage?.alt ?? "cover"}
-                  className={
-                    isHero
-                      ? "preview-cover-layer__img preview-cover-layer__img--hero"
-                      : isCellular
-                        ? "preview-cover-layer__img preview-cover-layer__img--cellular"
-                      : isCoverDerived
-                        ? "preview-cover-layer__img preview-cover-layer__img--blur"
-                        : "preview-cover-layer__img preview-cover-layer__img--soft"
-                  }
+                  className="preview-cover-layer__img"
+                  style={{
+                    objectPosition: layoutConfig.objectPosition,
+                    opacity: layoutConfig.opacity,
+                    filter: `blur(${layoutConfig.blurPx}px) saturate(${layoutConfig.saturation}) brightness(${layoutConfig.brightness})`,
+                    transform: `scale(${layoutConfig.scale})`,
+                  }}
                   src={coverImageSrc}
                 />
-                <div className={isHero ? "preview-cover-layer__shade preview-cover-layer__shade--hero" : "preview-cover-layer__shade"} />
-                {isCellular ? <div className="preview-cover-layer__cellular" /> : null}
+                <div className="preview-cover-layer__shade" style={{background: layoutConfig.shade}} />
+                <PreviewEffectLayer
+                  effectId={backgroundEffectId}
+                  layoutId={backgroundImageLayoutId}
+                  frame={previewFrame}
+                  seed={manifest.seed}
+                />
               </div>
             ) : null}
             <div className="slide-top">

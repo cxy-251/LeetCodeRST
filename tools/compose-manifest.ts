@@ -5,6 +5,10 @@ import {
   writeLatestRun,
   writeRunSummary,
 } from "./lib/run-artifacts";
+import {
+  resolveSceneBackgroundEffectId,
+  resolveSceneBackgroundImageLayoutId,
+} from "@paper-to-video/content-pipeline";
 import type {
   ProductionManifest,
   RenderManifest,
@@ -110,6 +114,7 @@ const main = async () => {
   let cursor = 0;
   const scenes: RenderScene[] = [];
   const subtitleSegments: SubtitleSegment[] = [];
+  let coverCycleIndex = 0;
 
   for (const scene of manifest.scenes) {
     const sceneDurationMs =
@@ -133,6 +138,8 @@ const main = async () => {
       fromFrame: cursor,
       durationInFrames,
       backgroundPresetId: scene.backgroundPresetId,
+      backgroundImageLayoutId: resolveSceneBackgroundImageLayoutId(scene, coverCycleIndex),
+      backgroundEffectId: resolveSceneBackgroundEffectId(scene),
       motionPresetId: scene.motionPresetId,
       imageAssetIds: scene.imageAssetId ? [scene.imageAssetId] : [],
       audioSegmentIds: [`audio-${scene.id}`],
@@ -150,6 +157,9 @@ const main = async () => {
     renderScene.subtitleSegmentIds = sceneSubtitles.map((segment) => segment.id);
     subtitleSegments.push(...sceneSubtitles);
     scenes.push(renderScene);
+    if (renderScene.backgroundImageLayoutId !== "gradient-default" && renderScene.backgroundImageLayoutId !== "cover-full") {
+      coverCycleIndex += 1;
+    }
     cursor += durationInFrames;
   }
 

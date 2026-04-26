@@ -2,13 +2,22 @@ import path from "node:path";
 import {defineConfig} from "vite";
 import react from "@vitejs/plugin-react";
 
+const workspaceRoot = path.resolve(__dirname, "../..");
+
 export default defineConfig({
   plugins: [react()],
   root: path.resolve(__dirname),
+  define: {
+    __WORKSPACE_ROOT__: JSON.stringify(workspaceRoot),
+    __LATEST_RUN_FILE__: JSON.stringify(path.resolve(workspaceRoot, "output/latest-run.json")),
+    __DEFAULT_RENDER_MANIFEST__: JSON.stringify(
+      path.resolve(workspaceRoot, "data/generated-meta/demo-paper-001.render.json"),
+    ),
+  },
   server: {
     port: 3100,
     fs: {
-      allow: [path.resolve(__dirname, "../..")],
+      allow: [workspaceRoot],
     },
   },
   resolve: {

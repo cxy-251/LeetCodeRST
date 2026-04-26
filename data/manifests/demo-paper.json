@@ -40,6 +40,8 @@
         "body": "从图像生成走向内容编排，是 AI 视觉系统走向生产力的关键一步。"
       },
       "backgroundPresetId": "aurora",
+      "backgroundImageLayoutId": "cover-full",
+      "backgroundEffectId": "aurora",
       "motionPresetId": "fade-up",
       "durationStrategy": "auto-by-audio"
     },
@@ -53,6 +55,8 @@
         "body": "如何让生成模型同时理解视觉风格和页面布局，而不是只会生成一张好看的图。"
       },
       "backgroundPresetId": "cover-grid-drift",
+      "backgroundImageLayoutId": "cover-focus-tl",
+      "backgroundEffectId": "grid-drift",
       "motionPresetId": "slide-up",
       "durationStrategy": "auto-by-audio"
     },
@@ -70,6 +74,8 @@
         ]
       },
       "backgroundPresetId": "cover-cellular-mask",
+      "backgroundImageLayoutId": "cover-focus-tr",
+      "backgroundEffectId": "cellular-life",
       "motionPresetId": "fade-up",
       "durationStrategy": "auto-by-audio"
     },
@@ -87,6 +93,8 @@
         ]
       },
       "backgroundPresetId": "cover-cellular-mask",
+      "backgroundImageLayoutId": "cover-focus-br",
+      "backgroundEffectId": "cellular-life",
       "motionPresetId": "stagger-rise",
       "durationStrategy": "auto-by-audio"
     },
@@ -100,6 +108,8 @@
         "body": "真正实用的生成模型，不只是会画图，还要会组织信息。"
       },
       "backgroundPresetId": "cover-soft-focus",
+      "backgroundImageLayoutId": "cover-focus-bl",
+      "backgroundEffectId": "none",
       "motionPresetId": "fade-up",
       "durationStrategy": "auto-by-audio"
     }

@@ -1,4 +1,12 @@
 import type {RenderScene} from "@paper-to-video/shared-types";
+export {
+  buildCellularLifeCells,
+  getCoverLayoutConfig,
+  getEffectAnchor,
+  getSceneVisualIds,
+  resolveSceneBackgroundEffectId,
+  resolveSceneBackgroundImageLayoutId,
+} from "./visual-system";
 
 export type ThemePalette = {
   bg: string;

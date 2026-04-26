@@ -35,6 +35,21 @@ export type ContentBrief = {
   };
 };
 
+export type BackgroundImageLayoutId =
+  | "gradient-default"
+  | "cover-full"
+  | "cover-focus-tl"
+  | "cover-focus-tr"
+  | "cover-focus-br"
+  | "cover-focus-bl";
+
+export type BackgroundEffectId =
+  | "none"
+  | "aurora"
+  | "grid-drift"
+  | "noise-bloom"
+  | "cellular-life";
+
 export type ProductionScene = {
   id: string;
   type:
@@ -51,6 +66,8 @@ export type ProductionScene = {
   imagePrompt?: string;
   imageAssetId?: string;
   backgroundPresetId: string;
+  backgroundImageLayoutId?: BackgroundImageLayoutId;
+  backgroundEffectId?: BackgroundEffectId;
   motionPresetId: string;
   durationStrategy: "auto-by-audio" | "fixed";
   fixedDurationMs?: number;
@@ -145,6 +162,8 @@ export type RenderScene = {
   fromFrame: number;
   durationInFrames: number;
   backgroundPresetId: string;
+  backgroundImageLayoutId: BackgroundImageLayoutId;
+  backgroundEffectId: BackgroundEffectId;
   motionPresetId: string;
   imageAssetIds: string[];
   audioSegmentIds: string[];

@@ -33,6 +33,8 @@ const fallbackManifest: RenderManifest = {
       fromFrame: 0,
       durationInFrames: 150,
       backgroundPresetId: "aurora",
+      backgroundImageLayoutId: "cover-full",
+      backgroundEffectId: "aurora",
       motionPresetId: "fade-up",
       imageAssetIds: [],
       audioSegmentIds: [],
