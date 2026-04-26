@@ -13,7 +13,7 @@ import {
   ThreeLifeEffect,
 } from "@paper-to-video/content-pipeline";
 import {renderTemplateZone} from "@paper-to-video/timeline-engine";
-import type {BackgroundEffectId, RenderManifest} from "@paper-to-video/shared-types";
+import type {BackgroundEffectId, RenderManifest, RenderScene} from "@paper-to-video/shared-types";
 
 const formatSeconds = (frames: number, fps: number) => `${(frames / fps).toFixed(1)}s`;
 
@@ -21,11 +21,20 @@ declare const __LATEST_RUN_FILE__: string;
 declare const __DEFAULT_RENDER_MANIFEST__: string;
 declare const __WORKSPACE_ROOT__: string;
 
-type PreviewRoute = {
+type TemplateRoute = {
   description: string;
   href: string;
   id: string;
   loadManifest: () => Promise<RenderManifest>;
+  title: string;
+};
+
+type EffectRoute = {
+  description: string;
+  effectId: BackgroundEffectId;
+  href: string;
+  id: string;
+  source: "default" | "latest";
   title: string;
 };
 
@@ -56,24 +65,57 @@ const loadLatestManifest = async () => {
 
 const loadDefaultManifest = async () => fetchJson<RenderManifest>(__DEFAULT_RENDER_MANIFEST__);
 
-const previewRoutes: PreviewRoute[] = [
+const templateRoutes: TemplateRoute[] = [
   {
     id: "latest-run",
-    href: "/previews/latest",
-    title: "Latest Run Preview",
+    href: "/templates/latest",
+    title: "Latest Run Template",
     description: "读取 output/latest-run.json 指向的最新产物，用来验证本地案例和最新模板编排。",
     loadManifest: loadLatestManifest,
   },
   {
     id: "repo-demo",
-    href: "/previews/demo",
-    title: "Repository Demo",
-    description: "读取仓库内默认 render manifest，作为稳定基线案例。",
+    href: "/templates/demo",
+    title: "Repository Demo Template",
+    description: "读取仓库内默认 render manifest，作为稳定基线模板案例。",
     loadManifest: loadDefaultManifest,
   },
 ];
 
-const findPreviewRoute = (pathname: string) => previewRoutes.find((route) => route.href === pathname) ?? null;
+const effectRoutes: EffectRoute[] = [
+  {
+    id: "effect-cellular-life",
+    href: "/effects/cellular-life",
+    title: "Cellular Life Effect",
+    description: "单独查看持续计算的生命游戏特效层，用来迭代 WebGL 细胞尺寸、步进速度和色块表达。",
+    effectId: "cellular-life",
+    source: "latest",
+  },
+  {
+    id: "effect-cellular-launch",
+    href: "/effects/cellular-launch",
+    title: "Cellular Launch Effect",
+    description: "单独查看生命游戏的启动阶段，用来调整按钮激活、扩散起点和切入方式。",
+    effectId: "cellular-launch",
+    source: "latest",
+  },
+  {
+    id: "effect-aurora",
+    href: "/effects/aurora",
+    title: "Aurora Overlay",
+    description: "独立查看轻量氛围型特效层，方便跟生命游戏类 effect 分开对比。",
+    effectId: "aurora",
+    source: "default",
+  },
+];
+
+const legacyRedirects: Record<string, string> = {
+  "/previews/demo": "/templates/demo",
+  "/previews/latest": "/templates/latest",
+};
+
+const findTemplateRoute = (pathname: string) => templateRoutes.find((route) => route.href === pathname) ?? null;
+const findEffectRoute = (pathname: string) => effectRoutes.find((route) => route.href === pathname) ?? null;
 
 const PreviewEffectLayer: React.FC<{
   effectId: BackgroundEffectId;
@@ -180,41 +222,148 @@ const PreviewEffectLayer: React.FC<{
 };
 
 const AppIndex: React.FC<{
-  currentPath: string;
   navigate: (href: string) => void;
-}> = ({currentPath, navigate}) => {
+}> = ({navigate}) => {
   return (
     <div className="index-shell">
       <div className="index-hero">
         <div className="eyebrow">PaperToVideo</div>
         <h1>Preview Index</h1>
-        <p>首页现在作为预览索引。不同组合版本会挂到各自的子路径下，当前这个站点已经支持继续往里扩更多模板、主题和案例。</p>
+        <p>首页现在作为索引。模板组合页和 WebGL / effect 实验页已经拆成两个路径分区，后面继续加案例时可以按目录自然扩展。</p>
       </div>
 
-      <div className="index-grid">
-        {previewRoutes.map((route) => (
-          <button
-            key={route.id}
-            className="index-card"
-            onClick={() => navigate(route.href)}
-            type="button"
-          >
-            <span className="index-card__path">{route.href}</span>
-            <strong>{route.title}</strong>
-            <span>{route.description}</span>
-            <span className="index-card__cta">
-              {currentPath === route.href ? "Open now" : "Open preview"}
-            </span>
-          </button>
-        ))}
+      <section className="index-section">
+        <div className="index-section__header">
+          <span className="eyebrow">Templates</span>
+          <h2>组合模板页</h2>
+          <p>这里放完整的拼装结果，也就是背景、特效、文本和时间轴都已经组合好的版本。</p>
+        </div>
+        <div className="index-grid">
+          {templateRoutes.map((route) => (
+            <button key={route.id} className="index-card" onClick={() => navigate(route.href)} type="button">
+              <span className="index-card__path">{route.href}</span>
+              <strong>{route.title}</strong>
+              <span>{route.description}</span>
+              <span className="index-card__cta">Open template</span>
+            </button>
+          ))}
+        </div>
+      </section>
+
+      <section className="index-section">
+        <div className="index-section__header">
+          <span className="eyebrow">Effects</span>
+          <h2>单独特效实验页</h2>
+          <p>这里单独看 WebGL / effect 层，避免每次都通过完整模板链路才能判断特效效果。</p>
+        </div>
+        <div className="index-grid">
+          {effectRoutes.map((route) => (
+            <button key={route.id} className="index-card" onClick={() => navigate(route.href)} type="button">
+              <span className="index-card__path">{route.href}</span>
+              <strong>{route.title}</strong>
+              <span>{route.description}</span>
+              <span className="index-card__cta">Open effect</span>
+            </button>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+};
+
+const LoadingState: React.FC<{
+  errorMessage?: string | null;
+  navigate: (href: string) => void;
+}> = ({errorMessage, navigate}) => {
+  if (!errorMessage) {
+    return <div className="app-loading">Loading preview manifest...</div>;
+  }
+
+  return (
+    <div className="app-loading">
+      <div className="loading-card">
+        <strong>Failed to load preview</strong>
+        <span>{errorMessage}</span>
+        <button className="back-link" onClick={() => navigate("/")} type="button">
+          Back to index
+        </button>
       </div>
     </div>
   );
 };
 
-const PreviewPage: React.FC<{
+const PreviewStage: React.FC<{
+  absolutePreviewFrame: number;
+  activationFrame: number;
+  children?: React.ReactNode;
+  coverImageSrc: string | null;
+  effectId: BackgroundEffectId;
+  layoutConfig: ReturnType<typeof getCoverLayoutConfig>;
+  manifest: RenderManifest;
+  palette: ReturnType<typeof getThemePalette>;
+  previewFrame: number;
+  stageBackground: string;
+}> = ({
+  absolutePreviewFrame,
+  activationFrame,
+  coverImageSrc,
+  effectId,
+  layoutConfig,
+  manifest,
+  palette,
+  previewFrame,
+  stageBackground,
+  children,
+}) => {
+  const backgroundMotion = resolveBackgroundMotionConfig(manifest.modules);
+
+  return (
+    <div className="phone-frame">
+      <div
+        className="slide-preview"
+        style={{
+          color: palette.fg,
+          background: stageBackground,
+        }}
+      >
+        {coverImageSrc ? (
+          <div className="preview-cover-layer">
+            <img
+              alt={manifest.coverImage?.alt ?? "cover"}
+              className="preview-cover-layer__img"
+              style={{
+                width: `${100 + backgroundMotion.overscanPercent}%`,
+                height: `${100 + backgroundMotion.overscanPercent}%`,
+                left: `-${backgroundMotion.overscanPercent / 2}%`,
+                top: `-${backgroundMotion.overscanPercent / 2}%`,
+                position: "absolute",
+                objectPosition: "center center",
+                opacity: layoutConfig.opacity,
+                filter: `blur(${layoutConfig.blurPx}px) saturate(${layoutConfig.saturation}) brightness(${layoutConfig.brightness})`,
+                transform: `translate(${layoutConfig.translateX}%, ${layoutConfig.translateY}%) scale(${layoutConfig.scale})`,
+              }}
+              src={coverImageSrc}
+            />
+            <div className="preview-cover-layer__shade" style={{background: layoutConfig.shade}} />
+          </div>
+        ) : null}
+        <PreviewEffectLayer
+          effectId={effectId}
+          frame={previewFrame}
+          absoluteFrame={absolutePreviewFrame}
+          activationFrame={activationFrame}
+          seed={manifest.seed}
+          modules={manifest.modules}
+        />
+        {children}
+      </div>
+    </div>
+  );
+};
+
+const TemplatePreviewPage: React.FC<{
   navigate: (href: string) => void;
-  route: PreviewRoute;
+  route: TemplateRoute;
 }> = ({navigate, route}) => {
   const [manifest, setManifest] = useState<RenderManifest | null>(null);
   const [activeSceneId, setActiveSceneId] = useState("");
@@ -267,22 +416,8 @@ const PreviewPage: React.FC<{
     [activeScene?.id, manifest],
   );
 
-  if (errorMessage) {
-    return (
-      <div className="app-loading">
-        <div className="loading-card">
-          <strong>Failed to load preview</strong>
-          <span>{errorMessage}</span>
-          <button className="back-link" onClick={() => navigate("/")} type="button">
-            Back to index
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  if (!manifest || !activeScene) {
-    return <div className="app-loading">Loading preview manifest...</div>;
+  if (errorMessage || !manifest || !activeScene) {
+    return <LoadingState errorMessage={errorMessage} navigate={navigate} />;
   }
 
   const palette = getThemePalette(manifest.theme.id);
@@ -342,7 +477,7 @@ const PreviewPage: React.FC<{
           <button className="back-link" onClick={() => navigate("/")} type="button">
             Back to index
           </button>
-          <div className="eyebrow">PaperToVideo</div>
+          <div className="eyebrow">Templates</div>
           <h1>{manifest.paper.title}</h1>
           <p>{route.description}</p>
         </div>
@@ -385,79 +520,190 @@ const PreviewPage: React.FC<{
       </aside>
 
       <main className="stage">
-        <div className="phone-frame">
-          <div
-            className="slide-preview"
-            style={{
-              color: palette.fg,
-              background: stageBackground,
-            }}
-          >
-            {coverImageSrc ? (
-              <div className="preview-cover-layer">
-                <img
-                  alt={manifest.coverImage?.alt ?? "cover"}
-                  className="preview-cover-layer__img"
-                  style={{
-                    width: `${100 + backgroundMotion.overscanPercent}%`,
-                    height: `${100 + backgroundMotion.overscanPercent}%`,
-                    left: `-${backgroundMotion.overscanPercent / 2}%`,
-                    top: `-${backgroundMotion.overscanPercent / 2}%`,
-                    position: "absolute",
-                    objectPosition: "center center",
-                    opacity: layoutConfig.opacity,
-                    filter: `blur(${layoutConfig.blurPx}px) saturate(${layoutConfig.saturation}) brightness(${layoutConfig.brightness})`,
-                    transform: `translate(${layoutConfig.translateX}%, ${layoutConfig.translateY}%) scale(${layoutConfig.scale})`,
-                  }}
-                  src={coverImageSrc}
-                />
-                <div className="preview-cover-layer__shade" style={{background: layoutConfig.shade}} />
-                <PreviewEffectLayer
-                  effectId={backgroundEffectId}
-                  frame={previewFrame}
-                  absoluteFrame={absolutePreviewFrame}
-                  activationFrame={activationFrame}
-                  seed={manifest.seed}
-                  modules={manifest.modules}
-                />
-              </div>
-            ) : null}
-            <div className="slide-top">
-              {primaryNodes.map((node, index) => {
-                const state = getTextMotionState({
-                  frame: previewFrame,
-                  durationInFrames: activeScene.durationInFrames,
-                  delayFrames: index === 0 ? 0 : textMotion.bodyDelayFrames + (index - 1) * textMotion.bulletsStaggerFrames,
-                  config: textMotion,
-                });
+        <PreviewStage
+          absolutePreviewFrame={absolutePreviewFrame}
+          activationFrame={activationFrame}
+          coverImageSrc={coverImageSrc}
+          effectId={backgroundEffectId}
+          layoutConfig={layoutConfig}
+          manifest={manifest}
+          palette={palette}
+          previewFrame={previewFrame}
+          stageBackground={stageBackground}
+        >
+          <div className="slide-top slide-top--template">
+            {primaryNodes.map((node, index) => {
+              const state = getTextMotionState({
+                frame: previewFrame,
+                durationInFrames: activeScene.durationInFrames,
+                delayFrames: index === 0 ? 0 : textMotion.bodyDelayFrames + (index - 1) * textMotion.bulletsStaggerFrames,
+                config: textMotion,
+              });
 
-                return (
-                  <div
-                    key={`preview-primary-${index}`}
-                    style={{
-                      opacity: state.opacity,
-                      transform: `translateY(${state.translateY}px)`,
-                    }}
-                  >
-                    {node}
-                  </div>
-                );
-              })}
-            </div>
-            {secondaryNodes.length > 0 ? secondaryNodes[0] : null}
+              return (
+                <div
+                  key={`preview-primary-${index}`}
+                  style={{
+                    opacity: state.opacity,
+                    transform: `translateY(${state.translateY}px)`,
+                  }}
+                >
+                  {node}
+                </div>
+              );
+            })}
+          </div>
+          {secondaryNodes.length > 0 ? secondaryNodes[0] : null}
+        </PreviewStage>
+      </main>
+    </div>
+  );
+};
+
+const findEffectScene = (manifest: RenderManifest, effectId: BackgroundEffectId): RenderScene => {
+  const matched = manifest.scenes.find((scene) => getSceneVisualIds(scene).backgroundEffectId === effectId);
+  return matched ?? manifest.scenes[0];
+};
+
+const EffectLabPage: React.FC<{
+  navigate: (href: string) => void;
+  route: EffectRoute;
+}> = ({navigate, route}) => {
+  const [manifest, setManifest] = useState<RenderManifest | null>(null);
+  const [previewFrame, setPreviewFrame] = useState(0);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loader = route.source === "latest" ? loadLatestManifest : loadDefaultManifest;
+
+    loader()
+      .then((nextManifest) => {
+        if (!cancelled) {
+          setManifest(nextManifest);
+          setErrorMessage(null);
+        }
+      })
+      .catch((error: unknown) => {
+        console.error(error);
+        if (!cancelled) {
+          setErrorMessage(error instanceof Error ? error.message : "Failed to load manifest");
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [route]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setPreviewFrame((frame) => (frame + 1) % 720);
+    }, 100);
+
+    return () => {
+      window.clearInterval(timer);
+    };
+  }, []);
+
+  if (errorMessage || !manifest) {
+    return <LoadingState errorMessage={errorMessage} navigate={navigate} />;
+  }
+
+  const scene = findEffectScene(manifest, route.effectId);
+  const palette = getThemePalette(manifest.theme.id);
+  const backgroundMotion = resolveBackgroundMotionConfig(manifest.modules);
+  const layoutConfig = getCoverLayoutConfig("cover-full", backgroundMotion.panTravelPercent);
+  const coverImageSrc =
+    manifest.coverImage?.source === "remote"
+      ? manifest.coverImage.path
+      : buildLocalAssetSrc(manifest.coverImage?.path);
+  const launchScene =
+    manifest.scenes.find((candidate) => getSceneVisualIds(candidate).backgroundEffectId === "cellular-launch") ?? scene;
+  const activationFrame = (launchScene?.fromFrame ?? 0) + resolveCellularEffectConfig(manifest.modules).activationDelayFrames;
+  const absolutePreviewFrame = (scene.fromFrame ?? 0) + previewFrame;
+
+  return (
+    <div className="app-shell">
+      <aside className="sidebar">
+        <div className="sidebar__header">
+          <button className="back-link" onClick={() => navigate("/")} type="button">
+            Back to index
+          </button>
+          <div className="eyebrow">Effects</div>
+          <h1>{route.title}</h1>
+          <p>{route.description}</p>
+        </div>
+
+        <div className="meta-grid">
+          <div>
+            <span>Route</span>
+            <strong>{route.href}</strong>
+          </div>
+          <div>
+            <span>Effect ID</span>
+            <strong>{route.effectId}</strong>
+          </div>
+          <div>
+            <span>Source</span>
+            <strong>{route.source}</strong>
+          </div>
+          <div>
+            <span>Module</span>
+            <strong>isolated lab</strong>
           </div>
         </div>
+
+        <div className="effect-notes">
+          <div className="effect-note">
+            <strong>用途</strong>
+            <span>单独检查 WebGL / effect 层，不和文本模板耦合。</span>
+          </div>
+          <div className="effect-note">
+            <strong>当前场景</strong>
+            <span>{getSceneTitle(scene)}</span>
+          </div>
+          <div className="effect-note">
+            <strong>下一步</strong>
+            <span>后续可以把更多 effect 单独挂到 `/effects/*` 下，做成真正的实验场。</span>
+          </div>
+        </div>
+      </aside>
+
+      <main className="stage">
+        <PreviewStage
+          absolutePreviewFrame={absolutePreviewFrame}
+          activationFrame={activationFrame}
+          coverImageSrc={coverImageSrc}
+          effectId={route.effectId}
+          layoutConfig={layoutConfig}
+          manifest={manifest}
+          palette={palette}
+          previewFrame={previewFrame}
+          stageBackground={`linear-gradient(180deg, ${palette.bg} 0%, #071019 100%)`}
+        >
+          <div className="effect-stage-caption">
+            <span>Effect Lab</span>
+            <strong>{route.effectId}</strong>
+          </div>
+        </PreviewStage>
       </main>
     </div>
   );
 };
 
 export const App: React.FC = () => {
-  const [currentPath, setCurrentPath] = useState(() => window.location.pathname);
+  const [currentPath, setCurrentPath] = useState(() => legacyRedirects[window.location.pathname] ?? window.location.pathname);
 
   useEffect(() => {
+    if (legacyRedirects[window.location.pathname]) {
+      const nextPath = legacyRedirects[window.location.pathname];
+      window.history.replaceState({}, "", nextPath);
+      setCurrentPath(nextPath);
+    }
+
     const onPopState = () => {
-      setCurrentPath(window.location.pathname);
+      setCurrentPath(legacyRedirects[window.location.pathname] ?? window.location.pathname);
     };
 
     window.addEventListener("popstate", onPopState);
@@ -475,10 +721,15 @@ export const App: React.FC = () => {
     setCurrentPath(href);
   };
 
-  const route = findPreviewRoute(currentPath);
-  if (!route) {
-    return <AppIndex currentPath={currentPath} navigate={navigate} />;
+  const templateRoute = findTemplateRoute(currentPath);
+  if (templateRoute) {
+    return <TemplatePreviewPage navigate={navigate} route={templateRoute} />;
   }
 
-  return <PreviewPage navigate={navigate} route={route} />;
+  const effectRoute = findEffectRoute(currentPath);
+  if (effectRoute) {
+    return <EffectLabPage navigate={navigate} route={effectRoute} />;
+  }
+
+  return <AppIndex navigate={navigate} />;
 };

@@ -128,8 +128,13 @@ npm run render:video
 26. `npm run compose:manifest` 已验证可正常读取模板 JSON，并将 `templateDocument` 写入最新 run 的 `render-manifest.json`
 27. `editor-web` 已从单页预览改成“小型预览站点”结构：
    - `/` 作为索引首页
-   - `/previews/latest` 读取最新 run
-   - `/previews/demo` 读取仓库默认 demo
+   - `/templates/latest` 读取最新 run
+   - `/templates/demo` 读取仓库默认 demo
+28. `editor-web` 已新增独立特效实验页分区：
+   - `/effects/cellular-life`
+   - `/effects/cellular-launch`
+   - `/effects/aurora`
+29. 原子组件字号已从固定像素改成更偏容器友好的响应式尺寸，减少预览页在不同窗口下字号失衡的问题
 
 ---
 

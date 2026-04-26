@@ -33,7 +33,7 @@ export const SceneKickerAtom: React.FC<{
   color: string;
 }> = ({text, color}) => {
   return (
-    <div style={{fontSize: 26, letterSpacing: 4, color}}>
+    <div style={{fontSize: "clamp(0.72rem, 1vw + 0.42rem, 1.5rem)", letterSpacing: "0.28em", color}}>
       {text}
     </div>
   );
@@ -43,7 +43,7 @@ export const SceneTitleAtom: React.FC<{
   text: string;
 }> = ({text}) => {
   return (
-    <div style={{fontSize: 78, lineHeight: 1.08, fontWeight: 700, maxWidth: 860}}>
+    <div style={{fontSize: "clamp(1.9rem, 4vw + 0.4rem, 4.8rem)", lineHeight: 1.08, fontWeight: 700, maxWidth: "min(100%, 54rem)"}}>
       {text}
     </div>
   );
@@ -53,7 +53,7 @@ export const SceneBodyAtom: React.FC<{
   text: string;
 }> = ({text}) => {
   return (
-    <div style={{fontSize: 34, lineHeight: 1.5, maxWidth: 860, color: "#dbe7f5"}}>
+    <div style={{fontSize: "clamp(1rem, 1.6vw + 0.5rem, 2.1rem)", lineHeight: 1.5, maxWidth: "min(100%, 54rem)", color: "#dbe7f5"}}>
       {text}
     </div>
   );
@@ -63,9 +63,9 @@ export const SceneBulletsAtom: React.FC<{
   bullets: string[];
 }> = ({bullets}) => {
   return (
-    <div style={{display: "flex", flexDirection: "column", gap: 18, maxWidth: 860}}>
+    <div style={{display: "flex", flexDirection: "column", gap: "clamp(0.7rem, 1.2vw, 1.15rem)", maxWidth: "min(100%, 54rem)"}}>
       {bullets.map((bullet) => (
-        <div key={bullet} style={{fontSize: 30, lineHeight: 1.5, color: "#ecf6ff"}}>
+        <div key={bullet} style={{fontSize: "clamp(0.98rem, 1.45vw + 0.45rem, 1.9rem)", lineHeight: 1.5, color: "#ecf6ff"}}>
           {"• "}{bullet}
         </div>
       ))}
@@ -81,14 +81,14 @@ export const SubtitlePanelAtom: React.FC<{
   return (
     <div
       style={{
-        fontSize: 28,
+        fontSize: "clamp(0.95rem, 1.25vw + 0.45rem, 1.75rem)",
         lineHeight: 1.45,
         color: foreground,
-        padding: "24px 28px",
+        padding: "clamp(0.95rem, 1.35vw, 1.5rem) clamp(1rem, 1.6vw, 1.75rem)",
         borderRadius: 28,
         backgroundColor: panelColor,
         border: "1px solid rgba(255,255,255,0.08)",
-        minHeight: 120,
+        minHeight: "clamp(4rem, 8vw, 7.5rem)",
         opacity: 0.98,
       }}
     >
