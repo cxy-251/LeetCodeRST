@@ -64,6 +64,19 @@ const RemotionRoot: React.FC = () => {
       width={fallbackManifest.width}
       height={fallbackManifest.height}
       defaultProps={{manifest: fallbackManifest}}
+      calculateMetadata={({props}) => {
+        const manifest = (props as {manifest?: RenderManifest}).manifest ?? fallbackManifest;
+
+        return {
+          durationInFrames: manifest.totalFrames,
+          fps: manifest.fps,
+          width: manifest.width,
+          height: manifest.height,
+          props: {
+            manifest,
+          },
+        };
+      }}
     />
   );
 };

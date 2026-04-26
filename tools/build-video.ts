@@ -1,5 +1,7 @@
+import fs from "node:fs/promises";
 import path from "node:path";
 import {spawn} from "node:child_process";
+import type {RenderManifest} from "@paper-to-video/shared-types";
 
 const DEFAULT_RENDER_MANIFEST = path.resolve("data/generated-meta/demo-paper-001.render.json");
 const DEFAULT_OUTPUT = path.resolve("output/videos/demo-paper-001.mp4");
@@ -21,6 +23,8 @@ const run = (command: string, args: string[]) =>
 const main = async () => {
   const renderManifest = process.argv[2] ? path.resolve(process.argv[2]) : DEFAULT_RENDER_MANIFEST;
   const output = process.argv[3] ? path.resolve(process.argv[3]) : DEFAULT_OUTPUT;
+  const manifestRaw = await fs.readFile(renderManifest, "utf-8");
+  const manifest = JSON.parse(manifestRaw) as RenderManifest;
 
   await run("npx", [
     "remotion",
@@ -30,7 +34,7 @@ const main = async () => {
     output,
     "--props",
     JSON.stringify({
-      manifestPath: renderManifest,
+      manifest,
     }),
   ]);
 };
