@@ -118,6 +118,8 @@ npm run render:video
 20. 已新增模块 API 文档：
    - `docs/modular-visual-apis.md`
 21. 当前 renderer 与 editor 都已经开始读取这套模块参数
+22. 生命游戏 effect 已切换为 `Three.js + WebGL` 实现，不再由 SVG/DOM 承担主渲染
+23. 文本动效已补上离场参数，当前支持进场 + 离场统一配置
 
 ---
 
@@ -181,9 +183,7 @@ npm run render:video
 7. 当前非 hero 页面的人像残影层已移除，改为更直接的“轻虚化封面图 + 上层动效”
 8. 用户进一步指出：之前的虚化仍然偏重、上层动效不够明显，因此当前版本继续朝“更易辨认底图 + 更强块状动效”推进
 9. 当前 `cellular-life` 已经拆成独立 effect 层，但仍属于“生命游戏风格原型”，还不是真正的 WebGL 版本
-10. 当前 effect 层虽然已经连续运行，但底层实现仍是 SVG/DOM 原型，还没有切换到 Three.js / WebGL
-11. 最新 local run 已重新 compose 到 `20260427-064800`，用于验证“更密细胞 + 环绕边界 + 大图平移取景”
-12. 最新公开 demo run 已重新 compose 到 `20260427-070553`，用于验证模块参数外置化后的默认行为
+10. 最新 local run 已重新 compose 到 `20260427-071354`，用于验证 Three.js/WebGL 生命游戏、文本进出动效和参数外置化后的行为
 
 ### 视觉方向问题
 
@@ -203,10 +203,10 @@ npm run render:video
 建议严格按这个顺序继续：
 
 1. 继续把更多参数从组件内常量迁移到 `manifest.modules`
-2. 给文本组件补更明显的切换与离场动效
+2. 继续打磨文本切页/替换时的视觉表现，不只控制单页内部进出
 3. 确认本地专用 manifest 在整条链路上稳定生效
 4. 为新增 effect / background / text motion 建立统一 registry 扩展方式
-5. 把当前连续 effect 轨道升级为真正的 Three.js / WebGL 实现
+5. 继续扩充更多 Three.js / WebGL effect 模块
 
 ---
 

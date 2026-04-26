@@ -1,7 +1,6 @@
 import React from "react";
 import {AbsoluteFill, Audio, Img, Sequence, staticFile, useCurrentFrame, useVideoConfig} from "remotion";
 import {
-  buildCellularLifeCells,
   getCoverLayoutConfig,
   getCellularLaunchOrigin,
   getInterpolatedCoverLayoutConfig,
@@ -10,9 +9,11 @@ import {
   getSceneTitle,
   getSceneVisualIds,
   getThemePalette,
+  getTextMotionState,
   resolveBackgroundMotionConfig,
   resolveCellularEffectConfig,
   resolveTextMotionConfig,
+  ThreeLifeEffect,
 } from "@paper-to-video/content-pipeline";
 import type {
   AudioAsset,
@@ -33,51 +34,6 @@ const resolveCoverImageSrc = (coverImage?: CoverImageAsset) => {
   }
 
   return coverImage.source === "remote" ? coverImage.path : staticFile(coverImage.path);
-};
-
-const GameOfLifeEffect: React.FC<{
-  absoluteFrame: number;
-  activationFrame: number;
-  width: number;
-  height: number;
-  seed: number;
-  modules?: RenderManifest["modules"];
-}> = ({absoluteFrame, activationFrame, width, height, seed, modules}) => {
-  const cellularConfig = resolveCellularEffectConfig(modules);
-  const cols = cellularConfig.cellColumns;
-  const rows = cellularConfig.cellRows;
-  const cells = buildCellularLifeCells({
-    cols,
-    rows,
-    globalFrame: absoluteFrame,
-    activationFrame,
-    seed,
-    stepEveryFrames: cellularConfig.stepEveryFrames,
-  });
-  const cellWidth = width / cols;
-  const cellHeight = height / rows;
-
-  return (
-    <AbsoluteFill style={{pointerEvents: "none"}}>
-      <svg viewBox={`0 0 ${width} ${height}`} width="100%" height="100%" preserveAspectRatio="none">
-        {cells.map((cell) => {
-          const fill = cell.tone === 1 ? "rgba(87,216,196,0.42)" : "rgba(255,255,255,0.22)";
-          const inset = cell.age >= 3 ? cellularConfig.cellPadding * 2.2 : cellularConfig.cellPadding;
-          return (
-            <rect
-              key={`${cell.x}-${cell.y}`}
-              x={cell.x * cellWidth + inset}
-              y={cell.y * cellHeight + inset}
-              width={Math.max(1.2, cellWidth - inset * 2)}
-              height={Math.max(1.2, cellHeight - inset * 2)}
-              rx={Math.max(0.8, cell.age * cellularConfig.cornerRadius)}
-              fill={fill}
-            />
-          );
-        })}
-      </svg>
-    </AbsoluteFill>
-  );
 };
 
 const BackgroundImageLayer: React.FC<{
@@ -134,7 +90,7 @@ const BackgroundEffectLayer: React.FC<{
 
   if (effectId === "cellular-life") {
     return (
-      <GameOfLifeEffect
+      <ThreeLifeEffect
         absoluteFrame={absoluteFrame}
         activationFrame={activationFrame}
         width={width}
@@ -151,7 +107,7 @@ const BackgroundEffectLayer: React.FC<{
     const ready = absoluteFrame >= activationFrame;
     return (
       <>
-        <GameOfLifeEffect
+        <ThreeLifeEffect
           absoluteFrame={absoluteFrame}
           activationFrame={activationFrame}
           width={width}
@@ -317,9 +273,11 @@ const SceneCard: React.FC<{
   const sceneFrame = localFrame;
   const absoluteFrame = scene.fromFrame + localFrame;
   const textMotion = resolveTextMotionConfig(scene.motionPresetId, manifest.modules);
-  const contentProgress = Math.min(1, sceneFrame / Math.max(1, textMotion.enterFrames));
-  const contentOpacity = Math.min(1, Math.max(textMotion.minOpacity, contentProgress));
-  const lift = Math.max(0, textMotion.maxLiftPx * (1 - contentProgress));
+  const titleMotion = getTextMotionState({
+    frame: sceneFrame,
+    durationInFrames: scene.durationInFrames,
+    config: textMotion,
+  });
   const bullets = getSceneBullets(scene);
   const subtitle = findSubtitle(
     manifest.subtitleSegments.filter((segment) => segment.sceneId === scene.id),
@@ -364,8 +322,8 @@ const SceneCard: React.FC<{
             flexDirection: "column",
             gap: 24,
             marginTop: 60,
-            opacity: contentOpacity,
-            transform: `translateY(${lift}px)`,
+            opacity: titleMotion.opacity,
+            transform: `translateY(${titleMotion.translateY}px)`,
           }}
         >
           {isHero && coverSrc ? (
@@ -401,14 +359,18 @@ const SceneCard: React.FC<{
               lineHeight: 1.5,
               maxWidth: 860,
               color: "#dbe7f5",
-              opacity: Math.min(
-                1,
-                Math.max(
-                  textMotion.minOpacity,
-                  (sceneFrame - textMotion.bodyDelayFrames) / Math.max(1, textMotion.enterFrames),
-                ),
-              ),
-              transform: `translateY(${Math.max(0, lift - textMotion.bodyDelayFrames)}px)`,
+              ...(() => {
+                const state = getTextMotionState({
+                  frame: sceneFrame,
+                  durationInFrames: scene.durationInFrames,
+                  delayFrames: textMotion.bodyDelayFrames,
+                  config: textMotion,
+                });
+                return {
+                  opacity: state.opacity,
+                  transform: `translateY(${state.translateY}px)`,
+                };
+              })(),
             }}
           >
             {getSceneBody(scene)}
@@ -422,19 +384,19 @@ const SceneCard: React.FC<{
                     fontSize: 30,
                     lineHeight: 1.5,
                     color: "#ecf6ff",
-                    opacity: Math.min(
-                      1,
-                      Math.max(
-                        textMotion.minOpacity,
-                        (sceneFrame - textMotion.bodyDelayFrames - index * textMotion.bulletsStaggerFrames) /
-                          Math.max(1, textMotion.enterFrames),
-                      ),
-                    ),
-                    transform: `translateY(${Math.max(
-                      0,
-                      textMotion.maxLiftPx -
-                        Math.max(0, sceneFrame - index * textMotion.bulletsStaggerFrames) * 1.3,
-                    )}px)`,
+                    ...(() => {
+                      const state = getTextMotionState({
+                        frame: sceneFrame,
+                        durationInFrames: scene.durationInFrames,
+                        delayFrames:
+                          textMotion.bodyDelayFrames + index * textMotion.bulletsStaggerFrames,
+                        config: textMotion,
+                      });
+                      return {
+                        opacity: state.opacity,
+                        transform: `translateY(${state.translateY}px)`,
+                      };
+                    })(),
                   }}
                 >
                   {"• "}{bullet}

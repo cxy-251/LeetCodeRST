@@ -59,6 +59,9 @@ export type TextMotionConfig = {
   minOpacity: number;
   bodyDelayFrames: number;
   bulletsStaggerFrames: number;
+  exitFrames: number;
+  exitLiftPx: number;
+  exitOpacity: number;
 };
 
 export type BackgroundMotionConfig = {

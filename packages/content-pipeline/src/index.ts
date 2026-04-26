@@ -16,6 +16,8 @@ export {
   resolveCellularEffectConfig,
   resolveTextMotionConfig,
 } from "./module-api";
+export {getTextMotionState} from "./text-motion";
+export {ThreeLifeEffect} from "./three-life-effect";
 
 export type ThemePalette = {
   bg: string;

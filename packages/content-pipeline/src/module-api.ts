@@ -13,6 +13,9 @@ export const DEFAULT_TEXT_MOTIONS: Record<TextMotionId, TextMotionConfig> = {
     minOpacity: 0.28,
     bodyDelayFrames: 2,
     bulletsStaggerFrames: 3,
+    exitFrames: 8,
+    exitLiftPx: 10,
+    exitOpacity: 0.72,
   },
   "slide-up": {
     enterFrames: 16,
@@ -20,6 +23,9 @@ export const DEFAULT_TEXT_MOTIONS: Record<TextMotionId, TextMotionConfig> = {
     minOpacity: 0.18,
     bodyDelayFrames: 3,
     bulletsStaggerFrames: 4,
+    exitFrames: 10,
+    exitLiftPx: 18,
+    exitOpacity: 0.62,
   },
   "stagger-rise": {
     enterFrames: 18,
@@ -27,6 +33,9 @@ export const DEFAULT_TEXT_MOTIONS: Record<TextMotionId, TextMotionConfig> = {
     minOpacity: 0.2,
     bodyDelayFrames: 4,
     bulletsStaggerFrames: 5,
+    exitFrames: 10,
+    exitLiftPx: 16,
+    exitOpacity: 0.6,
   },
   "hard-cut": {
     enterFrames: 2,
@@ -34,6 +43,9 @@ export const DEFAULT_TEXT_MOTIONS: Record<TextMotionId, TextMotionConfig> = {
     minOpacity: 1,
     bodyDelayFrames: 0,
     bulletsStaggerFrames: 0,
+    exitFrames: 2,
+    exitLiftPx: 0,
+    exitOpacity: 1,
   },
 };
 

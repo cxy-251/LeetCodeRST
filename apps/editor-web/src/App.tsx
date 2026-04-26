@@ -1,6 +1,5 @@
 import React, {useEffect, useMemo, useState} from "react";
 import {
-  buildCellularLifeCells,
   getCoverLayoutConfig,
   getCellularLaunchOrigin,
   getInterpolatedCoverLayoutConfig,
@@ -9,9 +8,11 @@ import {
   getSceneTitle,
   getSceneVisualIds,
   getThemePalette,
+  getTextMotionState,
   resolveBackgroundMotionConfig,
   resolveCellularEffectConfig,
   resolveTextMotionConfig,
+  ThreeLifeEffect,
 } from "@paper-to-video/content-pipeline";
 import type {BackgroundEffectId, BackgroundImageLayoutId, RenderManifest} from "@paper-to-video/shared-types";
 
@@ -38,47 +39,6 @@ const fetchJson = async <T,>(absolutePath: string) => {
   return (await response.json()) as T;
 };
 
-const PreviewGameOfLifeEffect: React.FC<{
-  absoluteFrame: number;
-  activationFrame: number;
-  seed: number;
-  modules?: RenderManifest["modules"];
-}> = ({absoluteFrame, activationFrame, seed, modules}) => {
-  const cellularConfig = resolveCellularEffectConfig(modules);
-  const cols = cellularConfig.cellColumns;
-  const rows = cellularConfig.cellRows;
-  const cells = buildCellularLifeCells({
-    cols,
-    rows,
-    globalFrame: absoluteFrame,
-    activationFrame,
-    seed,
-    stepEveryFrames: cellularConfig.stepEveryFrames,
-  });
-  const cellWidth = 100 / cols;
-  const cellHeight = 100 / rows;
-
-  return (
-    <svg className="preview-effect-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
-      {cells.map((cell) => {
-        const fill = cell.tone === 1 ? "rgba(87,216,196,0.44)" : "rgba(255,255,255,0.24)";
-        const inset = cell.age >= 3 ? cellularConfig.cellPadding * 0.36 : cellularConfig.cellPadding * 0.16;
-        return (
-          <rect
-            key={`${cell.x}-${cell.y}`}
-            x={cell.x * cellWidth + inset}
-            y={cell.y * cellHeight + inset}
-            width={Math.max(0.18, cellWidth - inset * 2)}
-            height={Math.max(0.18, cellHeight - inset * 2)}
-            rx={cellularConfig.cornerRadius * 0.2}
-            fill={fill}
-          />
-        );
-      })}
-    </svg>
-  );
-};
-
 const PreviewEffectLayer: React.FC<{
   effectId: BackgroundEffectId;
   frame: number;
@@ -89,9 +49,11 @@ const PreviewEffectLayer: React.FC<{
 }> = ({effectId, frame, absoluteFrame, activationFrame, seed, modules}) => {
   if (effectId === "cellular-life") {
     return (
-      <PreviewGameOfLifeEffect
+      <ThreeLifeEffect
         absoluteFrame={absoluteFrame}
         activationFrame={activationFrame}
+        width={378}
+        height={672}
         seed={seed}
         modules={modules}
       />
@@ -104,9 +66,11 @@ const PreviewEffectLayer: React.FC<{
     const ready = absoluteFrame >= activationFrame;
     return (
       <>
-        <PreviewGameOfLifeEffect
+        <ThreeLifeEffect
           absoluteFrame={absoluteFrame}
           activationFrame={activationFrame}
+          width={378}
+          height={672}
           seed={seed}
           modules={modules}
         />
@@ -246,6 +210,11 @@ export const App: React.FC = () => {
   const {backgroundImageLayoutId, backgroundEffectId} = getSceneVisualIds(activeScene);
   const backgroundMotion = resolveBackgroundMotionConfig(manifest.modules);
   const textMotion = resolveTextMotionConfig(activeScene.motionPresetId, manifest.modules);
+  const titleMotion = getTextMotionState({
+    frame: previewFrame,
+    durationInFrames: activeScene.durationInFrames,
+    config: textMotion,
+  });
   const activeSceneIndex = manifest.scenes.findIndex((scene) => scene.id === activeScene.id);
   const previousScene = activeSceneIndex > 0 ? manifest.scenes[activeSceneIndex - 1] : null;
   const previousLayoutId = previousScene ? getSceneVisualIds(previousScene).backgroundImageLayoutId : "cover-full";
@@ -362,30 +331,34 @@ export const App: React.FC = () => {
               <div
                 className="slide-kicker"
                 style={{
-                  opacity: Math.min(1, Math.max(textMotion.minOpacity, previewFrame / Math.max(1, textMotion.enterFrames))),
-                  transform: `translateY(${Math.max(0, textMotion.maxLiftPx * (1 - previewFrame / Math.max(1, textMotion.enterFrames)))}px)`,
+                  opacity: titleMotion.opacity,
+                  transform: `translateY(${titleMotion.translateY}px)`,
                 }}
               >
                 {manifest.paper.paperId} · AI Paper Digest
               </div>
               <h2
                 style={{
-                  opacity: Math.min(1, Math.max(textMotion.minOpacity, previewFrame / Math.max(1, textMotion.enterFrames))),
-                  transform: `translateY(${Math.max(0, textMotion.maxLiftPx * (1 - previewFrame / Math.max(1, textMotion.enterFrames)))}px)`,
+                  opacity: titleMotion.opacity,
+                  transform: `translateY(${titleMotion.translateY}px)`,
                 }}
               >
                 {getSceneTitle(activeScene)}
               </h2>
               <p
                 style={{
-                  opacity: Math.min(
-                    1,
-                    Math.max(
-                      textMotion.minOpacity,
-                      (previewFrame - textMotion.bodyDelayFrames) / Math.max(1, textMotion.enterFrames),
-                    ),
-                  ),
-                  transform: `translateY(${Math.max(0, textMotion.maxLiftPx - previewFrame)}px)`,
+                  ...(() => {
+                    const state = getTextMotionState({
+                      frame: previewFrame,
+                      durationInFrames: activeScene.durationInFrames,
+                      delayFrames: textMotion.bodyDelayFrames,
+                      config: textMotion,
+                    });
+                    return {
+                      opacity: state.opacity,
+                      transform: `translateY(${state.translateY}px)`,
+                    };
+                  })(),
                 }}
               >
                 {getSceneBody(activeScene)}
@@ -397,19 +370,19 @@ export const App: React.FC = () => {
                       key={bullet}
                       className="bullet-item"
                       style={{
-                        opacity: Math.min(
-                          1,
-                          Math.max(
-                            textMotion.minOpacity,
-                            (previewFrame - textMotion.bodyDelayFrames - index * textMotion.bulletsStaggerFrames) /
-                              Math.max(1, textMotion.enterFrames),
-                          ),
-                        ),
-                        transform: `translateY(${Math.max(
-                          0,
-                          textMotion.maxLiftPx -
-                            Math.max(0, previewFrame - index * textMotion.bulletsStaggerFrames) * 0.8,
-                        )}px)`,
+                        ...(() => {
+                          const state = getTextMotionState({
+                            frame: previewFrame,
+                            durationInFrames: activeScene.durationInFrames,
+                            delayFrames:
+                              textMotion.bodyDelayFrames + index * textMotion.bulletsStaggerFrames,
+                            config: textMotion,
+                          });
+                          return {
+                            opacity: state.opacity,
+                            transform: `translateY(${state.translateY}px)`,
+                          };
+                        })(),
                       }}
                     >
                       <span className="bullet-dot" />
