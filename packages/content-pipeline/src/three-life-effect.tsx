@@ -9,6 +9,7 @@ type Props = {
   height: number;
   absoluteFrame: number;
   activationFrame: number;
+  simulationFrame?: number;
   seed: number;
   modules?: RenderManifest["modules"];
 };
@@ -18,6 +19,7 @@ export const ThreeLifeEffect: React.FC<Props> = ({
   height,
   absoluteFrame,
   activationFrame,
+  simulationFrame,
   seed,
   modules,
 }) => {
@@ -106,10 +108,11 @@ export const ThreeLifeEffect: React.FC<Props> = ({
 
     const cols = config.cellColumns;
     const rows = config.cellRows;
+    const effectiveFrame = simulationFrame ?? absoluteFrame;
     const cells = buildCellularLifeCells({
       cols,
       rows,
-      globalFrame: absoluteFrame,
+      globalFrame: effectiveFrame,
       activationFrame,
       seed,
       stepEveryFrames: config.stepEveryFrames,
@@ -154,6 +157,7 @@ export const ThreeLifeEffect: React.FC<Props> = ({
     helper,
     height,
     seed,
+    simulationFrame,
     width,
   ]);
 

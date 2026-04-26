@@ -1,5 +1,6 @@
 import React, {useEffect, useMemo, useState} from "react";
 import {
+  getEffectAtomDefinition,
   getCoverLayoutConfig,
   getCellularLaunchOrigin,
   getInterpolatedCoverLayoutConfig,
@@ -10,6 +11,7 @@ import {
   resolveBackgroundMotionConfig,
   resolveCellularEffectConfig,
   resolveTextMotionConfig,
+  type EffectAtomId,
   ThreeLifeEffect,
 } from "@paper-to-video/content-pipeline";
 import {renderTemplateZone} from "@paper-to-video/timeline-engine";
@@ -31,7 +33,7 @@ type TemplateRoute = {
 
 type EffectRoute = {
   description: string;
-  effectId: BackgroundEffectId;
+  effectId: EffectAtomId;
   href: string;
   id: string;
   source: "default" | "latest";
@@ -297,6 +299,7 @@ const PreviewStage: React.FC<{
   activationFrame: number;
   children?: React.ReactNode;
   coverImageSrc: string | null;
+  effectLayer?: React.ReactNode;
   effectId: BackgroundEffectId;
   layoutConfig: ReturnType<typeof getCoverLayoutConfig>;
   manifest: RenderManifest;
@@ -307,6 +310,7 @@ const PreviewStage: React.FC<{
   absolutePreviewFrame,
   activationFrame,
   coverImageSrc,
+  effectLayer,
   effectId,
   layoutConfig,
   manifest,
@@ -347,14 +351,16 @@ const PreviewStage: React.FC<{
             <div className="preview-cover-layer__shade" style={{background: layoutConfig.shade}} />
           </div>
         ) : null}
-        <PreviewEffectLayer
-          effectId={effectId}
-          frame={previewFrame}
-          absoluteFrame={absolutePreviewFrame}
-          activationFrame={activationFrame}
-          seed={manifest.seed}
-          modules={manifest.modules}
-        />
+        {effectLayer ?? (
+          <PreviewEffectLayer
+            effectId={effectId}
+            frame={previewFrame}
+            absoluteFrame={absolutePreviewFrame}
+            activationFrame={activationFrame}
+            seed={manifest.seed}
+            modules={manifest.modules}
+          />
+        )}
         {children}
       </div>
     </div>
@@ -570,8 +576,9 @@ const EffectLabPage: React.FC<{
   route: EffectRoute;
 }> = ({navigate, route}) => {
   const [manifest, setManifest] = useState<RenderManifest | null>(null);
-  const [previewFrame, setPreviewFrame] = useState(0);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isRunning, setIsRunning] = useState(route.effectId === "aurora");
+  const [simulationFrame, setSimulationFrame] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
@@ -597,20 +604,30 @@ const EffectLabPage: React.FC<{
   }, [route]);
 
   useEffect(() => {
+    if (!isRunning) {
+      return;
+    }
+
     const timer = window.setInterval(() => {
-      setPreviewFrame((frame) => (frame + 1) % 720);
-    }, 100);
+      setSimulationFrame((frame) => frame + 1);
+    }, 1000 / 24);
 
     return () => {
       window.clearInterval(timer);
     };
-  }, []);
+  }, [isRunning]);
+
+  useEffect(() => {
+    setSimulationFrame(0);
+    setIsRunning(route.effectId === "aurora");
+  }, [route.effectId]);
 
   if (errorMessage || !manifest) {
     return <LoadingState errorMessage={errorMessage} navigate={navigate} />;
   }
 
   const scene = findEffectScene(manifest, route.effectId);
+  const effectDefinition = getEffectAtomDefinition(route.effectId);
   const palette = getThemePalette(manifest.theme.id);
   const backgroundMotion = resolveBackgroundMotionConfig(manifest.modules);
   const layoutConfig = getCoverLayoutConfig("cover-full", backgroundMotion.panTravelPercent);
@@ -618,10 +635,34 @@ const EffectLabPage: React.FC<{
     manifest.coverImage?.source === "remote"
       ? manifest.coverImage.path
       : buildLocalAssetSrc(manifest.coverImage?.path);
-  const launchScene =
-    manifest.scenes.find((candidate) => getSceneVisualIds(candidate).backgroundEffectId === "cellular-launch") ?? scene;
-  const activationFrame = (launchScene?.fromFrame ?? 0) + resolveCellularEffectConfig(manifest.modules).activationDelayFrames;
-  const absolutePreviewFrame = (scene.fromFrame ?? 0) + previewFrame;
+  const activationFrame = 0;
+  const absolutePreviewFrame = simulationFrame;
+  const controlLabel =
+    route.effectId === "aurora" ? "Ambient Overlay" : isRunning ? "Running" : "Idle";
+  const effectLayer = (
+    <>
+      <effectDefinition.Component
+        absoluteFrame={absolutePreviewFrame}
+        activationFrame={activationFrame}
+        height={672}
+        isRunning={isRunning}
+        modules={manifest.modules}
+        onPrimaryAction={() => setIsRunning(true)}
+        seed={manifest.seed}
+        simulationFrame={simulationFrame}
+        width={378}
+      />
+      {route.effectId === "cellular-life" && !isRunning ? (
+        <button
+          className="effect-stage-button"
+          onClick={() => setIsRunning(true)}
+          type="button"
+        >
+          Start Life Simulation
+        </button>
+      ) : null}
+    </>
+  );
 
   return (
     <div className="app-shell">
@@ -649,23 +690,46 @@ const EffectLabPage: React.FC<{
             <strong>{route.source}</strong>
           </div>
           <div>
-            <span>Module</span>
-            <strong>isolated lab</strong>
+            <span>Status</span>
+            <strong>{controlLabel}</strong>
           </div>
+        </div>
+
+        <div className="effect-controls">
+          <button className="effect-control-button" onClick={() => setIsRunning(true)} type="button">
+            Start
+          </button>
+          <button className="effect-control-button" onClick={() => setIsRunning(false)} type="button">
+            Pause
+          </button>
+          <button
+            className="effect-control-button effect-control-button--ghost"
+            onClick={() => {
+              setIsRunning(false);
+              setSimulationFrame(0);
+            }}
+            type="button"
+          >
+            Reset
+          </button>
         </div>
 
         <div className="effect-notes">
           <div className="effect-note">
             <strong>用途</strong>
-            <span>单独检查 WebGL / effect 层，不和文本模板耦合。</span>
+            <span>单独检查中间层 effect atom，不和背景模板、文本模板耦合。</span>
           </div>
           <div className="effect-note">
-            <strong>当前场景</strong>
-            <span>{getSceneTitle(scene)}</span>
+            <strong>当前原子</strong>
+            <span>{effectDefinition.title}</span>
           </div>
           <div className="effect-note">
-            <strong>下一步</strong>
-            <span>后续可以把更多 effect 单独挂到 `/effects/*` 下，做成真正的实验场。</span>
+            <strong>组合关系</strong>
+            <span>短视频最终由 背景 + WebGL 小游戏特效 + 文本 + 朗读 组合而成，这里只验证中间层特效。</span>
+          </div>
+          <div className="effect-note">
+            <strong>扩展方式</strong>
+            <span>后续贪吃蛇、扫雷、吃豆人都可以按同一 effect atom 接口挂到 `/effects/*` 下。</span>
           </div>
         </div>
       </aside>
@@ -675,16 +739,18 @@ const EffectLabPage: React.FC<{
           absolutePreviewFrame={absolutePreviewFrame}
           activationFrame={activationFrame}
           coverImageSrc={coverImageSrc}
+          effectLayer={effectLayer}
           effectId={route.effectId}
           layoutConfig={layoutConfig}
           manifest={manifest}
           palette={palette}
-          previewFrame={previewFrame}
+          previewFrame={simulationFrame}
           stageBackground={`linear-gradient(180deg, ${palette.bg} 0%, #071019 100%)`}
         >
           <div className="effect-stage-caption">
-            <span>Effect Lab</span>
-            <strong>{route.effectId}</strong>
+            <span>Effect Atom</span>
+            <strong>{effectDefinition.id}</strong>
+            <small>{effectDefinition.description}</small>
           </div>
         </PreviewStage>
       </main>

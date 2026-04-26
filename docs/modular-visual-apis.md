@@ -9,6 +9,7 @@
 这些模块都可以通过 `ProductionManifest.modules` 和 `scene` 上的模块 id 从外部写入。
 
 当前生命游戏 effect 的底层已切换为 `Three.js + WebGL` 渲染。
+另外，特效层现在开始支持“独立 effect atom 页面”，也就是不经过模板页，单独把某个中间层特效拉出来交互验证。
 
 ---
 
@@ -77,6 +78,29 @@
   效果：第 2 页按钮启动生命游戏。
 - `cellular-life`
   效果：生命游戏持续运行，当前使用 `Three.js + WebGL`。
+
+### 独立 effect atom 页面
+
+当前 `editor-web` 已新增：
+
+- `/effects/cellular-life`
+- `/effects/cellular-launch`
+- `/effects/aurora`
+
+这类页面的目标不是展示完整模板，而是单独验证“背景与文本之间的中间层特效原子”。
+
+例如：
+
+- `cellular-launch`
+  效果：页面内可点击按钮，启动生命游戏。
+- `cellular-life`
+  效果：单独查看持续运行的生命游戏中间层。
+
+后续新增 WebGL 小游戏时，推荐直接按同一路径继续扩展：
+
+- `/effects/snake-grid`
+- `/effects/minesweeper`
+- `/effects/pacman-field`
 
 ### 生命游戏参数
 

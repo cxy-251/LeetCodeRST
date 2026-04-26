@@ -18,6 +18,8 @@ export {
 } from "./module-api";
 export {getTextMotionState} from "./text-motion";
 export {ThreeLifeEffect} from "./three-life-effect";
+export {EFFECT_ATOMS, getEffectAtomDefinition} from "./effect-atoms";
+export type {EffectAtomDefinition, EffectAtomId, EffectAtomRuntimeProps} from "./effect-atoms";
 
 export type ThemePalette = {
   bg: string;

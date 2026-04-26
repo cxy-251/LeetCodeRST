@@ -135,6 +135,10 @@ npm run render:video
    - `/effects/cellular-launch`
    - `/effects/aurora`
 29. 原子组件字号已从固定像素改成更偏容器友好的响应式尺寸，减少预览页在不同窗口下字号失衡的问题
+30. 特效实验页已从“模板裁剪预览”进一步调整为“独立 effect atom 页面”方向：
+   - 生命游戏可单独拉出成页面
+   - 页面内可点击按钮启动
+   - 目标是让贪吃蛇、扫雷、吃豆人等后续 WebGL 小游戏沿同一原子接口接入
 
 ---
 
@@ -165,6 +169,7 @@ npm run render:video
 
 - `packages/atomic-ui/src/index.tsx`
 - `packages/timeline-engine/src/index.tsx`
+- `packages/content-pipeline/src/effect-atoms.tsx`
 - `docs/lego-architecture.md`
 - `docs/modular-visual-apis.md`
 
