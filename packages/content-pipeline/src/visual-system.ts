@@ -46,12 +46,12 @@ export const resolveSceneBackgroundImageLayoutId = (
 };
 
 const LAYOUT_POINTS: Record<BackgroundImageLayoutId, {x: number; y: number; scale: number}> = {
-  "gradient-default": {x: 50, y: 50, scale: 1.04},
-  "cover-full": {x: 50, y: 50, scale: 1.02},
-  "cover-focus-tl": {x: 18, y: 18, scale: 1.34},
-  "cover-focus-tr": {x: 82, y: 18, scale: 1.34},
-  "cover-focus-br": {x: 80, y: 82, scale: 1.36},
-  "cover-focus-bl": {x: 20, y: 82, scale: 1.36},
+  "gradient-default": {x: 50, y: 50, scale: 1.06},
+  "cover-full": {x: 50, y: 50, scale: 1.06},
+  "cover-focus-tl": {x: 16, y: 16, scale: 1.46},
+  "cover-focus-tr": {x: 84, y: 16, scale: 1.46},
+  "cover-focus-br": {x: 84, y: 84, scale: 1.48},
+  "cover-focus-bl": {x: 16, y: 84, scale: 1.48},
 };
 
 const LAYOUT_TONES: Record<
@@ -110,6 +110,8 @@ export const getCoverLayoutConfig = (layoutId: BackgroundImageLayoutId) => {
   return {
     objectPosition: `${point.x}% ${point.y}%`,
     scale: point.scale,
+    translateX: (50 - point.x) * 0.82,
+    translateY: (50 - point.y) * 0.82,
     blurPx: tone.blurPx,
     opacity: tone.opacity,
     brightness: tone.brightness,
@@ -135,6 +137,8 @@ export const getInterpolatedCoverLayoutConfig = ({
   return {
     objectPosition: `${lerp(fromPoint.x, toPoint.x, progress)}% ${lerp(fromPoint.y, toPoint.y, progress)}%`,
     scale: lerp(fromPoint.scale, toPoint.scale, progress),
+    translateX: lerp((50 - fromPoint.x) * 0.82, (50 - toPoint.x) * 0.82, progress),
+    translateY: lerp((50 - fromPoint.y) * 0.82, (50 - toPoint.y) * 0.82, progress),
     blurPx: lerp(fromTone.blurPx, toTone.blurPx, progress),
     opacity: lerp(fromTone.opacity, toTone.opacity, progress),
     brightness: lerp(fromTone.brightness, toTone.brightness, progress),
@@ -203,11 +207,9 @@ const countNeighbors = (grid: number[][], x: number, y: number) => {
 
       const nextX = x + dx;
       const nextY = y + dy;
-      if (nextX < 0 || nextX >= cols || nextY < 0 || nextY >= rows) {
-        continue;
-      }
-
-      total += grid[nextY][nextX];
+      const wrappedX = (nextX + cols) % cols;
+      const wrappedY = (nextY + rows) % rows;
+      total += grid[wrappedY][wrappedX];
     }
   }
 

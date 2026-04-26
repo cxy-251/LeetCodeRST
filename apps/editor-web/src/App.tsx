@@ -40,8 +40,8 @@ const PreviewGameOfLifeEffect: React.FC<{
   activationFrame: number;
   seed: number;
 }> = ({absoluteFrame, activationFrame, seed}) => {
-  const cols = 14;
-  const rows = 24;
+  const cols = 36;
+  const rows = 64;
   const cells = buildCellularLifeCells({cols, rows, globalFrame: absoluteFrame, activationFrame, seed});
   const cellWidth = 100 / cols;
   const cellHeight = 100 / rows;
@@ -50,15 +50,15 @@ const PreviewGameOfLifeEffect: React.FC<{
     <svg className="preview-effect-svg" viewBox="0 0 100 100" preserveAspectRatio="none">
       {cells.map((cell) => {
         const fill = cell.tone === 1 ? "rgba(87,216,196,0.44)" : "rgba(255,255,255,0.24)";
-        const inset = cell.age >= 3 ? 0.7 : 0.4;
+        const inset = cell.age >= 3 ? 0.18 : 0.08;
         return (
           <rect
             key={`${cell.x}-${cell.y}`}
             x={cell.x * cellWidth + inset}
             y={cell.y * cellHeight + inset}
-            width={Math.max(0.8, cellWidth - inset * 2)}
-            height={Math.max(0.8, cellHeight - inset * 2)}
-            rx={0.6}
+            width={Math.max(0.18, cellWidth - inset * 2)}
+            height={Math.max(0.18, cellHeight - inset * 2)}
+            rx={0.12}
             fill={fill}
           />
         );
@@ -307,10 +307,15 @@ export const App: React.FC = () => {
                   alt={manifest.coverImage?.alt ?? "cover"}
                   className="preview-cover-layer__img"
                   style={{
-                    objectPosition: layoutConfig.objectPosition,
+                    width: "136%",
+                    height: "136%",
+                    left: "-18%",
+                    top: "-18%",
+                    position: "absolute",
+                    objectPosition: "center center",
                     opacity: layoutConfig.opacity,
                     filter: `blur(${layoutConfig.blurPx}px) saturate(${layoutConfig.saturation}) brightness(${layoutConfig.brightness})`,
-                    transform: `scale(${layoutConfig.scale})`,
+                    transform: `translate(${layoutConfig.translateX}%, ${layoutConfig.translateY}%) scale(${layoutConfig.scale})`,
                   }}
                   src={coverImageSrc}
                 />

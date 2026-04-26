@@ -39,8 +39,8 @@ const GameOfLifeEffect: React.FC<{
   height: number;
   seed: number;
 }> = ({absoluteFrame, activationFrame, width, height, seed}) => {
-  const cols = 18;
-  const rows = 32;
+  const cols = 44;
+  const rows = 78;
   const cells = buildCellularLifeCells({
     cols,
     rows,
@@ -56,15 +56,15 @@ const GameOfLifeEffect: React.FC<{
       <svg viewBox={`0 0 ${width} ${height}`} width="100%" height="100%" preserveAspectRatio="none">
         {cells.map((cell) => {
           const fill = cell.tone === 1 ? "rgba(87,216,196,0.42)" : "rgba(255,255,255,0.22)";
-          const inset = cell.age >= 3 ? 5 : 3;
+          const inset = cell.age >= 3 ? 1.1 : 0.5;
           return (
             <rect
               key={`${cell.x}-${cell.y}`}
               x={cell.x * cellWidth + inset}
               y={cell.y * cellHeight + inset}
-              width={Math.max(4, cellWidth - inset * 2)}
-              height={Math.max(4, cellHeight - inset * 2)}
-              rx={Math.max(2, cell.age)}
+              width={Math.max(1.2, cellWidth - inset * 2)}
+              height={Math.max(1.2, cellHeight - inset * 2)}
+              rx={Math.max(0.8, cell.age * 0.45)}
               fill={fill}
             />
           );
@@ -93,13 +93,16 @@ const BackgroundImageLayer: React.FC<{
       <Img
         src={coverSrc}
         style={{
-          width: "100%",
-          height: "100%",
+          width: "136%",
+          height: "136%",
+          left: "-18%",
+          top: "-18%",
+          position: "absolute",
           objectFit: "cover",
-          objectPosition: config.objectPosition,
+          objectPosition: "center center",
           opacity: config.opacity,
           filter: `blur(${config.blurPx}px) saturate(${config.saturation}) brightness(${config.brightness})`,
-          transform: `scale(${config.scale})`,
+          transform: `translate(${config.translateX}%, ${config.translateY}%) scale(${config.scale})`,
         }}
       />
       <AbsoluteFill style={{background: config.shade}} />
