@@ -69,7 +69,7 @@
           "提升复杂图文页面生成稳定性"
         ]
       },
-      "backgroundPresetId": "cover-soft-focus",
+      "backgroundPresetId": "cover-cellular-mask",
       "motionPresetId": "fade-up",
       "durationStrategy": "auto-by-audio"
     },
@@ -86,7 +86,7 @@
           "对短视频和营销素材生成很有启发"
         ]
       },
-      "backgroundPresetId": "cover-noise-bloom",
+      "backgroundPresetId": "cover-cellular-mask",
       "motionPresetId": "stagger-rise",
       "durationStrategy": "auto-by-audio"
     },

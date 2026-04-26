@@ -31,6 +31,15 @@ const Background: React.FC<{
 
   const presetStyle = (() => {
     switch (backgroundPresetId) {
+      case "cover-cellular-mask":
+        return {
+          imageOpacity: 0.26,
+          imageFilter: "blur(22px) grayscale(0.24) saturate(0.78) brightness(0.42)",
+          imageTransform: "scale(1.16)",
+          overlayOpacity: 0.1,
+          extraOverlay:
+            "radial-gradient(circle at 20% 22%, rgba(87,216,196,0.12) 0%, transparent 20%), radial-gradient(circle at 72% 76%, rgba(255,255,255,0.08) 0%, transparent 16%)",
+        };
       case "cover-grid-drift":
         return {
           imageOpacity: 0.36,
@@ -60,6 +69,50 @@ const Background: React.FC<{
         };
     }
   })();
+
+  const cellularMaskLayer =
+    coverSrc && backgroundPresetId === "cover-cellular-mask" ? (
+      <>
+        <AbsoluteFill
+          style={{
+            opacity: 0.82,
+            backgroundImage: `
+              radial-gradient(circle, rgba(87,216,196,0.78) 0 28%, transparent 32%),
+              radial-gradient(circle, rgba(255,255,255,0.22) 0 20%, transparent 26%)
+            `,
+            backgroundSize: "28px 28px, 52px 52px",
+            backgroundPosition: `${(sceneFrame * 0.9) % 28}px ${(sceneFrame * 0.45) % 28}px, ${-((sceneFrame * 0.6) % 52)}px ${((sceneFrame * 0.35) % 52)}px`,
+            mixBlendMode: "screen",
+            maskImage: `url(${coverSrc})`,
+            WebkitMaskImage: `url(${coverSrc})`,
+            maskSize: "cover",
+            WebkitMaskSize: "cover",
+            maskPosition: "center",
+            WebkitMaskPosition: "center",
+            maskRepeat: "no-repeat",
+            WebkitMaskRepeat: "no-repeat",
+            filter: "contrast(1.2) saturate(1.18)",
+          }}
+        />
+        <AbsoluteFill
+          style={{
+            opacity: 0.24,
+            backgroundImage:
+              "linear-gradient(rgba(255,255,255,0.32) 1px, transparent 1px), linear-gradient(90deg, rgba(87,216,196,0.22) 1px, transparent 1px)",
+            backgroundSize: "22px 22px",
+            backgroundPosition: `${(sceneFrame * 0.7) % 22}px ${(sceneFrame * 0.25) % 22}px`,
+            maskImage: `url(${coverSrc})`,
+            WebkitMaskImage: `url(${coverSrc})`,
+            maskSize: "cover",
+            WebkitMaskSize: "cover",
+            maskPosition: "center",
+            WebkitMaskPosition: "center",
+            maskRepeat: "no-repeat",
+            WebkitMaskRepeat: "no-repeat",
+          }}
+        />
+      </>
+    ) : null;
 
   return (
     <AbsoluteFill
@@ -102,6 +155,7 @@ const Background: React.FC<{
           ) : null}
         </AbsoluteFill>
       ) : null}
+      {cellularMaskLayer}
       <AbsoluteFill
         style={{
           opacity: coverSrc && !isHero ? presetStyle.overlayOpacity : 0.28,

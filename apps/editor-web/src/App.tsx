@@ -25,6 +25,7 @@ export const App: React.FC = () => {
   const bullets = getSceneBullets(activeScene);
   const isHero = activeScene.type === "hero";
   const isCoverDerived = activeScene.backgroundPresetId.startsWith("cover-");
+  const isCellular = activeScene.backgroundPresetId === "cover-cellular-mask";
 
   return (
     <div className="app-shell">
@@ -88,6 +89,8 @@ export const App: React.FC = () => {
                   className={
                     isHero
                       ? "preview-cover-layer__img preview-cover-layer__img--hero"
+                      : isCellular
+                        ? "preview-cover-layer__img preview-cover-layer__img--cellular"
                       : isCoverDerived
                         ? "preview-cover-layer__img preview-cover-layer__img--blur"
                         : "preview-cover-layer__img preview-cover-layer__img--soft"
@@ -95,6 +98,7 @@ export const App: React.FC = () => {
                   src={coverImageSrc}
                 />
                 <div className={isHero ? "preview-cover-layer__shade preview-cover-layer__shade--hero" : "preview-cover-layer__shade"} />
+                {isCellular ? <div className="preview-cover-layer__cellular" /> : null}
               </div>
             ) : null}
             <div className="slide-top">

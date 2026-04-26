@@ -184,6 +184,12 @@ button {
   transform: scale(1.12);
 }
 
+.preview-cover-layer__img--cellular {
+  opacity: 0.26;
+  filter: blur(22px) brightness(0.42) saturate(0.78);
+  transform: scale(1.16);
+}
+
 .preview-cover-layer__img--soft {
   opacity: 0.28;
   filter: blur(14px) brightness(0.62);
@@ -198,6 +204,19 @@ button {
 
 .preview-cover-layer__shade--hero {
   background: linear-gradient(90deg, rgba(6,10,16,0.08) 0%, rgba(6,10,16,0.40) 46%, rgba(6,10,16,0.78) 100%);
+}
+
+.preview-cover-layer__cellular {
+  position: absolute;
+  inset: 0;
+  background-image:
+    radial-gradient(circle, rgba(87,216,196,0.78) 0 28%, transparent 32%),
+    radial-gradient(circle, rgba(255,255,255,0.22) 0 20%, transparent 26%);
+  background-size: 28px 28px, 52px 52px;
+  background-position: 10px 8px, -16px 18px;
+  mix-blend-mode: screen;
+  opacity: 0.75;
+  mask-image: inherit;
 }
 
 .slide-kicker {
