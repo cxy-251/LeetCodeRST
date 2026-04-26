@@ -1,0 +1,38 @@
+{
+  "projectId": "demo-paper-001",
+  "seed": 42,
+  "locale": "zh-CN",
+  "output": {
+    "width": 1080,
+    "height": 1920,
+    "fps": 30,
+    "platform": "douyin"
+  },
+  "paper": {
+    "source": "arxiv",
+    "paperId": "2501.12345",
+    "title": "Example AI Paper"
+  },
+  "theme": {
+    "id": "clean-tech",
+    "paletteId": "teal-slate",
+    "fontPackId": "modern-cn"
+  },
+  "voice": {
+    "provider": "edge-tts",
+    "name": "zh-CN-XiaoxiaoNeural",
+    "rate": "+0%",
+    "pitch": "+0Hz"
+  },
+  "scenes": [
+    {
+      "id": "scene-hero",
+      "type": "hero",
+      "contentRef": "hook",
+      "narrationText": "这篇论文想解决一个很实际的问题。",
+      "backgroundPresetId": "aurora",
+      "motionPresetId": "fade-up",
+      "durationStrategy": "auto-by-audio"
+    }
+  ]
+}

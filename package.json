@@ -1,0 +1,11 @@
+{
+  "name": "paper-to-video",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.0.0",
+  "scripts": {
+    "build:video": "tsx tools/build-video.ts",
+    "compose:manifest": "tsx tools/compose-manifest.ts",
+    "generate:audio": "tsx tools/generate-audio.ts"
+  }
+}
