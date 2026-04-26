@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import {spawn} from "node:child_process";
+import {readLatestRun, writeRunSummary} from "./lib/run-artifacts";
 import type {
   AudioAsset,
   ProductionManifest,
@@ -123,12 +124,13 @@ const main = async () => {
   const args = process.argv.slice(2);
   const mockMode = args.includes("--mock");
   const positionalArgs = args.filter((arg) => arg !== "--mock");
+  const latestRun = await readLatestRun().catch(() => null);
   const productionManifestPath = positionalArgs[0]
     ? path.resolve(positionalArgs[0])
-    : DEFAULT_PRODUCTION_MANIFEST;
+    : latestRun?.productionManifestPath ?? DEFAULT_PRODUCTION_MANIFEST;
   const renderManifestPath = positionalArgs[1]
     ? path.resolve(positionalArgs[1])
-    : DEFAULT_RENDER_MANIFEST;
+    : latestRun?.renderManifestPath ?? DEFAULT_RENDER_MANIFEST;
 
   const [productionRaw, renderRaw] = await Promise.all([
     fs.readFile(productionManifestPath, "utf-8"),
@@ -142,14 +144,20 @@ const main = async () => {
   for (const scene of productionManifest.scenes) {
     if (mockMode) {
       const audioAsset = await createMockAudioAsset(scene.id, scene.narrationText);
-      const outputMeta = path.resolve(`data/generated-meta/${scene.id}.audio.json`);
+      const outputMeta = latestRun
+        ? path.join(latestRun.rootDir, "meta", `${scene.id}.audio.json`)
+        : path.resolve(`data/generated-meta/${scene.id}.audio.json`);
       await fs.writeFile(outputMeta, JSON.stringify(audioAsset, null, 2), "utf-8");
       audioAssets.push(audioAsset);
       continue;
     }
 
-    const outputAudio = path.resolve(`data/generated-audio/${scene.id}.mp3`);
-    const outputMeta = path.resolve(`data/generated-meta/${scene.id}.audio.json`);
+    const outputAudio = latestRun
+      ? path.join(latestRun.rootDir, "audio", `${scene.id}.mp3`)
+      : path.resolve(`data/generated-audio/${scene.id}.mp3`);
+    const outputMeta = latestRun
+      ? path.join(latestRun.rootDir, "meta", `${scene.id}.audio.json`)
+      : path.resolve(`data/generated-meta/${scene.id}.audio.json`);
 
     await run("conda", [
       "run",
@@ -185,6 +193,37 @@ const main = async () => {
   };
 
   await fs.writeFile(renderManifestPath, JSON.stringify(nextManifest, null, 2), "utf-8");
+
+  if (latestRun) {
+    await writeRunSummary(
+      {
+        projectId: latestRun.projectId,
+        projectSlug: latestRun.projectId,
+        runId: latestRun.runId,
+        rootDir: latestRun.rootDir,
+        inputDir: path.join(latestRun.rootDir, "inputs"),
+        manifestDir: path.join(latestRun.rootDir, "manifests"),
+        audioDir: path.join(latestRun.rootDir, "audio"),
+        metaDir: path.join(latestRun.rootDir, "meta"),
+        imageDir: path.join(latestRun.rootDir, "images"),
+        videoDir: path.join(latestRun.rootDir, "video"),
+        productionManifestPath: latestRun.productionManifestPath,
+        renderManifestPath: latestRun.renderManifestPath,
+        summaryPath: path.join(latestRun.rootDir, "run-summary.json"),
+        videoPath: latestRun.videoPath,
+      },
+      {
+        projectId: productionManifest.projectId,
+        runId: latestRun.runId,
+        productionManifestPath,
+        renderManifestPath,
+        audioAssets: audioAssets.map((asset) => asset.filePath),
+        mockMode,
+        stage: "audio-generated",
+      },
+    );
+  }
+
   console.log(
     `${mockMode ? "Mock audio assets" : "Audio assets"} written into ${renderManifestPath}`,
   );

@@ -1,5 +1,10 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import {
+  createRunContextFromManifest,
+  writeLatestRun,
+  writeRunSummary,
+} from "./lib/run-artifacts";
 import type {
   ProductionManifest,
   RenderManifest,
@@ -83,10 +88,24 @@ const buildSubtitles = (
 };
 
 const main = async () => {
-  const input = process.argv[2] ? path.resolve(process.argv[2]) : DEFAULT_INPUT;
-  const output = process.argv[3] ? path.resolve(process.argv[3]) : DEFAULT_OUTPUT;
+  const args = process.argv.slice(2);
+  const requestedRunIdIndex = args.indexOf("--run-id");
+  const requestedRunId =
+    requestedRunIdIndex >= 0 && args[requestedRunIdIndex + 1]
+      ? args[requestedRunIdIndex + 1]
+      : undefined;
+  const positionalArgs = args.filter((arg, index) => {
+    if (requestedRunIdIndex < 0) {
+      return true;
+    }
+
+    return index !== requestedRunIdIndex && index !== requestedRunIdIndex + 1;
+  });
+  const input = positionalArgs[0] ? path.resolve(positionalArgs[0]) : DEFAULT_INPUT;
+  const output = positionalArgs[1] ? path.resolve(positionalArgs[1]) : undefined;
   const raw = await fs.readFile(input, "utf-8");
   const manifest = JSON.parse(raw) as ProductionManifest;
+  const runContext = await createRunContextFromManifest(manifest, requestedRunId);
 
   let cursor = 0;
   const scenes: RenderScene[] = [];
@@ -150,9 +169,31 @@ const main = async () => {
     subtitleSegments,
   };
 
-  await fs.mkdir(path.dirname(output), {recursive: true});
-  await fs.writeFile(output, JSON.stringify(renderManifest, null, 2), "utf-8");
-  console.log(`Render manifest written to ${output}`);
+  await fs.writeFile(
+    runContext.productionManifestPath,
+    JSON.stringify(manifest, null, 2),
+    "utf-8",
+  );
+
+  const finalOutput = output ?? runContext.renderManifestPath;
+  await fs.mkdir(path.dirname(finalOutput), {recursive: true});
+  await fs.writeFile(finalOutput, JSON.stringify(renderManifest, null, 2), "utf-8");
+
+  if (finalOutput !== runContext.renderManifestPath) {
+    await fs.writeFile(runContext.renderManifestPath, JSON.stringify(renderManifest, null, 2), "utf-8");
+  }
+
+  await writeLatestRun(runContext);
+  await writeRunSummary(runContext, {
+    projectId: manifest.projectId,
+    runId: runContext.runId,
+    sourceManifestPath: input,
+    productionManifestPath: runContext.productionManifestPath,
+    renderManifestPath: runContext.renderManifestPath,
+    stage: "manifest-composed",
+  });
+
+  console.log(`Run ${runContext.runId} manifest written to ${runContext.renderManifestPath}`);
 };
 
 main().catch((error) => {

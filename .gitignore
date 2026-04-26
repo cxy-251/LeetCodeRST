@@ -12,6 +12,9 @@ data/generated-images/*
 data/generated-meta/*
 output/previews/*
 output/videos/*
+output/runs/*
+output/video-runs.csv
+output/latest-run.json
 public/generated-audio/*
 public/generated-images/*
 apps/video-renderer/public/generated-audio/*

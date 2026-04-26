@@ -12,9 +12,10 @@
     "compose:manifest": "node --import tsx tools/compose-manifest.ts",
     "generate:audio": "node --import tsx tools/generate-audio.ts",
     "generate:audio:mock": "node --import tsx tools/generate-audio.ts --mock",
+    "produce:video": "node --import tsx tools/produce-video.ts",
     "dev:editor": "vite --config apps/editor-web/vite.config.ts",
     "render:preview": "remotion studio apps/video-renderer/src/index.tsx",
-    "render:video": "node --import tsx tools/build-video.ts data/generated-meta/demo-paper-001.render.json output/videos/demo-paper-001.mp4"
+    "render:video": "node --import tsx tools/build-video.ts"
   },
   "dependencies": {
     "react": "^19.2.0",

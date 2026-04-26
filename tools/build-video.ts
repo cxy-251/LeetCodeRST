@@ -1,6 +1,11 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import {spawn} from "node:child_process";
+import {
+  appendRegistryRow,
+  readLatestRun,
+  writeRunSummary,
+} from "./lib/run-artifacts";
 import type {RenderManifest} from "@paper-to-video/shared-types";
 
 const DEFAULT_RENDER_MANIFEST = path.resolve("data/generated-meta/demo-paper-001.render.json");
@@ -73,10 +78,17 @@ const prepareStaticAssets = async (manifest: RenderManifest): Promise<RenderMani
 };
 
 const main = async () => {
-  const renderManifest = process.argv[2] ? path.resolve(process.argv[2]) : DEFAULT_RENDER_MANIFEST;
-  const output = process.argv[3] ? path.resolve(process.argv[3]) : DEFAULT_OUTPUT;
+  const latestRun = await readLatestRun().catch(() => null);
+  const renderManifest = process.argv[2]
+    ? path.resolve(process.argv[2])
+    : latestRun?.renderManifestPath ?? DEFAULT_RENDER_MANIFEST;
+  const output = process.argv[3]
+    ? path.resolve(process.argv[3])
+    : latestRun?.videoPath ?? DEFAULT_OUTPUT;
   const manifestRaw = await fs.readFile(renderManifest, "utf-8");
   const manifest = await prepareStaticAssets(JSON.parse(manifestRaw) as RenderManifest);
+
+  await fs.mkdir(path.dirname(output), {recursive: true});
 
   await run("npx", [
     "remotion",
@@ -89,6 +101,51 @@ const main = async () => {
       manifest,
     }),
   ]);
+
+  if (latestRun) {
+    await writeRunSummary(
+      {
+        projectId: latestRun.projectId,
+        projectSlug: latestRun.projectId,
+        runId: latestRun.runId,
+        rootDir: latestRun.rootDir,
+        inputDir: path.join(latestRun.rootDir, "inputs"),
+        manifestDir: path.join(latestRun.rootDir, "manifests"),
+        audioDir: path.join(latestRun.rootDir, "audio"),
+        metaDir: path.join(latestRun.rootDir, "meta"),
+        imageDir: path.join(latestRun.rootDir, "images"),
+        videoDir: path.join(latestRun.rootDir, "video"),
+        productionManifestPath: latestRun.productionManifestPath,
+        renderManifestPath: latestRun.renderManifestPath,
+        summaryPath: path.join(latestRun.rootDir, "run-summary.json"),
+        videoPath: latestRun.videoPath,
+      },
+      {
+        projectId: latestRun.projectId,
+        runId: latestRun.runId,
+        productionManifestPath: latestRun.productionManifestPath,
+        renderManifestPath: latestRun.renderManifestPath,
+        outputVideoPath: output,
+        audioDir: path.join(latestRun.rootDir, "audio"),
+        metaDir: path.join(latestRun.rootDir, "meta"),
+        stage: "video-rendered",
+      },
+    );
+
+    const renderManifestRaw = JSON.parse(manifestRaw) as RenderManifest;
+    await appendRegistryRow({
+      created_at: new Date().toISOString(),
+      project_id: latestRun.projectId,
+      run_id: latestRun.runId,
+      production_manifest: latestRun.productionManifestPath,
+      render_manifest: latestRun.renderManifestPath,
+      audio_dir: path.join(latestRun.rootDir, "audio"),
+      meta_dir: path.join(latestRun.rootDir, "meta"),
+      video_path: output,
+      voice: renderManifestRaw.voice.name,
+      status: "rendered",
+    });
+  }
 };
 
 main().catch((error) => {
