@@ -60,6 +60,11 @@ export type ProductionManifest = {
   projectId: string;
   seed: number;
   locale: "zh-CN";
+  coverImage?: {
+    source: "local" | "remote";
+    path: string;
+    alt?: string;
+  };
   output: {
     width: number;
     height: number;

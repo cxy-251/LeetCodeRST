@@ -42,17 +42,18 @@ const SceneCard: React.FC<{
   scene: RenderScene;
   manifest: RenderManifest;
 }> = ({scene, manifest}) => {
-  const frame = useCurrentFrame();
+  const localFrame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const theme = getThemePalette(manifest.theme.id);
-  const sceneFrame = frame - scene.fromFrame;
+  const sceneFrame = localFrame;
+  const absoluteFrame = scene.fromFrame + localFrame;
   const enterFrames = Math.max(1, scene.timing.enterFrames);
-  const contentOpacity = Math.min(1, Math.max(0.18, sceneFrame / enterFrames));
-  const lift = Math.max(0, 20 - sceneFrame * 1.2);
+  const contentOpacity = Math.min(1, Math.max(0.28, sceneFrame / Math.max(6, enterFrames * 0.55)));
+  const lift = Math.max(0, 14 - sceneFrame * 2.4);
   const bullets = getSceneBullets(scene);
   const subtitle = findSubtitle(
     manifest.subtitleSegments.filter((segment) => segment.sceneId === scene.id),
-    frame,
+    absoluteFrame,
   );
 
   return (

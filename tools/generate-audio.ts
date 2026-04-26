@@ -26,16 +26,60 @@ const run = (command: string, args: string[]) =>
     child.on("error", reject);
   });
 
-const estimateSegments = (text: string) => {
-  const sentences = text
-    .split(/[。！？!?]/)
+const runWithCapture = (command: string, args: string[]) =>
+  new Promise<string>((resolve, reject) => {
+    const child = spawn(command, args, {stdio: ["ignore", "pipe", "pipe"]});
+    let stdout = "";
+    let stderr = "";
+
+    child.stdout.on("data", (chunk) => {
+      stdout += chunk.toString();
+    });
+
+    child.stderr.on("data", (chunk) => {
+      stderr += chunk.toString();
+    });
+
+    child.on("exit", (code) => {
+      if (code === 0) {
+        resolve(stdout.trim());
+        return;
+      }
+
+      reject(new Error(`${command} exited with code ${code ?? "unknown"}\n${stderr}`));
+    });
+
+    child.on("error", reject);
+  });
+
+const splitNarration = (text: string) => {
+  const sentenceParts = text
+    .split(/[。！？!?；;]/)
     .map((item) => item.trim())
     .filter(Boolean);
-  const safeSentences = sentences.length > 0 ? sentences : [text.trim()];
+
+  const coarseParts = sentenceParts.length > 0 ? sentenceParts : [text.trim()];
+
+  return coarseParts.flatMap((part) => {
+    if (part.length <= 22) {
+      return [part];
+    }
+
+    const chunks = part
+      .split(/[，,、]/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    return chunks.length > 0 ? chunks : [part];
+  });
+};
+
+const estimateSegments = (text: string) => {
+  const safeSentences = splitNarration(text);
 
   let cursor = 0;
   return safeSentences.map((sentence, index) => {
-    const durationMs = Math.max(900, sentence.length * 220);
+    const durationMs = Math.max(420, sentence.length * 185);
     const segment = {
       id: `seg-${index + 1}`,
       text: sentence,
@@ -49,6 +93,51 @@ const estimateSegments = (text: string) => {
 };
 
 const msToFrames = (ms: number, fps: number) => Math.max(1, Math.round((ms / 1000) * fps));
+
+const distributeSegmentsByDuration = (
+  text: string,
+  durationMs: number,
+): AudioAsset["segments"] => {
+  const safeSentences = splitNarration(text);
+  const totalWeight = safeSentences.reduce((sum, sentence) => sum + Math.max(sentence.length, 1), 0);
+
+  let cursor = 0;
+  return safeSentences.map((sentence, index) => {
+    const isLast = index === safeSentences.length - 1;
+    const slice = isLast
+      ? durationMs - cursor
+      : Math.max(1, Math.round((Math.max(sentence.length, 1) / totalWeight) * durationMs));
+    const nextCursor = isLast ? durationMs : cursor + slice;
+    const segment = {
+      id: `seg-${index + 1}`,
+      text: sentence,
+      startMs: cursor,
+      endMs: nextCursor,
+      role: "narration" as const,
+    };
+    cursor = nextCursor;
+    return segment;
+  });
+};
+
+const probeAudioDurationMs = async (audioPath: string) => {
+  const result = await runWithCapture("/opt/homebrew/bin/ffprobe", [
+    "-v",
+    "error",
+    "-show_entries",
+    "format=duration",
+    "-of",
+    "default=noprint_wrappers=1:nokey=1",
+    audioPath,
+  ]);
+
+  const seconds = Number.parseFloat(result);
+  if (!Number.isFinite(seconds)) {
+    throw new Error(`Unable to parse audio duration from ffprobe output: ${result}`);
+  }
+
+  return Math.max(1, Math.round(seconds * 1000));
+};
 
 const createMockAudioAsset = async (sceneId: string, text: string) => {
   const segments = estimateSegments(text);
@@ -183,7 +272,14 @@ const main = async () => {
 
     const audioRaw = await fs.readFile(outputMeta, "utf-8");
     const audioAsset = JSON.parse(audioRaw) as AudioAsset;
-    audioAssets.push(audioAsset);
+    const durationMs = await probeAudioDurationMs(outputAudio);
+    const normalizedAudioAsset: AudioAsset = {
+      ...audioAsset,
+      durationMs,
+      segments: distributeSegmentsByDuration(scene.narrationText, durationMs),
+    };
+    await fs.writeFile(outputMeta, JSON.stringify(normalizedAudioAsset, null, 2), "utf-8");
+    audioAssets.push(normalizedAudioAsset);
   }
 
   const nextManifest: RenderManifest = {

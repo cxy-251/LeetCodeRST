@@ -2,6 +2,11 @@
   "projectId": "demo-paper-001",
   "seed": 42,
   "locale": "zh-CN",
+  "coverImage": {
+    "source": "local",
+    "path": "data/images/cover-portrait.png",
+    "alt": "AI generated portrait cover"
+  },
   "output": {
     "width": 1080,
     "height": 1920,
@@ -21,7 +26,7 @@
   "voice": {
     "provider": "edge-tts",
     "name": "zh-CN-XiaoxiaoNeural",
-    "rate": "+0%",
+    "rate": "+80%",
     "pitch": "+0Hz"
   },
   "scenes": [
