@@ -4,9 +4,6 @@ import {
   getCoverLayoutConfig,
   getCellularLaunchOrigin,
   getInterpolatedCoverLayoutConfig,
-  getSceneBody,
-  getSceneBullets,
-  getSceneTitle,
   getSceneVisualIds,
   getThemePalette,
   getTextMotionState,
@@ -15,6 +12,7 @@ import {
   resolveTextMotionConfig,
   ThreeLifeEffect,
 } from "@paper-to-video/content-pipeline";
+import {renderTemplateZone} from "@paper-to-video/timeline-engine";
 import type {
   AudioAsset,
   BackgroundEffectId,
@@ -273,12 +271,6 @@ const SceneCard: React.FC<{
   const sceneFrame = localFrame;
   const absoluteFrame = scene.fromFrame + localFrame;
   const textMotion = resolveTextMotionConfig(scene.motionPresetId, manifest.modules);
-  const titleMotion = getTextMotionState({
-    frame: sceneFrame,
-    durationInFrames: scene.durationInFrames,
-    config: textMotion,
-  });
-  const bullets = getSceneBullets(scene);
   const subtitle = findSubtitle(
     manifest.subtitleSegments.filter((segment) => segment.sceneId === scene.id),
     absoluteFrame,
@@ -294,6 +286,24 @@ const SceneCard: React.FC<{
     manifest.scenes.find((item) => getSceneVisualIds(item).backgroundEffectId === "cellular-launch") ?? null;
   const activationFrame =
     (launchScene?.fromFrame ?? 0) + resolveCellularEffectConfig(manifest.modules).activationDelayFrames;
+  const primaryNodes = renderTemplateZone({
+    zone: "primary",
+    context: {
+      manifest,
+      scene,
+      coverSrc,
+      subtitleText: subtitle?.text ?? null,
+    },
+  });
+  const secondaryNodes = renderTemplateZone({
+    zone: "secondary",
+    context: {
+      manifest,
+      scene,
+      coverSrc,
+      subtitleText: subtitle?.text ?? null,
+    },
+  });
 
   return (
     <AbsoluteFill>
@@ -322,106 +332,30 @@ const SceneCard: React.FC<{
             flexDirection: "column",
             gap: 24,
             marginTop: 60,
-            opacity: titleMotion.opacity,
-            transform: `translateY(${titleMotion.translateY}px)`,
           }}
         >
-          {isHero && coverSrc ? (
-            <div
-              style={{
-                width: 148,
-                height: 148,
-                borderRadius: 999,
-                overflow: "hidden",
-                border: "3px solid rgba(255,255,255,0.18)",
-                boxShadow: "0 24px 64px rgba(0,0,0,0.28)",
-              }}
-            >
-              <Img
-                src={coverSrc}
+          {primaryNodes.map((node, index) => {
+            const state = getTextMotionState({
+              frame: sceneFrame,
+              durationInFrames: scene.durationInFrames,
+              delayFrames: index === 0 ? 0 : textMotion.bodyDelayFrames + (index - 1) * textMotion.bulletsStaggerFrames,
+              config: textMotion,
+            });
+
+            return (
+              <div
+                key={`primary-node-${index}`}
                 style={{
-                  width: "100%",
-                  height: "100%",
-                  objectFit: "cover",
-                }}
-              />
-            </div>
-          ) : null}
-          <div style={{fontSize: 26, letterSpacing: 4, color: theme.accent}}>
-            {manifest.paper.paperId} · AI Paper Digest
-          </div>
-          <div style={{fontSize: 78, lineHeight: 1.08, fontWeight: 700, maxWidth: 860}}>
-            {getSceneTitle(scene)}
-          </div>
-          <div
-            style={{
-              fontSize: 34,
-              lineHeight: 1.5,
-              maxWidth: 860,
-              color: "#dbe7f5",
-              ...(() => {
-                const state = getTextMotionState({
-                  frame: sceneFrame,
-                  durationInFrames: scene.durationInFrames,
-                  delayFrames: textMotion.bodyDelayFrames,
-                  config: textMotion,
-                });
-                return {
                   opacity: state.opacity,
                   transform: `translateY(${state.translateY}px)`,
-                };
-              })(),
-            }}
-          >
-            {getSceneBody(scene)}
-          </div>
-          {bullets.length > 0 ? (
-            <div style={{display: "flex", flexDirection: "column", gap: 18, maxWidth: 860}}>
-              {bullets.map((bullet, index) => (
-                <div
-                  key={bullet}
-                  style={{
-                    fontSize: 30,
-                    lineHeight: 1.5,
-                    color: "#ecf6ff",
-                    ...(() => {
-                      const state = getTextMotionState({
-                        frame: sceneFrame,
-                        durationInFrames: scene.durationInFrames,
-                        delayFrames:
-                          textMotion.bodyDelayFrames + index * textMotion.bulletsStaggerFrames,
-                        config: textMotion,
-                      });
-                      return {
-                        opacity: state.opacity,
-                        transform: `translateY(${state.translateY}px)`,
-                      };
-                    })(),
-                  }}
-                >
-                  {"• "}{bullet}
-                </div>
-              ))}
-            </div>
-          ) : null}
+                }}
+              >
+                {node}
+              </div>
+            );
+          })}
         </div>
-        {subtitle ? (
-          <div
-            style={{
-              fontSize: 28,
-              lineHeight: 1.45,
-              color: theme.fg,
-              padding: "24px 28px",
-              borderRadius: 28,
-              backgroundColor: theme.panel,
-              border: "1px solid rgba(255,255,255,0.08)",
-              minHeight: 120,
-              opacity: 0.98,
-            }}
-          >
-            {subtitle.text}
-          </div>
-        ) : null}
+        {secondaryNodes.length > 0 ? secondaryNodes[0] : null}
       </AbsoluteFill>
     </AbsoluteFill>
   );

@@ -3,8 +3,6 @@ import {
   getCoverLayoutConfig,
   getCellularLaunchOrigin,
   getInterpolatedCoverLayoutConfig,
-  getSceneBody,
-  getSceneBullets,
   getSceneTitle,
   getSceneVisualIds,
   getThemePalette,
@@ -14,6 +12,7 @@ import {
   resolveTextMotionConfig,
   ThreeLifeEffect,
 } from "@paper-to-video/content-pipeline";
+import {renderTemplateZone} from "@paper-to-video/timeline-engine";
 import type {BackgroundEffectId, BackgroundImageLayoutId, RenderManifest} from "@paper-to-video/shared-types";
 
 const formatSeconds = (frames: number, fps: number) => `${(frames / fps).toFixed(1)}s`;
@@ -206,15 +205,9 @@ export const App: React.FC = () => {
   }
 
   const palette = getThemePalette(manifest.theme.id);
-  const bullets = getSceneBullets(activeScene);
   const {backgroundImageLayoutId, backgroundEffectId} = getSceneVisualIds(activeScene);
   const backgroundMotion = resolveBackgroundMotionConfig(manifest.modules);
   const textMotion = resolveTextMotionConfig(activeScene.motionPresetId, manifest.modules);
-  const titleMotion = getTextMotionState({
-    frame: previewFrame,
-    durationInFrames: activeScene.durationInFrames,
-    config: textMotion,
-  });
   const activeSceneIndex = manifest.scenes.findIndex((scene) => scene.id === activeScene.id);
   const previousScene = activeSceneIndex > 0 ? manifest.scenes[activeSceneIndex - 1] : null;
   const previousLayoutId = previousScene ? getSceneVisualIds(previousScene).backgroundImageLayoutId : "cover-full";
@@ -238,6 +231,24 @@ export const App: React.FC = () => {
     manifest.coverImage?.source === "remote"
       ? manifest.coverImage.path
       : buildLocalAssetSrc(manifest.coverImage?.path);
+  const primaryNodes = renderTemplateZone({
+    zone: "primary",
+    context: {
+      manifest,
+      scene: activeScene,
+      coverSrc: coverImageSrc,
+      subtitleText: activeSubtitles[0]?.text ?? null,
+    },
+  });
+  const secondaryNodes = renderTemplateZone({
+    zone: "secondary",
+    context: {
+      manifest,
+      scene: activeScene,
+      coverSrc: coverImageSrc,
+      subtitleText: activeSubtitles[0]?.text ?? null,
+    },
+  });
   const stageBackground =
     usesCoverImage
       ? "linear-gradient(180deg, #050c13 0%, #071019 100%)"
@@ -328,78 +339,28 @@ export const App: React.FC = () => {
               </div>
             ) : null}
             <div className="slide-top">
-              <div
-                className="slide-kicker"
-                style={{
-                  opacity: titleMotion.opacity,
-                  transform: `translateY(${titleMotion.translateY}px)`,
-                }}
-              >
-                {manifest.paper.paperId} · AI Paper Digest
-              </div>
-              <h2
-                style={{
-                  opacity: titleMotion.opacity,
-                  transform: `translateY(${titleMotion.translateY}px)`,
-                }}
-              >
-                {getSceneTitle(activeScene)}
-              </h2>
-              <p
-                style={{
-                  ...(() => {
-                    const state = getTextMotionState({
-                      frame: previewFrame,
-                      durationInFrames: activeScene.durationInFrames,
-                      delayFrames: textMotion.bodyDelayFrames,
-                      config: textMotion,
-                    });
-                    return {
+              {primaryNodes.map((node, index) => {
+                const state = getTextMotionState({
+                  frame: previewFrame,
+                  durationInFrames: activeScene.durationInFrames,
+                  delayFrames: index === 0 ? 0 : textMotion.bodyDelayFrames + (index - 1) * textMotion.bulletsStaggerFrames,
+                  config: textMotion,
+                });
+
+                return (
+                  <div
+                    key={`preview-primary-${index}`}
+                    style={{
                       opacity: state.opacity,
                       transform: `translateY(${state.translateY}px)`,
-                    };
-                  })(),
-                }}
-              >
-                {getSceneBody(activeScene)}
-              </p>
-              {bullets.length > 0 ? (
-                <div className="bullet-list">
-                  {bullets.map((bullet, index) => (
-                    <div
-                      key={bullet}
-                      className="bullet-item"
-                      style={{
-                        ...(() => {
-                          const state = getTextMotionState({
-                            frame: previewFrame,
-                            durationInFrames: activeScene.durationInFrames,
-                            delayFrames:
-                              textMotion.bodyDelayFrames + index * textMotion.bulletsStaggerFrames,
-                            config: textMotion,
-                          });
-                          return {
-                            opacity: state.opacity,
-                            transform: `translateY(${state.translateY}px)`,
-                          };
-                        })(),
-                      }}
-                    >
-                      <span className="bullet-dot" />
-                      <span>{bullet}</span>
-                    </div>
-                  ))}
-                </div>
-              ) : null}
+                    }}
+                  >
+                    {node}
+                  </div>
+                );
+              })}
             </div>
-
-            <div className="subtitle-panel">
-              {activeSubtitles.map((segment) => (
-                <div key={segment.id} className="subtitle-line">
-                  {segment.text}
-                </div>
-              ))}
-            </div>
+            {secondaryNodes.length > 0 ? secondaryNodes[0] : null}
           </div>
         </div>
       </main>

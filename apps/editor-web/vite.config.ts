@@ -27,6 +27,11 @@ export default defineConfig({
         __dirname,
         "../../packages/content-pipeline/src/index.ts",
       ),
+      "@paper-to-video/atomic-ui": path.resolve(__dirname, "../../packages/atomic-ui/src/index.tsx"),
+      "@paper-to-video/timeline-engine": path.resolve(
+        __dirname,
+        "../../packages/timeline-engine/src/index.tsx",
+      ),
     },
   },
 });

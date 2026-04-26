@@ -10,6 +10,25 @@ const fallbackManifest: RenderManifest = {
   width: 1080,
   height: 1920,
   totalFrames: 150,
+  template: {
+    id: "paper-digest-v1",
+    path: "data/templates/paper-digest-v1.json",
+  },
+  templateDocument: {
+    id: "paper-digest-v1",
+    version: "1.0.0",
+    sceneTemplates: [
+      {
+        sceneType: "default",
+        nodes: [
+          {id: "fallback-kicker", componentId: "scene-kicker", zone: "primary"},
+          {id: "fallback-title", componentId: "scene-title", zone: "primary"},
+          {id: "fallback-body", componentId: "scene-body", zone: "primary"},
+          {id: "fallback-subtitle", componentId: "subtitle-panel", zone: "secondary"},
+        ],
+      },
+    ],
+  },
   paper: {
     source: "arxiv",
     paperId: "fallback",

@@ -85,6 +85,35 @@ export type VisualModuleConfig = {
   cellularEffect?: Partial<CellularEffectConfig>;
 };
 
+export type TemplateZoneId = "primary" | "secondary";
+
+export type AtomicComponentId =
+  | "cover-avatar"
+  | "scene-kicker"
+  | "scene-title"
+  | "scene-body"
+  | "scene-bullets"
+  | "subtitle-panel";
+
+export type TemplateNode = {
+  id: string;
+  componentId: AtomicComponentId;
+  zone: TemplateZoneId;
+  props?: Record<string, unknown>;
+};
+
+export type SceneTemplateDefinition = {
+  sceneType: ProductionScene["type"] | "default";
+  nodes: TemplateNode[];
+};
+
+export type TemplateDocument = {
+  id: string;
+  version: string;
+  description?: string;
+  sceneTemplates: SceneTemplateDefinition[];
+};
+
 export type ProductionScene = {
   id: string;
   type:
@@ -112,6 +141,10 @@ export type ProductionManifest = {
   projectId: string;
   seed: number;
   locale: "zh-CN";
+  template: {
+    id: string;
+    path: string;
+  };
   coverImage?: {
     source: "local" | "remote";
     path: string;
@@ -215,6 +248,8 @@ export type RenderManifest = {
   width: number;
   height: number;
   totalFrames: number;
+  template: ProductionManifest["template"];
+  templateDocument: TemplateDocument;
   coverImage?: CoverImageAsset;
   paper: ProductionManifest["paper"];
   theme: ProductionManifest["theme"];

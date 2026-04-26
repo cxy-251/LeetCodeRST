@@ -109,6 +109,13 @@ const main = async () => {
   const output = positionalArgs[1] ? path.resolve(positionalArgs[1]) : undefined;
   const raw = await fs.readFile(input, "utf-8");
   const manifest = JSON.parse(raw) as ProductionManifest;
+  const templateRef = manifest.template ?? {
+    id: "paper-digest-v1",
+    path: "data/templates/paper-digest-v1.json",
+  };
+  const templatePath = path.resolve(templateRef.path);
+  const templateRaw = await fs.readFile(templatePath, "utf-8");
+  const templateDocument = JSON.parse(templateRaw);
   const runContext = await createRunContextFromManifest(manifest, requestedRunId);
 
   let cursor = 0;
@@ -170,6 +177,8 @@ const main = async () => {
     width: manifest.output.width,
     height: manifest.output.height,
     totalFrames: cursor,
+    template: templateRef,
+    templateDocument,
     coverImage: manifest.coverImage,
     paper: manifest.paper,
     theme: manifest.theme,

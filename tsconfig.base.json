@@ -13,7 +13,9 @@
     "types": ["node"],
     "paths": {
       "@paper-to-video/shared-types": ["packages/shared-types/src/index.ts"],
-      "@paper-to-video/content-pipeline": ["packages/content-pipeline/src/index.ts"]
+      "@paper-to-video/content-pipeline": ["packages/content-pipeline/src/index.ts"],
+      "@paper-to-video/atomic-ui": ["packages/atomic-ui/src/index.tsx"],
+      "@paper-to-video/timeline-engine": ["packages/timeline-engine/src/index.tsx"]
     }
   }
 }

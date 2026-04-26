@@ -120,6 +120,12 @@ npm run render:video
 21. 当前 renderer 与 editor 都已经开始读取这套模块参数
 22. 生命游戏 effect 已切换为 `Three.js + WebGL` 实现，不再由 SVG/DOM 承担主渲染
 23. 文本动效已补上离场参数，当前支持进场 + 离场统一配置
+24. 前景层已经开始按 Lego 架构拆成：
+   - `atomic-ui` 原子组件库
+   - `data/templates/*.json` 模板配置
+   - `timeline-engine` 模板引擎
+25. 当前 renderer/editor 的前景文本区已切到模板引擎输出，不再全部手写在 `Root.tsx` / `App.tsx`
+26. `npm run compose:manifest` 已验证可正常读取模板 JSON，并将 `templateDocument` 写入最新 run 的 `render-manifest.json`
 
 ---
 
@@ -129,6 +135,7 @@ npm run render:video
 
 - `data/manifests/demo-paper.json`
 - `data/manifests/demo-paper.local.json`
+- `data/templates/paper-digest-v1.json`
 - `data/images/cover-portrait.svg`
 
 ### 运行脚本
@@ -144,6 +151,13 @@ npm run render:video
 - `apps/video-renderer/src/index.tsx`
 - `apps/video-renderer/src/Root.tsx`
 - `apps/video-renderer/src/Video.tsx`
+
+### Lego 架构
+
+- `packages/atomic-ui/src/index.tsx`
+- `packages/timeline-engine/src/index.tsx`
+- `docs/lego-architecture.md`
+- `docs/modular-visual-apis.md`
 
 ### 预览页
 
@@ -202,10 +216,10 @@ npm run render:video
 
 建议严格按这个顺序继续：
 
-1. 继续把更多参数从组件内常量迁移到 `manifest.modules`
-2. 继续打磨文本切页/替换时的视觉表现，不只控制单页内部进出
-3. 确认本地专用 manifest 在整条链路上稳定生效
-4. 为新增 effect / background / text motion 建立统一 registry 扩展方式
+1. 继续把背景层和 effect 层也进一步模板化/组件化
+2. 在 `atomic-ui` 中新增更多原子组件
+3. 增加第二套、第三套模板 JSON，而不是只用 `paper-digest-v1`
+4. 确认本地专用 manifest 在整条链路上稳定生效
 5. 继续扩充更多 Three.js / WebGL effect 模块
 
 ---
