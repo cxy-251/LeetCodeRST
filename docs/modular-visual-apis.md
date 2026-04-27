@@ -32,6 +32,8 @@
    效果：选择“这条视频到底讲哪份论文总结文本”。
 2. `coverProfile.id`
    效果：选择“这条视频默认使用哪张背景图 / 封面图”。
+3. `coverImage.path`
+   效果：如果你已经有一张处理好的具体图片，可以直接指定这张图，而不走 profile registry。
 
 这样一来：
 
@@ -74,7 +76,40 @@ npm run create:manifest -- \
 
 1. `contentProfile` 会按 `scene.contentRef` 把每页的 `narrationText` 和 `content` 注入进 manifest
 2. `coverProfile` 会解析成最终 `coverImage`
-3. 如果显式写了 `coverImage`，它仍然可以继续用于本地临时案例
+3. 如果显式写了 `coverImage`，它会优先覆盖 `coverProfile`
+4. 在 batch CSV 里，推荐优先填写 `cover_image_path`，只有想复用预设图库时再填 `cover_profile_id`
+
+### 批量配置文件里的推荐前置列
+
+如果你用 CSV 组合表控制视频，推荐把最重要的 3 个输入源放在前几列：
+
+1. `content_profile_id`
+2. `cover_image_path`
+3. `cover_profile_id`
+4. `effect_profile_id`
+
+这样用户打开表格时，最先看到的就是：
+
+1. 使用哪篇论文
+2. 使用哪张背景图
+3. 使用哪一种 WebGL 特效
+
+### 背景图预处理工具
+
+如果输入的是本地 AI 图、网图或其他原始素材，推荐先处理成 9:16 再放进 `cover_image_path`：
+
+```bash
+npm run prepare:cover-image -- \
+  --input /path/to/source.jpg \
+  --output data/images/prepared/source-9x16.jpg
+```
+
+处理后的图片再写入 CSV：
+
+```csv
+content_profile_id,cover_image_path,effect_profile_id
+agentic-world-modeling,data/images/prepared/source-9x16.jpg,life-game
+```
 
 ---
 

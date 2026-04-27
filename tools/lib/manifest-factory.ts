@@ -17,6 +17,8 @@ export type CreateManifestOptions = {
   seed?: number;
   contentProfileId: string;
   coverProfileId?: string;
+  coverImagePath?: string;
+  coverImageSource?: "local" | "remote";
   effectProfileId: WebGLEffectProfileId;
 };
 
@@ -33,7 +35,10 @@ const resolveContentProfileDocument = async (contentProfileId: string) => {
   for (const candidatePath of candidatePaths) {
     try {
       const raw = await fs.readFile(candidatePath, "utf-8");
-      return JSON.parse(raw) as ContentProfileDocument;
+      return {
+        document: JSON.parse(raw) as ContentProfileDocument,
+        path: candidatePath,
+      };
     } catch {
       continue;
     }
@@ -48,14 +53,20 @@ export const buildProfileDrivenManifest = async ({
   seed,
   contentProfileId,
   coverProfileId,
+  coverImagePath,
+  coverImageSource,
   effectProfileId,
 }: CreateManifestOptions): Promise<ProductionManifest> => {
   const raw = await fs.readFile(baseManifestPath, "utf-8");
   const baseManifest = JSON.parse(raw) as ProductionManifest;
-  const contentProfileDocument = await resolveContentProfileDocument(contentProfileId);
+  const contentProfileResolution = await resolveContentProfileDocument(contentProfileId);
+  const contentProfileDocument = contentProfileResolution?.document ?? null;
 
+  const coverToken = coverImagePath
+    ? path.basename(coverImagePath)
+    : coverProfileId ?? "cover-local";
   const resolvedProjectId =
-    projectId ?? slugify(`${contentProfileId}-${coverProfileId ?? "cover-local"}-${effectProfileId}`);
+    projectId ?? slugify(`${contentProfileId}-${coverToken}-${effectProfileId}`);
 
   const nextManifest: ProductionManifest = {
     ...baseManifest,
@@ -63,6 +74,9 @@ export const buildProfileDrivenManifest = async ({
     seed: seed ?? baseManifest.seed,
     contentProfile: {
       id: contentProfileId,
+      path: contentProfileResolution?.path
+        ? path.relative(path.resolve("."), contentProfileResolution.path)
+        : baseManifest.contentProfile?.path,
     },
     paper: {
       ...baseManifest.paper,
@@ -73,7 +87,13 @@ export const buildProfileDrivenManifest = async ({
     },
   };
 
-  if (coverProfileId) {
+  if (coverImagePath) {
+    nextManifest.coverImage = {
+      source: coverImageSource ?? (/^https?:\/\//i.test(coverImagePath) ? "remote" : "local"),
+      path: coverImagePath,
+    };
+    delete nextManifest.coverProfile;
+  } else if (coverProfileId) {
     nextManifest.coverProfile = {
       id: coverProfileId,
     };

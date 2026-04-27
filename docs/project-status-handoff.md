@@ -83,6 +83,7 @@ npm run render:video
 10. 基于 profile 一键生成本地 manifest
 11. 基于 CSV 组合配置按行批量生成视频
 12. 一键准备最新论文批量配置
+13. 9:16 背景图处理工具
 
 ### 工程组织
 
@@ -201,6 +202,7 @@ npm run render:video
 - `data/templates/paper-digest-v1.json`
 - `data/video-batches/demo-batch.csv`
 - `data/images/cover-portrait.svg`
+- `data/images/prepared/*`
 
 ### 运行脚本
 
@@ -213,12 +215,14 @@ npm run render:video
 - `tools/extract-pdf-text.ts`
 - `tools/build-source-bundle.ts`
 - `tools/build-video-batch.ts`
+- `tools/prepare-cover-image.ts`
 - `tools/analyze-paper-sources.ts`
 - `tools/scaffold-paper-manifests.ts`
 - `tools/create-video-manifest.ts`
 - `tools/prepare-latest-ai-batch.ts`
 - `tools/lib/manifest-factory.ts`
 - `tools/lib/video-batch.ts`
+- `tools/lib/image-processing.ts`
 
 ### 渲染入口
 
@@ -330,6 +334,13 @@ npm run render:video
 9. 一键准备最新论文批量配置：
    - `npm run prepare:latest-ai-batch -- --limit 3`
    - 输出：`data/video-batches/generated/latest-ai-batch.csv`
+10. 背景图 9:16 处理：
+    - `npm run prepare:cover-image -- --input <image> --output data/images/prepared/<name>.jpg`
+11. 当前 batch CSV 的前几列已经调整为：
+    - `content_profile_id`
+    - `cover_image_path`
+    - `cover_profile_id`
+    - `effect_profile_id`
 
 当前本地已经实际拉取并分析了 3 篇 `cs.AI` 论文，并生成了对应的背景图建议和候选 manifest。
 

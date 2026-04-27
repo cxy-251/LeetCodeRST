@@ -26,4 +26,5 @@ data/manifests/generated/*.json
 data/content-profiles/generated/*.json
 !data/video-batches/*.csv
 data/video-batches/generated/*.csv
+data/images/prepared/*
 !.gitkeep

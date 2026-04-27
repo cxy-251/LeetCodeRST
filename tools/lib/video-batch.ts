@@ -8,10 +8,12 @@ export type VideoBatchRow = {
   rowNumber: number;
   enabled: boolean;
   rowId: string;
-  projectId?: string;
   contentProfileId: string;
+  coverImagePath?: string;
+  coverImageSource?: "local" | "remote";
   coverProfileId?: string;
   effectProfileId: WebGLEffectProfileId;
+  projectId?: string;
   seed?: number;
   voiceName?: string;
   voiceRate?: string;
@@ -153,10 +155,12 @@ export const readVideoBatchRows = async (csvPath: string): Promise<VideoBatchRow
       rowNumber,
       enabled: parseBoolean(record.enabled),
       rowId,
-      projectId: record.project_id?.trim() || undefined,
       contentProfileId,
+      coverImagePath: record.cover_image_path?.trim() || undefined,
+      coverImageSource: (record.cover_image_source?.trim() as "local" | "remote" | "") || undefined,
       coverProfileId: record.cover_profile_id?.trim() || undefined,
       effectProfileId,
+      projectId: record.project_id?.trim() || undefined,
       seed: parseInteger(record.seed),
       voiceName: record.voice_name?.trim() || undefined,
       voiceRate: record.voice_rate?.trim() || undefined,
@@ -179,9 +183,13 @@ export const materializeBatchManifest = async ({
     baseManifestPath: row.baseManifestPath,
     projectId:
       row.projectId ??
-      slugify(`${row.contentProfileId}-${row.coverProfileId ?? "cover-local"}-${row.effectProfileId}`),
+      slugify(
+        `${row.contentProfileId}-${row.coverImagePath ? path.basename(row.coverImagePath) : row.coverProfileId ?? "cover-local"}-${row.effectProfileId}`,
+      ),
     seed: row.seed,
     contentProfileId: row.contentProfileId,
+    coverImagePath: row.coverImagePath,
+    coverImageSource: row.coverImageSource,
     coverProfileId: row.coverProfileId,
     effectProfileId: row.effectProfileId,
   });

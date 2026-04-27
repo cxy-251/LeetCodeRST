@@ -4,6 +4,7 @@ import path from "node:path";
 type AnalysisBundle = {
   papers: Array<{
     arxivId: string;
+    suggestedCoverImagePath?: string | null;
   }>;
 };
 
@@ -39,10 +40,12 @@ const main = async () => {
   const headers = [
     "enabled",
     "row_id",
-    "project_id",
     "content_profile_id",
+    "cover_image_path",
     "cover_profile_id",
     "effect_profile_id",
+    "project_id",
+    "cover_image_source",
     "seed",
     "voice_name",
     "voice_rate",
@@ -58,10 +61,12 @@ const main = async () => {
       return [
         "true",
         paper.arxivId,
-        "",
         profileId,
+        paper.suggestedCoverImagePath ?? "",
         "",
         effectProfileId,
+        "",
+        paper.suggestedCoverImagePath ? "local" : "",
         String(options.seedStart + index),
         options.voiceName,
         options.voiceRate,

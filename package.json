@@ -16,6 +16,7 @@
     "create:manifest": "node --import tsx tools/create-video-manifest.ts",
     "fetch:arxiv-ai": "node --import tsx tools/fetch-arxiv-ai.ts",
     "extract:pdf-text": "node --import tsx tools/extract-pdf-text.ts",
+    "prepare:cover-image": "node --import tsx tools/prepare-cover-image.ts",
     "prepare:latest-ai-batch": "node --import tsx tools/prepare-latest-ai-batch.ts",
     "scaffold:paper-manifests": "node --import tsx tools/scaffold-paper-manifests.ts",
     "generate:audio": "node --import tsx tools/generate-audio.ts",

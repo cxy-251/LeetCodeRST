@@ -44,12 +44,50 @@ PaperToVideo 是一个模块化论文视频生成项目，目标是将 arXiv AI 
 这个 CSV 的每一行代表一个视频组合，当前重点字段是：
 
 1. `content_profile_id`
-2. `cover_profile_id`
-3. `effect_profile_id`
-4. `voice_name`
-5. `voice_rate`
-6. `voice_pitch`
-7. `seed`
+2. `cover_image_path`
+3. `cover_profile_id`
+4. `effect_profile_id`
+5. `voice_name`
+6. `voice_rate`
+7. `voice_pitch`
+8. `seed`
+
+说明：
+
+1. `content_profile_id`
+   表示使用哪份论文总结文本
+2. `cover_image_path`
+   表示直接使用哪一张背景图
+3. `cover_profile_id`
+   表示如果不想直接写图片路径，就从封面图库里选一个
+4. `effect_profile_id`
+   表示这一条视频使用哪一种 WebGL 特效
+
+推荐优先级：
+
+1. 如果你已经有具体图片，优先写 `cover_image_path`
+2. 如果你只想复用仓库里的预设图，再写 `cover_profile_id`
+
+## 背景图 9:16 处理工具
+
+如果你后面拿 AI 生成图或网图作为入参，先用这个工具把图片处理成适合手机竖屏的 9:16：
+
+```bash
+npm run prepare:cover-image -- \
+  --input /path/to/your-image.jpg \
+  --output data/images/prepared/your-cover-9x16.jpg
+```
+
+然后把输出路径填进 CSV 的 `cover_image_path` 列即可。
+
+这个工具当前主要面向：
+
+1. `jpg`
+2. `png`
+3. `webp`
+4. 常见网络图片 URL
+
+输出目录 `data/images/prepared/*` 默认视为本地工作产物，不会自动进 git。
 
 执行整表批量渲染：
 
@@ -98,6 +136,13 @@ npm run prepare:latest-ai-batch -- --limit 3
 5. 生成 ingest manifests 和 generated content profiles
 6. 生成批量配置表：
    - `data/video-batches/generated/latest-ai-batch.csv`
+
+这份自动生成的 CSV 现在会把以下字段放在前几列：
+
+1. `content_profile_id`
+2. `cover_image_path`
+3. `cover_profile_id`
+4. `effect_profile_id`
 
 然后你就可以直接批量渲染：
 
