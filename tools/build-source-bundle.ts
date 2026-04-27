@@ -35,7 +35,24 @@ const IMAGE_CACHE_ROOT = path.resolve("output/cache/images");
 const readJson = async <T,>(targetPath: string) =>
   JSON.parse(await fs.readFile(targetPath, "utf-8")) as T;
 
+const parseArgs = (args: string[]) => {
+  const take = (flag: string) => {
+    const index = args.indexOf(flag);
+    return index >= 0 ? args[index + 1] : undefined;
+  };
+
+  const paperIds = (take("--paper-ids") ?? "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  return {
+    paperIds: paperIds.length > 0 ? new Set(paperIds) : null,
+  };
+};
+
 const main = async () => {
+  const options = parseArgs(process.argv.slice(2));
   const paperDirs = (await fs.readdir(PAPER_CACHE_ROOT, {withFileTypes: true}))
     .filter((entry) => entry.isDirectory())
     .map((entry) => path.join(PAPER_CACHE_ROOT, entry.name))
@@ -69,9 +86,13 @@ const main = async () => {
     }),
   );
 
+  const filteredPapers = options.paperIds
+    ? papers.filter((paper) => options.paperIds?.has(paper.arxivId))
+    : papers;
+
   const bundle: SourceBundle = {
     generatedAt: new Date().toISOString(),
-    papers,
+    papers: filteredPapers,
     backgroundImages,
   };
 

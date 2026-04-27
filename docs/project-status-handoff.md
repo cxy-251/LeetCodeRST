@@ -82,6 +82,7 @@ npm run render:video
 9. `contentProfile` / `coverProfile` 驱动的外部文本源与背景图选择
 10. 基于 profile 一键生成本地 manifest
 11. 基于 CSV 组合配置按行批量生成视频
+12. 一键准备最新论文批量配置
 
 ### 工程组织
 
@@ -211,9 +212,11 @@ npm run render:video
 - `tools/fetch-arxiv-ai.ts`
 - `tools/extract-pdf-text.ts`
 - `tools/build-source-bundle.ts`
+- `tools/build-video-batch.ts`
 - `tools/analyze-paper-sources.ts`
 - `tools/scaffold-paper-manifests.ts`
 - `tools/create-video-manifest.ts`
+- `tools/prepare-latest-ai-batch.ts`
 - `tools/lib/manifest-factory.ts`
 - `tools/lib/video-batch.ts`
 
@@ -324,6 +327,9 @@ npm run render:video
 8. 基于 CSV 配置表批量生成或按行生成视频：
    - `npm run produce:video -- --batch-config data/video-batches/demo-batch.csv`
    - `npm run produce:video -- --batch-config data/video-batches/demo-batch.csv --rows 1,3`
+9. 一键准备最新论文批量配置：
+   - `npm run prepare:latest-ai-batch -- --limit 3`
+   - 输出：`data/video-batches/generated/latest-ai-batch.csv`
 
 当前本地已经实际拉取并分析了 3 篇 `cs.AI` 论文，并生成了对应的背景图建议和候选 manifest。
 

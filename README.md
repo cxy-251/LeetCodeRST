@@ -81,6 +81,36 @@ npm run produce:video -- --batch-config data/video-batches/demo-batch.csv --rows
 
 顺序渲染，所以不会破坏现有的视频主链路。
 
+## 最新论文一键准备链路
+
+如果你希望从最新 `cs.AI` 论文一路准备到“可批量渲染的组合表”，可以执行：
+
+```bash
+npm run prepare:latest-ai-batch -- --limit 3
+```
+
+这条命令会顺序完成：
+
+1. 抓取最新论文并下载 PDF
+2. 抽取 PDF 文本
+3. 生成 source bundle
+4. 生成中文脚本草案
+5. 生成 ingest manifests 和 generated content profiles
+6. 生成批量配置表：
+   - `data/video-batches/generated/latest-ai-batch.csv`
+
+然后你就可以直接批量渲染：
+
+```bash
+npm run produce:video -- --batch-config data/video-batches/generated/latest-ai-batch.csv
+```
+
+如果只想跑其中几条：
+
+```bash
+npm run produce:video -- --batch-config data/video-batches/generated/latest-ai-batch.csv --rows 1,2
+```
+
 ## 无网络开发模式
 
 如果当前环境不能访问 `edge-tts` 依赖的在线语音服务，可以使用 mock 模式：
