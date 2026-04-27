@@ -156,6 +156,39 @@ npm run produce:video -- --batch-config data/video-batches/generated/latest-ai-b
 npm run produce:video -- --batch-config data/video-batches/generated/latest-ai-batch.csv --rows 1,2
 ```
 
+## 外部 AI 总结 JSON 导入
+
+如果你把 PDF 发给其他 AI，让它按项目模板输出总结 JSON，现在可以直接导入成系统可消费的 `contentProfile`：
+
+```bash
+npm run import:summary-json -- \
+  --input /path/to/video-script.json \
+  --profile-id my-paper-summary \
+  --register
+```
+
+这个命令会：
+
+1. 读取外部 AI 返回的总结 JSON
+2. 自动归一化常见字段别名
+3. 生成：
+   - `data/content-profiles/generated/my-paper-summary.json`
+4. 如果加了 `--register`，还会自动写入：
+   - `data/content-profiles/index.json`
+
+当前导入器已经兼容一些常见字段变体，例如：
+
+1. `video_script / videoScript / script`
+2. `preferred_effect / preferredEffect`
+3. `title / heading / headline`
+4. `narration / voiceover / script`
+5. `bullets / points / highlights`
+
+总结 JSON 的推荐模板见：
+
+- [services/summarizer/video-script-template.json](/Users/cxy251/Code/02codeX/services/summarizer/video-script-template.json)
+- [services/summarizer/video-script-prompt.md](/Users/cxy251/Code/02codeX/services/summarizer/video-script-prompt.md)
+
 ## 无网络开发模式
 
 如果当前环境不能访问 `edge-tts` 依赖的在线语音服务，可以使用 mock 模式：

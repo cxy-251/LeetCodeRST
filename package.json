@@ -18,6 +18,7 @@
     "extract:pdf-text": "node --import tsx tools/extract-pdf-text.ts",
     "prepare:cover-image": "node --import tsx tools/prepare-cover-image.ts",
     "prepare:latest-ai-batch": "node --import tsx tools/prepare-latest-ai-batch.ts",
+    "import:summary-json": "node --import tsx tools/import-summary-json.ts",
     "scaffold:paper-manifests": "node --import tsx tools/scaffold-paper-manifests.ts",
     "generate:audio": "node --import tsx tools/generate-audio.ts",
     "generate:audio:mock": "node --import tsx tools/generate-audio.ts --mock",

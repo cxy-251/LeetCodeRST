@@ -328,17 +328,18 @@ npm run render:video
    - run 产物归档
 9. 开发规范文档已经补齐
 10. 外部 AI 论文总结模板、提示词、示例已经写入 `services/summarizer`
+11. 外部 AI 总结 JSON 已经可以导入成 `contentProfile`
 
 ### 未完成
 
-1. 还没有把外部 AI 返回的 JSON 自动转换成 `contentProfile` 的正式脚本
-2. 还没有把论文总结质量提升到“稳定可商用”的程度，当前仍有启发式模板味
-3. 还没有接入真正的图像生成/搜图服务调度，只做了图片处理和路径接入
-4. 还没有做视频质量筛选或自动评分机制
-5. 还没有实现多个模板风格的大规模切换，目前主模板仍以 `paper-digest-v1` 为核心
-6. 还没有完成更丰富的 WebGL effect 家族扩展，例如扫雷、吃豆人等
-7. 还没有把 effect registry、template registry、profile registry 做成严格 schema 校验
-8. 还没有提供 GUI 级别的配置编辑器，当前主要靠 JSON 和 CSV
+1. 还没有把论文总结质量提升到“稳定可商用”的程度，当前仍有启发式模板味
+2. 还没有接入真正的图像生成/搜图服务调度，只做了图片处理和路径接入
+3. 还没有做视频质量筛选或自动评分机制
+4. 还没有实现多个模板风格的大规模切换，目前主模板仍以 `paper-digest-v1` 为核心
+5. 还没有完成更丰富的 WebGL effect 家族扩展，例如扫雷、吃豆人等
+6. 还没有把 effect registry、template registry、profile registry 做成严格 schema 校验
+7. 还没有提供 GUI 级别的配置编辑器，当前主要靠 JSON 和 CSV
+8. 外部总结 JSON 导入虽然已经可用，但当前仍是“宽松别名兼容 + 标准落盘”，还没有建立严格的 schema version 管理
 
 ### 当前不完善
 
@@ -350,6 +351,7 @@ npm run render:video
 4. Remotion 渲染在当前环境仍可能被 Chromium 启动权限限制阻塞，这不是业务代码本身的逻辑错误，但会影响本机批量渲染体验
 5. 自动论文分析目前主要基于规则/启发式生成中文脚本草案，质量依赖论文类型，理论类、综述类和应用类的稳定性仍不完全一致
 6. 一些旧文档里仍保留了项目早期阶段的描述，后续需要继续清理和统一
+7. 外部总结 JSON 导入器当前稳定覆盖的是 5 段式短视频结构，超过这个结构的复杂脚本还没有抽象成更通用的 scene mapper
 
 ---
 
@@ -363,6 +365,7 @@ npm run render:video
 4. 继续把背景层和 effect 层进一步模板化/组件化
 5. 在 `atomic-ui` 中新增更多原子组件
 6. 增加第二套、第三套模板 JSON，而不是只用 `paper-digest-v1`
+7. 给外部总结 JSON 增加 schema version 和严格校验，降低后续字段变动风险
 
 ---
 
@@ -394,6 +397,8 @@ npm run render:video
     - `cover_image_path`
     - `cover_profile_id`
     - `effect_profile_id`
+12. 外部 AI 总结 JSON 可以直接导入成 `contentProfile`：
+    - `npm run import:summary-json -- --input /path/to/video-script.json --profile-id my-paper-summary --register`
 
 当前本地已经实际拉取并分析了 3 篇 `cs.AI` 论文，并生成了对应的背景图建议和候选 manifest。
 
