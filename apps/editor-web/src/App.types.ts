@@ -50,6 +50,7 @@ export type EffectPreviewState = {
 export type TemplateStageModel = {
   absolutePreviewFrame: number;
   activationFrame: number;
+  interactionFrame: number;
   backgroundEffectId: BackgroundEffectId;
   coverImageSrc: string | null;
   palette: ThemePalette;
@@ -72,6 +73,7 @@ export type TemplateStageModel = {
 export type EffectStageModel = {
   absolutePreviewFrame: number;
   activationFrame: number;
+  interactionFrame: number;
   coverImageSrc: string | null;
   effectId: EffectAtomId;
   palette: ThemePalette;
@@ -98,6 +100,7 @@ export type AppRouteState = {
 export type PreviewStageProps = {
   absolutePreviewFrame: number;
   activationFrame: number;
+  interactionFrame: number;
   children?: React.ReactNode;
   coverImageSrc: string | null;
   effectId: BackgroundEffectId;
@@ -160,6 +163,7 @@ export type TemplateLayoutInput = {
 
 export type LayoutResolution = {
   activationFrame: number;
+  interactionFrame: number;
   backgroundEffectId: BackgroundEffectId;
   coverImageSrc: string | null;
   palette: ThemePalette;
@@ -171,6 +175,7 @@ export type LayoutResolution = {
 export type EffectLayoutResolution = {
   absolutePreviewFrame: number;
   activationFrame: number;
+  interactionFrame: number;
   coverImageSrc: string | null;
   effectId: EffectAtomId;
   palette: ThemePalette;

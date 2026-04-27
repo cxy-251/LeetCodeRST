@@ -88,6 +88,7 @@ export const LoadingStateView: React.FC<{
 export const PreviewStageView: React.FC<PreviewStageProps> = ({
   absolutePreviewFrame,
   activationFrame,
+  interactionFrame,
   children,
   coverImageSrc,
   effectId,
@@ -136,6 +137,8 @@ export const PreviewStageView: React.FC<PreviewStageProps> = ({
             effectId={effectId}
             absoluteFrame={absolutePreviewFrame}
             activationFrame={activationFrame}
+            interactionFrame={interactionFrame}
+            effectStartFrame={activationFrame}
             height={672}
             mode="render"
             modules={manifest.modules}
@@ -214,6 +217,7 @@ export const TemplatePreviewView: React.FC<{
         <PreviewStageView
           absolutePreviewFrame={stageModel.absolutePreviewFrame}
           activationFrame={stageModel.activationFrame}
+          interactionFrame={stageModel.interactionFrame}
           coverImageSrc={stageModel.coverImageSrc}
           effectId={stageModel.backgroundEffectId}
           manifest={manifest}
@@ -340,6 +344,7 @@ export const EffectLabView: React.FC<{
         <PreviewStageView
           absolutePreviewFrame={stageModel.absolutePreviewFrame}
           activationFrame={stageModel.activationFrame}
+          interactionFrame={stageModel.interactionFrame}
           coverImageSrc={stageModel.coverImageSrc}
           effectId={stageModel.effectId}
           effectLayer={effectLayer}

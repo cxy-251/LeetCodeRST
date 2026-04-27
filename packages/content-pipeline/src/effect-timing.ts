@@ -41,3 +41,14 @@ export const resolveLifeGameActivationFrame = (manifest: RenderManifest) => {
 
   return launchScene.fromFrame + launchScene.timing.effectStartFrameOffset;
 };
+
+export const resolveLifeGameInteractionFrame = (manifest: RenderManifest) => {
+  const launchScene =
+    manifest.scenes.find((scene) => scene.backgroundEffectId === "cellular-launch") ?? null;
+
+  if (!launchScene) {
+    return 0;
+  }
+
+  return launchScene.fromFrame + launchScene.timing.interactionFrameOffset;
+};

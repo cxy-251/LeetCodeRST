@@ -356,6 +356,32 @@ Why this matters:
 
 ---
 
+## 12. 2026-04-27 Mixed Effect Composition Pass
+
+This pass addressed two product-level concerns:
+
+1. How a single video can use different WebGL effects across scenes.
+2. Why the page-2 launch scene still felt late even after cue timing became audio-driven.
+
+What changed:
+
+1. Effect runtime now distinguishes between:
+   - `interactionFrame`
+   - `effectStartFrame`
+   This allows the launch button to visually "click" before the life simulation actually starts.
+2. Launch settle timing was shortened so the simulation starts almost immediately after the click beat.
+3. The default demo manifests now mix two WebGL effects in one video:
+   - early middle scenes use `cellular-life`
+   - later scenes use `snake-grid`
+
+Current usage model:
+
+1. A scene chooses its WebGL layer through `backgroundEffectId`.
+2. Different scenes in the same production manifest can use different effect ids.
+3. This is now the intended way to compose one video from multiple WebGL atoms.
+
+---
+
 ## 8. 续接建议
 
 如果在新对话里继续，建议先读：

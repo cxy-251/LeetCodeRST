@@ -78,6 +78,8 @@
   效果：第 2 页按钮启动生命游戏。
 - `cellular-life`
   效果：生命游戏持续运行，当前使用 `Three.js + WebGL`。
+- `snake-grid`
+  效果：贪吃蛇网格特效，当前使用 `Three.js + WebGL`。
 
 ### 独立 effect atom 页面
 
@@ -300,6 +302,22 @@
 1. 背景图取右上区域
 2. 上层叠持续运行的生命游戏
 3. 文本用分段抬升动效进入
+
+也可以在同一条视频里混用不同特效，例如：
+
+```json
+[
+  {"id": "scene-method", "backgroundEffectId": "cellular-life"},
+  {"id": "scene-value", "backgroundEffectId": "snake-grid"},
+  {"id": "scene-ending", "backgroundEffectId": "snake-grid"}
+]
+```
+
+效果：
+
+1. 第二页到第三页延续生命游戏
+2. 后续页面切到贪吃蛇 WebGL 层
+3. 同一条视频可以按 scene 粒度切换不同 effect atom
 
 ---
 

@@ -59,7 +59,9 @@ const SnakeGridAtom: React.FC<EffectAtomRuntimeProps> = ({
 const CellularLaunchAtom: React.FC<EffectAtomRuntimeProps> = ({
   absoluteFrame,
   activationFrame,
+  effectStartFrame,
   height,
+  interactionFrame,
   isRunning,
   modules,
   onPrimaryAction,
@@ -69,7 +71,10 @@ const CellularLaunchAtom: React.FC<EffectAtomRuntimeProps> = ({
 }) => {
   const pulseFrame = simulationFrame ?? absoluteFrame;
   const {buttonOrigin, pulse} = getLaunchButtonState(pulseFrame);
-  const ready = Boolean(isRunning);
+  const clicked = interactionFrame !== undefined ? absoluteFrame >= interactionFrame : Boolean(isRunning);
+  const ready = effectStartFrame !== undefined ? absoluteFrame >= effectStartFrame : Boolean(isRunning);
+  const buttonScale = ready ? 0.94 : clicked ? pulse * 0.9 : pulse;
+  const buttonLabel = ready ? "Simulation Running" : clicked ? "Booting Life Grid" : "Start Life Simulation";
 
   return (
     <>
@@ -96,12 +101,12 @@ const CellularLaunchAtom: React.FC<EffectAtomRuntimeProps> = ({
         onClick={onPrimaryAction}
         style={{
           ...launchButtonBaseStyle,
-          background: getLaunchButtonBackground(ready),
-          transform: `translate(${(buttonOrigin.x - 0.5) * 110}px, ${(buttonOrigin.y - 0.5) * 110}px) scale(${pulse})`,
+          background: getLaunchButtonBackground(ready || clicked),
+          transform: `translate(${(buttonOrigin.x - 0.5) * 110}px, ${(buttonOrigin.y - 0.5) * 110}px) scale(${buttonScale})`,
         }}
         type="button"
       >
-        {ready ? "Simulation Running" : "Start Life Simulation"}
+        {buttonLabel}
       </button>
     </>
   );

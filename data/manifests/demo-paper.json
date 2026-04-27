@@ -49,11 +49,11 @@
       "secondaryColor": "#f6fbff",
       "birthColor": "#4db8ff",
       "launchClickRatio": 0.22,
-      "launchSettleRatio": 0.12,
+      "launchSettleRatio": 0.03,
       "minLaunchClickFrames": 8,
       "maxLaunchClickFrames": 28,
-      "minLaunchSettleFrames": 6,
-      "maxLaunchSettleFrames": 18
+      "minLaunchSettleFrames": 2,
+      "maxLaunchSettleFrames": 8
     },
     "typography": {
       "kickerSize": "clamp(0.88rem, 1.15vw + 0.5rem, 1.62rem)",
@@ -149,9 +149,9 @@
           "对短视频和营销素材生成很有启发"
         ]
       },
-      "backgroundPresetId": "cover-cellular-mask",
+      "backgroundPresetId": "cover-noise-bloom",
       "backgroundImageLayoutId": "cover-focus-br",
-      "backgroundEffectId": "cellular-life",
+      "backgroundEffectId": "snake-grid",
       "motionPresetId": "stagger-rise",
       "durationStrategy": "auto-by-audio"
     },
@@ -166,7 +166,7 @@
       },
       "backgroundPresetId": "cover-soft-focus",
       "backgroundImageLayoutId": "cover-focus-bl",
-      "backgroundEffectId": "cellular-life",
+      "backgroundEffectId": "snake-grid",
       "motionPresetId": "fade-up",
       "durationStrategy": "auto-by-audio"
     }

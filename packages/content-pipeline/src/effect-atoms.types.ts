@@ -6,6 +6,8 @@ export type EffectAtomId = Exclude<BackgroundEffectId, "none">;
 export type EffectAtomRuntimeProps = {
   absoluteFrame: number;
   activationFrame: number;
+  interactionFrame?: number;
+  effectStartFrame?: number;
   height: number;
   isRunning?: boolean;
   modules?: RenderManifest["modules"];

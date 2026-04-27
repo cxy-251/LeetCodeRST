@@ -7,6 +7,8 @@ export type EffectRuntimeMode = "interactive" | "render";
 export type EffectRuntimeAdapterProps = {
   absoluteFrame: number;
   activationFrame: number;
+  interactionFrame?: number;
+  effectStartFrame?: number;
   effectId: BackgroundEffectId;
   height: number;
   isRunning?: boolean;
@@ -21,6 +23,8 @@ export type EffectRuntimeAdapterProps = {
 export const EffectRuntimeAdapter: React.FC<EffectRuntimeAdapterProps> = ({
   absoluteFrame,
   activationFrame,
+  interactionFrame,
+  effectStartFrame,
   effectId,
   height,
   isRunning,
@@ -36,17 +40,21 @@ export const EffectRuntimeAdapter: React.FC<EffectRuntimeAdapterProps> = ({
   }
 
   const definition = getEffectAtomDefinition(effectId);
+  const effectiveInteractionFrame = interactionFrame ?? activationFrame;
+  const effectiveEffectStartFrame = effectStartFrame ?? activationFrame;
   const effectiveRunning =
     mode === "render"
-      ? absoluteFrame >= activationFrame || effectId === "cellular-life" || effectId === "aurora" || effectId === "snake-grid"
+      ? absoluteFrame >= effectiveEffectStartFrame || effectId === "cellular-life" || effectId === "aurora" || effectId === "snake-grid"
       : isRunning;
   const effectiveSimulationFrame =
-    mode === "render" ? Math.max(0, absoluteFrame - activationFrame) : (simulationFrame ?? absoluteFrame);
+    mode === "render" ? Math.max(0, absoluteFrame - effectiveEffectStartFrame) : (simulationFrame ?? absoluteFrame);
 
   return (
     <definition.Component
       absoluteFrame={absoluteFrame}
       activationFrame={activationFrame}
+      interactionFrame={effectiveInteractionFrame}
+      effectStartFrame={effectiveEffectStartFrame}
       height={height}
       isRunning={effectiveRunning}
       modules={modules}

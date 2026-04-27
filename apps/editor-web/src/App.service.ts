@@ -4,6 +4,7 @@ import {
   getEffectAtomDefinition,
   getInterpolatedCoverLayoutConfig,
   resolveLifeGameActivationFrame,
+  resolveLifeGameInteractionFrame,
   getSceneTitle,
   getSceneVisualIds,
   getThemePalette,
@@ -159,6 +160,7 @@ const resolveTemplateLayout = ({
    */
   return {
     activationFrame: resolveLifeGameActivationFrame(manifest),
+    interactionFrame: resolveLifeGameInteractionFrame(manifest),
     backgroundEffectId,
     coverImageSrc: getCoverImageSrc(manifest),
     palette,
@@ -198,6 +200,7 @@ export const createTemplateStageModel = ({
   return {
     absolutePreviewFrame,
     activationFrame: layout.activationFrame,
+    interactionFrame: layout.interactionFrame,
     backgroundEffectId: layout.backgroundEffectId,
     coverImageSrc: layout.coverImageSrc,
     palette: layout.palette,
@@ -233,6 +236,7 @@ export const createEffectStageModel = ({
   return {
     absolutePreviewFrame: isRunning ? simulationFrame : 0,
     activationFrame: 0,
+    interactionFrame: 0,
     coverImageSrc: null,
     effectId: effectRoute.effectId,
     palette,

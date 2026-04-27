@@ -66,11 +66,11 @@ export const DEFAULT_CELLULAR_EFFECT: CellularEffectConfig = {
   secondaryColor: "#f8fbff",
   birthColor: "#2fb4ff",
   launchClickRatio: 0.22,
-  launchSettleRatio: 0.12,
+  launchSettleRatio: 0.03,
   minLaunchClickFrames: 8,
   maxLaunchClickFrames: 28,
-  minLaunchSettleFrames: 6,
-  maxLaunchSettleFrames: 18,
+  minLaunchSettleFrames: 2,
+  maxLaunchSettleFrames: 8,
 };
 
 export const DEFAULT_TYPOGRAPHY_SCALE: TypographyScaleConfig = {

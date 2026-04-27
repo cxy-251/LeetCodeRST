@@ -46,10 +46,12 @@ const App: React.FC = () => {
     });
 
     const effectLayer = effectState.isRunning ? (
-      <EffectRuntimeAdapter
-        absoluteFrame={effectStageModel.absolutePreviewFrame}
-        activationFrame={effectStageModel.activationFrame}
-        effectId={effectStageModel.effectId}
+        <EffectRuntimeAdapter
+          absoluteFrame={effectStageModel.absolutePreviewFrame}
+          activationFrame={effectStageModel.activationFrame}
+          interactionFrame={effectStageModel.interactionFrame}
+          effectStartFrame={effectStageModel.activationFrame}
+          effectId={effectStageModel.effectId}
         height={672}
         isRunning={effectState.isRunning}
         mode="interactive"
