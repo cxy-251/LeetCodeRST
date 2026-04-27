@@ -131,14 +131,18 @@ npm run render:video
    - `/templates/latest` 读取最新 run
    - `/templates/demo` 读取仓库默认 demo
 28. `editor-web` 已新增独立特效实验页分区：
-   - `/effects/cellular-life`
-   - `/effects/cellular-launch`
-   - `/effects/aurora`
+   - 当前主入口收敛为 `/effects/life-game`
+   - 旧路径会重定向到新的生命游戏入口页
 29. 原子组件字号已从固定像素改成更偏容器友好的响应式尺寸，减少预览页在不同窗口下字号失衡的问题
 30. 特效实验页已从“模板裁剪预览”进一步调整为“独立 effect atom 页面”方向：
    - 生命游戏可单独拉出成页面
    - 页面内可点击按钮启动
    - 目标是让贪吃蛇、扫雷、吃豆人等后续 WebGL 小游戏沿同一原子接口接入
+31. 已新增 `EffectRuntimeAdapter` 作为“网页交互特效 -> 视频渲染特效”的转换层：
+   - 网页端可交互运行
+   - 视频端可按绝对帧自动运行
+   - 同一个 effect atom 可同时服务 editor 与 Remotion
+32. `npm install` 已补跑，workspace 包解析已恢复；`render:video` 不再报 `@paper-to-video/timeline-engine` 找不到，而是进入浏览器启动阶段
 
 ---
 
@@ -170,6 +174,7 @@ npm run render:video
 - `packages/atomic-ui/src/index.tsx`
 - `packages/timeline-engine/src/index.tsx`
 - `packages/content-pipeline/src/effect-atoms.tsx`
+- `packages/content-pipeline/src/effect-runtime.tsx`
 - `docs/lego-architecture.md`
 - `docs/modular-visual-apis.md`
 

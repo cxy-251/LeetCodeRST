@@ -83,18 +83,27 @@
 
 当前 `editor-web` 已新增：
 
-- `/effects/cellular-life`
-- `/effects/cellular-launch`
-- `/effects/aurora`
+- `/effects/life-game`
 
 这类页面的目标不是展示完整模板，而是单独验证“背景与文本之间的中间层特效原子”。
 
 例如：
 
-- `cellular-launch`
-  效果：页面内可点击按钮，启动生命游戏。
-- `cellular-life`
-  效果：单独查看持续运行的生命游戏中间层。
+- `life-game`
+  效果：页面内可点击按钮，启动并持续运行生命游戏。
+
+### 转换层
+
+当前已新增 `EffectRuntimeAdapter`：
+
+1. 网页端：
+   - effect atom 可以独立运行
+   - 可以响应点击、暂停、重置
+2. 视频端：
+   - effect atom 会根据绝对帧自动运行
+   - 不依赖人工点击
+
+它的作用就是把“交互式小游戏 / WebGL effect”转换成“可被视频引擎稳定录制的 deterministic effect 轨道”。
 
 后续新增 WebGL 小游戏时，推荐直接按同一路径继续扩展：
 

@@ -1,18 +1,16 @@
 import React, {useEffect, useMemo, useState} from "react";
 import {
   getEffectAtomDefinition,
+  EffectRuntimeAdapter,
   getCoverLayoutConfig,
-  getCellularLaunchOrigin,
   getInterpolatedCoverLayoutConfig,
   getSceneTitle,
   getSceneVisualIds,
   getThemePalette,
   getTextMotionState,
   resolveBackgroundMotionConfig,
-  resolveCellularEffectConfig,
   resolveTextMotionConfig,
   type EffectAtomId,
-  ThreeLifeEffect,
 } from "@paper-to-video/content-pipeline";
 import {renderTemplateZone} from "@paper-to-video/timeline-engine";
 import type {BackgroundEffectId, RenderManifest, RenderScene} from "@paper-to-video/shared-types";
@@ -86,142 +84,25 @@ const templateRoutes: TemplateRoute[] = [
 
 const effectRoutes: EffectRoute[] = [
   {
-    id: "effect-cellular-life",
-    href: "/effects/cellular-life",
-    title: "Cellular Life Effect",
-    description: "单独查看持续计算的生命游戏特效层，用来迭代 WebGL 细胞尺寸、步进速度和色块表达。",
-    effectId: "cellular-life",
-    source: "latest",
-  },
-  {
-    id: "effect-cellular-launch",
-    href: "/effects/cellular-launch",
-    title: "Cellular Launch Effect",
-    description: "单独查看生命游戏的启动阶段，用来调整按钮激活、扩散起点和切入方式。",
+    id: "effect-life-game",
+    href: "/effects/life-game",
+    title: "Life Game Effect",
+    description: "单独查看可点击启动的生命游戏中间层原子，后续小游戏也沿这套接口扩展。",
     effectId: "cellular-launch",
     source: "latest",
-  },
-  {
-    id: "effect-aurora",
-    href: "/effects/aurora",
-    title: "Aurora Overlay",
-    description: "独立查看轻量氛围型特效层，方便跟生命游戏类 effect 分开对比。",
-    effectId: "aurora",
-    source: "default",
   },
 ];
 
 const legacyRedirects: Record<string, string> = {
+  "/effects/cellular-launch": "/effects/life-game",
+  "/effects/cellular-life": "/effects/life-game",
+  "/effects/aurora": "/effects/life-game",
   "/previews/demo": "/templates/demo",
   "/previews/latest": "/templates/latest",
 };
 
 const findTemplateRoute = (pathname: string) => templateRoutes.find((route) => route.href === pathname) ?? null;
 const findEffectRoute = (pathname: string) => effectRoutes.find((route) => route.href === pathname) ?? null;
-
-const PreviewEffectLayer: React.FC<{
-  effectId: BackgroundEffectId;
-  frame: number;
-  absoluteFrame: number;
-  activationFrame: number;
-  seed: number;
-  modules?: RenderManifest["modules"];
-}> = ({effectId, frame, absoluteFrame, activationFrame, seed, modules}) => {
-  if (effectId === "cellular-life") {
-    return (
-      <ThreeLifeEffect
-        absoluteFrame={absoluteFrame}
-        activationFrame={activationFrame}
-        width={378}
-        height={672}
-        seed={seed}
-        modules={modules}
-      />
-    );
-  }
-
-  if (effectId === "cellular-launch") {
-    const buttonOrigin = getCellularLaunchOrigin();
-    const pulse = 1 + Math.sin(frame / 7) * 0.04;
-    const ready = absoluteFrame >= activationFrame;
-    return (
-      <>
-        <ThreeLifeEffect
-          absoluteFrame={absoluteFrame}
-          activationFrame={activationFrame}
-          width={378}
-          height={672}
-          seed={seed}
-          modules={modules}
-        />
-        {!ready ? (
-          <div
-            className="preview-launch-button"
-            style={{
-              transform: `translate(${(buttonOrigin.x - 0.5) * 110}px, ${(buttonOrigin.y - 0.5) * 110}px) scale(${pulse})`,
-            }}
-          >
-            Start Life Simulation
-          </div>
-        ) : (
-          <div
-            className="preview-effect-layer"
-            style={{
-              background: `radial-gradient(circle at ${buttonOrigin.x * 100}% ${buttonOrigin.y * 100}%, rgba(87,216,196,0.12) 0%, transparent ${Math.min(34, 8 + (absoluteFrame - activationFrame) * 0.16)}%)`,
-            }}
-          />
-        )}
-      </>
-    );
-  }
-
-  if (effectId === "grid-drift") {
-    return (
-      <div
-        className="preview-effect-layer"
-        style={{
-          opacity: 0.38,
-          backgroundImage: `
-            linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(255,255,255,0.07) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(87,216,196,0.14) 0%, transparent 40%, rgba(255,255,255,0.08) 100%)
-          `,
-          backgroundSize: "44px 44px, 44px 44px, 100% 100%",
-          backgroundPosition: `${(frame * 0.8) % 44}px ${(frame * 0.3) % 44}px, ${(frame * 0.8) % 44}px ${(frame * 0.3) % 44}px, 0 0`,
-        }}
-      />
-    );
-  }
-
-  if (effectId === "noise-bloom") {
-    return (
-      <div
-        className="preview-effect-layer"
-        style={{
-          opacity: 0.92,
-          background: `
-            radial-gradient(circle at ${22 + (frame % 24)}% 24%, rgba(87,216,196,0.18) 0%, transparent 24%),
-            radial-gradient(circle at 80% ${68 + (frame % 16) * 0.4}%, rgba(255,255,255,0.12) 0%, transparent 18%)
-          `,
-        }}
-      />
-    );
-  }
-
-  if (effectId === "aurora") {
-    return (
-      <div
-        className="preview-effect-layer"
-        style={{
-          background:
-            "radial-gradient(circle at 18% 22%, rgba(87,216,196,0.14) 0%, transparent 22%), radial-gradient(circle at 82% 76%, rgba(255,255,255,0.1) 0%, transparent 18%)",
-        }}
-      />
-    );
-  }
-
-  return <div className="preview-effect-layer preview-effect-layer--soft" />;
-};
 
 const AppIndex: React.FC<{
   navigate: (href: string) => void;
@@ -352,13 +233,15 @@ const PreviewStage: React.FC<{
           </div>
         ) : null}
         {effectLayer ?? (
-          <PreviewEffectLayer
+          <EffectRuntimeAdapter
             effectId={effectId}
-            frame={previewFrame}
             absoluteFrame={absolutePreviewFrame}
             activationFrame={activationFrame}
-            seed={manifest.seed}
+            height={672}
+            mode="render"
             modules={manifest.modules}
+            seed={manifest.seed}
+            width={378}
           />
         )}
         {children}
@@ -448,7 +331,7 @@ const TemplatePreviewPage: React.FC<{
   const absolutePreviewFrame = activeScene.fromFrame + previewFrame;
   const launchScene =
     manifest.scenes.find((scene) => getSceneVisualIds(scene).backgroundEffectId === "cellular-launch") ?? null;
-  const activationFrame = (launchScene?.fromFrame ?? 0) + resolveCellularEffectConfig(manifest.modules).activationDelayFrames;
+  const activationFrame = launchScene?.fromFrame ?? 0;
   const coverImageSrc =
     manifest.coverImage?.source === "remote"
       ? manifest.coverImage.path
@@ -641,11 +524,13 @@ const EffectLabPage: React.FC<{
     route.effectId === "aurora" ? "Ambient Overlay" : isRunning ? "Running" : "Idle";
   const effectLayer = (
     <>
-      <effectDefinition.Component
+      <EffectRuntimeAdapter
         absoluteFrame={absolutePreviewFrame}
         activationFrame={activationFrame}
+        effectId={route.effectId}
         height={672}
         isRunning={isRunning}
+        mode="interactive"
         modules={manifest.modules}
         onPrimaryAction={() => setIsRunning(true)}
         seed={manifest.seed}

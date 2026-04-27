@@ -1,6 +1,7 @@
 import React from "react";
 import {AbsoluteFill, Audio, Img, Sequence, staticFile, useCurrentFrame, useVideoConfig} from "remotion";
 import {
+  EffectRuntimeAdapter,
   getCoverLayoutConfig,
   getCellularLaunchOrigin,
   getInterpolatedCoverLayoutConfig,
@@ -10,7 +11,6 @@ import {
   resolveBackgroundMotionConfig,
   resolveCellularEffectConfig,
   resolveTextMotionConfig,
-  ThreeLifeEffect,
 } from "@paper-to-video/content-pipeline";
 import {renderTemplateZone} from "@paper-to-video/timeline-engine";
 import type {
@@ -85,69 +85,18 @@ const BackgroundEffectLayer: React.FC<{
 }> = ({effectId, sceneFrame, absoluteFrame, activationFrame, themeId, seed, modules}) => {
   const palette = getThemePalette(themeId);
   const {width, height} = useVideoConfig();
-
-  if (effectId === "cellular-life") {
+  if (effectId === "cellular-life" || effectId === "cellular-launch") {
     return (
-      <ThreeLifeEffect
+      <EffectRuntimeAdapter
         absoluteFrame={absoluteFrame}
         activationFrame={activationFrame}
-        width={width}
+        effectId={effectId}
         height={height}
-        seed={seed}
+        mode="render"
         modules={modules}
+        seed={seed}
+        width={width}
       />
-    );
-  }
-
-  if (effectId === "cellular-launch") {
-    const buttonOrigin = getCellularLaunchOrigin();
-    const pulse = 1 + Math.sin(sceneFrame / 7) * 0.04;
-    const ready = absoluteFrame >= activationFrame;
-    return (
-      <>
-        <ThreeLifeEffect
-          absoluteFrame={absoluteFrame}
-          activationFrame={activationFrame}
-          width={width}
-          height={height}
-          seed={seed}
-          modules={modules}
-        />
-        {!ready ? (
-          <AbsoluteFill
-            style={{
-              justifyContent: "center",
-              alignItems: "center",
-              pointerEvents: "none",
-            }}
-          >
-            <div
-              style={{
-                width: 320,
-                padding: "22px 28px",
-                borderRadius: 999,
-                border: "1px solid rgba(255,255,255,0.16)",
-                background: "rgba(5,12,20,0.58)",
-                color: "#f4f7fb",
-                fontSize: 28,
-                letterSpacing: 1,
-                textAlign: "center",
-                boxShadow: "0 0 0 12px rgba(87,216,196,0.08), 0 18px 48px rgba(0,0,0,0.28)",
-                transform: `translate(${(buttonOrigin.x - 0.5) * 120}px, ${(buttonOrigin.y - 0.5) * 120}px) scale(${pulse})`,
-              }}
-            >
-              Start Life Simulation
-            </div>
-          </AbsoluteFill>
-        ) : (
-          <AbsoluteFill
-            style={{
-              pointerEvents: "none",
-              background: `radial-gradient(circle at ${buttonOrigin.x * 100}% ${buttonOrigin.y * 100}%, rgba(87,216,196,0.12) 0%, transparent ${Math.min(34, 8 + (absoluteFrame - activationFrame) * 0.16)}%)`,
-            }}
-          />
-        )}
-      </>
     );
   }
 
