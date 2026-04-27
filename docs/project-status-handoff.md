@@ -148,6 +148,14 @@ npm run render:video
    - `--concurrency 2`
    并支持通过 `REMOTION_GL` / `REMOTION_CONCURRENCY` 覆盖
 34. `ThreeLifeEffect` 当前坚持 `Three.js + WebGL` 路线，并改成显式尝试 `webgl2 / webgl / experimental-webgl`，同时降低上下文创建开销，以提高 editor 与视频渲染中的可用性
+35. `apps/editor-web/src/App.tsx` 已按局部规范重构：
+   - `App.tsx` 只做页面装配
+   - `AppViews.tsx` 负责视图组件
+   - `useEditorPreview.ts` 负责状态和交互
+   - `App.service.ts` 负责文件读取与模型整理
+   - `App.types.ts` 负责类型
+   - `App.module.css` 负责样式
+   - 旧的 `styles.css` 已移除
 
 ---
 
