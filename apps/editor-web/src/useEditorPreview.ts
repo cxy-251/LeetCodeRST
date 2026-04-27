@@ -1,5 +1,4 @@
 import {useEffect, useMemo, useState} from "react";
-import {getSceneVisualIds} from "@paper-to-video/content-pipeline";
 import type {RenderManifest} from "@paper-to-video/shared-types";
 import {
   findEffectScene,
@@ -195,14 +194,4 @@ export const useEffectPreview = (route: EffectRoute | null): EffectPreviewState 
   };
 };
 
-export const useTemplateActivationFrame = (manifest: RenderManifest | null) => {
-  return useMemo(() => {
-    if (!manifest) {
-      return 0;
-    }
-
-    const launchScene =
-      manifest.scenes.find((scene) => getSceneVisualIds(scene).backgroundEffectId === "cellular-launch") ?? null;
-    return launchScene?.fromFrame ?? 0;
-  }, [manifest]);
-};
+export const useTemplateActivationFrame = (_manifest: RenderManifest | null) => 0;

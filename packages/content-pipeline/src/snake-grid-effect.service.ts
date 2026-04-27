@@ -6,40 +6,124 @@ type SnakeCell = {
   tone: "head" | "body" | "food";
 };
 
+type Point = {
+  x: number;
+  y: number;
+};
+
+const DIRECTIONS: Direction[] = ["up", "right", "down", "left"];
+
 const hashNoise = (value: number, seed: number) => {
   const result = Math.sin(value * 12.9898 + seed * 78.233) * 43758.5453;
   return result - Math.floor(result);
 };
 
-const rotateLeft = (direction: Direction): Direction => {
-  const order: Direction[] = ["up", "left", "down", "right"];
-  const index = order.indexOf(direction);
-  return order[(index + 1) % order.length];
-};
-
-const rotateRight = (direction: Direction): Direction => {
-  const order: Direction[] = ["up", "right", "down", "left"];
-  const index = order.indexOf(direction);
-  return order[(index + 1) % order.length];
-};
-
-const stepForward = (
-  x: number,
-  y: number,
-  direction: Direction,
-  cols: number,
-  rows: number,
-) => {
+const stepForward = (point: Point, direction: Direction, cols: number, rows: number): Point => {
   switch (direction) {
     case "up":
-      return {x, y: (y - 1 + rows) % rows};
+      return {x: point.x, y: (point.y - 1 + rows) % rows};
     case "right":
-      return {x: (x + 1) % cols, y};
+      return {x: (point.x + 1) % cols, y: point.y};
     case "down":
-      return {x, y: (y + 1) % rows};
+      return {x: point.x, y: (point.y + 1) % rows};
     case "left":
-      return {x: (x - 1 + cols) % cols, y};
+      return {x: (point.x - 1 + cols) % cols, y: point.y};
   }
+};
+
+const wrapDistance = (from: number, to: number, size: number) => {
+  const diff = Math.abs(to - from);
+  return Math.min(diff, size - diff);
+};
+
+const pointKey = (point: Point) => `${point.x},${point.y}`;
+
+const sortDirectionsTowardFood = ({
+  head,
+  food,
+  cols,
+  rows,
+}: {
+  head: Point;
+  food: Point;
+  cols: number;
+  rows: number;
+}) => {
+  return [...DIRECTIONS].sort((left, right) => {
+    const leftPoint = stepForward(head, left, cols, rows);
+    const rightPoint = stepForward(head, right, cols, rows);
+    const leftScore =
+      wrapDistance(leftPoint.x, food.x, cols) + wrapDistance(leftPoint.y, food.y, rows);
+    const rightScore =
+      wrapDistance(rightPoint.x, food.x, cols) + wrapDistance(rightPoint.y, food.y, rows);
+
+    return leftScore - rightScore;
+  });
+};
+
+const spawnFood = ({
+  cols,
+  rows,
+  seed,
+  eatenCount,
+  snake,
+}: {
+  cols: number;
+  rows: number;
+  seed: number;
+  eatenCount: number;
+  snake: Point[];
+}) => {
+  const occupied = new Set(snake.map(pointKey));
+
+  /**
+   * Food stays alive until the snake reaches it. When spawning a new target,
+   * we walk a deterministic sequence so editor and final render stay identical.
+   */
+  for (let attempt = 0; attempt < cols * rows; attempt += 1) {
+    const x = Math.floor(hashNoise(eatenCount * 37 + attempt * 11 + 7, seed) * cols) % cols;
+    const y = Math.floor(hashNoise(eatenCount * 53 + attempt * 17 + 19, seed) * rows) % rows;
+    const candidate = {x, y};
+
+    if (!occupied.has(pointKey(candidate))) {
+      return candidate;
+    }
+  }
+
+  return {x: 0, y: 0};
+};
+
+const chooseNextHead = ({
+  snake,
+  food,
+  cols,
+  rows,
+}: {
+  snake: Point[];
+  food: Point;
+  cols: number;
+  rows: number;
+}) => {
+  const head = snake[0];
+  const movableBody = snake.slice(0, -1);
+  const blocked = new Set(movableBody.map(pointKey));
+  const ordered = sortDirectionsTowardFood({head, food, cols, rows});
+
+  for (const direction of ordered) {
+    const next = stepForward(head, direction, cols, rows);
+    if (!blocked.has(pointKey(next))) {
+      return next;
+    }
+  }
+
+  for (const direction of DIRECTIONS) {
+    const next = stepForward(head, direction, cols, rows);
+    if (!blocked.has(pointKey(next))) {
+      return next;
+    }
+  }
+
+  return stepForward(head, ordered[0] ?? "right", cols, rows);
 };
 
 export const buildSnakeGridCells = ({
@@ -54,39 +138,36 @@ export const buildSnakeGridCells = ({
   seed: number;
 }) => {
   const steps = Math.max(0, Math.floor(frame / 3));
-  const snakeLength = 22;
-  let direction: Direction = "right";
-  let headX = Math.floor(cols * 0.34);
-  let headY = Math.floor(rows * 0.46);
-  const trail = [{x: headX, y: headY}];
+  let targetLength = 18;
+  let eatenCount = 0;
+  const snake: Point[] = [];
 
-  /**
-   * We use a deterministic turn schedule instead of random state so the same
-   * frame always reproduces the same snake path in both editor and video render.
-   */
-  for (let step = 1; step <= steps + snakeLength; step += 1) {
-    if (step % 11 === 0) {
-      const turnNoise = hashNoise(step, seed);
-      direction = turnNoise > 0.5 ? rotateLeft(direction) : rotateRight(direction);
+  for (let index = 0; index < targetLength; index += 1) {
+    snake.push({
+      x: (Math.floor(cols * 0.28) - index + cols) % cols,
+      y: Math.floor(rows * 0.48),
+    });
+  }
+
+  let food = spawnFood({cols, rows, seed, eatenCount, snake});
+
+  for (let step = 0; step < steps; step += 1) {
+    const nextHead = chooseNextHead({snake, food, cols, rows});
+    snake.unshift(nextHead);
+    const ateFood = nextHead.x === food.x && nextHead.y === food.y;
+
+    if (ateFood) {
+      eatenCount += 1;
+      targetLength += 2;
+      food = spawnFood({cols, rows, seed, eatenCount, snake});
     }
 
-    const next = stepForward(headX, headY, direction, cols, rows);
-    headX = next.x;
-    headY = next.y;
-    trail.unshift(next);
-
-    if (trail.length > snakeLength) {
-      trail.pop();
+    while (snake.length > targetLength) {
+      snake.pop();
     }
   }
 
-  const foodStep = Math.max(0, Math.floor(frame / 18));
-  const food = {
-    x: (Math.floor(hashNoise(foodStep + 7, seed) * cols) + cols) % cols,
-    y: (Math.floor(hashNoise(foodStep + 19, seed) * rows) + rows) % rows,
-  };
-
-  const cells: SnakeCell[] = trail.map((cell, index) => ({
+  const cells: SnakeCell[] = snake.map((cell, index) => ({
     x: cell.x,
     y: cell.y,
     tone: index === 0 ? "head" : "body",

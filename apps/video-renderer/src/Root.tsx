@@ -9,7 +9,7 @@ import {
   getThemePalette,
   getTextMotionState,
   resolveBackgroundMotionConfig,
-  resolveCellularEffectConfig,
+  resolveLifeGameActivationFrame,
   resolveTextMotionConfig,
 } from "@paper-to-video/content-pipeline";
 import {renderTemplateZone} from "@paper-to-video/timeline-engine";
@@ -231,10 +231,7 @@ const SceneCard: React.FC<{
   const previousLayoutId = previousScene
     ? getSceneVisualIds(previousScene).backgroundImageLayoutId
     : "cover-full";
-  const launchScene =
-    manifest.scenes.find((item) => getSceneVisualIds(item).backgroundEffectId === "cellular-launch") ?? null;
-  const activationFrame =
-    (launchScene?.fromFrame ?? 0) + resolveCellularEffectConfig(manifest.modules).activationDelayFrames;
+  const activationFrame = resolveLifeGameActivationFrame(manifest);
   const primaryNodes = renderTemplateZone({
     zone: "primary",
     context: {

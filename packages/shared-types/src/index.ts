@@ -74,13 +74,18 @@ export type CellularEffectConfig = {
   cellColumns: number;
   cellRows: number;
   stepEveryFrames: number;
-  activationDelayFrames: number;
   cellPadding: number;
   cornerRadius: number;
   edgeMode: "wrap";
   primaryColor: string;
   secondaryColor: string;
   birthColor: string;
+  launchClickRatio: number;
+  launchSettleRatio: number;
+  minLaunchClickFrames: number;
+  maxLaunchClickFrames: number;
+  minLaunchSettleFrames: number;
+  maxLaunchSettleFrames: number;
 };
 
 export type TypographyScaleConfig = {
@@ -236,6 +241,8 @@ export type SceneTiming = {
   holdFrames: number;
   exitFrames: number;
   audioOffsetFrames: number;
+  interactionFrameOffset: number;
+  effectStartFrameOffset: number;
 };
 
 export type RenderScene = {

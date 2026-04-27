@@ -6,6 +6,7 @@ import {
   writeRunSummary,
 } from "./lib/run-artifacts";
 import {
+  resolveLaunchCueOffsets,
   resolveSceneBackgroundEffectId,
   resolveSceneBackgroundImageLayoutId,
 } from "@paper-to-video/content-pipeline";
@@ -132,12 +133,24 @@ const main = async () => {
     const durationInFrames = msToFrames(sceneDurationMs, manifest.output.fps);
     const enterFrames = Math.min(12, Math.max(8, Math.floor(durationInFrames * 0.12)));
     const exitFrames = Math.min(12, Math.max(8, Math.floor(durationInFrames * 0.08)));
-    const timing: SceneTiming = {
+    const baseTiming: SceneTiming = {
       enterFrames,
       holdFrames: Math.max(1, durationInFrames - enterFrames - exitFrames),
       exitFrames,
       audioOffsetFrames: 0,
+      interactionFrameOffset: enterFrames,
+      effectStartFrameOffset: enterFrames,
     };
+    const timing =
+      resolveSceneBackgroundEffectId(scene) === "cellular-launch"
+        ? {
+            ...baseTiming,
+            ...resolveLaunchCueOffsets({
+              scene: {timing: baseTiming},
+              modules: manifest.modules,
+            }),
+          }
+        : baseTiming;
 
     const renderScene: RenderScene = {
       id: scene.id,

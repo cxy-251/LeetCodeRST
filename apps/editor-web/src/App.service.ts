@@ -3,6 +3,7 @@ import {
   getCoverLayoutConfig,
   getEffectAtomDefinition,
   getInterpolatedCoverLayoutConfig,
+  resolveLifeGameActivationFrame,
   getSceneTitle,
   getSceneVisualIds,
   getThemePalette,
@@ -156,11 +157,8 @@ const resolveTemplateLayout = ({
    * We anchor template preview activation to the launch scene so the editor and
    * the final render use the same moment as the effect hand-off boundary.
    */
-  const launchScene =
-    manifest.scenes.find((scene) => getSceneVisualIds(scene).backgroundEffectId === "cellular-launch") ?? null;
-
   return {
-    activationFrame: launchScene?.fromFrame ?? 0,
+    activationFrame: resolveLifeGameActivationFrame(manifest),
     backgroundEffectId,
     coverImageSrc: getCoverImageSrc(manifest),
     palette,

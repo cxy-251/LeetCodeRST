@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import {spawn} from "node:child_process";
+import {resolveLaunchCueOffsets} from "@paper-to-video/content-pipeline";
 import {readLatestRun, writeRunSummary} from "./lib/run-artifacts";
 import type {
   AudioAsset,
@@ -176,8 +177,14 @@ const rebuildTimeline = (
         ...scene.timing,
         holdFrames,
         audioOffsetFrames: enterFrames,
+        interactionFrameOffset: scene.timing.interactionFrameOffset,
+        effectStartFrameOffset: scene.timing.effectStartFrameOffset,
       },
     };
+
+    if (scene.backgroundEffectId === "cellular-launch") {
+      Object.assign(nextScene.timing, resolveLaunchCueOffsets({scene: nextScene, modules: renderManifest.modules}));
+    }
 
     if (audioAsset) {
       const sceneSubtitleSegments = audioAsset.segments.map<SubtitleSegment>((segment, index) => {

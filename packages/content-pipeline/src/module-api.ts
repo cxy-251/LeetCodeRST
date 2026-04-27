@@ -59,13 +59,18 @@ export const DEFAULT_CELLULAR_EFFECT: CellularEffectConfig = {
   cellColumns: 44,
   cellRows: 78,
   stepEveryFrames: 2,
-  activationDelayFrames: 18,
   cellPadding: 0.5,
   cornerRadius: 0.45,
   edgeMode: "wrap",
   primaryColor: "#79f7d4",
   secondaryColor: "#f8fbff",
   birthColor: "#2fb4ff",
+  launchClickRatio: 0.22,
+  launchSettleRatio: 0.12,
+  minLaunchClickFrames: 8,
+  maxLaunchClickFrames: 28,
+  minLaunchSettleFrames: 6,
+  maxLaunchSettleFrames: 18,
 };
 
 export const DEFAULT_TYPOGRAPHY_SCALE: TypographyScaleConfig = {

@@ -322,6 +322,40 @@ Next check after this pass:
 
 ---
 
+## 11. 2026-04-27 Dynamic Cue Timing Pass
+
+This pass removed the remaining fixed-frame launch dependency from the life-game flow.
+
+What changed:
+
+1. `cellularEffect.activationDelayFrames` is no longer used as the driver for page-2 to page-3 activation handoff.
+2. Launch timing is now computed from scene timing derived from narration audio duration.
+   Specifically:
+   - `interactionFrameOffset`
+   - `effectStartFrameOffset`
+   are written into `SceneTiming`.
+3. The launch scene now computes its simulated click beat and effect-start beat from hold duration using configurable ratios and clamps.
+4. `snake-grid` was upgraded from a drifting prototype to a deterministic food-seeking version:
+   - food persists until eaten
+   - the snake chooses the shortest wrapped path toward food
+   - a new food target only spawns after successful consumption
+
+New `modules.cellularEffect` timing controls:
+
+- `launchClickRatio`
+- `launchSettleRatio`
+- `minLaunchClickFrames`
+- `maxLaunchClickFrames`
+- `minLaunchSettleFrames`
+- `maxLaunchSettleFrames`
+
+Why this matters:
+
+1. Swapping in a different paper, narration text, or voice rate should no longer require manually editing a fixed activation frame.
+2. The second scene can now complete the launch-button beat and start the life simulation based on actual scene timing rather than a hardcoded delay.
+
+---
+
 ## 8. 续接建议
 
 如果在新对话里继续，建议先读：

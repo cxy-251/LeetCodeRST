@@ -24,6 +24,7 @@ export {EFFECT_ATOMS, getEffectAtomDefinition} from "./effect-atoms";
 export type {EffectAtomDefinition, EffectAtomId, EffectAtomRuntimeProps} from "./effect-atoms.types";
 export {EffectRuntimeAdapter} from "./effect-runtime";
 export type {EffectRuntimeAdapterProps, EffectRuntimeMode} from "./effect-runtime";
+export {resolveLaunchCueOffsets, resolveLifeGameActivationFrame} from "./effect-timing";
 
 export type ThemePalette = {
   bg: string;

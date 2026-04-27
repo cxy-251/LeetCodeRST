@@ -67,6 +67,8 @@ const fallbackManifest: RenderManifest = {
         holdFrames: 126,
         exitFrames: 12,
         audioOffsetFrames: 0,
+        interactionFrameOffset: 20,
+        effectStartFrameOffset: 28,
       },
     },
   ],

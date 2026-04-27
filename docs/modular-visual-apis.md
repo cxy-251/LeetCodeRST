@@ -150,13 +150,18 @@
     "cellColumns": 44,
     "cellRows": 78,
     "stepEveryFrames": 2,
-    "activationDelayFrames": 18,
     "cellPadding": 0.5,
     "cornerRadius": 0.45,
     "edgeMode": "wrap",
     "primaryColor": "#82ffd9",
     "secondaryColor": "#f6fbff",
-    "birthColor": "#4db8ff"
+    "birthColor": "#4db8ff",
+    "launchClickRatio": 0.22,
+    "launchSettleRatio": 0.12,
+    "minLaunchClickFrames": 8,
+    "maxLaunchClickFrames": 28,
+    "minLaunchSettleFrames": 6,
+    "maxLaunchSettleFrames": 18
   }
 }
 ```
@@ -169,8 +174,6 @@
   效果：纵向网格数量。越大，细胞越密。
 - `stepEveryFrames`
   效果：多少帧迭代一次生命游戏。值越小，演化越快。
-- `activationDelayFrames`
-  效果：启动按钮出现后，延迟多少帧开始正式演化。
 - `cellPadding`
   效果：单个细胞块内部留白。值越小，块越满。
 - `cornerRadius`
@@ -184,6 +187,14 @@
   效果：次级细胞色，用来拉开层次。
 - `birthColor`
   效果：新生或高亮细胞的强调色。
+- `launchClickRatio`
+  效果：启动场景里，模拟点击按钮在 hold 区间中的相对时机。
+- `launchSettleRatio`
+  效果：点击后，按钮完成过渡再切到生命游戏的相对缓冲时机。
+- `minLaunchClickFrames` / `maxLaunchClickFrames`
+  效果：限制点击时机不会因为语音过短或过长而过分靠前或靠后。
+- `minLaunchSettleFrames` / `maxLaunchSettleFrames`
+  效果：限制点击完成后的过渡缓冲窗口。
 
 ---
 
