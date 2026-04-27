@@ -12,7 +12,7 @@ const DEFAULT_RENDER_MANIFEST = path.resolve("data/generated-meta/demo-paper-001
 const DEFAULT_OUTPUT = path.resolve("output/videos/demo-paper-001.mp4");
 const PUBLIC_DIR = path.resolve("public");
 const DEFAULT_GL = process.env.REMOTION_GL ?? "angle";
-const DEFAULT_CONCURRENCY = process.env.REMOTION_CONCURRENCY ?? "1";
+const DEFAULT_CONCURRENCY = process.env.REMOTION_CONCURRENCY ?? "2";
 
 const run = (command: string, args: string[]) =>
   new Promise<void>((resolve, reject) => {

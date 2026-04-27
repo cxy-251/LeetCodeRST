@@ -110,7 +110,7 @@
 当前 `tools/build-video.ts` 对 WebGL effect 默认启用了更保守的渲染参数：
 
 - `--gl angle`
-- `--concurrency 1`
+- `--concurrency 2`
 
 目的：
 
@@ -121,6 +121,20 @@
 
 - `REMOTION_GL`
 - `REMOTION_CONCURRENCY`
+
+### WebGL 自动降级
+
+当前生命游戏 effect 已新增自动降级策略：
+
+1. 优先尝试 `Three.js + WebGL`
+2. 如果当前浏览器 / 无头渲染环境拿不到稳定的 WebGL context
+3. 自动回退到 `2D canvas` 版同一套细胞演化
+
+这样可以保证：
+
+- 网页端能先看到生命游戏在跑
+- 视频端能稳定录出来
+- 后续继续保留 WebGL 作为高性能实现路径
 
 后续新增 WebGL 小游戏时，推荐直接按同一路径继续扩展：
 

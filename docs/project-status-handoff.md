@@ -145,8 +145,9 @@ npm run render:video
 32. `npm install` 已补跑，workspace 包解析已恢复；`render:video` 不再报 `@paper-to-video/timeline-engine` 找不到，而是进入浏览器启动阶段
 33. `tools/build-video.ts` 已补上 WebGL 更稳妥的默认渲染参数：
    - `--gl angle`
-   - `--concurrency 1`
+   - `--concurrency 2`
    并支持通过 `REMOTION_GL` / `REMOTION_CONCURRENCY` 覆盖
+34. `ThreeLifeEffect` 已新增自动降级策略：WebGL context 创建失败时，自动切换到 `2D canvas` 版生命游戏，保证 editor 与视频渲染都能看到中间层特效
 
 ---
 
