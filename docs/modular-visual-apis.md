@@ -13,6 +13,56 @@
 
 ---
 
+## 0. 内容源与背景图选择 API
+
+如果你希望不同论文总结文本复用同一套视频风格，推荐优先改这两个顶层字段：
+
+```json
+"contentProfile": {
+  "id": "demo-layout-priors"
+},
+"coverProfile": {
+  "id": "portrait-default"
+}
+```
+
+含义：
+
+1. `contentProfile.id`
+   效果：选择“这条视频到底讲哪份论文总结文本”。
+2. `coverProfile.id`
+   效果：选择“这条视频默认使用哪张背景图 / 封面图”。
+
+这样一来：
+
+1. scene 里只保留结构、顺序、动效和版式语义
+2. 论文文本从独立 content profile 注入
+3. 背景图从独立 cover profile 注入
+4. 更换论文或更换背景时，不需要改每一页的正文和配图路径
+
+当前默认注册表位置：
+
+- `data/content-profiles/index.json`
+- `data/cover-assets/index.json`
+
+当前示例内容 profile：
+
+- `demo-layout-priors`
+- `agentic-world-modeling`
+
+当前示例封面 profile：
+
+- `portrait-default`
+- `abstract-orbit`
+
+补充说明：
+
+1. `contentProfile` 会按 `scene.contentRef` 把每页的 `narrationText` 和 `content` 注入进 manifest
+2. `coverProfile` 会解析成最终 `coverImage`
+3. 如果显式写了 `coverImage`，它仍然可以继续用于本地临时案例
+
+---
+
 ## 1. 背景图布局 API
 
 ### scene 字段

@@ -174,7 +174,7 @@ const buildAudioCacheKey = ({
       rate: voice.rate,
       pitch: voice.pitch,
       volume: voice.volume ?? "",
-      text: scene.narrationText,
+      text: scene.narrationText ?? "",
     }),
   );
 
@@ -264,8 +264,13 @@ const main = async () => {
   await ensureCacheDirectories();
 
   for (const scene of productionManifest.scenes) {
+    const narrationText = scene.narrationText ?? "";
+    if (!narrationText) {
+      throw new Error(`Scene ${scene.id} is missing narrationText. Run compose:manifest first or provide a hydrated manifest.`);
+    }
+
     if (mockMode) {
-      const audioAsset = await createMockAudioAsset(scene.id, scene.narrationText);
+      const audioAsset = await createMockAudioAsset(scene.id, narrationText);
       const outputMeta = latestRun
         ? path.join(latestRun.rootDir, "meta", `${scene.id}.audio.json`)
         : path.resolve(`data/generated-meta/${scene.id}.audio.json`);
@@ -300,7 +305,7 @@ const main = async () => {
         "--scene-id",
         scene.id,
         "--text",
-        scene.narrationText,
+        narrationText,
         "--voice",
         productionManifest.voice.name,
         "--rate",
@@ -322,7 +327,7 @@ const main = async () => {
     const normalizedAudioAsset: AudioAsset = {
       ...audioAsset,
       durationMs,
-      segments: distributeSegmentsByDuration(scene.narrationText, durationMs),
+      segments: distributeSegmentsByDuration(narrationText, durationMs),
       filePath: outputAudio,
     };
     await fs.writeFile(outputMeta, JSON.stringify(normalizedAudioAsset, null, 2), "utf-8");

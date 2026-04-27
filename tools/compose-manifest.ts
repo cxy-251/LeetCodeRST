@@ -12,6 +12,9 @@ import {
   resolveSceneBackgroundImageLayoutId,
 } from "@paper-to-video/content-pipeline";
 import type {
+  ContentProfileDocument,
+  ContentProfileRegistryDocument,
+  CoverProfileRegistryDocument,
   ProductionManifest,
   RenderManifest,
   RenderScene,
@@ -21,6 +24,8 @@ import type {
 
 const DEFAULT_INPUT = path.resolve("data/manifests/demo-paper.json");
 const DEFAULT_OUTPUT = path.resolve("data/generated-meta/demo-paper-001.render.json");
+const DEFAULT_CONTENT_PROFILE_REGISTRY = path.resolve("data/content-profiles/index.json");
+const DEFAULT_COVER_PROFILE_REGISTRY = path.resolve("data/cover-assets/index.json");
 
 const msToFrames = (ms: number, fps: number) => Math.max(1, Math.round((ms / 1000) * fps));
 
@@ -29,7 +34,88 @@ const estimateSceneDurationMs = (text: string) => {
   return Math.max(2500, estimatedNarration + 700);
 };
 
+const resolveContentProfile = async (manifest: ProductionManifest) => {
+  if (!manifest.contentProfile) {
+    return null;
+  }
+
+  const profilePath = manifest.contentProfile.path
+    ? path.resolve(manifest.contentProfile.path)
+    : await (async () => {
+        const registryRaw = await fs.readFile(DEFAULT_CONTENT_PROFILE_REGISTRY, "utf-8");
+        const registry = JSON.parse(registryRaw) as ContentProfileRegistryDocument;
+        const entry = registry.profiles.find((item) => item.id === manifest.contentProfile?.id);
+        if (!entry) {
+          throw new Error(`Unknown content profile: ${manifest.contentProfile?.id}`);
+        }
+
+        return path.resolve(entry.path);
+      })();
+
+  const raw = await fs.readFile(profilePath, "utf-8");
+  return JSON.parse(raw) as ContentProfileDocument;
+};
+
+const resolveCoverImage = async (manifest: ProductionManifest, contentProfile: ContentProfileDocument | null) => {
+  if (manifest.coverProfile) {
+    const registryPath = manifest.coverProfile.path
+      ? path.resolve(manifest.coverProfile.path)
+      : DEFAULT_COVER_PROFILE_REGISTRY;
+    const registryRaw = await fs.readFile(registryPath, "utf-8");
+    const registry = JSON.parse(registryRaw) as CoverProfileRegistryDocument;
+    const entry = registry.assets.find((item) => item.id === manifest.coverProfile?.id);
+    if (!entry) {
+      throw new Error(`Unknown cover profile: ${manifest.coverProfile?.id}`);
+    }
+
+    return {
+      source: entry.source,
+      path: entry.path,
+      alt: entry.alt,
+    } satisfies NonNullable<ProductionManifest["coverImage"]>;
+  }
+
+  if (manifest.coverImage) {
+    return manifest.coverImage;
+  }
+
+  return contentProfile?.coverImage;
+};
+
+const hydrateManifest = async (manifest: ProductionManifest) => {
+  const contentProfile = await resolveContentProfile(manifest);
+  const coverImage = await resolveCoverImage(manifest, contentProfile);
+
+  const scenes = manifest.scenes.map((scene) => {
+    const profileScene = contentProfile?.scenes[scene.contentRef];
+    const hydratedScene = {
+      ...scene,
+      narrationText: profileScene?.narrationText ?? scene.narrationText,
+      content: profileScene?.content ?? scene.content,
+      imagePrompt: profileScene?.imagePrompt ?? scene.imagePrompt,
+      imageAssetId: profileScene?.imageAssetId ?? scene.imageAssetId,
+    };
+
+    if (!hydratedScene.narrationText) {
+      throw new Error(`Scene ${scene.id} is missing narrationText after content profile hydration.`);
+    }
+
+    return hydratedScene;
+  });
+
+  return {
+    ...manifest,
+    paper: {
+      ...manifest.paper,
+      ...(contentProfile?.paper ?? {}),
+    },
+    coverImage,
+    scenes,
+  } satisfies ProductionManifest;
+};
+
 const buildContent = (scene: ProductionManifest["scenes"][number]) => {
+  const narrationText = scene.narrationText ?? "";
   if (scene.content) {
     return scene.content;
   }
@@ -38,27 +124,27 @@ const buildContent = (scene: ProductionManifest["scenes"][number]) => {
     case "hero":
       return {
         title: "这篇论文到底解决了什么问题？",
-        body: scene.narrationText,
+        body: narrationText,
       };
     case "paper-intro":
       return {
         title: "论文背景",
-        body: scene.narrationText,
+        body: narrationText,
       };
     case "summary":
       return {
         title: "核心总结",
-        body: scene.narrationText,
+        body: narrationText,
       };
     case "ending":
       return {
         title: "结论",
-        body: scene.narrationText,
+        body: narrationText,
       };
     default:
       return {
         title: scene.id,
-        body: scene.narrationText,
+        body: narrationText,
       };
   }
 };
@@ -110,7 +196,8 @@ const main = async () => {
   const input = positionalArgs[0] ? path.resolve(positionalArgs[0]) : DEFAULT_INPUT;
   const output = positionalArgs[1] ? path.resolve(positionalArgs[1]) : undefined;
   const raw = await fs.readFile(input, "utf-8");
-  const manifest = JSON.parse(raw) as ProductionManifest;
+  const sourceManifest = JSON.parse(raw) as ProductionManifest;
+  const manifest = await hydrateManifest(sourceManifest);
   const templateRef = manifest.template ?? {
     id: "paper-digest-v1",
     path: "data/templates/paper-digest-v1.json",
@@ -135,10 +222,11 @@ const main = async () => {
   }
 
   for (const scene of manifest.scenes) {
+    const narrationText = scene.narrationText ?? "";
     const sceneDurationMs =
       scene.durationStrategy === "fixed" && scene.fixedDurationMs
         ? scene.fixedDurationMs
-        : estimateSceneDurationMs(scene.narrationText);
+        : estimateSceneDurationMs(narrationText);
 
     const durationInFrames = msToFrames(sceneDurationMs, manifest.output.fps);
     const enterFrames = Math.min(12, Math.max(8, Math.floor(durationInFrames * 0.12)));
@@ -181,7 +269,7 @@ const main = async () => {
     const sceneSubtitles = buildSubtitles(
       scene.id,
       renderScene.fromFrame,
-      scene.narrationText,
+      narrationText,
       renderScene.durationInFrames,
     );
     renderScene.subtitleSegmentIds = sceneSubtitles.map((segment) => segment.id);

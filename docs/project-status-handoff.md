@@ -67,6 +67,7 @@ npm run render:video
 6. PDF 文本抽取
 7. 基于论文文本的中文短视频脚本草案生成
 8. 基于脚本草案的候选 manifest 生成
+9. `contentProfile` / `coverProfile` 驱动的外部文本源与背景图选择
 
 ### 工程组织
 
@@ -122,37 +123,39 @@ npm run render:video
 20. 已新增模块 API 文档：
    - `docs/modular-visual-apis.md`
 21. 当前 renderer 与 editor 都已经开始读取这套模块参数
-22. 生命游戏 effect 已切换为 `Three.js + WebGL` 实现，不再由 SVG/DOM 承担主渲染
-23. 文本动效已补上离场参数，当前支持进场 + 离场统一配置
-24. 前景层已经开始按 Lego 架构拆成：
+22. `compose:manifest` 已支持从 `contentProfile` 注入论文总结文本，并从 `coverProfile` 解析默认背景图
+23. 当前 demo / local demo 已从“scene 内硬编码正文”切换成“scene 保留结构，正文由 profile 注入”
+24. 生命游戏 effect 已切换为 `Three.js + WebGL` 实现，不再由 SVG/DOM 承担主渲染
+25. 文本动效已补上离场参数，当前支持进场 + 离场统一配置
+26. 前景层已经开始按 Lego 架构拆成：
    - `atomic-ui` 原子组件库
    - `data/templates/*.json` 模板配置
    - `timeline-engine` 模板引擎
-25. 当前 renderer/editor 的前景文本区已切到模板引擎输出，不再全部手写在 `Root.tsx` / `App.tsx`
-26. `npm run compose:manifest` 已验证可正常读取模板 JSON，并将 `templateDocument` 写入最新 run 的 `render-manifest.json`
-27. `editor-web` 已从单页预览改成“小型预览站点”结构：
+27. 当前 renderer/editor 的前景文本区已切到模板引擎输出，不再全部手写在 `Root.tsx` / `App.tsx`
+28. `npm run compose:manifest` 已验证可正常读取模板 JSON，并将 `templateDocument` 写入最新 run 的 `render-manifest.json`
+29. `editor-web` 已从单页预览改成“小型预览站点”结构：
    - `/` 作为索引首页
    - `/templates/latest` 读取最新 run
    - `/templates/demo` 读取仓库默认 demo
-28. `editor-web` 已新增独立特效实验页分区：
+30. `editor-web` 已新增独立特效实验页分区：
    - 当前主入口收敛为 `/effects/life-game`
    - 旧路径会重定向到新的生命游戏入口页
-29. 原子组件字号已从固定像素改成更偏容器友好的响应式尺寸，减少预览页在不同窗口下字号失衡的问题
-30. 特效实验页已从“模板裁剪预览”进一步调整为“独立 effect atom 页面”方向：
+31. 原子组件字号已从固定像素改成更偏容器友好的响应式尺寸，减少预览页在不同窗口下字号失衡的问题
+32. 特效实验页已从“模板裁剪预览”进一步调整为“独立 effect atom 页面”方向：
    - 生命游戏可单独拉出成页面
    - 页面内可点击按钮启动
    - 目标是让贪吃蛇、扫雷、吃豆人等后续 WebGL 小游戏沿同一原子接口接入
-31. 已新增 `EffectRuntimeAdapter` 作为“网页交互特效 -> 视频渲染特效”的转换层：
+33. 已新增 `EffectRuntimeAdapter` 作为“网页交互特效 -> 视频渲染特效”的转换层：
    - 网页端可交互运行
    - 视频端可按绝对帧自动运行
    - 同一个 effect atom 可同时服务 editor 与 Remotion
-32. `npm install` 已补跑，workspace 包解析已恢复；`render:video` 不再报 `@paper-to-video/timeline-engine` 找不到，而是进入浏览器启动阶段
-33. `tools/build-video.ts` 已补上 WebGL 更稳妥的默认渲染参数：
+34. `npm install` 已补跑，workspace 包解析已恢复；`render:video` 不再报 `@paper-to-video/timeline-engine` 找不到，而是进入浏览器启动阶段
+35. `tools/build-video.ts` 已补上 WebGL 更稳妥的默认渲染参数：
    - `--gl angle`
    - `--concurrency 2`
    并支持通过 `REMOTION_GL` / `REMOTION_CONCURRENCY` 覆盖
-34. `ThreeLifeEffect` 当前坚持 `Three.js + WebGL` 路线，并改成显式尝试 `webgl2 / webgl / experimental-webgl`，同时降低上下文创建开销，以提高 editor 与视频渲染中的可用性
-35. `apps/editor-web/src/App.tsx` 已按局部规范重构：
+36. `ThreeLifeEffect` 当前坚持 `Three.js + WebGL` 路线，并改成显式尝试 `webgl2 / webgl / experimental-webgl`，同时降低上下文创建开销，以提高 editor 与视频渲染中的可用性
+37. `apps/editor-web/src/App.tsx` 已按局部规范重构：
    - `App.tsx` 只做页面装配
    - `AppViews.tsx` 负责视图组件
    - `useEditorPreview.ts` 负责状态和交互
@@ -160,7 +163,7 @@ npm run render:video
    - `App.types.ts` 负责类型
    - `App.module.css` 负责样式
    - 旧的 `styles.css` 已移除
-36. 当前活跃的生命游戏特效链路也已做同风格局部拆分：
+38. 当前活跃的生命游戏特效链路也已做同风格局部拆分：
    - `effect-atoms.tsx` 主要保留组件装配
    - `effect-atoms.types.ts` 负责类型
    - `effect-atoms.service.ts` 负责展示层辅助计算
@@ -176,6 +179,9 @@ npm run render:video
 
 - `data/manifests/demo-paper.json`
 - `data/manifests/demo-paper.local.json`
+- `data/content-profiles/index.json`
+- `data/content-profiles/*.json`
+- `data/cover-assets/index.json`
 - `data/templates/paper-digest-v1.json`
 - `data/images/cover-portrait.svg`
 

@@ -58,6 +58,16 @@ export type EffectProfileConfig = {
   id: WebGLEffectProfileId;
 };
 
+export type ContentProfileConfig = {
+  id: string;
+  path?: string;
+};
+
+export type CoverProfileConfig = {
+  id: string;
+  path?: string;
+};
+
 export type TextMotionId = "fade-up" | "slide-up" | "stagger-rise" | "hard-cut";
 
 export type TextMotionConfig = {
@@ -149,7 +159,7 @@ export type ProductionScene = {
     | "quote"
     | "ending";
   contentRef: string;
-  narrationText: string;
+  narrationText?: string;
   content?: Record<string, unknown>;
   imagePrompt?: string;
   imageAssetId?: string;
@@ -169,6 +179,8 @@ export type ProductionManifest = {
     id: string;
     path: string;
   };
+  contentProfile?: ContentProfileConfig;
+  coverProfile?: CoverProfileConfig;
   coverImage?: {
     source: "local" | "remote";
     path: string;
@@ -204,6 +216,37 @@ export type ProductionManifest = {
   effectProfile?: EffectProfileConfig;
   modules?: VisualModuleConfig;
   scenes: ProductionScene[];
+};
+
+export type ContentProfileSceneEntry = {
+  narrationText: string;
+  content?: Record<string, unknown>;
+  imagePrompt?: string;
+  imageAssetId?: string;
+};
+
+export type ContentProfileDocument = {
+  id: string;
+  paper?: Partial<ProductionManifest["paper"]>;
+  coverImage?: CoverImageAsset;
+  scenes: Record<string, ContentProfileSceneEntry>;
+};
+
+export type ContentProfileRegistryDocument = {
+  profiles: Array<{
+    id: string;
+    path: string;
+    label?: string;
+  }>;
+};
+
+export type CoverProfileRegistryDocument = {
+  assets: Array<
+    CoverImageAsset & {
+      id: string;
+      label?: string;
+    }
+  >;
 };
 
 export type ImageAsset = {

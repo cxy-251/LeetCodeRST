@@ -1,7 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import {slugify} from "./lib/run-artifacts";
-import type {ProductionManifest} from "@paper-to-video/shared-types";
+import type {ContentProfileDocument, ProductionManifest} from "@paper-to-video/shared-types";
 
 type SourceBundle = {
   papers: Array<{
@@ -26,8 +26,9 @@ type SourceBundle = {
 
 const INPUT_PATH = path.resolve("data/source-bundles/latest-ai-analysis.json");
 const OUTPUT_DIR = path.resolve("data/manifests/ingest");
+const CONTENT_PROFILE_DIR = path.resolve("data/content-profiles/generated");
 
-const buildManifest = (paper: SourceBundle["papers"][number], index: number): ProductionManifest => {
+const buildContentProfile = (paper: SourceBundle["papers"][number]): ContentProfileDocument => {
   const draft = paper.scriptDraft ?? {
     hook: paper.summary,
     problem: paper.summary,
@@ -38,12 +39,74 @@ const buildManifest = (paper: SourceBundle["papers"][number], index: number): Pr
   };
 
   return {
-    projectId: `arxiv-${paper.arxivId.replace(/[^\w]+/g, "-").toLowerCase()}`,
+    id: `arxiv-${paper.arxivId.replace(/[^\w]+/g, "-").toLowerCase()}`,
+    paper: {
+      source: "arxiv",
+      paperId: paper.arxivId,
+      title: paper.title,
+      pdfUrl: `https://arxiv.org/pdf/${paper.arxivId}.pdf`,
+      localPdfPath: paper.localPdfPath,
+      categories: paper.categories,
+      publishedAt: paper.publishedAt,
+    },
+    scenes: {
+      hook: {
+        narrationText: draft.hook,
+        content: {
+          title: paper.title,
+          body: `arXiv ${paper.arxivId} · ${paper.categories.join(" / ")}`,
+        },
+      },
+      problem: {
+        narrationText: draft.problem,
+        content: {
+          title: "这篇论文在解决什么？",
+          body: draft.problem,
+        },
+      },
+      method: {
+        narrationText: draft.method,
+        content: {
+          title: "关键信息",
+          bullets: draft.bullets.slice(0, 3),
+        },
+      },
+      value: {
+        narrationText: draft.value,
+        content: {
+          title: "为什么值得看？",
+          bullets: [
+            draft.value,
+            `所属方向：${paper.categories.join(" / ")}`,
+            `发布时间：${paper.publishedAt.slice(0, 10)}`,
+          ],
+        },
+      },
+      ending: {
+        narrationText: draft.ending,
+        content: {
+          title: "一句话结论",
+          body: draft.ending,
+        },
+      },
+    },
+  };
+};
+
+const buildManifest = (paper: SourceBundle["papers"][number], index: number): ProductionManifest => {
+  const profileId = `arxiv-${paper.arxivId.replace(/[^\w]+/g, "-").toLowerCase()}`;
+
+  return {
+    projectId: profileId,
     seed: 100 + index,
     locale: "zh-CN",
     template: {
       id: "paper-digest-v1",
       path: "data/templates/paper-digest-v1.json",
+    },
+    contentProfile: {
+      id: profileId,
+      path: path.relative(path.resolve("."), path.join(CONTENT_PROFILE_DIR, `${profileId}.json`)),
     },
     coverImage: paper.suggestedCoverImagePath
       ? {
@@ -116,11 +179,6 @@ const buildManifest = (paper: SourceBundle["papers"][number], index: number): Pr
         id: "scene-hero",
         type: "hero",
         contentRef: "hook",
-        narrationText: draft.hook,
-        content: {
-          title: paper.title,
-          body: `arXiv ${paper.arxivId} · ${paper.categories.join(" / ")}`,
-        },
         backgroundPresetId: "aurora",
         backgroundImageLayoutId: "cover-full",
         backgroundEffectId: "aurora",
@@ -131,11 +189,6 @@ const buildManifest = (paper: SourceBundle["papers"][number], index: number): Pr
         id: "scene-problem",
         type: "paper-intro",
         contentRef: "problem",
-        narrationText: draft.problem,
-        content: {
-          title: "这篇论文在解决什么？",
-          body: draft.problem,
-        },
         backgroundPresetId: "cover-grid-drift",
         backgroundImageLayoutId: "cover-focus-tl",
         backgroundEffectId: "cellular-launch",
@@ -146,11 +199,6 @@ const buildManifest = (paper: SourceBundle["papers"][number], index: number): Pr
         id: "scene-method",
         type: "summary",
         contentRef: "method",
-        narrationText: draft.method,
-        content: {
-          title: "关键信息",
-          bullets: draft.bullets.slice(0, 3),
-        },
         backgroundPresetId: "cover-cellular-mask",
         backgroundImageLayoutId: "cover-focus-tr",
         backgroundEffectId: "cellular-life",
@@ -161,15 +209,6 @@ const buildManifest = (paper: SourceBundle["papers"][number], index: number): Pr
         id: "scene-value",
         type: "bullet",
         contentRef: "value",
-        narrationText: draft.value,
-        content: {
-          title: "为什么值得看？",
-          bullets: [
-            draft.value,
-            `所属方向：${paper.categories.join(" / ")}`,
-            `发布时间：${paper.publishedAt.slice(0, 10)}`,
-          ],
-        },
         backgroundPresetId: "cover-cellular-mask",
         backgroundImageLayoutId: "cover-focus-br",
         backgroundEffectId: "cellular-life",
@@ -180,11 +219,6 @@ const buildManifest = (paper: SourceBundle["papers"][number], index: number): Pr
         id: "scene-ending",
         type: "ending",
         contentRef: "ending",
-        narrationText: draft.ending,
-        content: {
-          title: "一句话结论",
-          body: draft.ending,
-        },
         backgroundPresetId: "cover-soft-focus",
         backgroundImageLayoutId: "cover-focus-bl",
         backgroundEffectId: "cellular-life",
@@ -198,10 +232,14 @@ const buildManifest = (paper: SourceBundle["papers"][number], index: number): Pr
 const main = async () => {
   const bundle = JSON.parse(await fs.readFile(INPUT_PATH, "utf-8")) as SourceBundle;
   await fs.mkdir(OUTPUT_DIR, {recursive: true});
+  await fs.mkdir(CONTENT_PROFILE_DIR, {recursive: true});
 
   for (const [index, paper] of bundle.papers.entries()) {
+    const contentProfile = buildContentProfile(paper);
     const manifest = buildManifest(paper, index);
+    const contentProfilePath = path.join(CONTENT_PROFILE_DIR, `${slugify(manifest.projectId)}.json`);
     const outputPath = path.join(OUTPUT_DIR, `${slugify(manifest.projectId)}.json`);
+    await fs.writeFile(contentProfilePath, JSON.stringify(contentProfile, null, 2), "utf-8");
     await fs.writeFile(outputPath, JSON.stringify(manifest, null, 2), "utf-8");
   }
 

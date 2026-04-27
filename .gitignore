@@ -22,4 +22,5 @@ apps/video-renderer/public/generated-audio/*
 apps/video-renderer/public/generated-images/*
 data/source-bundles/*.json
 data/manifests/ingest/*.json
+data/content-profiles/generated/*.json
 !.gitkeep
