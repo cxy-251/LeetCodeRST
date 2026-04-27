@@ -122,6 +122,7 @@ npm run render:video
 19. 文本动效、背景运动、生命游戏参数已开始通过 `manifest.modules` 外置化，不再只写死在组件内部
 20. 已新增模块 API 文档：
    - `docs/modular-visual-apis.md`
+   - `docs/development-standards.md`
 21. 当前 renderer 与 editor 都已经开始读取这套模块参数
 22. `compose:manifest` 已支持从 `contentProfile` 注入论文总结文本，并从 `coverProfile` 解析默认背景图
 23. 当前 demo / local demo 已从“scene 内硬编码正文”切换成“scene 保留结构，正文由 profile 注入”
@@ -212,6 +213,7 @@ npm run render:video
 - `packages/content-pipeline/src/effect-runtime.tsx`
 - `docs/lego-architecture.md`
 - `docs/modular-visual-apis.md`
+- `docs/development-standards.md`
 
 ### 论文接入
 
