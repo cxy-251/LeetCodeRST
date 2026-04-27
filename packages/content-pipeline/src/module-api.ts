@@ -65,6 +65,15 @@ export const DEFAULT_CELLULAR_EFFECT: CellularEffectConfig = {
   cornerRadius: 0.45,
   edgeMode: "wrap",
   colorPreset: "mint-ice",
+  primaryHue: 164,
+  primarySaturation: 100,
+  primaryLightness: 83,
+  secondaryHue: 43,
+  secondarySaturation: 100,
+  secondaryLightness: 96,
+  birthHue: 205,
+  birthSaturation: 100,
+  birthLightness: 78,
   primaryColor: "#a7ffe8",
   secondaryColor: "#fff8ec",
   birthColor: "#8fd2ff",
@@ -102,23 +111,107 @@ export const DEFAULT_PARTICLE_EFFECT: ParticleEffectConfig = {
 
 const CELLULAR_COLOR_PRESETS: Record<
   CellularEffectConfig["colorPreset"],
-  Pick<CellularEffectConfig, "primaryColor" | "secondaryColor" | "birthColor">
+  Pick<
+    CellularEffectConfig,
+    | "primaryColor"
+    | "secondaryColor"
+    | "birthColor"
+    | "primaryHue"
+    | "primarySaturation"
+    | "primaryLightness"
+    | "secondaryHue"
+    | "secondarySaturation"
+    | "secondaryLightness"
+    | "birthHue"
+    | "birthSaturation"
+    | "birthLightness"
+  >
 > = {
   "mint-ice": {
     primaryColor: "#a7ffe8",
     secondaryColor: "#fff8ec",
     birthColor: "#8fd2ff",
+    primaryHue: 164,
+    primarySaturation: 100,
+    primaryLightness: 83,
+    secondaryHue: 43,
+    secondarySaturation: 100,
+    secondaryLightness: 96,
+    birthHue: 205,
+    birthSaturation: 100,
+    birthLightness: 78,
   },
   "sunset-pop": {
     primaryColor: "#ffb77d",
     secondaryColor: "#fff0d9",
     birthColor: "#ff7fb3",
+    primaryHue: 27,
+    primarySaturation: 100,
+    primaryLightness: 75,
+    secondaryHue: 37,
+    secondarySaturation: 100,
+    secondaryLightness: 92,
+    birthHue: 334,
+    birthSaturation: 100,
+    birthLightness: 75,
   },
   "violet-cyan": {
     primaryColor: "#9c9bff",
     secondaryColor: "#defdff",
     birthColor: "#67f1ff",
+    primaryHue: 240,
+    primarySaturation: 100,
+    primaryLightness: 80,
+    secondaryHue: 184,
+    secondarySaturation: 100,
+    secondaryLightness: 94,
+    birthHue: 185,
+    birthSaturation: 100,
+    birthLightness: 70,
   },
+};
+
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
+
+const hslToHex = (h: number, s: number, l: number) => {
+  const hue = ((h % 360) + 360) % 360;
+  const saturation = clamp(s, 0, 100) / 100;
+  const lightness = clamp(l, 0, 100) / 100;
+  const chroma = (1 - Math.abs(2 * lightness - 1)) * saturation;
+  const segment = hue / 60;
+  const x = chroma * (1 - Math.abs((segment % 2) - 1));
+
+  let red = 0;
+  let green = 0;
+  let blue = 0;
+
+  if (segment >= 0 && segment < 1) {
+    red = chroma;
+    green = x;
+  } else if (segment >= 1 && segment < 2) {
+    red = x;
+    green = chroma;
+  } else if (segment >= 2 && segment < 3) {
+    green = chroma;
+    blue = x;
+  } else if (segment >= 3 && segment < 4) {
+    green = x;
+    blue = chroma;
+  } else if (segment >= 4 && segment < 5) {
+    red = x;
+    blue = chroma;
+  } else {
+    red = chroma;
+    blue = x;
+  }
+
+  const match = lightness - chroma / 2;
+  const toHex = (value: number) => {
+    const byte = Math.round((value + match) * 255);
+    return byte.toString(16).padStart(2, "0");
+  };
+
+  return `#${toHex(red)}${toHex(green)}${toHex(blue)}`;
 };
 
 const PARTICLE_VARIANTS: Record<
@@ -193,10 +286,29 @@ export const resolveCellularEffectConfig = (
 ): CellularEffectConfig => {
   const overrides = modules?.cellularEffect ?? {};
   const colorPreset = overrides.colorPreset ?? DEFAULT_CELLULAR_EFFECT.colorPreset;
-  return {
+  const resolved = {
     ...DEFAULT_CELLULAR_EFFECT,
     ...CELLULAR_COLOR_PRESETS[colorPreset],
     ...overrides,
+  };
+
+  return {
+    ...resolved,
+    primaryColor: hslToHex(
+      resolved.primaryHue,
+      resolved.primarySaturation,
+      resolved.primaryLightness,
+    ),
+    secondaryColor: hslToHex(
+      resolved.secondaryHue,
+      resolved.secondarySaturation,
+      resolved.secondaryLightness,
+    ),
+    birthColor: hslToHex(
+      resolved.birthHue,
+      resolved.birthSaturation,
+      resolved.birthLightness,
+    ),
   };
 };
 

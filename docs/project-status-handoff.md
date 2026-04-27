@@ -332,6 +332,7 @@ npm run render:video
 12. 第三个 WebGL effect family `particle-orbit` 已接入，可作为更偏 Three.js 粒子案例方向的样板
 13. effect lab 已支持按特效声明参数控件，网页实验页可以局部调节特效参数而不改全局 manifest
 14. effect lab 参数控件已从“纯数值滑杆”扩展到“数值 + 枚举选择”，可以调颜色主题、粒子形状、分布、轨迹和变体
+15. life-game / snake-grid 的颜色控制已进一步改成连续 HSL 滑块，不再只依赖预设颜色主题
 
 ### 未完成
 

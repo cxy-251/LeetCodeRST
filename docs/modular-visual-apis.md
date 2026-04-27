@@ -232,9 +232,9 @@ agentic-world-modeling,data/images/prepared/source-9x16.jpg,life-game
 当前已经接入的方向：
 
 - `life-game`
-  可调：颜色主题、色块尺寸、步进间隔、cell padding
+  可调：三组颜色的 H/S/L、色块尺寸、步进间隔、cell padding
 - `snake-grid`
-  可调：颜色主题、色块尺寸、移动间隔、cell padding
+  可调：三组颜色的 H/S/L、色块尺寸、移动间隔、cell padding
 - `particle-orbit`
   可调：variant、粒子形状、分布方式、运动轨迹、粒子数量、点大小、轨道半径、旋涡强度、漂移速度
 

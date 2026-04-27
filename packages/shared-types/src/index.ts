@@ -96,6 +96,15 @@ export type CellularEffectConfig = {
   cornerRadius: number;
   edgeMode: "wrap";
   colorPreset: "mint-ice" | "sunset-pop" | "violet-cyan";
+  primaryHue: number;
+  primarySaturation: number;
+  primaryLightness: number;
+  secondaryHue: number;
+  secondarySaturation: number;
+  secondaryLightness: number;
+  birthHue: number;
+  birthSaturation: number;
+  birthLightness: number;
   primaryColor: string;
   secondaryColor: string;
   birthColor: string;
