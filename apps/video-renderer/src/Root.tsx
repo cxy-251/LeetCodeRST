@@ -90,12 +90,23 @@ const BackgroundEffectLayer: React.FC<{
 }> = ({effectId, sceneFrame, absoluteFrame, activationFrame, interactionFrame, effectStartFrame, continuousEffectId, themeId, seed, modules}) => {
   const palette = getThemePalette(themeId);
   const {width, height} = useVideoConfig();
-  if (effectId === "cellular-life" || effectId === "cellular-launch" || effectId === "snake-grid") {
+  if (
+    effectId === "cellular-life" ||
+    effectId === "cellular-launch" ||
+    effectId === "snake-grid" ||
+    effectId === "particle-orbit"
+  ) {
     return (
       <EffectRuntimeAdapter
         absoluteFrame={absoluteFrame}
         activationFrame={activationFrame}
-        continuousEffectId={continuousEffectId === "snake-grid" ? "snake-grid" : "cellular-life"}
+        continuousEffectId={
+          continuousEffectId === "snake-grid"
+            ? "snake-grid"
+            : continuousEffectId === "particle-orbit"
+              ? "particle-orbit"
+              : "cellular-life"
+        }
         interactionFrame={interactionFrame}
         effectStartFrame={effectStartFrame}
         effectId={effectId}

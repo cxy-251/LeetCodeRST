@@ -30,8 +30,16 @@ export const resolveSceneBackgroundEffectId = (
     return resolved;
   }
 
-  if (resolved === "cellular-life" || resolved === "snake-grid") {
-    return effectProfile?.id === "snake-grid" ? "snake-grid" : "cellular-life";
+  if (resolved === "cellular-life" || resolved === "snake-grid" || resolved === "particle-orbit") {
+    if (effectProfile?.id === "snake-grid") {
+      return "snake-grid";
+    }
+
+    if (effectProfile?.id === "particle-orbit") {
+      return "particle-orbit";
+    }
+
+    return "cellular-life";
   }
 
   return resolved;

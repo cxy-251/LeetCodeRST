@@ -1,6 +1,7 @@
 import React from "react";
 import {ThreeLifeEffect} from "./three-life-effect";
 import {ThreeSnakeEffect} from "./three-snake-effect";
+import {ThreeParticleEffect} from "./three-particle-effect";
 import {
   baseLayerStyle,
   getAuroraBackground,
@@ -56,6 +57,28 @@ const SnakeGridAtom: React.FC<EffectAtomRuntimeProps> = ({
   );
 };
 
+const ParticleOrbitAtom: React.FC<EffectAtomRuntimeProps> = ({
+  absoluteFrame,
+  activationFrame,
+  height,
+  modules,
+  seed,
+  simulationFrame,
+  width,
+}) => {
+  return (
+    <ThreeParticleEffect
+      absoluteFrame={absoluteFrame}
+      activationFrame={activationFrame}
+      height={height}
+      modules={modules}
+      seed={seed}
+      simulationFrame={simulationFrame}
+      width={width}
+    />
+  );
+};
+
 const CellularLaunchAtom: React.FC<EffectAtomRuntimeProps> = ({
   absoluteFrame,
   activationFrame,
@@ -76,7 +99,12 @@ const CellularLaunchAtom: React.FC<EffectAtomRuntimeProps> = ({
   const ready = effectStartFrame !== undefined ? absoluteFrame >= effectStartFrame : Boolean(isRunning);
   const buttonScale = ready ? 0.94 : clicked ? pulse * 0.9 : pulse;
   const buttonLabel = ready ? "Simulation Running" : clicked ? "Booting Life Grid" : "Start Life Simulation";
-  const MainEffectComponent = continuousEffectId === "snake-grid" ? ThreeSnakeEffect : ThreeLifeEffect;
+  const MainEffectComponent =
+    continuousEffectId === "snake-grid"
+      ? ThreeSnakeEffect
+      : continuousEffectId === "particle-orbit"
+        ? ThreeParticleEffect
+        : ThreeLifeEffect;
 
   return (
     <>
@@ -162,6 +190,12 @@ export const EFFECT_ATOMS: Record<EffectAtomId, EffectAtomDefinition> = {
     title: "Snake Grid",
     description: "基于 Three.js + WebGL 的贪吃蛇网格原型，可作为下一类小游戏动效样板。",
     Component: SnakeGridAtom,
+  },
+  "particle-orbit": {
+    id: "particle-orbit",
+    title: "Particle Orbit",
+    description: "受常见 Three.js 粒子星云案例启发的轨道粒子层，适合作为更偏氛围感的中间层特效。",
+    Component: ParticleOrbitAtom,
   },
 };
 

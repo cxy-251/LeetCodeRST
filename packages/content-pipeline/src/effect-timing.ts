@@ -57,5 +57,13 @@ export const resolveLifeGameInteractionFrame = (manifest: RenderManifest) => {
 };
 
 export const resolveContinuousEffectId = (manifest: RenderManifest): BackgroundEffectId => {
-  return manifest.effectProfile?.id === "snake-grid" ? "snake-grid" : "cellular-life";
+  if (manifest.effectProfile?.id === "snake-grid") {
+    return "snake-grid";
+  }
+
+  if (manifest.effectProfile?.id === "particle-orbit") {
+    return "particle-orbit";
+  }
+
+  return "cellular-life";
 };

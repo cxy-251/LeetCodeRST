@@ -329,6 +329,7 @@ npm run render:video
 9. 开发规范文档已经补齐
 10. 外部 AI 论文总结模板、提示词、示例已经写入 `services/summarizer`
 11. 外部 AI 总结 JSON 已经可以导入成 `contentProfile`
+12. 第三个 WebGL effect family `particle-orbit` 已接入，可作为更偏 Three.js 粒子案例方向的样板
 
 ### 未完成
 
@@ -336,7 +337,7 @@ npm run render:video
 2. 还没有接入真正的图像生成/搜图服务调度，只做了图片处理和路径接入
 3. 还没有做视频质量筛选或自动评分机制
 4. 还没有实现多个模板风格的大规模切换，目前主模板仍以 `paper-digest-v1` 为核心
-5. 还没有完成更丰富的 WebGL effect 家族扩展，例如扫雷、吃豆人等
+5. 还没有完成更丰富的 WebGL effect 家族扩展，例如扫雷、吃豆人等；当前已扩到 `life-game / snake-grid / particle-orbit`
 6. 还没有把 effect registry、template registry、profile registry 做成严格 schema 校验
 7. 还没有提供 GUI 级别的配置编辑器，当前主要靠 JSON 和 CSV
 8. 外部总结 JSON 导入虽然已经可用，但当前仍是“宽松别名兼容 + 标准落盘”，还没有建立严格的 schema version 管理
@@ -352,6 +353,7 @@ npm run render:video
 5. 自动论文分析目前主要基于规则/启发式生成中文脚本草案，质量依赖论文类型，理论类、综述类和应用类的稳定性仍不完全一致
 6. 一些旧文档里仍保留了项目早期阶段的描述，后续需要继续清理和统一
 7. 外部总结 JSON 导入器当前稳定覆盖的是 5 段式短视频结构，超过这个结构的复杂脚本还没有抽象成更通用的 scene mapper
+8. 新增的 `particle-orbit` 目前是第一版粒子轨道样板，视觉方向已经成立，但还没有细化成多个粒子案例子风格
 
 ---
 
@@ -366,6 +368,7 @@ npm run render:video
 5. 在 `atomic-ui` 中新增更多原子组件
 6. 增加第二套、第三套模板 JSON，而不是只用 `paper-digest-v1`
 7. 给外部总结 JSON 增加 schema version 和严格校验，降低后续字段变动风险
+8. 继续沿 effect atom registry 复现更多 Three.js 风格案例，并沉淀成可选 effect family
 
 ---
 
@@ -399,6 +402,10 @@ npm run render:video
     - `effect_profile_id`
 12. 外部 AI 总结 JSON 可以直接导入成 `contentProfile`：
     - `npm run import:summary-json -- --input /path/to/video-script.json --profile-id my-paper-summary --register`
+13. 新增第三个 WebGL effect atom 页面：
+    - `/effects/particle-orbit`
+14. 批量配置示例已新增：
+    - `effect_profile_id=particle-orbit`
 
 当前本地已经实际拉取并分析了 3 篇 `cs.AI` 论文，并生成了对应的背景图建议和候选 manifest。
 

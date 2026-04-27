@@ -50,9 +50,10 @@ export type BackgroundEffectId =
   | "noise-bloom"
   | "cellular-launch"
   | "cellular-life"
-  | "snake-grid";
+  | "snake-grid"
+  | "particle-orbit";
 
-export type WebGLEffectProfileId = "life-game" | "snake-grid";
+export type WebGLEffectProfileId = "life-game" | "snake-grid" | "particle-orbit";
 
 export type EffectProfileConfig = {
   id: WebGLEffectProfileId;
@@ -112,10 +113,23 @@ export type TypographyScaleConfig = {
   subtitleSize: string;
 };
 
+export type ParticleEffectConfig = {
+  particleCount: number;
+  pointSize: number;
+  orbitRadius: number;
+  swirlStrength: number;
+  driftSpeed: number;
+  layerDepth: number;
+  primaryColor: string;
+  secondaryColor: string;
+  accentColor: string;
+};
+
 export type VisualModuleConfig = {
   textMotions?: Partial<Record<TextMotionId, Partial<TextMotionConfig>>>;
   backgroundMotion?: Partial<BackgroundMotionConfig>;
   cellularEffect?: Partial<CellularEffectConfig>;
+  particleEffect?: Partial<ParticleEffectConfig>;
   typography?: Partial<TypographyScaleConfig>;
 };
 

@@ -174,6 +174,8 @@ agentic-world-modeling,data/images/prepared/source-9x16.jpg,life-game
   效果：第二页按钮启动后，整条视频的主 WebGL 层使用生命游戏。
 - `snake-grid`
   效果：第二页按钮启动后，整条视频的主 WebGL 层使用贪吃蛇网格。
+- `particle-orbit`
+  效果：整条视频使用粒子轨道型 WebGL 中间层，风格更接近常见 Three.js 粒子氛围案例。
 
 也就是说：
 
@@ -203,6 +205,8 @@ agentic-world-modeling,data/images/prepared/source-9x16.jpg,life-game
   效果：生命游戏持续运行，当前使用 `Three.js + WebGL`。
 - `snake-grid`
   效果：贪吃蛇网格特效，当前使用 `Three.js + WebGL`。
+- `particle-orbit`
+  效果：粒子轨道特效，当前使用 `Three.js + WebGL`。
 
 ### 独立 effect atom 页面
 
@@ -210,6 +214,7 @@ agentic-world-modeling,data/images/prepared/source-9x16.jpg,life-game
 
 - `/effects/life-game`
 - `/effects/snake-grid`
+- `/effects/particle-orbit`
 
 这类页面的目标不是展示完整模板，而是单独验证“背景与文本之间的中间层特效原子”。
 
@@ -217,6 +222,8 @@ agentic-world-modeling,data/images/prepared/source-9x16.jpg,life-game
 
 - `life-game`
   效果：页面内可点击按钮，启动并持续运行生命游戏。
+- `particle-orbit`
+  效果：页面内持续运行粒子轨道层，用来验证更偏氛围型的中间层方向。
 
 ### 转换层
 

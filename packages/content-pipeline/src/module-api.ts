@@ -1,6 +1,7 @@
 import type {
   BackgroundMotionConfig,
   CellularEffectConfig,
+  ParticleEffectConfig,
   TextMotionConfig,
   TextMotionId,
   TypographyScaleConfig,
@@ -81,6 +82,18 @@ export const DEFAULT_TYPOGRAPHY_SCALE: TypographyScaleConfig = {
   subtitleSize: "clamp(1.08rem, 1.48vw + 0.52rem, 1.92rem)",
 };
 
+export const DEFAULT_PARTICLE_EFFECT: ParticleEffectConfig = {
+  particleCount: 560,
+  pointSize: 5.4,
+  orbitRadius: 0.34,
+  swirlStrength: 0.22,
+  driftSpeed: 0.012,
+  layerDepth: 8,
+  primaryColor: "#8cf4ff",
+  secondaryColor: "#fff5de",
+  accentColor: "#aab9ff",
+};
+
 export const resolveTextMotionConfig = (
   motionId: TextMotionId,
   modules?: VisualModuleConfig,
@@ -115,5 +128,14 @@ export const resolveTypographyScaleConfig = (
   return {
     ...DEFAULT_TYPOGRAPHY_SCALE,
     ...(modules?.typography ?? {}),
+  };
+};
+
+export const resolveParticleEffectConfig = (
+  modules?: VisualModuleConfig,
+): ParticleEffectConfig => {
+  return {
+    ...DEFAULT_PARTICLE_EFFECT,
+    ...(modules?.particleEffect ?? {}),
   };
 };

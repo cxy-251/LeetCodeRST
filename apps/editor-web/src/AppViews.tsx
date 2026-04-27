@@ -138,7 +138,13 @@ export const PreviewStageView: React.FC<PreviewStageProps> = ({
             effectId={effectId}
             absoluteFrame={absolutePreviewFrame}
             activationFrame={activationFrame}
-            continuousEffectId={continuousEffectId === "snake-grid" ? "snake-grid" : "cellular-life"}
+            continuousEffectId={
+              continuousEffectId === "snake-grid"
+                ? "snake-grid"
+                : continuousEffectId === "particle-orbit"
+                  ? "particle-orbit"
+                  : "cellular-life"
+            }
             interactionFrame={interactionFrame}
             effectStartFrame={activationFrame}
             height={672}

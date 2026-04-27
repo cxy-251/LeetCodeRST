@@ -92,6 +92,14 @@ export const effectRoutes: EffectRoute[] = [
     effectId: "snake-grid",
     source: "latest",
   },
+  {
+    id: "effect-particle-orbit",
+    href: "/effects/particle-orbit",
+    title: "Particle Orbit Effect",
+    description: "单独查看粒子轨道型 WebGL 中间层原子，用于承接更偏 Three.js 官网氛围案例的视觉方向。",
+    effectId: "particle-orbit",
+    source: "latest",
+  },
 ];
 
 export const legacyRedirects: LegacyRedirectMap = {

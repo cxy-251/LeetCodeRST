@@ -11,15 +11,18 @@ export {
 export {
   DEFAULT_BACKGROUND_MOTION,
   DEFAULT_CELLULAR_EFFECT,
+  DEFAULT_PARTICLE_EFFECT,
   DEFAULT_TEXT_MOTIONS,
   DEFAULT_TYPOGRAPHY_SCALE,
   resolveBackgroundMotionConfig,
   resolveCellularEffectConfig,
+  resolveParticleEffectConfig,
   resolveTextMotionConfig,
   resolveTypographyScaleConfig,
 } from "./module-api";
 export {getTextMotionState} from "./text-motion";
 export {ThreeLifeEffect} from "./three-life-effect";
+export {ThreeParticleEffect} from "./three-particle-effect";
 export {EFFECT_ATOMS, getEffectAtomDefinition} from "./effect-atoms";
 export type {EffectAtomDefinition, EffectAtomId, EffectAtomRuntimeProps} from "./effect-atoms.types";
 export {EffectRuntimeAdapter} from "./effect-runtime";
