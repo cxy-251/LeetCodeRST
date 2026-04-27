@@ -7,7 +7,13 @@ import {
   SceneTitleAtom,
   SubtitlePanelAtom,
 } from "@paper-to-video/atomic-ui";
-import {getSceneBody, getSceneBullets, getSceneTitle, getThemePalette} from "@paper-to-video/content-pipeline";
+import {
+  getSceneBody,
+  getSceneBullets,
+  getSceneTitle,
+  getThemePalette,
+  resolveTypographyScaleConfig,
+} from "@paper-to-video/content-pipeline";
 import type {
   AtomicComponentId,
   RenderManifest,
@@ -46,16 +52,27 @@ const componentRegistry: Record<
     <SceneKickerAtom
       text={`${context.manifest.paper.paperId} · AI Paper Digest`}
       color={getThemePalette(context.manifest.theme.id).accent}
+      fontSize={resolveTypographyScaleConfig(context.manifest.modules).kickerSize}
     />
   ),
-  "scene-title": (_node, context) => <SceneTitleAtom text={getSceneTitle(context.scene)} />,
+  "scene-title": (_node, context) => (
+    <SceneTitleAtom
+      text={getSceneTitle(context.scene)}
+      fontSize={resolveTypographyScaleConfig(context.manifest.modules).titleSize}
+    />
+  ),
   "scene-body": (_node, context) => {
     const text = getSceneBody(context.scene);
-    return text ? <SceneBodyAtom text={text} /> : null;
+    return text ? <SceneBodyAtom text={text} fontSize={resolveTypographyScaleConfig(context.manifest.modules).bodySize} /> : null;
   },
   "scene-bullets": (_node, context) => {
     const bullets = getSceneBullets(context.scene);
-    return bullets.length > 0 ? <SceneBulletsAtom bullets={bullets} /> : null;
+    return bullets.length > 0 ? (
+      <SceneBulletsAtom
+        bullets={bullets}
+        fontSize={resolveTypographyScaleConfig(context.manifest.modules).bulletSize}
+      />
+    ) : null;
   },
   "subtitle-panel": (_node, context) => {
     if (!context.subtitleText) {
@@ -68,6 +85,7 @@ const componentRegistry: Record<
         text={context.subtitleText}
         panelColor={palette.panel}
         foreground={palette.fg}
+        fontSize={resolveTypographyScaleConfig(context.manifest.modules).subtitleSize}
       />
     );
   },

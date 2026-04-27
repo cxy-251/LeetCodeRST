@@ -42,10 +42,20 @@
       "cellColumns": 44,
       "cellRows": 78,
       "stepEveryFrames": 2,
-      "activationDelayFrames": 36,
+      "activationDelayFrames": 18,
       "cellPadding": 0.5,
       "cornerRadius": 0.45,
-      "edgeMode": "wrap"
+      "edgeMode": "wrap",
+      "primaryColor": "#82ffd9",
+      "secondaryColor": "#f6fbff",
+      "birthColor": "#4db8ff"
+    },
+    "typography": {
+      "kickerSize": "clamp(0.88rem, 1.15vw + 0.5rem, 1.62rem)",
+      "titleSize": "clamp(2.48rem, 5vw + 0.7rem, 5.6rem)",
+      "bodySize": "clamp(1.18rem, 1.95vw + 0.55rem, 2.42rem)",
+      "bulletSize": "clamp(1.1rem, 1.78vw + 0.52rem, 2.12rem)",
+      "subtitleSize": "clamp(1.12rem, 1.52vw + 0.54rem, 1.94rem)"
     },
     "textMotions": {
       "fade-up": {

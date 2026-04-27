@@ -12,9 +12,11 @@ export {
   DEFAULT_BACKGROUND_MOTION,
   DEFAULT_CELLULAR_EFFECT,
   DEFAULT_TEXT_MOTIONS,
+  DEFAULT_TYPOGRAPHY_SCALE,
   resolveBackgroundMotionConfig,
   resolveCellularEffectConfig,
   resolveTextMotionConfig,
+  resolveTypographyScaleConfig,
 } from "./module-api";
 export {getTextMotionState} from "./text-motion";
 export {ThreeLifeEffect} from "./three-life-effect";

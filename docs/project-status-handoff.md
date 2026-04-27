@@ -285,6 +285,43 @@ Expected outcome after this fix:
 
 ---
 
+## 10. 2026-04-27 Modular Tuning Pass
+
+This pass focused on making the active visual system easier to tune from config rather than code.
+
+What changed:
+
+1. Added `modules.typography` so text sizes can now be adjusted externally from the manifest.
+   Current configurable values are:
+   - `kickerSize`
+   - `titleSize`
+   - `bodySize`
+   - `bulletSize`
+   - `subtitleSize`
+2. Expanded `modules.cellularEffect` so life-game colors can be tuned externally.
+   Current configurable values now include:
+   - `primaryColor`
+   - `secondaryColor`
+   - `birthColor`
+   - existing timing/grid parameters such as `activationDelayFrames`, `cellColumns`, `cellRows`, `stepEveryFrames`
+3. Reduced life-game activation delay from `36` to `18` frames.
+   Goal: let page 2 complete the launch-button beat and then start showing the life simulation inside the same scene, instead of only appearing from page 3 onward.
+4. Added a second WebGL effect lab prototype: `/effects/snake-grid`.
+   This is a deterministic Three.js grid-snake atom intended as the next reusable game-like middle-layer effect.
+
+Validation:
+
+1. `npx tsc --noEmit -p apps/editor-web/tsconfig.json`
+2. `npx tsc --noEmit -p apps/video-renderer/tsconfig.json`
+
+Next check after this pass:
+
+1. Confirm text is visually large enough in both template preview and final render.
+2. Confirm life-game now becomes visible within scene 2 after the launch button beat.
+3. Review `/effects/snake-grid` as the baseline for the next effect family.
+
+---
+
 ## 8. 续接建议
 
 如果在新对话里继续，建议先读：

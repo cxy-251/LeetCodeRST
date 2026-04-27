@@ -85,7 +85,7 @@ const BackgroundEffectLayer: React.FC<{
 }> = ({effectId, sceneFrame, absoluteFrame, activationFrame, themeId, seed, modules}) => {
   const palette = getThemePalette(themeId);
   const {width, height} = useVideoConfig();
-  if (effectId === "cellular-life" || effectId === "cellular-launch") {
+  if (effectId === "cellular-life" || effectId === "cellular-launch" || effectId === "snake-grid") {
     return (
       <EffectRuntimeAdapter
         absoluteFrame={absoluteFrame}

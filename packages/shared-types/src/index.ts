@@ -49,7 +49,8 @@ export type BackgroundEffectId =
   | "grid-drift"
   | "noise-bloom"
   | "cellular-launch"
-  | "cellular-life";
+  | "cellular-life"
+  | "snake-grid";
 
 export type TextMotionId = "fade-up" | "slide-up" | "stagger-rise" | "hard-cut";
 
@@ -77,12 +78,24 @@ export type CellularEffectConfig = {
   cellPadding: number;
   cornerRadius: number;
   edgeMode: "wrap";
+  primaryColor: string;
+  secondaryColor: string;
+  birthColor: string;
+};
+
+export type TypographyScaleConfig = {
+  kickerSize: string;
+  titleSize: string;
+  bodySize: string;
+  bulletSize: string;
+  subtitleSize: string;
 };
 
 export type VisualModuleConfig = {
   textMotions?: Partial<Record<TextMotionId, Partial<TextMotionConfig>>>;
   backgroundMotion?: Partial<BackgroundMotionConfig>;
   cellularEffect?: Partial<CellularEffectConfig>;
+  typography?: Partial<TypographyScaleConfig>;
 };
 
 export type TemplateZoneId = "primary" | "secondary";

@@ -37,7 +37,9 @@ export const EffectRuntimeAdapter: React.FC<EffectRuntimeAdapterProps> = ({
 
   const definition = getEffectAtomDefinition(effectId);
   const effectiveRunning =
-    mode === "render" ? absoluteFrame >= activationFrame || effectId === "cellular-life" || effectId === "aurora" : isRunning;
+    mode === "render"
+      ? absoluteFrame >= activationFrame || effectId === "cellular-life" || effectId === "aurora" || effectId === "snake-grid"
+      : isRunning;
   const effectiveSimulationFrame =
     mode === "render" ? Math.max(0, absoluteFrame - activationFrame) : (simulationFrame ?? absoluteFrame);
 

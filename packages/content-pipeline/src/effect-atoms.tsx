@@ -1,5 +1,6 @@
 import React from "react";
 import {ThreeLifeEffect} from "./three-life-effect";
+import {ThreeSnakeEffect} from "./three-snake-effect";
 import {
   baseLayerStyle,
   getAuroraBackground,
@@ -22,6 +23,28 @@ const CellularLifeAtom: React.FC<EffectAtomRuntimeProps> = ({
 }) => {
   return (
     <ThreeLifeEffect
+      absoluteFrame={absoluteFrame}
+      activationFrame={activationFrame}
+      height={height}
+      modules={modules}
+      seed={seed}
+      simulationFrame={simulationFrame}
+      width={width}
+    />
+  );
+};
+
+const SnakeGridAtom: React.FC<EffectAtomRuntimeProps> = ({
+  absoluteFrame,
+  activationFrame,
+  height,
+  modules,
+  seed,
+  simulationFrame,
+  width,
+}) => {
+  return (
+    <ThreeSnakeEffect
       absoluteFrame={absoluteFrame}
       activationFrame={activationFrame}
       height={height}
@@ -126,6 +149,12 @@ export const EFFECT_ATOMS: Record<EffectAtomId, EffectAtomDefinition> = {
     title: "Cellular Life",
     description: "持续运行的生命游戏中间层特效，当前由 Three.js + WebGL 驱动。",
     Component: CellularLifeAtom,
+  },
+  "snake-grid": {
+    id: "snake-grid",
+    title: "Snake Grid",
+    description: "基于 Three.js + WebGL 的贪吃蛇网格原型，可作为下一类小游戏动效样板。",
+    Component: SnakeGridAtom,
   },
 };
 

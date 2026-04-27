@@ -81,6 +81,14 @@ export const effectRoutes: EffectRoute[] = [
     effectId: "cellular-life",
     source: "latest",
   },
+  {
+    id: "effect-snake-grid",
+    href: "/effects/snake-grid",
+    title: "Snake Grid Effect",
+    description: "单独查看贪吃蛇网格型 WebGL 中间层原子，用于验证第二类小游戏动效接口。",
+    effectId: "snake-grid",
+    source: "latest",
+  },
 ];
 
 export const legacyRedirects: LegacyRedirectMap = {

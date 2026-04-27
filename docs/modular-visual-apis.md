@@ -84,6 +84,7 @@
 当前 `editor-web` 已新增：
 
 - `/effects/life-game`
+- `/effects/snake-grid`
 
 这类页面的目标不是展示完整模板，而是单独验证“背景与文本之间的中间层特效原子”。
 
@@ -149,10 +150,13 @@
     "cellColumns": 44,
     "cellRows": 78,
     "stepEveryFrames": 2,
-    "activationDelayFrames": 36,
+    "activationDelayFrames": 18,
     "cellPadding": 0.5,
     "cornerRadius": 0.45,
-    "edgeMode": "wrap"
+    "edgeMode": "wrap",
+    "primaryColor": "#82ffd9",
+    "secondaryColor": "#f6fbff",
+    "birthColor": "#4db8ff"
   }
 }
 ```
@@ -174,6 +178,12 @@
 - `edgeMode`
   当前支持：`wrap`
   效果：边界环绕，细胞从另一侧继续拓展。
+- `primaryColor`
+  效果：稳定存活细胞的主色。
+- `secondaryColor`
+  效果：次级细胞色，用来拉开层次。
+- `birthColor`
+  效果：新生或高亮细胞的强调色。
 
 ---
 
@@ -234,6 +244,35 @@
 ---
 
 ## 4. 组合方式
+
+### 字号参数
+
+```json
+{
+  "modules": {
+    "typography": {
+      "kickerSize": "clamp(0.88rem, 1.15vw + 0.5rem, 1.62rem)",
+      "titleSize": "clamp(2.48rem, 5vw + 0.7rem, 5.6rem)",
+      "bodySize": "clamp(1.18rem, 1.95vw + 0.55rem, 2.42rem)",
+      "bulletSize": "clamp(1.1rem, 1.78vw + 0.52rem, 2.12rem)",
+      "subtitleSize": "clamp(1.12rem, 1.52vw + 0.54rem, 1.94rem)"
+    }
+  }
+}
+```
+
+效果：
+
+- `kickerSize`
+  调整场景顶部小字。
+- `titleSize`
+  调整大标题。
+- `bodySize`
+  调整正文段落。
+- `bulletSize`
+  调整 bullet 列表。
+- `subtitleSize`
+  调整底部字幕面板字号。
 
 当前推荐组合方式：
 
