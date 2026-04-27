@@ -16,6 +16,18 @@
 npm run produce:video
 ```
 
+### 使用批量组合配置
+
+```bash
+npm run produce:video -- --batch-config data/video-batches/demo-batch.csv
+```
+
+只跑指定行：
+
+```bash
+npm run produce:video -- --batch-config data/video-batches/demo-batch.csv --rows 1,3
+```
+
 ### 使用本地真人图案例
 
 ```bash
@@ -69,6 +81,7 @@ npm run render:video
 8. 基于脚本草案的候选 manifest 生成
 9. `contentProfile` / `coverProfile` 驱动的外部文本源与背景图选择
 10. 基于 profile 一键生成本地 manifest
+11. 基于 CSV 组合配置按行批量生成视频
 
 ### 工程组织
 
@@ -185,6 +198,7 @@ npm run render:video
 - `data/content-profiles/*.json`
 - `data/cover-assets/index.json`
 - `data/templates/paper-digest-v1.json`
+- `data/video-batches/demo-batch.csv`
 - `data/images/cover-portrait.svg`
 
 ### 运行脚本
@@ -201,6 +215,7 @@ npm run render:video
 - `tools/scaffold-paper-manifests.ts`
 - `tools/create-video-manifest.ts`
 - `tools/lib/manifest-factory.ts`
+- `tools/lib/video-batch.ts`
 
 ### 渲染入口
 
@@ -306,6 +321,9 @@ npm run render:video
    - `data/manifests/ingest/*.json`
 7. 基于 `contentProfile + coverProfile + effectProfile` 生成本地使用的统一风格 manifest：
    - `npm run create:manifest -- --content-profile <id> --cover-profile <id> --effect-profile <id>`
+8. 基于 CSV 配置表批量生成或按行生成视频：
+   - `npm run produce:video -- --batch-config data/video-batches/demo-batch.csv`
+   - `npm run produce:video -- --batch-config data/video-batches/demo-batch.csv --rows 1,3`
 
 当前本地已经实际拉取并分析了 3 篇 `cs.AI` 论文，并生成了对应的背景图建议和候选 manifest。
 

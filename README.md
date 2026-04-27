@@ -30,6 +30,57 @@ PaperToVideo 是一个模块化论文视频生成项目，目标是将 arXiv AI 
 3. 当前视频渲染是 MVP，先跑通单篇论文总结页与字幕同步，后续再接论文抓取、AI 总结、配图和 WebGL 增强。
 4. `dev:editor` 会启动本地网页预览，用于查看多场景论文幻灯片效果。
 
+## 组合配置与批量渲染
+
+单个视频仍然保持原来的方式：
+
+1. `npm run produce:video`
+2. `npm run produce:video data/manifests/demo-paper.json`
+
+如果你希望通过“只包含用户输入字段”的配置表来控制视频组合，可以编辑：
+
+- [data/video-batches/demo-batch.csv](/Users/cxy251/Code/02codeX/data/video-batches/demo-batch.csv)
+
+这个 CSV 的每一行代表一个视频组合，当前重点字段是：
+
+1. `content_profile_id`
+2. `cover_profile_id`
+3. `effect_profile_id`
+4. `voice_name`
+5. `voice_rate`
+6. `voice_pitch`
+7. `seed`
+
+执行整表批量渲染：
+
+```bash
+npm run produce:video -- --batch-config data/video-batches/demo-batch.csv
+```
+
+只渲染指定行：
+
+```bash
+npm run produce:video -- --batch-config data/video-batches/demo-batch.csv --rows 1,3
+```
+
+按区间渲染：
+
+```bash
+npm run produce:video -- --batch-config data/video-batches/demo-batch.csv --rows 2-4
+```
+
+批量模式下，系统会先为每一行自动生成一份本地 manifest 到：
+
+- `data/manifests/generated/*.json`
+
+然后再按原来的：
+
+1. `compose:manifest`
+2. `generate:audio`
+3. `build-video`
+
+顺序渲染，所以不会破坏现有的视频主链路。
+
 ## 无网络开发模式
 
 如果当前环境不能访问 `edge-tts` 依赖的在线语音服务，可以使用 mock 模式：

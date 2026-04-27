@@ -24,4 +24,5 @@ data/source-bundles/*.json
 data/manifests/ingest/*.json
 data/manifests/generated/*.json
 data/content-profiles/generated/*.json
+!data/video-batches/*.csv
 !.gitkeep
