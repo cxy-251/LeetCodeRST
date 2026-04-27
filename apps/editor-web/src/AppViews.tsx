@@ -328,72 +328,6 @@ export const EffectLabView: React.FC<{
           </div>
         </div>
 
-        <div className={styles.effectControls}>
-          <button className={styles.effectControlButton} onClick={() => setIsRunning(true)} type="button">
-            Start
-          </button>
-          <button className={styles.effectControlButton} onClick={() => setIsRunning(false)} type="button">
-            Pause
-          </button>
-          <button
-            className={cx(styles.effectControlButton, styles.effectControlButtonGhost)}
-            onClick={resetSimulation}
-            type="button"
-          >
-            Reset
-          </button>
-        </div>
-
-        {state.controlDefinitions.length > 0 ? (
-          <div className={styles.effectControlPanel}>
-            <div className={styles.effectControlPanelHeader}>
-              <strong>Effect Parameters</strong>
-              <span>这些参数只作用于实验页，用来快速验证不同 WebGL 特效的主体构图和运动节奏。</span>
-            </div>
-            <div className={styles.effectControlList}>
-              {state.controlDefinitions.map((control) => {
-                const value = readControlValue(stageModel.modules, control.section, control.field);
-                return (
-                  <label key={control.id} className={styles.effectControlField}>
-                    <div className={styles.effectControlMeta}>
-                      <strong>{control.label}</strong>
-                      <span>{control.description}</span>
-                    </div>
-                    <div className={styles.effectControlInputRow}>
-                      {control.kind === "range" ? (
-                        <input
-                          className={styles.effectRange}
-                          max={control.max}
-                          min={control.min}
-                          onChange={(event) => state.setControlValue(control, Number(event.target.value))}
-                          step={control.step}
-                          type="range"
-                          value={typeof value === "number" ? value : control.min}
-                        />
-                      ) : (
-                        <select
-                          className={styles.effectSelect}
-                          onChange={(event) => state.setControlValue(control, event.target.value)}
-                          value={typeof value === "string" ? value : control.options[0]?.value ?? ""}
-                        >
-                          {control.options.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </select>
-                      )}
-                      <output className={styles.effectControlValue}>
-                        {typeof value === "number" || typeof value === "string" ? value : "--"}
-                      </output>
-                    </div>
-                  </label>
-                );
-              })}
-            </div>
-          </div>
-        ) : null}
-
         <div className={styles.effectNotes}>
           <div className={styles.effectNote}>
             <strong>Purpose</strong>
@@ -415,26 +349,96 @@ export const EffectLabView: React.FC<{
       </aside>
 
       <main className={styles.stage}>
-        <PreviewStageView
-          absolutePreviewFrame={stageModel.absolutePreviewFrame}
-          activationFrame={stageModel.activationFrame}
-          continuousEffectId={stageModel.continuousEffectId}
-          interactionFrame={stageModel.interactionFrame}
-          coverImageSrc={stageModel.coverImageSrc}
-          effectId={stageModel.effectId}
-          effectLayer={effectLayer}
-          manifest={manifest}
-          palette={stageModel.palette}
-          previewFrame={simulationFrame}
-          stageBackground={stageModel.stageBackground}
-          visualLayout={stageModel.visualLayout}
-        >
-          <div className={styles.effectStageCaption}>
-            <span>Effect Atom</span>
-            <strong>{effectDefinition.id}</strong>
-            <small>{effectDefinition.description}</small>
-          </div>
-        </PreviewStageView>
+        <div className={styles.effectLabStageLayout}>
+          <PreviewStageView
+            absolutePreviewFrame={stageModel.absolutePreviewFrame}
+            activationFrame={stageModel.activationFrame}
+            continuousEffectId={stageModel.continuousEffectId}
+            interactionFrame={stageModel.interactionFrame}
+            coverImageSrc={stageModel.coverImageSrc}
+            effectId={stageModel.effectId}
+            effectLayer={effectLayer}
+            manifest={manifest}
+            palette={stageModel.palette}
+            previewFrame={simulationFrame}
+            stageBackground={stageModel.stageBackground}
+            visualLayout={stageModel.visualLayout}
+          >
+            <div className={styles.effectStageCaption}>
+              <span>Effect Atom</span>
+              <strong>{effectDefinition.id}</strong>
+              <small>{effectDefinition.description}</small>
+            </div>
+          </PreviewStageView>
+
+          <aside className={styles.effectStageSidebar}>
+            <div className={styles.effectControls}>
+              <button className={styles.effectControlButton} onClick={() => setIsRunning(true)} type="button">
+                Start
+              </button>
+              <button className={styles.effectControlButton} onClick={() => setIsRunning(false)} type="button">
+                Pause
+              </button>
+              <button
+                className={cx(styles.effectControlButton, styles.effectControlButtonGhost)}
+                onClick={resetSimulation}
+                type="button"
+              >
+                Reset
+              </button>
+            </div>
+
+            {state.controlDefinitions.length > 0 ? (
+              <div className={styles.effectControlPanel}>
+                <div className={styles.effectControlPanelHeader}>
+                  <strong>Effect Parameters</strong>
+                  <span>这些参数只作用于实验页，用来快速验证不同 WebGL 特效的主体构图和运动节奏。</span>
+                </div>
+                <div className={styles.effectControlList}>
+                  {state.controlDefinitions.map((control) => {
+                    const value = readControlValue(stageModel.modules, control.section, control.field);
+                    return (
+                      <label key={control.id} className={styles.effectControlField}>
+                        <div className={styles.effectControlMeta}>
+                          <strong>{control.label}</strong>
+                          <span>{control.description}</span>
+                        </div>
+                        <div className={styles.effectControlInputRow}>
+                          {control.kind === "range" ? (
+                            <input
+                              className={styles.effectRange}
+                              max={control.max}
+                              min={control.min}
+                              onChange={(event) => state.setControlValue(control, Number(event.target.value))}
+                              step={control.step}
+                              type="range"
+                              value={typeof value === "number" ? value : control.min}
+                            />
+                          ) : (
+                            <select
+                              className={styles.effectSelect}
+                              onChange={(event) => state.setControlValue(control, event.target.value)}
+                              value={typeof value === "string" ? value : control.options[0]?.value ?? ""}
+                            >
+                              {control.options.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
+                          )}
+                          <output className={styles.effectControlValue}>
+                            {typeof value === "number" || typeof value === "string" ? value : "--"}
+                          </output>
+                        </div>
+                      </label>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : null}
+          </aside>
+        </div>
       </main>
     </div>
   );
