@@ -1,15 +1,15 @@
 import React from "react";
 import {ThreeLifeEffect} from "./three-life-effect";
 import {
+  baseLayerStyle,
   getAuroraBackground,
   getGridDriftBackground,
+  getLaunchButtonBackground,
   getLaunchButtonState,
   getNoiseBloomBackground,
+  launchButtonBaseStyle,
 } from "./effect-atoms.service";
 import type {EffectAtomDefinition, EffectAtomId, EffectAtomRuntimeProps} from "./effect-atoms.types";
-import styles from "./effect-atoms.module.css";
-
-const cx = (...classNames: Array<string | false | null | undefined>) => classNames.filter(Boolean).join(" ");
 
 const CellularLifeAtom: React.FC<EffectAtomRuntimeProps> = ({
   absoluteFrame,
@@ -62,20 +62,18 @@ const CellularLaunchAtom: React.FC<EffectAtomRuntimeProps> = ({
         />
       ) : (
         <div
-          className={cx(styles.layer, styles.launchHalo)}
           style={{
+            ...baseLayerStyle,
             background: `radial-gradient(circle at ${buttonOrigin.x * 100}% ${buttonOrigin.y * 100}%, rgba(87,216,196,0.14) 0%, transparent 16%)`,
           }}
         />
       )}
 
       <button
-        className={cx(
-          styles.launchButton,
-          ready ? styles.launchButtonRunning : styles.launchButtonIdle,
-        )}
         onClick={onPrimaryAction}
         style={{
+          ...launchButtonBaseStyle,
+          background: getLaunchButtonBackground(ready),
           transform: `translate(${(buttonOrigin.x - 0.5) * 110}px, ${(buttonOrigin.y - 0.5) * 110}px) scale(${pulse})`,
         }}
         type="button"
@@ -87,15 +85,15 @@ const CellularLaunchAtom: React.FC<EffectAtomRuntimeProps> = ({
 };
 
 const AuroraAtom: React.FC = () => {
-  return <div className={cx(styles.layer, styles.auroraLayer)} style={getAuroraBackground()} />;
+  return <div style={{...baseLayerStyle, ...getAuroraBackground()}} />;
 };
 
 const GridDriftAtom: React.FC<Pick<EffectAtomRuntimeProps, "absoluteFrame">> = ({absoluteFrame}) => {
-  return <div className={cx(styles.layer, styles.gridLayer)} style={getGridDriftBackground(absoluteFrame)} />;
+  return <div style={{...baseLayerStyle, opacity: 0.38, ...getGridDriftBackground(absoluteFrame)}} />;
 };
 
 const NoiseBloomAtom: React.FC<Pick<EffectAtomRuntimeProps, "absoluteFrame">> = ({absoluteFrame}) => {
-  return <div className={cx(styles.layer, styles.noiseLayer)} style={getNoiseBloomBackground(absoluteFrame)} />;
+  return <div style={{...baseLayerStyle, opacity: 0.92, ...getNoiseBloomBackground(absoluteFrame)}} />;
 };
 
 export const EFFECT_ATOMS: Record<EffectAtomId, EffectAtomDefinition> = {
