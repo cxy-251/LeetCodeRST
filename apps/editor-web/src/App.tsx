@@ -88,7 +88,7 @@ const effectRoutes: EffectRoute[] = [
     href: "/effects/life-game",
     title: "Life Game Effect",
     description: "单独查看可点击启动的生命游戏中间层原子，后续小游戏也沿这套接口扩展。",
-    effectId: "cellular-launch",
+    effectId: "cellular-life",
     source: "latest",
   },
 ];
@@ -524,20 +524,22 @@ const EffectLabPage: React.FC<{
     route.effectId === "aurora" ? "Ambient Overlay" : isRunning ? "Running" : "Idle";
   const effectLayer = (
     <>
-      <EffectRuntimeAdapter
-        absoluteFrame={absolutePreviewFrame}
-        activationFrame={activationFrame}
-        effectId={route.effectId}
-        height={672}
-        isRunning={isRunning}
-        mode="interactive"
-        modules={manifest.modules}
-        onPrimaryAction={() => setIsRunning(true)}
-        seed={manifest.seed}
-        simulationFrame={simulationFrame}
-        width={378}
-      />
-      {route.effectId === "cellular-life" && !isRunning ? (
+      {route.effectId === "aurora" || isRunning ? (
+        <EffectRuntimeAdapter
+          absoluteFrame={absolutePreviewFrame}
+          activationFrame={activationFrame}
+          effectId={route.effectId}
+          height={672}
+          isRunning={isRunning}
+          mode="interactive"
+          modules={manifest.modules}
+          onPrimaryAction={() => setIsRunning(true)}
+          seed={manifest.seed}
+          simulationFrame={simulationFrame}
+          width={378}
+        />
+      ) : null}
+      {!isRunning ? (
         <button
           className="effect-stage-button"
           onClick={() => setIsRunning(true)}

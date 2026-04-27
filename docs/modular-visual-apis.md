@@ -122,19 +122,18 @@
 - `REMOTION_GL`
 - `REMOTION_CONCURRENCY`
 
-### WebGL 自动降级
+### WebGL 上下文策略
 
-当前生命游戏 effect 已新增自动降级策略：
+当前生命游戏 effect 保持 `Three.js + WebGL` 路线，不切换到 canvas 实现。
 
-1. 优先尝试 `Three.js + WebGL`
-2. 如果当前浏览器 / 无头渲染环境拿不到稳定的 WebGL context
-3. 自动回退到 `2D canvas` 版同一套细胞演化
+为了提高 editor 和视频渲染的稳定性，当前做法是：
 
-这样可以保证：
+1. 显式尝试 `webgl2`
+2. 如果不可用，再显式尝试 `webgl`
+3. 再退一步尝试 `experimental-webgl`
+4. 同时关闭不必要的抗锯齿 / 深度 / 模板缓冲开销
 
-- 网页端能先看到生命游戏在跑
-- 视频端能稳定录出来
-- 后续继续保留 WebGL 作为高性能实现路径
+目标是让同一个 WebGL effect atom 在网页端与视频端都更容易成功拿到上下文。
 
 后续新增 WebGL 小游戏时，推荐直接按同一路径继续扩展：
 

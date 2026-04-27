@@ -147,7 +147,7 @@ npm run render:video
    - `--gl angle`
    - `--concurrency 2`
    并支持通过 `REMOTION_GL` / `REMOTION_CONCURRENCY` 覆盖
-34. `ThreeLifeEffect` 已新增自动降级策略：WebGL context 创建失败时，自动切换到 `2D canvas` 版生命游戏，保证 editor 与视频渲染都能看到中间层特效
+34. `ThreeLifeEffect` 当前坚持 `Three.js + WebGL` 路线，并改成显式尝试 `webgl2 / webgl / experimental-webgl`，同时降低上下文创建开销，以提高 editor 与视频渲染中的可用性
 
 ---
 
