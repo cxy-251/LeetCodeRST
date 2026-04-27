@@ -13,24 +13,29 @@ type SourceBundle = {
     localPdfPath: string;
     localTextPath?: string;
     suggestedCoverImagePath: string | null;
+    scriptDraft?: {
+      hook: string;
+      problem: string;
+      method: string;
+      value: string;
+      ending: string;
+      bullets: string[];
+    };
   }>;
 };
 
-const INPUT_PATH = path.resolve("data/source-bundles/latest-ai-batch.json");
+const INPUT_PATH = path.resolve("data/source-bundles/latest-ai-analysis.json");
 const OUTPUT_DIR = path.resolve("data/manifests/ingest");
 
-const sentenceParts = (text: string) =>
-  text
-    .split(/(?<=[.?!])\s+/)
-    .map((item) => item.trim())
-    .filter(Boolean);
-
-const takeSentences = (text: string, count: number) => sentenceParts(text).slice(0, count).join(" ");
-
 const buildManifest = (paper: SourceBundle["papers"][number], index: number): ProductionManifest => {
-  const shortSummary = takeSentences(paper.summary, 3) || paper.summary;
-  const hook = takeSentences(paper.summary, 1) || paper.title;
-  const ending = `如果你在关注 ${paper.categories.join(" / ")} 方向，这篇 ${paper.arxivId} 值得进一步展开。`;
+  const draft = paper.scriptDraft ?? {
+    hook: paper.summary,
+    problem: paper.summary,
+    method: paper.summary,
+    value: paper.summary,
+    ending: `如果你在关注 ${paper.categories.join(" / ")} 方向，这篇 ${paper.arxivId} 值得进一步展开。`,
+    bullets: [paper.summary],
+  };
 
   return {
     projectId: `arxiv-${paper.arxivId.replace(/[^\w]+/g, "-").toLowerCase()}`,
@@ -111,10 +116,10 @@ const buildManifest = (paper: SourceBundle["papers"][number], index: number): Pr
         id: "scene-hero",
         type: "hero",
         contentRef: "hook",
-        narrationText: hook,
+        narrationText: draft.hook,
         content: {
           title: paper.title,
-          body: `arXiv ${paper.arxivId}`,
+          body: `arXiv ${paper.arxivId} · ${paper.categories.join(" / ")}`,
         },
         backgroundPresetId: "aurora",
         backgroundImageLayoutId: "cover-full",
@@ -126,10 +131,10 @@ const buildManifest = (paper: SourceBundle["papers"][number], index: number): Pr
         id: "scene-problem",
         type: "paper-intro",
         contentRef: "problem",
-        narrationText: shortSummary,
+        narrationText: draft.problem,
         content: {
-          title: "论文核心摘要",
-          body: takeSentences(shortSummary, 2),
+          title: "这篇论文在解决什么？",
+          body: draft.problem,
         },
         backgroundPresetId: "cover-grid-drift",
         backgroundImageLayoutId: "cover-focus-tl",
@@ -141,10 +146,10 @@ const buildManifest = (paper: SourceBundle["papers"][number], index: number): Pr
         id: "scene-method",
         type: "summary",
         contentRef: "method",
-        narrationText: shortSummary,
+        narrationText: draft.method,
         content: {
           title: "关键信息",
-          bullets: sentenceParts(shortSummary).slice(0, 3),
+          bullets: draft.bullets.slice(0, 3),
         },
         backgroundPresetId: "cover-cellular-mask",
         backgroundImageLayoutId: "cover-focus-tr",
@@ -153,13 +158,32 @@ const buildManifest = (paper: SourceBundle["papers"][number], index: number): Pr
         durationStrategy: "auto-by-audio",
       },
       {
+        id: "scene-value",
+        type: "bullet",
+        contentRef: "value",
+        narrationText: draft.value,
+        content: {
+          title: "为什么值得看？",
+          bullets: [
+            draft.value,
+            `所属方向：${paper.categories.join(" / ")}`,
+            `发布时间：${paper.publishedAt.slice(0, 10)}`,
+          ],
+        },
+        backgroundPresetId: "cover-cellular-mask",
+        backgroundImageLayoutId: "cover-focus-br",
+        backgroundEffectId: "cellular-life",
+        motionPresetId: "stagger-rise",
+        durationStrategy: "auto-by-audio",
+      },
+      {
         id: "scene-ending",
         type: "ending",
         contentRef: "ending",
-        narrationText: ending,
+        narrationText: draft.ending,
         content: {
           title: "一句话结论",
-          body: ending,
+          body: draft.ending,
         },
         backgroundPresetId: "cover-soft-focus",
         backgroundImageLayoutId: "cover-focus-bl",

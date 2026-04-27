@@ -63,6 +63,10 @@ npm run render:video
 2. Remotion 视频渲染入口
 3. Python `edge-tts` 语音生成
 4. Node 调度脚本
+5. arXiv `cs.AI` 论文抓取与 PDF 下载
+6. PDF 文本抽取
+7. 基于论文文本的中文短视频脚本草案生成
+8. 基于脚本草案的候选 manifest 生成
 
 ### 工程组织
 
@@ -182,6 +186,11 @@ npm run render:video
 - `tools/build-video.ts`
 - `tools/produce-video.ts`
 - `tools/lib/run-artifacts.ts`
+- `tools/fetch-arxiv-ai.ts`
+- `tools/extract-pdf-text.ts`
+- `tools/build-source-bundle.ts`
+- `tools/analyze-paper-sources.ts`
+- `tools/scaffold-paper-manifests.ts`
 
 ### 渲染入口
 
@@ -197,6 +206,13 @@ npm run render:video
 - `packages/content-pipeline/src/effect-runtime.tsx`
 - `docs/lego-architecture.md`
 - `docs/modular-visual-apis.md`
+
+### 论文接入
+
+- `services/paper-ingest/extract_pdf_text.py`
+- `data/source-bundles/latest-ai-batch.json`
+- `data/source-bundles/latest-ai-analysis.json`
+- `data/manifests/ingest/*.json`
 
 ### 预览页
 
@@ -255,11 +271,41 @@ npm run render:video
 
 建议严格按这个顺序继续：
 
-1. 继续把背景层和 effect 层也进一步模板化/组件化
-2. 在 `atomic-ui` 中新增更多原子组件
-3. 增加第二套、第三套模板 JSON，而不是只用 `paper-digest-v1`
-4. 确认本地专用 manifest 在整条链路上稳定生效
-5. 继续扩充更多 Three.js / WebGL effect 模块
+1. 把 `fetch:arxiv-ai -> extract:pdf-text -> build:source-bundle -> analyze:paper-sources -> scaffold:paper-manifests` 串成更顺滑的一键入口
+2. 继续提升论文脚本草案质量，把当前启发式总结升级成更稳定的结构化摘要流程
+3. 将候选 manifest 与背景图、PDF、音频、最终视频更明确地绑定到同一个 run/source bundle 视图中
+4. 继续把背景层和 effect 层进一步模板化/组件化
+5. 在 `atomic-ui` 中新增更多原子组件
+6. 增加第二套、第三套模板 JSON，而不是只用 `paper-digest-v1`
+
+---
+
+## 8. 最新论文接入进展
+
+截至当前阶段，项目已经能在本地完成这条链路：
+
+1. 抓取 arXiv `cs.AI` 最新论文
+2. 下载 PDF 到 `output/cache/papers/<arxivId>/source.pdf`
+3. 抽取 PDF 文本到 `output/cache/papers/<arxivId>/source.txt`
+4. 生成 source bundle：
+   - `data/source-bundles/latest-ai-batch.json`
+5. 基于抽取文本生成中文短视频脚本草案：
+   - `data/source-bundles/latest-ai-analysis.json`
+6. 为每篇论文生成候选 manifest：
+   - `data/manifests/ingest/*.json`
+
+当前本地已经实际拉取并分析了 3 篇 `cs.AI` 论文，并生成了对应的背景图建议和候选 manifest。
+
+需要注意：
+
+1. `data/source-bundles/*.json`
+2. `data/manifests/ingest/*.json`
+3. `output/cache/papers/*`
+4. `output/cache/images/*`
+
+这些都属于本地抓取/缓存产物，已经通过 `.gitignore` 保持不进仓库。
+
+另外，`build-source-bundle`、`analyze-paper-sources`、`scaffold-paper-manifests` 目前应顺序执行，不建议并行跑；并行时可能出现后一步先读取、前一步文件尚未写出的情况。
 
 ---
 
