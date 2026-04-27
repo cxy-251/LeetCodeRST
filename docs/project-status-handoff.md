@@ -156,6 +156,13 @@ npm run render:video
    - `App.types.ts` 负责类型
    - `App.module.css` 负责样式
    - 旧的 `styles.css` 已移除
+36. 当前活跃的生命游戏特效链路也已做同风格局部拆分：
+   - `effect-atoms.tsx` 主要保留组件装配
+   - `effect-atoms.types.ts` 负责类型
+   - `effect-atoms.service.ts` 负责展示层辅助计算
+   - `effect-atoms.module.css` 负责样式
+   - `three-life-effect.tsx` 仅保留 canvas 组件外壳
+   - `use-three-life-renderer.ts` 下沉 Three.js 生命周期与渲染逻辑
 
 ---
 

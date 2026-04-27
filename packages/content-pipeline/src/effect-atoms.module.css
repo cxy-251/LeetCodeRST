@@ -1,0 +1,55 @@
+.layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.interactiveLayer {
+  position: absolute;
+  inset: 0;
+}
+
+.auroraLayer {
+  pointer-events: none;
+}
+
+.gridLayer {
+  opacity: 0.38;
+}
+
+.noiseLayer {
+  opacity: 0.92;
+}
+
+.launchHalo {
+  position: absolute;
+  inset: 0;
+}
+
+.launchButton {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 260px;
+  margin-left: -130px;
+  margin-top: -28px;
+  padding: 18px 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: #f4f7fb;
+  font-size: 15px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  text-align: center;
+  box-shadow: 0 0 0 10px rgba(87, 216, 196, 0.08), 0 18px 48px rgba(0, 0, 0, 0.28);
+  z-index: 2;
+  cursor: pointer;
+}
+
+.launchButtonIdle {
+  background: rgba(5, 12, 20, 0.58);
+}
+
+.launchButtonRunning {
+  background: rgba(7, 18, 29, 0.36);
+}
