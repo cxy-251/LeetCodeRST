@@ -2,7 +2,14 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import {spawn} from "node:child_process";
 import {resolveLaunchCueOffsets} from "@paper-to-video/content-pipeline";
-import {readLatestRun, writeRunSummary} from "./lib/run-artifacts";
+import {
+  ensureCacheDirectories,
+  getAudioCachePaths,
+  linkOrCopyFile,
+  readLatestRun,
+  stableHash,
+  writeRunSummary,
+} from "./lib/run-artifacts";
 import type {
   AudioAsset,
   ProductionManifest,
@@ -153,6 +160,24 @@ const createMockAudioAsset = async (sceneId: string, text: string) => {
   } satisfies AudioAsset;
 };
 
+const buildAudioCacheKey = ({
+  scene,
+  voice,
+}: {
+  scene: ProductionManifest["scenes"][number];
+  voice: ProductionManifest["voice"];
+}) =>
+  stableHash(
+    JSON.stringify({
+      provider: voice.provider,
+      voice: voice.name,
+      rate: voice.rate,
+      pitch: voice.pitch,
+      volume: voice.volume ?? "",
+      text: scene.narrationText,
+    }),
+  );
+
 const rebuildTimeline = (
   renderManifest: RenderManifest,
   audioAssets: AudioAsset[],
@@ -236,6 +261,7 @@ const main = async () => {
   const productionManifest = JSON.parse(productionRaw) as ProductionManifest;
   const renderManifest = JSON.parse(renderRaw) as RenderManifest;
   const audioAssets: AudioAsset[] = [];
+  await ensureCacheDirectories();
 
   for (const scene of productionManifest.scenes) {
     if (mockMode) {
@@ -254,36 +280,50 @@ const main = async () => {
     const outputMeta = latestRun
       ? path.join(latestRun.rootDir, "meta", `${scene.id}.audio.json`)
       : path.resolve(`data/generated-meta/${scene.id}.audio.json`);
+    const cacheKey = buildAudioCacheKey({scene, voice: productionManifest.voice});
+    const cachePaths = getAudioCachePaths(cacheKey);
 
-    await run("conda", [
-      "run",
-      "-n",
-      "kwai",
-      "python",
-      "services/tts-python/src/main.py",
-      "--scene-id",
-      scene.id,
-      "--text",
-      scene.narrationText,
-      "--voice",
-      productionManifest.voice.name,
-      "--rate",
-      productionManifest.voice.rate,
-      "--pitch",
-      productionManifest.voice.pitch,
-      "--output-audio",
-      outputAudio,
-      "--output-meta",
-      outputMeta,
-    ]);
+    let cacheHit = true;
+    try {
+      await Promise.all([fs.access(cachePaths.audioPath), fs.access(cachePaths.metaPath)]);
+    } catch {
+      cacheHit = false;
+    }
 
-    const audioRaw = await fs.readFile(outputMeta, "utf-8");
+    if (!cacheHit) {
+      await run("conda", [
+        "run",
+        "-n",
+        "kwai",
+        "python",
+        "services/tts-python/src/main.py",
+        "--scene-id",
+        scene.id,
+        "--text",
+        scene.narrationText,
+        "--voice",
+        productionManifest.voice.name,
+        "--rate",
+        productionManifest.voice.rate,
+        "--pitch",
+        productionManifest.voice.pitch,
+        "--output-audio",
+        cachePaths.audioPath,
+        "--output-meta",
+        cachePaths.metaPath,
+      ]);
+    }
+
+    await linkOrCopyFile(cachePaths.audioPath, outputAudio);
+
+    const audioRaw = await fs.readFile(cachePaths.metaPath, "utf-8");
     const audioAsset = JSON.parse(audioRaw) as AudioAsset;
-    const durationMs = await probeAudioDurationMs(outputAudio);
+    const durationMs = await probeAudioDurationMs(cachePaths.audioPath);
     const normalizedAudioAsset: AudioAsset = {
       ...audioAsset,
       durationMs,
       segments: distributeSegmentsByDuration(scene.narrationText, durationMs),
+      filePath: outputAudio,
     };
     await fs.writeFile(outputMeta, JSON.stringify(normalizedAudioAsset, null, 2), "utf-8");
     audioAssets.push(normalizedAudioAsset);
@@ -309,6 +349,7 @@ const main = async () => {
         audioDir: path.join(latestRun.rootDir, "audio"),
         metaDir: path.join(latestRun.rootDir, "meta"),
         imageDir: path.join(latestRun.rootDir, "images"),
+        paperDir: path.join(latestRun.rootDir, "paper"),
         videoDir: path.join(latestRun.rootDir, "video"),
         productionManifestPath: latestRun.productionManifestPath,
         renderManifestPath: latestRun.renderManifestPath,

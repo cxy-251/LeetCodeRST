@@ -1,9 +1,13 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import crypto from "node:crypto";
 import type {ProductionManifest} from "@paper-to-video/shared-types";
 
 const OUTPUT_ROOT = path.resolve("output");
 const RUNS_ROOT = path.join(OUTPUT_ROOT, "runs");
+const CACHE_ROOT = path.join(OUTPUT_ROOT, "cache");
+const AUDIO_CACHE_ROOT = path.join(CACHE_ROOT, "audio");
+const PAPER_CACHE_ROOT = path.join(CACHE_ROOT, "papers");
 const REGISTRY_CSV = path.join(OUTPUT_ROOT, "video-runs.csv");
 const LATEST_RUN_FILE = path.join(OUTPUT_ROOT, "latest-run.json");
 
@@ -37,6 +41,7 @@ export type RunContext = {
   audioDir: string;
   metaDir: string;
   imageDir: string;
+  paperDir: string;
   videoDir: string;
   productionManifestPath: string;
   renderManifestPath: string;
@@ -58,6 +63,7 @@ export const getRunContext = (projectId: string, runId: string): RunContext => {
     audioDir: path.join(rootDir, "audio"),
     metaDir: path.join(rootDir, "meta"),
     imageDir: path.join(rootDir, "images"),
+    paperDir: path.join(rootDir, "paper"),
     videoDir: path.join(rootDir, "video"),
     productionManifestPath: path.join(rootDir, "inputs", "production-manifest.json"),
     renderManifestPath: path.join(rootDir, "manifests", "render-manifest.json"),
@@ -74,9 +80,38 @@ export const ensureRunDirectories = async (context: RunContext) => {
       context.audioDir,
       context.metaDir,
       context.imageDir,
+      context.paperDir,
       context.videoDir,
     ].map((dir) => fs.mkdir(dir, {recursive: true})),
   );
+};
+
+export const ensureCacheDirectories = async () => {
+  await Promise.all([
+    fs.mkdir(AUDIO_CACHE_ROOT, {recursive: true}),
+    fs.mkdir(PAPER_CACHE_ROOT, {recursive: true}),
+  ]);
+};
+
+export const stableHash = (value: string) =>
+  crypto.createHash("sha256").update(value).digest("hex").slice(0, 20);
+
+export const getAudioCachePaths = (cacheKey: string) => ({
+  audioPath: path.join(AUDIO_CACHE_ROOT, `${cacheKey}.mp3`),
+  metaPath: path.join(AUDIO_CACHE_ROOT, `${cacheKey}.json`),
+});
+
+export const getPaperCacheDir = (paperId: string) => path.join(PAPER_CACHE_ROOT, paperId);
+
+export const linkOrCopyFile = async (sourcePath: string, targetPath: string) => {
+  await fs.mkdir(path.dirname(targetPath), {recursive: true});
+  await fs.rm(targetPath, {force: true});
+
+  try {
+    await fs.link(sourcePath, targetPath);
+  } catch {
+    await fs.copyFile(sourcePath, targetPath);
+  }
 };
 
 export const createRunContextFromManifest = async (

@@ -2,6 +2,7 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import {
   createRunContextFromManifest,
+  linkOrCopyFile,
   writeLatestRun,
   writeRunSummary,
 } from "./lib/run-artifacts";
@@ -123,6 +124,15 @@ const main = async () => {
   const scenes: RenderScene[] = [];
   const subtitleSegments: SubtitleSegment[] = [];
   let coverCycleIndex = 0;
+  let paperLocalPdfPath = manifest.paper.localPdfPath;
+
+  if (manifest.paper.localPdfPath) {
+    const sourcePdfPath = path.resolve(manifest.paper.localPdfPath);
+    const extension = path.extname(sourcePdfPath) || ".pdf";
+    const runPdfPath = path.join(runContext.paperDir, `source${extension}`);
+    await linkOrCopyFile(sourcePdfPath, runPdfPath);
+    paperLocalPdfPath = runPdfPath;
+  }
 
   for (const scene of manifest.scenes) {
     const sceneDurationMs =
@@ -193,7 +203,10 @@ const main = async () => {
     template: templateRef,
     templateDocument,
     coverImage: manifest.coverImage,
-    paper: manifest.paper,
+    paper: {
+      ...manifest.paper,
+      localPdfPath: paperLocalPdfPath,
+    },
     theme: manifest.theme,
     voice: manifest.voice,
     effectProfile: manifest.effectProfile,

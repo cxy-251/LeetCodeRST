@@ -167,6 +167,30 @@
 - `/effects/minesweeper`
 - `/effects/pacman-field`
 
+### 单条视频如何选择一个 WebGL 效果
+
+当前推荐入口：
+
+```json
+"effectProfile": {
+  "id": "life-game"
+}
+```
+
+或：
+
+```json
+"effectProfile": {
+  "id": "snake-grid"
+}
+```
+
+含义：
+
+1. 一个视频只选一个主 WebGL 效果家族
+2. 第二页启动按钮会自动接入这个家族
+3. 后续场景沿用同一个效果家族继续运行
+
 ### 生命游戏参数
 
 ```json

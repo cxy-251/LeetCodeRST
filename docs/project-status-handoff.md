@@ -402,6 +402,33 @@ Practical outcome:
 
 ---
 
+## 14. 2026-04-27 Paper Ingest + Asset Cache Pass
+
+This pass prepared the project for real paper ingestion and reduced duplicate asset work.
+
+What changed:
+
+1. Added audio cache reuse in `tools/generate-audio.ts`.
+   - cache key is based on narration text + TTS voice settings
+   - repeated runs with the same scene text/voice now reuse cached MP3 instead of synthesizing again
+2. Added output cache directories in `tools/lib/run-artifacts.ts`.
+   - `output/cache/audio`
+   - `output/cache/papers`
+3. Added paper bundling support to run composition.
+   - if `manifest.paper.localPdfPath` exists, the PDF is linked/copied into the current run's `paper/` directory
+4. Added an arXiv fetch tool:
+   - `npm run fetch:arxiv-ai -- --latest-only --download-pdf`
+5. Added a PDF text extraction tool:
+   - `npm run extract:pdf-text -- --input-pdf <pdf> --output-text <txt>`
+   - current implementation uses Python `pypdf` inside the `kwai` conda environment
+
+Important note:
+
+1. Existing old run directories still contain historical duplicated audio files from before the cache layer existed.
+2. From this pass onward, newly generated identical narration audio should reuse the cache instead of regenerating.
+
+---
+
 ## 8. 续接建议
 
 如果在新对话里继续，建议先读：

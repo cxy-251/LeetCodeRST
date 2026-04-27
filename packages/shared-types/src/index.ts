@@ -184,6 +184,10 @@ export type ProductionManifest = {
     source: "arxiv";
     paperId: string;
     title: string;
+    pdfUrl?: string;
+    localPdfPath?: string;
+    categories?: string[];
+    publishedAt?: string;
   };
   theme: {
     id: string;

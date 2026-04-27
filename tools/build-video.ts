@@ -142,6 +142,7 @@ const main = async () => {
         audioDir: path.join(latestRun.rootDir, "audio"),
         metaDir: path.join(latestRun.rootDir, "meta"),
         imageDir: path.join(latestRun.rootDir, "images"),
+        paperDir: path.join(latestRun.rootDir, "paper"),
         videoDir: path.join(latestRun.rootDir, "video"),
         productionManifestPath: latestRun.productionManifestPath,
         renderManifestPath: latestRun.renderManifestPath,
