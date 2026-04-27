@@ -300,7 +300,60 @@ npm run render:video
 
 ---
 
-## 7. 下一步优先级
+## 7. 功能完成情况总览
+
+### 已完成
+
+1. 论文到视频的基础工程链路已经打通：
+   - 读取 manifest
+   - 生成 render manifest
+   - 生成音频
+   - 渲染视频
+2. React 预览站点已经可用：
+   - 模板页预览
+   - effect 原子页预览
+3. `contentProfile / coverProfile / effectProfile` 三层配置已建立
+4. 批量 CSV 配置已经建立，并支持按行渲染
+5. arXiv 最新论文抓取、PDF 下载、PDF 文本抽取已经可用
+6. 自动生成：
+   - source bundle
+   - analysis bundle
+   - ingest manifest
+   - generated content profile
+   - generated batch CSV
+7. 背景图 9:16 处理工具已经可用，适合位图输入
+8. 本地缓存体系已经建立：
+   - PDF 缓存
+   - 音频缓存
+   - run 产物归档
+9. 开发规范文档已经补齐
+10. 外部 AI 论文总结模板、提示词、示例已经写入 `services/summarizer`
+
+### 未完成
+
+1. 还没有把外部 AI 返回的 JSON 自动转换成 `contentProfile` 的正式脚本
+2. 还没有把论文总结质量提升到“稳定可商用”的程度，当前仍有启发式模板味
+3. 还没有接入真正的图像生成/搜图服务调度，只做了图片处理和路径接入
+4. 还没有做视频质量筛选或自动评分机制
+5. 还没有实现多个模板风格的大规模切换，目前主模板仍以 `paper-digest-v1` 为核心
+6. 还没有完成更丰富的 WebGL effect 家族扩展，例如扫雷、吃豆人等
+7. 还没有把 effect registry、template registry、profile registry 做成严格 schema 校验
+8. 还没有提供 GUI 级别的配置编辑器，当前主要靠 JSON 和 CSV
+
+### 当前不完善
+
+1. 生命游戏相关视觉体验仍未完全达到理想状态：
+   - 第二页按钮后视觉衔接仍有改进空间
+   - 某些页面的实际动效表现仍不够强
+2. 贪吃蛇和生命游戏虽然可切换，但审美和节奏仍偏原型
+3. `prepare:cover-image` 当前更适合 jpg/png/webp 这类位图；SVG 等矢量输入虽有兼容，但不是主路径
+4. Remotion 渲染在当前环境仍可能被 Chromium 启动权限限制阻塞，这不是业务代码本身的逻辑错误，但会影响本机批量渲染体验
+5. 自动论文分析目前主要基于规则/启发式生成中文脚本草案，质量依赖论文类型，理论类、综述类和应用类的稳定性仍不完全一致
+6. 一些旧文档里仍保留了项目早期阶段的描述，后续需要继续清理和统一
+
+---
+
+## 8. 下一步优先级
 
 建议严格按这个顺序继续：
 
@@ -313,7 +366,7 @@ npm run render:video
 
 ---
 
-## 8. 最新论文接入进展
+## 9. 最新论文接入进展
 
 截至当前阶段，项目已经能在本地完成这条链路：
 
@@ -357,7 +410,7 @@ npm run render:video
 
 ---
 
-## 9. 2026-04-27 Latest Fix
+## 10. 2026-04-27 Latest Fix
 
 Current debugging focus returned to the real product goal:
 
@@ -379,7 +432,7 @@ Expected outcome after this fix:
 
 ---
 
-## 10. 2026-04-27 Modular Tuning Pass
+## 11. 2026-04-27 Modular Tuning Pass
 
 This pass focused on making the active visual system easier to tune from config rather than code.
 
@@ -416,7 +469,7 @@ Next check after this pass:
 
 ---
 
-## 11. 2026-04-27 Dynamic Cue Timing Pass
+## 12. 2026-04-27 Dynamic Cue Timing Pass
 
 This pass removed the remaining fixed-frame launch dependency from the life-game flow.
 
@@ -450,7 +503,7 @@ Why this matters:
 
 ---
 
-## 12. 2026-04-27 Mixed Effect Composition Pass
+## 13. 2026-04-27 Mixed Effect Composition Pass
 
 This pass addressed two product-level concerns:
 
@@ -477,7 +530,7 @@ Current usage model:
 
 ---
 
-## 13. 2026-04-27 Immediate Launch + Lighter Snake Colors
+## 14. 2026-04-27 Immediate Launch + Lighter Snake Colors
 
 This pass made two UX-level adjustments:
 
@@ -496,7 +549,7 @@ Practical outcome:
 
 ---
 
-## 14. 2026-04-27 Paper Ingest + Asset Cache Pass
+## 15. 2026-04-27 Paper Ingest + Asset Cache Pass
 
 This pass prepared the project for real paper ingestion and reduced duplicate asset work.
 
@@ -523,7 +576,7 @@ Important note:
 
 ---
 
-## 15. 2026-04-27 Source Bundle + Manifest Scaffold Pass
+## 16. 2026-04-27 Source Bundle + Manifest Scaffold Pass
 
 This pass connected downloaded paper assets to actual candidate video manifests.
 
@@ -546,7 +599,7 @@ Why this matters:
 
 ---
 
-## 8. 续接建议
+## 17. 续接建议
 
 如果在新对话里继续，建议先读：
 
