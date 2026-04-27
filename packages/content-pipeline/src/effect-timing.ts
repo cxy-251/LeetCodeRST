@@ -1,5 +1,5 @@
 import {resolveCellularEffectConfig} from "./module-api";
-import type {RenderManifest, RenderScene} from "@paper-to-video/shared-types";
+import type {BackgroundEffectId, RenderManifest, RenderScene} from "@paper-to-video/shared-types";
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
@@ -51,4 +51,8 @@ export const resolveLifeGameInteractionFrame = (manifest: RenderManifest) => {
   }
 
   return launchScene.fromFrame + launchScene.timing.interactionFrameOffset;
+};
+
+export const resolveContinuousEffectId = (manifest: RenderManifest): BackgroundEffectId => {
+  return manifest.effectProfile?.id === "snake-grid" ? "snake-grid" : "cellular-life";
 };

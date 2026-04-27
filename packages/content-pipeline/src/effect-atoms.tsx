@@ -59,6 +59,7 @@ const SnakeGridAtom: React.FC<EffectAtomRuntimeProps> = ({
 const CellularLaunchAtom: React.FC<EffectAtomRuntimeProps> = ({
   absoluteFrame,
   activationFrame,
+  continuousEffectId,
   effectStartFrame,
   height,
   interactionFrame,
@@ -75,11 +76,12 @@ const CellularLaunchAtom: React.FC<EffectAtomRuntimeProps> = ({
   const ready = effectStartFrame !== undefined ? absoluteFrame >= effectStartFrame : Boolean(isRunning);
   const buttonScale = ready ? 0.94 : clicked ? pulse * 0.9 : pulse;
   const buttonLabel = ready ? "Simulation Running" : clicked ? "Booting Life Grid" : "Start Life Simulation";
+  const MainEffectComponent = continuousEffectId === "snake-grid" ? ThreeSnakeEffect : ThreeLifeEffect;
 
   return (
     <>
       {ready ? (
-        <ThreeLifeEffect
+        <MainEffectComponent
           absoluteFrame={absoluteFrame}
           activationFrame={activationFrame}
           height={height}

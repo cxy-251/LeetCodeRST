@@ -142,7 +142,7 @@ const main = async () => {
       effectStartFrameOffset: enterFrames,
     };
     const timing =
-      resolveSceneBackgroundEffectId(scene) === "cellular-launch"
+      resolveSceneBackgroundEffectId(scene, manifest.effectProfile) === "cellular-launch"
         ? {
             ...baseTiming,
             ...resolveLaunchCueOffsets({
@@ -159,7 +159,7 @@ const main = async () => {
       durationInFrames,
       backgroundPresetId: scene.backgroundPresetId,
       backgroundImageLayoutId: resolveSceneBackgroundImageLayoutId(scene, coverCycleIndex),
-      backgroundEffectId: resolveSceneBackgroundEffectId(scene),
+      backgroundEffectId: resolveSceneBackgroundEffectId(scene, manifest.effectProfile),
       motionPresetId: scene.motionPresetId,
       imageAssetIds: scene.imageAssetId ? [scene.imageAssetId] : [],
       audioSegmentIds: [`audio-${scene.id}`],
@@ -196,6 +196,7 @@ const main = async () => {
     paper: manifest.paper,
     theme: manifest.theme,
     voice: manifest.voice,
+    effectProfile: manifest.effectProfile,
     modules: manifest.modules,
     scenes,
     audioAssets: [],

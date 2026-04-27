@@ -52,6 +52,12 @@ export type BackgroundEffectId =
   | "cellular-life"
   | "snake-grid";
 
+export type WebGLEffectProfileId = "life-game" | "snake-grid";
+
+export type EffectProfileConfig = {
+  id: WebGLEffectProfileId;
+};
+
 export type TextMotionId = "fade-up" | "slide-up" | "stagger-rise" | "hard-cut";
 
 export type TextMotionConfig = {
@@ -191,6 +197,7 @@ export type ProductionManifest = {
     pitch: string;
     volume?: string;
   };
+  effectProfile?: EffectProfileConfig;
   modules?: VisualModuleConfig;
   scenes: ProductionScene[];
 };
@@ -274,6 +281,7 @@ export type RenderManifest = {
   paper: ProductionManifest["paper"];
   theme: ProductionManifest["theme"];
   voice: ProductionManifest["voice"];
+  effectProfile?: EffectProfileConfig;
   modules?: VisualModuleConfig;
   scenes: RenderScene[];
   audioAssets: AudioAsset[];

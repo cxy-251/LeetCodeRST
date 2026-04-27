@@ -88,6 +88,7 @@ export const LoadingStateView: React.FC<{
 export const PreviewStageView: React.FC<PreviewStageProps> = ({
   absolutePreviewFrame,
   activationFrame,
+  continuousEffectId,
   interactionFrame,
   children,
   coverImageSrc,
@@ -137,6 +138,7 @@ export const PreviewStageView: React.FC<PreviewStageProps> = ({
             effectId={effectId}
             absoluteFrame={absolutePreviewFrame}
             activationFrame={activationFrame}
+            continuousEffectId={continuousEffectId === "snake-grid" ? "snake-grid" : "cellular-life"}
             interactionFrame={interactionFrame}
             effectStartFrame={activationFrame}
             height={672}
@@ -217,6 +219,7 @@ export const TemplatePreviewView: React.FC<{
         <PreviewStageView
           absolutePreviewFrame={stageModel.absolutePreviewFrame}
           activationFrame={stageModel.activationFrame}
+          continuousEffectId={stageModel.continuousEffectId}
           interactionFrame={stageModel.interactionFrame}
           coverImageSrc={stageModel.coverImageSrc}
           effectId={stageModel.backgroundEffectId}
@@ -344,6 +347,7 @@ export const EffectLabView: React.FC<{
         <PreviewStageView
           absolutePreviewFrame={stageModel.absolutePreviewFrame}
           activationFrame={stageModel.activationFrame}
+          continuousEffectId={stageModel.continuousEffectId}
           interactionFrame={stageModel.interactionFrame}
           coverImageSrc={stageModel.coverImageSrc}
           effectId={stageModel.effectId}

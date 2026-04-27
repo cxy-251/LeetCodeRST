@@ -1,12 +1,14 @@
 import React from "react";
 import {getEffectAtomDefinition} from "./effect-atoms";
 import type {BackgroundEffectId, RenderManifest} from "@paper-to-video/shared-types";
+import type {EffectAtomId} from "./effect-atoms.types";
 
 export type EffectRuntimeMode = "interactive" | "render";
 
 export type EffectRuntimeAdapterProps = {
   absoluteFrame: number;
   activationFrame: number;
+  continuousEffectId?: EffectAtomId;
   interactionFrame?: number;
   effectStartFrame?: number;
   effectId: BackgroundEffectId;
@@ -23,6 +25,7 @@ export type EffectRuntimeAdapterProps = {
 export const EffectRuntimeAdapter: React.FC<EffectRuntimeAdapterProps> = ({
   absoluteFrame,
   activationFrame,
+  continuousEffectId,
   interactionFrame,
   effectStartFrame,
   effectId,
@@ -53,6 +56,7 @@ export const EffectRuntimeAdapter: React.FC<EffectRuntimeAdapterProps> = ({
     <definition.Component
       absoluteFrame={absoluteFrame}
       activationFrame={activationFrame}
+      continuousEffectId={continuousEffectId}
       interactionFrame={effectiveInteractionFrame}
       effectStartFrame={effectiveEffectStartFrame}
       height={height}

@@ -376,9 +376,10 @@ What changed:
 
 Current usage model:
 
-1. A scene chooses its WebGL layer through `backgroundEffectId`.
-2. Different scenes in the same production manifest can use different effect ids.
-3. This is now the intended way to compose one video from multiple WebGL atoms.
+1. The latest direction is now "one video uses one effect family".
+2. The manifest selects that family through top-level `effectProfile.id`.
+3. Scene-level effect ids are treated as semantic slots, and the compose step resolves them to the chosen effect family.
+4. This means the user can switch the whole video from `life-game` to `snake-grid` by editing one config field instead of changing every scene manually.
 
 ---
 

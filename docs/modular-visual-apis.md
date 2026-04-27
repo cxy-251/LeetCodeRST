@@ -58,6 +58,29 @@
 
 ## 2. 特效层 API
 
+### 顶层效果配置
+
+如果你希望“一条视频只用一种 WebGL 特效”，优先改这个顶层字段：
+
+```json
+"effectProfile": {
+  "id": "life-game"
+}
+```
+
+当前支持：
+
+- `life-game`
+  效果：第二页按钮启动后，整条视频的主 WebGL 层使用生命游戏。
+- `snake-grid`
+  效果：第二页按钮启动后，整条视频的主 WebGL 层使用贪吃蛇网格。
+
+也就是说：
+
+1. 先在配置文件里选整条视频的 effect family
+2. 再执行 `produce:video`
+3. 最终这条视频就统一使用你选中的那个 WebGL 中间层
+
 ### scene 字段
 
 ```json
@@ -303,21 +326,10 @@
 2. 上层叠持续运行的生命游戏
 3. 文本用分段抬升动效进入
 
-也可以在同一条视频里混用不同特效，例如：
+默认推荐做法不是混用，而是：
 
-```json
-[
-  {"id": "scene-method", "backgroundEffectId": "cellular-life"},
-  {"id": "scene-value", "backgroundEffectId": "snake-grid"},
-  {"id": "scene-ending", "backgroundEffectId": "snake-grid"}
-]
-```
-
-效果：
-
-1. 第二页到第三页延续生命游戏
-2. 后续页面切到贪吃蛇 WebGL 层
-3. 同一条视频可以按 scene 粒度切换不同 effect atom
+1. scene 上保留 effect 占位角色
+2. 顶层 `effectProfile.id` 决定整条视频到底用哪一个 WebGL effect family
 
 ---
 

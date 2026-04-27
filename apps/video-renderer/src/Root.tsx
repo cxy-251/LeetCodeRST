@@ -9,6 +9,7 @@ import {
   getThemePalette,
   getTextMotionState,
   resolveBackgroundMotionConfig,
+  resolveContinuousEffectId,
   resolveLifeGameActivationFrame,
   resolveLifeGameInteractionFrame,
   resolveTextMotionConfig,
@@ -82,10 +83,11 @@ const BackgroundEffectLayer: React.FC<{
   activationFrame: number;
   interactionFrame: number;
   effectStartFrame: number;
+  continuousEffectId: BackgroundEffectId;
   themeId: string;
   seed: number;
   modules?: RenderManifest["modules"];
-}> = ({effectId, sceneFrame, absoluteFrame, activationFrame, interactionFrame, effectStartFrame, themeId, seed, modules}) => {
+}> = ({effectId, sceneFrame, absoluteFrame, activationFrame, interactionFrame, effectStartFrame, continuousEffectId, themeId, seed, modules}) => {
   const palette = getThemePalette(themeId);
   const {width, height} = useVideoConfig();
   if (effectId === "cellular-life" || effectId === "cellular-launch" || effectId === "snake-grid") {
@@ -93,6 +95,7 @@ const BackgroundEffectLayer: React.FC<{
       <EffectRuntimeAdapter
         absoluteFrame={absoluteFrame}
         activationFrame={activationFrame}
+        continuousEffectId={continuousEffectId === "snake-grid" ? "snake-grid" : "cellular-life"}
         interactionFrame={interactionFrame}
         effectStartFrame={effectStartFrame}
         effectId={effectId}
@@ -168,10 +171,11 @@ const Background: React.FC<{
   activationFrame: number;
   interactionFrame: number;
   effectStartFrame: number;
+  continuousEffectId: BackgroundEffectId;
   coverImage?: CoverImageAsset;
   seed: number;
   modules?: RenderManifest["modules"];
-}> = ({themeId, sceneFrame, absoluteFrame, scene, previousLayoutId, activationFrame, interactionFrame, effectStartFrame, coverImage, seed, modules}) => {
+}> = ({themeId, sceneFrame, absoluteFrame, scene, previousLayoutId, activationFrame, interactionFrame, effectStartFrame, continuousEffectId, coverImage, seed, modules}) => {
   const palette = getThemePalette(themeId);
   const glowX = 15 + (sceneFrame % 160) * 0.38;
   const glowY = 18 + (sceneFrame % 220) * 0.18;
@@ -211,6 +215,7 @@ const Background: React.FC<{
         activationFrame={activationFrame}
         interactionFrame={interactionFrame}
         effectStartFrame={effectStartFrame}
+        continuousEffectId={continuousEffectId}
         themeId={themeId}
         seed={seed}
         modules={modules}
@@ -242,6 +247,7 @@ const SceneCard: React.FC<{
     : "cover-full";
   const activationFrame = resolveLifeGameActivationFrame(manifest);
   const interactionFrame = resolveLifeGameInteractionFrame(manifest);
+  const continuousEffectId = resolveContinuousEffectId(manifest);
   const primaryNodes = renderTemplateZone({
     zone: "primary",
     context: {
@@ -272,6 +278,7 @@ const SceneCard: React.FC<{
         activationFrame={activationFrame}
         interactionFrame={interactionFrame}
         effectStartFrame={activationFrame}
+        continuousEffectId={continuousEffectId}
         coverImage={manifest.coverImage}
         seed={manifest.seed}
         modules={manifest.modules}

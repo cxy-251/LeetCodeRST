@@ -33,6 +33,9 @@
     "rate": "+80%",
     "pitch": "+0Hz"
   },
+  "effectProfile": {
+    "id": "life-game"
+  },
   "modules": {
     "backgroundMotion": {
       "overscanPercent": 36,
@@ -149,9 +152,9 @@
           "对短视频和营销素材生成很有启发"
         ]
       },
-      "backgroundPresetId": "cover-noise-bloom",
+      "backgroundPresetId": "cover-cellular-mask",
       "backgroundImageLayoutId": "cover-focus-br",
-      "backgroundEffectId": "snake-grid",
+      "backgroundEffectId": "cellular-life",
       "motionPresetId": "stagger-rise",
       "durationStrategy": "auto-by-audio"
     },
@@ -166,7 +169,7 @@
       },
       "backgroundPresetId": "cover-soft-focus",
       "backgroundImageLayoutId": "cover-focus-bl",
-      "backgroundEffectId": "snake-grid",
+      "backgroundEffectId": "cellular-life",
       "motionPresetId": "fade-up",
       "durationStrategy": "auto-by-audio"
     }

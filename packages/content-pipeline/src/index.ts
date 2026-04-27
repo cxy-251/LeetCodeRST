@@ -28,6 +28,7 @@ export {
   resolveLaunchCueOffsets,
   resolveLifeGameActivationFrame,
   resolveLifeGameInteractionFrame,
+  resolveContinuousEffectId,
 } from "./effect-timing";
 
 export type ThemePalette = {

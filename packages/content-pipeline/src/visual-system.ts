@@ -1,6 +1,7 @@
 import type {
   BackgroundEffectId,
   BackgroundImageLayoutId,
+  EffectProfileConfig,
   ProductionScene,
   RenderScene,
 } from "@paper-to-video/shared-types";
@@ -22,8 +23,18 @@ const LEGACY_EFFECT_MAP: Record<string, BackgroundEffectId> = {
 
 export const resolveSceneBackgroundEffectId = (
   scene: Pick<ProductionScene, "backgroundPresetId" | "backgroundEffectId">,
+  effectProfile?: EffectProfileConfig,
 ): BackgroundEffectId => {
-  return scene.backgroundEffectId ?? LEGACY_EFFECT_MAP[scene.backgroundPresetId] ?? "none";
+  const resolved = scene.backgroundEffectId ?? LEGACY_EFFECT_MAP[scene.backgroundPresetId] ?? "none";
+  if (resolved === "cellular-launch") {
+    return resolved;
+  }
+
+  if (resolved === "cellular-life" || resolved === "snake-grid") {
+    return effectProfile?.id === "snake-grid" ? "snake-grid" : "cellular-life";
+  }
+
+  return resolved;
 };
 
 export const resolveSceneBackgroundImageLayoutId = (

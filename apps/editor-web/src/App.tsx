@@ -49,6 +49,7 @@ const App: React.FC = () => {
         <EffectRuntimeAdapter
           absoluteFrame={effectStageModel.absolutePreviewFrame}
           activationFrame={effectStageModel.activationFrame}
+          continuousEffectId={effectStageModel.continuousEffectId}
           interactionFrame={effectStageModel.interactionFrame}
           effectStartFrame={effectStageModel.activationFrame}
           effectId={effectStageModel.effectId}

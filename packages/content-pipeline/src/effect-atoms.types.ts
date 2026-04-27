@@ -6,6 +6,7 @@ export type EffectAtomId = Exclude<BackgroundEffectId, "none">;
 export type EffectAtomRuntimeProps = {
   absoluteFrame: number;
   activationFrame: number;
+  continuousEffectId?: EffectAtomId;
   interactionFrame?: number;
   effectStartFrame?: number;
   height: number;
