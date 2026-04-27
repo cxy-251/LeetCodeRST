@@ -4,6 +4,25 @@ import {buildCellularLifeCells} from "./visual-system";
 import {resolveCellularEffectConfig} from "./module-api";
 import type {ThreeLifeEffectProps} from "./three-life-effect.types";
 
+type LifeMeshRefs = {
+  birth: THREE.InstancedMesh | null;
+  primary: THREE.InstancedMesh | null;
+  secondary: THREE.InstancedMesh | null;
+};
+
+const disposeMeshMaterial = (mesh: THREE.InstancedMesh | null) => {
+  if (!mesh) {
+    return;
+  }
+
+  if (Array.isArray(mesh.material)) {
+    mesh.material.forEach((material) => material.dispose());
+    return;
+  }
+
+  mesh.material.dispose();
+};
+
 export const useThreeLifeRenderer = ({
   width,
   height,
@@ -17,11 +36,13 @@ export const useThreeLifeRenderer = ({
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.OrthographicCamera | null>(null);
-  const meshRef = useRef<THREE.InstancedMesh | null>(null);
+  const meshRefs = useRef<LifeMeshRefs>({
+    birth: null,
+    primary: null,
+    secondary: null,
+  });
   const geometryRef = useRef<THREE.PlaneGeometry | null>(null);
-  const materialRef = useRef<THREE.MeshBasicMaterial | null>(null);
   const helper = useMemo(() => new THREE.Object3D(), []);
-  const color = useMemo(() => new THREE.Color(), []);
   const clearColor = useMemo(() => new THREE.Color(0x000000), []);
   const config = resolveCellularEffectConfig(modules);
 
@@ -68,44 +89,55 @@ export const useThreeLifeRenderer = ({
     camera.position.z = 10;
 
     const geometry = new THREE.PlaneGeometry(1, 1);
-    const material = new THREE.MeshBasicMaterial({
-      transparent: true,
-      opacity: 1,
-      vertexColors: true,
-    });
-    const mesh = new THREE.InstancedMesh(
-      geometry,
-      material,
-      config.cellColumns * config.cellRows,
-    );
-    mesh.frustumCulled = false;
-    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    mesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(mesh.count * 3), 3);
+    const createLayerMesh = (colorValue: string) => {
+      const material = new THREE.MeshBasicMaterial({
+        color: new THREE.Color(colorValue),
+        transparent: true,
+        opacity: 1,
+      });
+      const mesh = new THREE.InstancedMesh(
+        geometry,
+        material,
+        config.cellColumns * config.cellRows,
+      );
+      mesh.frustumCulled = false;
+      mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      scene.add(mesh);
+      return mesh;
+    };
 
-    scene.add(mesh);
+    const birthMesh = createLayerMesh(config.birthColor);
+    const primaryMesh = createLayerMesh(config.primaryColor);
+    const secondaryMesh = createLayerMesh(config.secondaryColor);
 
     rendererRef.current = renderer;
     sceneRef.current = scene;
     cameraRef.current = camera;
-    meshRef.current = mesh;
+    meshRefs.current = {
+      birth: birthMesh,
+      primary: primaryMesh,
+      secondary: secondaryMesh,
+    };
     geometryRef.current = geometry;
-    materialRef.current = material;
 
     /**
      * We keep the WebGL lifecycle inside one hook so the editor preview and
      * Remotion renderer can share the exact same initialization path.
      */
     return () => {
+      disposeMeshMaterial(meshRefs.current.birth);
+      disposeMeshMaterial(meshRefs.current.primary);
+      disposeMeshMaterial(meshRefs.current.secondary);
+      meshRefs.current.birth?.dispose();
+      meshRefs.current.primary?.dispose();
+      meshRefs.current.secondary?.dispose();
       renderer.dispose();
       geometry.dispose();
-      material.dispose();
-      mesh.dispose();
       rendererRef.current = null;
       sceneRef.current = null;
       cameraRef.current = null;
-      meshRef.current = null;
+      meshRefs.current = {birth: null, primary: null, secondary: null};
       geometryRef.current = null;
-      materialRef.current = null;
     };
   }, [clearColor, config.cellColumns, config.cellRows, height, width]);
 
@@ -127,8 +159,8 @@ export const useThreeLifeRenderer = ({
     const renderer = rendererRef.current;
     const scene = sceneRef.current;
     const camera = cameraRef.current;
-    const mesh = meshRef.current;
-    if (!renderer || !scene || !camera || !mesh) {
+    const {birth: birthMesh, primary: primaryMesh, secondary: secondaryMesh} = meshRefs.current;
+    if (!renderer || !scene || !camera || !birthMesh || !primaryMesh || !secondaryMesh) {
       return;
     }
 
@@ -138,11 +170,13 @@ export const useThreeLifeRenderer = ({
     camera.bottom = 0;
     camera.updateProjectionMatrix();
 
-    const darkColor = new THREE.Color(config.secondaryColor);
-    const accentColor = new THREE.Color(config.primaryColor);
-    const birthColor = new THREE.Color(config.birthColor);
+    (birthMesh.material as THREE.MeshBasicMaterial).color.set(config.birthColor);
+    (primaryMesh.material as THREE.MeshBasicMaterial).color.set(config.primaryColor);
+    (secondaryMesh.material as THREE.MeshBasicMaterial).color.set(config.secondaryColor);
 
-    mesh.count = cells.length;
+    let birthCount = 0;
+    let primaryCount = 0;
+    let secondaryCount = 0;
     cells.forEach((cell, index) => {
       const inset = cell.age >= 3 ? visibleInset * 2.2 : visibleInset;
       const drawWidth = Math.max(1.2, (cellWidth - inset * 2) * config.cellScale);
@@ -155,20 +189,29 @@ export const useThreeLifeRenderer = ({
       helper.scale.set(drawWidth, drawHeight, 1);
       helper.rotation.set(0, 0, 0);
       helper.updateMatrix();
-      mesh.setMatrixAt(index, helper.matrix);
-      color.copy(cell.age <= 1 ? birthColor : cell.tone === 1 ? accentColor : darkColor);
-      mesh.setColorAt(index, color);
+
+      if (cell.age <= 1) {
+        birthMesh.setMatrixAt(birthCount, helper.matrix);
+        birthCount += 1;
+      } else if (cell.tone === 1) {
+        primaryMesh.setMatrixAt(primaryCount, helper.matrix);
+        primaryCount += 1;
+      } else {
+        secondaryMesh.setMatrixAt(secondaryCount, helper.matrix);
+        secondaryCount += 1;
+      }
     });
 
-    mesh.instanceMatrix.needsUpdate = true;
-    if (mesh.instanceColor) {
-      mesh.instanceColor.needsUpdate = true;
-    }
+    birthMesh.count = birthCount;
+    primaryMesh.count = primaryCount;
+    secondaryMesh.count = secondaryCount;
+    birthMesh.instanceMatrix.needsUpdate = true;
+    primaryMesh.instanceMatrix.needsUpdate = true;
+    secondaryMesh.instanceMatrix.needsUpdate = true;
     renderer.render(scene, camera);
   }, [
     absoluteFrame,
     activationFrame,
-    color,
     config.cellColumns,
     config.cellPadding,
     config.cellScale,

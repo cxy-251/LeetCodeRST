@@ -4,6 +4,25 @@ import {resolveCellularEffectConfig} from "./module-api";
 import {buildSnakeGridCells} from "./snake-grid-effect.service";
 import type {ThreeLifeEffectProps} from "./three-life-effect.types";
 
+type SnakeMeshRefs = {
+  body: THREE.InstancedMesh | null;
+  head: THREE.InstancedMesh | null;
+  food: THREE.InstancedMesh | null;
+};
+
+const disposeMeshMaterial = (mesh: THREE.InstancedMesh | null) => {
+  if (!mesh) {
+    return;
+  }
+
+  if (Array.isArray(mesh.material)) {
+    mesh.material.forEach((material) => material.dispose());
+    return;
+  }
+
+  mesh.material.dispose();
+};
+
 export const useThreeSnakeRenderer = ({
   width,
   height,
@@ -16,9 +35,12 @@ export const useThreeSnakeRenderer = ({
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.OrthographicCamera | null>(null);
-  const meshRef = useRef<THREE.InstancedMesh | null>(null);
+  const meshRefs = useRef<SnakeMeshRefs>({
+    body: null,
+    head: null,
+    food: null,
+  });
   const helper = useMemo(() => new THREE.Object3D(), []);
-  const color = useMemo(() => new THREE.Color(), []);
   const config = resolveCellularEffectConfig(modules);
 
   useEffect(() => {
@@ -47,32 +69,45 @@ export const useThreeSnakeRenderer = ({
     camera.position.z = 10;
 
     const geometry = new THREE.PlaneGeometry(1, 1);
-    const material = new THREE.MeshBasicMaterial({
-      transparent: true,
-      opacity: 1,
-      vertexColors: true,
-    });
+    const createLayerMesh = (colorValue: string) => {
+      const material = new THREE.MeshBasicMaterial({
+        color: new THREE.Color(colorValue),
+        transparent: true,
+        opacity: 1,
+      });
+      const mesh = new THREE.InstancedMesh(geometry, material, 96);
+      mesh.frustumCulled = false;
+      mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      scene.add(mesh);
+      return mesh;
+    };
 
-    const mesh = new THREE.InstancedMesh(geometry, material, 64);
-    mesh.frustumCulled = false;
-    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    mesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(mesh.count * 3), 3);
-    scene.add(mesh);
+    const bodyMesh = createLayerMesh(config.primaryColor);
+    const headMesh = createLayerMesh(config.secondaryColor);
+    const foodMesh = createLayerMesh(config.birthColor);
 
     rendererRef.current = renderer;
     sceneRef.current = scene;
     cameraRef.current = camera;
-    meshRef.current = mesh;
+    meshRefs.current = {
+      body: bodyMesh,
+      head: headMesh,
+      food: foodMesh,
+    };
 
     return () => {
-      mesh.dispose();
+      disposeMeshMaterial(meshRefs.current.body);
+      disposeMeshMaterial(meshRefs.current.head);
+      disposeMeshMaterial(meshRefs.current.food);
+      meshRefs.current.body?.dispose();
+      meshRefs.current.head?.dispose();
+      meshRefs.current.food?.dispose();
       geometry.dispose();
-      material.dispose();
       renderer.dispose();
       rendererRef.current = null;
       sceneRef.current = null;
       cameraRef.current = null;
-      meshRef.current = null;
+      meshRefs.current = {body: null, head: null, food: null};
     };
   }, [height, width]);
 
@@ -80,8 +115,8 @@ export const useThreeSnakeRenderer = ({
     const renderer = rendererRef.current;
     const scene = sceneRef.current;
     const camera = cameraRef.current;
-    const mesh = meshRef.current;
-    if (!renderer || !scene || !camera || !mesh) {
+    const {body: bodyMesh, head: headMesh, food: foodMesh} = meshRefs.current;
+    if (!renderer || !scene || !camera || !bodyMesh || !headMesh || !foodMesh) {
       return;
     }
 
@@ -102,12 +137,14 @@ export const useThreeSnakeRenderer = ({
     camera.bottom = 0;
     camera.updateProjectionMatrix();
 
-    const bodyColor = new THREE.Color(config.primaryColor);
-    const headColor = new THREE.Color(config.secondaryColor);
-    const foodColor = new THREE.Color("#ffd2a6");
+    (bodyMesh.material as THREE.MeshBasicMaterial).color.set(config.primaryColor);
+    (headMesh.material as THREE.MeshBasicMaterial).color.set(config.secondaryColor);
+    (foodMesh.material as THREE.MeshBasicMaterial).color.set(config.birthColor);
 
-    mesh.count = cells.length;
-    cells.forEach((cell, index) => {
+    let bodyCount = 0;
+    let headCount = 0;
+    let foodCount = 0;
+    cells.forEach((cell) => {
       const inset = cell.tone === "food" ? 3 + config.cellPadding * 1.4 : 1.1 + config.cellPadding;
       const drawWidth = Math.max(2, (cellWidth - inset * 2) * config.cellScale);
       const drawHeight = Math.max(2, (cellHeight - inset * 2) * config.cellScale);
@@ -118,19 +155,27 @@ export const useThreeSnakeRenderer = ({
       );
       helper.scale.set(drawWidth, drawHeight, 1);
       helper.updateMatrix();
-      mesh.setMatrixAt(index, helper.matrix);
-      color.copy(cell.tone === "head" ? headColor : cell.tone === "food" ? foodColor : bodyColor);
-      mesh.setColorAt(index, color);
+      if (cell.tone === "head") {
+        headMesh.setMatrixAt(headCount, helper.matrix);
+        headCount += 1;
+      } else if (cell.tone === "food") {
+        foodMesh.setMatrixAt(foodCount, helper.matrix);
+        foodCount += 1;
+      } else {
+        bodyMesh.setMatrixAt(bodyCount, helper.matrix);
+        bodyCount += 1;
+      }
     });
 
-    mesh.instanceMatrix.needsUpdate = true;
-    if (mesh.instanceColor) {
-      mesh.instanceColor.needsUpdate = true;
-    }
+    bodyMesh.count = bodyCount;
+    headMesh.count = headCount;
+    foodMesh.count = foodCount;
+    bodyMesh.instanceMatrix.needsUpdate = true;
+    headMesh.instanceMatrix.needsUpdate = true;
+    foodMesh.instanceMatrix.needsUpdate = true;
     renderer.render(scene, camera);
   }, [
     absoluteFrame,
-    color,
     config.birthColor,
     config.cellColumns,
     config.cellPadding,
