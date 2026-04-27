@@ -429,6 +429,29 @@ Important note:
 
 ---
 
+## 15. 2026-04-27 Source Bundle + Manifest Scaffold Pass
+
+This pass connected downloaded paper assets to actual candidate video manifests.
+
+What was completed:
+
+1. Downloaded 3 latest `cs.AI` papers and cached their PDFs locally.
+2. Downloaded 3 background images into `output/cache/images`.
+3. Extracted plain text from all 3 PDFs into `source.txt` files.
+4. Built a source bundle file:
+   - `data/source-bundles/latest-ai-batch.json`
+5. Scaffolded 3 candidate production manifests:
+   - `data/manifests/ingest/arxiv-2604-22722v1.json`
+   - `data/manifests/ingest/arxiv-2604-22736v1.json`
+   - `data/manifests/ingest/arxiv-2604-22748v1.json`
+
+Why this matters:
+
+1. The project now has a concrete bridge from paper ingestion assets to renderable manifest inputs.
+2. Later PDF summarization can replace the placeholder abstract-to-scene logic without changing the surrounding asset pipeline.
+
+---
+
 ## 8. 续接建议
 
 如果在新对话里继续，建议先读：

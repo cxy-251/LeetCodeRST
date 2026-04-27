@@ -15,8 +15,11 @@ output/videos/*
 output/runs/*
 output/video-runs.csv
 output/latest-run.json
+output/cache/*
 public/generated-audio/*
 public/generated-images/*
 apps/video-renderer/public/generated-audio/*
 apps/video-renderer/public/generated-images/*
+data/source-bundles/*.json
+data/manifests/ingest/*.json
 !.gitkeep
