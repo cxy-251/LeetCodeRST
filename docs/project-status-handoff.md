@@ -383,6 +383,25 @@ Current usage model:
 
 ---
 
+## 13. 2026-04-27 Immediate Launch + Lighter Snake Colors
+
+This pass made two UX-level adjustments:
+
+1. Page-2 launch timing now uses immediate start after the click beat.
+   - `effectStartFrameOffset` now equals `interactionFrameOffset` when settle delay is configured as zero.
+   - Verified on latest local compose: scene 2 now resolves to `40 -> 40`.
+2. `snake-grid` default color treatment was shifted toward a lighter, higher-contrast palette.
+   - body uses a pale mint
+   - head uses a warm near-white
+   - food uses a soft peach highlight
+
+Practical outcome:
+
+1. The life-game launch page should no longer feel like it pauses after the simulated click.
+2. `snake-grid` should read less like a dark overlay and more like a deliberate light-accent gameplay layer.
+
+---
+
 ## 8. 续接建议
 
 如果在新对话里继续，建议先读：

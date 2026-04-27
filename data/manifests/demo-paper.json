@@ -48,15 +48,15 @@
       "cellPadding": 0.5,
       "cornerRadius": 0.45,
       "edgeMode": "wrap",
-      "primaryColor": "#82ffd9",
-      "secondaryColor": "#f6fbff",
-      "birthColor": "#4db8ff",
+      "primaryColor": "#b1ffe9",
+      "secondaryColor": "#fff9ef",
+      "birthColor": "#a5d8ff",
       "launchClickRatio": 0.22,
-      "launchSettleRatio": 0.03,
+      "launchSettleRatio": 0,
       "minLaunchClickFrames": 8,
       "maxLaunchClickFrames": 28,
-      "minLaunchSettleFrames": 2,
-      "maxLaunchSettleFrames": 8
+      "minLaunchSettleFrames": 0,
+      "maxLaunchSettleFrames": 1
     },
     "typography": {
       "kickerSize": "clamp(0.88rem, 1.15vw + 0.5rem, 1.62rem)",

@@ -103,8 +103,8 @@ export const useThreeSnakeRenderer = ({
     camera.updateProjectionMatrix();
 
     const bodyColor = new THREE.Color(config.primaryColor);
-    const headColor = new THREE.Color(config.birthColor);
-    const foodColor = new THREE.Color("#ffb86b");
+    const headColor = new THREE.Color(config.secondaryColor);
+    const foodColor = new THREE.Color("#ffd2a6");
 
     mesh.count = cells.length;
     cells.forEach((cell, index) => {

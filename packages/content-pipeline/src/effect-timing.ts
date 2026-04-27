@@ -27,7 +27,10 @@ export const resolveLaunchCueOffsets = ({
 
   return {
     interactionFrameOffset,
-    effectStartFrameOffset: Math.max(interactionFrameOffset, effectStartFrameOffset),
+    effectStartFrameOffset:
+      settleFrames <= 0
+        ? interactionFrameOffset
+        : Math.max(interactionFrameOffset, effectStartFrameOffset),
   };
 };
 
