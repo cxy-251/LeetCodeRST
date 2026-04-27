@@ -28,7 +28,7 @@ const buildParticleSeeds = (count: number, seed: number): ParticleSeed[] => {
 
     return {
       baseAngle: noiseA * Math.PI * 2,
-      baseRadius: 0.18 + noiseB * 0.82,
+      baseRadius: 0.08 + noiseB * noiseB * 0.92,
       speed: 0.4 + noiseC * 1.8,
       phase: noiseD * Math.PI * 2,
       layer: noiseE * 2 - 1,
@@ -100,10 +100,10 @@ export const useThreeParticleRenderer = ({
     const material = new THREE.PointsMaterial({
       size: config.pointSize,
       transparent: true,
-      opacity: 0.92,
+      opacity: 0.72,
       vertexColors: true,
       depthWrite: false,
-      blending: THREE.AdditiveBlending,
+      blending: THREE.NormalBlending,
       sizeAttenuation: true,
     });
 
@@ -156,22 +156,24 @@ export const useThreeParticleRenderer = ({
       const particle = particleSeeds[index];
       const angle = particle.baseAngle + time * particle.speed;
       const radius =
-        particle.baseRadius * config.orbitRadius * Math.min(width, height) * 0.04 +
-        Math.sin(time * 1.7 + particle.phase) * config.swirlStrength * 18;
-      const spiral = Math.sin(time * 0.8 + particle.phase * 1.3) * 12;
+        particle.baseRadius * config.orbitRadius * Math.min(width, height) * 0.055 +
+        Math.sin(time * 1.35 + particle.phase) * config.swirlStrength * 11;
+      const spiral = Math.sin(time * 0.72 + particle.phase * 1.3) * 6;
       const depth = particle.layer * config.layerDepth + Math.cos(time + particle.phase) * 2.2;
+      const armOffset = Math.sin(angle * 2 + particle.phase) * radius * 0.18;
+      const centerBias = 1 - Math.min(1, particle.baseRadius);
 
       positions.setXYZ(
         index,
-        Math.cos(angle) * radius * aspectScale + Math.cos(angle * 2.2 + particle.phase) * spiral,
-        Math.sin(angle) * radius + Math.sin(angle * 1.6 + particle.phase) * spiral * 0.65,
+        Math.cos(angle) * radius * aspectScale + Math.cos(angle * 2.2 + particle.phase) * spiral + armOffset,
+        Math.sin(angle) * radius + Math.sin(angle * 1.6 + particle.phase) * spiral * 0.65 - centerBias * 8,
         depth,
       );
 
       const mix = particle.tone;
       const color =
-        mix < 0.34 ? primary.clone() : mix < 0.67 ? secondary.clone() : accent.clone();
-      color.lerp(primary, 0.2 + 0.3 * Math.sin(time + particle.phase));
+        mix < 0.42 ? primary.clone() : mix < 0.78 ? secondary.clone() : accent.clone();
+      color.lerp(primary, 0.18 + 0.22 * Math.sin(time + particle.phase));
       colors.setXYZ(index, color.r, color.g, color.b);
     }
 

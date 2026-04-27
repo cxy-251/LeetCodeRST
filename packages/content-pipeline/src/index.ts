@@ -23,8 +23,13 @@ export {
 export {getTextMotionState} from "./text-motion";
 export {ThreeLifeEffect} from "./three-life-effect";
 export {ThreeParticleEffect} from "./three-particle-effect";
-export {EFFECT_ATOMS, getEffectAtomDefinition} from "./effect-atoms";
-export type {EffectAtomDefinition, EffectAtomId, EffectAtomRuntimeProps} from "./effect-atoms.types";
+export {EFFECT_ATOMS, createModuleOverride, getEffectAtomDefinition} from "./effect-atoms";
+export type {
+  EffectAtomDefinition,
+  EffectAtomId,
+  EffectAtomRuntimeProps,
+  EffectControlDefinition,
+} from "./effect-atoms.types";
 export {EffectRuntimeAdapter} from "./effect-runtime";
 export type {EffectRuntimeAdapterProps, EffectRuntimeMode} from "./effect-runtime";
 export {

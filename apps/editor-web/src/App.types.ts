@@ -5,8 +5,9 @@ import type {
   RenderScene,
   SubtitleSegment,
   TextMotionConfig,
+  VisualModuleConfig,
 } from "@paper-to-video/shared-types";
-import type {EffectAtomId, ThemePalette} from "@paper-to-video/content-pipeline";
+import type {EffectAtomId, EffectControlDefinition, ThemePalette} from "@paper-to-video/content-pipeline";
 
 export type TemplateRoute = {
   description: string;
@@ -37,12 +38,15 @@ export type TemplatePreviewState = {
 };
 
 export type EffectPreviewState = {
+  controlDefinitions: EffectControlDefinition[];
   errorMessage: string | null;
   isRunning: boolean;
   loading: boolean;
   manifest: RenderManifest | null;
+  moduleOverrides: VisualModuleConfig;
   resetSimulation: () => void;
   scene: RenderScene | null;
+  setControlValue: (control: EffectControlDefinition, value: number) => void;
   setIsRunning: (isRunning: boolean) => void;
   simulationFrame: number;
 };
@@ -78,6 +82,7 @@ export type EffectStageModel = {
   interactionFrame: number;
   coverImageSrc: string | null;
   effectId: EffectAtomId;
+  modules: VisualModuleConfig | undefined;
   palette: ThemePalette;
   stageBackground: string;
   visualLayout: {
@@ -154,6 +159,7 @@ export type EffectStageInput = {
   effectRoute: EffectRoute;
   isRunning: boolean;
   manifest: RenderManifest;
+  moduleOverrides?: VisualModuleConfig;
   scene: RenderScene;
   simulationFrame: number;
 };
@@ -183,6 +189,7 @@ export type EffectLayoutResolution = {
   interactionFrame: number;
   coverImageSrc: string | null;
   effectId: EffectAtomId;
+  modules: VisualModuleConfig | undefined;
   palette: ThemePalette;
   stageBackground: string;
   visualLayout: CoverLayoutConfig;

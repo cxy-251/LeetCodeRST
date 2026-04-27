@@ -1,5 +1,6 @@
 import React from "react";
 import {EffectRuntimeAdapter, getTextMotionState} from "@paper-to-video/content-pipeline";
+import type {VisualModuleConfig} from "@paper-to-video/shared-types";
 import {formatSeconds, getEffectDefinition, getSceneLabel, routeCollections} from "./App.service";
 import type {
   EffectPreviewState,
@@ -13,6 +14,20 @@ import type {
 import styles from "./App.module.css";
 
 const cx = (...classNames: Array<string | false | null | undefined>) => classNames.filter(Boolean).join(" ");
+
+const readControlValue = (
+  modules: VisualModuleConfig | undefined,
+  section: string,
+  field: string,
+) => {
+  const sectionValue = modules?.[section as keyof VisualModuleConfig];
+  if (!sectionValue || typeof sectionValue !== "object") {
+    return "";
+  }
+
+  const value = (sectionValue as Record<string, unknown>)[field];
+  return typeof value === "number" ? value : "";
+};
 
 export const AppIndexView: React.FC<{
   navigate: (href: string) => void;
@@ -328,6 +343,42 @@ export const EffectLabView: React.FC<{
             Reset
           </button>
         </div>
+
+        {state.controlDefinitions.length > 0 ? (
+          <div className={styles.effectControlPanel}>
+            <div className={styles.effectControlPanelHeader}>
+              <strong>Effect Parameters</strong>
+              <span>这些参数只作用于实验页，用来快速验证不同 WebGL 特效的主体构图和运动节奏。</span>
+            </div>
+            <div className={styles.effectControlList}>
+              {state.controlDefinitions.map((control) => {
+                const value = readControlValue(stageModel.modules, control.section, control.field);
+                return (
+                  <label key={control.id} className={styles.effectControlField}>
+                    <div className={styles.effectControlMeta}>
+                      <strong>{control.label}</strong>
+                      <span>{control.description}</span>
+                    </div>
+                    <div className={styles.effectControlInputRow}>
+                      <input
+                        className={styles.effectRange}
+                        max={control.max}
+                        min={control.min}
+                        onChange={(event) => state.setControlValue(control, Number(event.target.value))}
+                        step={control.step}
+                        type="range"
+                        value={typeof value === "number" ? value : control.min}
+                      />
+                      <output className={styles.effectControlValue}>
+                        {typeof value === "number" ? value : "--"}
+                      </output>
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+          </div>
+        ) : null}
 
         <div className={styles.effectNotes}>
           <div className={styles.effectNote}>

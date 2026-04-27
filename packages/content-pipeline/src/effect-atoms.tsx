@@ -3,7 +3,11 @@ import {ThreeLifeEffect} from "./three-life-effect";
 import {ThreeSnakeEffect} from "./three-snake-effect";
 import {ThreeParticleEffect} from "./three-particle-effect";
 import {
+  LIFE_EFFECT_CONTROLS,
+  PARTICLE_EFFECT_CONTROLS,
+  SNAKE_EFFECT_CONTROLS,
   baseLayerStyle,
+  createModuleOverride,
   getAuroraBackground,
   getGridDriftBackground,
   getLaunchButtonBackground,
@@ -178,25 +182,30 @@ export const EFFECT_ATOMS: Record<EffectAtomId, EffectAtomDefinition> = {
     title: "Cellular Launch",
     description: "可点击启动的生命游戏入口特效，适合作为独立 effect atom 页面。",
     Component: CellularLaunchAtom,
+    controls: LIFE_EFFECT_CONTROLS,
   },
   "cellular-life": {
     id: "cellular-life",
     title: "Cellular Life",
     description: "持续运行的生命游戏中间层特效，当前由 Three.js + WebGL 驱动。",
     Component: CellularLifeAtom,
+    controls: LIFE_EFFECT_CONTROLS,
   },
   "snake-grid": {
     id: "snake-grid",
     title: "Snake Grid",
     description: "基于 Three.js + WebGL 的贪吃蛇网格原型，可作为下一类小游戏动效样板。",
     Component: SnakeGridAtom,
+    controls: SNAKE_EFFECT_CONTROLS,
   },
   "particle-orbit": {
     id: "particle-orbit",
     title: "Particle Orbit",
-    description: "受常见 Three.js 粒子星云案例启发的轨道粒子层，适合作为更偏氛围感的中间层特效。",
+    description: "受常见 Three.js 粒子星云案例启发的轨道粒子层，已经调整为更强调画面中央主视觉的构图。",
     Component: ParticleOrbitAtom,
+    controls: PARTICLE_EFFECT_CONTROLS,
   },
 };
 
 export const getEffectAtomDefinition = (effectId: EffectAtomId) => EFFECT_ATOMS[effectId];
+export {createModuleOverride};

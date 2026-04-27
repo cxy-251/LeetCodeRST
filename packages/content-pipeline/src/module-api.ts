@@ -83,15 +83,15 @@ export const DEFAULT_TYPOGRAPHY_SCALE: TypographyScaleConfig = {
 };
 
 export const DEFAULT_PARTICLE_EFFECT: ParticleEffectConfig = {
-  particleCount: 560,
-  pointSize: 5.4,
-  orbitRadius: 0.34,
-  swirlStrength: 0.22,
-  driftSpeed: 0.012,
-  layerDepth: 8,
-  primaryColor: "#8cf4ff",
-  secondaryColor: "#fff5de",
-  accentColor: "#aab9ff",
+  particleCount: 520,
+  pointSize: 3.6,
+  orbitRadius: 0.22,
+  swirlStrength: 0.16,
+  driftSpeed: 0.01,
+  layerDepth: 6,
+  primaryColor: "#74f3d8",
+  secondaryColor: "#7dbdff",
+  accentColor: "#ffc0dc",
 };
 
 export const resolveTextMotionConfig = (

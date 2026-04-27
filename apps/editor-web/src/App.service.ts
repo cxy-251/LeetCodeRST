@@ -227,12 +227,14 @@ export const createEffectStageModel = ({
   effectRoute,
   isRunning,
   manifest,
+  moduleOverrides,
   scene,
   simulationFrame,
 }: {
   effectRoute: EffectRoute;
   isRunning: boolean;
   manifest: RenderManifest;
+  moduleOverrides?: RenderManifest["modules"];
   scene: RenderScene;
   simulationFrame: number;
 }): EffectLayoutResolution => {
@@ -251,6 +253,22 @@ export const createEffectStageModel = ({
     interactionFrame: 0,
     coverImageSrc: null,
     effectId: effectRoute.effectId,
+    modules: {
+      ...(manifest.modules ?? {}),
+      ...(moduleOverrides ?? {}),
+      cellularEffect: {
+        ...(manifest.modules?.cellularEffect ?? {}),
+        ...(moduleOverrides?.cellularEffect ?? {}),
+      },
+      particleEffect: {
+        ...(manifest.modules?.particleEffect ?? {}),
+        ...(moduleOverrides?.particleEffect ?? {}),
+      },
+      backgroundMotion: {
+        ...(manifest.modules?.backgroundMotion ?? {}),
+        ...(moduleOverrides?.backgroundMotion ?? {}),
+      },
+    },
     palette,
     stageBackground:
       "radial-gradient(circle at 50% 50%, rgba(87,216,196,0.12) 0%, transparent 26%), linear-gradient(180deg, #03070c 0%, #071019 100%)",

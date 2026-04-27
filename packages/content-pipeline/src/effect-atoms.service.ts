@@ -1,4 +1,6 @@
 import {getCellularLaunchOrigin} from "./visual-system";
+import type {VisualModuleConfig} from "@paper-to-video/shared-types";
+import type {EffectControlDefinition} from "./effect-atoms.types";
 
 export const baseLayerStyle = {
   position: "absolute",
@@ -60,3 +62,162 @@ export const getAuroraBackground = () => ({
 
 export const getLaunchButtonBackground = (ready: boolean) =>
   ready ? "rgba(7,18,29,0.36)" : "rgba(5,12,20,0.58)";
+
+export const LIFE_EFFECT_CONTROLS: EffectControlDefinition[] = [
+  {
+    id: "life-cols",
+    label: "Cell Columns",
+    description: "Increase horizontal density when you want the life field to feel more intricate.",
+    section: "cellularEffect",
+    field: "cellColumns",
+    min: 18,
+    max: 84,
+    step: 2,
+  },
+  {
+    id: "life-rows",
+    label: "Cell Rows",
+    description: "Increase vertical density to make the phone stage feel more fully occupied.",
+    section: "cellularEffect",
+    field: "cellRows",
+    min: 28,
+    max: 144,
+    step: 2,
+  },
+  {
+    id: "life-speed",
+    label: "Step Interval",
+    description: "Lower values make the life simulation evolve faster frame-to-frame.",
+    section: "cellularEffect",
+    field: "stepEveryFrames",
+    min: 1,
+    max: 8,
+    step: 1,
+  },
+  {
+    id: "life-padding",
+    label: "Cell Padding",
+    description: "Controls the visual breathing room between cells.",
+    section: "cellularEffect",
+    field: "cellPadding",
+    min: 0,
+    max: 2,
+    step: 0.1,
+  },
+];
+
+export const PARTICLE_EFFECT_CONTROLS: EffectControlDefinition[] = [
+  {
+    id: "particle-count",
+    label: "Particle Count",
+    description: "Higher values add richness, but can also make the center feel heavier.",
+    section: "particleEffect",
+    field: "particleCount",
+    min: 120,
+    max: 1200,
+    step: 20,
+  },
+  {
+    id: "particle-size",
+    label: "Point Size",
+    description: "Bigger points feel softer and dreamier, smaller points feel sharper and more digital.",
+    section: "particleEffect",
+    field: "pointSize",
+    min: 1.2,
+    max: 12,
+    step: 0.2,
+  },
+  {
+    id: "particle-radius",
+    label: "Orbit Radius",
+    description: "Controls how much of the stage the particle mass occupies.",
+    section: "particleEffect",
+    field: "orbitRadius",
+    min: 0.08,
+    max: 0.8,
+    step: 0.01,
+  },
+  {
+    id: "particle-swirl",
+    label: "Swirl Strength",
+    description: "Higher values create more visible spiraling motion and central turbulence.",
+    section: "particleEffect",
+    field: "swirlStrength",
+    min: 0,
+    max: 0.8,
+    step: 0.01,
+  },
+  {
+    id: "particle-speed",
+    label: "Drift Speed",
+    description: "Controls the global movement tempo of the orbit field.",
+    section: "particleEffect",
+    field: "driftSpeed",
+    min: 0.002,
+    max: 0.04,
+    step: 0.001,
+  },
+];
+
+export const SNAKE_EFFECT_CONTROLS: EffectControlDefinition[] = [
+  {
+    id: "snake-cols",
+    label: "Grid Columns",
+    description: "Adjust the horizontal grid density used by the snake arena.",
+    section: "cellularEffect",
+    field: "cellColumns",
+    min: 12,
+    max: 48,
+    step: 2,
+  },
+  {
+    id: "snake-rows",
+    label: "Grid Rows",
+    description: "Adjust the vertical grid density so the snake can fill more or less of the phone stage.",
+    section: "cellularEffect",
+    field: "cellRows",
+    min: 18,
+    max: 84,
+    step: 2,
+  },
+  {
+    id: "snake-speed",
+    label: "Move Interval",
+    description: "Lower values make the snake advance more frequently through the grid.",
+    section: "cellularEffect",
+    field: "stepEveryFrames",
+    min: 1,
+    max: 8,
+    step: 1,
+  },
+  {
+    id: "snake-padding",
+    label: "Cell Padding",
+    description: "Controls how much breathing room each snake segment has inside the grid cells.",
+    section: "cellularEffect",
+    field: "cellPadding",
+    min: 0,
+    max: 6,
+    step: 0.2,
+  },
+];
+
+export const createModuleOverride = ({
+  baseModules,
+  control,
+  value,
+}: {
+  baseModules?: VisualModuleConfig;
+  control: EffectControlDefinition;
+  value: number;
+}) => {
+  const section = {
+    ...(baseModules?.[control.section] ?? {}),
+    [control.field]: value,
+  };
+
+  return {
+    ...(baseModules ?? {}),
+    [control.section]: section,
+  } satisfies VisualModuleConfig;
+};

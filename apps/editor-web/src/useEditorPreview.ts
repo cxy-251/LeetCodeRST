@@ -1,5 +1,6 @@
 import {useEffect, useMemo, useState} from "react";
 import type {RenderManifest} from "@paper-to-video/shared-types";
+import {createModuleOverride, getEffectAtomDefinition} from "@paper-to-video/content-pipeline";
 import {
   findEffectScene,
   findRoutes,
@@ -145,6 +146,7 @@ export const useEffectPreview = (route: EffectRoute | null): EffectPreviewState 
   const {errorMessage, loading, manifest} = useManifestLoader(loadManifest);
   const [isRunning, setIsRunning] = useState(false);
   const [simulationFrame, setSimulationFrame] = useState(0);
+  const [moduleOverrides, setModuleOverrides] = useState({} as NonNullable<RenderManifest["modules"]>);
 
   useEffect(() => {
     /**
@@ -153,6 +155,7 @@ export const useEffectPreview = (route: EffectRoute | null): EffectPreviewState 
      */
     setSimulationFrame(0);
     setIsRunning(false);
+    setModuleOverrides({});
   }, [route?.effectId]);
 
   useEffect(() => {
@@ -180,15 +183,34 @@ export const useEffectPreview = (route: EffectRoute | null): EffectPreviewState 
   const resetSimulation = () => {
     setIsRunning(false);
     setSimulationFrame(0);
+    setModuleOverrides({});
+  };
+
+  const controlDefinitions = useMemo(
+    () => (route ? getEffectAtomDefinition(route.effectId).controls ?? [] : []),
+    [route],
+  );
+
+  const setControlValue = (control: (typeof controlDefinitions)[number], value: number) => {
+    setModuleOverrides((previous) =>
+      createModuleOverride({
+        baseModules: previous,
+        control,
+        value,
+      }),
+    );
   };
 
   return {
+    controlDefinitions,
     errorMessage,
     isRunning,
     loading,
     manifest,
+    moduleOverrides,
     resetSimulation,
     scene,
+    setControlValue,
     setIsRunning,
     simulationFrame,
   };

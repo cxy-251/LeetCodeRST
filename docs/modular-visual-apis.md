@@ -225,6 +225,21 @@ agentic-world-modeling,data/images/prepared/source-9x16.jpg,life-game
 - `particle-orbit`
   效果：页面内持续运行粒子轨道层，用来验证更偏氛围型的中间层方向。
 
+### effect lab 参数面板
+
+现在每个 effect atom 都可以声明自己的实验参数控件，`editor-web` 会统一渲染这些控件。
+
+当前已经接入的方向：
+
+- `life-game`
+  可调：网格列数、网格行数、步进间隔、cell padding
+- `snake-grid`
+  可调：网格列数、网格行数、移动间隔、cell padding
+- `particle-orbit`
+  可调：粒子数量、点大小、轨道半径、旋涡强度、漂移速度
+
+这层控件当前只作用于实验页，用来快速验证主体构图和运动节奏，不会直接改写全局 manifest。
+
 ### 转换层
 
 当前已新增 `EffectRuntimeAdapter`：

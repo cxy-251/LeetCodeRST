@@ -352,6 +352,81 @@
   border-color: rgba(255, 255, 255, 0.08);
 }
 
+.effectControlPanel {
+  margin-bottom: 18px;
+  padding: 16px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.effectControlPanelHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.effectControlPanelHeader strong {
+  font-size: 0.96rem;
+}
+
+.effectControlPanelHeader span {
+  color: rgba(244, 247, 251, 0.66);
+  line-height: 1.55;
+  font-size: 0.92rem;
+}
+
+.effectControlList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.effectControlField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.effectControlMeta {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.effectControlMeta strong {
+  font-size: 0.92rem;
+}
+
+.effectControlMeta span {
+  color: rgba(244, 247, 251, 0.62);
+  line-height: 1.5;
+  font-size: 0.82rem;
+}
+
+.effectControlInputRow {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.effectRange {
+  width: 100%;
+  accent-color: #57d8c4;
+}
+
+.effectControlValue {
+  min-width: 56px;
+  text-align: right;
+  color: #57d8c4;
+  font-size: 0.86rem;
+  font-variant-numeric: tabular-nums;
+}
+
 .effectNotes {
   display: flex;
   flex-direction: column;

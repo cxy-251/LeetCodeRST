@@ -41,6 +41,7 @@ const App: React.FC = () => {
       effectRoute,
       isRunning: effectState.isRunning,
       manifest: effectState.manifest,
+      moduleOverrides: effectState.moduleOverrides,
       scene: effectState.scene,
       simulationFrame: effectState.simulationFrame,
     });
@@ -52,11 +53,11 @@ const App: React.FC = () => {
           continuousEffectId={effectStageModel.continuousEffectId}
           interactionFrame={effectStageModel.interactionFrame}
           effectStartFrame={effectStageModel.activationFrame}
-          effectId={effectStageModel.effectId}
+        effectId={effectStageModel.effectId}
         height={672}
         isRunning={effectState.isRunning}
         mode="interactive"
-        modules={effectState.manifest.modules}
+        modules={effectStageModel.modules}
         onPrimaryAction={() => effectState.setIsRunning(true)}
         seed={effectState.manifest.seed}
         simulationFrame={effectState.simulationFrame}

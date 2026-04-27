@@ -330,6 +330,7 @@ npm run render:video
 10. 外部 AI 论文总结模板、提示词、示例已经写入 `services/summarizer`
 11. 外部 AI 总结 JSON 已经可以导入成 `contentProfile`
 12. 第三个 WebGL effect family `particle-orbit` 已接入，可作为更偏 Three.js 粒子案例方向的样板
+13. effect lab 已支持按特效声明参数控件，网页实验页可以局部调节特效参数而不改全局 manifest
 
 ### 未完成
 
@@ -341,6 +342,7 @@ npm run render:video
 6. 还没有把 effect registry、template registry、profile registry 做成严格 schema 校验
 7. 还没有提供 GUI 级别的配置编辑器，当前主要靠 JSON 和 CSV
 8. 外部总结 JSON 导入虽然已经可用，但当前仍是“宽松别名兼容 + 标准落盘”，还没有建立严格的 schema version 管理
+9. 特效实验页目前已经支持参数调节，但还没有把这套控件直接反写成可保存 preset 或 manifest patch
 
 ### 当前不完善
 
@@ -354,6 +356,7 @@ npm run render:video
 6. 一些旧文档里仍保留了项目早期阶段的描述，后续需要继续清理和统一
 7. 外部总结 JSON 导入器当前稳定覆盖的是 5 段式短视频结构，超过这个结构的复杂脚本还没有抽象成更通用的 scene mapper
 8. 新增的 `particle-orbit` 目前是第一版粒子轨道样板，视觉方向已经成立，但还没有细化成多个粒子案例子风格
+9. `particle-orbit` 已从“边缘环绕 + 中央过曝”调整为“中央主视觉优先”，但还需要继续打磨更多中心构图变体
 
 ---
 
@@ -369,6 +372,7 @@ npm run render:video
 6. 增加第二套、第三套模板 JSON，而不是只用 `paper-digest-v1`
 7. 给外部总结 JSON 增加 schema version 和严格校验，降低后续字段变动风险
 8. 继续沿 effect atom registry 复现更多 Three.js 风格案例，并沉淀成可选 effect family
+9. 把 effect lab 的参数调节结果导出成 preset，减少人工抄参数
 
 ---
 

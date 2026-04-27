@@ -85,12 +85,12 @@ export const useThreeSnakeRenderer = ({
       return;
     }
 
-    const cols = 24;
-    const rows = 42;
+    const cols = Math.max(12, Math.round(config.cellColumns));
+    const rows = Math.max(18, Math.round(config.cellRows));
     const cells = buildSnakeGridCells({
       cols,
       rows,
-      frame: simulationFrame ?? absoluteFrame,
+      frame: Math.floor((simulationFrame ?? absoluteFrame) / Math.max(1, config.stepEveryFrames)),
       seed,
     });
     const cellWidth = width / cols;
@@ -108,7 +108,7 @@ export const useThreeSnakeRenderer = ({
 
     mesh.count = cells.length;
     cells.forEach((cell, index) => {
-      const inset = cell.tone === "food" ? 5 : 1.8;
+      const inset = cell.tone === "food" ? 3 + config.cellPadding * 1.4 : 1.1 + config.cellPadding;
       const drawWidth = Math.max(2, cellWidth - inset * 2);
       const drawHeight = Math.max(2, cellHeight - inset * 2);
       helper.position.set(
@@ -128,7 +128,22 @@ export const useThreeSnakeRenderer = ({
       mesh.instanceColor.needsUpdate = true;
     }
     renderer.render(scene, camera);
-  }, [absoluteFrame, color, config.birthColor, config.primaryColor, height, helper, modules, seed, simulationFrame, width]);
+  }, [
+    absoluteFrame,
+    color,
+    config.birthColor,
+    config.cellColumns,
+    config.cellPadding,
+    config.cellRows,
+    config.primaryColor,
+    config.stepEveryFrames,
+    height,
+    helper,
+    modules,
+    seed,
+    simulationFrame,
+    width,
+  ]);
 
   return {canvasRef};
 };
