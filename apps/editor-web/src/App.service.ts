@@ -227,10 +227,11 @@ export const createEffectStageModel = ({
   return {
     absolutePreviewFrame: isRunning ? simulationFrame : 0,
     activationFrame: 0,
-    coverImageSrc: getCoverImageSrc(manifest),
+    coverImageSrc: null,
     effectId: effectRoute.effectId,
     palette,
-    stageBackground: `linear-gradient(180deg, ${palette.bg} 0%, #071019 100%)`,
+    stageBackground:
+      "radial-gradient(circle at 50% 50%, rgba(87,216,196,0.12) 0%, transparent 26%), linear-gradient(180deg, #03070c 0%, #071019 100%)",
     visualLayout,
   };
 };

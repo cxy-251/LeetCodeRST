@@ -263,6 +263,28 @@ npm run render:video
 
 ---
 
+## 9. 2026-04-27 Latest Fix
+
+Current debugging focus returned to the real product goal:
+
+1. `edge-tts` is confirmed by the user to work locally, so TTS is no longer treated as a product-code blocker.
+2. The active issue is the `life-game` effect not appearing clearly in either the editor lab or final render.
+
+Latest code changes:
+
+1. Fixed the active `ThreeLifeEffect` camera update bug in `packages/content-pipeline/src/use-three-life-renderer.ts`.
+   The orthographic camera was incorrectly updating `bottom = height`, which could collapse the visible render area during frame updates.
+2. Disabled frustum culling on the instanced mesh so the cellular grid is not accidentally clipped after instance transforms.
+3. Isolated the effect lab stage from the cover-image background in `apps/editor-web/src/App.service.ts`.
+   The effect sandbox now uses a neutral dark gradient instead of the latest template cover image, making the WebGL middle layer easier to inspect by itself.
+
+Expected outcome after this fix:
+
+1. `/effects/life-game` should show the life simulation after clicking start, instead of appearing as only a pulsing button.
+2. The same fix should also improve visibility of the life effect in the final Remotion video, because the broken camera update affected both environments.
+
+---
+
 ## 8. 续接建议
 
 如果在新对话里继续，建议先读：

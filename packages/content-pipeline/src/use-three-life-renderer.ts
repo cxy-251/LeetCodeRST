@@ -78,6 +78,7 @@ export const useThreeLifeRenderer = ({
       material,
       config.cellColumns * config.cellRows,
     );
+    mesh.frustumCulled = false;
     mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     mesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(mesh.count * 3), 3);
 
@@ -133,7 +134,8 @@ export const useThreeLifeRenderer = ({
 
     renderer.setSize(width, height, false);
     camera.right = width;
-    camera.bottom = height;
+    camera.top = height;
+    camera.bottom = 0;
     camera.updateProjectionMatrix();
 
     const darkColor = new THREE.Color(0xffffff);
