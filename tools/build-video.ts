@@ -11,6 +11,8 @@ import type {CoverImageAsset, RenderManifest} from "@paper-to-video/shared-types
 const DEFAULT_RENDER_MANIFEST = path.resolve("data/generated-meta/demo-paper-001.render.json");
 const DEFAULT_OUTPUT = path.resolve("output/videos/demo-paper-001.mp4");
 const PUBLIC_DIR = path.resolve("public");
+const DEFAULT_GL = process.env.REMOTION_GL ?? "angle";
+const DEFAULT_CONCURRENCY = process.env.REMOTION_CONCURRENCY ?? "1";
 
 const run = (command: string, args: string[]) =>
   new Promise<void>((resolve, reject) => {
@@ -118,6 +120,10 @@ const main = async () => {
     "apps/video-renderer/src/index.tsx",
     "PaperToVideo",
     output,
+    "--gl",
+    DEFAULT_GL,
+    "--concurrency",
+    DEFAULT_CONCURRENCY,
     "--props",
     JSON.stringify({
       manifest,

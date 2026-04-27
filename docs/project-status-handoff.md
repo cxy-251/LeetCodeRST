@@ -143,6 +143,10 @@ npm run render:video
    - 视频端可按绝对帧自动运行
    - 同一个 effect atom 可同时服务 editor 与 Remotion
 32. `npm install` 已补跑，workspace 包解析已恢复；`render:video` 不再报 `@paper-to-video/timeline-engine` 找不到，而是进入浏览器启动阶段
+33. `tools/build-video.ts` 已补上 WebGL 更稳妥的默认渲染参数：
+   - `--gl angle`
+   - `--concurrency 1`
+   并支持通过 `REMOTION_GL` / `REMOTION_CONCURRENCY` 覆盖
 
 ---
 

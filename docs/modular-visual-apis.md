@@ -105,6 +105,23 @@
 
 它的作用就是把“交互式小游戏 / WebGL effect”转换成“可被视频引擎稳定录制的 deterministic effect 轨道”。
 
+### 视频渲染兼容策略
+
+当前 `tools/build-video.ts` 对 WebGL effect 默认启用了更保守的渲染参数：
+
+- `--gl angle`
+- `--concurrency 1`
+
+目的：
+
+1. 降低 Three.js / WebGL 在 Remotion 多标签并发渲染时的 context 创建失败概率
+2. 让生命游戏、后续小游戏类特效在录制视频时更稳定
+
+如果后面需要调整，可通过环境变量覆盖：
+
+- `REMOTION_GL`
+- `REMOTION_CONCURRENCY`
+
 后续新增 WebGL 小游戏时，推荐直接按同一路径继续扩展：
 
 - `/effects/snake-grid`
