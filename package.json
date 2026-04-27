@@ -12,6 +12,7 @@
     "compose:manifest": "node --import tsx tools/compose-manifest.ts",
     "build:source-bundle": "node --import tsx tools/build-source-bundle.ts",
     "analyze:paper-sources": "node --import tsx tools/analyze-paper-sources.ts",
+    "create:manifest": "node --import tsx tools/create-video-manifest.ts",
     "fetch:arxiv-ai": "node --import tsx tools/fetch-arxiv-ai.ts",
     "extract:pdf-text": "node --import tsx tools/extract-pdf-text.ts",
     "scaffold:paper-manifests": "node --import tsx tools/scaffold-paper-manifests.ts",

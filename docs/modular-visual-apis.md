@@ -55,6 +55,21 @@
 - `portrait-default`
 - `abstract-orbit`
 
+如果你想直接从这些 profile 生成一份新 manifest，可以用：
+
+```bash
+npm run create:manifest -- \
+  --content-profile agentic-world-modeling \
+  --cover-profile abstract-orbit \
+  --effect-profile life-game
+```
+
+默认会写到：
+
+- `data/manifests/generated/<project-id>.json`
+
+这个目录默认作为本地生成配置使用，不会自动进 git。
+
 补充说明：
 
 1. `contentProfile` 会按 `scene.contentRef` 把每页的 `narrationText` 和 `content` 注入进 manifest

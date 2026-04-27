@@ -68,6 +68,7 @@ npm run render:video
 7. 基于论文文本的中文短视频脚本草案生成
 8. 基于脚本草案的候选 manifest 生成
 9. `contentProfile` / `coverProfile` 驱动的外部文本源与背景图选择
+10. 基于 profile 一键生成本地 manifest
 
 ### 工程组织
 
@@ -198,6 +199,8 @@ npm run render:video
 - `tools/build-source-bundle.ts`
 - `tools/analyze-paper-sources.ts`
 - `tools/scaffold-paper-manifests.ts`
+- `tools/create-video-manifest.ts`
+- `tools/lib/manifest-factory.ts`
 
 ### 渲染入口
 
@@ -301,6 +304,8 @@ npm run render:video
    - `data/source-bundles/latest-ai-analysis.json`
 6. 为每篇论文生成候选 manifest：
    - `data/manifests/ingest/*.json`
+7. 基于 `contentProfile + coverProfile + effectProfile` 生成本地使用的统一风格 manifest：
+   - `npm run create:manifest -- --content-profile <id> --cover-profile <id> --effect-profile <id>`
 
 当前本地已经实际拉取并分析了 3 篇 `cs.AI` 论文，并生成了对应的背景图建议和候选 manifest。
 
