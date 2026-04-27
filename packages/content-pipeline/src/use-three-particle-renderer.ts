@@ -1,6 +1,7 @@
 import {useEffect, useMemo, useRef} from "react";
 import * as THREE from "three";
 import {resolveParticleEffectConfig} from "./module-api";
+import type {ParticleEffectConfig} from "@paper-to-video/shared-types";
 import type {ThreeLifeEffectProps} from "./three-life-effect.types";
 
 type ParticleSeed = {
@@ -17,7 +18,7 @@ const hashNoise = (seed: number) => {
   return value - Math.floor(value);
 };
 
-const buildParticleSeeds = (count: number, seed: number): ParticleSeed[] => {
+const buildParticleSeeds = (count: number, seed: number, distribution: ParticleEffectConfig["distribution"]) => {
   return Array.from({length: count}, (_, index) => {
     const noiseA = hashNoise(seed * 101 + index * 13.17);
     const noiseB = hashNoise(seed * 211 + index * 7.41);
@@ -26,15 +27,30 @@ const buildParticleSeeds = (count: number, seed: number): ParticleSeed[] => {
     const noiseE = hashNoise(seed * 503 + index * 5.61);
     const noiseF = hashNoise(seed * 601 + index * 17.21);
 
+    const radiusNoise =
+      distribution === "halo"
+        ? 0.62 + noiseB * 0.38
+        : distribution === "spiral"
+          ? 0.12 + noiseB * 0.88
+          : 0.06 + noiseB * noiseB * 0.78;
+
     return {
       baseAngle: noiseA * Math.PI * 2,
-      baseRadius: 0.08 + noiseB * noiseB * 0.92,
+      baseRadius: radiusNoise,
       speed: 0.4 + noiseC * 1.8,
       phase: noiseD * Math.PI * 2,
       layer: noiseE * 2 - 1,
       tone: noiseF,
     };
   });
+};
+
+const createGeometry = (shape: ParticleEffectConfig["shape"]) => {
+  if (shape === "circle") {
+    return new THREE.CircleGeometry(0.5, 18);
+  }
+
+  return new THREE.PlaneGeometry(1, 1);
 };
 
 export const useThreeParticleRenderer = ({
@@ -49,13 +65,14 @@ export const useThreeParticleRenderer = ({
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
-  const pointsRef = useRef<THREE.Points | null>(null);
-  const geometryRef = useRef<THREE.BufferGeometry | null>(null);
-  const particleSeeds = useMemo(
-    () => buildParticleSeeds(resolveParticleEffectConfig(modules).particleCount, seed),
-    [modules, seed],
-  );
+  const meshRef = useRef<THREE.InstancedMesh | null>(null);
+  const helper = useMemo(() => new THREE.Object3D(), []);
+  const color = useMemo(() => new THREE.Color(), []);
   const config = resolveParticleEffectConfig(modules);
+  const particleSeeds = useMemo(
+    () => buildParticleSeeds(config.particleCount, seed, config.distribution),
+    [config.distribution, config.particleCount, seed],
+  );
 
   useEffect(() => {
     if (!canvasRef.current) {
@@ -91,51 +108,42 @@ export const useThreeParticleRenderer = ({
     const camera = new THREE.PerspectiveCamera(38, width / height, 0.1, 100);
     camera.position.set(0, 0, 22);
 
-    const geometry = new THREE.BufferGeometry();
-    const positions = new Float32Array(particleSeeds.length * 3);
-    const colors = new Float32Array(particleSeeds.length * 3);
-    geometry.setAttribute("position", new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute("color", new THREE.BufferAttribute(colors, 3));
-
-    const material = new THREE.PointsMaterial({
-      size: config.pointSize,
+    const geometry = createGeometry(config.shape);
+    const material = new THREE.MeshBasicMaterial({
       transparent: true,
-      opacity: 0.72,
+      opacity: 0.76,
       vertexColors: true,
       depthWrite: false,
-      blending: THREE.NormalBlending,
-      sizeAttenuation: true,
     });
-
-    const points = new THREE.Points(geometry, material);
-    points.frustumCulled = false;
-    scene.add(points);
+    const mesh = new THREE.InstancedMesh(geometry, material, particleSeeds.length);
+    mesh.frustumCulled = false;
+    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    mesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(mesh.count * 3), 3);
+    scene.add(mesh);
 
     rendererRef.current = renderer;
     sceneRef.current = scene;
     cameraRef.current = camera;
-    pointsRef.current = points;
-    geometryRef.current = geometry;
+    meshRef.current = mesh;
 
     return () => {
-      points.geometry.dispose();
+      mesh.dispose();
+      geometry.dispose();
       material.dispose();
       renderer.dispose();
       rendererRef.current = null;
       sceneRef.current = null;
       cameraRef.current = null;
-      pointsRef.current = null;
-      geometryRef.current = null;
+      meshRef.current = null;
     };
-  }, [config.pointSize, height, particleSeeds.length, width]);
+  }, [config.shape, height, particleSeeds.length, width]);
 
   useEffect(() => {
     const renderer = rendererRef.current;
     const scene = sceneRef.current;
     const camera = cameraRef.current;
-    const points = pointsRef.current;
-    const geometry = geometryRef.current;
-    if (!renderer || !scene || !camera || !points || !geometry) {
+    const mesh = meshRef.current;
+    if (!renderer || !scene || !camera || !mesh) {
       return;
     }
 
@@ -143,8 +151,6 @@ export const useThreeParticleRenderer = ({
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
 
-    const positions = geometry.getAttribute("position") as THREE.BufferAttribute;
-    const colors = geometry.getAttribute("color") as THREE.BufferAttribute;
     const primary = new THREE.Color(config.primaryColor);
     const secondary = new THREE.Color(config.secondaryColor);
     const accent = new THREE.Color(config.accentColor);
@@ -152,44 +158,92 @@ export const useThreeParticleRenderer = ({
     const time = frame * config.driftSpeed;
     const aspectScale = width / Math.max(1, height);
 
-    for (let index = 0; index < particleSeeds.length; index += 1) {
-      const particle = particleSeeds[index];
+    mesh.count = particleSeeds.length;
+    particleSeeds.forEach((particle, index) => {
       const angle = particle.baseAngle + time * particle.speed;
+      const distributionFactor =
+        config.distribution === "halo" ? 1.18 : config.distribution === "spiral" ? 0.98 : 0.86;
       const radius =
-        particle.baseRadius * config.orbitRadius * Math.min(width, height) * 0.055 +
+        particle.baseRadius * config.orbitRadius * Math.min(width, height) * 0.065 * distributionFactor +
         Math.sin(time * 1.35 + particle.phase) * config.swirlStrength * 11;
-      const spiral = Math.sin(time * 0.72 + particle.phase * 1.3) * 6;
-      const depth = particle.layer * config.layerDepth + Math.cos(time + particle.phase) * 2.2;
-      const armOffset = Math.sin(angle * 2 + particle.phase) * radius * 0.18;
-      const centerBias = 1 - Math.min(1, particle.baseRadius);
 
-      positions.setXYZ(
-        index,
-        Math.cos(angle) * radius * aspectScale + Math.cos(angle * 2.2 + particle.phase) * spiral + armOffset,
-        Math.sin(angle) * radius + Math.sin(angle * 1.6 + particle.phase) * spiral * 0.65 - centerBias * 8,
-        depth,
-      );
+      let x = 0;
+      let y = 0;
+
+      if (config.trajectory === "drift") {
+        x =
+          Math.cos(angle) * radius * aspectScale * 0.65 +
+          Math.sin(time * 0.9 + particle.phase) * 42 +
+          particle.layer * 10;
+        y =
+          Math.sin(angle * 0.5 + particle.phase) * radius * 0.4 +
+          Math.cos(time * 1.2 + particle.phase) * 36 -
+          (1 - Math.min(1, particle.baseRadius)) * 8;
+      } else if (config.trajectory === "wave") {
+        x =
+          Math.sin(angle * 1.8 + particle.phase) * radius * aspectScale +
+          Math.cos(time * 1.1 + particle.phase) * 18;
+        y =
+          Math.cos(angle * 1.2 + particle.phase) * radius * 0.62 +
+          Math.sin(time * 2 + particle.phase) * 26;
+      } else {
+        const spiral = Math.sin(time * 0.72 + particle.phase * 1.3) * (config.distribution === "spiral" ? 12 : 6);
+        const armOffset =
+          config.distribution === "spiral"
+            ? Math.sin(angle * 2.8 + particle.phase) * radius * 0.34
+            : Math.sin(angle * 2 + particle.phase) * radius * 0.18;
+        const centerBias = 1 - Math.min(1, particle.baseRadius);
+        x =
+          Math.cos(angle) * radius * aspectScale +
+          Math.cos(angle * 2.2 + particle.phase) * spiral +
+          armOffset;
+        y =
+          Math.sin(angle) * radius +
+          Math.sin(angle * 1.6 + particle.phase) * spiral * 0.65 -
+          centerBias * (config.distribution === "core" ? 12 : 4);
+      }
+
+      const sizeScale =
+        config.distribution === "core"
+          ? 0.82 + (1 - particle.baseRadius) * 0.9
+          : config.distribution === "halo"
+            ? 0.78 + particle.baseRadius * 0.42
+            : 0.78 + particle.baseRadius * 0.28;
+      const drawSize = config.pointSize * sizeScale;
+      helper.position.set(x, y, particle.layer * config.layerDepth);
+      helper.scale.set(drawSize, drawSize, 1);
+      helper.rotation.set(0, 0, config.shape === "diamond" ? Math.PI / 4 : 0);
+      helper.updateMatrix();
+      mesh.setMatrixAt(index, helper.matrix);
 
       const mix = particle.tone;
-      const color =
+      const swatch =
         mix < 0.42 ? primary.clone() : mix < 0.78 ? secondary.clone() : accent.clone();
-      color.lerp(primary, 0.18 + 0.22 * Math.sin(time + particle.phase));
-      colors.setXYZ(index, color.r, color.g, color.b);
-    }
+      swatch.lerp(primary, 0.12 + 0.24 * Math.sin(time + particle.phase));
+      mesh.setColorAt(index, swatch);
+    });
 
-    positions.needsUpdate = true;
-    colors.needsUpdate = true;
+    mesh.instanceMatrix.needsUpdate = true;
+    if (mesh.instanceColor) {
+      mesh.instanceColor.needsUpdate = true;
+    }
     renderer.render(scene, camera);
   }, [
     absoluteFrame,
+    color,
     config.accentColor,
     config.driftSpeed,
+    config.distribution,
     config.layerDepth,
     config.orbitRadius,
+    config.pointSize,
     config.primaryColor,
     config.secondaryColor,
+    config.shape,
     config.swirlStrength,
+    config.trajectory,
     height,
+    helper,
     particleSeeds,
     simulationFrame,
     width,

@@ -61,8 +61,10 @@ export const DEFAULT_CELLULAR_EFFECT: CellularEffectConfig = {
   cellRows: 78,
   stepEveryFrames: 2,
   cellPadding: 0.5,
+  cellScale: 1,
   cornerRadius: 0.45,
   edgeMode: "wrap",
+  colorPreset: "mint-ice",
   primaryColor: "#a7ffe8",
   secondaryColor: "#fff8ec",
   birthColor: "#8fd2ff",
@@ -83,6 +85,10 @@ export const DEFAULT_TYPOGRAPHY_SCALE: TypographyScaleConfig = {
 };
 
 export const DEFAULT_PARTICLE_EFFECT: ParticleEffectConfig = {
+  variant: "nebula",
+  shape: "circle",
+  distribution: "core",
+  trajectory: "orbit",
   particleCount: 520,
   pointSize: 3.6,
   orbitRadius: 0.22,
@@ -92,6 +98,75 @@ export const DEFAULT_PARTICLE_EFFECT: ParticleEffectConfig = {
   primaryColor: "#74f3d8",
   secondaryColor: "#7dbdff",
   accentColor: "#ffc0dc",
+};
+
+const CELLULAR_COLOR_PRESETS: Record<
+  CellularEffectConfig["colorPreset"],
+  Pick<CellularEffectConfig, "primaryColor" | "secondaryColor" | "birthColor">
+> = {
+  "mint-ice": {
+    primaryColor: "#a7ffe8",
+    secondaryColor: "#fff8ec",
+    birthColor: "#8fd2ff",
+  },
+  "sunset-pop": {
+    primaryColor: "#ffb77d",
+    secondaryColor: "#fff0d9",
+    birthColor: "#ff7fb3",
+  },
+  "violet-cyan": {
+    primaryColor: "#9c9bff",
+    secondaryColor: "#defdff",
+    birthColor: "#67f1ff",
+  },
+};
+
+const PARTICLE_VARIANTS: Record<
+  ParticleEffectConfig["variant"],
+  Partial<ParticleEffectConfig>
+> = {
+  nebula: {
+    shape: "circle",
+    distribution: "core",
+    trajectory: "orbit",
+    particleCount: 520,
+    pointSize: 3.6,
+    orbitRadius: 0.22,
+    swirlStrength: 0.16,
+    driftSpeed: 0.01,
+    layerDepth: 6,
+    primaryColor: "#74f3d8",
+    secondaryColor: "#7dbdff",
+    accentColor: "#ffc0dc",
+  },
+  vortex: {
+    shape: "diamond",
+    distribution: "spiral",
+    trajectory: "orbit",
+    particleCount: 640,
+    pointSize: 2.8,
+    orbitRadius: 0.26,
+    swirlStrength: 0.32,
+    driftSpeed: 0.013,
+    layerDepth: 8,
+    primaryColor: "#6cf1ff",
+    secondaryColor: "#f2f7ff",
+    accentColor: "#8d8cff",
+  },
+  comet: {
+    shape: "square",
+    distribution: "halo",
+    trajectory: "drift",
+    particleCount: 420,
+    pointSize: 3.2,
+    orbitRadius: 0.3,
+    swirlStrength: 0.08,
+    driftSpeed: 0.016,
+    layerDepth: 10,
+    primaryColor: "#fff0c2",
+    secondaryColor: "#ffb5d0",
+    accentColor: "#86cbff",
+  },
 };
 
 export const resolveTextMotionConfig = (
@@ -116,9 +191,12 @@ export const resolveBackgroundMotionConfig = (
 export const resolveCellularEffectConfig = (
   modules?: VisualModuleConfig,
 ): CellularEffectConfig => {
+  const overrides = modules?.cellularEffect ?? {};
+  const colorPreset = overrides.colorPreset ?? DEFAULT_CELLULAR_EFFECT.colorPreset;
   return {
     ...DEFAULT_CELLULAR_EFFECT,
-    ...(modules?.cellularEffect ?? {}),
+    ...CELLULAR_COLOR_PRESETS[colorPreset],
+    ...overrides,
   };
 };
 
@@ -134,8 +212,11 @@ export const resolveTypographyScaleConfig = (
 export const resolveParticleEffectConfig = (
   modules?: VisualModuleConfig,
 ): ParticleEffectConfig => {
+  const overrides = modules?.particleEffect ?? {};
+  const variant = overrides.variant ?? DEFAULT_PARTICLE_EFFECT.variant;
   return {
     ...DEFAULT_PARTICLE_EFFECT,
-    ...(modules?.particleEffect ?? {}),
+    ...PARTICLE_VARIANTS[variant],
+    ...overrides,
   };
 };

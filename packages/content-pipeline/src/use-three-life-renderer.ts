@@ -145,11 +145,11 @@ export const useThreeLifeRenderer = ({
     mesh.count = cells.length;
     cells.forEach((cell, index) => {
       const inset = cell.age >= 3 ? visibleInset * 2.2 : visibleInset;
-      const drawWidth = Math.max(1.2, cellWidth - inset * 2);
-      const drawHeight = Math.max(1.2, cellHeight - inset * 2);
+      const drawWidth = Math.max(1.2, (cellWidth - inset * 2) * config.cellScale);
+      const drawHeight = Math.max(1.2, (cellHeight - inset * 2) * config.cellScale);
       helper.position.set(
-        cell.x * cellWidth + inset + drawWidth / 2,
-        cell.y * cellHeight + inset + drawHeight / 2,
+        cell.x * cellWidth + cellWidth / 2,
+        cell.y * cellHeight + cellHeight / 2,
         0,
       );
       helper.scale.set(drawWidth, drawHeight, 1);
@@ -171,6 +171,7 @@ export const useThreeLifeRenderer = ({
     color,
     config.cellColumns,
     config.cellPadding,
+    config.cellScale,
     config.birthColor,
     config.primaryColor,
     config.cellRows,

@@ -26,7 +26,7 @@ const readControlValue = (
   }
 
   const value = (sectionValue as Record<string, unknown>)[field];
-  return typeof value === "number" ? value : "";
+  return typeof value === "number" || typeof value === "string" ? value : "";
 };
 
 export const AppIndexView: React.FC<{
@@ -360,17 +360,31 @@ export const EffectLabView: React.FC<{
                       <span>{control.description}</span>
                     </div>
                     <div className={styles.effectControlInputRow}>
-                      <input
-                        className={styles.effectRange}
-                        max={control.max}
-                        min={control.min}
-                        onChange={(event) => state.setControlValue(control, Number(event.target.value))}
-                        step={control.step}
-                        type="range"
-                        value={typeof value === "number" ? value : control.min}
-                      />
+                      {control.kind === "range" ? (
+                        <input
+                          className={styles.effectRange}
+                          max={control.max}
+                          min={control.min}
+                          onChange={(event) => state.setControlValue(control, Number(event.target.value))}
+                          step={control.step}
+                          type="range"
+                          value={typeof value === "number" ? value : control.min}
+                        />
+                      ) : (
+                        <select
+                          className={styles.effectSelect}
+                          onChange={(event) => state.setControlValue(control, event.target.value)}
+                          value={typeof value === "string" ? value : control.options[0]?.value ?? ""}
+                        >
+                          {control.options.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                       <output className={styles.effectControlValue}>
-                        {typeof value === "number" ? value : "--"}
+                        {typeof value === "number" || typeof value === "string" ? value : "--"}
                       </output>
                     </div>
                   </label>

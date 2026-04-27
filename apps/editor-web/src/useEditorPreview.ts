@@ -191,7 +191,10 @@ export const useEffectPreview = (route: EffectRoute | null): EffectPreviewState 
     [route],
   );
 
-  const setControlValue = (control: (typeof controlDefinitions)[number], value: number) => {
+  const setControlValue = (
+    control: (typeof controlDefinitions)[number],
+    value: number | string,
+  ) => {
     setModuleOverrides((previous) =>
       createModuleOverride({
         baseModules: previous,

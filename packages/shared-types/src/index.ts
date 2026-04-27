@@ -92,8 +92,10 @@ export type CellularEffectConfig = {
   cellRows: number;
   stepEveryFrames: number;
   cellPadding: number;
+  cellScale: number;
   cornerRadius: number;
   edgeMode: "wrap";
+  colorPreset: "mint-ice" | "sunset-pop" | "violet-cyan";
   primaryColor: string;
   secondaryColor: string;
   birthColor: string;
@@ -114,6 +116,10 @@ export type TypographyScaleConfig = {
 };
 
 export type ParticleEffectConfig = {
+  variant: "nebula" | "vortex" | "comet";
+  shape: "circle" | "square" | "diamond";
+  distribution: "core" | "spiral" | "halo";
+  trajectory: "orbit" | "drift" | "wave";
   particleCount: number;
   pointSize: number;
   orbitRadius: number;

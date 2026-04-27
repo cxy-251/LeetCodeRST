@@ -27,16 +27,34 @@ export type EffectControlSection = keyof Pick<
   "cellularEffect" | "particleEffect" | "backgroundMotion"
 >;
 
-export type EffectControlDefinition = {
+export type EffectControlOption = {
+  label: string;
+  value: string;
+};
+
+type EffectControlBase = {
   id: string;
   label: string;
   description: string;
   section: EffectControlSection;
   field: string;
+};
+
+export type EffectRangeControlDefinition = EffectControlBase & {
+  kind: "range";
   min: number;
   max: number;
   step: number;
 };
+
+export type EffectSelectControlDefinition = EffectControlBase & {
+  kind: "select";
+  options: EffectControlOption[];
+};
+
+export type EffectControlDefinition =
+  | EffectRangeControlDefinition
+  | EffectSelectControlDefinition;
 
 export type EffectAtomDefinition = {
   description: string;

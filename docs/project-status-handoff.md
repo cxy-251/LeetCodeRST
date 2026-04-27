@@ -331,6 +331,7 @@ npm run render:video
 11. 外部 AI 总结 JSON 已经可以导入成 `contentProfile`
 12. 第三个 WebGL effect family `particle-orbit` 已接入，可作为更偏 Three.js 粒子案例方向的样板
 13. effect lab 已支持按特效声明参数控件，网页实验页可以局部调节特效参数而不改全局 manifest
+14. effect lab 参数控件已从“纯数值滑杆”扩展到“数值 + 枚举选择”，可以调颜色主题、粒子形状、分布、轨迹和变体
 
 ### 未完成
 
@@ -343,6 +344,7 @@ npm run render:video
 7. 还没有提供 GUI 级别的配置编辑器，当前主要靠 JSON 和 CSV
 8. 外部总结 JSON 导入虽然已经可用，但当前仍是“宽松别名兼容 + 标准落盘”，还没有建立严格的 schema version 管理
 9. 特效实验页目前已经支持参数调节，但还没有把这套控件直接反写成可保存 preset 或 manifest patch
+10. 同一类特效虽然已经支持 variant / shape / distribution / trajectory，但这些组合目前主要停留在实验页，还没有正式沉淀成可复用的 profile registry
 
 ### 当前不完善
 
@@ -357,6 +359,7 @@ npm run render:video
 7. 外部总结 JSON 导入器当前稳定覆盖的是 5 段式短视频结构，超过这个结构的复杂脚本还没有抽象成更通用的 scene mapper
 8. 新增的 `particle-orbit` 目前是第一版粒子轨道样板，视觉方向已经成立，但还没有细化成多个粒子案例子风格
 9. `particle-orbit` 已从“边缘环绕 + 中央过曝”调整为“中央主视觉优先”，但还需要继续打磨更多中心构图变体
+10. 当前 life-game / snake-grid 的实验页已经去掉列数和行数暴露，改成更贴近视觉结果的“色块主题 + 尺寸 + 节奏”控制
 
 ---
 
@@ -373,6 +376,7 @@ npm run render:video
 7. 给外部总结 JSON 增加 schema version 和严格校验，降低后续字段变动风险
 8. 继续沿 effect atom registry 复现更多 Three.js 风格案例，并沉淀成可选 effect family
 9. 把 effect lab 的参数调节结果导出成 preset，减少人工抄参数
+10. 把 `particle-orbit` 的 variant 进一步拆成正式 effect family，或者反过来抽成共享 preset 机制
 
 ---
 

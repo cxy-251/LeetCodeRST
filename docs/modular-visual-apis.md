@@ -232,13 +232,25 @@ agentic-world-modeling,data/images/prepared/source-9x16.jpg,life-game
 当前已经接入的方向：
 
 - `life-game`
-  可调：网格列数、网格行数、步进间隔、cell padding
+  可调：颜色主题、色块尺寸、步进间隔、cell padding
 - `snake-grid`
-  可调：网格列数、网格行数、移动间隔、cell padding
+  可调：颜色主题、色块尺寸、移动间隔、cell padding
 - `particle-orbit`
-  可调：粒子数量、点大小、轨道半径、旋涡强度、漂移速度
+  可调：variant、粒子形状、分布方式、运动轨迹、粒子数量、点大小、轨道半径、旋涡强度、漂移速度
 
 这层控件当前只作用于实验页，用来快速验证主体构图和运动节奏，不会直接改写全局 manifest。
+
+其中 `particle-orbit` 这一类已经开始支持“同一类特效拆出不同参数搭配的变体”：
+
+- `nebula`
+- `vortex`
+- `comet`
+
+后续可以继续沿这条思路，把更多 Three.js 风格案例拆成：
+
+1. 一个 effect family
+2. 多个 variant preset
+3. 一组可细调参数
 
 ### 转换层
 

@@ -46,7 +46,7 @@ export type EffectPreviewState = {
   moduleOverrides: VisualModuleConfig;
   resetSimulation: () => void;
   scene: RenderScene | null;
-  setControlValue: (control: EffectControlDefinition, value: number) => void;
+  setControlValue: (control: EffectControlDefinition, value: number | string) => void;
   setIsRunning: (isRunning: boolean) => void;
   simulationFrame: number;
 };

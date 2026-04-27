@@ -109,11 +109,11 @@ export const useThreeSnakeRenderer = ({
     mesh.count = cells.length;
     cells.forEach((cell, index) => {
       const inset = cell.tone === "food" ? 3 + config.cellPadding * 1.4 : 1.1 + config.cellPadding;
-      const drawWidth = Math.max(2, cellWidth - inset * 2);
-      const drawHeight = Math.max(2, cellHeight - inset * 2);
+      const drawWidth = Math.max(2, (cellWidth - inset * 2) * config.cellScale);
+      const drawHeight = Math.max(2, (cellHeight - inset * 2) * config.cellScale);
       helper.position.set(
-        cell.x * cellWidth + inset + drawWidth / 2,
-        cell.y * cellHeight + inset + drawHeight / 2,
+        cell.x * cellWidth + cellWidth / 2,
+        cell.y * cellHeight + cellHeight / 2,
         0,
       );
       helper.scale.set(drawWidth, drawHeight, 1);
@@ -134,6 +134,7 @@ export const useThreeSnakeRenderer = ({
     config.birthColor,
     config.cellColumns,
     config.cellPadding,
+    config.cellScale,
     config.cellRows,
     config.primaryColor,
     config.stepEveryFrames,

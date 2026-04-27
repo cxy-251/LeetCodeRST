@@ -65,27 +65,32 @@ export const getLaunchButtonBackground = (ready: boolean) =>
 
 export const LIFE_EFFECT_CONTROLS: EffectControlDefinition[] = [
   {
-    id: "life-cols",
-    label: "Cell Columns",
-    description: "Increase horizontal density when you want the life field to feel more intricate.",
+    id: "life-palette",
+    kind: "select",
+    label: "Color Theme",
+    description: "Switch the life field between different color moods without touching low-level color values.",
     section: "cellularEffect",
-    field: "cellColumns",
-    min: 18,
-    max: 84,
-    step: 2,
+    field: "colorPreset",
+    options: [
+      {label: "Mint Ice", value: "mint-ice"},
+      {label: "Sunset Pop", value: "sunset-pop"},
+      {label: "Violet Cyan", value: "violet-cyan"},
+    ],
   },
   {
-    id: "life-rows",
-    label: "Cell Rows",
-    description: "Increase vertical density to make the phone stage feel more fully occupied.",
+    id: "life-scale",
+    kind: "range",
+    label: "Cell Scale",
+    description: "Increase or decrease the apparent block size without exposing raw row/column counts.",
     section: "cellularEffect",
-    field: "cellRows",
-    min: 28,
-    max: 144,
-    step: 2,
+    field: "cellScale",
+    min: 0.55,
+    max: 1.55,
+    step: 0.05,
   },
   {
     id: "life-speed",
+    kind: "range",
     label: "Step Interval",
     description: "Lower values make the life simulation evolve faster frame-to-frame.",
     section: "cellularEffect",
@@ -96,6 +101,7 @@ export const LIFE_EFFECT_CONTROLS: EffectControlDefinition[] = [
   },
   {
     id: "life-padding",
+    kind: "range",
     label: "Cell Padding",
     description: "Controls the visual breathing room between cells.",
     section: "cellularEffect",
@@ -108,7 +114,60 @@ export const LIFE_EFFECT_CONTROLS: EffectControlDefinition[] = [
 
 export const PARTICLE_EFFECT_CONTROLS: EffectControlDefinition[] = [
   {
+    id: "particle-variant",
+    kind: "select",
+    label: "Variant",
+    description: "Treat one particle family as multiple effect presets with different parameter stacks.",
+    section: "particleEffect",
+    field: "variant",
+    options: [
+      {label: "Nebula", value: "nebula"},
+      {label: "Vortex", value: "vortex"},
+      {label: "Comet", value: "comet"},
+    ],
+  },
+  {
+    id: "particle-shape",
+    kind: "select",
+    label: "Particle Shape",
+    description: "Switch the primitive shape used by the particle field.",
+    section: "particleEffect",
+    field: "shape",
+    options: [
+      {label: "Circle", value: "circle"},
+      {label: "Square", value: "square"},
+      {label: "Diamond", value: "diamond"},
+    ],
+  },
+  {
+    id: "particle-distribution",
+    kind: "select",
+    label: "Distribution",
+    description: "Controls whether particles cluster in the center, form spirals, or wrap into a halo.",
+    section: "particleEffect",
+    field: "distribution",
+    options: [
+      {label: "Core", value: "core"},
+      {label: "Spiral", value: "spiral"},
+      {label: "Halo", value: "halo"},
+    ],
+  },
+  {
+    id: "particle-trajectory",
+    kind: "select",
+    label: "Trajectory",
+    description: "Choose how particles move through space over time.",
+    section: "particleEffect",
+    field: "trajectory",
+    options: [
+      {label: "Orbit", value: "orbit"},
+      {label: "Drift", value: "drift"},
+      {label: "Wave", value: "wave"},
+    ],
+  },
+  {
     id: "particle-count",
+    kind: "range",
     label: "Particle Count",
     description: "Higher values add richness, but can also make the center feel heavier.",
     section: "particleEffect",
@@ -119,6 +178,7 @@ export const PARTICLE_EFFECT_CONTROLS: EffectControlDefinition[] = [
   },
   {
     id: "particle-size",
+    kind: "range",
     label: "Point Size",
     description: "Bigger points feel softer and dreamier, smaller points feel sharper and more digital.",
     section: "particleEffect",
@@ -129,6 +189,7 @@ export const PARTICLE_EFFECT_CONTROLS: EffectControlDefinition[] = [
   },
   {
     id: "particle-radius",
+    kind: "range",
     label: "Orbit Radius",
     description: "Controls how much of the stage the particle mass occupies.",
     section: "particleEffect",
@@ -139,6 +200,7 @@ export const PARTICLE_EFFECT_CONTROLS: EffectControlDefinition[] = [
   },
   {
     id: "particle-swirl",
+    kind: "range",
     label: "Swirl Strength",
     description: "Higher values create more visible spiraling motion and central turbulence.",
     section: "particleEffect",
@@ -149,6 +211,7 @@ export const PARTICLE_EFFECT_CONTROLS: EffectControlDefinition[] = [
   },
   {
     id: "particle-speed",
+    kind: "range",
     label: "Drift Speed",
     description: "Controls the global movement tempo of the orbit field.",
     section: "particleEffect",
@@ -161,27 +224,32 @@ export const PARTICLE_EFFECT_CONTROLS: EffectControlDefinition[] = [
 
 export const SNAKE_EFFECT_CONTROLS: EffectControlDefinition[] = [
   {
-    id: "snake-cols",
-    label: "Grid Columns",
-    description: "Adjust the horizontal grid density used by the snake arena.",
+    id: "snake-palette",
+    kind: "select",
+    label: "Color Theme",
+    description: "Switch the snake grid between different light-accent color themes.",
     section: "cellularEffect",
-    field: "cellColumns",
-    min: 12,
-    max: 48,
-    step: 2,
+    field: "colorPreset",
+    options: [
+      {label: "Mint Ice", value: "mint-ice"},
+      {label: "Sunset Pop", value: "sunset-pop"},
+      {label: "Violet Cyan", value: "violet-cyan"},
+    ],
   },
   {
-    id: "snake-rows",
-    label: "Grid Rows",
-    description: "Adjust the vertical grid density so the snake can fill more or less of the phone stage.",
+    id: "snake-scale",
+    kind: "range",
+    label: "Block Scale",
+    description: "Adjust how large each visible snake block feels without exposing row/column counts.",
     section: "cellularEffect",
-    field: "cellRows",
-    min: 18,
-    max: 84,
-    step: 2,
+    field: "cellScale",
+    min: 0.55,
+    max: 1.55,
+    step: 0.05,
   },
   {
     id: "snake-speed",
+    kind: "range",
     label: "Move Interval",
     description: "Lower values make the snake advance more frequently through the grid.",
     section: "cellularEffect",
@@ -192,6 +260,7 @@ export const SNAKE_EFFECT_CONTROLS: EffectControlDefinition[] = [
   },
   {
     id: "snake-padding",
+    kind: "range",
     label: "Cell Padding",
     description: "Controls how much breathing room each snake segment has inside the grid cells.",
     section: "cellularEffect",
@@ -209,7 +278,7 @@ export const createModuleOverride = ({
 }: {
   baseModules?: VisualModuleConfig;
   control: EffectControlDefinition;
-  value: number;
+  value: number | string;
 }) => {
   const section = {
     ...(baseModules?.[control.section] ?? {}),
