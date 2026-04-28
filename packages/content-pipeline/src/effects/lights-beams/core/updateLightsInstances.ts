@@ -57,6 +57,17 @@ const sampleFloorHeight = (x: number, worldZ: number, time: number, spread: numb
   return (radialA + radialB + radialC + longWave + ridgeWave) * (0.34 + nearField * 0.76);
 };
 
+const wrapDepth = (value: number, nearLimit: number, depthRange: number) => {
+  let resolved = value;
+  while (resolved > nearLimit) {
+    resolved -= depthRange;
+  }
+  while (resolved < nearLimit - depthRange) {
+    resolved += depthRange;
+  }
+  return resolved;
+};
+
 const computeOrbState = ({
   seed,
   variant,
@@ -96,12 +107,13 @@ export const updateLightsInstances = ({
   const time = frame * config.motionSpeed * 14;
   const tileLength = 18;
   const totalDepth = tileLength * floorTiles.length;
-  const scroll = (time * 1.8) % totalDepth;
+  const travelPhase = (time * 0.11) % 1;
+  const travelOffset = travelPhase * totalDepth;
+  const nearLimit = 6.5;
 
   floorTiles.forEach((tile, index) => {
     const baseZ = -index * tileLength;
-    const shifted = baseZ + (scroll % totalDepth);
-    const wrappedZ = shifted > tileLength ? shifted - totalDepth : shifted;
+    const wrappedZ = wrapDepth(baseZ + travelOffset, tileLength, totalDepth);
 
     tile.fillMesh.position.z = wrappedZ;
     tile.wireMesh.position.z = wrappedZ;
@@ -121,18 +133,20 @@ export const updateLightsInstances = ({
     tile.geometry.attributes.position.needsUpdate = true;
   });
 
-  const glowRadius = 0.48 + config.beamLength * 1.2;
-  const coreRadius = 0.16 + config.beamThickness * 3.1;
+  const glowRadius = 0.72 + config.beamLength * 1.34;
+  const coreRadius = 0.22 + config.beamThickness * 4.2;
 
   seeds.forEach((seed, index) => {
     const state = computeOrbState({
       seed,
       variant: config.variant,
     });
-    const floorHeight = sampleFloorHeight(state.x, state.z, time, config.spread);
+    const displayZ = wrapDepth(state.z + travelOffset, nearLimit, totalDepth);
+    const floorHeight = sampleFloorHeight(state.x, displayZ, time, config.spread);
     const breathing = 0.72 + (Math.sin(time * (1.05 + seed.speed * 5.5) + seed.phase) + 1) * 0.24;
-    const nearFactor = Math.max(0, Math.min(1, 1 - ((-state.z) - 4) / 24));
-    const rimOnlyFactor = 0.18 + nearFactor * 0.82;
+    const nearFactor = Math.max(0, Math.min(1, (displayZ - (nearLimit - totalDepth)) / totalDepth));
+    const highlightFactor = Math.pow(nearFactor, 1.45);
+    const rimOnlyFactor = 0.14 + highlightFactor * 0.86;
 
     (["glow", "core", "accent"] as const).forEach((layerName) => {
       const tuning = LAYER_TUNING[layerName];
@@ -144,9 +158,9 @@ export const updateLightsInstances = ({
             ? coreRadius
             : Math.max(0.08, coreRadius * 0.36);
 
-      const presence = tuning.nearMix * nearFactor + (1 - tuning.nearMix);
+      const presence = tuning.nearMix * highlightFactor + (1 - tuning.nearMix);
 
-      helper.position.set(state.x, -2.1 + floorHeight + tuning.yOffset, state.z);
+      helper.position.set(state.x, -2.1 + floorHeight + tuning.yOffset, displayZ);
       helper.rotation.set(0, seed.baseAngle + time * 0.08, 0);
       helper.scale.setScalar(
         radius *

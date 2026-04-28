@@ -121,21 +121,23 @@ export class ThreeLightsEngine {
 
     const frame = Math.max(0, params.simulationFrame ?? params.absoluteFrame);
     const time = frame * config.motionSpeed * 10.5;
+    const forwardPhase = (time * 0.11) % 1;
+    const cameraDolly = forwardPhase * 6.2;
     this.lookAtTarget.set(
       Math.sin(time * 0.16) * 0.5,
       -0.58 + Math.sin(time * 0.28) * 0.08,
-      -13.2 + Math.sin(time * 0.11) * 2.2,
+      -13.2 - cameraDolly * 1.35 + Math.sin(time * 0.11) * 1.2,
     );
     this.camera.position.set(
       Math.sin(time * 0.17) * 0.48,
       1.48 + Math.cos(time * 0.13) * 0.08,
-      6.85 + Math.sin(time * 0.08) * 0.18,
+      6.85 - cameraDolly + Math.sin(time * 0.08) * 0.08,
     );
     this.camera.lookAt(this.lookAtTarget);
     this.bundle.horizonMesh.position.set(
       Math.sin(time * 0.08) * 0.24,
       4.8 + Math.cos(time * 0.11) * 0.12,
-      -28,
+      -28 - cameraDolly * 0.92,
     );
 
     updateLightsInstances({

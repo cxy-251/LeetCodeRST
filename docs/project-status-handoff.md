@@ -849,6 +849,34 @@ Verification:
 
 ---
 
+## 25. 2026-04-29 Lights Forward Dolly Pass
+
+This pass made the `Lights` family read more like a forward-moving camera through a field of anchored orb markers.
+
+What changed:
+
+1. The camera now performs a stronger forward dolly instead of staying almost static with only subtle sway.
+   - `packages/content-pipeline/src/effects/lights-beams/core/ThreeLightsEngine.ts`
+2. Orb depth presentation is now tied to the same forward-travel phase used by the terrain loop.
+   - orbs approach from the distance
+   - near-field orbs brighten more strongly
+   - far-field orbs remain mostly outline-like
+3. The ground tiles and orb positions now share the same wrapped travel offset, which makes the whole scene feel like one moving landscape instead of two unrelated layers.
+4. Glow and core radii were increased so the foreground "lit" state is easier to perceive during the forward pass.
+
+Why this matters:
+
+1. The previous pass fixed the orb/terrain relationship, but the camera movement still did not read strongly enough.
+2. The intended reference behavior is not just "lights on terrain", but "the camera pushes forward and those distant dark markers bloom as they approach".
+
+Verification:
+
+1. `npm run lint`
+2. `npm run build`
+3. Browser-checked `/effects/lights-beams`
+
+---
+
 ## 22. 2026-04-29 Lights Beams Perspective Rework
 
 This follow-up changed `lights-beams` from a flat central burst into a more scene-like interpretation of the Hello Enjoy `Lights` reference.
