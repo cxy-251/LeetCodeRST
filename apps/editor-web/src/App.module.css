@@ -273,6 +273,44 @@
   font-size: 13px;
 }
 
+.controlPanel {
+  margin-bottom: 18px;
+  padding: 16px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.controlPanelHeader {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.controlPanelHeader strong {
+  font-size: 0.96rem;
+}
+
+.controlPanelHeader span {
+  color: rgba(244, 247, 251, 0.66);
+  line-height: 1.55;
+  font-size: 0.9rem;
+}
+
+.controlField {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.controlField span {
+  color: rgba(244, 247, 251, 0.78);
+  font-size: 0.88rem;
+}
+
 .stage {
   padding: 40px;
   display: grid;
@@ -280,11 +318,17 @@
 }
 
 .effectLabStageLayout {
-  width: min(100%, 920px);
+  width: min(100%, 1280px);
   display: grid;
-  grid-template-columns: minmax(260px, 360px) minmax(220px, 280px);
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
   gap: 24px;
   align-items: start;
+}
+
+.effectStagePresentation {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .effectStageSidebar {
@@ -309,6 +353,19 @@
     rgba(8, 15, 24, 0.88);
   box-shadow:
     0 30px 80px rgba(0, 0, 0, 0.45),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+}
+
+.effectFrame {
+  width: min(100%, 960px);
+  aspect-ratio: 16 / 10;
+  padding: 16px;
+  border-radius: 34px;
+  background:
+    linear-gradient(150deg, rgba(255, 255, 255, 0.14), rgba(255,255,255,0.02)),
+    rgba(8, 15, 24, 0.88);
+  box-shadow:
+    0 30px 80px rgba(0, 0, 0, 0.42),
     inset 0 1px 0 rgba(255,255,255,0.08);
 }
 
@@ -456,6 +513,37 @@
   font-variant-numeric: tabular-nums;
 }
 
+.effectFamilyList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.effectFamilyItem {
+  padding: 12px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.effectFamilyItem strong {
+  font-size: 0.9rem;
+}
+
+.effectFamilyItem span {
+  color: rgba(244, 247, 251, 0.64);
+  line-height: 1.5;
+  font-size: 0.82rem;
+}
+
+.effectFamilyItemActive {
+  border-color: rgba(87, 216, 196, 0.42);
+  background: rgba(87, 216, 196, 0.08);
+}
+
 .effectNotes {
   display: flex;
   flex-direction: column;
@@ -482,15 +570,12 @@
 }
 
 .effectStageCaption {
-  position: absolute;
-  left: 20px;
-  top: 20px;
-  z-index: 1;
+  align-self: flex-start;
   display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 14px 16px;
-  border-radius: 18px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 999px;
   background: rgba(4, 12, 20, 0.5);
   border: 1px solid rgba(255, 255, 255, 0.08);
 }
@@ -503,13 +588,7 @@
 }
 
 .effectStageCaption strong {
-  font-size: 1rem;
-}
-
-.effectStageCaption small {
-  color: rgba(244, 247, 251, 0.72);
-  line-height: 1.55;
-  font-size: 0.8rem;
+  font-size: 0.9rem;
 }
 
 .effectStageButton {
@@ -557,7 +636,7 @@
 @media (max-width: 720px) {
   .effectLabStageLayout {
     width: 100%;
-    grid-template-columns: minmax(0, 1fr) minmax(220px, 248px);
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 260px);
     gap: 14px;
   }
 
@@ -566,6 +645,11 @@
     max-width: 320px;
     padding: 12px;
     border-radius: 34px;
+  }
+
+  .effectFrame {
+    padding: 12px;
+    border-radius: 28px;
   }
 
   .slidePreview {

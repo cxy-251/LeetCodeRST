@@ -10,16 +10,28 @@ import {
   getSceneVisualIds,
   getThemePalette,
   resolveBackgroundMotionConfig,
+  resolveSceneBackgroundEffectId,
   resolveTextMotionConfig,
 } from "@paper-to-video/content-pipeline";
 import {renderTemplateZone} from "@paper-to-video/timeline-engine";
-import type {BackgroundEffectId, RenderManifest, RenderScene} from "@paper-to-video/shared-types";
+import type {
+  BackgroundEffectId,
+  ContentProfileDocument,
+  ContentProfileRegistryDocument,
+  ProductionManifest,
+  RenderManifest,
+  RenderScene,
+  SubtitleSegment,
+  TemplateDocument,
+  WebGLEffectProfileId,
+} from "@paper-to-video/shared-types";
 import type {
   CoverLayoutConfig,
   EffectLayoutResolution,
   EffectRoute,
   LayoutResolution,
   LegacyRedirectMap,
+  ProfileOption,
   RouteCollections,
   RouteLookup,
   TemplateLayoutInput,
@@ -29,6 +41,8 @@ import type {
 
 declare const __LATEST_RUN_FILE__: string;
 declare const __DEFAULT_RENDER_MANIFEST__: string;
+declare const __DEFAULT_PRODUCTION_MANIFEST__: string;
+declare const __CONTENT_PROFILE_REGISTRY__: string;
 declare const __WORKSPACE_ROOT__: string;
 
 const fetchJson = async <T,>(absolutePath: string) => {
@@ -40,6 +54,9 @@ const fetchJson = async <T,>(absolutePath: string) => {
   return (await response.json()) as T;
 };
 
+const resolveWorkspacePath = (targetPath: string) =>
+  targetPath.startsWith("/") ? targetPath : `${__WORKSPACE_ROOT__}/${targetPath}`;
+
 export const buildLocalAssetSrc = (relativePath?: string) => {
   if (!relativePath) {
     return null;
@@ -48,7 +65,47 @@ export const buildLocalAssetSrc = (relativePath?: string) => {
   return `/@fs${__WORKSPACE_ROOT__}/${relativePath}`;
 };
 
+const loadLatestRunDescriptor = async () =>
+  fetchJson<{
+    productionManifestPath: string;
+    renderManifestPath: string;
+  }>(__LATEST_RUN_FILE__);
+
 export const loadLatestManifest = async () => {
+  const latestRun = await loadLatestRunDescriptor();
+  return fetchJson<RenderManifest>(latestRun.renderManifestPath);
+};
+
+export const loadLatestProductionManifest = async () => {
+  const latestRun = await loadLatestRunDescriptor();
+  return fetchJson<ProductionManifest>(latestRun.productionManifestPath);
+};
+
+export const loadLatestContentProfileRegistry = async () =>
+  fetchJson<ContentProfileRegistryDocument>(__CONTENT_PROFILE_REGISTRY__);
+
+export const loadLatestContentProfileDocument = async (profilePath: string) =>
+  fetchJson<ContentProfileDocument>(resolveWorkspacePath(profilePath));
+
+export const loadDefaultProductionManifest = async () =>
+  fetchJson<ProductionManifest>(__DEFAULT_PRODUCTION_MANIFEST__);
+
+export const loadDefaultContentProfileRegistry = async () =>
+  fetchJson<ContentProfileRegistryDocument>(__CONTENT_PROFILE_REGISTRY__);
+
+export const loadDefaultContentProfileDocument = async (profilePath: string) =>
+  fetchJson<ContentProfileDocument>(resolveWorkspacePath(profilePath));
+
+export const loadContentProfileRegistry = async () =>
+  fetchJson<ContentProfileRegistryDocument>(__CONTENT_PROFILE_REGISTRY__);
+
+export const loadContentProfileDocument = async (profilePath: string) =>
+  fetchJson<ContentProfileDocument>(resolveWorkspacePath(profilePath));
+
+export const loadTemplateDocument = async (templatePath: string) =>
+  fetchJson<TemplateDocument>(resolveWorkspacePath(templatePath));
+
+export const loadLatestRenderManifest = async () => {
   const latestRun = await fetchJson<{
     renderManifestPath: string;
   }>(__LATEST_RUN_FILE__);
@@ -64,14 +121,16 @@ export const templateRoutes: TemplateRoute[] = [
     href: "/templates/latest",
     title: "Latest Run Template",
     description: "读取 output/latest-run.json 指向的最新产物，用来验证本地案例和最新模板编排。",
-    loadManifest: loadLatestManifest,
+    loadProductionManifest: loadLatestProductionManifest,
+    loadRenderManifest: loadLatestManifest,
   },
   {
     id: "repo-demo",
     href: "/templates/demo",
     title: "Repository Demo Template",
     description: "读取仓库内默认 render manifest，作为稳定基线模板案例。",
-    loadManifest: loadDefaultManifest,
+    loadProductionManifest: loadDefaultProductionManifest,
+    loadRenderManifest: loadDefaultManifest,
   },
 ];
 
@@ -123,6 +182,170 @@ export const findRoutes = (pathname: string): RouteLookup => ({
 });
 
 export const formatSeconds = (frames: number, fps: number) => `${(frames / fps).toFixed(1)}s`;
+
+export const effectProfileOptions: ProfileOption<WebGLEffectProfileId>[] = [
+  {
+    id: "life-game",
+    label: "Life Game",
+    description: "Launch button + continuous cellular automata evolution.",
+  },
+  {
+    id: "snake-grid",
+    label: "Snake Grid",
+    description: "Grid-based snake pathing as the middle WebGL layer.",
+  },
+  {
+    id: "particle-orbit",
+    label: "Particle Orbit",
+    description: "Centered particle orbit field inspired by Three.js atmosphere studies.",
+  },
+];
+
+const buildSceneSubtitles = (
+  sceneId: string,
+  fromFrame: number,
+  narrationText: string,
+  durationInFrames: number,
+) => {
+  const parts = narrationText
+    .split(/[。！？!?]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  const safeParts = parts.length > 0 ? parts : [narrationText.trim()];
+  const segmentFrames = Math.max(1, Math.floor(durationInFrames / safeParts.length));
+
+  return safeParts.map<SubtitleSegment>((text, index) => {
+    const startFrame = fromFrame + index * segmentFrames;
+    const endFrame =
+      index === safeParts.length - 1 ? fromFrame + durationInFrames : startFrame + segmentFrames;
+
+    return {
+      id: `${sceneId}-subtitle-${index + 1}`,
+      sceneId,
+      text,
+      startFrame,
+      endFrame,
+      emphasisLevel: index === 0 ? 2 : 1,
+    };
+  });
+};
+
+export const resolveContentProfileOptions = (
+  registry: ContentProfileRegistryDocument | null,
+  productionManifest: ProductionManifest | null,
+) => {
+  const options: ProfileOption[] = [];
+  const existing = new Set<string>();
+
+  for (const entry of registry?.profiles ?? []) {
+    existing.add(entry.id);
+    options.push({
+      id: entry.id,
+      label: entry.label ?? entry.id,
+      description: entry.path,
+    });
+  }
+
+  if (productionManifest?.contentProfile?.id && !existing.has(productionManifest.contentProfile.id)) {
+    options.unshift({
+      id: productionManifest.contentProfile.id,
+      label: productionManifest.contentProfile.id,
+      description: productionManifest.contentProfile.path,
+    });
+  }
+
+  return options;
+};
+
+export const resolveContentProfilePath = (
+  registry: ContentProfileRegistryDocument | null,
+  productionManifest: ProductionManifest | null,
+  profileId: string,
+) => {
+  if (!profileId) {
+    return null;
+  }
+
+  const registryEntry = registry?.profiles.find((item) => item.id === profileId);
+  if (registryEntry) {
+    return registryEntry.path;
+  }
+
+  if (productionManifest?.contentProfile?.id === profileId) {
+    return productionManifest.contentProfile.path ?? null;
+  }
+
+  return null;
+};
+
+export const createTemplatePreviewManifest = ({
+  contentProfile,
+  effectProfileId,
+  productionManifest,
+  renderManifest,
+  templateDocument,
+}: {
+  contentProfile: ContentProfileDocument | null;
+  effectProfileId: WebGLEffectProfileId;
+  productionManifest: ProductionManifest;
+  renderManifest: RenderManifest;
+  templateDocument: TemplateDocument;
+}) => {
+  const nextScenes = renderManifest.scenes.map((renderScene) => {
+    const sourceScene = productionManifest.scenes.find((scene) => scene.id === renderScene.id);
+    if (!sourceScene) {
+      return renderScene;
+    }
+
+    const contentProfileScene = contentProfile?.scenes[sourceScene.contentRef];
+    const narrationText = contentProfileScene?.narrationText ?? sourceScene.narrationText ?? "";
+    const nextContent = contentProfileScene?.content ?? renderScene.content;
+
+    return {
+      ...renderScene,
+      backgroundEffectId: resolveSceneBackgroundEffectId(sourceScene, {id: effectProfileId}),
+      content: nextContent,
+      subtitleSegmentIds: buildSceneSubtitles(
+        renderScene.id,
+        renderScene.fromFrame,
+        narrationText,
+        renderScene.durationInFrames,
+      ).map((segment) => segment.id),
+    };
+  });
+
+  const nextSubtitleSegments = nextScenes.flatMap((scene) => {
+    const sourceScene = productionManifest.scenes.find((item) => item.id === scene.id);
+    const contentProfileScene = sourceScene ? contentProfile?.scenes[sourceScene.contentRef] : null;
+    const narrationText = contentProfileScene?.narrationText ?? sourceScene?.narrationText ?? "";
+    return buildSceneSubtitles(scene.id, scene.fromFrame, narrationText, scene.durationInFrames);
+  });
+
+  return {
+    ...renderManifest,
+    projectId: `${productionManifest.projectId}-${effectProfileId}-${contentProfile?.id ?? productionManifest.contentProfile?.id ?? "content"}`,
+    templateDocument,
+    paper: {
+      ...renderManifest.paper,
+      ...(contentProfile?.paper ?? {}),
+    },
+    effectProfile: {id: effectProfileId},
+    scenes: nextScenes,
+    subtitleSegments: nextSubtitleSegments,
+  } satisfies RenderManifest;
+};
+
+export const getEffectStartLabel = (effectId: EffectRoute["effectId"]) => {
+  switch (effectId) {
+    case "snake-grid":
+      return "Start Snake Grid";
+    case "particle-orbit":
+      return "Start Particle Orbit";
+    default:
+      return "Start Life Simulation";
+  }
+};
 
 export const findEffectScene = (manifest: RenderManifest, effectId: BackgroundEffectId): RenderScene => {
   const matched = manifest.scenes.find((scene) => getSceneVisualIds(scene).backgroundEffectId === effectId);

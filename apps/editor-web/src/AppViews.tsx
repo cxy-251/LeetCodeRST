@@ -1,7 +1,13 @@
 import React from "react";
 import {EffectRuntimeAdapter, getTextMotionState} from "@paper-to-video/content-pipeline";
 import type {VisualModuleConfig} from "@paper-to-video/shared-types";
-import {formatSeconds, getEffectDefinition, getSceneLabel, routeCollections} from "./App.service";
+import {
+  effectProfileOptions,
+  formatSeconds,
+  getEffectDefinition,
+  getSceneLabel,
+  routeCollections,
+} from "./App.service";
 import type {
   EffectPreviewState,
   EffectRoute,
@@ -112,13 +118,14 @@ export const PreviewStageView: React.FC<PreviewStageProps> = ({
   manifest,
   palette,
   previewFrame,
+  surfaceVariant = "phone",
   stageBackground,
   visualLayout,
 }) => {
   const backgroundMotion = manifest.modules?.backgroundMotion?.overscanPercent ?? 36;
 
   return (
-    <div className={styles.phoneFrame}>
+    <div className={surfaceVariant === "effect-lab" ? styles.effectFrame : styles.phoneFrame}>
       <div
         className={styles.slidePreview}
         style={{
@@ -163,9 +170,11 @@ export const PreviewStageView: React.FC<PreviewStageProps> = ({
             interactionFrame={interactionFrame}
             effectStartFrame={activationFrame}
             height={672}
-            mode="render"
+            isRunning
+            mode="interactive"
             modules={manifest.modules}
             seed={manifest.seed}
+            simulationFrame={absolutePreviewFrame}
             width={378}
           />
         )}
@@ -218,6 +227,41 @@ export const TemplatePreviewView: React.FC<{
           </div>
         </div>
 
+        <div className={styles.controlPanel}>
+          <div className={styles.controlPanelHeader}>
+            <strong>Template Controls</strong>
+            <span>手动切论文总结文本和 WebGL 特效，验证统一视频模板在不同输入下的可复用性。</span>
+          </div>
+          <label className={styles.controlField}>
+            <span>Paper / Content Profile</span>
+            <select
+              className={styles.effectSelect}
+              onChange={(event) => state.setSelectedContentProfileId(event.target.value)}
+              value={state.selectedContentProfileId}
+            >
+              {state.contentProfileOptions.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className={styles.controlField}>
+            <span>WebGL Effect</span>
+            <select
+              className={styles.effectSelect}
+              onChange={(event) => state.setSelectedEffectProfileId(event.target.value as typeof state.selectedEffectProfileId)}
+              value={state.selectedEffectProfileId}
+            >
+              {state.effectProfileOptions.map((option) => (
+                <option key={option.id} value={option.id}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+
         <div className={styles.sceneList}>
           {manifest.scenes.map((scene, index) => (
             <button
@@ -247,6 +291,7 @@ export const TemplatePreviewView: React.FC<{
           manifest={manifest}
           palette={stageModel.palette}
           previewFrame={previewFrame}
+          surfaceVariant="phone"
           stageBackground={stageModel.stageBackground}
           visualLayout={stageModel.visualLayout}
         >
@@ -350,26 +395,27 @@ export const EffectLabView: React.FC<{
 
       <main className={styles.stage}>
         <div className={styles.effectLabStageLayout}>
-          <PreviewStageView
-            absolutePreviewFrame={stageModel.absolutePreviewFrame}
-            activationFrame={stageModel.activationFrame}
-            continuousEffectId={stageModel.continuousEffectId}
-            interactionFrame={stageModel.interactionFrame}
-            coverImageSrc={stageModel.coverImageSrc}
-            effectId={stageModel.effectId}
-            effectLayer={effectLayer}
-            manifest={manifest}
-            palette={stageModel.palette}
-            previewFrame={simulationFrame}
-            stageBackground={stageModel.stageBackground}
-            visualLayout={stageModel.visualLayout}
-          >
+          <div className={styles.effectStagePresentation}>
             <div className={styles.effectStageCaption}>
               <span>Effect Atom</span>
               <strong>{effectDefinition.id}</strong>
-              <small>{effectDefinition.description}</small>
             </div>
-          </PreviewStageView>
+            <PreviewStageView
+              absolutePreviewFrame={stageModel.absolutePreviewFrame}
+              activationFrame={stageModel.activationFrame}
+              continuousEffectId={stageModel.continuousEffectId}
+              interactionFrame={stageModel.interactionFrame}
+              coverImageSrc={stageModel.coverImageSrc}
+              effectId={stageModel.effectId}
+              effectLayer={effectLayer}
+              manifest={manifest}
+              palette={stageModel.palette}
+              previewFrame={simulationFrame}
+              surfaceVariant="effect-lab"
+              stageBackground={stageModel.stageBackground}
+              visualLayout={stageModel.visualLayout}
+            />
+          </div>
 
           <aside className={styles.effectStageSidebar}>
             <div className={styles.effectControls}>
@@ -437,6 +483,32 @@ export const EffectLabView: React.FC<{
                 </div>
               </div>
             ) : null}
+
+            <div className={styles.effectControlPanel}>
+              <div className={styles.effectControlPanelHeader}>
+                <strong>Effect Family Context</strong>
+                <span>整条视频会通过 effect profile 选择一个 WebGL family，这里先把当前 family 的主体构图调顺。</span>
+              </div>
+              <div className={styles.effectFamilyList}>
+                {effectProfileOptions.map((option) => {
+                  const currentProfileId =
+                    route.effectId === "snake-grid"
+                      ? "snake-grid"
+                      : route.effectId === "particle-orbit"
+                        ? "particle-orbit"
+                        : "life-game";
+                  return (
+                    <div
+                      key={option.id}
+                      className={cx(styles.effectFamilyItem, option.id === currentProfileId && styles.effectFamilyItemActive)}
+                    >
+                      <strong>{option.label}</strong>
+                      <span>{option.description}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </aside>
         </div>
       </main>

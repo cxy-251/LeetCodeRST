@@ -198,6 +198,21 @@ npm run build
    - `npm run lint`
    - `npm run build`
    并已在当前阶段验证通过
+41. `demo-batch.csv` 和 `create-video-manifest` 现已正式支持 `particle-orbit`，批量渲染不会再因为 `effect_profile_id=particle-orbit` 在本地解析阶段直接报错
+42. 模板预览页 `/templates/demo` 与 `/templates/latest` 已新增手动下拉选择：
+   - `Paper / Content Profile`
+   - `WebGL Effect`
+   目标是直接在同一套模板下切论文总结文本和中间层 WebGL family
+43. `editor-web` 模板预览已补齐旧 render manifest 的 `templateDocument` 回填逻辑，不再要求仓库里的默认 demo render manifest 先手工重生成一次才能显示
+44. 浏览器中的模板预览默认不再走 Remotion `useCurrentFrame()` 分支，而是改成网页可运行的 interactive effect 适配路径，避免在 editor 里触发 Remotion-only hook 错误
+45. effect lab 舞台已改成更适合网页的宽幅实验台：
+   - 预览区不再强制沿用 9:16 手机壳
+   - 控制侧栏保留在画面右边
+   - `snake-grid` 启动按钮文案已修正，不再显示 `Start Life Simulation`
+46. effect lab 控件已做第一轮收口：
+   - `life-game / snake-grid` 保留颜色与主体尺寸、节奏的高价值参数
+   - `particle-orbit` 保留变体、形状、分布、轨迹与主体构图参数
+   - 不再暴露过多底层实现参数
 
 ---
 
@@ -389,6 +404,8 @@ npm run build
 9. `particle-orbit` 已从“边缘环绕 + 中央过曝”调整为“中央主视觉优先”，但还需要继续打磨更多中心构图变体
 10. 当前 life-game / snake-grid 的实验页已经去掉列数和行数暴露，改成更贴近视觉结果的“色块主题 + 尺寸 + 节奏”控制
 11. `ThreeLife` 这条链路虽然已经完成核心架构拆分，但 `snake-grid / particle-orbit` 还没有按同样深度拆成纯引擎层，后续应继续统一
+12. `editor-web` 构建当前仍会出现 `chunk size > 500kB` 的 Vite 提示，这不阻塞功能，但后续最好继续做按路由或 effect family 的拆包
+13. effect lab 在更窄网页宽度下虽然已经尽量保持右侧侧栏，但当视口进一步变窄时仍会退化；如果后续要长期面向桌面实验页使用，建议把信息区再进一步上移，给舞台让出更多横向空间
 
 ---
 

@@ -10,8 +10,14 @@ export default defineConfig({
   define: {
     __WORKSPACE_ROOT__: JSON.stringify(workspaceRoot),
     __LATEST_RUN_FILE__: JSON.stringify(path.resolve(workspaceRoot, "output/latest-run.json")),
+    __DEFAULT_PRODUCTION_MANIFEST__: JSON.stringify(
+      path.resolve(workspaceRoot, "data/manifests/demo-paper.json"),
+    ),
     __DEFAULT_RENDER_MANIFEST__: JSON.stringify(
       path.resolve(workspaceRoot, "data/generated-meta/demo-paper-001.render.json"),
+    ),
+    __CONTENT_PROFILE_REGISTRY__: JSON.stringify(
+      path.resolve(workspaceRoot, "data/content-profiles/index.json"),
     ),
   },
   server: {

@@ -1,11 +1,14 @@
 import type {
   BackgroundEffectId,
   BackgroundImageLayoutId,
+  ContentProfileRegistryDocument,
+  ProductionManifest,
   RenderManifest,
   RenderScene,
   SubtitleSegment,
   TextMotionConfig,
   VisualModuleConfig,
+  WebGLEffectProfileId,
 } from "@paper-to-video/shared-types";
 import type {EffectAtomId, EffectControlDefinition, ThemePalette} from "@paper-to-video/content-pipeline";
 
@@ -13,7 +16,8 @@ export type TemplateRoute = {
   description: string;
   href: string;
   id: string;
-  loadManifest: () => Promise<RenderManifest>;
+  loadProductionManifest: () => Promise<ProductionManifest>;
+  loadRenderManifest: () => Promise<RenderManifest>;
   title: string;
 };
 
@@ -30,11 +34,17 @@ export type TemplatePreviewState = {
   activeScene: RenderScene | null;
   activeSceneId: string;
   activeSubtitles: SubtitleSegment[];
+  contentProfileOptions: ProfileOption[];
   errorMessage: string | null;
+  effectProfileOptions: ProfileOption<WebGLEffectProfileId>[];
   loading: boolean;
   manifest: RenderManifest | null;
   previewFrame: number;
+  selectedContentProfileId: string;
+  selectedEffectProfileId: WebGLEffectProfileId;
   setActiveSceneId: (sceneId: string) => void;
+  setSelectedContentProfileId: (profileId: string) => void;
+  setSelectedEffectProfileId: (effectId: WebGLEffectProfileId) => void;
 };
 
 export type EffectPreviewState = {
@@ -117,6 +127,7 @@ export type PreviewStageProps = {
   manifest: RenderManifest;
   palette: ThemePalette;
   previewFrame: number;
+  surfaceVariant?: "phone" | "effect-lab";
   stageBackground: string;
   visualLayout: {
     blurPx: number;
@@ -133,6 +144,12 @@ export type PreviewStageProps = {
 export type RouteLookup = {
   effectRoute: EffectRoute | null;
   templateRoute: TemplateRoute | null;
+};
+
+export type ProfileOption<TValue extends string = string> = {
+  description?: string;
+  id: TValue;
+  label: string;
 };
 
 export type LegacyRedirectMap = Record<string, string>;
@@ -212,6 +229,8 @@ export type RouteCollections = {
   effectRoutes: EffectRouteCollection;
   templateRoutes: TemplateRouteCollection;
 };
+
+export type ContentProfileRegistry = ContentProfileRegistryDocument;
 
 export type PreviewFrameController = {
   frame: number;

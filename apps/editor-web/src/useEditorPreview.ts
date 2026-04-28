@@ -1,39 +1,53 @@
 import {useEffect, useMemo, useState} from "react";
-import type {RenderManifest} from "@paper-to-video/shared-types";
+import type {
+  ContentProfileDocument,
+  ContentProfileRegistryDocument,
+  ProductionManifest,
+  RenderManifest,
+  TemplateDocument,
+  WebGLEffectProfileId,
+} from "@paper-to-video/shared-types";
 import {createModuleOverride, getEffectAtomDefinition} from "@paper-to-video/content-pipeline";
 import {
+  createTemplatePreviewManifest,
+  effectProfileOptions,
   findEffectScene,
   findRoutes,
+  loadContentProfileDocument,
+  loadContentProfileRegistry,
   loadDefaultManifest,
   legacyRedirects,
   loadLatestManifest,
+  loadTemplateDocument,
+  resolveContentProfileOptions,
+  resolveContentProfilePath,
   resolveInitialPath,
 } from "./App.service";
 import type {AppRouteState, EffectPreviewState, EffectRoute, TemplatePreviewState, TemplateRoute} from "./App.types";
 
-const useManifestLoader = (loadManifest: (() => Promise<RenderManifest>) | null) => {
-  const [manifest, setManifest] = useState<RenderManifest | null>(null);
+const useAsyncLoader = <T,>(loadValue: (() => Promise<T>) | null) => {
+  const [value, setValue] = useState<T | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
 
-    if (!loadManifest) {
-      setManifest(null);
+    if (!loadValue) {
+      setValue(null);
       setErrorMessage(null);
       setLoading(false);
       return;
     }
 
     setLoading(true);
-    loadManifest()
-      .then((nextManifest) => {
+    loadValue()
+      .then((nextValue) => {
         if (cancelled) {
           return;
         }
 
-        setManifest(nextManifest);
+        setValue(nextValue);
         setErrorMessage(null);
         setLoading(false);
       })
@@ -43,7 +57,7 @@ const useManifestLoader = (loadManifest: (() => Promise<RenderManifest>) | null)
         }
 
         console.error(error);
-        setManifest(null);
+        setValue(null);
         setErrorMessage(error instanceof Error ? error.message : "Failed to load manifest");
         setLoading(false);
       });
@@ -51,9 +65,9 @@ const useManifestLoader = (loadManifest: (() => Promise<RenderManifest>) | null)
     return () => {
       cancelled = true;
     };
-  }, [loadManifest]);
+  }, [loadValue]);
 
-  return {errorMessage, loading, manifest};
+  return {errorMessage, loading, value};
 };
 
 export const usePreviewRouter = (): AppRouteState => {
@@ -96,18 +110,35 @@ export const usePreviewRouter = (): AppRouteState => {
 };
 
 export const useTemplatePreview = (route: TemplateRoute | null): TemplatePreviewState => {
-  const {errorMessage, loading, manifest} = useManifestLoader(route?.loadManifest ?? null);
+  const {
+    errorMessage: renderErrorMessage,
+    loading: renderLoading,
+    value: renderManifest,
+  } = useAsyncLoader<RenderManifest>(route?.loadRenderManifest ?? null);
+  const {
+    errorMessage: productionErrorMessage,
+    loading: productionLoading,
+    value: productionManifest,
+  } = useAsyncLoader<ProductionManifest>(route?.loadProductionManifest ?? null);
+  const {
+    errorMessage: registryErrorMessage,
+    loading: registryLoading,
+    value: registry,
+  } = useAsyncLoader<ContentProfileRegistryDocument>(route ? loadContentProfileRegistry : null);
   const [activeSceneId, setActiveSceneId] = useState("");
+  const [selectedContentProfileId, setSelectedContentProfileId] = useState("");
+  const [selectedEffectProfileId, setSelectedEffectProfileId] = useState<WebGLEffectProfileId>("life-game");
   const [previewFrame, setPreviewFrame] = useState(0);
 
   useEffect(() => {
-    if (!manifest) {
-      setActiveSceneId("");
+    if (!productionManifest) {
+      setSelectedContentProfileId("");
       return;
     }
 
-    setActiveSceneId(manifest.scenes[0]?.id ?? "");
-  }, [manifest]);
+    setSelectedContentProfileId(productionManifest.contentProfile?.id ?? "");
+    setSelectedEffectProfileId(productionManifest.effectProfile?.id ?? "life-game");
+  }, [productionManifest]);
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -118,6 +149,78 @@ export const useTemplatePreview = (route: TemplateRoute | null): TemplatePreview
       window.clearInterval(timer);
     };
   }, []);
+
+  const selectedContentProfilePath = useMemo(
+    () => resolveContentProfilePath(registry, productionManifest, selectedContentProfileId),
+    [productionManifest, registry, selectedContentProfileId],
+  );
+  const loadSelectedContentProfile = useMemo(
+    () =>
+      selectedContentProfilePath
+        ? () => loadContentProfileDocument(selectedContentProfilePath)
+        : null,
+    [selectedContentProfilePath],
+  );
+  const {
+    errorMessage: contentErrorMessage,
+    loading: contentLoading,
+    value: selectedContentProfile,
+  } = useAsyncLoader<ContentProfileDocument>(loadSelectedContentProfile);
+  const loadTemplateDocumentValue = useMemo(
+    () =>
+      productionManifest?.template?.path
+        ? () => loadTemplateDocument(productionManifest.template.path)
+        : null,
+    [productionManifest?.template?.path],
+  );
+  const {
+    errorMessage: templateErrorMessage,
+    loading: templateLoading,
+    value: templateDocument,
+  } = useAsyncLoader<TemplateDocument>(loadTemplateDocumentValue);
+
+  const contentProfileOptions = useMemo(
+    () => resolveContentProfileOptions(registry, productionManifest),
+    [productionManifest, registry],
+  );
+
+  const manifest = useMemo(() => {
+    if (!renderManifest || !productionManifest) {
+      return null;
+    }
+
+    return createTemplatePreviewManifest({
+      contentProfile: selectedContentProfile,
+      effectProfileId: selectedEffectProfileId,
+      productionManifest,
+      renderManifest,
+      templateDocument: renderManifest.templateDocument ?? templateDocument ?? {
+        id: productionManifest.template.id,
+        version: "fallback",
+        sceneTemplates: [],
+      },
+    });
+  }, [productionManifest, renderManifest, selectedContentProfile, selectedEffectProfileId, templateDocument]);
+
+  const loading =
+    renderLoading ||
+    productionLoading ||
+    registryLoading ||
+    Boolean(productionManifest?.template?.path) && templateLoading ||
+    Boolean(selectedContentProfilePath) && contentLoading;
+  const errorMessage =
+    renderErrorMessage ?? productionErrorMessage ?? registryErrorMessage ?? contentErrorMessage ?? templateErrorMessage ?? null;
+
+  useEffect(() => {
+    if (!manifest) {
+      setActiveSceneId("");
+      return;
+    }
+
+    setActiveSceneId((currentSceneId) =>
+      manifest.scenes.some((scene) => scene.id === currentSceneId) ? currentSceneId : (manifest.scenes[0]?.id ?? ""),
+    );
+  }, [manifest]);
 
   const activeScene = useMemo(
     () => manifest?.scenes.find((scene) => scene.id === activeSceneId) ?? manifest?.scenes[0] ?? null,
@@ -133,17 +236,23 @@ export const useTemplatePreview = (route: TemplateRoute | null): TemplatePreview
     activeScene,
     activeSceneId,
     activeSubtitles,
+    contentProfileOptions,
     errorMessage,
+    effectProfileOptions,
     loading,
     manifest,
     previewFrame,
+    selectedContentProfileId,
+    selectedEffectProfileId,
     setActiveSceneId,
+    setSelectedContentProfileId,
+    setSelectedEffectProfileId,
   };
 };
 
 export const useEffectPreview = (route: EffectRoute | null): EffectPreviewState => {
   const loadManifest = route ? (route.source === "latest" ? loadLatestManifest : loadDefaultManifest) : null;
-  const {errorMessage, loading, manifest} = useManifestLoader(loadManifest);
+  const {errorMessage, loading, value: manifest} = useAsyncLoader<RenderManifest>(loadManifest);
   const [isRunning, setIsRunning] = useState(false);
   const [simulationFrame, setSimulationFrame] = useState(0);
   const [resetToken, setResetToken] = useState(0);

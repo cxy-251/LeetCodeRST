@@ -1,9 +1,12 @@
 import React from "react";
 import {EffectRuntimeAdapter} from "@paper-to-video/content-pipeline";
-import {createEffectStageModel, createTemplateStageModel} from "./App.service";
+import {createEffectStageModel, createTemplateStageModel, getEffectStartLabel} from "./App.service";
 import {EffectLabView, LoadingStateView, TemplatePreviewView, AppIndexView} from "./AppViews";
 import styles from "./App.module.css";
 import {useEffectPreview, usePreviewRouter, useTemplatePreview} from "./useEditorPreview";
+
+const EFFECT_STAGE_WIDTH = 960;
+const EFFECT_STAGE_HEIGHT = 600;
 
 const App: React.FC = () => {
   const {effectRoute, navigate, templateRoute} = usePreviewRouter();
@@ -54,7 +57,7 @@ const App: React.FC = () => {
         interactionFrame={effectStageModel.interactionFrame}
         effectStartFrame={effectStageModel.activationFrame}
         effectId={effectStageModel.effectId}
-        height={672}
+        height={EFFECT_STAGE_HEIGHT}
         isRunning={effectState.isRunning}
         mode="interactive"
         modules={effectStageModel.modules}
@@ -62,11 +65,11 @@ const App: React.FC = () => {
         resetToken={effectState.resetToken}
         seed={effectState.manifest.seed}
         simulationFrame={effectState.simulationFrame}
-        width={378}
+        width={EFFECT_STAGE_WIDTH}
       />
     ) : (
       <button className={styles.effectStageButton} onClick={() => effectState.setIsRunning(true)} type="button">
-        Start Life Simulation
+        {getEffectStartLabel(effectRoute.effectId)}
       </button>
     );
 
