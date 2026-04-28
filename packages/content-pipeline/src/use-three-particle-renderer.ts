@@ -13,6 +13,14 @@ type ParticleSeed = {
   tone: number;
 };
 
+type ParticleLayerKey = "primary" | "secondary" | "accent";
+
+type LayeredParticleSeed = ParticleSeed & {
+  colorLayer: ParticleLayerKey;
+};
+
+type ParticleMeshes = Record<ParticleLayerKey, THREE.InstancedMesh>;
+
 const hashNoise = (seed: number) => {
   const value = Math.sin(seed * 12.9898) * 43758.5453;
   return value - Math.floor(value);
@@ -45,6 +53,18 @@ const buildParticleSeeds = (count: number, seed: number, distribution: ParticleE
   });
 };
 
+const resolveParticleColorLayer = (tone: number): ParticleLayerKey => {
+  if (tone < 0.42) {
+    return "primary";
+  }
+
+  if (tone < 0.78) {
+    return "secondary";
+  }
+
+  return "accent";
+};
+
 const createGeometry = (shape: ParticleEffectConfig["shape"]) => {
   if (shape === "circle") {
     return new THREE.CircleGeometry(0.5, 18);
@@ -65,13 +85,24 @@ export const useThreeParticleRenderer = ({
   const rendererRef = useRef<THREE.WebGLRenderer | null>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
-  const meshRef = useRef<THREE.InstancedMesh | null>(null);
+  const meshesRef = useRef<ParticleMeshes | null>(null);
   const helper = useMemo(() => new THREE.Object3D(), []);
-  const color = useMemo(() => new THREE.Color(), []);
   const config = resolveParticleEffectConfig(modules);
-  const particleSeeds = useMemo(
-    () => buildParticleSeeds(config.particleCount, seed, config.distribution),
+  const particleSeeds = useMemo<LayeredParticleSeed[]>(
+    () =>
+      buildParticleSeeds(config.particleCount, seed, config.distribution).map((particle) => ({
+        ...particle,
+        colorLayer: resolveParticleColorLayer(particle.tone),
+      })),
     [config.distribution, config.particleCount, seed],
+  );
+  const layeredSeeds = useMemo(
+    () => ({
+      primary: particleSeeds.filter((particle) => particle.colorLayer === "primary"),
+      secondary: particleSeeds.filter((particle) => particle.colorLayer === "secondary"),
+      accent: particleSeeds.filter((particle) => particle.colorLayer === "accent"),
+    }),
+    [particleSeeds],
   );
 
   useEffect(() => {
@@ -109,41 +140,67 @@ export const useThreeParticleRenderer = ({
     camera.position.set(0, 0, 22);
 
     const geometry = createGeometry(config.shape);
-    const material = new THREE.MeshBasicMaterial({
-      transparent: true,
-      opacity: 0.76,
-      vertexColors: true,
-      depthWrite: false,
-    });
-    const mesh = new THREE.InstancedMesh(geometry, material, particleSeeds.length);
-    mesh.frustumCulled = false;
-    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    mesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(mesh.count * 3), 3);
-    scene.add(mesh);
+    const createLayerMesh = (count: number, color: string) => {
+      const material = new THREE.MeshBasicMaterial({
+        color,
+        transparent: true,
+        opacity: 0.78,
+        depthWrite: false,
+      });
+      const mesh = new THREE.InstancedMesh(geometry, material, Math.max(1, count));
+      mesh.count = count;
+      mesh.frustumCulled = false;
+      mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+      scene.add(mesh);
+      return mesh;
+    };
+
+    /**
+     * We render one instanced mesh per tone bucket instead of relying on
+     * instanceColor, because that path has proven inconsistent across the
+     * in-app browser and video renderer environments.
+     */
+    const meshes: ParticleMeshes = {
+      primary: createLayerMesh(layeredSeeds.primary.length, config.primaryColor),
+      secondary: createLayerMesh(layeredSeeds.secondary.length, config.secondaryColor),
+      accent: createLayerMesh(layeredSeeds.accent.length, config.accentColor),
+    };
 
     rendererRef.current = renderer;
     sceneRef.current = scene;
     cameraRef.current = camera;
-    meshRef.current = mesh;
+    meshesRef.current = meshes;
 
     return () => {
-      mesh.dispose();
       geometry.dispose();
-      material.dispose();
+      Object.values(meshes).forEach((mesh) => {
+        mesh.dispose();
+        (mesh.material as THREE.MeshBasicMaterial).dispose();
+      });
       renderer.dispose();
       rendererRef.current = null;
       sceneRef.current = null;
       cameraRef.current = null;
-      meshRef.current = null;
+      meshesRef.current = null;
     };
-  }, [config.shape, height, particleSeeds.length, width]);
+  }, [
+    config.accentColor,
+    config.primaryColor,
+    config.secondaryColor,
+    config.shape,
+    height,
+    layeredSeeds.accent.length,
+    layeredSeeds.primary.length,
+    layeredSeeds.secondary.length,
+    width,
+  ]);
 
   useEffect(() => {
     const renderer = rendererRef.current;
     const scene = sceneRef.current;
     const camera = cameraRef.current;
-    const mesh = meshRef.current;
-    if (!renderer || !scene || !camera || !mesh) {
+    const meshes = meshesRef.current;
+    if (!renderer || !scene || !camera || !meshes) {
       return;
     }
 
@@ -151,15 +208,20 @@ export const useThreeParticleRenderer = ({
     camera.aspect = width / height;
     camera.updateProjectionMatrix();
 
-    const primary = new THREE.Color(config.primaryColor);
-    const secondary = new THREE.Color(config.secondaryColor);
-    const accent = new THREE.Color(config.accentColor);
+    (meshes.primary.material as THREE.MeshBasicMaterial).color.set(config.primaryColor);
+    (meshes.secondary.material as THREE.MeshBasicMaterial).color.set(config.secondaryColor);
+    (meshes.accent.material as THREE.MeshBasicMaterial).color.set(config.accentColor);
+
     const frame = simulationFrame ?? absoluteFrame ?? 0;
     const time = frame * config.driftSpeed;
     const aspectScale = width / Math.max(1, height);
+    const layerIndices: Record<ParticleLayerKey, number> = {
+      primary: 0,
+      secondary: 0,
+      accent: 0,
+    };
 
-    mesh.count = particleSeeds.length;
-    particleSeeds.forEach((particle, index) => {
+    particleSeeds.forEach((particle) => {
       const angle = particle.baseAngle + time * particle.speed;
       const distributionFactor =
         config.distribution === "halo" ? 1.18 : config.distribution === "spiral" ? 0.98 : 0.86;
@@ -214,23 +276,19 @@ export const useThreeParticleRenderer = ({
       helper.scale.set(drawSize, drawSize, 1);
       helper.rotation.set(0, 0, config.shape === "diamond" ? Math.PI / 4 : 0);
       helper.updateMatrix();
-      mesh.setMatrixAt(index, helper.matrix);
 
-      const mix = particle.tone;
-      const swatch =
-        mix < 0.42 ? primary.clone() : mix < 0.78 ? secondary.clone() : accent.clone();
-      swatch.lerp(primary, 0.12 + 0.24 * Math.sin(time + particle.phase));
-      mesh.setColorAt(index, swatch);
+      const targetMesh = meshes[particle.colorLayer];
+      const layerIndex = layerIndices[particle.colorLayer];
+      targetMesh.setMatrixAt(layerIndex, helper.matrix);
+      layerIndices[particle.colorLayer] += 1;
     });
 
-    mesh.instanceMatrix.needsUpdate = true;
-    if (mesh.instanceColor) {
-      mesh.instanceColor.needsUpdate = true;
-    }
+    Object.values(meshes).forEach((mesh) => {
+      mesh.instanceMatrix.needsUpdate = true;
+    });
     renderer.render(scene, camera);
   }, [
     absoluteFrame,
-    color,
     config.accentColor,
     config.driftSpeed,
     config.distribution,

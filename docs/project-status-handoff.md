@@ -693,3 +693,42 @@ npm run produce:video data/manifests/demo-paper.local.json
 3. `video/*.mp4`
 
 确认它们是否真的引用了本地真人图。
+
+---
+
+## 18. 2026-04-28 Effect Lab Sizing + Particle Orbit Default Pass
+
+This pass fixed two active effect-lab usability issues.
+
+What changed:
+
+1. The effect lab stage now fills its frame correctly instead of showing a large outer shell with a smaller inner preview.
+   - `apps/editor-web/src/App.module.css`
+   - `effectFrame` now uses an explicit aspect ratio plus flex layout
+   - `slidePreview` now stretches to the full available surface
+2. The effect lab stage layout was rebalanced for web usage.
+   - the presentation column now gets more width
+   - the right control sidebar stays embedded, but the stage no longer feels portrait-constrained
+   - narrow widths now use a more reasonable stage/sidebar split and a better fallback stack
+3. `particle-orbit` default visuals were retuned.
+   - smaller particle size
+   - lower default density
+   - lighter pastel palette
+   - wider spread and softer motion defaults
+4. `particle-orbit` color rendering was moved away from per-instance color updates.
+   - it now uses three layered instanced meshes (`primary` / `secondary` / `accent`)
+   - this matches the more reliable material-layer coloring strategy already used in other effect families
+   - this was done because the prior instance-color path produced black particles in the in-app browser
+
+Verification:
+
+1. `npm run lint`
+2. `npm run build`
+3. Browser check:
+   - `/effects/life-game`
+   - `/effects/particle-orbit`
+
+Observed outcome:
+
+1. `life-game` stage sizing is now visually coherent inside the effect lab frame.
+2. `particle-orbit` defaults are no longer black and oversized.
