@@ -5,8 +5,8 @@ import {EffectLabView, LoadingStateView, TemplatePreviewView, AppIndexView} from
 import styles from "./App.module.css";
 import {useEffectPreview, usePreviewRouter, useTemplatePreview} from "./useEditorPreview";
 
-const EFFECT_STAGE_WIDTH = 960;
-const EFFECT_STAGE_HEIGHT = 600;
+const EFFECT_STAGE_WIDTH = 540;
+const EFFECT_STAGE_HEIGHT = 960;
 
 const App: React.FC = () => {
   const {effectRoute, navigate, templateRoute} = usePreviewRouter();

@@ -732,3 +732,25 @@ Observed outcome:
 
 1. `life-game` stage sizing is now visually coherent inside the effect lab frame.
 2. `particle-orbit` defaults are no longer black and oversized.
+
+---
+
+## 19. 2026-04-28 Effect Lab Portrait Stage Follow-up
+
+This follow-up aligned the effect lab stage with the intended portrait-first preview workflow.
+
+What changed:
+
+1. The effect lab runtime canvas was switched back to a portrait render size.
+   - `apps/editor-web/src/App.tsx`
+   - `540 x 960` is now used for interactive effect-layer rendering
+2. The effect lab layout now reserves a portrait-width presentation column instead of stretching the stage area horizontally.
+   - `apps/editor-web/src/App.module.css`
+   - stage column now uses a constrained portrait-friendly width
+   - effect frame is back to a `9 / 16` aspect ratio
+   - narrow-width breakpoints keep the stage portrait instead of switching to a landscape shell
+
+Why this was needed:
+
+1. The previous responsive pass fixed inner-surface fill, but it also made the lab read like a horizontal demo panel.
+2. For this project, the effect lab is meant to validate short-video effect behavior, so the default stage should stay portrait-oriented.

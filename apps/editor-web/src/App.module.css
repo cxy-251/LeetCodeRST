@@ -318,11 +318,12 @@
 }
 
 .effectLabStageLayout {
-  width: min(100%, 1280px);
+  width: min(100%, 1040px);
   display: grid;
-  grid-template-columns: minmax(0, 1.7fr) minmax(240px, 0.78fr);
+  grid-template-columns: minmax(320px, 420px) minmax(220px, 360px);
   gap: 24px;
   align-items: start;
+  justify-content: center;
 }
 
 .effectStagePresentation {
@@ -330,6 +331,7 @@
   flex-direction: column;
   gap: 12px;
   min-width: 0;
+  width: min(100%, 420px);
 }
 
 .effectStageSidebar {
@@ -359,7 +361,7 @@
 
 .effectFrame {
   width: 100%;
-  aspect-ratio: 16 / 10;
+  aspect-ratio: 9 / 16;
   padding: 16px;
   border-radius: 34px;
   background:
@@ -608,7 +610,7 @@
 @media (max-width: 720px) {
   .effectLabStageLayout {
     width: 100%;
-    grid-template-columns: minmax(0, 1.78fr) minmax(180px, 0.72fr);
+    grid-template-columns: minmax(250px, 320px) minmax(160px, 1fr);
     gap: 12px;
   }
 
@@ -622,7 +624,7 @@
   .effectFrame {
     padding: 12px;
     border-radius: 28px;
-    aspect-ratio: 4 / 3;
+    aspect-ratio: 9 / 16;
   }
 
   .slidePreview {
@@ -643,15 +645,15 @@
   }
 
   .effectStagePresentation {
-    width: min(560px, 100%);
+    width: min(420px, 100%);
   }
 
   .effectFrame {
-    width: min(560px, 100%);
-    aspect-ratio: 16 / 10;
+    width: min(420px, 100%);
+    aspect-ratio: 9 / 16;
   }
 
   .effectStageSidebar {
-    width: min(560px, 100%);
+    width: min(420px, 100%);
   }
 }
