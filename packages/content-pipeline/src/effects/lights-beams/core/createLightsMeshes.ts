@@ -11,7 +11,7 @@ const createLayer = ({
 }: {
   color: string;
   count: number;
-  geometry: THREE.PlaneGeometry;
+  geometry: THREE.SphereGeometry;
   layerName: "accent" | "core" | "glow";
   opacity: number;
   root: THREE.Group;
@@ -22,25 +22,17 @@ const createLayer = ({
     opacity,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
-    side: THREE.DoubleSide,
   });
 
-  const planes = [0, (Math.PI * 2) / 3, (Math.PI * 4) / 3].map((rotationOffset) => {
-    const mesh = new THREE.InstancedMesh(geometry, material, Math.max(1, count));
-    mesh.count = count;
-    mesh.frustumCulled = false;
-    mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    root.add(mesh);
-
-    return {
-      mesh,
-      rotationOffset,
-    };
-  });
+  const mesh = new THREE.InstancedMesh(geometry, material, Math.max(1, count));
+  mesh.count = count;
+  mesh.frustumCulled = false;
+  mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  root.add(mesh);
 
   return {
     material,
-    planes,
+    mesh,
     name: layerName,
   } as const;
 };
@@ -58,7 +50,7 @@ export const createLightsMeshes = ({
   glowColor: string;
   root: THREE.Group;
 }): ThreeLightsMeshBundle => {
-  const beamGeometry = new THREE.PlaneGeometry(1, 1, 1, 1);
+  const orbGeometry = new THREE.SphereGeometry(1, 24, 24);
 
   const floorTiles = Array.from({length: 4}, (_, index) => {
     const geometry = new THREE.PlaneGeometry(30, 18, 44, 42);
@@ -79,7 +71,7 @@ export const createLightsMeshes = ({
     const wireMaterial = new THREE.MeshBasicMaterial({
       color: glowColor,
       transparent: true,
-      opacity: 0.32,
+      opacity: 0.34,
       depthWrite: false,
       wireframe: true,
     });
@@ -97,49 +89,49 @@ export const createLightsMeshes = ({
     };
   });
 
-  const horizonGeometry = new THREE.CircleGeometry(14, 64);
+  const horizonGeometry = new THREE.CircleGeometry(10, 64);
   const horizonMaterial = new THREE.MeshBasicMaterial({
     color: accentColor,
     transparent: true,
-    opacity: 0.22,
+    opacity: 0.16,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
     side: THREE.DoubleSide,
   });
   const horizonMesh = new THREE.Mesh(horizonGeometry, horizonMaterial);
-  horizonMesh.position.set(0, 7.2, -30);
-  horizonMesh.scale.set(1.6, 0.75, 1);
+  horizonMesh.position.set(0, 5.4, -30);
+  horizonMesh.scale.set(1.8, 0.72, 1);
   root.add(horizonMesh);
 
   return {
-    beamGeometry,
+    orbGeometry,
     floorTiles,
     horizonGeometry,
     horizonMaterial,
     horizonMesh,
-    signature: `beams:${beamCount}`,
+    signature: `orbs:${beamCount}`,
     glow: createLayer({
       color: glowColor,
       count: beamCount,
-      geometry: beamGeometry,
+      geometry: orbGeometry,
       layerName: "glow",
-      opacity: 0.14,
+      opacity: 0.12,
       root,
     }),
     core: createLayer({
       color: coreColor,
       count: beamCount,
-      geometry: beamGeometry,
+      geometry: orbGeometry,
       layerName: "core",
-      opacity: 0.42,
+      opacity: 0.35,
       root,
     }),
     accent: createLayer({
       color: accentColor,
       count: beamCount,
-      geometry: beamGeometry,
+      geometry: orbGeometry,
       layerName: "accent",
-      opacity: 0.24,
+      opacity: 0.22,
       root,
     }),
   };

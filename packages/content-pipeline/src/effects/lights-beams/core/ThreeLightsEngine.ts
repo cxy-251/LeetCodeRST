@@ -78,8 +78,8 @@ export class ThreeLightsEngine {
     this.scene.add(this.root);
     this.scene.fog = new THREE.FogExp2(0x071320, 0.026);
     this.camera = new THREE.PerspectiveCamera(34, options.width / options.height, 0.1, 100);
-    this.camera.position.set(0, 2.15, 7.4);
-    this.camera.lookAt(0, 0.35, -14.5);
+    this.camera.position.set(0, 1.55, 6.8);
+    this.camera.lookAt(0, -0.4, -12.5);
 
     const defaultConfig = resolveLightsEffectConfig(undefined);
     this.bundle = createLightsMeshes({
@@ -120,29 +120,28 @@ export class ThreeLightsEngine {
     this.bundle.horizonMaterial.color.set(config.accentColor);
 
     const frame = Math.max(0, params.simulationFrame ?? params.absoluteFrame);
-    const time = frame * config.motionSpeed * 13.5;
+    const time = frame * config.motionSpeed * 10.5;
     this.lookAtTarget.set(
-      Math.sin(time * 0.21) * 0.7,
-      0.14 + Math.sin(time * 0.46) * 0.12,
-      -14.5 + Math.sin(time * 0.18) * 2.8,
+      Math.sin(time * 0.16) * 0.5,
+      -0.58 + Math.sin(time * 0.28) * 0.08,
+      -13.2 + Math.sin(time * 0.11) * 2.2,
     );
     this.camera.position.set(
-      Math.sin(time * 0.25) * 1.2,
-      2.05 + Math.cos(time * 0.16) * 0.16,
-      7.2 + Math.sin(time * 0.12) * 0.3,
+      Math.sin(time * 0.17) * 0.48,
+      1.48 + Math.cos(time * 0.13) * 0.08,
+      6.85 + Math.sin(time * 0.08) * 0.18,
     );
     this.camera.lookAt(this.lookAtTarget);
     this.bundle.horizonMesh.position.set(
-      Math.sin(time * 0.12) * 0.45,
-      7 + Math.cos(time * 0.17) * 0.18,
-      -29.5,
+      Math.sin(time * 0.08) * 0.24,
+      4.8 + Math.cos(time * 0.11) * 0.12,
+      -28,
     );
 
     updateLightsInstances({
       config,
       floorTiles: this.bundle.floorTiles,
       frame,
-      height: this.height,
       helper: this.helper,
       meshes: {
         accent: this.bundle.accent,
@@ -150,7 +149,6 @@ export class ThreeLightsEngine {
         glow: this.bundle.glow,
       },
       seeds,
-      width: this.width,
     });
 
     this.renderer.render(this.scene, this.camera);
@@ -166,13 +164,13 @@ export class ThreeLightsEngine {
   }
 
   private ensureBundle(config: ReturnType<typeof resolveLightsEffectConfig>) {
-    const signature = `beams:${config.beamCount}`;
+    const signature = `orbs:${config.beamCount}`;
     if (this.bundle.signature === signature) {
       return;
     }
 
     this.root.clear();
-    this.bundle.beamGeometry.dispose();
+    this.bundle.orbGeometry.dispose();
     this.bundle.floorTiles.forEach((tile) => {
       tile.geometry.dispose();
       tile.fillMaterial.dispose();
@@ -180,15 +178,9 @@ export class ThreeLightsEngine {
     });
     this.bundle.horizonGeometry.dispose();
     this.bundle.horizonMaterial.dispose();
-    this.bundle.glow.planes.forEach((plane) => {
-      plane.mesh.dispose();
-    });
-    this.bundle.core.planes.forEach((plane) => {
-      plane.mesh.dispose();
-    });
-    this.bundle.accent.planes.forEach((plane) => {
-      plane.mesh.dispose();
-    });
+    this.bundle.glow.mesh.dispose();
+    this.bundle.core.mesh.dispose();
+    this.bundle.accent.mesh.dispose();
     this.bundle.glow.material.dispose();
     this.bundle.core.material.dispose();
     this.bundle.accent.material.dispose();

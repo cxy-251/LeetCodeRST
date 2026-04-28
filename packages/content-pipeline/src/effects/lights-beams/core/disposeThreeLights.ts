@@ -12,7 +12,7 @@ export const disposeThreeLights = ({
   root: THREE.Group;
   scene: THREE.Scene;
 }) => {
-  bundle.beamGeometry?.dispose();
+  bundle.orbGeometry?.dispose();
   bundle.floorTiles?.forEach((tile) => {
     tile.geometry?.dispose();
     tile.fillMaterial?.dispose();
@@ -20,15 +20,9 @@ export const disposeThreeLights = ({
   });
   bundle.horizonGeometry?.dispose();
   bundle.horizonMaterial?.dispose();
-  bundle.glow?.planes?.forEach((plane) => {
-    plane.mesh?.dispose();
-  });
-  bundle.core?.planes?.forEach((plane) => {
-    plane.mesh?.dispose();
-  });
-  bundle.accent?.planes?.forEach((plane) => {
-    plane.mesh?.dispose();
-  });
+  bundle.glow?.mesh?.dispose();
+  bundle.core?.mesh?.dispose();
+  bundle.accent?.mesh?.dispose();
   bundle.glow?.material?.dispose();
   bundle.core?.material?.dispose();
   bundle.accent?.material?.dispose();

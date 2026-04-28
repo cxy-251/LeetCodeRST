@@ -785,6 +785,36 @@ Verification:
 
 ---
 
+## 23. 2026-04-29 Lights Ground-Orb Pass
+
+This pass corrected the visual interpretation of the `Lights` reference again.
+
+What changed:
+
+1. The middle-layer subject for `lights-beams` is now a field of glow orbs anchored to the ripple terrain instead of upright beam pillars.
+   - `packages/content-pipeline/src/effects/lights-beams/core/createLightsMeshes.ts`
+   - `packages/content-pipeline/src/effects/lights-beams/core/updateLightsInstances.ts`
+2. Each orb now breathes in place with layered glow / core / accent spheres.
+   - the same instanced optimization pattern is preserved
+   - motion is driven through shared `renderFrame()` like the other effect families
+3. Orb positions are sampled against the same floor wave function that deforms the ground tiles.
+   - this keeps them visually attached to the terrain instead of floating as a detached overlay
+4. The camera remains low and perspective-based, but it now looks into a terrain-lightscape rather than a corridor of vertical columns.
+   - `packages/content-pipeline/src/effects/lights-beams/core/ThreeLightsEngine.ts`
+
+Why this matters:
+
+1. The previous pass improved depth and terrain, but the subject still read as stage beams.
+2. The requested target is closer to grounded glowing orbs that pulse over a reactive landscape, so the family needed to move away from pillar geometry and toward breathing light nodes.
+
+Verification:
+
+1. `npm run lint`
+2. `npm run build`
+3. Browser-checked `/effects/lights-beams`
+
+---
+
 ## 22. 2026-04-29 Lights Beams Perspective Rework
 
 This follow-up changed `lights-beams` from a flat central burst into a more scene-like interpretation of the Hello Enjoy `Lights` reference.

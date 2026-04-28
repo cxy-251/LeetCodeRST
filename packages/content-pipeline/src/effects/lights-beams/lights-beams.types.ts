@@ -29,14 +29,9 @@ export type LightsBeamSeed = {
 
 export type LightsMeshLayerName = "accent" | "core" | "glow";
 
-export type LightsMeshPlane = {
-  mesh: THREE.InstancedMesh;
-  rotationOffset: number;
-};
-
 export type LightsMeshLayer = {
   material: THREE.MeshBasicMaterial;
-  planes: LightsMeshPlane[];
+  mesh: THREE.InstancedMesh;
   name: LightsMeshLayerName;
 };
 
@@ -52,7 +47,7 @@ export type ThreeLightsFloorTile = {
 export type ThreeLightsMeshBundle = {
   accent: LightsMeshLayer;
   core: LightsMeshLayer;
-  beamGeometry: THREE.PlaneGeometry;
+  orbGeometry: THREE.SphereGeometry;
   floorTiles: ThreeLightsFloorTile[];
   glow: LightsMeshLayer;
   horizonGeometry: THREE.CircleGeometry;
@@ -65,11 +60,9 @@ export type UpdateLightsInstancesInput = {
   config: LightsEffectConfig;
   floorTiles: ThreeLightsMeshBundle["floorTiles"];
   frame: number;
-  height: number;
   helper: THREE.Object3D;
   meshes: Pick<ThreeLightsMeshBundle, "accent" | "core" | "glow">;
   seeds: LightsBeamSeed[];
-  width: number;
 };
 
 export type WebLightsLayerProps = {
