@@ -94,7 +94,9 @@ const BackgroundEffectLayer: React.FC<{
     effectId === "cellular-life" ||
     effectId === "cellular-launch" ||
     effectId === "snake-grid" ||
-    effectId === "particle-orbit"
+    effectId === "particle-orbit" ||
+    effectId === "rubiks-launch" ||
+    effectId === "rubiks-auto-solve"
   ) {
     return (
       <EffectRuntimeAdapter
@@ -105,7 +107,9 @@ const BackgroundEffectLayer: React.FC<{
             ? "snake-grid"
             : continuousEffectId === "particle-orbit"
               ? "particle-orbit"
-              : "cellular-life"
+              : continuousEffectId === "rubiks-auto-solve"
+                ? "rubiks-auto-solve"
+                : "cellular-life"
         }
         interactionFrame={interactionFrame}
         effectStartFrame={effectStartFrame}

@@ -36,7 +36,9 @@ export const resolveLaunchCueOffsets = ({
 
 export const resolveLifeGameActivationFrame = (manifest: RenderManifest) => {
   const launchScene =
-    manifest.scenes.find((scene) => scene.backgroundEffectId === "cellular-launch") ?? null;
+    manifest.scenes.find(
+      (scene) => scene.backgroundEffectId === "cellular-launch" || scene.backgroundEffectId === "rubiks-launch",
+    ) ?? null;
 
   if (!launchScene) {
     return 0;
@@ -47,7 +49,9 @@ export const resolveLifeGameActivationFrame = (manifest: RenderManifest) => {
 
 export const resolveLifeGameInteractionFrame = (manifest: RenderManifest) => {
   const launchScene =
-    manifest.scenes.find((scene) => scene.backgroundEffectId === "cellular-launch") ?? null;
+    manifest.scenes.find(
+      (scene) => scene.backgroundEffectId === "cellular-launch" || scene.backgroundEffectId === "rubiks-launch",
+    ) ?? null;
 
   if (!launchScene) {
     return 0;
@@ -63,6 +67,10 @@ export const resolveContinuousEffectId = (manifest: RenderManifest): BackgroundE
 
   if (manifest.effectProfile?.id === "particle-orbit") {
     return "particle-orbit";
+  }
+
+  if (manifest.effectProfile?.id === "rubiks-solver") {
+    return "rubiks-auto-solve";
   }
 
   return "cellular-life";

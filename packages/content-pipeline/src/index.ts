@@ -12,11 +12,13 @@ export {
   DEFAULT_BACKGROUND_MOTION,
   DEFAULT_CELLULAR_EFFECT,
   DEFAULT_PARTICLE_EFFECT,
+  DEFAULT_RUBIKS_EFFECT,
   DEFAULT_TEXT_MOTIONS,
   DEFAULT_TYPOGRAPHY_SCALE,
   resolveBackgroundMotionConfig,
   resolveCellularEffectConfig,
   resolveParticleEffectConfig,
+  resolveRubiksEffectConfig,
   resolveTextMotionConfig,
   resolveTypographyScaleConfig,
 } from "./module-api";
@@ -30,6 +32,16 @@ export {
   useThreeLifeEngine,
   WebThreeLifeLayer,
 } from "./effects/three-life";
+export {
+  buildRubiksSequenceCache,
+  createRubiksCubelets,
+  disposeThreeRubiks,
+  RemotionRubiksLayer,
+  ThreeRubiksEngine,
+  updateRubiksCubelets,
+  useThreeRubiksEngine,
+  WebRubiksLayer,
+} from "./effects/rubiks-cube";
 export type {
   RemotionThreeLifeLayerProps,
   ThreeLifeEngineOptions,
@@ -38,6 +50,16 @@ export type {
   ThreeLifeRenderParams,
   WebThreeLifeLayerProps,
 } from "./effects/three-life";
+export type {
+  RemotionRubiksLayerProps,
+  RubiksCubieState,
+  RubiksMove,
+  RubiksSequenceCache,
+  ThreeRubiksCubeletBundle,
+  ThreeRubiksEngineOptions,
+  ThreeRubiksRenderParams,
+  WebRubiksLayerProps,
+} from "./effects/rubiks-cube";
 export {getTextMotionState} from "./text-motion";
 export {ThreeLifeEffect} from "./three-life-effect";
 export {ThreeParticleEffect} from "./three-particle-effect";

@@ -26,17 +26,30 @@ export const resolveSceneBackgroundEffectId = (
   effectProfile?: EffectProfileConfig,
 ): BackgroundEffectId => {
   const resolved = scene.backgroundEffectId ?? LEGACY_EFFECT_MAP[scene.backgroundPresetId] ?? "none";
-  if (resolved === "cellular-launch") {
+  if (resolved === "rubiks-launch") {
     return resolved;
   }
 
-  if (resolved === "cellular-life" || resolved === "snake-grid" || resolved === "particle-orbit") {
+  if (resolved === "cellular-launch") {
+    return effectProfile?.id === "rubiks-solver" ? "rubiks-launch" : resolved;
+  }
+
+  if (
+    resolved === "cellular-life" ||
+    resolved === "snake-grid" ||
+    resolved === "particle-orbit" ||
+    resolved === "rubiks-auto-solve"
+  ) {
     if (effectProfile?.id === "snake-grid") {
       return "snake-grid";
     }
 
     if (effectProfile?.id === "particle-orbit") {
       return "particle-orbit";
+    }
+
+    if (effectProfile?.id === "rubiks-solver") {
+      return "rubiks-auto-solve";
     }
 
     return "cellular-life";

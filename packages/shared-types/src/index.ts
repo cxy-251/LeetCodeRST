@@ -51,9 +51,15 @@ export type BackgroundEffectId =
   | "cellular-launch"
   | "cellular-life"
   | "snake-grid"
-  | "particle-orbit";
+  | "particle-orbit"
+  | "rubiks-launch"
+  | "rubiks-auto-solve";
 
-export type WebGLEffectProfileId = "life-game" | "snake-grid" | "particle-orbit";
+export type WebGLEffectProfileId =
+  | "life-game"
+  | "snake-grid"
+  | "particle-orbit"
+  | "rubiks-solver";
 
 export type EffectProfileConfig = {
   id: WebGLEffectProfileId;
@@ -140,11 +146,21 @@ export type ParticleEffectConfig = {
   accentColor: string;
 };
 
+export type RubiksEffectConfig = {
+  turnFrames: number;
+  holdFrames: number;
+  cubeScale: number;
+  cubieGap: number;
+  floatAmplitude: number;
+  cameraDrift: number;
+};
+
 export type VisualModuleConfig = {
   textMotions?: Partial<Record<TextMotionId, Partial<TextMotionConfig>>>;
   backgroundMotion?: Partial<BackgroundMotionConfig>;
   cellularEffect?: Partial<CellularEffectConfig>;
   particleEffect?: Partial<ParticleEffectConfig>;
+  rubiksEffect?: Partial<RubiksEffectConfig>;
   typography?: Partial<TypographyScaleConfig>;
 };
 

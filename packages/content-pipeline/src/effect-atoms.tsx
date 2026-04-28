@@ -1,10 +1,12 @@
 import React from "react";
 import {RemotionThreeLifeLayer, WebThreeLifeLayer} from "./effects/three-life";
+import {RemotionRubiksLayer, WebRubiksLayer} from "./effects/rubiks-cube";
 import {ThreeSnakeEffect} from "./three-snake-effect";
 import {ThreeParticleEffect} from "./three-particle-effect";
 import {
   LIFE_EFFECT_CONTROLS,
   PARTICLE_EFFECT_CONTROLS,
+  RUBIKS_EFFECT_CONTROLS,
   SNAKE_EFFECT_CONTROLS,
   baseLayerStyle,
   createModuleOverride,
@@ -45,6 +47,45 @@ const renderLifeLayer = ({
 
   return (
     <RemotionThreeLifeLayer
+      absoluteFrame={absoluteFrame}
+      activationFrame={activationFrame}
+      height={height}
+      modules={modules}
+      seed={seed}
+      simulationFrame={simulationFrame}
+      width={width}
+    />
+  );
+};
+
+const renderRubiksLayer = ({
+  absoluteFrame,
+  activationFrame,
+  height,
+  isRunning,
+  mode,
+  modules,
+  resetToken,
+  seed,
+  simulationFrame,
+  width,
+}: EffectAtomRuntimeProps) => {
+  if (mode === "interactive") {
+    return (
+      <WebRubiksLayer
+        activationFrame={activationFrame}
+        height={height}
+        isRunning={Boolean(isRunning)}
+        modules={modules}
+        resetToken={resetToken}
+        seed={seed}
+        width={width}
+      />
+    );
+  }
+
+  return (
+    <RemotionRubiksLayer
       absoluteFrame={absoluteFrame}
       activationFrame={activationFrame}
       height={height}
@@ -126,6 +167,32 @@ const ParticleOrbitAtom: React.FC<EffectAtomRuntimeProps> = ({
   );
 };
 
+const RubiksAutoSolveAtom: React.FC<EffectAtomRuntimeProps> = ({
+  absoluteFrame,
+  activationFrame,
+  height,
+  isRunning,
+  mode,
+  modules,
+  resetToken,
+  seed,
+  simulationFrame,
+  width,
+}) => {
+  return renderRubiksLayer({
+    absoluteFrame,
+    activationFrame,
+    height,
+    isRunning,
+    mode,
+    modules,
+    resetToken,
+    seed,
+    simulationFrame,
+    width,
+  });
+};
+
 const CellularLaunchAtom: React.FC<EffectAtomRuntimeProps> = ({
   absoluteFrame,
   activationFrame,
@@ -177,6 +244,21 @@ const CellularLaunchAtom: React.FC<EffectAtomRuntimeProps> = ({
       );
     }
 
+    if (continuousEffectId === "rubiks-auto-solve") {
+      return renderRubiksLayer({
+        absoluteFrame,
+        activationFrame,
+        height,
+        isRunning,
+        mode,
+        modules,
+        resetToken,
+        seed,
+        simulationFrame,
+        width,
+      });
+    }
+
     return renderLifeLayer({
       absoluteFrame,
       activationFrame,
@@ -200,6 +282,67 @@ const CellularLaunchAtom: React.FC<EffectAtomRuntimeProps> = ({
           style={{
             ...baseLayerStyle,
             background: `radial-gradient(circle at ${buttonOrigin.x * 100}% ${buttonOrigin.y * 100}%, rgba(87,216,196,0.14) 0%, transparent 16%)`,
+          }}
+        />
+      )}
+
+      <button
+        onClick={onPrimaryAction}
+        style={{
+          ...launchButtonBaseStyle,
+          background: getLaunchButtonBackground(ready || clicked),
+          transform: `translate(${(buttonOrigin.x - 0.5) * 110}px, ${(buttonOrigin.y - 0.5) * 110}px) scale(${buttonScale})`,
+        }}
+        type="button"
+      >
+        {buttonLabel}
+      </button>
+    </>
+  );
+};
+
+const RubiksLaunchAtom: React.FC<EffectAtomRuntimeProps> = ({
+  absoluteFrame,
+  activationFrame,
+  effectStartFrame,
+  height,
+  interactionFrame,
+  isRunning,
+  mode,
+  modules,
+  onPrimaryAction,
+  resetToken,
+  seed,
+  simulationFrame,
+  width,
+}) => {
+  const pulseFrame = simulationFrame ?? absoluteFrame;
+  const {buttonOrigin, pulse} = getLaunchButtonState(pulseFrame);
+  const clicked = interactionFrame !== undefined ? absoluteFrame >= interactionFrame : Boolean(isRunning);
+  const ready = effectStartFrame !== undefined ? absoluteFrame >= effectStartFrame : Boolean(isRunning);
+  const buttonScale = ready ? 0.94 : clicked ? pulse * 0.92 : pulse;
+  const buttonLabel = ready ? "Solving Cube" : clicked ? "Aligning Layers" : "Auto Solve Cube";
+
+  return (
+    <>
+      {ready ? (
+        renderRubiksLayer({
+          absoluteFrame,
+          activationFrame,
+          height,
+          isRunning,
+          mode,
+          modules,
+          resetToken,
+          seed,
+          simulationFrame,
+          width,
+        })
+      ) : (
+        <div
+          style={{
+            ...baseLayerStyle,
+            background: `radial-gradient(circle at ${buttonOrigin.x * 100}% ${buttonOrigin.y * 100}%, rgba(103,216,255,0.18) 0%, transparent 18%)`,
           }}
         />
       )}
@@ -277,6 +420,20 @@ export const EFFECT_ATOMS: Record<EffectAtomId, EffectAtomDefinition> = {
     description: "受常见 Three.js 粒子星云案例启发的轨道粒子层，已经调整为更强调画面中央主视觉的构图。",
     Component: ParticleOrbitAtom,
     controls: PARTICLE_EFFECT_CONTROLS,
+  },
+  "rubiks-launch": {
+    id: "rubiks-launch",
+    title: "Rubiks Launch",
+    description: "用于模板第二页的启动场景，按钮触发后切入自动解魔方的主体演化。",
+    Component: RubiksLaunchAtom,
+    controls: RUBIKS_EFFECT_CONTROLS,
+  },
+  "rubiks-auto-solve": {
+    id: "rubiks-auto-solve",
+    title: "Rubiks Auto Solve",
+    description: "受 Stewart Smith Rubik's Cube Explorer 启发的自动解魔方 WebGL 中间层。",
+    Component: RubiksAutoSolveAtom,
+    controls: RUBIKS_EFFECT_CONTROLS,
   },
 };
 

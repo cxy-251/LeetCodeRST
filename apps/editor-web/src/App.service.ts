@@ -162,6 +162,14 @@ export const effectRoutes: EffectRoute[] = [
     effectId: "particle-orbit",
     source: "default",
   },
+  {
+    id: "effect-rubiks-solver",
+    href: "/effects/rubiks-solver",
+    title: "Rubiks Solver Effect",
+    description: "单独查看自动解魔方型 WebGL 中间层原子，用来承接更偏空间结构和解题机械感的 Three.js 案例。",
+    effectId: "rubiks-auto-solve",
+    source: "default",
+  },
 ];
 
 export const legacyRedirects: LegacyRedirectMap = {
@@ -201,6 +209,11 @@ export const effectProfileOptions: ProfileOption<WebGLEffectProfileId>[] = [
     id: "particle-orbit",
     label: "Particle Orbit",
     description: "Centered particle orbit field inspired by Three.js atmosphere studies.",
+  },
+  {
+    id: "rubiks-solver",
+    label: "Rubiks Solver",
+    description: "Auto-solving 3D cube effect inspired by Stewart Smith's Rubik's Cube Explorer.",
   },
 ];
 
@@ -345,6 +358,8 @@ export const getEffectStartLabel = (effectId: EffectRoute["effectId"]) => {
       return "Start Snake Grid";
     case "particle-orbit":
       return "Start Particle Orbit";
+    case "rubiks-auto-solve":
+      return "Start Cube Solver";
     default:
       return "Start Life Simulation";
   }
@@ -491,6 +506,10 @@ export const createEffectStageModel = ({
       particleEffect: {
         ...(manifest.modules?.particleEffect ?? {}),
         ...(moduleOverrides?.particleEffect ?? {}),
+      },
+      rubiksEffect: {
+        ...(manifest.modules?.rubiksEffect ?? {}),
+        ...(moduleOverrides?.rubiksEffect ?? {}),
       },
       backgroundMotion: {
         ...(manifest.modules?.backgroundMotion ?? {}),

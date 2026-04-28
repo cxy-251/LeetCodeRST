@@ -176,6 +176,8 @@ agentic-world-modeling,data/images/prepared/source-9x16.jpg,life-game
   效果：第二页按钮启动后，整条视频的主 WebGL 层使用贪吃蛇网格。
 - `particle-orbit`
   效果：整条视频使用粒子轨道型 WebGL 中间层，风格更接近常见 Three.js 粒子氛围案例。
+- `rubiks-solver`
+  效果：整条视频使用自动解魔方型 WebGL 中间层，风格更偏空间结构和机械解题感。
 
 也就是说：
 
@@ -207,6 +209,10 @@ agentic-world-modeling,data/images/prepared/source-9x16.jpg,life-game
   效果：贪吃蛇网格特效，当前使用 `Three.js + WebGL`。
 - `particle-orbit`
   效果：粒子轨道特效，当前使用 `Three.js + WebGL`。
+- `rubiks-launch`
+  效果：用于第二页按钮启动 Rubik's Cube 自动解算。
+- `rubiks-auto-solve`
+  效果：自动解魔方主体层，当前使用 `Three.js + WebGL`。
 
 ### 独立 effect atom 页面
 
@@ -215,6 +221,7 @@ agentic-world-modeling,data/images/prepared/source-9x16.jpg,life-game
 - `/effects/life-game`
 - `/effects/snake-grid`
 - `/effects/particle-orbit`
+- `/effects/rubiks-solver`
 
 这类页面的目标不是展示完整模板，而是单独验证“背景与文本之间的中间层特效原子”。
 
@@ -237,6 +244,8 @@ agentic-world-modeling,data/images/prepared/source-9x16.jpg,life-game
   可调：三组颜色的 H/S/L、色块尺寸、移动间隔、cell padding
 - `particle-orbit`
   可调：variant、粒子形状、分布方式、运动轨迹、粒子数量、点大小、轨道半径、旋涡强度、漂移速度
+- `rubiks-solver`
+  可调：turnFrames、holdFrames、cubeScale、cubieGap、cameraDrift
 
 这层控件当前只作用于实验页，用来快速验证主体构图和运动节奏，不会直接改写全局 manifest。
 

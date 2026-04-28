@@ -217,6 +217,29 @@ npm run build
    - `/effects/*` 默认读取仓库基线 manifest，而不是 `latest run`
    - 避免实验页被最新一次视频运行的临时参数污染
 48. `Effect Family Context` 说明块已从特效实验页移除，当前 family 选择只保留在组合模板页的手动下拉里
+49. 已新增 `rubiks-solver` WebGL 特效家族，灵感来自 Stewart Smith 的 Rubik's Cube Explorer：
+   - 新增纯 Three.js 引擎目录：`packages/content-pipeline/src/effects/rubiks-cube/`
+   - 网页端走 `requestAnimationFrame`
+   - Remotion 端走同一个 `renderFrame()` 核心入口
+   - 当前 effect lab 路由：`/effects/rubiks-solver`
+50. `rubiks-solver` 已接入现有 effect family 体系：
+   - `effectProfile.id = "rubiks-solver"` 可用于整条视频
+   - `backgroundEffectId` 已支持 `rubiks-launch / rubiks-auto-solve`
+   - 模板页下拉已可切换 Rubik's family
+   - batch CSV / `create-video-manifest` / `prepare:latest-ai-batch` 已接受该 profile
+51. `compose-manifest` 与 `generate-audio` 已扩展 launch cue 计算，不再只认 `cellular-launch`，Rubik's launch 也能沿用同一套启动时机逻辑
+52. 当前 `rubiks-solver` 默认控制参数已收敛为高价值项：
+   - `turnFrames`
+   - `holdFrames`
+   - `cubeScale`
+   - `cubieGap`
+   - `cameraDrift`
+53. 当前已完成浏览器内验证：
+   - `/effects/rubiks-solver` 路由可打开
+   - 点击 `Start Cube Solver` 后可看到自动解魔方主体层
+   - `npm run lint`
+   - `npm run build`
+   均已通过
 
 ---
 
@@ -258,6 +281,7 @@ npm run build
 
 - `apps/video-renderer/src/index.tsx`
 - `apps/video-renderer/src/Root.tsx`
+- `packages/content-pipeline/src/effects/rubiks-cube/`
 - `apps/video-renderer/src/Video.tsx`
 
 ### Lego 架构

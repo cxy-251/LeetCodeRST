@@ -257,7 +257,8 @@ export const useEffectPreview = (route: EffectRoute | null): EffectPreviewState 
   const [simulationFrame, setSimulationFrame] = useState(0);
   const [resetToken, setResetToken] = useState(0);
   const [moduleOverrides, setModuleOverrides] = useState({} as NonNullable<RenderManifest["modules"]>);
-  const usesEngineDrivenFrames = route?.effectId === "cellular-life";
+  const usesEngineDrivenFrames =
+    route?.effectId === "cellular-life" || route?.effectId === "rubiks-auto-solve";
 
   useEffect(() => {
     /**
@@ -272,9 +273,9 @@ export const useEffectPreview = (route: EffectRoute | null): EffectPreviewState 
 
   useEffect(() => {
     /**
-     * Life-game now renders through its own RAF-driven WebGL engine, so we
-     * only keep the old React timer for the other effect labs that still rely
-     * on a simple externally-driven simulation frame.
+     * Life-game and Rubik's solver both own their own RAF-driven WebGL loops,
+     * so we only keep the old React timer for effect labs that still rely on a
+     * simple externally-driven simulation frame.
      */
     if (!isRunning || usesEngineDrivenFrames) {
       return;

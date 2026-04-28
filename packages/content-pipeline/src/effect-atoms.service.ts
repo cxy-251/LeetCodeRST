@@ -242,6 +242,64 @@ export const PARTICLE_EFFECT_CONTROLS: EffectControlDefinition[] = [
   },
 ];
 
+export const RUBIKS_EFFECT_CONTROLS: EffectControlDefinition[] = [
+  {
+    id: "rubiks-turn-frames",
+    kind: "range",
+    label: "Turn Frames",
+    description: "Controls how long each face turn takes while the cube is solving itself.",
+    section: "rubiksEffect",
+    field: "turnFrames",
+    min: 6,
+    max: 24,
+    step: 1,
+  },
+  {
+    id: "rubiks-hold-frames",
+    kind: "range",
+    label: "Hold Frames",
+    description: "Adds a small pause between turns so the solve path remains readable.",
+    section: "rubiksEffect",
+    field: "holdFrames",
+    min: 0,
+    max: 16,
+    step: 1,
+  },
+  {
+    id: "rubiks-scale",
+    kind: "range",
+    label: "Cube Scale",
+    description: "Scales the cube up or down while keeping it centered as the main subject.",
+    section: "rubiksEffect",
+    field: "cubeScale",
+    min: 0.7,
+    max: 1.5,
+    step: 0.01,
+  },
+  {
+    id: "rubiks-gap",
+    kind: "range",
+    label: "Cubie Gap",
+    description: "Controls the spacing between cubelets, from compact to slightly exploded.",
+    section: "rubiksEffect",
+    field: "cubieGap",
+    min: 0.02,
+    max: 0.24,
+    step: 0.01,
+  },
+  {
+    id: "rubiks-drift",
+    kind: "range",
+    label: "Camera Drift",
+    description: "Controls the amount of gentle camera-like sway around the solving cube.",
+    section: "rubiksEffect",
+    field: "cameraDrift",
+    min: 0,
+    max: 0.32,
+    step: 0.01,
+  },
+];
+
 export const SNAKE_EFFECT_CONTROLS: EffectControlDefinition[] = [
   {
     id: "snake-primary-hue",

@@ -147,7 +147,7 @@ export const readVideoBatchRows = async (csvPath: string): Promise<VideoBatchRow
       throw new Error(`Row ${rowNumber} is missing content_profile_id`);
     }
 
-    if (!["life-game", "snake-grid", "particle-orbit"].includes(effectProfileId)) {
+    if (!["life-game", "snake-grid", "particle-orbit", "rubiks-solver"].includes(effectProfileId)) {
       throw new Error(`Row ${rowNumber} has unsupported effect_profile_id: ${effectProfileId}`);
     }
 

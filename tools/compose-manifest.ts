@@ -239,8 +239,9 @@ const main = async () => {
       interactionFrameOffset: enterFrames,
       effectStartFrameOffset: enterFrames,
     };
+    const resolvedBackgroundEffectId = resolveSceneBackgroundEffectId(scene, manifest.effectProfile);
     const timing =
-      resolveSceneBackgroundEffectId(scene, manifest.effectProfile) === "cellular-launch"
+      resolvedBackgroundEffectId === "cellular-launch" || resolvedBackgroundEffectId === "rubiks-launch"
         ? {
             ...baseTiming,
             ...resolveLaunchCueOffsets({
@@ -257,7 +258,7 @@ const main = async () => {
       durationInFrames,
       backgroundPresetId: scene.backgroundPresetId,
       backgroundImageLayoutId: resolveSceneBackgroundImageLayoutId(scene, coverCycleIndex),
-      backgroundEffectId: resolveSceneBackgroundEffectId(scene, manifest.effectProfile),
+      backgroundEffectId: resolvedBackgroundEffectId,
       motionPresetId: scene.motionPresetId,
       imageAssetIds: scene.imageAssetId ? [scene.imageAssetId] : [],
       audioSegmentIds: [`audio-${scene.id}`],

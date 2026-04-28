@@ -2,6 +2,7 @@ import type {
   BackgroundMotionConfig,
   CellularEffectConfig,
   ParticleEffectConfig,
+  RubiksEffectConfig,
   TextMotionConfig,
   TextMotionId,
   TypographyScaleConfig,
@@ -107,6 +108,15 @@ export const DEFAULT_PARTICLE_EFFECT: ParticleEffectConfig = {
   primaryColor: "#9dffea",
   secondaryColor: "#9bcfff",
   accentColor: "#ffd5ee",
+};
+
+export const DEFAULT_RUBIKS_EFFECT: RubiksEffectConfig = {
+  turnFrames: 12,
+  holdFrames: 5,
+  cubeScale: 0.88,
+  cubieGap: 0.06,
+  floatAmplitude: 0.12,
+  cameraDrift: 0.12,
 };
 
 const CELLULAR_COLOR_PRESETS: Record<
@@ -330,5 +340,14 @@ export const resolveParticleEffectConfig = (
     ...DEFAULT_PARTICLE_EFFECT,
     ...PARTICLE_VARIANTS[variant],
     ...overrides,
+  };
+};
+
+export const resolveRubiksEffectConfig = (
+  modules?: VisualModuleConfig,
+): RubiksEffectConfig => {
+  return {
+    ...DEFAULT_RUBIKS_EFFECT,
+    ...(modules?.rubiksEffect ?? {}),
   };
 };

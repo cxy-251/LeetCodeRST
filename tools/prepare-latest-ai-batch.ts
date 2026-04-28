@@ -54,7 +54,7 @@ const parseArgs = (args: string[]) => {
     batchOutput: take("--batch-output")
       ? path.resolve(take("--batch-output") as string)
       : path.resolve("data/video-batches/generated/latest-ai-batch.csv"),
-    effectCycle: take("--effect-cycle") ?? "life-game,snake-grid",
+    effectCycle: take("--effect-cycle") ?? "life-game,snake-grid,particle-orbit,rubiks-solver",
   };
 };
 
