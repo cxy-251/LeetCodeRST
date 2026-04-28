@@ -241,7 +241,9 @@ const main = async () => {
     };
     const resolvedBackgroundEffectId = resolveSceneBackgroundEffectId(scene, manifest.effectProfile);
     const timing =
-      resolvedBackgroundEffectId === "cellular-launch" || resolvedBackgroundEffectId === "rubiks-launch"
+      resolvedBackgroundEffectId === "cellular-launch" ||
+      resolvedBackgroundEffectId === "lights-launch" ||
+      resolvedBackgroundEffectId === "rubiks-launch"
         ? {
             ...baseTiming,
             ...resolveLaunchCueOffsets({

@@ -167,6 +167,8 @@ export const PreviewStageView: React.FC<PreviewStageProps> = ({
                   ? "snake-grid"
                   : continuousEffectId === "particle-orbit"
                     ? "particle-orbit"
+                    : continuousEffectId === "lights-beams"
+                      ? "lights-beams"
                     : continuousEffectId === "rubiks-auto-solve"
                       ? "rubiks-auto-solve"
                       : "cellular-life"

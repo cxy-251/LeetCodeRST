@@ -26,18 +26,27 @@ export const resolveSceneBackgroundEffectId = (
   effectProfile?: EffectProfileConfig,
 ): BackgroundEffectId => {
   const resolved = scene.backgroundEffectId ?? LEGACY_EFFECT_MAP[scene.backgroundPresetId] ?? "none";
-  if (resolved === "rubiks-launch") {
+  if (resolved === "rubiks-launch" || resolved === "lights-launch") {
     return resolved;
   }
 
   if (resolved === "cellular-launch") {
-    return effectProfile?.id === "rubiks-solver" ? "rubiks-launch" : resolved;
+    if (effectProfile?.id === "rubiks-solver") {
+      return "rubiks-launch";
+    }
+
+    if (effectProfile?.id === "lights-beams") {
+      return "lights-launch";
+    }
+
+    return resolved;
   }
 
   if (
     resolved === "cellular-life" ||
     resolved === "snake-grid" ||
     resolved === "particle-orbit" ||
+    resolved === "lights-beams" ||
     resolved === "rubiks-auto-solve"
   ) {
     if (effectProfile?.id === "snake-grid") {
@@ -48,13 +57,16 @@ export const resolveSceneBackgroundEffectId = (
       return "particle-orbit";
     }
 
+    if (effectProfile?.id === "lights-beams") {
+      return "lights-beams";
+    }
+
     if (effectProfile?.id === "rubiks-solver") {
       return "rubiks-auto-solve";
     }
 
     return "cellular-life";
   }
-
   return resolved;
 };
 

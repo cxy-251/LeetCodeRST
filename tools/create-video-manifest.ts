@@ -30,7 +30,7 @@ const main = async () => {
     throw new Error("Missing required argument: --content-profile <profile-id>");
   }
 
-  if (!["life-game", "snake-grid", "particle-orbit", "rubiks-solver"].includes(options.effectProfileId)) {
+  if (!["life-game", "snake-grid", "particle-orbit", "lights-beams", "rubiks-solver"].includes(options.effectProfileId)) {
     throw new Error(`Unsupported effect profile: ${options.effectProfileId}`);
   }
 

@@ -26,7 +26,7 @@ export type EffectAtomRuntimeProps = {
 
 export type EffectControlSection = keyof Pick<
   VisualModuleConfig,
-  "backgroundMotion" | "cellularEffect" | "particleEffect" | "rubiksEffect"
+  "backgroundMotion" | "cellularEffect" | "particleEffect" | "lightsEffect" | "rubiksEffect"
 >;
 
 export type EffectControlOption = {

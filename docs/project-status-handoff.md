@@ -804,3 +804,35 @@ Why this matters:
 1. Previously, the web preview was laying out text directly inside a much narrower DOM box than the final render.
 2. Exported video still looked "old but correct" because Remotion was using the real output dimensions.
 3. After this pass, template preview and exported video should be much closer again, while effect-lab behavior remains isolated.
+
+---
+
+## 21. 2026-04-29 Lights Beams WebGL Effect Family
+
+This pass added a new WebGL effect family inspired by the Hello Enjoy `Lights` interaction.
+
+What changed:
+
+1. A new `lights-beams` effect family was added under:
+   - `packages/content-pipeline/src/effects/lights-beams/`
+   - pure engine in `core/`
+   - shared web / Remotion adapters in `react/`
+2. The new family uses a single pure `ThreeLightsEngine` for both interactive preview and Remotion rendering.
+   - web preview uses `requestAnimationFrame`
+   - Remotion uses the same `renderFrame()` entry point
+3. New supported IDs were added across the stack:
+   - `effectProfile.id = "lights-beams"`
+   - `backgroundEffectId = "lights-launch" | "lights-beams"`
+4. The effect registry, runtime adapter, editor routes, template dropdown, batch CSV validation, and manifest creation flow now all recognize `lights-beams`.
+5. The effect lab route is now available at:
+   - `/effects/lights-beams`
+
+Why this matters:
+
+1. The project now has another non-game, center-composed WebGL family that is closer to polished Three.js showcase work.
+2. The family was added through the same modular boundary as the previous effect families, so future Three.js showcase recreations can follow the same pattern.
+
+Verification:
+
+1. `npm run lint`
+2. `npm run build`

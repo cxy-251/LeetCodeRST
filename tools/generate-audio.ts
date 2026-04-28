@@ -207,7 +207,11 @@ const rebuildTimeline = (
       },
     };
 
-    if (scene.backgroundEffectId === "cellular-launch" || scene.backgroundEffectId === "rubiks-launch") {
+    if (
+      scene.backgroundEffectId === "cellular-launch" ||
+      scene.backgroundEffectId === "lights-launch" ||
+      scene.backgroundEffectId === "rubiks-launch"
+    ) {
       Object.assign(nextScene.timing, resolveLaunchCueOffsets({scene: nextScene, modules: renderManifest.modules}));
     }
 

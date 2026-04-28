@@ -163,6 +163,14 @@ export const effectRoutes: EffectRoute[] = [
     source: "default",
   },
   {
+    id: "effect-lights-beams",
+    href: "/effects/lights-beams",
+    title: "Lights Beams Effect",
+    description: "单独查看发光束线型 WebGL 中间层原子，用于承接更偏舞台灯束、音乐可视化和沉浸式空间氛围的案例方向。",
+    effectId: "lights-beams",
+    source: "default",
+  },
+  {
     id: "effect-rubiks-solver",
     href: "/effects/rubiks-solver",
     title: "Rubiks Solver Effect",
@@ -209,6 +217,11 @@ export const effectProfileOptions: ProfileOption<WebGLEffectProfileId>[] = [
     id: "particle-orbit",
     label: "Particle Orbit",
     description: "Centered particle orbit field inspired by Three.js atmosphere studies.",
+  },
+  {
+    id: "lights-beams",
+    label: "Lights Beams",
+    description: "Centered luminous beam choreography inspired by the Hello Enjoy Lights interaction.",
   },
   {
     id: "rubiks-solver",
@@ -358,6 +371,8 @@ export const getEffectStartLabel = (effectId: EffectRoute["effectId"]) => {
       return "Start Snake Grid";
     case "particle-orbit":
       return "Start Particle Orbit";
+    case "lights-beams":
+      return "Ignite Lights";
     case "rubiks-auto-solve":
       return "Start Cube Solver";
     default:
@@ -506,6 +521,10 @@ export const createEffectStageModel = ({
       particleEffect: {
         ...(manifest.modules?.particleEffect ?? {}),
         ...(moduleOverrides?.particleEffect ?? {}),
+      },
+      lightsEffect: {
+        ...(manifest.modules?.lightsEffect ?? {}),
+        ...(moduleOverrides?.lightsEffect ?? {}),
       },
       rubiksEffect: {
         ...(manifest.modules?.rubiksEffect ?? {}),

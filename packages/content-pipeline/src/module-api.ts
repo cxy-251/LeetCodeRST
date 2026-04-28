@@ -1,6 +1,7 @@
 import type {
   BackgroundMotionConfig,
   CellularEffectConfig,
+  LightsEffectConfig,
   ParticleEffectConfig,
   RubiksEffectConfig,
   TextMotionConfig,
@@ -108,6 +109,19 @@ export const DEFAULT_PARTICLE_EFFECT: ParticleEffectConfig = {
   primaryColor: "#9dffea",
   secondaryColor: "#9bcfff",
   accentColor: "#ffd5ee",
+};
+
+export const DEFAULT_LIGHTS_EFFECT: LightsEffectConfig = {
+  variant: "fan",
+  beamCount: 20,
+  beamLength: 0.42,
+  beamThickness: 0.055,
+  orbitRadius: 0.22,
+  motionSpeed: 0.012,
+  spread: 0.52,
+  primaryColor: "#9efbf0",
+  secondaryColor: "#ffe7ba",
+  accentColor: "#c5d9ff",
 };
 
 export const DEFAULT_RUBIKS_EFFECT: RubiksEffectConfig = {
@@ -272,6 +286,45 @@ const PARTICLE_VARIANTS: Record<
   },
 };
 
+const LIGHTS_VARIANTS: Record<
+  LightsEffectConfig["variant"],
+  Partial<LightsEffectConfig>
+> = {
+  pulse: {
+    beamCount: 16,
+    beamLength: 0.38,
+    beamThickness: 0.048,
+    orbitRadius: 0.18,
+    motionSpeed: 0.01,
+    spread: 0.36,
+    primaryColor: "#aefcf7",
+    secondaryColor: "#fff4d8",
+    accentColor: "#d4e2ff",
+  },
+  fan: {
+    beamCount: 20,
+    beamLength: 0.42,
+    beamThickness: 0.055,
+    orbitRadius: 0.22,
+    motionSpeed: 0.012,
+    spread: 0.52,
+    primaryColor: "#9efbf0",
+    secondaryColor: "#ffe7ba",
+    accentColor: "#c5d9ff",
+  },
+  bloom: {
+    beamCount: 28,
+    beamLength: 0.5,
+    beamThickness: 0.064,
+    orbitRadius: 0.26,
+    motionSpeed: 0.014,
+    spread: 0.68,
+    primaryColor: "#9efef5",
+    secondaryColor: "#ffc6e3",
+    accentColor: "#fff5d6",
+  },
+};
+
 export const resolveTextMotionConfig = (
   motionId: TextMotionId,
   modules?: VisualModuleConfig,
@@ -349,5 +402,17 @@ export const resolveRubiksEffectConfig = (
   return {
     ...DEFAULT_RUBIKS_EFFECT,
     ...(modules?.rubiksEffect ?? {}),
+  };
+};
+
+export const resolveLightsEffectConfig = (
+  modules?: VisualModuleConfig,
+): LightsEffectConfig => {
+  const overrides = modules?.lightsEffect ?? {};
+  const variant = overrides.variant ?? DEFAULT_LIGHTS_EFFECT.variant;
+  return {
+    ...DEFAULT_LIGHTS_EFFECT,
+    ...LIGHTS_VARIANTS[variant],
+    ...overrides,
   };
 };

@@ -54,6 +54,7 @@ export const EffectRuntimeAdapter: React.FC<EffectRuntimeAdapterProps> = ({
         effectId === "aurora" ||
         effectId === "snake-grid" ||
         effectId === "particle-orbit" ||
+        effectId === "lights-beams" ||
         effectId === "rubiks-auto-solve"
       : isRunning;
   const effectiveSimulationFrame =

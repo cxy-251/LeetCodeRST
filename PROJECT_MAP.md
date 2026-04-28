@@ -29,6 +29,8 @@
   - 文本、背景、特效、时间 cue 的核心管线。
 - `packages/content-pipeline/src/effects/three-life/`
   - `ThreeLife` 的纯引擎与 React 适配层。
+- `packages/content-pipeline/src/effects/lights-beams/`
+  - `Lights` 风格发光束线特效族的纯引擎与 React 适配层。
 - `packages/content-pipeline/src/effects/rubiks-cube/`
   - Rubik's Cube 自动解算特效族的纯引擎与 React 适配层。
 - `packages/atomic-ui/src/`

@@ -1,9 +1,11 @@
 import React from "react";
 import {RemotionThreeLifeLayer, WebThreeLifeLayer} from "./effects/three-life";
+import {RemotionLightsLayer, WebLightsLayer} from "./effects/lights-beams";
 import {RemotionRubiksLayer, WebRubiksLayer} from "./effects/rubiks-cube";
 import {ThreeSnakeEffect} from "./three-snake-effect";
 import {ThreeParticleEffect} from "./three-particle-effect";
 import {
+  LIGHTS_EFFECT_CONTROLS,
   LIFE_EFFECT_CONTROLS,
   PARTICLE_EFFECT_CONTROLS,
   RUBIKS_EFFECT_CONTROLS,
@@ -97,6 +99,45 @@ const renderRubiksLayer = ({
   );
 };
 
+const renderLightsLayer = ({
+  absoluteFrame,
+  activationFrame,
+  height,
+  isRunning,
+  mode,
+  modules,
+  resetToken,
+  seed,
+  simulationFrame,
+  width,
+}: EffectAtomRuntimeProps) => {
+  if (mode === "interactive") {
+    return (
+      <WebLightsLayer
+        activationFrame={activationFrame}
+        height={height}
+        isRunning={Boolean(isRunning)}
+        modules={modules}
+        resetToken={resetToken}
+        seed={seed}
+        width={width}
+      />
+    );
+  }
+
+  return (
+    <RemotionLightsLayer
+      absoluteFrame={absoluteFrame}
+      activationFrame={activationFrame}
+      height={height}
+      modules={modules}
+      seed={seed}
+      simulationFrame={simulationFrame}
+      width={width}
+    />
+  );
+};
+
 const CellularLifeAtom: React.FC<EffectAtomRuntimeProps> = ({
   absoluteFrame,
   activationFrame,
@@ -165,6 +206,32 @@ const ParticleOrbitAtom: React.FC<EffectAtomRuntimeProps> = ({
       width={width}
     />
   );
+};
+
+const LightsBeamsAtom: React.FC<EffectAtomRuntimeProps> = ({
+  absoluteFrame,
+  activationFrame,
+  height,
+  isRunning,
+  mode,
+  modules,
+  resetToken,
+  seed,
+  simulationFrame,
+  width,
+}) => {
+  return renderLightsLayer({
+    absoluteFrame,
+    activationFrame,
+    height,
+    isRunning,
+    mode,
+    modules,
+    resetToken,
+    seed,
+    simulationFrame,
+    width,
+  });
 };
 
 const RubiksAutoSolveAtom: React.FC<EffectAtomRuntimeProps> = ({
@@ -242,6 +309,21 @@ const CellularLaunchAtom: React.FC<EffectAtomRuntimeProps> = ({
           width={width}
         />
       );
+    }
+
+    if (continuousEffectId === "lights-beams") {
+      return renderLightsLayer({
+        absoluteFrame,
+        activationFrame,
+        height,
+        isRunning,
+        mode,
+        modules,
+        resetToken,
+        seed,
+        simulationFrame,
+        width,
+      });
     }
 
     if (continuousEffectId === "rubiks-auto-solve") {
@@ -362,6 +444,67 @@ const RubiksLaunchAtom: React.FC<EffectAtomRuntimeProps> = ({
   );
 };
 
+const LightsLaunchAtom: React.FC<EffectAtomRuntimeProps> = ({
+  absoluteFrame,
+  activationFrame,
+  effectStartFrame,
+  height,
+  interactionFrame,
+  isRunning,
+  mode,
+  modules,
+  onPrimaryAction,
+  resetToken,
+  seed,
+  simulationFrame,
+  width,
+}) => {
+  const pulseFrame = simulationFrame ?? absoluteFrame;
+  const {buttonOrigin, pulse} = getLaunchButtonState(pulseFrame);
+  const clicked = interactionFrame !== undefined ? absoluteFrame >= interactionFrame : Boolean(isRunning);
+  const ready = effectStartFrame !== undefined ? absoluteFrame >= effectStartFrame : Boolean(isRunning);
+  const buttonScale = ready ? 0.94 : clicked ? pulse * 0.9 : pulse;
+  const buttonLabel = ready ? "Lights Running" : clicked ? "Charging Beams" : "Ignite Lights";
+
+  return (
+    <>
+      {ready ? (
+        renderLightsLayer({
+          absoluteFrame,
+          activationFrame,
+          height,
+          isRunning,
+          mode,
+          modules,
+          resetToken,
+          seed,
+          simulationFrame,
+          width,
+        })
+      ) : (
+        <div
+          style={{
+            ...baseLayerStyle,
+            background: `radial-gradient(circle at ${buttonOrigin.x * 100}% ${buttonOrigin.y * 100}%, rgba(158,251,240,0.2) 0%, transparent 18%)`,
+          }}
+        />
+      )}
+
+      <button
+        onClick={onPrimaryAction}
+        style={{
+          ...launchButtonBaseStyle,
+          background: getLaunchButtonBackground(ready || clicked),
+          transform: `translate(${(buttonOrigin.x - 0.5) * 110}px, ${(buttonOrigin.y - 0.5) * 110}px) scale(${buttonScale})`,
+        }}
+        type="button"
+      >
+        {buttonLabel}
+      </button>
+    </>
+  );
+};
+
 const AuroraAtom: React.FC = () => {
   return <div style={{...baseLayerStyle, ...getAuroraBackground()}} />;
 };
@@ -420,6 +563,20 @@ export const EFFECT_ATOMS: Record<EffectAtomId, EffectAtomDefinition> = {
     description: "受常见 Three.js 粒子星云案例启发的轨道粒子层，已经调整为更强调画面中央主视觉的构图。",
     Component: ParticleOrbitAtom,
     controls: PARTICLE_EFFECT_CONTROLS,
+  },
+  "lights-launch": {
+    id: "lights-launch",
+    title: "Lights Launch",
+    description: "用于模板启动页的灯束点亮入口，按钮触发后切入持续的中心束线演化。",
+    Component: LightsLaunchAtom,
+    controls: LIGHTS_EFFECT_CONTROLS,
+  },
+  "lights-beams": {
+    id: "lights-beams",
+    title: "Lights Beams",
+    description: "受 Hello Enjoy《Lights》氛围启发的发光束线 WebGL 中间层，强调中心区域的主体演化。",
+    Component: LightsBeamsAtom,
+    controls: LIGHTS_EFFECT_CONTROLS,
   },
   "rubiks-launch": {
     id: "rubiks-launch",
