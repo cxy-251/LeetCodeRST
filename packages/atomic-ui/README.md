@@ -1,19 +1,40 @@
-# atomic-ui
+# 目录职责
 
-原子组件库。
+`packages/atomic-ui/` 是原子展示组件库。
 
-原则：
+# 允许内容
 
-1. 单一职责
-2. 开闭原则
-3. 只负责展示
-4. 不直接感知模板、引擎、时间轴
+- 只负责展示的原子组件
+- 原子组件样式
+- 与原子组件直接相关的类型
 
-当前组件：
+# 禁止内容
 
-- `CoverAvatarAtom`
-- `SceneKickerAtom`
-- `SceneTitleAtom`
-- `SceneBodyAtom`
-- `SceneBulletsAtom`
-- `SubtitlePanelAtom`
+- 模板编排逻辑
+- 时间轴逻辑
+- WebGL 引擎实现
+- 业务脚本读取逻辑
+
+# 修改前必须阅读
+
+- `../README.md`
+- `../../README.md`
+- `../../PROJECT_MAP.md`
+- `../../AGENTS.md`
+
+# 命名规则
+
+- 组件命名：`XxxAtom`
+- 类型命名：`XxxAtomProps`
+- 源码目录：`src/`
+
+# 边界说明
+
+这里只放“怎么显示”。
+至于“什么时候显示、按什么顺序显示”，应由 `timeline-engine` 和模板配置决定。
+
+# Codex 规则
+
+- 修改本目录文件前必须阅读本 README。
+- 保持单一职责与开闭原则。
+- 不允许把模板引擎或 scene 业务判断写进原子组件。
