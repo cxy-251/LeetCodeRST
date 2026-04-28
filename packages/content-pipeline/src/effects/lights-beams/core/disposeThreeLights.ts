@@ -12,13 +12,16 @@ export const disposeThreeLights = ({
   root: THREE.Group;
   scene: THREE.Scene;
 }) => {
-  bundle.geometry.dispose();
+  bundle.beamGeometry.dispose();
+  bundle.floorGeometry.dispose();
   bundle.glow.mesh.dispose();
   bundle.core.mesh.dispose();
   bundle.accent.mesh.dispose();
   bundle.glow.material.dispose();
   bundle.core.material.dispose();
   bundle.accent.material.dispose();
+  bundle.floorFillMaterial.dispose();
+  bundle.floorWireMaterial.dispose();
   root.clear();
   scene.clear();
   renderer.dispose();

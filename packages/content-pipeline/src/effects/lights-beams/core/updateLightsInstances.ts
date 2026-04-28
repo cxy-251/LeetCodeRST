@@ -3,101 +3,106 @@ import type {UpdateLightsInstancesInput} from "../lights-beams.types";
 type LayerTuning = {
   length: number;
   thickness: number;
-  zJitter: number;
+  yOffset: number;
 };
 
 const LAYER_TUNING: Record<"accent" | "core" | "glow", LayerTuning> = {
   glow: {
-    length: 1.7,
-    thickness: 1.85,
-    zJitter: -0.08,
+    length: 1.55,
+    thickness: 1.7,
+    yOffset: 0,
   },
   core: {
     length: 1,
     thickness: 1,
-    zJitter: 0,
+    yOffset: 0,
   },
   accent: {
-    length: 0.68,
-    thickness: 0.56,
-    zJitter: 0.08,
+    length: 0.62,
+    thickness: 0.58,
+    yOffset: 0.08,
   },
 };
 
 const computeBeamState = ({
   frame,
-  orbitRadius,
   seed,
-  spread,
   variant,
 }: {
   frame: number;
-  orbitRadius: number;
   seed: UpdateLightsInstancesInput["seeds"][number];
-  spread: number;
   variant: UpdateLightsInstancesInput["config"]["variant"];
 }) => {
-  const rotationBase = seed.baseAngle + Math.sin(frame * 0.012 + seed.phase) * 0.22;
-  const orbit = orbitRadius * (0.22 + seed.orbit * 0.78);
-  const fanSpread = spread * (seed.lane - 0.5);
-  const radialPulse = Math.sin(frame * seed.speed + seed.phase) * seed.pulse;
+  const time = frame * seed.speed;
+  const travel = (seed.depth + time * 0.045) % 1;
+  const corridorDepth = -34 + travel * 30;
+  const lane = seed.lane * 2 - 1;
+  const pulse = 0.84 + (Math.sin(time * 1.8 + seed.phase) + 1) * 0.24;
 
   if (variant === "pulse") {
     return {
-      x: Math.cos(rotationBase * 0.7) * orbit * 0.18 + fanSpread * 0.12,
-      y: Math.sin(rotationBase * 1.3) * orbit * 0.14 + radialPulse * 10,
-      rotation: rotationBase + Math.sin(frame * 0.01 + seed.phase) * 0.34,
-      scalePulse: 0.82 + (Math.sin(frame * seed.speed + seed.phase) + 1) * 0.26,
+      x: lane * 2.2 + Math.sin(time * 1.2 + seed.phase) * 1.1,
+      y: 1.6 + Math.sin(time * 1.7 + seed.phase) * 0.45,
+      z: corridorDepth,
+      rotationY: Math.sin(time * 0.9 + seed.phase) * 0.45,
+      scalePulse: pulse,
     };
   }
 
   if (variant === "bloom") {
     return {
-      x:
-        Math.cos(rotationBase + seed.phase) * orbit * 0.22 +
-        Math.sin(frame * 0.009 + seed.phase) * spread * 0.16,
-      y:
-        Math.sin(rotationBase * 1.24 + seed.phase) * orbit * 0.2 +
-        Math.cos(frame * 0.011 + seed.phase) * spread * 0.14,
-      rotation: rotationBase + seed.drift * 1.2,
-      scalePulse: 0.94 + (Math.sin(frame * seed.speed + seed.phase) + 1) * 0.16,
+      x: lane * 3.1 + Math.sin(time * 1.05 + seed.phase) * 1.6,
+      y: 1.9 + Math.cos(time * 1.2 + seed.phase) * 0.6,
+      z: corridorDepth - seed.orbit * 4,
+      rotationY: lane * 0.34 + Math.sin(time * 0.75 + seed.phase) * 0.22,
+      scalePulse: 0.96 + (Math.sin(time * 1.4 + seed.phase) + 1) * 0.16,
     };
   }
 
   return {
-    x:
-      Math.cos(rotationBase * 0.88) * orbit * 0.26 +
-      fanSpread * 0.24 +
-      Math.sin(frame * 0.006 + seed.phase) * spread * 0.08,
-    y:
-      Math.sin(rotationBase * 1.08) * orbit * 0.18 +
-      Math.cos(frame * 0.008 + seed.phase) * spread * 0.06,
-    rotation: rotationBase + fanSpread * 0.9,
-    scalePulse: 0.9 + (Math.sin(frame * seed.speed + seed.phase) + 1) * 0.18,
+    x: lane * 4.2 + Math.sin(time * 0.8 + seed.phase) * 1.2,
+    y: 1.7 + Math.sin(time * 1.15 + seed.phase) * 0.36,
+    z: corridorDepth,
+    rotationY: lane * 0.5 + Math.sin(time * 0.7 + seed.phase) * 0.18,
+    scalePulse: 0.92 + (Math.sin(time * 1.1 + seed.phase) + 1) * 0.12,
   };
 };
 
 export const updateLightsInstances = ({
   config,
+  floorBasePositions,
+  floorGeometry,
   frame,
-  height,
   helper,
   meshes,
   seeds,
-  width,
 }: UpdateLightsInstancesInput) => {
-  const stageUnit = Math.min(width, height);
-  const orbitRadius = stageUnit * config.orbitRadius;
-  const beamLength = stageUnit * config.beamLength;
-  const beamThickness = stageUnit * config.beamThickness;
-  const spread = stageUnit * config.spread;
+  const worldScale = 8.5;
+  const beamLength = config.beamLength * worldScale;
+  const beamThickness = config.beamThickness * worldScale;
+  const positions = floorGeometry.attributes.position.array as Float32Array;
+  const rippleTime = frame * config.motionSpeed * 24;
+  const rippleAmplitude = 0.24 + config.spread * 0.34;
+
+  for (let index = 0; index < floorBasePositions.length; index += 3) {
+    const x = floorBasePositions[index];
+    const y = floorBasePositions[index + 1];
+    const z = floorBasePositions[index + 2];
+    const primaryWave = Math.sin(z * 0.55 - rippleTime * 1.9 + x * 0.14) * rippleAmplitude;
+    const secondaryWave = Math.cos((x + z) * 0.24 + rippleTime * 1.25) * rippleAmplitude * 0.55;
+    const frontBias = 1 - Math.min(1, Math.max(0, (Math.abs(z) - 4) / 26));
+
+    positions[index] = x;
+    positions[index + 1] = y + (primaryWave + secondaryWave) * (0.55 + frontBias * 0.65);
+    positions[index + 2] = z;
+  }
+
+  floorGeometry.attributes.position.needsUpdate = true;
 
   seeds.forEach((seed, index) => {
     const state = computeBeamState({
       frame,
-      orbitRadius,
       seed,
-      spread,
       variant: config.variant,
     });
 
@@ -105,16 +110,12 @@ export const updateLightsInstances = ({
       const tuning = LAYER_TUNING[layerName];
       const mesh = meshes[layerName].mesh;
 
-      helper.position.set(
-        state.x,
-        state.y,
-        (seed.depth - 0.5) * 4 + tuning.zJitter,
-      );
-      helper.rotation.set(0, 0, state.rotation + seed.drift * 0.42);
+      helper.position.set(state.x, state.y + tuning.yOffset, state.z);
+      helper.rotation.set(0, state.rotationY, 0);
       helper.scale.set(
+        beamThickness * tuning.thickness,
         beamLength * tuning.length * state.scalePulse,
-        beamThickness * tuning.thickness * (0.88 + seed.drift * 0.22),
-        1,
+        beamThickness * 0.6,
       );
       helper.updateMatrix();
       mesh.setMatrixAt(index, helper.matrix);

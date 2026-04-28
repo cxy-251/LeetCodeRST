@@ -748,6 +748,32 @@ Verification:
 
 1. `npm run lint`
 2. `npm run build`
+
+---
+
+## 22. 2026-04-29 Lights Beams Perspective Rework
+
+This follow-up changed `lights-beams` from a flat central burst into a more scene-like interpretation of the Hello Enjoy `Lights` reference.
+
+What changed:
+
+1. `ThreeLightsEngine` now uses a perspective camera instead of the earlier orthographic setup.
+2. The scene now includes a flowing ripple floor in the lower half of the frame.
+3. The camera now drifts through the scene over time, instead of keeping the composition locked to a flat center burst.
+4. Beam placement was rewritten into a depth corridor so the effect reads more like a staged 3D environment.
+5. The default `lights-beams` preset was retuned so the experiment page and the actual default family baseline are aligned.
+
+Why this matters:
+
+1. The original pass technically added the family, but visually it felt too much like a radial particle explosion.
+2. The new direction is much closer to the user's target reference: moving camera, vertical light structures, and lower-plane motion.
+
+Verification:
+
+1. `npm run lint`
+2. `npm run build`
+3. Browser check:
+   - `/effects/lights-beams`
 3. Browser check:
    - `/effects/life-game`
    - `/effects/particle-orbit`

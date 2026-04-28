@@ -38,13 +38,21 @@ export type LightsMeshLayer = {
 export type ThreeLightsMeshBundle = {
   accent: LightsMeshLayer;
   core: LightsMeshLayer;
-  geometry: THREE.PlaneGeometry;
+  beamGeometry: THREE.BoxGeometry;
+  floorBasePositions: Float32Array;
+  floorFillMaterial: THREE.MeshBasicMaterial;
+  floorFillMesh: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
+  floorGeometry: THREE.PlaneGeometry;
+  floorWireMaterial: THREE.MeshBasicMaterial;
+  floorWireMesh: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
   glow: LightsMeshLayer;
   signature: string;
 };
 
 export type UpdateLightsInstancesInput = {
   config: LightsEffectConfig;
+  floorBasePositions: Float32Array;
+  floorGeometry: THREE.PlaneGeometry;
   frame: number;
   height: number;
   helper: THREE.Object3D;

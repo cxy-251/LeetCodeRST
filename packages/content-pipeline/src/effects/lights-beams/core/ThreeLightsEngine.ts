@@ -31,9 +31,10 @@ const buildBeamSeeds = (count: number, seed: number): LightsBeamSeed[] =>
 export class ThreeLightsEngine {
   private readonly renderer: THREE.WebGLRenderer;
   private readonly scene: THREE.Scene;
-  private readonly camera: THREE.OrthographicCamera;
+  private readonly camera: THREE.PerspectiveCamera;
   private readonly root = new THREE.Group();
   private readonly helper = new THREE.Object3D();
+  private readonly lookAtTarget = new THREE.Vector3();
   private bundle: ThreeLightsMeshBundle;
   private height = 0;
   private width = 0;
@@ -75,9 +76,10 @@ export class ThreeLightsEngine {
 
     this.scene = new THREE.Scene();
     this.scene.add(this.root);
-    this.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 100);
-    this.camera.position.set(0, 0, 12);
-    this.camera.lookAt(0, 0, 0);
+    this.scene.fog = new THREE.FogExp2(0x071320, 0.032);
+    this.camera = new THREE.PerspectiveCamera(34, options.width / options.height, 0.1, 100);
+    this.camera.position.set(0, 3.15, 10.8);
+    this.camera.lookAt(0, 0.45, -9.5);
 
     const defaultConfig = resolveLightsEffectConfig(undefined);
     this.bundle = createLightsMeshes({
@@ -99,11 +101,7 @@ export class ThreeLightsEngine {
     this.width = width;
     this.height = height;
     this.renderer.setSize(width, height, false);
-
-    this.camera.left = -width / 2;
-    this.camera.right = width / 2;
-    this.camera.top = height / 2;
-    this.camera.bottom = -height / 2;
+    this.camera.aspect = width / Math.max(1, height);
     this.camera.updateProjectionMatrix();
   }
 
@@ -115,12 +113,27 @@ export class ThreeLightsEngine {
     this.bundle.core.material.color.set(config.primaryColor);
     this.bundle.glow.material.color.set(config.secondaryColor);
     this.bundle.accent.material.color.set(config.accentColor);
+    this.bundle.floorFillMaterial.color.set(config.secondaryColor);
+    this.bundle.floorWireMaterial.color.set(config.primaryColor);
 
     const frame = Math.max(0, params.simulationFrame ?? params.absoluteFrame);
-    this.root.rotation.z = Math.sin(frame * config.motionSpeed * 6) * 0.08;
+    const time = frame * config.motionSpeed * 11.5;
+    this.lookAtTarget.set(
+      Math.sin(time * 0.31) * 1.2,
+      0.4 + Math.sin(time * 0.58) * 0.14,
+      -9.5 + Math.sin(time * 0.24) * 2.2,
+    );
+    this.camera.position.set(
+      Math.sin(time * 0.28) * 1.55,
+      3.05 + Math.cos(time * 0.19) * 0.18,
+      10.6 + Math.sin(time * 0.17) * 0.45,
+    );
+    this.camera.lookAt(this.lookAtTarget);
 
     updateLightsInstances({
       config,
+      floorBasePositions: this.bundle.floorBasePositions,
+      floorGeometry: this.bundle.floorGeometry,
       frame,
       height: this.height,
       helper: this.helper,
@@ -151,13 +164,17 @@ export class ThreeLightsEngine {
       return;
     }
 
-    this.bundle.geometry.dispose();
+    this.root.clear();
+    this.bundle.beamGeometry.dispose();
+    this.bundle.floorGeometry.dispose();
     this.bundle.glow.mesh.dispose();
     this.bundle.core.mesh.dispose();
     this.bundle.accent.mesh.dispose();
     this.bundle.glow.material.dispose();
     this.bundle.core.material.dispose();
     this.bundle.accent.material.dispose();
+    this.bundle.floorFillMaterial.dispose();
+    this.bundle.floorWireMaterial.dispose();
 
     this.bundle = createLightsMeshes({
       accentColor: config.accentColor,

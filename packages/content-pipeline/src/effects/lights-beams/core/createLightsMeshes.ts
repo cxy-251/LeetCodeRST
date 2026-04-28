@@ -7,16 +7,14 @@ const createLayer = ({
   geometry,
   opacity,
   root,
-  zOffset,
   layerName,
 }: {
   color: string;
   count: number;
-  geometry: THREE.PlaneGeometry;
+  geometry: THREE.BoxGeometry;
   layerName: "accent" | "core" | "glow";
   opacity: number;
   root: THREE.Group;
-  zOffset: number;
 }) => {
   const material = new THREE.MeshBasicMaterial({
     color,
@@ -24,13 +22,11 @@ const createLayer = ({
     opacity,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
-    side: THREE.DoubleSide,
   });
   const mesh = new THREE.InstancedMesh(geometry, material, Math.max(1, count));
   mesh.count = count;
   mesh.frustumCulled = false;
   mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-  mesh.position.z = zOffset;
   root.add(mesh);
 
   return {
@@ -53,37 +49,65 @@ export const createLightsMeshes = ({
   glowColor: string;
   root: THREE.Group;
 }): ThreeLightsMeshBundle => {
-  const geometry = new THREE.PlaneGeometry(1, 1, 1, 1);
+  const beamGeometry = new THREE.BoxGeometry(1, 1, 0.18, 1, 1, 1);
+  const floorGeometry = new THREE.PlaneGeometry(26, 54, 42, 110);
+  floorGeometry.rotateX(-Math.PI / 2);
+  const floorBasePositions = new Float32Array(floorGeometry.attributes.position.array as ArrayLike<number>);
+
+  const floorFillMaterial = new THREE.MeshBasicMaterial({
+    color: coreColor,
+    transparent: true,
+    opacity: 0.11,
+    depthWrite: false,
+    side: THREE.DoubleSide,
+  });
+  const floorFillMesh = new THREE.Mesh(floorGeometry, floorFillMaterial);
+  floorFillMesh.position.set(0, -2.05, -14);
+  root.add(floorFillMesh);
+
+  const floorWireMaterial = new THREE.MeshBasicMaterial({
+    color: glowColor,
+    transparent: true,
+    opacity: 0.38,
+    depthWrite: false,
+    wireframe: true,
+  });
+  const floorWireMesh = new THREE.Mesh(floorGeometry, floorWireMaterial);
+  floorWireMesh.position.copy(floorFillMesh.position);
+  root.add(floorWireMesh);
 
   return {
-    geometry,
+    beamGeometry,
+    floorBasePositions,
+    floorFillMaterial,
+    floorFillMesh,
+    floorGeometry,
+    floorWireMaterial,
+    floorWireMesh,
     signature: `beams:${beamCount}`,
     glow: createLayer({
       color: glowColor,
       count: beamCount,
-      geometry,
+      geometry: beamGeometry,
       layerName: "glow",
-      opacity: 0.14,
+      opacity: 0.15,
       root,
-      zOffset: -0.06,
     }),
     core: createLayer({
       color: coreColor,
       count: beamCount,
-      geometry,
+      geometry: beamGeometry,
       layerName: "core",
-      opacity: 0.4,
+      opacity: 0.42,
       root,
-      zOffset: 0,
     }),
     accent: createLayer({
       color: accentColor,
       count: beamCount,
-      geometry,
+      geometry: beamGeometry,
       layerName: "accent",
-      opacity: 0.26,
+      opacity: 0.24,
       root,
-      zOffset: 0.08,
     }),
   };
 };
