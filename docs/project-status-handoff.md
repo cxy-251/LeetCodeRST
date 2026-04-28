@@ -753,6 +753,40 @@ Verification:
 
 ## 22. 2026-04-29 Lights Beams Perspective Rework
 
+This pass pushed `lights-beams` away from a centered burst and closer to the original `Lights` reference language.
+
+What changed:
+
+1. The beam field was rebuilt as a forward corridor of vertical light pillars instead of a radial starburst.
+   - `packages/content-pipeline/src/effects/lights-beams/core/createLightsMeshes.ts`
+   - `packages/content-pipeline/src/effects/lights-beams/core/updateLightsInstances.ts`
+2. The floor became a looping multi-tile ripple terrain rather than a single static plane.
+   - tiles now wrap in depth to suggest an infinite landscape
+   - wave deformation is evaluated per tile using world-space depth so seams stay hidden
+3. The camera was retuned into a lower, perspective glide with a moving look-at target.
+   - `packages/content-pipeline/src/effects/lights-beams/core/ThreeLightsEngine.ts`
+4. A distant horizon glow was added so the upper half of the frame reads more like atmosphere instead of dead empty space.
+5. The beam volume illusion is now closer to the original article description.
+   - each light uses three crossed planes instead of a chunky box beam
+   - the family still keeps the same pure-engine / shared-renderFrame architecture
+6. Default `lights-beams` parameters were retuned so the first-load state is visually usable without manual adjustment.
+   - `packages/content-pipeline/src/module-api.ts`
+
+Why this matters:
+
+1. The previous version proved the family wiring, but it still read too much like a center-composed stage burst.
+2. The reference project is more about flying over a reactive light landscape, so depth, terrain repetition, and camera motion needed to become the main visual language.
+
+Verification:
+
+1. `npm run lint`
+2. `npm run build`
+3. Browser-checked `/effects/lights-beams`
+
+---
+
+## 22. 2026-04-29 Lights Beams Perspective Rework
+
 This follow-up changed `lights-beams` from a flat central burst into a more scene-like interpretation of the Hello Enjoy `Lights` reference.
 
 What changed:

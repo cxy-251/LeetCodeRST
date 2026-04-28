@@ -29,30 +29,41 @@ export type LightsBeamSeed = {
 
 export type LightsMeshLayerName = "accent" | "core" | "glow";
 
+export type LightsMeshPlane = {
+  mesh: THREE.InstancedMesh;
+  rotationOffset: number;
+};
+
 export type LightsMeshLayer = {
   material: THREE.MeshBasicMaterial;
-  mesh: THREE.InstancedMesh;
+  planes: LightsMeshPlane[];
   name: LightsMeshLayerName;
+};
+
+export type ThreeLightsFloorTile = {
+  basePositions: Float32Array;
+  fillMaterial: THREE.MeshBasicMaterial;
+  fillMesh: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
+  geometry: THREE.PlaneGeometry;
+  wireMaterial: THREE.MeshBasicMaterial;
+  wireMesh: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
 };
 
 export type ThreeLightsMeshBundle = {
   accent: LightsMeshLayer;
   core: LightsMeshLayer;
-  beamGeometry: THREE.BoxGeometry;
-  floorBasePositions: Float32Array;
-  floorFillMaterial: THREE.MeshBasicMaterial;
-  floorFillMesh: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
-  floorGeometry: THREE.PlaneGeometry;
-  floorWireMaterial: THREE.MeshBasicMaterial;
-  floorWireMesh: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
+  beamGeometry: THREE.PlaneGeometry;
+  floorTiles: ThreeLightsFloorTile[];
   glow: LightsMeshLayer;
+  horizonGeometry: THREE.CircleGeometry;
+  horizonMaterial: THREE.MeshBasicMaterial;
+  horizonMesh: THREE.Mesh<THREE.CircleGeometry, THREE.MeshBasicMaterial>;
   signature: string;
 };
 
 export type UpdateLightsInstancesInput = {
   config: LightsEffectConfig;
-  floorBasePositions: Float32Array;
-  floorGeometry: THREE.PlaneGeometry;
+  floorTiles: ThreeLightsMeshBundle["floorTiles"];
   frame: number;
   height: number;
   helper: THREE.Object3D;

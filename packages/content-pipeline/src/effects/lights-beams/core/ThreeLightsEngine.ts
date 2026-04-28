@@ -76,10 +76,10 @@ export class ThreeLightsEngine {
 
     this.scene = new THREE.Scene();
     this.scene.add(this.root);
-    this.scene.fog = new THREE.FogExp2(0x071320, 0.032);
+    this.scene.fog = new THREE.FogExp2(0x071320, 0.026);
     this.camera = new THREE.PerspectiveCamera(34, options.width / options.height, 0.1, 100);
-    this.camera.position.set(0, 3.15, 10.8);
-    this.camera.lookAt(0, 0.45, -9.5);
+    this.camera.position.set(0, 2.15, 7.4);
+    this.camera.lookAt(0, 0.35, -14.5);
 
     const defaultConfig = resolveLightsEffectConfig(undefined);
     this.bundle = createLightsMeshes({
@@ -113,27 +113,34 @@ export class ThreeLightsEngine {
     this.bundle.core.material.color.set(config.primaryColor);
     this.bundle.glow.material.color.set(config.secondaryColor);
     this.bundle.accent.material.color.set(config.accentColor);
-    this.bundle.floorFillMaterial.color.set(config.secondaryColor);
-    this.bundle.floorWireMaterial.color.set(config.primaryColor);
+    this.bundle.floorTiles.forEach((tile) => {
+      tile.fillMaterial.color.set(config.secondaryColor);
+      tile.wireMaterial.color.set(config.primaryColor);
+    });
+    this.bundle.horizonMaterial.color.set(config.accentColor);
 
     const frame = Math.max(0, params.simulationFrame ?? params.absoluteFrame);
-    const time = frame * config.motionSpeed * 11.5;
+    const time = frame * config.motionSpeed * 13.5;
     this.lookAtTarget.set(
-      Math.sin(time * 0.31) * 1.2,
-      0.4 + Math.sin(time * 0.58) * 0.14,
-      -9.5 + Math.sin(time * 0.24) * 2.2,
+      Math.sin(time * 0.21) * 0.7,
+      0.14 + Math.sin(time * 0.46) * 0.12,
+      -14.5 + Math.sin(time * 0.18) * 2.8,
     );
     this.camera.position.set(
-      Math.sin(time * 0.28) * 1.55,
-      3.05 + Math.cos(time * 0.19) * 0.18,
-      10.6 + Math.sin(time * 0.17) * 0.45,
+      Math.sin(time * 0.25) * 1.2,
+      2.05 + Math.cos(time * 0.16) * 0.16,
+      7.2 + Math.sin(time * 0.12) * 0.3,
     );
     this.camera.lookAt(this.lookAtTarget);
+    this.bundle.horizonMesh.position.set(
+      Math.sin(time * 0.12) * 0.45,
+      7 + Math.cos(time * 0.17) * 0.18,
+      -29.5,
+    );
 
     updateLightsInstances({
       config,
-      floorBasePositions: this.bundle.floorBasePositions,
-      floorGeometry: this.bundle.floorGeometry,
+      floorTiles: this.bundle.floorTiles,
       frame,
       height: this.height,
       helper: this.helper,
@@ -166,15 +173,25 @@ export class ThreeLightsEngine {
 
     this.root.clear();
     this.bundle.beamGeometry.dispose();
-    this.bundle.floorGeometry.dispose();
-    this.bundle.glow.mesh.dispose();
-    this.bundle.core.mesh.dispose();
-    this.bundle.accent.mesh.dispose();
+    this.bundle.floorTiles.forEach((tile) => {
+      tile.geometry.dispose();
+      tile.fillMaterial.dispose();
+      tile.wireMaterial.dispose();
+    });
+    this.bundle.horizonGeometry.dispose();
+    this.bundle.horizonMaterial.dispose();
+    this.bundle.glow.planes.forEach((plane) => {
+      plane.mesh.dispose();
+    });
+    this.bundle.core.planes.forEach((plane) => {
+      plane.mesh.dispose();
+    });
+    this.bundle.accent.planes.forEach((plane) => {
+      plane.mesh.dispose();
+    });
     this.bundle.glow.material.dispose();
     this.bundle.core.material.dispose();
     this.bundle.accent.material.dispose();
-    this.bundle.floorFillMaterial.dispose();
-    this.bundle.floorWireMaterial.dispose();
 
     this.bundle = createLightsMeshes({
       accentColor: config.accentColor,
