@@ -47,6 +47,13 @@ npm run generate:audio
 npm run render:video
 ```
 
+### 工程检查
+
+```bash
+npm run lint
+npm run build
+```
+
 ---
 
 ## 3. 用户当前实际使用的配置
@@ -180,13 +187,17 @@ npm run render:video
    - `App.types.ts` 负责类型
    - `App.module.css` 负责样式
    - 旧的 `styles.css` 已移除
-38. 当前活跃的生命游戏特效链路也已做同风格局部拆分：
-   - `effect-atoms.tsx` 主要保留组件装配
-   - `effect-atoms.types.ts` 负责类型
-   - `effect-atoms.service.ts` 负责展示层辅助计算
-   - `effect-atoms.module.css` 负责样式
-   - `three-life-effect.tsx` 仅保留 canvas 组件外壳
-   - `use-three-life-renderer.ts` 下沉 Three.js 生命周期与渲染逻辑
+38. 当前活跃的生命游戏特效链路已重构为“纯引擎 + React 适配层”：
+   - `ThreeLifeEngine` 负责纯 Three.js / WebGL 生命周期
+   - `createLifeMeshes / updateLifeInstances / disposeThreeLife` 负责 mesh 构建、实例更新和 GPU 释放
+   - `WebThreeLifeLayer` 使用 `requestAnimationFrame` 驱动网页实时效果
+   - `RemotionThreeLifeLayer` 使用外部帧或 `useCurrentFrame()` 驱动视频图层
+   - 网页和 Remotion 共用同一个 `renderFrame()` 核心逻辑
+39. effect lab 在当前 616px 左右视口已经保持“手机画面 + 右侧控制栏”并排，仅在更窄宽度下才退化成上下堆叠
+40. 已新增稳定工程入口：
+   - `npm run lint`
+   - `npm run build`
+   并已在当前阶段验证通过
 
 ---
 
@@ -250,7 +261,20 @@ npm run render:video
 ### 预览页
 
 - `apps/editor-web/src/App.tsx`
-- `apps/editor-web/src/styles.css`
+- `apps/editor-web/src/AppViews.tsx`
+- `apps/editor-web/src/useEditorPreview.ts`
+- `apps/editor-web/src/App.service.ts`
+- `apps/editor-web/src/App.module.css`
+
+### Three Life 引擎
+
+- `packages/content-pipeline/src/effects/three-life/core/ThreeLifeEngine.ts`
+- `packages/content-pipeline/src/effects/three-life/core/createLifeMeshes.ts`
+- `packages/content-pipeline/src/effects/three-life/core/updateLifeInstances.ts`
+- `packages/content-pipeline/src/effects/three-life/core/disposeThreeLife.ts`
+- `packages/content-pipeline/src/effects/three-life/react/useThreeLifeEngine.ts`
+- `packages/content-pipeline/src/effects/three-life/react/WebThreeLifeLayer.tsx`
+- `packages/content-pipeline/src/effects/three-life/react/RemotionThreeLifeLayer.tsx`
 
 ---
 
@@ -334,6 +358,8 @@ npm run render:video
 14. effect lab 参数控件已从“纯数值滑杆”扩展到“数值 + 枚举选择”，可以调颜色主题、粒子形状、分布、轨迹和变体
 15. life-game / snake-grid 的颜色控制已进一步改成连续 HSL 滑块，不再只依赖预设颜色主题
 16. effect lab 布局已改成“手机画面 + 贴边控制侧栏”，参数面板不再和预览结果分离
+17. `ThreeLife` 已完成纯引擎拆分，网页实时页和 Remotion 视频层现在共享同一套 `renderFrame()` 核心逻辑
+18. `life-game` 实验页已实测恢复实时运行，控制面板在当前窄屏视口中也能保持右侧嵌入
 
 ### 未完成
 
@@ -362,6 +388,7 @@ npm run render:video
 8. 新增的 `particle-orbit` 目前是第一版粒子轨道样板，视觉方向已经成立，但还没有细化成多个粒子案例子风格
 9. `particle-orbit` 已从“边缘环绕 + 中央过曝”调整为“中央主视觉优先”，但还需要继续打磨更多中心构图变体
 10. 当前 life-game / snake-grid 的实验页已经去掉列数和行数暴露，改成更贴近视觉结果的“色块主题 + 尺寸 + 节奏”控制
+11. `ThreeLife` 这条链路虽然已经完成核心架构拆分，但 `snake-grid / particle-orbit` 还没有按同样深度拆成纯引擎层，后续应继续统一
 
 ---
 
@@ -441,7 +468,7 @@ Current debugging focus returned to the real product goal:
 
 Latest code changes:
 
-1. Fixed the active `ThreeLifeEffect` camera update bug in `packages/content-pipeline/src/use-three-life-renderer.ts`.
+1. Fixed the active `ThreeLifeEffect` camera update bug, now preserved inside `packages/content-pipeline/src/effects/three-life/core/ThreeLifeEngine.ts`.
    The orthographic camera was incorrectly updating `bottom = height`, which could collapse the visible render area during frame updates.
 2. Disabled frustum culling on the instanced mesh so the cellular grid is not accidentally clipped after instance transforms.
 3. Isolated the effect lab stage from the cover-image background in `apps/editor-web/src/App.service.ts`.

@@ -146,7 +146,9 @@ export const useEffectPreview = (route: EffectRoute | null): EffectPreviewState 
   const {errorMessage, loading, manifest} = useManifestLoader(loadManifest);
   const [isRunning, setIsRunning] = useState(false);
   const [simulationFrame, setSimulationFrame] = useState(0);
+  const [resetToken, setResetToken] = useState(0);
   const [moduleOverrides, setModuleOverrides] = useState({} as NonNullable<RenderManifest["modules"]>);
+  const usesEngineDrivenFrames = route?.effectId === "cellular-life";
 
   useEffect(() => {
     /**
@@ -155,11 +157,17 @@ export const useEffectPreview = (route: EffectRoute | null): EffectPreviewState 
      */
     setSimulationFrame(0);
     setIsRunning(false);
+    setResetToken((token) => token + 1);
     setModuleOverrides({});
   }, [route?.effectId]);
 
   useEffect(() => {
-    if (!isRunning) {
+    /**
+     * Life-game now renders through its own RAF-driven WebGL engine, so we
+     * only keep the old React timer for the other effect labs that still rely
+     * on a simple externally-driven simulation frame.
+     */
+    if (!isRunning || usesEngineDrivenFrames) {
       return;
     }
 
@@ -170,7 +178,7 @@ export const useEffectPreview = (route: EffectRoute | null): EffectPreviewState 
     return () => {
       window.clearInterval(timer);
     };
-  }, [isRunning]);
+  }, [isRunning, usesEngineDrivenFrames]);
 
   const scene = useMemo(() => {
     if (!manifest || !route) {
@@ -183,6 +191,7 @@ export const useEffectPreview = (route: EffectRoute | null): EffectPreviewState 
   const resetSimulation = () => {
     setIsRunning(false);
     setSimulationFrame(0);
+    setResetToken((token) => token + 1);
     setModuleOverrides({});
   };
 
@@ -211,6 +220,7 @@ export const useEffectPreview = (route: EffectRoute | null): EffectPreviewState 
     loading,
     manifest,
     moduleOverrides,
+    resetToken,
     resetSimulation,
     scene,
     setControlValue,

@@ -17,6 +17,7 @@ export type EffectRuntimeAdapterProps = {
   mode: EffectRuntimeMode;
   modules?: RenderManifest["modules"];
   onPrimaryAction?: () => void;
+  resetToken?: number;
   seed: number;
   simulationFrame?: number;
   width: number;
@@ -34,6 +35,7 @@ export const EffectRuntimeAdapter: React.FC<EffectRuntimeAdapterProps> = ({
   mode,
   modules,
   onPrimaryAction,
+  resetToken,
   seed,
   simulationFrame,
   width,
@@ -65,8 +67,10 @@ export const EffectRuntimeAdapter: React.FC<EffectRuntimeAdapterProps> = ({
       effectStartFrame={effectiveEffectStartFrame}
       height={height}
       isRunning={effectiveRunning}
+      mode={mode}
       modules={modules}
       onPrimaryAction={onPrimaryAction}
+      resetToken={resetToken}
       seed={seed}
       simulationFrame={effectiveSimulationFrame}
       width={width}

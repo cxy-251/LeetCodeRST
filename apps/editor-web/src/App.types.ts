@@ -44,6 +44,7 @@ export type EffectPreviewState = {
   loading: boolean;
   manifest: RenderManifest | null;
   moduleOverrides: VisualModuleConfig;
+  resetToken: number;
   resetSimulation: () => void;
   scene: RenderScene | null;
   setControlValue: (control: EffectControlDefinition, value: number | string) => void;

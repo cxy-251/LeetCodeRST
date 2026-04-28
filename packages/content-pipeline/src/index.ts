@@ -20,6 +20,24 @@ export {
   resolveTextMotionConfig,
   resolveTypographyScaleConfig,
 } from "./module-api";
+export {
+  createLifeMeshes,
+  disposeLifeMeshes,
+  disposeThreeLife,
+  RemotionThreeLifeLayer,
+  ThreeLifeEngine,
+  updateLifeInstances,
+  useThreeLifeEngine,
+  WebThreeLifeLayer,
+} from "./effects/three-life";
+export type {
+  RemotionThreeLifeLayerProps,
+  ThreeLifeEngineOptions,
+  ThreeLifeMeshBundle,
+  ThreeLifeMeshLayer,
+  ThreeLifeRenderParams,
+  WebThreeLifeLayerProps,
+} from "./effects/three-life";
 export {getTextMotionState} from "./text-motion";
 export {ThreeLifeEffect} from "./three-life-effect";
 export {ThreeParticleEffect} from "./three-particle-effect";

@@ -1,11 +1,3 @@
-import type {RenderManifest} from "@paper-to-video/shared-types";
+import type {RemotionThreeLifeLayerProps} from "./effects/three-life";
 
-export type ThreeLifeEffectProps = {
-  width: number;
-  height: number;
-  absoluteFrame: number;
-  activationFrame: number;
-  simulationFrame?: number;
-  seed: number;
-  modules?: RenderManifest["modules"];
-};
+export type ThreeLifeEffectProps = RemotionThreeLifeLayerProps;

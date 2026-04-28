@@ -154,7 +154,7 @@ export const useThreeParticleRenderer = ({
     const primary = new THREE.Color(config.primaryColor);
     const secondary = new THREE.Color(config.secondaryColor);
     const accent = new THREE.Color(config.accentColor);
-    const frame = simulationFrame ?? absoluteFrame;
+    const frame = simulationFrame ?? absoluteFrame ?? 0;
     const time = frame * config.driftSpeed;
     const aspectScale = width / Math.max(1, height);
 

@@ -15,8 +15,10 @@ export type EffectAtomRuntimeProps = {
   effectStartFrame?: number;
   height: number;
   isRunning?: boolean;
+  mode: "interactive" | "render";
   modules?: RenderManifest["modules"];
   onPrimaryAction?: () => void;
+  resetToken?: number;
   seed: number;
   simulationFrame?: number;
   width: number;

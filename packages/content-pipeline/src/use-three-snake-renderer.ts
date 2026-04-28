@@ -120,12 +120,13 @@ export const useThreeSnakeRenderer = ({
       return;
     }
 
+    const resolvedFrame = simulationFrame ?? absoluteFrame ?? 0;
     const cols = Math.max(12, Math.round(config.cellColumns));
     const rows = Math.max(18, Math.round(config.cellRows));
     const cells = buildSnakeGridCells({
       cols,
       rows,
-      frame: Math.floor((simulationFrame ?? absoluteFrame) / Math.max(1, config.stepEveryFrames)),
+      frame: Math.floor(resolvedFrame / Math.max(1, config.stepEveryFrames)),
       seed,
     });
     const cellWidth = width / cols;

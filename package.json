@@ -8,6 +8,10 @@
     "packages/*"
   ],
   "scripts": {
+    "lint": "tsc --noEmit -p apps/editor-web/tsconfig.json && tsc --noEmit -p apps/video-renderer/tsconfig.json",
+    "build": "npm run lint && npm run build:editor && npm run build:renderer",
+    "build:editor": "vite build --config apps/editor-web/vite.config.ts",
+    "build:renderer": "remotion bundle apps/video-renderer/src/index.tsx /tmp/paper-to-video-remotion-bundle",
     "build:video": "node --import tsx tools/build-video.ts",
     "compose:manifest": "node --import tsx tools/compose-manifest.ts",
     "build:source-bundle": "node --import tsx tools/build-source-bundle.ts",

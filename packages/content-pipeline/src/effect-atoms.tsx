@@ -1,5 +1,5 @@
 import React from "react";
-import {ThreeLifeEffect} from "./three-life-effect";
+import {RemotionThreeLifeLayer, WebThreeLifeLayer} from "./effects/three-life";
 import {ThreeSnakeEffect} from "./three-snake-effect";
 import {ThreeParticleEffect} from "./three-particle-effect";
 import {
@@ -17,17 +17,34 @@ import {
 } from "./effect-atoms.service";
 import type {EffectAtomDefinition, EffectAtomId, EffectAtomRuntimeProps} from "./effect-atoms.types";
 
-const CellularLifeAtom: React.FC<EffectAtomRuntimeProps> = ({
+const renderLifeLayer = ({
   absoluteFrame,
   activationFrame,
   height,
+  isRunning,
+  mode,
   modules,
+  resetToken,
   seed,
   simulationFrame,
   width,
-}) => {
+}: EffectAtomRuntimeProps) => {
+  if (mode === "interactive") {
+    return (
+      <WebThreeLifeLayer
+        activationFrame={activationFrame}
+        height={height}
+        isRunning={Boolean(isRunning)}
+        modules={modules}
+        resetToken={resetToken}
+        seed={seed}
+        width={width}
+      />
+    );
+  }
+
   return (
-    <ThreeLifeEffect
+    <RemotionThreeLifeLayer
       absoluteFrame={absoluteFrame}
       activationFrame={activationFrame}
       height={height}
@@ -37,6 +54,32 @@ const CellularLifeAtom: React.FC<EffectAtomRuntimeProps> = ({
       width={width}
     />
   );
+};
+
+const CellularLifeAtom: React.FC<EffectAtomRuntimeProps> = ({
+  absoluteFrame,
+  activationFrame,
+  height,
+  isRunning,
+  mode,
+  modules,
+  resetToken,
+  seed,
+  simulationFrame,
+  width,
+}) => {
+  return renderLifeLayer({
+    absoluteFrame,
+    activationFrame,
+    height,
+    isRunning,
+    mode,
+    modules,
+    resetToken,
+    seed,
+    simulationFrame,
+    width,
+  });
 };
 
 const SnakeGridAtom: React.FC<EffectAtomRuntimeProps> = ({
@@ -91,8 +134,10 @@ const CellularLaunchAtom: React.FC<EffectAtomRuntimeProps> = ({
   height,
   interactionFrame,
   isRunning,
+  mode,
   modules,
   onPrimaryAction,
+  resetToken,
   seed,
   simulationFrame,
   width,
@@ -103,17 +148,10 @@ const CellularLaunchAtom: React.FC<EffectAtomRuntimeProps> = ({
   const ready = effectStartFrame !== undefined ? absoluteFrame >= effectStartFrame : Boolean(isRunning);
   const buttonScale = ready ? 0.94 : clicked ? pulse * 0.9 : pulse;
   const buttonLabel = ready ? "Simulation Running" : clicked ? "Booting Life Grid" : "Start Life Simulation";
-  const MainEffectComponent =
-    continuousEffectId === "snake-grid"
-      ? ThreeSnakeEffect
-      : continuousEffectId === "particle-orbit"
-        ? ThreeParticleEffect
-        : ThreeLifeEffect;
-
-  return (
-    <>
-      {ready ? (
-        <MainEffectComponent
+  const renderContinuousLayer = () => {
+    if (continuousEffectId === "snake-grid") {
+      return (
+        <ThreeSnakeEffect
           absoluteFrame={absoluteFrame}
           activationFrame={activationFrame}
           height={height}
@@ -122,6 +160,41 @@ const CellularLaunchAtom: React.FC<EffectAtomRuntimeProps> = ({
           simulationFrame={simulationFrame}
           width={width}
         />
+      );
+    }
+
+    if (continuousEffectId === "particle-orbit") {
+      return (
+        <ThreeParticleEffect
+          absoluteFrame={absoluteFrame}
+          activationFrame={activationFrame}
+          height={height}
+          modules={modules}
+          seed={seed}
+          simulationFrame={simulationFrame}
+          width={width}
+        />
+      );
+    }
+
+    return renderLifeLayer({
+      absoluteFrame,
+      activationFrame,
+      height,
+      isRunning,
+      mode,
+      modules,
+      resetToken,
+      seed,
+      simulationFrame,
+      width,
+    });
+  };
+
+  return (
+    <>
+      {ready ? (
+        renderContinuousLayer()
       ) : (
         <div
           style={{

@@ -280,9 +280,9 @@
 }
 
 .effectLabStageLayout {
-  width: min(980px, 100%);
+  width: min(100%, 920px);
   display: grid;
-  grid-template-columns: minmax(320px, 420px) minmax(280px, 360px);
+  grid-template-columns: minmax(260px, 360px) minmax(220px, 280px);
   gap: 24px;
   align-items: start;
 }
@@ -545,16 +545,47 @@
   }
 
   .stage {
-    padding: 24px;
+    padding: 20px 16px 28px;
   }
 
+  .effectStageSidebar {
+    width: 100%;
+    max-height: none;
+  }
+}
+
+@media (max-width: 720px) {
+  .effectLabStageLayout {
+    width: 100%;
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 248px);
+    gap: 14px;
+  }
+
+  .phoneFrame {
+    width: 100%;
+    max-width: 320px;
+    padding: 12px;
+    border-radius: 34px;
+  }
+
+  .slidePreview {
+    border-radius: 22px;
+    padding: 28px 22px 22px;
+  }
+
+  .effectStageSidebar {
+    padding: 14px;
+    border-radius: 22px;
+  }
+}
+
+@media (max-width: 560px) {
   .effectLabStageLayout {
     grid-template-columns: 1fr;
     justify-items: center;
   }
 
   .effectStageSidebar {
-    width: min(560px, 100%);
-    max-height: none;
+    width: min(360px, 100%);
   }
 }
