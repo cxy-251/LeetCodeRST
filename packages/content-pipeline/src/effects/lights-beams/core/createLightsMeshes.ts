@@ -22,6 +22,7 @@ const createLayer = ({
     opacity,
     depthWrite: false,
     blending: THREE.AdditiveBlending,
+    wireframe: layerName === "accent",
   });
 
   const mesh = new THREE.InstancedMesh(geometry, material, Math.max(1, count));
@@ -115,7 +116,7 @@ export const createLightsMeshes = ({
       count: beamCount,
       geometry: orbGeometry,
       layerName: "glow",
-      opacity: 0.12,
+      opacity: 0.1,
       root,
     }),
     core: createLayer({
@@ -123,7 +124,7 @@ export const createLightsMeshes = ({
       count: beamCount,
       geometry: orbGeometry,
       layerName: "core",
-      opacity: 0.35,
+      opacity: 0.28,
       root,
     }),
     accent: createLayer({
@@ -131,7 +132,7 @@ export const createLightsMeshes = ({
       count: beamCount,
       geometry: orbGeometry,
       layerName: "accent",
-      opacity: 0.22,
+      opacity: 0.34,
       root,
     }),
   };

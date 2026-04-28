@@ -815,6 +815,40 @@ Verification:
 
 ---
 
+## 24. 2026-04-29 Lights Anchored Orb Depth Pass
+
+This pass refined the `Lights` interpretation from "breathing orbs on terrain" into a more specific depth composition.
+
+What changed:
+
+1. Orb positions are now anchored in world space instead of drifting through the scene.
+   - the camera and floor waves move
+   - the orb field itself stays fixed to the landscape
+2. The floor deformation is no longer based on a mostly uniform wave blend.
+   - multiple radial disturbance sources now drive the terrain
+   - the surface reads more like uneven ripples than even sinusoidal rows
+3. Distant orbs now read mostly as outline silhouettes, while near-field orbs receive the stronger core/glow contribution.
+   - `accent` layer stays visible farther back
+   - `core` and `glow` are biased toward the foreground
+4. The family still keeps the same pure-engine / shared-renderFrame structure, so web preview and Remotion continue to use one core path.
+
+Why this matters:
+
+1. The requested target is not a musically-reactive beam burst.
+2. The important visual hierarchy is:
+   - reactive uneven ground
+   - fixed orb markers attached to that ground
+   - distant dim silhouettes
+   - near bright breathing nodes
+
+Verification:
+
+1. `npm run lint`
+2. `npm run build`
+3. Browser-checked `/effects/lights-beams`
+
+---
+
 ## 22. 2026-04-29 Lights Beams Perspective Rework
 
 This follow-up changed `lights-beams` from a flat central burst into a more scene-like interpretation of the Hello Enjoy `Lights` reference.

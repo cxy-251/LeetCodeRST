@@ -1,6 +1,7 @@
 import type {UpdateLightsInstancesInput} from "../lights-beams.types";
 
 type LayerTuning = {
+  nearMix: number;
   pulseBias: number;
   scale: number;
   yOffset: number;
@@ -8,72 +9,79 @@ type LayerTuning = {
 
 const LAYER_TUNING: Record<"accent" | "core" | "glow", LayerTuning> = {
   glow: {
+    nearMix: 1,
     pulseBias: 0.28,
-    scale: 1.95,
+    scale: 2.3,
     yOffset: 0,
   },
   core: {
+    nearMix: 1,
     pulseBias: 0.1,
     scale: 1,
     yOffset: 0,
   },
   accent: {
-    pulseBias: 0.18,
-    scale: 0.58,
+    nearMix: 0.25,
+    pulseBias: 0.08,
+    scale: 0.66,
     yOffset: 0.04,
   },
 };
 
 const sampleFloorHeight = (x: number, worldZ: number, time: number, spread: number) => {
-  const rippleAmplitude = 0.18 + spread * 0.18;
-  const longWave = Math.sin(worldZ * 0.4 - time * 1.85 + x * 0.12) * rippleAmplitude;
-  const crossWave = Math.cos(worldZ * 0.16 - time * 0.94 - x * 0.28) * rippleAmplitude * 0.52;
-  const pulseWave = Math.sin((worldZ + x * 0.5) * 0.22 - time * 1.32) * rippleAmplitude * 0.28;
-  const nearField = 1 - Math.min(1, Math.max(0, (Math.abs(worldZ) - 2) / 30));
+  const rippleAmplitude = 0.14 + spread * 0.17;
+  const sourceA = {
+    x: Math.sin(time * 0.16) * 7.5,
+    z: -10 + Math.cos(time * 0.09) * 4.5,
+  };
+  const sourceB = {
+    x: -5.2 + Math.sin(time * 0.07) * 1.8,
+    z: -22 + Math.sin(time * 0.11) * 3.2,
+  };
+  const sourceC = {
+    x: 6.4 + Math.cos(time * 0.05) * 1.5,
+    z: -31 + Math.cos(time * 0.08) * 4.1,
+  };
 
-  return (longWave + crossWave + pulseWave) * (0.45 + nearField * 0.8);
+  const distA = Math.hypot(x - sourceA.x, worldZ - sourceA.z);
+  const distB = Math.hypot(x - sourceB.x, worldZ - sourceB.z);
+  const distC = Math.hypot(x - sourceC.x, worldZ - sourceC.z);
+
+  const radialA = Math.sin(distA * 1.2 - time * 2.15) * rippleAmplitude;
+  const radialB = Math.sin(distB * 1.65 - time * 1.42 + x * 0.06) * rippleAmplitude * 0.72;
+  const radialC = Math.cos(distC * 1.08 - time * 1.08) * rippleAmplitude * 0.58;
+  const longWave = Math.sin(worldZ * 0.23 - time * 0.84 + x * 0.07) * rippleAmplitude * 0.36;
+  const ridgeWave = Math.cos(x * 0.54 + worldZ * 0.12 - time * 0.72) * rippleAmplitude * 0.26;
+  const nearField = 1 - Math.min(1, Math.max(0, (Math.abs(worldZ) - 3) / 30));
+
+  return (radialA + radialB + radialC + longWave + ridgeWave) * (0.34 + nearField * 0.76);
 };
 
 const computeOrbState = ({
-  frame,
   seed,
   variant,
 }: {
-  frame: number;
   seed: UpdateLightsInstancesInput["seeds"][number];
   variant: UpdateLightsInstancesInput["config"]["variant"];
 }) => {
-  const time = frame * seed.speed;
-  const depthTravel = (seed.depth + time * 0.011) % 1;
-  const radius = 0.8 + seed.orbit * 4.8;
-  const angle = seed.baseAngle + time * (0.12 + seed.drift * 0.06);
-  const pulse = 0.72 + (Math.sin(time * 1.6 + seed.phase) + 1) * 0.24;
-  const rippleSync = (Math.sin(time * 1.2 + seed.phase * 0.6) + 1) * 0.5;
-
   if (variant === "bloom") {
     return {
-      x: Math.cos(angle) * radius * 1.35,
-      z: -6 - depthTravel * 20 - Math.sin(angle * 0.4) * 5.5,
-      pulse,
-      rippleSync,
+      x: Math.cos(seed.baseAngle) * (1.2 + seed.orbit * 5.6),
+      z: -6 - seed.depth * 24 - Math.sin(seed.baseAngle * 0.35) * 3.8,
     };
   }
 
   if (variant === "fan") {
     const lane = seed.lane * 2 - 1;
     return {
-      x: lane * 5.6 + Math.sin(angle) * 1.25,
-      z: -5 - depthTravel * 22,
-      pulse: 0.76 + (Math.sin(time * 1.35 + seed.phase) + 1) * 0.2,
-      rippleSync,
+      x: lane * 6 + Math.sin(seed.baseAngle) * 0.9,
+      z: -5 - seed.depth * 22,
     };
   }
 
   return {
-    x: Math.cos(angle) * radius,
-    z: -4 - depthTravel * 18 - Math.sin(angle * 0.8) * 2.2,
-    pulse,
-    rippleSync,
+    x: Math.cos(seed.baseAngle) * (0.8 + seed.orbit * 4.2),
+    z: -4 - seed.depth * 18 - Math.sin(seed.baseAngle * 0.8) * 1.8,
   };
 };
 
@@ -118,12 +126,13 @@ export const updateLightsInstances = ({
 
   seeds.forEach((seed, index) => {
     const state = computeOrbState({
-      frame,
       seed,
       variant: config.variant,
     });
     const floorHeight = sampleFloorHeight(state.x, state.z, time, config.spread);
-    const breathing = state.pulse * (0.82 + state.rippleSync * 0.36);
+    const breathing = 0.72 + (Math.sin(time * (1.05 + seed.speed * 5.5) + seed.phase) + 1) * 0.24;
+    const nearFactor = Math.max(0, Math.min(1, 1 - ((-state.z) - 4) / 24));
+    const rimOnlyFactor = 0.18 + nearFactor * 0.82;
 
     (["glow", "core", "accent"] as const).forEach((layerName) => {
       const tuning = LAYER_TUNING[layerName];
@@ -135,9 +144,16 @@ export const updateLightsInstances = ({
             ? coreRadius
             : Math.max(0.08, coreRadius * 0.36);
 
+      const presence = tuning.nearMix * nearFactor + (1 - tuning.nearMix);
+
       helper.position.set(state.x, -2.1 + floorHeight + tuning.yOffset, state.z);
       helper.rotation.set(0, seed.baseAngle + time * 0.08, 0);
-      helper.scale.setScalar(radius * tuning.scale * (breathing + tuning.pulseBias));
+      helper.scale.setScalar(
+        radius *
+          tuning.scale *
+          (breathing + tuning.pulseBias) *
+          (layerName === "accent" ? rimOnlyFactor : presence),
+      );
       helper.updateMatrix();
       mesh.setMatrixAt(index, helper.matrix);
     });
