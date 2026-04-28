@@ -754,3 +754,29 @@ Why this was needed:
 
 1. The previous responsive pass fixed inner-surface fill, but it also made the lab read like a horizontal demo panel.
 2. For this project, the effect lab is meant to validate short-video effect behavior, so the default stage should stay portrait-oriented.
+
+---
+
+## 20. 2026-04-28 Template Preview Render-Space Alignment Pass
+
+This pass fixed a mismatch between the template preview page and the final exported video.
+
+What changed:
+
+1. Template preview now lays out content in the same render coordinate space as the final video.
+   - `apps/editor-web/src/AppViews.tsx`
+   - `apps/editor-web/src/usePreviewSurfaceScale.ts`
+   - `apps/editor-web/src/App.types.ts`
+2. The preview surface is rendered at the manifest's real `width x height`, then scaled down into the browser shell.
+   - this prevents long titles from wrapping earlier than they do in Remotion output
+   - this keeps avatar, kicker, title, body, subtitle, and effect placement closer to the exported video
+3. Template preview now uses render-manifest dimensions instead of assuming a smaller ad hoc preview space.
+   - `apps/editor-web/src/App.service.ts`
+4. The template phone shell was enlarged for narrow browser widths so the preview stays readable after render-space scaling.
+   - `apps/editor-web/src/App.module.css`
+
+Why this matters:
+
+1. Previously, the web preview was laying out text directly inside a much narrower DOM box than the final render.
+2. Exported video still looked "old but correct" because Remotion was using the real output dimensions.
+3. After this pass, template preview and exported video should be much closer again, while effect-lab behavior remains isolated.

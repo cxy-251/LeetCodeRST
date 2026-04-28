@@ -45,6 +45,9 @@ declare const __DEFAULT_PRODUCTION_MANIFEST__: string;
 declare const __CONTENT_PROFILE_REGISTRY__: string;
 declare const __WORKSPACE_ROOT__: string;
 
+export const EFFECT_LAB_RENDER_WIDTH = 540;
+export const EFFECT_LAB_RENDER_HEIGHT = 960;
+
 const fetchJson = async <T,>(absolutePath: string) => {
   const response = await fetch(`/@fs${absolutePath}`);
   if (!response.ok) {
@@ -439,6 +442,8 @@ export const createTemplateStageModel = ({
     coverImageSrc: layout.coverImageSrc,
     palette: layout.palette,
     primaryNodes,
+    renderHeight: manifest.height,
+    renderWidth: manifest.width,
     secondaryNodes,
     stageBackground: layout.stageBackground,
     textMotion: layout.textMotion,
@@ -493,6 +498,8 @@ export const createEffectStageModel = ({
       },
     },
     palette,
+    renderHeight: EFFECT_LAB_RENDER_HEIGHT,
+    renderWidth: EFFECT_LAB_RENDER_WIDTH,
     stageBackground:
       "radial-gradient(circle at 50% 50%, rgba(87,216,196,0.12) 0%, transparent 26%), linear-gradient(180deg, #03070c 0%, #071019 100%)",
     visualLayout,

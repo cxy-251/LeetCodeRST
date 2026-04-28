@@ -1,12 +1,15 @@
 import React from "react";
 import {EffectRuntimeAdapter} from "@paper-to-video/content-pipeline";
-import {createEffectStageModel, createTemplateStageModel, getEffectStartLabel} from "./App.service";
+import {
+  createEffectStageModel,
+  createTemplateStageModel,
+  EFFECT_LAB_RENDER_HEIGHT,
+  EFFECT_LAB_RENDER_WIDTH,
+  getEffectStartLabel,
+} from "./App.service";
 import {EffectLabView, LoadingStateView, TemplatePreviewView, AppIndexView} from "./AppViews";
 import styles from "./App.module.css";
 import {useEffectPreview, usePreviewRouter, useTemplatePreview} from "./useEditorPreview";
-
-const EFFECT_STAGE_WIDTH = 540;
-const EFFECT_STAGE_HEIGHT = 960;
 
 const App: React.FC = () => {
   const {effectRoute, navigate, templateRoute} = usePreviewRouter();
@@ -57,7 +60,7 @@ const App: React.FC = () => {
         interactionFrame={effectStageModel.interactionFrame}
         effectStartFrame={effectStageModel.activationFrame}
         effectId={effectStageModel.effectId}
-        height={EFFECT_STAGE_HEIGHT}
+        height={EFFECT_LAB_RENDER_HEIGHT}
         isRunning={effectState.isRunning}
         mode="interactive"
         modules={effectStageModel.modules}
@@ -65,7 +68,7 @@ const App: React.FC = () => {
         resetToken={effectState.resetToken}
         seed={effectState.manifest.seed}
         simulationFrame={effectState.simulationFrame}
-        width={EFFECT_STAGE_WIDTH}
+        width={EFFECT_LAB_RENDER_WIDTH}
       />
     ) : (
       <button className={styles.effectStageButton} onClick={() => effectState.setIsRunning(true)} type="button">

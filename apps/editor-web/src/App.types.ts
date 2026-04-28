@@ -71,6 +71,8 @@ export type TemplateStageModel = {
   coverImageSrc: string | null;
   palette: ThemePalette;
   primaryNodes: React.ReactNode[];
+  renderHeight: number;
+  renderWidth: number;
   secondaryNodes: React.ReactNode[];
   stageBackground: string;
   textMotion: TextMotionConfig;
@@ -95,6 +97,8 @@ export type EffectStageModel = {
   effectId: EffectAtomId;
   modules: VisualModuleConfig | undefined;
   palette: ThemePalette;
+  renderHeight: number;
+  renderWidth: number;
   stageBackground: string;
   visualLayout: {
     blurPx: number;
@@ -127,6 +131,8 @@ export type PreviewStageProps = {
   manifest: RenderManifest;
   palette: ThemePalette;
   previewFrame: number;
+  renderHeight: number;
+  renderWidth: number;
   surfaceVariant?: "phone" | "effect-lab";
   stageBackground: string;
   visualLayout: {
@@ -209,6 +215,8 @@ export type EffectLayoutResolution = {
   effectId: EffectAtomId;
   modules: VisualModuleConfig | undefined;
   palette: ThemePalette;
+  renderHeight: number;
+  renderWidth: number;
   stageBackground: string;
   visualLayout: CoverLayoutConfig;
 };

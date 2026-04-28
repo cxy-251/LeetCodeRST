@@ -12,6 +12,7 @@ import type {
   TemplateStageModel,
 } from "./App.types";
 import styles from "./App.module.css";
+import {usePreviewSurfaceScale} from "./usePreviewSurfaceScale";
 
 const cx = (...classNames: Array<string | false | null | undefined>) => classNames.filter(Boolean).join(" ");
 
@@ -112,68 +113,76 @@ export const PreviewStageView: React.FC<PreviewStageProps> = ({
   manifest,
   palette,
   previewFrame,
+  renderHeight,
+  renderWidth,
   surfaceVariant = "phone",
   stageBackground,
   visualLayout,
 }) => {
   const backgroundMotion = manifest.modules?.backgroundMotion?.overscanPercent ?? 36;
+  const {scale, viewportRef} = usePreviewSurfaceScale({renderHeight, renderWidth});
 
   return (
     <div className={surfaceVariant === "effect-lab" ? styles.effectFrame : styles.phoneFrame}>
-      <div
-        className={styles.slidePreview}
-        style={{
-          color: palette.fg,
-          background: stageBackground,
-        }}
-      >
-        {coverImageSrc ? (
-          <div className={styles.previewCoverLayer}>
-            <img
-              alt={manifest.coverImage?.alt ?? "cover"}
-              className={styles.previewCoverImage}
-              style={{
-                width: `${100 + backgroundMotion}%`,
-                height: `${100 + backgroundMotion}%`,
-                left: `-${backgroundMotion / 2}%`,
-                top: `-${backgroundMotion / 2}%`,
-                position: "absolute",
-                objectPosition: "center center",
-                opacity: visualLayout.opacity,
-                filter: `blur(${visualLayout.blurPx}px) saturate(${visualLayout.saturation}) brightness(${visualLayout.brightness})`,
-                transform: `translate(${visualLayout.translateX}%, ${visualLayout.translateY}%) scale(${visualLayout.scale})`,
-              }}
-              src={coverImageSrc}
+      <div className={styles.previewViewport} ref={viewportRef}>
+        <div
+          className={styles.slidePreview}
+          style={{
+            color: palette.fg,
+            background: stageBackground,
+            height: renderHeight,
+            transform: `scale(${scale})`,
+            width: renderWidth,
+          }}
+        >
+          {coverImageSrc ? (
+            <div className={styles.previewCoverLayer}>
+              <img
+                alt={manifest.coverImage?.alt ?? "cover"}
+                className={styles.previewCoverImage}
+                style={{
+                  width: `${100 + backgroundMotion}%`,
+                  height: `${100 + backgroundMotion}%`,
+                  left: `-${backgroundMotion / 2}%`,
+                  top: `-${backgroundMotion / 2}%`,
+                  position: "absolute",
+                  objectPosition: "center center",
+                  opacity: visualLayout.opacity,
+                  filter: `blur(${visualLayout.blurPx}px) saturate(${visualLayout.saturation}) brightness(${visualLayout.brightness})`,
+                  transform: `translate(${visualLayout.translateX}%, ${visualLayout.translateY}%) scale(${visualLayout.scale})`,
+                }}
+                src={coverImageSrc}
+              />
+              <div className={styles.previewCoverShade} style={{background: visualLayout.shade}} />
+            </div>
+          ) : null}
+
+          {effectLayer ?? (
+            <EffectRuntimeAdapter
+              effectId={effectId}
+              absoluteFrame={absolutePreviewFrame}
+              activationFrame={activationFrame}
+              continuousEffectId={
+                continuousEffectId === "snake-grid"
+                  ? "snake-grid"
+                  : continuousEffectId === "particle-orbit"
+                    ? "particle-orbit"
+                    : "cellular-life"
+              }
+              interactionFrame={interactionFrame}
+              effectStartFrame={activationFrame}
+              height={renderHeight}
+              isRunning
+              mode="interactive"
+              modules={manifest.modules}
+              seed={manifest.seed}
+              simulationFrame={absolutePreviewFrame}
+              width={renderWidth}
             />
-            <div className={styles.previewCoverShade} style={{background: visualLayout.shade}} />
-          </div>
-        ) : null}
+          )}
 
-        {effectLayer ?? (
-          <EffectRuntimeAdapter
-            effectId={effectId}
-            absoluteFrame={absolutePreviewFrame}
-            activationFrame={activationFrame}
-            continuousEffectId={
-              continuousEffectId === "snake-grid"
-                ? "snake-grid"
-                : continuousEffectId === "particle-orbit"
-                  ? "particle-orbit"
-                  : "cellular-life"
-            }
-            interactionFrame={interactionFrame}
-            effectStartFrame={activationFrame}
-            height={672}
-            isRunning
-            mode="interactive"
-            modules={manifest.modules}
-            seed={manifest.seed}
-            simulationFrame={absolutePreviewFrame}
-            width={378}
-          />
-        )}
-
-        {children}
+          {children}
+        </div>
       </div>
     </div>
   );
@@ -285,6 +294,8 @@ export const TemplatePreviewView: React.FC<{
           manifest={manifest}
           palette={stageModel.palette}
           previewFrame={previewFrame}
+          renderHeight={stageModel.renderHeight}
+          renderWidth={stageModel.renderWidth}
           surfaceVariant="phone"
           stageBackground={stageModel.stageBackground}
           visualLayout={stageModel.visualLayout}
@@ -405,6 +416,8 @@ export const EffectLabView: React.FC<{
               manifest={manifest}
               palette={stageModel.palette}
               previewFrame={simulationFrame}
+              renderHeight={stageModel.renderHeight}
+              renderWidth={stageModel.renderWidth}
               surfaceVariant="effect-lab"
               stageBackground={stageModel.stageBackground}
               visualLayout={stageModel.visualLayout}

@@ -347,7 +347,7 @@
 }
 
 .phoneFrame {
-  width: min(420px, 100%);
+  width: min(520px, 100%);
   aspect-ratio: 9 / 16;
   padding: 16px;
   border-radius: 42px;
@@ -373,10 +373,18 @@
   display: flex;
 }
 
-.slidePreview {
+.previewViewport {
   width: 100%;
+  height: 100%;
   flex: 1;
-  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.slidePreview {
+  flex-shrink: 0;
   border-radius: 28px;
   padding: 36px 28px 28px;
   display: flex;
@@ -384,6 +392,8 @@
   justify-content: space-between;
   position: relative;
   overflow: hidden;
+  transform-origin: center center;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
 .previewCoverLayer {
@@ -616,7 +626,7 @@
 
   .phoneFrame {
     width: 100%;
-    max-width: 320px;
+    max-width: 400px;
     padding: 12px;
     border-radius: 34px;
   }
