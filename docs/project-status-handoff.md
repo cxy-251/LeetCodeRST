@@ -213,6 +213,10 @@ npm run build
    - `life-game / snake-grid` 保留颜色与主体尺寸、节奏的高价值参数
    - `particle-orbit` 保留变体、形状、分布、轨迹与主体构图参数
    - 不再暴露过多底层实现参数
+47. effect lab 当前已切回稳定基线数据源：
+   - `/effects/*` 默认读取仓库基线 manifest，而不是 `latest run`
+   - 避免实验页被最新一次视频运行的临时参数污染
+48. `Effect Family Context` 说明块已从特效实验页移除，当前 family 选择只保留在组合模板页的手动下拉里
 
 ---
 
@@ -406,6 +410,7 @@ npm run build
 11. `ThreeLife` 这条链路虽然已经完成核心架构拆分，但 `snake-grid / particle-orbit` 还没有按同样深度拆成纯引擎层，后续应继续统一
 12. `editor-web` 构建当前仍会出现 `chunk size > 500kB` 的 Vite 提示，这不阻塞功能，但后续最好继续做按路由或 effect family 的拆包
 13. effect lab 在更窄网页宽度下虽然已经尽量保持右侧侧栏，但当视口进一步变窄时仍会退化；如果后续要长期面向桌面实验页使用，建议把信息区再进一步上移，给舞台让出更多横向空间
+14. effect lab 的舞台虽然已经改成更适合网页的宽幅区域，但目前仍然是“固定侧栏 + 响应式主舞台”的第一版；如果后续要上更多复杂特效，建议再加可折叠侧栏或分段参数分组
 
 ---
 

@@ -1,13 +1,7 @@
 import React from "react";
 import {EffectRuntimeAdapter, getTextMotionState} from "@paper-to-video/content-pipeline";
 import type {VisualModuleConfig} from "@paper-to-video/shared-types";
-import {
-  effectProfileOptions,
-  formatSeconds,
-  getEffectDefinition,
-  getSceneLabel,
-  routeCollections,
-} from "./App.service";
+import {formatSeconds, getEffectDefinition, getSceneLabel, routeCollections} from "./App.service";
 import type {
   EffectPreviewState,
   EffectRoute,
@@ -484,31 +478,6 @@ export const EffectLabView: React.FC<{
               </div>
             ) : null}
 
-            <div className={styles.effectControlPanel}>
-              <div className={styles.effectControlPanelHeader}>
-                <strong>Effect Family Context</strong>
-                <span>整条视频会通过 effect profile 选择一个 WebGL family，这里先把当前 family 的主体构图调顺。</span>
-              </div>
-              <div className={styles.effectFamilyList}>
-                {effectProfileOptions.map((option) => {
-                  const currentProfileId =
-                    route.effectId === "snake-grid"
-                      ? "snake-grid"
-                      : route.effectId === "particle-orbit"
-                        ? "particle-orbit"
-                        : "life-game";
-                  return (
-                    <div
-                      key={option.id}
-                      className={cx(styles.effectFamilyItem, option.id === currentProfileId && styles.effectFamilyItemActive)}
-                    >
-                      <strong>{option.label}</strong>
-                      <span>{option.description}</span>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
           </aside>
         </div>
       </main>

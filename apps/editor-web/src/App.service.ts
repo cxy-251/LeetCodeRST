@@ -141,7 +141,7 @@ export const effectRoutes: EffectRoute[] = [
     title: "Life Game Effect",
     description: "单独查看可点击启动的生命游戏中间层原子，后续小游戏也沿这套接口扩展。",
     effectId: "cellular-life",
-    source: "latest",
+    source: "default",
   },
   {
     id: "effect-snake-grid",
@@ -149,7 +149,7 @@ export const effectRoutes: EffectRoute[] = [
     title: "Snake Grid Effect",
     description: "单独查看贪吃蛇网格型 WebGL 中间层原子，用于验证第二类小游戏动效接口。",
     effectId: "snake-grid",
-    source: "latest",
+    source: "default",
   },
   {
     id: "effect-particle-orbit",
@@ -157,7 +157,7 @@ export const effectRoutes: EffectRoute[] = [
     title: "Particle Orbit Effect",
     description: "单独查看粒子轨道型 WebGL 中间层原子，用于承接更偏 Three.js 官网氛围案例的视觉方向。",
     effectId: "particle-orbit",
-    source: "latest",
+    source: "default",
   },
 ];
 
