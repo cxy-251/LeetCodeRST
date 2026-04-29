@@ -13,8 +13,8 @@ export const updateRubiksCubelets = ({
 
   cubelets.forEach((cubie, index) => {
     const state = states[index];
-    cubie.mesh.position.copy(state.coord).multiplyScalar(spacing);
-    cubie.mesh.quaternion.copy(state.orientation);
-    cubie.mesh.scale.setScalar(0.92);
+    cubie.object.position.copy(state.coord).multiplyScalar(spacing);
+    cubie.object.quaternion.copy(state.orientation);
+    cubie.object.scale.setScalar(0.96);
   });
 };

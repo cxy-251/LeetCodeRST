@@ -125,12 +125,12 @@ export const DEFAULT_LIGHTS_EFFECT: LightsEffectConfig = {
 };
 
 export const DEFAULT_RUBIKS_EFFECT: RubiksEffectConfig = {
-  turnFrames: 12,
-  holdFrames: 5,
-  cubeScale: 0.88,
-  cubieGap: 0.06,
-  floatAmplitude: 0.12,
-  cameraDrift: 0.12,
+  turnFrames: 14,
+  holdFrames: 3,
+  cubeScale: 1.02,
+  cubieGap: 0.035,
+  floatAmplitude: 0.08,
+  cameraDrift: 0.09,
 };
 
 const CELLULAR_COLOR_PRESETS: Record<

@@ -20,14 +20,15 @@ export type RubiksCubieState = {
 export type RubiksCubelet = {
   id: string;
   initialCoord: THREE.Vector3;
-  mesh: THREE.Mesh<THREE.BoxGeometry, THREE.Material | THREE.Material[]>;
+  object: THREE.Group;
 };
 
 export type ThreeRubiksModules = VisualModuleConfig | undefined;
 
 export type ThreeRubiksCubeletBundle = {
   cubelets: RubiksCubelet[];
-  geometry: THREE.BoxGeometry;
+  bodyGeometry: THREE.BufferGeometry;
+  stickerGeometry: THREE.BufferGeometry;
 };
 
 export type RubiksSequenceCache = {

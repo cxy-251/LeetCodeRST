@@ -1,13 +1,19 @@
-import type * as THREE from "three";
+import * as THREE from "three";
 import type {ThreeRubiksCubeletBundle} from "../rubiks-cube.types";
 
-const disposeMaterials = (mesh: ThreeRubiksCubeletBundle["cubelets"][number]["mesh"]) => {
-  if (Array.isArray(mesh.material)) {
-    mesh.material.forEach((material) => material.dispose());
-    return;
-  }
+const disposeObjectMaterials = (object: ThreeRubiksCubeletBundle["cubelets"][number]["object"]) => {
+  object.traverse((node) => {
+    if (!(node instanceof THREE.Mesh)) {
+      return;
+    }
 
-  mesh.material.dispose();
+    if (Array.isArray(node.material)) {
+      node.material.forEach((material) => material.dispose());
+      return;
+    }
+
+    node.material.dispose();
+  });
 };
 
 export const disposeThreeRubiks = ({
@@ -22,10 +28,11 @@ export const disposeThreeRubiks = ({
   scene: THREE.Scene;
 }) => {
   bundle.cubelets.forEach((cubie) => {
-    disposeMaterials(cubie.mesh);
-    root.remove(cubie.mesh);
+    disposeObjectMaterials(cubie.object);
+    root.remove(cubie.object);
   });
-  bundle.geometry.dispose();
+  bundle.bodyGeometry.dispose();
+  bundle.stickerGeometry.dispose();
   scene.remove(root);
   renderer.dispose();
 };

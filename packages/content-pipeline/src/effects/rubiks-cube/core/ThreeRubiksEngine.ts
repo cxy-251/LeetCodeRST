@@ -20,9 +20,35 @@ export class ThreeRubiksEngine {
   private readonly scene: THREE.Scene;
   private readonly camera: THREE.PerspectiveCamera;
   private readonly root = new THREE.Group();
-  private readonly ambientLight = new THREE.AmbientLight(0xffffff, 1.28);
-  private readonly keyLight = new THREE.DirectionalLight(0xffffff, 1.18);
-  private readonly rimLight = new THREE.DirectionalLight(0x8fd2ff, 0.76);
+  private readonly ambientLight = new THREE.AmbientLight(0xeaf1ff, 1.42);
+  private readonly hemiLight = new THREE.HemisphereLight(0xf6fbff, 0x0b0f15, 1.1);
+  private readonly keyLight = new THREE.DirectionalLight(0xffffff, 1.42);
+  private readonly fillLight = new THREE.DirectionalLight(0xffd4ab, 0.42);
+  private readonly rimLight = new THREE.DirectionalLight(0x8fd2ff, 0.96);
+  private readonly cubeCore = new THREE.Mesh(
+    new THREE.BoxGeometry(1.85, 1.85, 1.85),
+    new THREE.MeshStandardMaterial({
+      color: 0x090b0e,
+      metalness: 0.08,
+      roughness: 0.92,
+    }),
+  );
+  private readonly contactShadow = new THREE.Mesh(
+    new THREE.CircleGeometry(2.68, 48),
+    new THREE.MeshBasicMaterial({
+      color: 0x04070b,
+      opacity: 0.22,
+      transparent: true,
+    }),
+  );
+  private readonly haloPlane = new THREE.Mesh(
+    new THREE.CircleGeometry(4.6, 64),
+    new THREE.MeshBasicMaterial({
+      color: 0x153455,
+      opacity: 0.07,
+      transparent: true,
+    }),
+  );
   private readonly bundle: ThreeRubiksCubeletBundle;
   private width = 0;
   private height = 0;
@@ -64,13 +90,29 @@ export class ThreeRubiksEngine {
 
     this.scene = new THREE.Scene();
     this.scene.add(this.root);
-    this.camera = new THREE.PerspectiveCamera(30, options.width / options.height, 0.1, 100);
-    this.camera.position.set(0, 0, 12.8);
+    this.scene.fog = new THREE.Fog(0x081019, 12, 28);
+    this.camera = new THREE.PerspectiveCamera(34, options.width / options.height, 0.1, 100);
+    this.camera.position.set(5.8, 4.2, 7.3);
     this.camera.lookAt(0, 0, 0);
 
-    this.keyLight.position.set(6, 8, 10);
-    this.rimLight.position.set(-7, -4, -8);
-    this.scene.add(this.ambientLight, this.keyLight, this.rimLight);
+    this.keyLight.position.set(7, 9, 10);
+    this.fillLight.position.set(-6, 2.5, 7);
+    this.rimLight.position.set(-8, 5, -8);
+    this.contactShadow.rotation.x = -Math.PI / 2;
+    this.contactShadow.position.set(0, -3.12, 0);
+    this.haloPlane.rotation.x = -Math.PI / 2;
+    this.haloPlane.position.set(0, -3.16, 0);
+    this.cubeCore.scale.setScalar(1.36);
+    this.root.add(this.cubeCore);
+    this.scene.add(
+      this.contactShadow,
+      this.haloPlane,
+      this.ambientLight,
+      this.hemiLight,
+      this.keyLight,
+      this.fillLight,
+      this.rimLight,
+    );
 
     this.bundle = createRubiksCubelets({root: this.root});
     this.resize(options.width, options.height);
@@ -105,13 +147,25 @@ export class ThreeRubiksEngine {
     });
 
     const time = effectiveFrame * 0.018 + params.seed * 0.0061;
+    const settleProgress = Math.min(1, effectiveFrame / 96);
+    const orbitPhase = time * 0.36;
+    const cameraRadius = 7.3 - settleProgress * 0.48 + Math.sin(time * 0.33) * 0.12;
+
     this.root.scale.setScalar(config.cubeScale);
-    this.root.position.set(0, Math.sin(time * 0.9) * config.floatAmplitude, 0);
+    this.root.position.set(0, Math.sin(time * 0.72) * config.floatAmplitude, 0);
     this.root.rotation.set(
-      -0.56 + Math.sin(time * 0.52) * config.cameraDrift,
-      0.66 + time * 0.12 + Math.cos(time * 0.46) * config.cameraDrift,
-      Math.sin(time * 0.74) * config.cameraDrift * 0.44,
+      -0.48 + Math.sin(time * 0.48) * config.cameraDrift * 0.32,
+      0.62 + Math.cos(time * 0.31) * config.cameraDrift * 0.2,
+      Math.sin(time * 0.58) * config.cameraDrift * 0.16,
     );
+    this.camera.position.set(
+      Math.sin(orbitPhase) * cameraRadius,
+      4.15 + Math.sin(time * 0.27) * config.cameraDrift * 1.9,
+      Math.cos(orbitPhase) * cameraRadius,
+    );
+    this.camera.lookAt(0, 0.1 + Math.sin(time * 0.41) * 0.12, 0);
+    this.contactShadow.scale.setScalar(1 + Math.sin(time * 0.64) * 0.03);
+    this.haloPlane.scale.setScalar(1 + Math.cos(time * 0.38) * 0.04);
 
     this.renderer.render(this.scene, this.camera);
   }
@@ -123,6 +177,24 @@ export class ThreeRubiksEngine {
       root: this.root,
       scene: this.scene,
     });
+    this.cubeCore.geometry.dispose();
+    if (Array.isArray(this.cubeCore.material)) {
+      this.cubeCore.material.forEach((material) => material.dispose());
+    } else {
+      this.cubeCore.material.dispose();
+    }
+    this.contactShadow.geometry.dispose();
+    if (Array.isArray(this.contactShadow.material)) {
+      this.contactShadow.material.forEach((material) => material.dispose());
+    } else {
+      this.contactShadow.material.dispose();
+    }
+    this.haloPlane.geometry.dispose();
+    if (Array.isArray(this.haloPlane.material)) {
+      this.haloPlane.material.forEach((material) => material.dispose());
+    } else {
+      this.haloPlane.material.dispose();
+    }
   }
 
   private resolveConfig(modules?: ThreeRubiksModules) {
