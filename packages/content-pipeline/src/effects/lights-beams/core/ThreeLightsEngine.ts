@@ -97,7 +97,7 @@ export class ThreeLightsEngine {
 
     this.scene = new THREE.Scene();
     this.scene.add(this.root);
-    this.scene.fog = new THREE.FogExp2(0x071320, 0.026);
+    this.scene.fog = new THREE.FogExp2(0x071320, 0.03);
     this.camera = new THREE.PerspectiveCamera(34, options.width / options.height, 0.1, 100);
     this.camera.position.set(0, 1.38, 7.6);
     this.camera.lookAt(0, -0.58, -15.2);
@@ -107,9 +107,9 @@ export class ThreeLightsEngine {
     this.composer.addPass(renderPass);
     this.bloomPass = new UnrealBloomPass(
       new THREE.Vector2(options.width, options.height),
-      0.62,
-      0.82,
-      0.18,
+      0.5,
+      0.78,
+      0.22,
     );
     this.composer.addPass(this.bloomPass);
 
@@ -207,11 +207,11 @@ export class ThreeLightsEngine {
     });
     const fog = this.scene.fog;
     if (fog instanceof THREE.FogExp2) {
-      fog.density = 0.022 + surgeSection * 0.006 - pulseSection * 0.002;
+      fog.density = 0.028 + surgeSection * 0.007 - pulseSection * 0.001;
     }
-    this.bloomPass.strength = 0.38 + config.beatIntensity * 0.56 + pulseSection * 0.22 + surgeSection * 0.36;
-    this.bloomPass.radius = 0.56 + config.beatIntensity * 0.18 + pulseSection * 0.08;
-    this.bloomPass.threshold = Math.max(0.04, 0.18 - config.beatIntensity * 0.08 - surgeSection * 0.06);
+    this.bloomPass.strength = 0.26 + config.beatIntensity * 0.42 + pulseSection * 0.16 + surgeSection * 0.28;
+    this.bloomPass.radius = 0.5 + config.beatIntensity * 0.12 + pulseSection * 0.06;
+    this.bloomPass.threshold = Math.max(0.08, 0.24 - config.beatIntensity * 0.06 - surgeSection * 0.04);
     this.bundle.glow.material.opacity = 0.08 * choreography.orbGain;
     this.bundle.core.material.opacity = 0.22 * choreography.orbGain;
     this.bundle.accent.material.opacity = 0.25 * choreography.rimGain;
@@ -220,12 +220,12 @@ export class ThreeLightsEngine {
     this.bundle.groundRim.material.opacity = 0.24 * choreography.rimGain;
     this.bundle.surfaceDots.material.opacity = 0.14 * choreography.fieldGain;
     this.bundle.surfaceAccent.material.opacity = 0.2 * choreography.fieldGain;
-    this.bundle.stars.material.opacity = 0.2 + choreography.fieldGain * 0.12 + surgeSection * 0.08;
+    this.bundle.stars.material.opacity = 0.08 + choreography.fieldGain * 0.06 + surgeSection * 0.04;
     this.bundle.stars.material.size =
-      0.14 +
-      config.density * 0.035 +
-      pulseSection * 0.025 +
-      surgeSection * 0.04;
+      0.1 +
+      config.density * 0.026 +
+      pulseSection * 0.016 +
+      surgeSection * 0.03;
     this.bundle.horizonMaterial.opacity = 0.12 + pulseSection * 0.06 + surgeSection * 0.04;
     this.bundle.floorTiles.forEach((tile) => {
       tile.fillMaterial.opacity = 0.06 + pulseSection * 0.04;

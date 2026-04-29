@@ -923,6 +923,36 @@ Verification:
 
 ---
 
+## 23. 2026-04-30 Lights Beams Far-Field Dimming Pass
+
+This pass intentionally darkened the far field of `lights-beams` so the scene reads as depth and travel, not as a uniformly lit horizon.
+
+What changed:
+
+1. Far orb outlines and ground rims were reduced so distant structures read more like dormant silhouettes.
+   - `packages/content-pipeline/src/effects/lights-beams/core/updateLightsInstances.ts`
+2. The new atmospheric stars layer was rebalanced:
+   - lower far-star intensity
+   - lower star opacity and point size
+   - burst response now favors near stars more strongly than horizon stars
+3. Global haze and bloom defaults were tightened:
+   - slightly denser fog
+   - lower base bloom strength
+   - higher bloom threshold
+   - `packages/content-pipeline/src/effects/lights-beams/core/ThreeLightsEngine.ts`
+
+Why this matters:
+
+1. The visual language for this family is “far = dark outline, near = illuminated presence”.
+2. Without this pass, the atmospheric field was competing too much with the foreground subject, which weakened the sense of forward travel.
+
+Verification:
+
+1. `npm run lint`
+2. `npm run build`
+
+---
+
 ## 31. 2026-04-30 Lights Bloom And Source Model Pass
 
 This pass aligned `lights-beams` more closely with the later-stage HelloEnjoy `Lights` structure and added a real screen-space bloom pass.

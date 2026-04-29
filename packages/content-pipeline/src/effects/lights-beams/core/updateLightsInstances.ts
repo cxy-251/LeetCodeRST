@@ -22,7 +22,7 @@ const LAYER_TUNING: Record<"accent" | "core" | "glow", LayerTuning> = {
     yOffset: 0.1,
   },
   accent: {
-    nearMix: 0.25,
+    nearMix: 0.34,
     pulseBias: 0.08,
     scale: 0.38,
     yOffset: 0.08,
@@ -199,6 +199,8 @@ export const updateLightsInstances = ({
 
   const glowRadius = 0.72 + config.beamLength * 1.34;
   const coreRadius = 0.22 + config.beamThickness * 4.2;
+  const farOrbBase = 0.18;
+  const farOrbGain = 0.26;
 
   seeds.forEach((seed, index) => {
     const state = computeOrbState({
@@ -224,7 +226,8 @@ export const updateLightsInstances = ({
             ? coreRadius
             : Math.max(0.08, coreRadius * 0.36);
 
-      const presence = tuning.nearMix * highlightFactor + (1 - tuning.nearMix) * (0.55 + visibility.far * 0.45);
+      const farPresence = farOrbBase + visibility.far * farOrbGain;
+      const presence = tuning.nearMix * highlightFactor + (1 - tuning.nearMix) * farPresence;
 
       helper.position.set(state.x, -2.1 + floorHeight + tuning.yOffset, displayZ);
       helper.rotation.set(0, seed.baseAngle + time * 0.08, 0);
@@ -262,7 +265,7 @@ export const updateLightsInstances = ({
     helper.position.set(state.x, -2.083 + floorHeight + 0.03, displayZ);
     helper.rotation.set(-Math.PI / 2, 0, 0);
     helper.scale.setScalar(
-      (0.34 + visibility.far * 0.32 + highlightFactor * 0.22) *
+      (0.12 + visibility.far * 0.18 + highlightFactor * 0.24) *
         choreography.rimGain *
         rimOnlyFactor,
     );
@@ -323,7 +326,8 @@ export const updateLightsInstances = ({
   const starDepth = totalDepth + 14;
 
   // Keep stars in a slower, wider volume so the camera read is "moving through space"
-  // instead of only watching foreground orbs fly at the viewer.
+  // instead of only watching foreground orbs fly at the viewer. Far stars stay dim on
+  // purpose so the horizon reads as air/depth, not as a second competing subject.
   for (let index = 0; index < starCount; index += 1) {
     const laneIndex = index % starLaneCount;
     const rowIndex = Math.floor(index / starLaneCount);
@@ -345,11 +349,15 @@ export const updateLightsInstances = ({
     const displayZ = wrapDepth(baseZ + travelOffset * parallax, nearLimit + 4, starDepth);
     const visibility = sampleDepthVisibility(displayZ, nearLimit + 4, starDepth);
     const shimmer = 0.58 + (Math.sin(time * (0.28 + (index % 7) * 0.025) + phase) + 1) * 0.18;
-    const burst = 0.18 + choreography.fieldGain * 0.24 + visibility.nearSoft * choreography.auraGain * 0.24;
-    const intensity = (0.14 + visibility.far * 0.18 + visibility.nearSoft * 0.52) * shimmer + burst;
+    const burst =
+      (0.04 + choreography.fieldGain * 0.08) +
+      visibility.nearSoft * choreography.auraGain * 0.24;
+    const intensity =
+      (0.02 + visibility.far * 0.05 + visibility.nearSoft * 0.5) * shimmer +
+      burst * (0.18 + visibility.nearSoft * 0.82);
 
     starColor.copy(starFarColor);
-    starColor.lerp(starAccentColor, visibility.far * 0.32 + choreography.rimGain * 0.04);
+    starColor.lerp(starAccentColor, visibility.far * 0.16 + choreography.rimGain * 0.03);
     starColor.lerp(starNearColor, visibility.nearSoft * 0.68);
 
     const cursor = index * 3;
