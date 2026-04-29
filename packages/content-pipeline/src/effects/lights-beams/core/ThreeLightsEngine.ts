@@ -212,9 +212,9 @@ export class ThreeLightsEngine {
     this.bloomPass.strength = 0.26 + config.beatIntensity * 0.42 + pulseSection * 0.16 + surgeSection * 0.28;
     this.bloomPass.radius = 0.5 + config.beatIntensity * 0.12 + pulseSection * 0.06;
     this.bloomPass.threshold = Math.max(0.08, 0.24 - config.beatIntensity * 0.06 - surgeSection * 0.04);
-    this.bundle.glow.material.opacity = 0.012 * choreography.orbGain;
-    this.bundle.core.material.opacity = 0.22 * choreography.orbGain;
-    this.bundle.accent.material.opacity = 0.25 * choreography.rimGain;
+    this.bundle.glow.material.opacity = 0.003 * choreography.orbGain;
+    this.bundle.core.material.opacity = 0.3 * choreography.orbGain;
+    this.bundle.accent.material.opacity = 0.36 * choreography.rimGain;
     this.bundle.groundAura.material.opacity = 0.055 * choreography.auraGain;
     this.bundle.groundGlow.material.opacity = 0.14 * choreography.orbGain;
     this.bundle.groundRim.material.opacity = 0.24 * choreography.rimGain;

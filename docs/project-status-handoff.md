@@ -1012,6 +1012,34 @@ Verification:
 
 ---
 
+## 26. 2026-04-30 Lights Beams Orb Visibility Pass
+
+This pass made the orb palette easier to read by enlarging the core body and suppressing the outer glow shell.
+
+What changed:
+
+1. Core orb size was increased and the accent shell was strengthened.
+   - `packages/content-pipeline/src/effects/lights-beams/core/updateLightsInstances.ts`
+   - the main subject should now read as a solid illuminated ball instead of a tiny point inside a glow stack
+2. Orb palette mixing was pushed harder toward visible per-instance variation.
+   - near balls now hold more `primary / accent` separation
+   - far balls keep more `secondary / accent` bias
+3. The actual orb halo layer was reduced again.
+   - `packages/content-pipeline/src/effects/lights-beams/core/ThreeLightsEngine.ts`
+   - `glow` is now almost invisible as a separate shell, leaving the orb body and field lighting to carry the look
+
+Why this matters:
+
+1. Previously the color logic existed, but the visible orb body was too small to communicate it clearly.
+2. This pass shifts the readable color area from the soft glow envelope back onto the orb itself.
+
+Verification:
+
+1. `npm run lint`
+2. `npm run build`
+
+---
+
 ## 31. 2026-04-30 Lights Bloom And Source Model Pass
 
 This pass aligned `lights-beams` more closely with the later-stage HelloEnjoy `Lights` structure and added a real screen-space bloom pass.

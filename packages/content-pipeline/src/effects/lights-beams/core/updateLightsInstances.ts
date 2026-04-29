@@ -12,19 +12,19 @@ const LAYER_TUNING: Record<"accent" | "core" | "glow", LayerTuning> = {
   glow: {
     nearMix: 1,
     pulseBias: 0.08,
-    scale: 0.72,
+    scale: 0.46,
     yOffset: 0.18,
   },
   core: {
     nearMix: 1,
     pulseBias: 0.1,
-    scale: 0.54,
+    scale: 0.86,
     yOffset: 0.1,
   },
   accent: {
     nearMix: 0.34,
     pulseBias: 0.08,
-    scale: 0.38,
+    scale: 0.56,
     yOffset: 0.08,
   },
 };
@@ -201,8 +201,8 @@ export const updateLightsInstances = ({
     });
   });
 
-  const glowRadius = 0.72 + config.beamLength * 1.34;
-  const coreRadius = 0.22 + config.beamThickness * 4.2;
+  const glowRadius = 0.56 + config.beamLength * 1.02;
+  const coreRadius = 0.34 + config.beamThickness * 5.2;
   const farOrbBase = 0.18;
   const farOrbGain = 0.26;
   const colorPrimary = new THREE.Color(config.primaryColor);
@@ -227,11 +227,13 @@ export const updateLightsInstances = ({
     const highlightFactor = Math.min(1, visibility.nearSoft + choreography.nearBias * visibility.near);
     const rimOnlyFactor = 0.42 + highlightFactor * 0.58;
     const nearBreathBoost = 1 + visibility.nearSoft * 0.28;
-    const paletteMix = 0.18 + seed.lane * 0.58;
+    const paletteMix = seed.lane * 0.72;
+    const accentMix = 0.18 + seed.depth * 0.52;
     mixColor.copy(colorSecondary).lerp(colorAccent, paletteMix);
-    orbColorFar.copy(mixColor).lerp(colorPrimary, visibility.nearSoft * 0.16);
-    orbColorNear.copy(mixColor).lerp(colorPrimary, 0.32 + visibility.nearSoft * 0.52);
-    accentColorResolved.copy(colorAccent).lerp(colorPrimary, visibility.nearSoft * 0.24);
+    orbColorFar.copy(mixColor).lerp(colorSecondary, 0.22 + visibility.far * 0.18);
+    orbColorNear.copy(mixColor).lerp(colorPrimary, 0.18 + visibility.nearSoft * 0.34);
+    orbColorNear.lerp(colorAccent, accentMix * visibility.nearSoft * 0.46);
+    accentColorResolved.copy(colorAccent).lerp(colorPrimary, 0.08 + visibility.nearSoft * 0.12);
 
     (["glow", "core", "accent"] as const).forEach((layerName) => {
       const tuning = LAYER_TUNING[layerName];
@@ -247,10 +249,10 @@ export const updateLightsInstances = ({
       const presence = tuning.nearMix * highlightFactor + (1 - tuning.nearMix) * farPresence;
       const nearScaleBoost =
         layerName === "glow"
-          ? 1 + visibility.nearSoft * 0.3
+          ? 1 + visibility.nearSoft * 0.12
           : layerName === "core"
-            ? 1 + visibility.nearSoft * 0.42
-            : 1 + visibility.nearSoft * 0.12;
+            ? 1 + visibility.nearSoft * 0.58
+            : 1 + visibility.nearSoft * 0.22;
 
       helper.position.set(state.x, -2.1 + floorHeight + tuning.yOffset, displayZ);
       helper.rotation.set(0, seed.baseAngle + time * 0.08, 0);
