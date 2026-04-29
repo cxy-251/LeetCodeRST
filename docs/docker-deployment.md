@@ -29,6 +29,16 @@
 
 ## 3. 构建镜像
 
+首次建议先执行：
+
+```bash
+npm run init:deployment
+```
+
+这会创建生成目录，并在没有 `.env` 时自动复制 `.env.example`。
+
+然后再构建：
+
 ```bash
 docker compose build
 ```
@@ -118,9 +128,16 @@ docker compose run --rm paper-to-video \
 4. 一个准备好的背景图目录示例
 5. 一个 `paper-urls.txt` 示例
 6. 一个 `demo-batch.csv` 示例
+7. `docs/docker-first-run-checklist.md`
 
 ## 9. 当前限制
 
 1. `LM Studio` 需要买家自己在宿主机启动
 2. `edge-tts` 仍然依赖网络访问微软语音服务
 3. `licensed-source` 和 `ai-generated-cover` 目前还是预留接口，尚未在 Docker 内实现 provider
+
+## 10. 首次启动排查
+
+买家第一次启动时，建议按这份清单逐项确认：
+
+- `docs/docker-first-run-checklist.md`

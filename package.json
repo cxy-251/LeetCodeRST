@@ -13,6 +13,7 @@
     "build:editor": "vite build --config apps/editor-web/vite.config.ts",
     "build:renderer": "remotion bundle apps/video-renderer/src/index.tsx /tmp/paper-to-video-remotion-bundle",
     "build:video": "node --import tsx tools/build-video.ts",
+    "init:deployment": "node --import tsx tools/init-deployment.ts",
     "compose:manifest": "node --import tsx tools/compose-manifest.ts",
     "build:source-bundle": "node --import tsx tools/build-source-bundle.ts",
     "analyze:paper-sources": "node --import tsx tools/analyze-paper-sources.ts",

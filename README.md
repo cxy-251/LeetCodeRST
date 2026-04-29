@@ -53,6 +53,7 @@ npm run build
 ## Docker 入口
 
 ```bash
+npm run init:deployment
 docker compose build
 docker compose up
 ```
@@ -60,6 +61,7 @@ docker compose up
 更完整的部署方式见：
 
 - `./docs/docker-deployment.md`
+- `./docs/docker-first-run-checklist.md`
 
 ## 顶层维护目录
 

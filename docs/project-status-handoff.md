@@ -336,6 +336,10 @@ npm run build
    - 宿主机运行 LM Studio
    - 容器内运行论文处理、音频生成、视频渲染和预览站
    - 默认通过 `host.docker.internal:1234/v1` 访问宿主机本地模型
+80. 已新增交付友好的部署辅助文件：
+   - `.env.example`
+   - `npm run init:deployment`
+   - `docs/docker-first-run-checklist.md`
 
 ---
 

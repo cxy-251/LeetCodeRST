@@ -12,6 +12,7 @@
 如果你想把这套源码直接交给别人部署，也请同时看：
 
 - `docs/docker-deployment.md`
+- `docs/docker-first-run-checklist.md`
 
 ## 1. 生成不同视频的三个核心开关
 

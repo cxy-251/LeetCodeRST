@@ -1,4 +1,5 @@
 .DS_Store
+.env
 node_modules
 .turbo
 dist
@@ -21,8 +22,9 @@ public/generated-images/*
 apps/video-renderer/public/generated-audio/*
 apps/video-renderer/public/generated-images/*
 data/source-bundles/*.json
+data/source-bundles/generated/
 data/manifests/ingest/*.json
-data/manifests/generated/*.json
+data/manifests/generated/
 data/content-profiles/generated/*.json
 !data/video-batches/*.csv
 data/video-batches/generated/*.csv
