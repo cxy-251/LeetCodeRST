@@ -148,16 +148,19 @@ export class ThreeLightsEngine {
     this.bundle.core.material.color.set("#ffffff");
     this.bundle.glow.material.color.set("#ffffff");
     this.bundle.accent.material.color.set("#ffffff");
-    this.bundle.groundAura.material.color.set(config.secondaryColor);
-    this.bundle.groundGlow.material.color.set(config.secondaryColor);
-    this.bundle.groundRim.material.color.set(config.accentColor);
-    this.bundle.surfaceDots.material.color.set(config.secondaryColor);
-    this.bundle.surfaceAccent.material.color.set(config.accentColor);
+    const atmosphereFill = new THREE.Color("#102233");
+    const atmosphereLines = new THREE.Color("#3e7aa4");
+    const atmosphereAccent = new THREE.Color("#6aa7d9");
+    this.bundle.groundAura.material.color.copy(atmosphereFill);
+    this.bundle.groundGlow.material.color.copy(atmosphereLines);
+    this.bundle.groundRim.material.color.copy(atmosphereAccent);
+    this.bundle.surfaceDots.material.color.copy(atmosphereLines);
+    this.bundle.surfaceAccent.material.color.copy(atmosphereAccent);
     this.bundle.floorTiles.forEach((tile) => {
-      tile.fillMaterial.color.set(config.secondaryColor);
-      tile.wireMaterial.color.set(config.primaryColor);
+      tile.fillMaterial.color.copy(atmosphereFill);
+      tile.wireMaterial.color.copy(atmosphereLines);
     });
-    this.bundle.horizonMaterial.color.set(config.accentColor);
+    this.bundle.horizonMaterial.color.copy(atmosphereFill);
 
     const frame = Math.max(0, params.simulationFrame ?? params.absoluteFrame);
     const time = frame * config.motionSpeed * 6.9;
@@ -219,24 +222,24 @@ export class ThreeLightsEngine {
     this.bundle.accent.material.opacity = 0.24 * choreography.rimGain;
     this.bundle.groundAura.material.opacity = 0.014 * choreography.auraGain;
     this.bundle.groundGlow.material.opacity = 0.052 * choreography.orbGain;
-    this.bundle.groundRim.material.opacity = 0.18 * choreography.rimGain;
-    this.bundle.surfaceDots.material.opacity = 0.14 * choreography.fieldGain;
-    this.bundle.surfaceAccent.material.opacity = 0.2 * choreography.fieldGain;
-    this.bundle.stars.material.opacity = 0.08 + choreography.fieldGain * 0.06 + surgeSection * 0.04;
+    this.bundle.groundRim.material.opacity = 0.12 * choreography.rimGain;
+    this.bundle.surfaceDots.material.opacity = 0.08 * choreography.fieldGain;
+    this.bundle.surfaceAccent.material.opacity = 0.12 * choreography.fieldGain;
+    this.bundle.stars.material.opacity = 0.04 + choreography.fieldGain * 0.03 + surgeSection * 0.02;
     this.bundle.stars.material.size =
       0.1 +
       config.density * 0.026 +
       pulseSection * 0.016 +
       surgeSection * 0.03;
-    this.bundle.horizonMaterial.opacity = 0.12 + pulseSection * 0.06 + surgeSection * 0.04;
+    this.bundle.horizonMaterial.opacity = 0.07 + pulseSection * 0.03 + surgeSection * 0.02;
     this.bundle.floorTiles.forEach((tile) => {
-      tile.fillMaterial.opacity = 0.06 + pulseSection * 0.04;
-      tile.wireMaterial.opacity = 0.22 + surgeSection * 0.14 + settleSection * 0.06;
+      tile.fillMaterial.opacity = 0.03 + pulseSection * 0.02;
+      tile.wireMaterial.opacity = 0.14 + surgeSection * 0.08 + settleSection * 0.04;
       tile.guideRails.forEach((plane) => {
-        plane.material.opacity = 0.2 + surgeSection * 0.14;
+        plane.material.opacity = 0.12 + surgeSection * 0.08;
       });
       tile.guideDashes.forEach((plane) => {
-        plane.material.opacity = 0.2 + pulseSection * 0.12 + surgeSection * 0.06;
+        plane.material.opacity = 0.1 + pulseSection * 0.08 + surgeSection * 0.04;
       });
     });
     this.bundle.horizonMesh.position.set(

@@ -89,7 +89,7 @@ const computeOrbState = ({
   seed: UpdateLightsInstancesInput["seeds"][number];
   variant: UpdateLightsInstancesInput["config"]["variant"];
 }) => {
-  const laneCount = variant === "fan" ? 6 : variant === "bloom" ? 5 : 4;
+  const laneCount = variant === "fan" ? 4 : variant === "bloom" ? 3 : 2;
   const depthRows = Math.max(1, Math.ceil(totalCount / laneCount));
   const laneIndex = index % laneCount;
   const depthIndex = Math.floor(index / laneCount);
@@ -100,19 +100,19 @@ const computeOrbState = ({
   // while the near field has fewer, more legible hero orbs.
   const depthOffset = (seed.depth - 0.5) * 0.16;
   const depthCurve = Math.max(0, Math.min(1, Math.pow(depthRatio, 0.66) + depthOffset));
-  const laneJitter = seed.drift * 0.42;
-  const depthJitter = Math.sin(seed.phase) * 1.2 + (seed.depth - 0.5) * 1.8;
+  const laneJitter = seed.drift * 0.24;
+  const depthJitter = Math.sin(seed.phase) * 0.72 + (seed.depth - 0.5) * 1.1;
 
   if (variant === "bloom") {
     return {
       x:
-        laneSigned * 5.4 +
-        Math.sin(seed.baseAngle * 0.8) * 0.8 +
+        laneSigned * 4.2 +
+        Math.sin(seed.baseAngle * 0.8) * 0.46 +
         laneJitter,
       z:
         -6 -
         depthCurve * 24.5 -
-        Math.cos(seed.baseAngle * 0.45) * 1.1 +
+        Math.cos(seed.baseAngle * 0.45) * 0.6 +
         depthJitter,
     };
   }
@@ -120,8 +120,8 @@ const computeOrbState = ({
   if (variant === "fan") {
     return {
       x:
-        laneSigned * 7.2 +
-        Math.sin(seed.baseAngle * 0.9) * (0.6 + depthRatio * 0.4) +
+        laneSigned * 5.8 +
+        Math.sin(seed.baseAngle * 0.9) * (0.42 + depthRatio * 0.28) +
         laneJitter,
       z: -5 - depthCurve * 22.5 + depthJitter,
     };
@@ -129,13 +129,13 @@ const computeOrbState = ({
 
   return {
     x:
-      laneSigned * 4.6 +
-      Math.sin(seed.baseAngle * 0.7) * 0.65 +
+      laneSigned * 2.2 +
+      Math.sin(seed.baseAngle * 0.7) * 0.24 +
       laneJitter,
     z:
-      -4 -
-      depthCurve * 20.5 -
-      Math.sin(seed.baseAngle * 0.65) * 0.75 +
+      -1.8 -
+      depthCurve * 16.5 -
+      Math.sin(seed.baseAngle * 0.65) * 0.26 +
       depthJitter,
   };
 };
@@ -203,8 +203,8 @@ export const updateLightsInstances = ({
 
   const glowRadius = 0.26 + config.beamLength * 0.42;
   const coreRadius = 0.84 + config.beamThickness * 7.8;
-  const farOrbBase = 0.18;
-  const farOrbGain = 0.26;
+  const farOrbBase = 0.12;
+  const farOrbGain = 0.16;
   const colorPrimary = new THREE.Color(config.primaryColor);
   const colorSecondary = new THREE.Color(config.secondaryColor);
   const colorAccent = new THREE.Color(config.accentColor);
@@ -227,14 +227,13 @@ export const updateLightsInstances = ({
     const highlightFactor = Math.min(1, visibility.nearSoft + choreography.nearBias * visibility.near);
     const rimOnlyFactor = 0.42 + highlightFactor * 0.58;
     const nearBreathBoost = 1 + visibility.nearSoft * 0.28;
-    const paletteMix = 0.22 + seed.lane * 0.54;
-    const accentMix = 0.26 + seed.depth * 0.34;
-    mixColor.copy(colorSecondary).lerp(colorAccent, paletteMix);
-    orbColorFar.copy(colorSecondary).lerp(mixColor, 0.48 + seed.depth * 0.18);
-    orbColorFar.lerp(colorAccent, 0.08 + visibility.far * 0.16);
-    orbColorNear.copy(mixColor).lerp(colorPrimary, 0.52 + visibility.nearSoft * 0.22);
-    orbColorNear.lerp(colorAccent, 0.14 + accentMix * visibility.nearSoft * 0.42);
-    accentColorResolved.copy(colorAccent).lerp(colorPrimary, 0.22 + visibility.nearSoft * 0.16);
+    const paletteMix = 0.18 + seed.lane * 0.38;
+    const accentMix = 0.18 + seed.depth * 0.26;
+    mixColor.copy(colorPrimary).lerp(colorSecondary, paletteMix);
+    orbColorFar.copy(colorSecondary).lerp(colorAccent, 0.06 + seed.depth * 0.1);
+    orbColorNear.copy(colorPrimary).lerp(colorAccent, 0.08 + accentMix * 0.34);
+    orbColorNear.lerp(colorSecondary, 0.12 + seed.lane * 0.12);
+    accentColorResolved.copy(colorAccent).lerp(colorPrimary, 0.12 + visibility.nearSoft * 0.18);
 
     (["glow", "core", "accent"] as const).forEach((layerName) => {
       const tuning = LAYER_TUNING[layerName];
@@ -287,7 +286,7 @@ export const updateLightsInstances = ({
     helper.position.set(state.x, -2.085 + floorHeight + 0.025, displayZ);
     helper.rotation.set(-Math.PI / 2, 0, 0);
     helper.scale.setScalar(
-      (0.22 + highlightFactor * 0.46) *
+      (0.14 + highlightFactor * 0.26) *
         choreography.orbGain *
         (0.86 + breathing * 0.22) *
         (1 + visibility.nearSoft * 0.06),
@@ -298,7 +297,7 @@ export const updateLightsInstances = ({
     helper.position.set(state.x, -2.09 + floorHeight + 0.015, displayZ);
     helper.rotation.set(-Math.PI / 2, 0, 0);
     helper.scale.setScalar(
-      (0.44 + highlightFactor * 0.52) *
+      (0.26 + highlightFactor * 0.24) *
         choreography.auraGain *
         (0.82 + breathing * 0.12) *
         (1 + visibility.nearSoft * 0.04),
@@ -369,9 +368,9 @@ export const updateLightsInstances = ({
 
   const starPositions = stars.positions;
   const starColors = stars.colors;
-  const starFarColor = new THREE.Color(config.secondaryColor);
-  const starNearColor = new THREE.Color(config.primaryColor);
-  const starAccentColor = new THREE.Color(config.accentColor);
+  const starFarColor = new THREE.Color("#17354b");
+  const starNearColor = new THREE.Color("#5a9bd1");
+  const starAccentColor = new THREE.Color("#9fd2ff");
   const starColor = new THREE.Color();
   const starCount = starPositions.length / 3;
   const starLaneCount = 18;

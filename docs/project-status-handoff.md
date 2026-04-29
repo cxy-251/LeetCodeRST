@@ -921,6 +921,46 @@ Verification:
 
 ---
 
+## 23. 2026-04-30 Lights Beams Hero-Orb Reset Pass
+
+This pass intentionally reset `lights-beams` toward a simpler starting point after the previous orb field still read as too crowded, too dark, and too willing to tint the entire environment.
+
+What changed:
+
+1. The default orb field was reduced to a much smaller hero-orb layout.
+   - `packages/content-pipeline/src/module-api.ts`
+   - lower default `density`
+   - lower default `beamCount`
+   - lower derived `beamCount` from `density`
+2. Pulse/fan/bloom variants now all start from fewer balls.
+   - the goal is to make the family readable from 1 to 2 dominant near-field orbs first, then scale outward
+3. Orb placement was made less wave-like and less batch-like.
+   - `packages/content-pipeline/src/effects/lights-beams/core/updateLightsInstances.ts`
+   - fewer lanes
+   - smaller jitter
+   - less abrupt near-field growth
+4. Orb colors were simplified into brighter direct mixes.
+   - near balls now favor `primary + accent`
+   - far balls now stay readable but more subdued
+5. The environment was decoupled from orb palette colors.
+   - `packages/content-pipeline/src/effects/lights-beams/core/ThreeLightsEngine.ts`
+   - floor, rails, horizon, and ambient support layers now use fixed muted atmosphere colors instead of reusing orb palette colors
+6. Stars were also decoupled from orb colors.
+   - the sky no longer inherits the vivid orb palette
+
+Why this matters:
+
+1. The previous pass still behaved like a field demo with too many simultaneous near-camera subjects.
+2. This reset makes `lights-beams` easier to iterate on by first getting a convincing hero-orb composition, then adding density back only if needed.
+3. The family should now read less like "black balls on a tinted sky" and more like vivid balls inside a darker, quieter environment.
+
+Verification:
+
+1. `npm run lint`
+2. `npm run build`
+
+---
+
 ## 22. 2026-04-30 Lights Beams Atmospheric Stars Pass
 
 This pass added a dedicated atmospheric `Stars` layer to the `lights-beams` family, following the source-analysis split between terrain, orb field, and air-depth systems.
