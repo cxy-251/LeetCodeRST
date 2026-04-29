@@ -961,6 +961,38 @@ Verification:
 
 ---
 
+## 24. 2026-04-30 Lights Beams Fixed-Pair Motion Pass
+
+This pass addressed two remaining motion problems in the simplified `pulse` version of `lights-beams`: near-camera popping / frame hitching, and hero balls appearing to collapse toward each other as they approach.
+
+What changed:
+
+1. The default `pulse` setup was reduced again to a true pair-first composition.
+   - `packages/content-pipeline/src/module-api.ts`
+   - lower default `density`
+   - lower default and derived `beamCount`
+2. `pulse` orbs now move as a paired row with shared depth.
+   - `packages/content-pipeline/src/effects/lights-beams/core/updateLightsInstances.ts`
+   - the first pair keeps the same relative spacing instead of drifting into staggered depth positions
+3. Near-camera fade-out was added before the wrap point.
+   - hero balls now dim out before reaching the extreme foreground
+   - this reduces the visual hitch when an orb leaves the visible zone and respawns in the far field
+4. Environment colors remain decoupled from orb colors.
+   - stars, floor, rails, and horizon continue to use muted atmosphere colors while orbs keep their own brighter palette
+
+Why this matters:
+
+1. The user wanted iteration to restart from one or two dominant balls rather than a full field.
+2. Keeping the first pair on the same depth plane makes the motion read more like a composed scene and less like random collision toward the camera.
+3. Fading before wrap avoids the "ball suddenly covers the whole ground, then snaps away" behavior.
+
+Verification:
+
+1. `npm run lint`
+2. `npm run build`
+
+---
+
 ## 22. 2026-04-30 Lights Beams Atmospheric Stars Pass
 
 This pass added a dedicated atmospheric `Stars` layer to the `lights-beams` family, following the source-analysis split between terrain, orb field, and air-depth systems.

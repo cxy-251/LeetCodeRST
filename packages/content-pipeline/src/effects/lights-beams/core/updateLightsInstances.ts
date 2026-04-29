@@ -127,6 +127,18 @@ const computeOrbState = ({
     };
   }
 
+  if (variant === "pulse") {
+    const pairGap = 1.55;
+    const pairX = laneSigned * pairGap + seed.drift * 0.12;
+    const rowDepth = -5.4 - depthIndex * 7.8;
+    const rowJitter = Math.sin(seed.phase) * 0.28;
+
+    return {
+      x: pairX,
+      z: rowDepth + rowJitter,
+    };
+  }
+
   return {
     x:
       laneSigned * 2.2 +
@@ -224,6 +236,8 @@ export const updateLightsInstances = ({
     const floorHeight = sampleFloorHeight(state.x, displayZ, time, config.spread);
     const breathing = 0.72 + (Math.sin(time * (1.05 + seed.speed * 5.5) + seed.phase) + 1) * 0.24;
     const visibility = sampleDepthVisibility(displayZ, nearLimit, totalDepth);
+    const nearExitFade =
+      displayZ <= 2.2 ? 1 : Math.max(0, 1 - (displayZ - 2.2) / (nearLimit - 2.2));
     const highlightFactor = Math.min(1, visibility.nearSoft + choreography.nearBias * visibility.near);
     const rimOnlyFactor = 0.42 + highlightFactor * 0.58;
     const nearBreathBoost = 1 + visibility.nearSoft * 0.28;
@@ -246,7 +260,8 @@ export const updateLightsInstances = ({
             : Math.max(0.08, coreRadius * 0.36);
 
       const farPresence = farOrbBase + visibility.far * farOrbGain;
-      const presence = tuning.nearMix * highlightFactor + (1 - tuning.nearMix) * farPresence;
+      const presence =
+        (tuning.nearMix * highlightFactor + (1 - tuning.nearMix) * farPresence) * nearExitFade;
       const nearScaleBoost =
         layerName === "glow"
           ? 1 + visibility.nearSoft * 0.02
@@ -269,7 +284,7 @@ export const updateLightsInstances = ({
           (breathing + tuning.pulseBias) *
           nearBreathBoost *
           nearScaleBoost *
-          (layerName === "accent" ? rimOnlyFactor : presence),
+          (layerName === "accent" ? rimOnlyFactor * nearExitFade : presence),
       );
       helper.updateMatrix();
       mesh.setMatrixAt(index, helper.matrix);
@@ -289,7 +304,8 @@ export const updateLightsInstances = ({
       (0.14 + highlightFactor * 0.26) *
         choreography.orbGain *
         (0.86 + breathing * 0.22) *
-        (1 + visibility.nearSoft * 0.06),
+        (1 + visibility.nearSoft * 0.06) *
+        nearExitFade,
     );
     helper.updateMatrix();
     meshes.groundGlow.mesh.setMatrixAt(index, helper.matrix);
@@ -300,7 +316,8 @@ export const updateLightsInstances = ({
       (0.26 + highlightFactor * 0.24) *
         choreography.auraGain *
         (0.82 + breathing * 0.12) *
-        (1 + visibility.nearSoft * 0.04),
+        (1 + visibility.nearSoft * 0.04) *
+        nearExitFade,
     );
     helper.updateMatrix();
     meshes.groundAura.mesh.setMatrixAt(index, helper.matrix);
@@ -310,7 +327,8 @@ export const updateLightsInstances = ({
     helper.scale.setScalar(
       (0.12 + visibility.far * 0.18 + highlightFactor * 0.24) *
         choreography.rimGain *
-        rimOnlyFactor,
+        rimOnlyFactor *
+        nearExitFade,
     );
     helper.updateMatrix();
     meshes.groundRim.mesh.setMatrixAt(index, helper.matrix);

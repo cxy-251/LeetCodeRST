@@ -114,10 +114,10 @@ export const DEFAULT_PARTICLE_EFFECT: ParticleEffectConfig = {
 export const DEFAULT_LIGHTS_EFFECT: LightsEffectConfig = {
   variant: "pulse",
   palette: "midnight-cyan",
-  density: 0.18,
+  density: 0.08,
   speed: 0.62,
   beatIntensity: 0.68,
-  beamCount: 6,
+  beamCount: 2,
   beamLength: 0.56,
   beamThickness: 0.024,
   orbitRadius: 0.24,
@@ -296,10 +296,10 @@ const LIGHTS_VARIANTS: Record<
 > = {
   pulse: {
     palette: "midnight-cyan",
-    density: 0.18,
+    density: 0.08,
     speed: 0.62,
     beatIntensity: 0.68,
-    beamCount: 6,
+    beamCount: 2,
     beamLength: 0.56,
     beamThickness: 0.024,
     orbitRadius: 0.24,
@@ -457,7 +457,7 @@ export const resolveLightsEffectConfig = (
 
   return {
     ...resolved,
-    beamCount: Math.max(2, Math.round(2 + resolved.density * 12)),
+    beamCount: Math.max(2, Math.round(1 + resolved.density * 10)),
     motionSpeed: 0.0038 + resolved.speed * 0.0052,
     spread: 0.5 + resolved.density * 0.42,
     beamLength: 0.48 + resolved.density * 0.28,
