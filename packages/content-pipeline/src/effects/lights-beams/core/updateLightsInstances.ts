@@ -11,8 +11,8 @@ type LayerTuning = {
 const LAYER_TUNING: Record<"accent" | "core" | "glow", LayerTuning> = {
   glow: {
     nearMix: 1,
-    pulseBias: 0.18,
-    scale: 1.2,
+    pulseBias: 0.08,
+    scale: 0.72,
     yOffset: 0.18,
   },
   core: {
@@ -98,9 +98,10 @@ const computeOrbState = ({
   const depthRatio = depthRows === 1 ? 0 : depthIndex / Math.max(1, depthRows - 1);
   // Bias rows toward the far field so the horizon reads as a denser dormant grid
   // while the near field has fewer, more legible hero orbs.
-  const depthCurve = Math.pow(depthRatio, 0.74);
+  const depthOffset = (seed.depth - 0.5) * 0.26;
+  const depthCurve = Math.max(0, Math.min(1, Math.pow(depthRatio, 0.82) + depthOffset));
   const laneJitter = seed.drift * 0.42;
-  const depthJitter = Math.sin(seed.phase) * 0.9;
+  const depthJitter = Math.sin(seed.phase) * 1.2 + (seed.depth - 0.5) * 1.8;
 
   if (variant === "bloom") {
     return {
@@ -204,6 +205,13 @@ export const updateLightsInstances = ({
   const coreRadius = 0.22 + config.beamThickness * 4.2;
   const farOrbBase = 0.18;
   const farOrbGain = 0.26;
+  const colorPrimary = new THREE.Color(config.primaryColor);
+  const colorSecondary = new THREE.Color(config.secondaryColor);
+  const colorAccent = new THREE.Color(config.accentColor);
+  const mixColor = new THREE.Color();
+  const orbColorFar = new THREE.Color();
+  const orbColorNear = new THREE.Color();
+  const accentColorResolved = new THREE.Color();
 
   seeds.forEach((seed, index) => {
     const state = computeOrbState({
@@ -219,6 +227,11 @@ export const updateLightsInstances = ({
     const highlightFactor = Math.min(1, visibility.nearSoft + choreography.nearBias * visibility.near);
     const rimOnlyFactor = 0.42 + highlightFactor * 0.58;
     const nearBreathBoost = 1 + visibility.nearSoft * 0.28;
+    const paletteMix = 0.18 + seed.lane * 0.58;
+    mixColor.copy(colorSecondary).lerp(colorAccent, paletteMix);
+    orbColorFar.copy(mixColor).lerp(colorPrimary, visibility.nearSoft * 0.16);
+    orbColorNear.copy(mixColor).lerp(colorPrimary, 0.32 + visibility.nearSoft * 0.52);
+    accentColorResolved.copy(colorAccent).lerp(colorPrimary, visibility.nearSoft * 0.24);
 
     (["glow", "core", "accent"] as const).forEach((layerName) => {
       const tuning = LAYER_TUNING[layerName];
@@ -252,6 +265,14 @@ export const updateLightsInstances = ({
       );
       helper.updateMatrix();
       mesh.setMatrixAt(index, helper.matrix);
+
+      const resolvedColor =
+        layerName === "core"
+          ? orbColorNear
+          : layerName === "accent"
+            ? accentColorResolved
+            : orbColorFar;
+      mesh.setColorAt(index, resolvedColor);
     });
 
     helper.position.set(state.x, -2.085 + floorHeight + 0.025, displayZ);
@@ -290,6 +311,15 @@ export const updateLightsInstances = ({
   meshes.glow.mesh.instanceMatrix.needsUpdate = true;
   meshes.core.mesh.instanceMatrix.needsUpdate = true;
   meshes.accent.mesh.instanceMatrix.needsUpdate = true;
+  if (meshes.glow.mesh.instanceColor) {
+    meshes.glow.mesh.instanceColor.needsUpdate = true;
+  }
+  if (meshes.core.mesh.instanceColor) {
+    meshes.core.mesh.instanceColor.needsUpdate = true;
+  }
+  if (meshes.accent.mesh.instanceColor) {
+    meshes.accent.mesh.instanceColor.needsUpdate = true;
+  }
   meshes.groundAura.mesh.instanceMatrix.needsUpdate = true;
   meshes.groundGlow.mesh.instanceMatrix.needsUpdate = true;
   meshes.groundRim.mesh.instanceMatrix.needsUpdate = true;

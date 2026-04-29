@@ -982,6 +982,36 @@ Verification:
 
 ---
 
+## 25. 2026-04-30 Lights Beams Continuity And Orb Palette Pass
+
+This pass addressed three visual issues in `lights-beams`: batch-like orb arrivals, visible orb halos, and overly uniform orb color.
+
+What changed:
+
+1. Orb depth placement is now jittered and curved per seed instead of reading like evenly grouped depth bands.
+   - `packages/content-pipeline/src/effects/lights-beams/core/updateLightsInstances.ts`
+   - this reduces the “one wave at a time” arrival pattern and makes the field feel more continuous when passing near camera
+2. Orb-level halo was reduced almost to zero.
+   - `packages/content-pipeline/src/effects/lights-beams/core/ThreeLightsEngine.ts`
+   - the outer glow shell is now only a very faint support layer rather than a visible aura around each ball
+3. Orb colors are now instance-varied across the existing palette.
+   - `packages/content-pipeline/src/effects/lights-beams/core/createLightsMeshes.ts`
+   - `packages/content-pipeline/src/effects/lights-beams/core/updateLightsInstances.ts`
+   - each orb now resolves a slightly different mix of `primary / secondary / accent` based on lane, depth, and near-field visibility
+
+Why this matters:
+
+1. The target look for this family is a continuous light field, not a set of evenly spaced orb batches.
+2. The subject should feel like illuminated points traveling through a staged environment, not glow sprites with a hard halo.
+3. Color variation helps the field feel more alive and modern without adding new object types.
+
+Verification:
+
+1. `npm run lint`
+2. `npm run build`
+
+---
+
 ## 31. 2026-04-30 Lights Bloom And Source Model Pass
 
 This pass aligned `lights-beams` more closely with the later-stage HelloEnjoy `Lights` structure and added a real screen-space bloom pass.

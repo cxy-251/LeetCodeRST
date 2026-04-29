@@ -24,6 +24,7 @@ const createLayer = ({
     depthWrite: false,
     blending: THREE.AdditiveBlending,
     wireframe: layerName === "accent",
+    vertexColors: true,
   });
 
   const mesh = new THREE.InstancedMesh(geometry, material, Math.max(1, count));
