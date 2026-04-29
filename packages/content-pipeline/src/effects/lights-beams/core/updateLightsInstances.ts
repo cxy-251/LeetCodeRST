@@ -12,20 +12,20 @@ const LAYER_TUNING: Record<"accent" | "core" | "glow", LayerTuning> = {
   glow: {
     nearMix: 1,
     pulseBias: 0.08,
-    scale: 0.38,
-    yOffset: 0.18,
+    scale: 0.26,
+    yOffset: 0.04,
   },
   core: {
     nearMix: 1,
     pulseBias: 0.1,
-    scale: 1.28,
-    yOffset: 0.1,
+    scale: 1.72,
+    yOffset: -0.06,
   },
   accent: {
     nearMix: 0.34,
     pulseBias: 0.08,
-    scale: 0.88,
-    yOffset: 0.08,
+    scale: 1.16,
+    yOffset: -0.04,
   },
 };
 
@@ -201,8 +201,8 @@ export const updateLightsInstances = ({
     });
   });
 
-  const glowRadius = 0.42 + config.beamLength * 0.84;
-  const coreRadius = 0.5 + config.beamThickness * 6.1;
+  const glowRadius = 0.34 + config.beamLength * 0.62;
+  const coreRadius = 0.7 + config.beamThickness * 7.4;
   const farOrbBase = 0.18;
   const farOrbGain = 0.26;
   const colorPrimary = new THREE.Color(config.primaryColor);
@@ -251,10 +251,16 @@ export const updateLightsInstances = ({
         layerName === "glow"
           ? 1 + visibility.nearSoft * 0.06
           : layerName === "core"
-            ? 1 + visibility.nearSoft * 0.82
-            : 1 + visibility.nearSoft * 0.34;
+            ? 1 + visibility.nearSoft * 1.02
+            : 1 + visibility.nearSoft * 0.42;
+      const embedOffset =
+        layerName === "core"
+          ? radius * tuning.scale * 0.26
+          : layerName === "accent"
+            ? radius * tuning.scale * 0.2
+            : radius * tuning.scale * 0.08;
 
-      helper.position.set(state.x, -2.1 + floorHeight + tuning.yOffset, displayZ);
+      helper.position.set(state.x, -2.1 + floorHeight + tuning.yOffset - embedOffset, displayZ);
       helper.rotation.set(0, seed.baseAngle + time * 0.08, 0);
       helper.scale.setScalar(
         radius *

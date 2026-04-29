@@ -1067,6 +1067,33 @@ Verification:
 
 ---
 
+## 28. 2026-04-30 Lights Beams Solid Embedded Orb Pass
+
+This pass moved the `lights-beams` orbs away from a floating additive look and toward solid balls that feel partially embedded in the ripple terrain.
+
+What changed:
+
+1. The visible orb core now renders as a more solid layer.
+   - `packages/content-pipeline/src/effects/lights-beams/core/createLightsMeshes.ts`
+   - core layer now uses normal blending and writes depth, instead of behaving like a purely additive light shell
+2. Core and accent layers were enlarged again and moved downward.
+   - `packages/content-pipeline/src/effects/lights-beams/core/updateLightsInstances.ts`
+   - near balls now sit lower into the terrain and scale more aggressively
+3. Ground halo support was reduced so the ball itself stays dominant.
+   - `packages/content-pipeline/src/effects/lights-beams/core/ThreeLightsEngine.ts`
+
+Why this matters:
+
+1. The user explicitly wants the orbs to read as solid objects, not glow sprites.
+2. Partial embed into the ripple field is important for making the scene feel staged and grounded rather than suspended.
+
+Verification:
+
+1. `npm run lint`
+2. `npm run build`
+
+---
+
 ## 31. 2026-04-30 Lights Bloom And Source Model Pass
 
 This pass aligned `lights-beams` more closely with the later-stage HelloEnjoy `Lights` structure and added a real screen-space bloom pass.

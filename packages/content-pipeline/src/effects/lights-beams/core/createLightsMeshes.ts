@@ -19,10 +19,10 @@ const createLayer = ({
 }) => {
   const material = new THREE.MeshBasicMaterial({
     color,
-    transparent: true,
+    transparent: layerName !== "core",
     opacity,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
+    depthWrite: layerName === "core",
+    blending: layerName === "core" ? THREE.NormalBlending : THREE.AdditiveBlending,
     wireframe: layerName === "accent",
     vertexColors: true,
   });
