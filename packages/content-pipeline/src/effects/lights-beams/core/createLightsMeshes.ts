@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import {createStageDisc} from "../../shared/createStageDisc";
 import type {ThreeLightsMeshBundle} from "../lights-beams.types";
 
 const createLayer = ({
@@ -170,25 +171,26 @@ export const createLightsMeshes = ({
     };
   });
 
-  const horizonGeometry = new THREE.CircleGeometry(10, 64);
-  const horizonMaterial = new THREE.MeshBasicMaterial({
-    color: accentColor,
-    transparent: true,
+  const horizon = createStageDisc({
+    additive: true,
+    color: Number.parseInt(accentColor.replace("#", ""), 16),
     opacity: 0.16,
-    depthWrite: false,
-    blending: THREE.AdditiveBlending,
-    side: THREE.DoubleSide,
+    radius: 10,
+    rotationX: 0,
+    scaleX: 1.8,
+    scaleY: 0.72,
+    y: 5.4,
+    z: -30,
+    segments: 64,
   });
-  const horizonMesh = new THREE.Mesh(horizonGeometry, horizonMaterial);
-  horizonMesh.position.set(0, 5.4, -30);
-  horizonMesh.scale.set(1.8, 0.72, 1);
+  const horizonMesh = horizon.mesh;
   root.add(horizonMesh);
 
   return {
     orbGeometry,
     floorTiles,
-    horizonGeometry,
-    horizonMaterial,
+    horizonGeometry: horizon.geometry,
+    horizonMaterial: horizon.material,
     horizonMesh,
     signature: `orbs:${beamCount}`,
     glow: createLayer({

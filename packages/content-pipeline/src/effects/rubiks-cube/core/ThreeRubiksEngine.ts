@@ -1,5 +1,7 @@
 import * as THREE from "three";
 import {resolveRubiksEffectConfig} from "../../../module-api";
+import {createStageDisc} from "../../shared/createStageDisc";
+import {applyOrbitRig} from "../../shared/updateCameraRigs";
 import {buildRubiksSequenceCache, applyRubiksMoveProgress} from "./applyRubiksMove";
 import {createRubiksCubelets} from "./createRubiksCubelets";
 import {disposeThreeRubiks} from "./disposeThreeRubiks";
@@ -25,6 +27,7 @@ export class ThreeRubiksEngine {
   private readonly keyLight = new THREE.DirectionalLight(0xffffff, 1.42);
   private readonly fillLight = new THREE.DirectionalLight(0xffd4ab, 0.42);
   private readonly rimLight = new THREE.DirectionalLight(0x8fd2ff, 0.96);
+  private readonly cameraTarget = new THREE.Vector3();
   private readonly cubeCore = new THREE.Mesh(
     new THREE.BoxGeometry(1.85, 1.85, 1.85),
     new THREE.MeshStandardMaterial({
@@ -33,22 +36,22 @@ export class ThreeRubiksEngine {
       roughness: 0.92,
     }),
   );
-  private readonly contactShadow = new THREE.Mesh(
-    new THREE.CircleGeometry(2.68, 48),
-    new THREE.MeshBasicMaterial({
-      color: 0x04070b,
-      opacity: 0.22,
-      transparent: true,
-    }),
-  );
-  private readonly haloPlane = new THREE.Mesh(
-    new THREE.CircleGeometry(4.6, 64),
-    new THREE.MeshBasicMaterial({
-      color: 0x153455,
-      opacity: 0.07,
-      transparent: true,
-    }),
-  );
+  private readonly contactShadow = createStageDisc({
+    color: 0x04070b,
+    opacity: 0.22,
+    radius: 2.68,
+    y: -3.12,
+  });
+  private readonly haloPlane = createStageDisc({
+    additive: true,
+    color: 0x153455,
+    opacity: 0.07,
+    radius: 4.6,
+    scaleY: 0.94,
+    y: -3.16,
+    z: 0.08,
+    segments: 64,
+  });
   private readonly bundle: ThreeRubiksCubeletBundle;
   private width = 0;
   private height = 0;
@@ -98,15 +101,11 @@ export class ThreeRubiksEngine {
     this.keyLight.position.set(7, 9, 10);
     this.fillLight.position.set(-6, 2.5, 7);
     this.rimLight.position.set(-8, 5, -8);
-    this.contactShadow.rotation.x = -Math.PI / 2;
-    this.contactShadow.position.set(0, -3.12, 0);
-    this.haloPlane.rotation.x = -Math.PI / 2;
-    this.haloPlane.position.set(0, -3.16, 0);
     this.cubeCore.scale.setScalar(1.36);
     this.root.add(this.cubeCore);
     this.scene.add(
-      this.contactShadow,
-      this.haloPlane,
+      this.contactShadow.mesh,
+      this.haloPlane.mesh,
       this.ambientLight,
       this.hemiLight,
       this.keyLight,
@@ -148,8 +147,7 @@ export class ThreeRubiksEngine {
 
     const time = effectiveFrame * 0.018 + params.seed * 0.0061;
     const settleProgress = Math.min(1, effectiveFrame / 96);
-    const orbitPhase = time * 0.36;
-    const cameraRadius = 7.3 - settleProgress * 0.48 + Math.sin(time * 0.33) * 0.12;
+    const cameraRadius = 7.3 - settleProgress * 0.48;
 
     this.root.scale.setScalar(config.cubeScale);
     this.root.position.set(0, Math.sin(time * 0.72) * config.floatAmplitude, 0);
@@ -158,14 +156,20 @@ export class ThreeRubiksEngine {
       0.62 + Math.cos(time * 0.31) * config.cameraDrift * 0.2,
       Math.sin(time * 0.58) * config.cameraDrift * 0.16,
     );
-    this.camera.position.set(
-      Math.sin(orbitPhase) * cameraRadius,
-      4.15 + Math.sin(time * 0.27) * config.cameraDrift * 1.9,
-      Math.cos(orbitPhase) * cameraRadius,
-    );
-    this.camera.lookAt(0, 0.1 + Math.sin(time * 0.41) * 0.12, 0);
-    this.contactShadow.scale.setScalar(1 + Math.sin(time * 0.64) * 0.03);
-    this.haloPlane.scale.setScalar(1 + Math.cos(time * 0.38) * 0.04);
+    applyOrbitRig({
+      camera: this.camera,
+      target: this.cameraTarget,
+      time,
+      orbitSpeed: 0.36,
+      radius: cameraRadius,
+      radiusJitter: 0.12,
+      centerY: 4.15,
+      heightJitter: config.cameraDrift * 1.9,
+      targetY: 0.1,
+      targetYJitter: 0.12,
+    });
+    this.contactShadow.mesh.scale.setScalar(1 + Math.sin(time * 0.64) * 0.03);
+    this.haloPlane.mesh.scale.setScalar(1 + Math.cos(time * 0.38) * 0.04);
 
     this.renderer.render(this.scene, this.camera);
   }
@@ -184,17 +188,9 @@ export class ThreeRubiksEngine {
       this.cubeCore.material.dispose();
     }
     this.contactShadow.geometry.dispose();
-    if (Array.isArray(this.contactShadow.material)) {
-      this.contactShadow.material.forEach((material) => material.dispose());
-    } else {
-      this.contactShadow.material.dispose();
-    }
+    this.contactShadow.material.dispose();
     this.haloPlane.geometry.dispose();
-    if (Array.isArray(this.haloPlane.material)) {
-      this.haloPlane.material.forEach((material) => material.dispose());
-    } else {
-      this.haloPlane.material.dispose();
-    }
+    this.haloPlane.material.dispose();
   }
 
   private resolveConfig(modules?: ThreeRubiksModules) {

@@ -1,5 +1,6 @@
 import * as THREE from "three";
 import {resolveLightsEffectConfig} from "../../../module-api";
+import {applyForwardDollyRig} from "../../shared/updateCameraRigs";
 import {createLightsMeshes} from "./createLightsMeshes";
 import {disposeThreeLights} from "./disposeThreeLights";
 import {updateLightsInstances} from "./updateLightsInstances";
@@ -123,17 +124,24 @@ export class ThreeLightsEngine {
     const time = frame * config.motionSpeed * 8.9;
     const forwardPhase = (time * 0.13) % 1;
     const cameraDolly = forwardPhase * 8.8;
-    this.lookAtTarget.set(
-      Math.sin(time * 0.16) * 0.5,
-      -0.58 + Math.sin(time * 0.28) * 0.08,
-      -14.8 - cameraDolly * 1.55 + Math.sin(time * 0.11) * 1.1,
-    );
-    this.camera.position.set(
-      Math.sin(time * 0.17) * 0.48,
-      1.48 + Math.cos(time * 0.13) * 0.08,
-      7.4 - cameraDolly * 1.12 + Math.sin(time * 0.08) * 0.08,
-    );
-    this.camera.lookAt(this.lookAtTarget);
+    applyForwardDollyRig({
+      camera: this.camera,
+      target: this.lookAtTarget,
+      time,
+      baseX: 0,
+      baseY: 1.48,
+      baseZ: 7.4,
+      dollyOffset: cameraDolly,
+      dollyMultiplier: 1.12,
+      xDrift: 0.48,
+      yDrift: 0.08,
+      zDrift: 0.08,
+      targetY: -0.58,
+      targetZ: -14.8,
+      targetXDrift: 0.5,
+      targetYDrift: 0.08,
+      targetZDrift: 1.1,
+    });
     this.bundle.horizonMesh.position.set(
       Math.sin(time * 0.08) * 0.24,
       4.8 + Math.cos(time * 0.11) * 0.12,

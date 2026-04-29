@@ -271,6 +271,14 @@ npm run build
 61. effect lab 中的 `rubiks-solver` 已改成实验页独立随机种子：
    - 视频渲染仍保持 manifest seed 可复现
    - 网页实验页每次 reset / 重新进入时会生成新的打乱状态
+62. 已新增共享展示层目录：
+   - `packages/content-pipeline/src/effects/shared/`
+   - 当前先抽出了 `stage disc` 与 `camera rig` 两类公共能力
+   - `rubiks-solver` 与 `lights-beams` 已开始共用这套展示层
+63. 当前对“高级感”的抽象已经开始从单一特效里上移：
+   - 共享镜头运动
+   - 共享 halo / shadow 这类 stage accents
+   - 目标是让后续新增 Three.js 案例时先复用展示语言，再叠加自己的核心算法
    - 两侧保留长导轨和侧边虚线标记
    - 目标是让“镜头往前穿行”更像沿着场域两边掠过
 59. 已新增面向实际生产的使用手册：
