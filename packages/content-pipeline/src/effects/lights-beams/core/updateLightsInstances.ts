@@ -12,19 +12,19 @@ const LAYER_TUNING: Record<"accent" | "core" | "glow", LayerTuning> = {
   glow: {
     nearMix: 1,
     pulseBias: 0.08,
-    scale: 0.26,
+    scale: 0.14,
     yOffset: 0.04,
   },
   core: {
     nearMix: 1,
     pulseBias: 0.1,
-    scale: 1.72,
+    scale: 1.96,
     yOffset: -0.06,
   },
   accent: {
     nearMix: 0.34,
     pulseBias: 0.08,
-    scale: 1.16,
+    scale: 1.02,
     yOffset: -0.04,
   },
 };
@@ -98,8 +98,8 @@ const computeOrbState = ({
   const depthRatio = depthRows === 1 ? 0 : depthIndex / Math.max(1, depthRows - 1);
   // Bias rows toward the far field so the horizon reads as a denser dormant grid
   // while the near field has fewer, more legible hero orbs.
-  const depthOffset = (seed.depth - 0.5) * 0.26;
-  const depthCurve = Math.max(0, Math.min(1, Math.pow(depthRatio, 0.82) + depthOffset));
+  const depthOffset = (seed.depth - 0.5) * 0.16;
+  const depthCurve = Math.max(0, Math.min(1, Math.pow(depthRatio, 0.66) + depthOffset));
   const laneJitter = seed.drift * 0.42;
   const depthJitter = Math.sin(seed.phase) * 1.2 + (seed.depth - 0.5) * 1.8;
 
@@ -201,8 +201,8 @@ export const updateLightsInstances = ({
     });
   });
 
-  const glowRadius = 0.34 + config.beamLength * 0.62;
-  const coreRadius = 0.7 + config.beamThickness * 7.4;
+  const glowRadius = 0.26 + config.beamLength * 0.42;
+  const coreRadius = 0.84 + config.beamThickness * 7.8;
   const farOrbBase = 0.18;
   const farOrbGain = 0.26;
   const colorPrimary = new THREE.Color(config.primaryColor);
@@ -227,13 +227,14 @@ export const updateLightsInstances = ({
     const highlightFactor = Math.min(1, visibility.nearSoft + choreography.nearBias * visibility.near);
     const rimOnlyFactor = 0.42 + highlightFactor * 0.58;
     const nearBreathBoost = 1 + visibility.nearSoft * 0.28;
-    const paletteMix = seed.lane * 0.72;
-    const accentMix = 0.18 + seed.depth * 0.52;
+    const paletteMix = 0.22 + seed.lane * 0.54;
+    const accentMix = 0.26 + seed.depth * 0.34;
     mixColor.copy(colorSecondary).lerp(colorAccent, paletteMix);
-    orbColorFar.copy(mixColor).lerp(colorSecondary, 0.22 + visibility.far * 0.18);
-    orbColorNear.copy(mixColor).lerp(colorPrimary, 0.18 + visibility.nearSoft * 0.34);
-    orbColorNear.lerp(colorAccent, accentMix * visibility.nearSoft * 0.46);
-    accentColorResolved.copy(colorAccent).lerp(colorPrimary, 0.08 + visibility.nearSoft * 0.12);
+    orbColorFar.copy(colorSecondary).lerp(mixColor, 0.48 + seed.depth * 0.18);
+    orbColorFar.lerp(colorAccent, 0.08 + visibility.far * 0.16);
+    orbColorNear.copy(mixColor).lerp(colorPrimary, 0.52 + visibility.nearSoft * 0.22);
+    orbColorNear.lerp(colorAccent, 0.14 + accentMix * visibility.nearSoft * 0.42);
+    accentColorResolved.copy(colorAccent).lerp(colorPrimary, 0.22 + visibility.nearSoft * 0.16);
 
     (["glow", "core", "accent"] as const).forEach((layerName) => {
       const tuning = LAYER_TUNING[layerName];
@@ -249,10 +250,10 @@ export const updateLightsInstances = ({
       const presence = tuning.nearMix * highlightFactor + (1 - tuning.nearMix) * farPresence;
       const nearScaleBoost =
         layerName === "glow"
-          ? 1 + visibility.nearSoft * 0.06
+          ? 1 + visibility.nearSoft * 0.02
           : layerName === "core"
-            ? 1 + visibility.nearSoft * 1.02
-            : 1 + visibility.nearSoft * 0.42;
+            ? 1 + visibility.nearSoft * 0.42
+            : 1 + visibility.nearSoft * 0.18;
       const embedOffset =
         layerName === "core"
           ? radius * tuning.scale * 0.26
@@ -286,10 +287,10 @@ export const updateLightsInstances = ({
     helper.position.set(state.x, -2.085 + floorHeight + 0.025, displayZ);
     helper.rotation.set(-Math.PI / 2, 0, 0);
     helper.scale.setScalar(
-      (0.34 + highlightFactor * 0.72) *
+      (0.22 + highlightFactor * 0.46) *
         choreography.orbGain *
         (0.86 + breathing * 0.22) *
-        (1 + visibility.nearSoft * 0.12),
+        (1 + visibility.nearSoft * 0.06),
     );
     helper.updateMatrix();
     meshes.groundGlow.mesh.setMatrixAt(index, helper.matrix);
@@ -297,10 +298,10 @@ export const updateLightsInstances = ({
     helper.position.set(state.x, -2.09 + floorHeight + 0.015, displayZ);
     helper.rotation.set(-Math.PI / 2, 0, 0);
     helper.scale.setScalar(
-      (0.82 + highlightFactor * 1.12) *
+      (0.44 + highlightFactor * 0.52) *
         choreography.auraGain *
-        (0.82 + breathing * 0.18) *
-        (1 + visibility.nearSoft * 0.08),
+        (0.82 + breathing * 0.12) *
+        (1 + visibility.nearSoft * 0.04),
     );
     helper.updateMatrix();
     meshes.groundAura.mesh.setMatrixAt(index, helper.matrix);

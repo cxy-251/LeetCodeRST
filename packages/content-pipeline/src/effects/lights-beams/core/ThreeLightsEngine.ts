@@ -143,9 +143,11 @@ export class ThreeLightsEngine {
     const seeds = this.resolveSeeds(config.beamCount, params.seed);
     this.ensureBundle(config);
 
-    this.bundle.core.material.color.set(config.primaryColor);
-    this.bundle.glow.material.color.set(config.secondaryColor);
-    this.bundle.accent.material.color.set(config.accentColor);
+    // Keep orb materials neutral so per-instance colors stay vivid instead of
+    // getting multiplied down into muddy / near-black tones.
+    this.bundle.core.material.color.set("#ffffff");
+    this.bundle.glow.material.color.set("#ffffff");
+    this.bundle.accent.material.color.set("#ffffff");
     this.bundle.groundAura.material.color.set(config.secondaryColor);
     this.bundle.groundGlow.material.color.set(config.secondaryColor);
     this.bundle.groundRim.material.color.set(config.accentColor);
@@ -212,11 +214,11 @@ export class ThreeLightsEngine {
     this.bloomPass.strength = 0.26 + config.beatIntensity * 0.42 + pulseSection * 0.16 + surgeSection * 0.28;
     this.bloomPass.radius = 0.5 + config.beatIntensity * 0.12 + pulseSection * 0.06;
     this.bloomPass.threshold = Math.max(0.08, 0.24 - config.beatIntensity * 0.06 - surgeSection * 0.04);
-    this.bundle.glow.material.opacity = 0.001 * choreography.orbGain;
+    this.bundle.glow.material.opacity = 0.0005 * choreography.orbGain;
     this.bundle.core.material.opacity = 0.94;
-    this.bundle.accent.material.opacity = 0.3 * choreography.rimGain;
-    this.bundle.groundAura.material.opacity = 0.022 * choreography.auraGain;
-    this.bundle.groundGlow.material.opacity = 0.074 * choreography.orbGain;
+    this.bundle.accent.material.opacity = 0.24 * choreography.rimGain;
+    this.bundle.groundAura.material.opacity = 0.014 * choreography.auraGain;
+    this.bundle.groundGlow.material.opacity = 0.052 * choreography.orbGain;
     this.bundle.groundRim.material.opacity = 0.18 * choreography.rimGain;
     this.bundle.surfaceDots.material.opacity = 0.14 * choreography.fieldGain;
     this.bundle.surfaceAccent.material.opacity = 0.2 * choreography.fieldGain;

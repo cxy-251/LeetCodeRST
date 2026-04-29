@@ -887,6 +887,40 @@ Verification:
 
 ---
 
+## 22. 2026-04-30 Lights Beams Density And Palette Correction
+
+This pass corrected two recurring visual problems in `lights-beams`: too many near-field orbs suddenly filling the frame, and orb colors reading as dark / muddy instead of vivid.
+
+What changed:
+
+1. The family defaults were rebalanced toward fewer hero orbs and a brighter palette.
+   - `packages/content-pipeline/src/module-api.ts`
+   - lower default `density`
+   - lower derived `beamCount`
+   - brighter `primary / secondary / accent` colors across `midnight-cyan`, `violet-haze`, and `sunset-plasma`
+2. The orb field distribution was biased harder toward the far field so fewer balls reach the near camera plane at the same time.
+   - `packages/content-pipeline/src/effects/lights-beams/core/updateLightsInstances.ts`
+   - near-field crowding now ramps in more gradually
+3. Near-camera scale amplification was reduced while keeping the base orb body large.
+   - this preserves the "large orb" read without the abrupt screen-filling jump
+4. Orb materials were switched to neutral white at the material layer.
+   - `packages/content-pipeline/src/effects/lights-beams/core/ThreeLightsEngine.ts`
+   - instance colors now drive the visible hue directly instead of being multiplied into darker material colors
+5. Ground support glow / aura were reduced again so the solid orb body remains the main subject.
+
+Why this matters:
+
+1. The family now reads more like a field of fewer, larger hero orbs instead of many small balls arriving in waves.
+2. Bright palette variation is now visible on the orb bodies themselves, rather than collapsing into near-black tones.
+3. This pass improves the default out-of-the-box look of the effect lab without requiring manual parameter correction first.
+
+Verification:
+
+1. `npm run lint`
+2. `npm run build`
+
+---
+
 ## 22. 2026-04-30 Lights Beams Atmospheric Stars Pass
 
 This pass added a dedicated atmospheric `Stars` layer to the `lights-beams` family, following the source-analysis split between terrain, orb field, and air-depth systems.
