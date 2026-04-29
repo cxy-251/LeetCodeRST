@@ -96,6 +96,9 @@ const computeOrbState = ({
   const laneRatio = laneIndex / (laneCount - 1);
   const laneSigned = laneRatio * 2 - 1;
   const depthRatio = depthRows === 1 ? 0 : depthIndex / Math.max(1, depthRows - 1);
+  // Bias rows toward the far field so the horizon reads as a denser dormant grid
+  // while the near field has fewer, more legible hero orbs.
+  const depthCurve = Math.pow(depthRatio, 0.74);
   const laneJitter = seed.drift * 0.42;
   const depthJitter = Math.sin(seed.phase) * 0.9;
 
@@ -107,7 +110,7 @@ const computeOrbState = ({
         laneJitter,
       z:
         -6 -
-        depthRatio * 26 -
+        depthCurve * 24.5 -
         Math.cos(seed.baseAngle * 0.45) * 1.1 +
         depthJitter,
     };
@@ -119,7 +122,7 @@ const computeOrbState = ({
         laneSigned * 7.2 +
         Math.sin(seed.baseAngle * 0.9) * (0.6 + depthRatio * 0.4) +
         laneJitter,
-      z: -5 - depthRatio * 24 + depthJitter,
+      z: -5 - depthCurve * 22.5 + depthJitter,
     };
   }
 
@@ -130,7 +133,7 @@ const computeOrbState = ({
       laneJitter,
     z:
       -4 -
-      depthRatio * 22 -
+      depthCurve * 20.5 -
       Math.sin(seed.baseAngle * 0.65) * 0.75 +
       depthJitter,
   };
@@ -215,6 +218,7 @@ export const updateLightsInstances = ({
     const visibility = sampleDepthVisibility(displayZ, nearLimit, totalDepth);
     const highlightFactor = Math.min(1, visibility.nearSoft + choreography.nearBias * visibility.near);
     const rimOnlyFactor = 0.42 + highlightFactor * 0.58;
+    const nearBreathBoost = 1 + visibility.nearSoft * 0.28;
 
     (["glow", "core", "accent"] as const).forEach((layerName) => {
       const tuning = LAYER_TUNING[layerName];
@@ -228,6 +232,12 @@ export const updateLightsInstances = ({
 
       const farPresence = farOrbBase + visibility.far * farOrbGain;
       const presence = tuning.nearMix * highlightFactor + (1 - tuning.nearMix) * farPresence;
+      const nearScaleBoost =
+        layerName === "glow"
+          ? 1 + visibility.nearSoft * 0.3
+          : layerName === "core"
+            ? 1 + visibility.nearSoft * 0.42
+            : 1 + visibility.nearSoft * 0.12;
 
       helper.position.set(state.x, -2.1 + floorHeight + tuning.yOffset, displayZ);
       helper.rotation.set(0, seed.baseAngle + time * 0.08, 0);
@@ -236,6 +246,8 @@ export const updateLightsInstances = ({
           tuning.scale *
           choreography.orbGain *
           (breathing + tuning.pulseBias) *
+          nearBreathBoost *
+          nearScaleBoost *
           (layerName === "accent" ? rimOnlyFactor : presence),
       );
       helper.updateMatrix();
@@ -247,7 +259,8 @@ export const updateLightsInstances = ({
     helper.scale.setScalar(
       (0.46 + highlightFactor * 0.94) *
         choreography.orbGain *
-        (0.86 + breathing * 0.22),
+        (0.86 + breathing * 0.22) *
+        (1 + visibility.nearSoft * 0.22),
     );
     helper.updateMatrix();
     meshes.groundGlow.mesh.setMatrixAt(index, helper.matrix);
@@ -257,7 +270,8 @@ export const updateLightsInstances = ({
     helper.scale.setScalar(
       (1.12 + highlightFactor * 1.86) *
         choreography.auraGain *
-        (0.82 + breathing * 0.18),
+        (0.82 + breathing * 0.18) *
+        (1 + visibility.nearSoft * 0.18),
     );
     helper.updateMatrix();
     meshes.groundAura.mesh.setMatrixAt(index, helper.matrix);

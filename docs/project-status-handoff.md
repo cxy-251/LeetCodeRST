@@ -953,6 +953,35 @@ Verification:
 
 ---
 
+## 24. 2026-04-30 Lights Beams Near/Far Contrast Pass
+
+This pass increased the contrast between dormant far-field orbs and the brighter near-field hero orbs.
+
+What changed:
+
+1. Orb placement now biases more rows toward the far horizon.
+   - `packages/content-pipeline/src/effects/lights-beams/core/updateLightsInstances.ts`
+   - depth distribution uses a curved row mapping so the far field feels denser without increasing the overall orb count
+2. Near-field glow/core layers now scale and breathe more aggressively.
+   - near visibility boosts glow/core radius and pulse
+   - the goal is to make close orbs read as the active subject, not just larger copies of the far field
+3. Ground glow and aura discs now also expand more in the near field.
+   - this helps the closest anchors feel like illuminated sources rather than flat decals
+
+Why this matters:
+
+1. The intended visual language for this family is:
+   - far = dense dormant lattice
+   - near = sparse illuminated presence
+2. Without this pass, the field could still read as a mostly uniform orb distribution with only brightness differences.
+
+Verification:
+
+1. `npm run lint`
+2. `npm run build`
+
+---
+
 ## 31. 2026-04-30 Lights Bloom And Source Model Pass
 
 This pass aligned `lights-beams` more closely with the later-stage HelloEnjoy `Lights` structure and added a real screen-space bloom pass.
