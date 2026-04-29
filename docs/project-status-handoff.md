@@ -310,6 +310,9 @@ npm run build
    - 优先请求结构化 JSON 输出
    - 若模型返回脏 JSON，会先做本地容错解析
    - 若仍失败，会调用本地模型做一次“JSON 修复”再落回统一脚本结构
+73. `LM Studio` 适配层现已补上“按字段边界抽取”的兜底：
+   - 即使模型把正文里的双引号写坏，也能尝试按 `hook/problem/method/value/ending/bullets` 顺序硬解析
+   - 如果 JSON 完全不稳，还会退回到标签式文本格式 `HOOK:/PROBLEM:/...`
 
 ---
 

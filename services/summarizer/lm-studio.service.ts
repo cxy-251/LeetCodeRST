@@ -73,6 +73,120 @@ const extractJsonObject = (raw: string) => {
 
 const stripTrailingCommas = (raw: string) => raw.replace(/,\s*([}\]])/g, "$1");
 
+const cleanLooseValue = (raw: string) =>
+  raw
+    .trim()
+    .replace(/^"/, "")
+    .replace(/",?$/, "")
+    .replace(/,$/, "")
+    .trim();
+
+const tryParseLooseFieldObject = (raw: string): SummaryDraft | null => {
+  const normalized = normalizeJsonText(raw);
+  const fieldOrder = ["hook", "problem", "method", "value", "ending", "bullets"] as const;
+  const values = new Map<string, string>();
+
+  for (let index = 0; index < fieldOrder.length - 1; index += 1) {
+    const key = fieldOrder[index];
+    const nextKey = fieldOrder[index + 1];
+    const keyMarker = new RegExp(`"${key}"\\s*:\\s*`, "i");
+    const nextMarker = new RegExp(`,\\s*"${nextKey}"\\s*:`, "i");
+    const keyMatch = keyMarker.exec(normalized);
+
+    if (!keyMatch || keyMatch.index === undefined) {
+      return null;
+    }
+
+    const startIndex = keyMatch.index + keyMatch[0].length;
+    const remainder = normalized.slice(startIndex);
+    const nextMatch = nextMarker.exec(remainder);
+    if (!nextMatch || nextMatch.index === undefined) {
+      return null;
+    }
+
+    values.set(key, cleanLooseValue(remainder.slice(0, nextMatch.index)));
+  }
+
+  const bulletsMarker = /"bullets"\s*:\s*\[/i.exec(normalized);
+  if (!bulletsMarker || bulletsMarker.index === undefined) {
+    return null;
+  }
+
+  const bulletsStart = bulletsMarker.index + bulletsMarker[0].length;
+  const bulletsEnd = normalized.indexOf("]", bulletsStart);
+  if (bulletsEnd === -1) {
+    return null;
+  }
+
+  const bulletsSection = normalized.slice(bulletsStart, bulletsEnd);
+  const bullets = [...bulletsSection.matchAll(/"([^"]+)"/g)]
+    .map((match) => match[1]?.trim() ?? "")
+    .filter(Boolean)
+    .slice(0, 3);
+
+  return {
+    hook: values.get("hook") ?? "",
+    problem: values.get("problem") ?? "",
+    method: values.get("method") ?? "",
+    value: values.get("value") ?? "",
+    ending: values.get("ending") ?? "",
+    bullets,
+  };
+};
+
+const parseTaggedDraft = (raw: string): SummaryDraft | null => {
+  const lines = raw
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean);
+  const fields = {
+    hook: "",
+    problem: "",
+    method: "",
+    value: "",
+    ending: "",
+  };
+  const bullets: string[] = [];
+  let currentKey: keyof typeof fields | null = null;
+  let inBullets = false;
+
+  for (const line of lines) {
+    const match = /^(HOOK|PROBLEM|METHOD|VALUE|ENDING|BULLETS)\s*[:：]\s*(.*)$/i.exec(line);
+    if (match) {
+      const key = match[1].toUpperCase();
+      const value = match[2]?.trim() ?? "";
+      inBullets = key === "BULLETS";
+      currentKey = inBullets ? null : (key.toLowerCase() as keyof typeof fields);
+
+      if (currentKey) {
+        fields[currentKey] = value;
+      }
+      continue;
+    }
+
+    if (inBullets) {
+      const bullet = line.replace(/^[-*•]\s*/, "").trim();
+      if (bullet) {
+        bullets.push(bullet);
+      }
+      continue;
+    }
+
+    if (currentKey && line) {
+      fields[currentKey] = `${fields[currentKey]} ${line}`.trim();
+    }
+  }
+
+  if (!fields.hook || !fields.problem || !fields.method || !fields.value || !fields.ending || bullets.length === 0) {
+    return null;
+  }
+
+  return {
+    ...fields,
+    bullets: bullets.slice(0, 3),
+  };
+};
+
 const tryParseDraft = (raw: string): SummaryDraft | null => {
   const normalized = normalizeJsonText(raw);
   const candidates = [
@@ -100,6 +214,16 @@ const tryParseDraft = (raw: string): SummaryDraft | null => {
     } catch {
       continue;
     }
+  }
+
+  const looseFieldDraft = tryParseLooseFieldObject(normalized);
+  if (looseFieldDraft) {
+    return looseFieldDraft;
+  }
+
+  const taggedDraft = parseTaggedDraft(normalized);
+  if (taggedDraft) {
+    return taggedDraft;
   }
 
   return null;
@@ -198,6 +322,26 @@ const buildRepairPrompt = (raw: string) => {
   ].join("\n");
 };
 
+const buildTaggedRepairPrompt = (raw: string) => {
+  return [
+    "下面这段输出格式不稳定，请你重新整理成固定标签格式，并且只输出这些行。",
+    "格式必须严格如下：",
+    "HOOK: ...",
+    "PROBLEM: ...",
+    "METHOD: ...",
+    "VALUE: ...",
+    "ENDING: ...",
+    "BULLETS:",
+    "- ...",
+    "- ...",
+    "- ...",
+    "",
+    "不要输出 JSON，不要输出解释。",
+    "",
+    raw,
+  ].join("\n");
+};
+
 const validateDraft = (draft: SummaryDraft) => {
   const requiredKeys: Array<keyof SummaryDraft> = ["hook", "problem", "method", "value", "ending"];
 
@@ -289,6 +433,27 @@ export const summarizeWithLmStudio = async (
     });
     const repairedContent = extractContent(repairedPayload);
     draft = repairedContent ? tryParseDraft(repairedContent) : null;
+  }
+
+  if (!draft) {
+    const taggedPayload = await requestCompletion({
+      config,
+      maxTokens: Math.min(config.maxOutputTokens, 800),
+      temperature: 0,
+      preferStructuredOutput: false,
+      messages: [
+        {
+          role: "system",
+          content: "You rewrite malformed output into a stable tagged plain-text structure.",
+        },
+        {
+          role: "user",
+          content: buildTaggedRepairPrompt(content),
+        },
+      ],
+    });
+    const taggedContent = extractContent(taggedPayload);
+    draft = taggedContent ? parseTaggedDraft(taggedContent) : null;
   }
 
   if (!draft) {
