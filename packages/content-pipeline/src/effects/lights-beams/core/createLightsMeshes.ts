@@ -39,6 +39,41 @@ const createLayer = ({
   } as const;
 };
 
+const createGroundLayer = ({
+  color,
+  count,
+  geometry,
+  opacity,
+  root,
+}: {
+  color: string;
+  count: number;
+  geometry: THREE.CircleGeometry | THREE.RingGeometry;
+  opacity: number;
+  root: THREE.Group;
+}) => {
+  const material = new THREE.MeshBasicMaterial({
+    color,
+    transparent: true,
+    opacity,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    side: THREE.DoubleSide,
+  });
+
+  const mesh = new THREE.InstancedMesh(geometry, material, Math.max(1, count));
+  mesh.count = count;
+  mesh.frustumCulled = false;
+  mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  root.add(mesh);
+
+  return {
+    material,
+    mesh,
+    name: "glow",
+  } as const;
+};
+
 const createGuidePlane = ({
   color,
   length,
@@ -96,6 +131,8 @@ export const createLightsMeshes = ({
 }): ThreeLightsMeshBundle => {
   const orbGeometry = new THREE.SphereGeometry(1, 24, 24);
   const dotGeometry = new THREE.SphereGeometry(1, 10, 10);
+  const groundDiscGeometry = new THREE.CircleGeometry(1, 40);
+  const groundRingGeometry = new THREE.RingGeometry(0.78, 1, 40);
   const surfaceDotCount = Math.max(144, beamCount * 14);
 
   const floorTiles = Array.from({length: 4}, (_, index) => {
@@ -191,6 +228,8 @@ export const createLightsMeshes = ({
   return {
     orbGeometry,
     dotGeometry,
+    groundDiscGeometry,
+    groundRingGeometry,
     floorTiles,
     horizonGeometry: horizon.geometry,
     horizonMaterial: horizon.material,
@@ -234,6 +273,20 @@ export const createLightsMeshes = ({
       geometry: dotGeometry,
       layerName: "core",
       opacity: 0.22,
+      root,
+    }),
+    groundGlow: createGroundLayer({
+      color: glowColor,
+      count: beamCount,
+      geometry: groundDiscGeometry,
+      opacity: 0.14,
+      root,
+    }),
+    groundRim: createGroundLayer({
+      color: accentColor,
+      count: beamCount,
+      geometry: groundRingGeometry,
+      opacity: 0.26,
       root,
     }),
   };

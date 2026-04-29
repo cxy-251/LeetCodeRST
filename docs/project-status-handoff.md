@@ -1042,6 +1042,31 @@ Residual note:
 
 ---
 
+## 27. 2026-04-29 Lights Ground Halo Pass
+
+This pass pushed `lights-beams` further away from "floating spheres over terrain" and closer to "anchored light pucks on the ground".
+
+1. Each main orb now has dedicated ground-attached disc and ring layers, so the eye reads the subject as a floor light first and a vertical glow second.
+   - `packages/content-pipeline/src/effects/lights-beams/core/createLightsMeshes.ts`
+   - `packages/content-pipeline/src/effects/lights-beams/core/updateLightsInstances.ts`
+2. The upright orb layers were reduced and lifted slightly above the surface, which keeps the breathing glow but stops the composition from feeling like free-floating balls.
+   - `packages/content-pipeline/src/effects/lights-beams/core/updateLightsInstances.ts`
+3. Bundle lifecycle and disposal were extended for the new ground geometries and mesh layers.
+   - `packages/content-pipeline/src/effects/lights-beams/lights-beams.types.ts`
+   - `packages/content-pipeline/src/effects/lights-beams/core/ThreeLightsEngine.ts`
+   - `packages/content-pipeline/src/effects/lights-beams/core/disposeThreeLights.ts`
+
+Verification:
+
+1. `npm run lint`
+2. `npm run build`
+
+Residual note:
+
+1. The family should now read more like floor-mounted luminous markers, but full parity with the official demo would still require additional postprocessing and event choreography work.
+
+---
+
 ## 22. 2026-04-29 Lights Beams Perspective Rework
 
 This follow-up changed `lights-beams` from a flat central burst into a more scene-like interpretation of the Hello Enjoy `Lights` reference.

@@ -14,6 +14,8 @@ export const disposeThreeLights = ({
 }) => {
   bundle.orbGeometry?.dispose();
   bundle.dotGeometry?.dispose();
+  bundle.groundDiscGeometry?.dispose();
+  bundle.groundRingGeometry?.dispose();
   bundle.floorTiles?.forEach((tile) => {
     tile.geometry?.dispose();
     tile.fillMaterial?.dispose();
@@ -32,11 +34,15 @@ export const disposeThreeLights = ({
   bundle.glow?.mesh?.dispose();
   bundle.core?.mesh?.dispose();
   bundle.accent?.mesh?.dispose();
+  bundle.groundGlow?.mesh?.dispose();
+  bundle.groundRim?.mesh?.dispose();
   bundle.surfaceDots?.mesh?.dispose();
   bundle.surfaceAccent?.mesh?.dispose();
   bundle.glow?.material?.dispose();
   bundle.core?.material?.dispose();
   bundle.accent?.material?.dispose();
+  bundle.groundGlow?.material?.dispose();
+  bundle.groundRim?.material?.dispose();
   bundle.surfaceDots?.material?.dispose();
   bundle.surfaceAccent?.material?.dispose();
   root.clear();

@@ -114,6 +114,8 @@ export class ThreeLightsEngine {
     this.bundle.core.material.color.set(config.primaryColor);
     this.bundle.glow.material.color.set(config.secondaryColor);
     this.bundle.accent.material.color.set(config.accentColor);
+    this.bundle.groundGlow.material.color.set(config.secondaryColor);
+    this.bundle.groundRim.material.color.set(config.accentColor);
     this.bundle.surfaceDots.material.color.set(config.secondaryColor);
     this.bundle.surfaceAccent.material.color.set(config.accentColor);
     this.bundle.floorTiles.forEach((tile) => {
@@ -159,6 +161,8 @@ export class ThreeLightsEngine {
         accent: this.bundle.accent,
         core: this.bundle.core,
         glow: this.bundle.glow,
+        groundGlow: this.bundle.groundGlow,
+        groundRim: this.bundle.groundRim,
         surfaceAccent: this.bundle.surfaceAccent,
         surfaceDots: this.bundle.surfaceDots,
       },
@@ -186,6 +190,8 @@ export class ThreeLightsEngine {
     this.root.clear();
     this.bundle.orbGeometry.dispose();
     this.bundle.dotGeometry.dispose();
+    this.bundle.groundDiscGeometry.dispose();
+    this.bundle.groundRingGeometry.dispose();
     this.bundle.floorTiles.forEach((tile) => {
       tile.geometry.dispose();
       tile.fillMaterial.dispose();
@@ -204,11 +210,15 @@ export class ThreeLightsEngine {
     this.bundle.glow.mesh.dispose();
     this.bundle.core.mesh.dispose();
     this.bundle.accent.mesh.dispose();
+    this.bundle.groundGlow.mesh.dispose();
+    this.bundle.groundRim.mesh.dispose();
     this.bundle.surfaceDots.mesh.dispose();
     this.bundle.surfaceAccent.mesh.dispose();
     this.bundle.glow.material.dispose();
     this.bundle.core.material.dispose();
     this.bundle.accent.material.dispose();
+    this.bundle.groundGlow.material.dispose();
+    this.bundle.groundRim.material.dispose();
     this.bundle.surfaceDots.material.dispose();
     this.bundle.surfaceAccent.material.dispose();
 

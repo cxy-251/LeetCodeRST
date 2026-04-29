@@ -10,21 +10,21 @@ type LayerTuning = {
 const LAYER_TUNING: Record<"accent" | "core" | "glow", LayerTuning> = {
   glow: {
     nearMix: 1,
-    pulseBias: 0.28,
-    scale: 2.3,
-    yOffset: 0,
+    pulseBias: 0.18,
+    scale: 1.2,
+    yOffset: 0.18,
   },
   core: {
     nearMix: 1,
     pulseBias: 0.1,
-    scale: 1,
-    yOffset: 0,
+    scale: 0.54,
+    yOffset: 0.1,
   },
   accent: {
     nearMix: 0.25,
     pulseBias: 0.08,
-    scale: 0.82,
-    yOffset: 0.04,
+    scale: 0.38,
+    yOffset: 0.08,
   },
 };
 
@@ -234,11 +234,25 @@ export const updateLightsInstances = ({
       helper.updateMatrix();
       mesh.setMatrixAt(index, helper.matrix);
     });
+
+    helper.position.set(state.x, -2.085 + floorHeight + 0.025, displayZ);
+    helper.rotation.set(-Math.PI / 2, 0, 0);
+    helper.scale.setScalar((0.46 + highlightFactor * 0.94) * (0.86 + breathing * 0.22));
+    helper.updateMatrix();
+    meshes.groundGlow.mesh.setMatrixAt(index, helper.matrix);
+
+    helper.position.set(state.x, -2.083 + floorHeight + 0.03, displayZ);
+    helper.rotation.set(-Math.PI / 2, 0, 0);
+    helper.scale.setScalar((0.34 + visibility.far * 0.32 + highlightFactor * 0.22) * rimOnlyFactor);
+    helper.updateMatrix();
+    meshes.groundRim.mesh.setMatrixAt(index, helper.matrix);
   });
 
   meshes.glow.mesh.instanceMatrix.needsUpdate = true;
   meshes.core.mesh.instanceMatrix.needsUpdate = true;
   meshes.accent.mesh.instanceMatrix.needsUpdate = true;
+  meshes.groundGlow.mesh.instanceMatrix.needsUpdate = true;
+  meshes.groundRim.mesh.instanceMatrix.needsUpdate = true;
 
   const surfaceLaneCount = 14;
   const surfaceRowCount = Math.ceil(meshes.surfaceDots.mesh.count / surfaceLaneCount);
