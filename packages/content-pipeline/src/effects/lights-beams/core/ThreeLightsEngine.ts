@@ -120,7 +120,7 @@ export class ThreeLightsEngine {
     this.bundle.horizonMaterial.color.set(config.accentColor);
 
     const frame = Math.max(0, params.simulationFrame ?? params.absoluteFrame);
-    const time = frame * config.motionSpeed * 10.5;
+    const time = frame * config.motionSpeed * 8.9;
     const forwardPhase = (time * 0.13) % 1;
     const cameraDolly = forwardPhase * 8.8;
     this.lookAtTarget.set(

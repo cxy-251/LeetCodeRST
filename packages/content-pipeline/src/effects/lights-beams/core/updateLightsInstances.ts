@@ -104,7 +104,7 @@ export const updateLightsInstances = ({
   meshes,
   seeds,
 }: UpdateLightsInstancesInput) => {
-  const time = frame * config.motionSpeed * 14;
+  const time = frame * config.motionSpeed * 11.2;
   const tileLength = 18;
   const totalDepth = tileLength * floorTiles.length;
   const travelPhase = (time * 0.11) % 1;

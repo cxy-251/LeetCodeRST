@@ -117,7 +117,7 @@ export const DEFAULT_LIGHTS_EFFECT: LightsEffectConfig = {
   beamLength: 0.6,
   beamThickness: 0.028,
   orbitRadius: 0.28,
-  motionSpeed: 0.013,
+  motionSpeed: 0.0075,
   spread: 0.62,
   primaryColor: "#97fbff",
   secondaryColor: "#1e4d72",

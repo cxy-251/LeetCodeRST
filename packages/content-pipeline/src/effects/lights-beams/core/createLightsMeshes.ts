@@ -126,42 +126,36 @@ export const createLightsMeshes = ({
       createGuidePlane({
         color: glowColor,
         length: 18,
-        opacity: 0.22,
-        root,
-        width: 0.18,
-        xOffset: -7.25,
-        zOffset: fillMesh.position.z,
-      }),
-      createGuidePlane({
-        color: accentColor,
-        length: 18,
-        opacity: 0.26,
+        opacity: 0.28,
         root,
         width: 0.24,
-        xOffset: 0,
+        xOffset: -7.85,
         zOffset: fillMesh.position.z,
       }),
       createGuidePlane({
         color: glowColor,
         length: 18,
-        opacity: 0.22,
+        opacity: 0.28,
         root,
-        width: 0.18,
-        xOffset: 7.25,
+        width: 0.24,
+        xOffset: 7.85,
         zOffset: fillMesh.position.z,
       }),
     ];
 
-    const guideDashes = [-6.2, -2.4, 1.4, 5.2].map((offset) =>
-      createGuidePlane({
-        color: accentColor,
-        length: 1.6,
-        opacity: 0.38,
-        root,
-        width: 0.42,
-        xOffset: 0,
-        zOffset: fillMesh.position.z + offset,
-      }),
+    const dashOffsets = [-6.2, -2.4, 1.4, 5.2];
+    const guideDashes = [-6.9, 6.9].flatMap((xOffset) =>
+      dashOffsets.map((offset) =>
+        createGuidePlane({
+          color: accentColor,
+          length: 1.42,
+          opacity: 0.34,
+          root,
+          width: 0.52,
+          xOffset,
+          zOffset: fillMesh.position.z + offset,
+        }),
+      ),
     );
 
     return {
