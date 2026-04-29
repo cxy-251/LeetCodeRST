@@ -29,4 +29,5 @@ data/content-profiles/generated/*.json
 !data/video-batches/*.csv
 data/video-batches/generated/*.csv
 data/images/prepared/*
+release/
 !.gitkeep

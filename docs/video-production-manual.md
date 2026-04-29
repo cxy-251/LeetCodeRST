@@ -14,6 +14,10 @@
 - `docs/docker-deployment.md`
 - `docs/docker-first-run-checklist.md`
 
+如果你要把这套源码打包交付给别人，还请看：
+
+- `npm run release:package`
+
 ## 1. 生成不同视频的三个核心开关
 
 当前系统最重要的 3 个输入维度是：
@@ -167,6 +171,26 @@ npm run produce:video
 ```
 
 系统会使用默认入口 manifest。
+
+## 2.3 打包成可交付发布包
+
+如果你要把源码以压缩包方式交付给别人，建议使用：
+
+```bash
+npm run release:package
+```
+
+这个命令会：
+
+1. 只复制当前 git 已跟踪的文件
+2. 自动排除 `.git/`、`node_modules/`、`output/`、本地 `.env`
+3. 在 `release/` 下生成一个干净的交付目录
+4. 如果系统里有 `zip` 命令，会额外生成 zip 压缩包
+
+这意味着：
+
+- 你后面继续新增 WebGL 特效，只要它已经提交到 git，发布包就会自动把它带进去
+- 你本地未跟踪的私有资源不会被顺手打进发布包
 
 ### 2.2 手工修改 manifest 来生成不同视频
 

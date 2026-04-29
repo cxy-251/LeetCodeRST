@@ -58,6 +58,14 @@ docker compose build
 docker compose up
 ```
 
+## 发布打包
+
+```bash
+npm run release:package
+```
+
+该命令会基于当前 git 已跟踪文件生成一个可交付的发布目录，并尽量输出 zip 压缩包。
+
 更完整的部署方式见：
 
 - `./docs/docker-deployment.md`
