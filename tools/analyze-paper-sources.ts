@@ -34,8 +34,8 @@ type AnalysisEntry = SourcePaper & {
   };
 };
 
-const INPUT_PATH = path.resolve("data/source-bundles/latest-ai-batch.json");
-const OUTPUT_PATH = path.resolve("data/source-bundles/latest-ai-analysis.json");
+const DEFAULT_INPUT_PATH = path.resolve("data/source-bundles/latest-ai-batch.json");
+const DEFAULT_OUTPUT_PATH = path.resolve("data/source-bundles/latest-ai-analysis.json");
 
 const splitSentences = (text: string) =>
   text
@@ -140,7 +140,15 @@ const buildScriptDraft = (paper: SourcePaper, abstractSentences: string[], secti
 };
 
 const main = async () => {
-  const bundle = JSON.parse(await fs.readFile(INPUT_PATH, "utf-8")) as SourceBundle;
+  const args = process.argv.slice(2);
+  const take = (flag: string) => {
+    const index = args.indexOf(flag);
+    return index >= 0 ? args[index + 1] : undefined;
+  };
+
+  const inputPath = take("--input") ? path.resolve(take("--input") as string) : DEFAULT_INPUT_PATH;
+  const outputPath = take("--output") ? path.resolve(take("--output") as string) : DEFAULT_OUTPUT_PATH;
+  const bundle = JSON.parse(await fs.readFile(inputPath, "utf-8")) as SourceBundle;
   const papers: AnalysisEntry[] = [];
 
   for (const paper of bundle.papers) {
@@ -155,13 +163,13 @@ const main = async () => {
     });
   }
 
-  await fs.mkdir(path.dirname(OUTPUT_PATH), {recursive: true});
+  await fs.mkdir(path.dirname(outputPath), {recursive: true});
   await fs.writeFile(
-    OUTPUT_PATH,
+    outputPath,
     JSON.stringify(
       {
         generatedAt: new Date().toISOString(),
-        sourceBundlePath: INPUT_PATH,
+        sourceBundlePath: inputPath,
         papers,
       },
       null,
@@ -170,7 +178,7 @@ const main = async () => {
     "utf-8",
   );
 
-  console.log(`Analysis bundle written to ${OUTPUT_PATH}`);
+  console.log(`Analysis bundle written to ${outputPath}`);
 };
 
 main().catch((error) => {

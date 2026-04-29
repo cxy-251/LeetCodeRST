@@ -28,6 +28,66 @@
 
 ## 2. 单个视频的标准生成方式
 
+### 2.0 直接从论文网址生成视频
+
+如果你现在不想再手工改 manifest、content profile、batch CSV，而是希望：
+
+- 输入一个论文网址
+- 自动抓 PDF
+- 自动抽文本
+- 自动生成总结草案
+- 自动随机选背景图
+- 自动随机选一个现有 WebGL 特效
+- 直接出视频
+
+现在可以直接用：
+
+```bash
+npm run produce:paper-urls -- \
+  --paper-url https://arxiv.org/abs/2604.22748 \
+  --background-dir data/images/prepared
+```
+
+说明：
+
+- 当前这一键链路优先面向 `arxiv.org` 链接
+- `--background-dir` 指向你自己的背景图目录
+- 背景图会从这个目录里随机挑
+- 特效会从当前支持的 effect family 里随机挑一个
+
+如果你不传 `--background-dir`，系统会优先尝试：
+
+1. `data/images/prepared`
+2. `data/images`
+
+### 2.0.1 控制随机特效池
+
+如果你只想让它在部分特效里随机，比如只在生命游戏和灯光特效里选：
+
+```bash
+npm run produce:paper-urls -- \
+  --paper-url https://arxiv.org/abs/2604.22748 \
+  --background-dir data/images/prepared \
+  --effect-pool life-game,lights-beams
+```
+
+### 2.0.2 控制随机种子
+
+如果你想让随机结果可复现：
+
+```bash
+npm run produce:paper-urls -- \
+  --paper-url https://arxiv.org/abs/2604.22748 \
+  --background-dir data/images/prepared \
+  --seed 42
+```
+
+同一个 `seed` 会影响：
+
+- 背景图随机分配
+- effect 随机分配
+- batch 里每行的基础种子
+
 ### 2.1 直接渲染一个 manifest
 
 ```bash
@@ -188,6 +248,72 @@ manifest 中改：
 - 页面里的不同 scene 会沿用这一个 family 的启动页 / 主运行页变体
 
 ## 6. 批量生产视频
+
+### 6.0 直接从网址文件批量生成
+
+如果你有一个文本文件，里面每行放一个论文网址：
+
+```text
+https://arxiv.org/abs/2604.22748
+https://arxiv.org/abs/2604.22736
+https://arxiv.org/abs/2604.22722
+```
+
+可以直接：
+
+```bash
+npm run produce:paper-urls -- \
+  --paper-url-file data/papers/paper-urls.txt \
+  --background-dir data/images/prepared
+```
+
+系统会自动：
+
+1. 读取网址文件
+2. 下载 PDF 到缓存
+3. 如果文本已抽取过就复用，否则抽取 PDF 文本
+4. 生成 source bundle
+5. 生成中文脚本草案
+6. 生成 content profile
+7. 从背景图目录随机给每篇论文分配背景图
+8. 从现有 WebGL 特效池随机给每篇论文分配 effect
+9. 最后批量渲染视频
+
+### 6.0.1 指定随机特效池
+
+```bash
+npm run produce:paper-urls -- \
+  --paper-url-file data/papers/paper-urls.txt \
+  --background-dir data/images/prepared \
+  --effect-pool life-game,snake-grid,particle-orbit
+```
+
+### 6.0.2 指定配音参数
+
+```bash
+npm run produce:paper-urls -- \
+  --paper-url-file data/papers/paper-urls.txt \
+  --background-dir data/images/prepared \
+  --voice-name zh-CN-XiaoxiaoNeural \
+  --voice-rate +80% \
+  --voice-pitch +0Hz
+```
+
+### 6.0.3 输出位置
+
+这条一键链路会同时生成：
+
+- source bundle
+- analysis bundle
+- 生成的 manifest 目录
+- batch CSV
+- 最终视频 run 目录
+
+其中 batch CSV 和中间描述文件会落在：
+
+- `data/source-bundles/generated/`
+- `data/manifests/generated/`
+- `data/video-batches/generated/`
 
 ### 6.1 批量配置文件在哪里
 

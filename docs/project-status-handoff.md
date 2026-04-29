@@ -275,6 +275,21 @@ npm run build
    - accent 层 scale 提高
    - 远处 outline 最小可见比例抬高
    - 当前默认观感比上一版更接近“连续铺开的球体场”
+63. 已新增 `paper url -> video` 一键链路：
+   - `npm run produce:paper-urls -- --paper-url <arxiv-url>`
+   - 会自动抓取 PDF、抽文本、生成 script draft、落 content profile、随机选背景图和随机选 effect，然后直接渲染视频
+64. 已新增 `paper url file -> batch videos` 一键链路：
+   - `npm run produce:paper-urls -- --paper-url-file <txt>`
+   - 文本文件按“每行一个 arXiv URL”解析
+65. 当前 `produce:paper-urls` 的随机输入策略：
+   - 背景图默认优先从 `data/images/prepared` 读取
+   - 若该目录无图，则回退 `data/images`
+   - effect 默认从 `life-game,snake-grid,particle-orbit,lights-beams,rubiks-solver` 随机选
+66. `build-source-bundle / analyze-paper-sources / scaffold-paper-manifests / build-video-batch` 已补齐参数化输入输出：
+   - 便于为特定论文 URL 批次生成自己的 source bundle、analysis bundle、manifest 目录和 batch CSV
+67. `video-production-manual.md` 已更新：
+   - 新增单个论文网址直接出视频的操作说明
+   - 新增网址文件批量出视频的操作说明
 
 ---
 

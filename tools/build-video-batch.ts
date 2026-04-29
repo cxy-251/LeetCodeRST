@@ -1,5 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import {pickOneWithSeed} from "./lib/deterministic-random";
+import {SUPPORTED_EFFECT_PROFILE_IDS, isSupportedEffectProfileId} from "./lib/effect-profiles";
 
 type AnalysisBundle = {
   papers: Array<{
@@ -10,6 +12,7 @@ type AnalysisBundle = {
 
 const DEFAULT_ANALYSIS_PATH = path.resolve("data/source-bundles/latest-ai-analysis.json");
 const DEFAULT_OUTPUT_PATH = path.resolve("data/video-batches/generated/latest-ai-batch.csv");
+const DEFAULT_BASE_MANIFEST_DIR = path.resolve("data/manifests/ingest");
 
 const parseArgs = (args: string[]) => {
   const take = (flag: string) => {
@@ -20,7 +23,15 @@ const parseArgs = (args: string[]) => {
   return {
     input: take("--input") ? path.resolve(take("--input") as string) : DEFAULT_ANALYSIS_PATH,
     output: take("--output") ? path.resolve(take("--output") as string) : DEFAULT_OUTPUT_PATH,
+    baseManifestDir: take("--base-manifest-dir")
+      ? path.resolve(take("--base-manifest-dir") as string)
+      : DEFAULT_BASE_MANIFEST_DIR,
     effectCycle: (take("--effect-cycle") ?? "life-game").split(",").map((item) => item.trim()).filter(Boolean),
+    effectMode: take("--effect-mode") ?? "cycle",
+    effectPool: (take("--effect-pool") ?? SUPPORTED_EFFECT_PROFILE_IDS.join(","))
+      .split(",")
+      .map((item) => item.trim())
+      .filter(Boolean),
     voiceName: take("--voice-name") ?? "zh-CN-XiaoxiaoNeural",
     voiceRate: take("--voice-rate") ?? "+80%",
     voicePitch: take("--voice-pitch") ?? "+0Hz",
@@ -30,12 +41,18 @@ const parseArgs = (args: string[]) => {
 
 const toProfileId = (arxivId: string) => `arxiv-${arxivId.replace(/[^\w]+/g, "-").toLowerCase()}`;
 
-const toManifestPath = (profileId: string) => `data/manifests/ingest/${profileId}.json`;
+const toManifestPath = (baseManifestDir: string, profileId: string) =>
+  path.relative(path.resolve("."), path.join(baseManifestDir, `${profileId}.json`));
 
 const main = async () => {
   const options = parseArgs(process.argv.slice(2));
   const raw = await fs.readFile(options.input, "utf-8");
   const bundle = JSON.parse(raw) as AnalysisBundle;
+  const supportedEffectPool = options.effectPool.filter(isSupportedEffectProfileId);
+
+  if (supportedEffectPool.length === 0) {
+    throw new Error("No supported effect ids were provided in --effect-pool");
+  }
 
   const headers = [
     "enabled",
@@ -57,7 +74,10 @@ const main = async () => {
     `# ${headers.join(",")}`,
     ...bundle.papers.map((paper, index) => {
       const profileId = toProfileId(paper.arxivId);
-      const effectProfileId = options.effectCycle[index % options.effectCycle.length] ?? "life-game";
+      const effectProfileId =
+        options.effectMode === "random"
+          ? pickOneWithSeed(supportedEffectPool, options.seedStart + index) ?? "life-game"
+          : (options.effectCycle[index % options.effectCycle.length] ?? "life-game");
       return [
         "true",
         paper.arxivId,
@@ -71,7 +91,7 @@ const main = async () => {
         options.voiceName,
         options.voiceRate,
         options.voicePitch,
-        toManifestPath(profileId),
+        toManifestPath(options.baseManifestDir, profileId),
       ].join(",");
     }),
   ];

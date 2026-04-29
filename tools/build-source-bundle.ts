@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import {shuffleWithSeed} from "./lib/deterministic-random";
 
 type PaperMetadata = {
   arxivId: string;
@@ -48,7 +49,29 @@ const parseArgs = (args: string[]) => {
 
   return {
     paperIds: paperIds.length > 0 ? new Set(paperIds) : null,
+    output: take("--output") ? path.resolve(take("--output") as string) : OUTPUT_PATH,
+    backgroundDir: take("--background-dir") ? path.resolve(take("--background-dir") as string) : undefined,
+    seed: Number.parseInt(take("--seed") ?? "42", 10),
   };
+};
+
+const collectImageFiles = async (rootDir: string): Promise<string[]> => {
+  const entries = await fs.readdir(rootDir, {withFileTypes: true});
+  const files: string[] = [];
+
+  for (const entry of entries) {
+    const resolved = path.join(rootDir, entry.name);
+    if (entry.isDirectory()) {
+      files.push(...(await collectImageFiles(resolved)));
+      continue;
+    }
+
+    if (/\.(png|jpg|jpeg|webp|svg)$/i.test(entry.name)) {
+      files.push(resolved);
+    }
+  }
+
+  return files.sort();
 };
 
 const main = async () => {
@@ -58,13 +81,18 @@ const main = async () => {
     .map((entry) => path.join(PAPER_CACHE_ROOT, entry.name))
     .sort();
 
-  const backgroundImages = (await fs.readdir(IMAGE_CACHE_ROOT))
-    .filter((name) => /\.(png|jpg|jpeg|webp)$/i.test(name))
-    .sort()
-    .map((name, index) => ({
-      id: `bg-${String(index + 1).padStart(2, "0")}`,
-      localPath: path.join(IMAGE_CACHE_ROOT, name),
-    }));
+  const backgroundImagePaths = options.backgroundDir
+    ? await collectImageFiles(options.backgroundDir)
+    : (await fs.readdir(IMAGE_CACHE_ROOT))
+      .filter((name) => /\.(png|jpg|jpeg|webp)$/i.test(name))
+      .sort()
+      .map((name) => path.join(IMAGE_CACHE_ROOT, name));
+
+  const randomizedBackgrounds = shuffleWithSeed(backgroundImagePaths, options.seed);
+  const backgroundImages = randomizedBackgrounds.map((localPath, index) => ({
+    id: `bg-${String(index + 1).padStart(2, "0")}`,
+    localPath,
+  }));
 
   const papers = await Promise.all(
     paperDirs.map(async (paperDir, index) => {
@@ -81,7 +109,7 @@ const main = async () => {
         ...metadata,
         localTextPath: textExtracted ? localTextPath : undefined,
         textExtracted,
-        suggestedCoverImagePath: backgroundImages[index % backgroundImages.length]?.localPath ?? null,
+        suggestedCoverImagePath: backgroundImages[index % Math.max(1, backgroundImages.length)]?.localPath ?? null,
       };
     }),
   );
@@ -96,9 +124,9 @@ const main = async () => {
     backgroundImages,
   };
 
-  await fs.mkdir(path.dirname(OUTPUT_PATH), {recursive: true});
-  await fs.writeFile(OUTPUT_PATH, JSON.stringify(bundle, null, 2), "utf-8");
-  console.log(`Source bundle written to ${OUTPUT_PATH}`);
+  await fs.mkdir(path.dirname(options.output), {recursive: true});
+  await fs.writeFile(options.output, JSON.stringify(bundle, null, 2), "utf-8");
+  console.log(`Source bundle written to ${options.output}`);
 };
 
 main().catch((error) => {

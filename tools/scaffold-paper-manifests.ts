@@ -24,9 +24,9 @@ type SourceBundle = {
   }>;
 };
 
-const INPUT_PATH = path.resolve("data/source-bundles/latest-ai-analysis.json");
-const OUTPUT_DIR = path.resolve("data/manifests/ingest");
-const CONTENT_PROFILE_DIR = path.resolve("data/content-profiles/generated");
+const DEFAULT_INPUT_PATH = path.resolve("data/source-bundles/latest-ai-analysis.json");
+const DEFAULT_OUTPUT_DIR = path.resolve("data/manifests/ingest");
+const DEFAULT_CONTENT_PROFILE_DIR = path.resolve("data/content-profiles/generated");
 
 const buildContentProfile = (paper: SourceBundle["papers"][number]): ContentProfileDocument => {
   const draft = paper.scriptDraft ?? {
@@ -93,7 +93,11 @@ const buildContentProfile = (paper: SourceBundle["papers"][number]): ContentProf
   };
 };
 
-const buildManifest = (paper: SourceBundle["papers"][number], index: number): ProductionManifest => {
+const buildManifest = (
+  paper: SourceBundle["papers"][number],
+  index: number,
+  contentProfileDir: string,
+): ProductionManifest => {
   const profileId = `arxiv-${paper.arxivId.replace(/[^\w]+/g, "-").toLowerCase()}`;
 
   return {
@@ -106,7 +110,7 @@ const buildManifest = (paper: SourceBundle["papers"][number], index: number): Pr
     },
     contentProfile: {
       id: profileId,
-      path: path.relative(path.resolve("."), path.join(CONTENT_PROFILE_DIR, `${profileId}.json`)),
+      path: path.relative(path.resolve("."), path.join(contentProfileDir, `${profileId}.json`)),
     },
     coverImage: paper.suggestedCoverImagePath
       ? {
@@ -230,20 +234,32 @@ const buildManifest = (paper: SourceBundle["papers"][number], index: number): Pr
 };
 
 const main = async () => {
-  const bundle = JSON.parse(await fs.readFile(INPUT_PATH, "utf-8")) as SourceBundle;
-  await fs.mkdir(OUTPUT_DIR, {recursive: true});
-  await fs.mkdir(CONTENT_PROFILE_DIR, {recursive: true});
+  const args = process.argv.slice(2);
+  const take = (flag: string) => {
+    const index = args.indexOf(flag);
+    return index >= 0 ? args[index + 1] : undefined;
+  };
+
+  const inputPath = take("--input") ? path.resolve(take("--input") as string) : DEFAULT_INPUT_PATH;
+  const outputDir = take("--output-dir") ? path.resolve(take("--output-dir") as string) : DEFAULT_OUTPUT_DIR;
+  const contentProfileDir = take("--content-profile-dir")
+    ? path.resolve(take("--content-profile-dir") as string)
+    : DEFAULT_CONTENT_PROFILE_DIR;
+
+  const bundle = JSON.parse(await fs.readFile(inputPath, "utf-8")) as SourceBundle;
+  await fs.mkdir(outputDir, {recursive: true});
+  await fs.mkdir(contentProfileDir, {recursive: true});
 
   for (const [index, paper] of bundle.papers.entries()) {
     const contentProfile = buildContentProfile(paper);
-    const manifest = buildManifest(paper, index);
-    const contentProfilePath = path.join(CONTENT_PROFILE_DIR, `${slugify(manifest.projectId)}.json`);
-    const outputPath = path.join(OUTPUT_DIR, `${slugify(manifest.projectId)}.json`);
+    const manifest = buildManifest(paper, index, contentProfileDir);
+    const contentProfilePath = path.join(contentProfileDir, `${slugify(manifest.projectId)}.json`);
+    const outputPath = path.join(outputDir, `${slugify(manifest.projectId)}.json`);
     await fs.writeFile(contentProfilePath, JSON.stringify(contentProfile, null, 2), "utf-8");
     await fs.writeFile(outputPath, JSON.stringify(manifest, null, 2), "utf-8");
   }
 
-  console.log(`Scaffolded ${bundle.papers.length} manifests into ${OUTPUT_DIR}`);
+  console.log(`Scaffolded ${bundle.papers.length} manifests into ${outputDir}`);
 };
 
 main().catch((error) => {

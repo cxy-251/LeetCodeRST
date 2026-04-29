@@ -1,6 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
 import type {ProductionManifest, WebGLEffectProfileId} from "@paper-to-video/shared-types";
+import {isSupportedEffectProfileId} from "./effect-profiles";
 import {buildProfileDrivenManifest} from "./manifest-factory";
 import {slugify} from "./run-artifacts";
 
@@ -147,7 +148,7 @@ export const readVideoBatchRows = async (csvPath: string): Promise<VideoBatchRow
       throw new Error(`Row ${rowNumber} is missing content_profile_id`);
     }
 
-    if (!["life-game", "snake-grid", "particle-orbit", "lights-beams", "rubiks-solver"].includes(effectProfileId)) {
+    if (!isSupportedEffectProfileId(effectProfileId)) {
       throw new Error(`Row ${rowNumber} has unsupported effect_profile_id: ${effectProfileId}`);
     }
 
