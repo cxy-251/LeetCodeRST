@@ -1,4 +1,7 @@
 import * as THREE from "three";
+import {EffectComposer} from "three/examples/jsm/postprocessing/EffectComposer.js";
+import {RenderPass} from "three/examples/jsm/postprocessing/RenderPass.js";
+import {UnrealBloomPass} from "three/examples/jsm/postprocessing/UnrealBloomPass.js";
 import {resolveLightsEffectConfig} from "../../../module-api";
 import {applyForwardDollyRig} from "../../shared/updateCameraRigs";
 import {createLightsMeshes} from "./createLightsMeshes";
@@ -47,6 +50,8 @@ export class ThreeLightsEngine {
   private readonly renderer: THREE.WebGLRenderer;
   private readonly scene: THREE.Scene;
   private readonly camera: THREE.PerspectiveCamera;
+  private readonly composer: EffectComposer;
+  private readonly bloomPass: UnrealBloomPass;
   private readonly root = new THREE.Group();
   private readonly helper = new THREE.Object3D();
   private readonly lookAtTarget = new THREE.Vector3();
@@ -88,6 +93,7 @@ export class ThreeLightsEngine {
     });
     this.renderer.setClearColor(new THREE.Color(0x000000), 0);
     this.renderer.setPixelRatio(1);
+    this.renderer.autoClear = true;
 
     this.scene = new THREE.Scene();
     this.scene.add(this.root);
@@ -95,6 +101,17 @@ export class ThreeLightsEngine {
     this.camera = new THREE.PerspectiveCamera(34, options.width / options.height, 0.1, 100);
     this.camera.position.set(0, 1.38, 7.6);
     this.camera.lookAt(0, -0.58, -15.2);
+
+    this.composer = new EffectComposer(this.renderer);
+    const renderPass = new RenderPass(this.scene, this.camera);
+    this.composer.addPass(renderPass);
+    this.bloomPass = new UnrealBloomPass(
+      new THREE.Vector2(options.width, options.height),
+      0.62,
+      0.82,
+      0.18,
+    );
+    this.composer.addPass(this.bloomPass);
 
     const defaultConfig = resolveLightsEffectConfig(undefined);
     this.bundle = createLightsMeshes({
@@ -116,6 +133,7 @@ export class ThreeLightsEngine {
     this.width = width;
     this.height = height;
     this.renderer.setSize(width, height, false);
+    this.composer.setSize(width, height);
     this.camera.aspect = width / Math.max(1, height);
     this.camera.updateProjectionMatrix();
   }
@@ -146,11 +164,25 @@ export class ThreeLightsEngine {
     const surgeSection = smoothPulse(choreographyPhase, 0.38, 0.58, 0.8);
     const settleSection = smoothPulse(choreographyPhase, 0.72, 0.88, 1);
     const choreography = {
-      auraGain: 0.9 + pulseSection * 0.45 + surgeSection * 0.26,
-      fieldGain: 0.82 + pulseSection * 0.28 + surgeSection * 0.14,
-      nearBias: pulseSection * 0.18 + surgeSection * 0.34,
-      orbGain: 0.84 + pulseSection * 0.22 + surgeSection * 0.24,
-      rimGain: 0.9 + settleSection * 0.16 + surgeSection * 0.12,
+      auraGain:
+        0.9 +
+        (0.24 + config.beatIntensity * 0.34) * pulseSection +
+        (0.12 + config.beatIntensity * 0.2) * surgeSection,
+      fieldGain:
+        0.82 +
+        (0.18 + config.beatIntensity * 0.18) * pulseSection +
+        (0.08 + config.beatIntensity * 0.08) * surgeSection,
+      nearBias:
+        pulseSection * (0.08 + config.beatIntensity * 0.16) +
+        surgeSection * (0.16 + config.beatIntensity * 0.24),
+      orbGain:
+        0.84 +
+        (0.14 + config.beatIntensity * 0.14) * pulseSection +
+        (0.12 + config.beatIntensity * 0.16) * surgeSection,
+      rimGain:
+        0.9 +
+        settleSection * (0.06 + config.beatIntensity * 0.1) +
+        surgeSection * (0.06 + config.beatIntensity * 0.08),
     };
     const forwardPhase = (time * 0.11) % 1;
     const cameraBoost = 1 + surgeSection * 0.22 + pulseSection * 0.08;
@@ -177,6 +209,9 @@ export class ThreeLightsEngine {
     if (fog instanceof THREE.FogExp2) {
       fog.density = 0.022 + surgeSection * 0.006 - pulseSection * 0.002;
     }
+    this.bloomPass.strength = 0.38 + config.beatIntensity * 0.56 + pulseSection * 0.22 + surgeSection * 0.36;
+    this.bloomPass.radius = 0.56 + config.beatIntensity * 0.18 + pulseSection * 0.08;
+    this.bloomPass.threshold = Math.max(0.04, 0.18 - config.beatIntensity * 0.08 - surgeSection * 0.06);
     this.bundle.glow.material.opacity = 0.08 * choreography.orbGain;
     this.bundle.core.material.opacity = 0.22 * choreography.orbGain;
     this.bundle.accent.material.opacity = 0.25 * choreography.rimGain;
@@ -221,7 +256,7 @@ export class ThreeLightsEngine {
       seeds,
     });
 
-    this.renderer.render(this.scene, this.camera);
+    this.composer.render();
   }
 
   public dispose() {

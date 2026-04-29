@@ -162,6 +162,10 @@ export type RubiksEffectConfig = {
 
 export type LightsEffectConfig = {
   variant: "pulse" | "fan" | "bloom";
+  palette: "midnight-cyan" | "violet-haze" | "sunset-plasma";
+  density: number;
+  speed: number;
+  beatIntensity: number;
   beamCount: number;
   beamLength: number;
   beamThickness: number;

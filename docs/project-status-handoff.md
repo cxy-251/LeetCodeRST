@@ -887,6 +887,58 @@ Verification:
 
 ---
 
+## 31. 2026-04-30 Lights Bloom And Source Model Pass
+
+This pass aligned `lights-beams` more closely with the later-stage HelloEnjoy `Lights` structure and added a real screen-space bloom pass.
+
+What changed:
+
+1. `lights-beams` now uses a real postprocessing stack inside `ThreeLightsEngine`:
+   - `EffectComposer`
+   - `RenderPass`
+   - `UnrealBloomPass`
+2. Bloom strength, radius, and threshold now respond to the family choreography instead of staying static.
+   - `packages/content-pipeline/src/effects/lights-beams/core/ThreeLightsEngine.ts`
+3. The family config language now includes higher-level source-inspired controls:
+   - `palette`
+   - `density`
+   - `speed`
+   - `beatIntensity`
+   These resolve down into the lower-level orb field and motion settings.
+   - `packages/shared-types/src/index.ts`
+   - `packages/content-pipeline/src/module-api.ts`
+4. Public-source analysis conclusions were folded into the current target model:
+   - `Director` = global phase/timeline orchestrator
+   - `BeatEvents` = beat-aware cue dispatcher
+   - `Terrain` = tiled heightfield and anchor-space provider
+   - `Balls` = later-scene orb actor system
+   - `Stars` = atmospheric additive depth layer
+   - `Skybox` = long-range environment shell
+   - `Music.phase` = scene progression index
+5. The internal minimal target for the later `Lights` language is now:
+   - ripple terrain
+   - ground orb field
+   - star / haze depth
+   - forward camera rail
+   - burst every ~2 seconds
+   - additive + fog + bloom
+
+Why this matters:
+
+1. The effect is no longer only a layered geometry composition; it now also has a true postprocessing glow component.
+2. The parameter surface is closer to how a showcase effect should be tuned at a product level, instead of exposing only low-level orb numbers.
+
+Verification:
+
+1. `npm run lint`
+2. `npm run build`
+
+Residual note:
+
+1. `lights-beams` now has real bloom and better source-aligned controls, but the star layer and fuller event scripting are still only partially represented compared with the original project.
+
+---
+
 ## 22. 2026-04-29 Lights Beams Perspective Rework
 
 This pass pushed `lights-beams` away from a centered burst and closer to the original `Lights` reference language.

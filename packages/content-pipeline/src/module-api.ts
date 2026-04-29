@@ -113,6 +113,10 @@ export const DEFAULT_PARTICLE_EFFECT: ParticleEffectConfig = {
 
 export const DEFAULT_LIGHTS_EFFECT: LightsEffectConfig = {
   variant: "pulse",
+  palette: "midnight-cyan",
+  density: 0.56,
+  speed: 0.62,
+  beatIntensity: 0.72,
   beamCount: 28,
   beamLength: 0.56,
   beamThickness: 0.024,
@@ -291,6 +295,10 @@ const LIGHTS_VARIANTS: Record<
   Partial<LightsEffectConfig>
 > = {
   pulse: {
+    palette: "midnight-cyan",
+    density: 0.56,
+    speed: 0.62,
+    beatIntensity: 0.72,
     beamCount: 28,
     beamLength: 0.56,
     beamThickness: 0.024,
@@ -302,6 +310,10 @@ const LIGHTS_VARIANTS: Record<
     accentColor: "#d6c3ff",
   },
   fan: {
+    palette: "violet-haze",
+    density: 0.64,
+    speed: 0.68,
+    beatIntensity: 0.78,
     beamCount: 30,
     beamLength: 0.62,
     beamThickness: 0.022,
@@ -313,6 +325,10 @@ const LIGHTS_VARIANTS: Record<
     accentColor: "#d9caff",
   },
   bloom: {
+    palette: "sunset-plasma",
+    density: 0.72,
+    speed: 0.74,
+    beatIntensity: 0.88,
     beamCount: 32,
     beamLength: 0.68,
     beamThickness: 0.026,
@@ -322,6 +338,27 @@ const LIGHTS_VARIANTS: Record<
     primaryColor: "#c9fff7",
     secondaryColor: "#355785",
     accentColor: "#ffd3f0",
+  },
+};
+
+const LIGHTS_PALETTES: Record<
+  LightsEffectConfig["palette"],
+  Pick<LightsEffectConfig, "primaryColor" | "secondaryColor" | "accentColor">
+> = {
+  "midnight-cyan": {
+    primaryColor: "#b8f7ff",
+    secondaryColor: "#234f78",
+    accentColor: "#d6c3ff",
+  },
+  "violet-haze": {
+    primaryColor: "#d7d5ff",
+    secondaryColor: "#2e3f78",
+    accentColor: "#9eeaff",
+  },
+  "sunset-plasma": {
+    primaryColor: "#ffd7b8",
+    secondaryColor: "#5a325e",
+    accentColor: "#ff8fd6",
   },
 };
 
@@ -410,9 +447,21 @@ export const resolveLightsEffectConfig = (
 ): LightsEffectConfig => {
   const overrides = modules?.lightsEffect ?? {};
   const variant = overrides.variant ?? DEFAULT_LIGHTS_EFFECT.variant;
-  return {
+  const palette = overrides.palette ?? LIGHTS_VARIANTS[variant].palette ?? DEFAULT_LIGHTS_EFFECT.palette;
+  const resolved = {
     ...DEFAULT_LIGHTS_EFFECT,
     ...LIGHTS_VARIANTS[variant],
+    ...LIGHTS_PALETTES[palette],
     ...overrides,
+  };
+
+  return {
+    ...resolved,
+    beamCount: Math.max(12, Math.round(16 + resolved.density * 28)),
+    motionSpeed: 0.0038 + resolved.speed * 0.0052,
+    spread: 0.5 + resolved.density * 0.42,
+    beamLength: 0.48 + resolved.density * 0.28,
+    beamThickness: 0.018 + resolved.density * 0.014,
+    orbitRadius: 0.18 + resolved.speed * 0.16,
   };
 };
