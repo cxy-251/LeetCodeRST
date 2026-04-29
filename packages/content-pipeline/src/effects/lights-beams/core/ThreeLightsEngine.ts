@@ -220,6 +220,12 @@ export class ThreeLightsEngine {
     this.bundle.groundRim.material.opacity = 0.24 * choreography.rimGain;
     this.bundle.surfaceDots.material.opacity = 0.14 * choreography.fieldGain;
     this.bundle.surfaceAccent.material.opacity = 0.2 * choreography.fieldGain;
+    this.bundle.stars.material.opacity = 0.2 + choreography.fieldGain * 0.12 + surgeSection * 0.08;
+    this.bundle.stars.material.size =
+      0.14 +
+      config.density * 0.035 +
+      pulseSection * 0.025 +
+      surgeSection * 0.04;
     this.bundle.horizonMaterial.opacity = 0.12 + pulseSection * 0.06 + surgeSection * 0.04;
     this.bundle.floorTiles.forEach((tile) => {
       tile.fillMaterial.opacity = 0.06 + pulseSection * 0.04;
@@ -253,6 +259,7 @@ export class ThreeLightsEngine {
         surfaceAccent: this.bundle.surfaceAccent,
         surfaceDots: this.bundle.surfaceDots,
       },
+      stars: this.bundle.stars,
       seeds,
     });
 
@@ -302,6 +309,8 @@ export class ThreeLightsEngine {
     this.bundle.groundRim.mesh.dispose();
     this.bundle.surfaceDots.mesh.dispose();
     this.bundle.surfaceAccent.mesh.dispose();
+    this.bundle.stars.geometry.dispose();
+    this.bundle.stars.material.dispose();
     this.bundle.glow.material.dispose();
     this.bundle.core.material.dispose();
     this.bundle.accent.material.dispose();
@@ -310,6 +319,7 @@ export class ThreeLightsEngine {
     this.bundle.groundRim.material.dispose();
     this.bundle.surfaceDots.material.dispose();
     this.bundle.surfaceAccent.material.dispose();
+    this.bundle.stars.points.removeFromParent();
 
     this.bundle = createLightsMeshes({
       accentColor: config.accentColor,

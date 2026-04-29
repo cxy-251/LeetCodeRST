@@ -134,6 +134,7 @@ export const createLightsMeshes = ({
   const groundDiscGeometry = new THREE.CircleGeometry(1, 40);
   const groundRingGeometry = new THREE.RingGeometry(0.78, 1, 40);
   const surfaceDotCount = Math.max(144, beamCount * 14);
+  const starCount = Math.max(220, beamCount * 18);
 
   const floorTiles = Array.from({length: 4}, (_, index) => {
     const geometry = new THREE.PlaneGeometry(30, 18, 44, 42);
@@ -225,6 +226,26 @@ export const createLightsMeshes = ({
   const horizonMesh = horizon.mesh;
   root.add(horizonMesh);
 
+  const starPositions = new Float32Array(starCount * 3);
+  const starColors = new Float32Array(starCount * 3);
+  const starGeometry = new THREE.BufferGeometry();
+  starGeometry.setAttribute("position", new THREE.BufferAttribute(starPositions, 3));
+  starGeometry.setAttribute("color", new THREE.BufferAttribute(starColors, 3));
+  const starMaterial = new THREE.PointsMaterial({
+    color: glowColor,
+    size: 0.18,
+    sizeAttenuation: true,
+    transparent: true,
+    opacity: 0.34,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    vertexColors: true,
+    fog: true,
+  });
+  const starPoints = new THREE.Points(starGeometry, starMaterial);
+  starPoints.frustumCulled = false;
+  root.add(starPoints);
+
   return {
     orbGeometry,
     dotGeometry,
@@ -235,6 +256,13 @@ export const createLightsMeshes = ({
     horizonMaterial: horizon.material,
     horizonMesh,
     signature: `orbs:${beamCount}`,
+    stars: {
+      colors: starColors,
+      geometry: starGeometry,
+      material: starMaterial,
+      points: starPoints,
+      positions: starPositions,
+    },
     glow: createLayer({
       color: glowColor,
       count: beamCount,

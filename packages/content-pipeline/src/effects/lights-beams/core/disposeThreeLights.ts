@@ -31,6 +31,8 @@ export const disposeThreeLights = ({
   });
   bundle.horizonGeometry?.dispose();
   bundle.horizonMaterial?.dispose();
+  bundle.stars?.geometry?.dispose();
+  bundle.stars?.material?.dispose();
   bundle.glow?.mesh?.dispose();
   bundle.core?.mesh?.dispose();
   bundle.accent?.mesh?.dispose();
@@ -47,6 +49,7 @@ export const disposeThreeLights = ({
   bundle.groundRim?.material?.dispose();
   bundle.surfaceDots?.material?.dispose();
   bundle.surfaceAccent?.material?.dispose();
+  bundle.stars?.points?.removeFromParent();
   root.clear();
   scene.clear();
   renderer.dispose();

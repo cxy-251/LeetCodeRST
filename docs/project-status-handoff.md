@@ -887,6 +887,42 @@ Verification:
 
 ---
 
+## 22. 2026-04-30 Lights Beams Atmospheric Stars Pass
+
+This pass added a dedicated atmospheric `Stars` layer to the `lights-beams` family, following the source-analysis split between terrain, orb field, and air-depth systems.
+
+What changed:
+
+1. A real star-field bundle was added to the pure `lights-beams` core.
+   - `packages/content-pipeline/src/effects/lights-beams/lights-beams.types.ts`
+   - `packages/content-pipeline/src/effects/lights-beams/core/createLightsMeshes.ts`
+2. The engine now creates a dedicated additive `THREE.Points` layer with:
+   - per-point position buffers
+   - per-point vertex colors
+   - fog-enabled `PointsMaterial`
+3. The per-frame update loop now drives stars as a separate air-depth volume rather than treating them as another orb layer.
+   - `packages/content-pipeline/src/effects/lights-beams/core/updateLightsInstances.ts`
+   - stars use slower parallax and a wider spatial spread so the camera reads as moving through space instead of only watching foreground orbs approach
+4. The main engine now modulates star opacity and point size as part of the same choreography pass that already controls orbs, field dots, fog, and bloom.
+   - `packages/content-pipeline/src/effects/lights-beams/core/ThreeLightsEngine.ts`
+5. GPU cleanup now explicitly disposes the star-field geometry and material.
+   - `packages/content-pipeline/src/effects/lights-beams/core/disposeThreeLights.ts`
+
+Why this matters:
+
+1. The `lights-beams` scene now maps more cleanly to the `HelloEnjoy Lights` source model:
+   - `Terrain` -> ripple field / guide surface
+   - `Balls` -> ground-anchored orb field
+   - `Stars` -> additive atmospheric depth layer
+2. This makes the scene feel less like isolated glowing objects and more like a coherent volumetric field with air, distance, and travel.
+
+Verification:
+
+1. `npm run lint`
+2. `npm run build`
+
+---
+
 ## 31. 2026-04-30 Lights Bloom And Source Model Pass
 
 This pass aligned `lights-beams` more closely with the later-stage HelloEnjoy `Lights` structure and added a real screen-space bloom pass.

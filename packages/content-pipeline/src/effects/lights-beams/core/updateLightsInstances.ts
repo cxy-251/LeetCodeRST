@@ -1,3 +1,4 @@
+import * as THREE from "three";
 import type {UpdateLightsInstancesInput} from "../lights-beams.types";
 
 type LayerTuning = {
@@ -142,6 +143,7 @@ export const updateLightsInstances = ({
   frame,
   helper,
   meshes,
+  stars,
   seeds,
 }: UpdateLightsInstancesInput) => {
   const time = frame * config.motionSpeed * 8.9;
@@ -308,4 +310,57 @@ export const updateLightsInstances = ({
 
   meshes.surfaceDots.mesh.instanceMatrix.needsUpdate = true;
   meshes.surfaceAccent.mesh.instanceMatrix.needsUpdate = true;
+
+  const starPositions = stars.positions;
+  const starColors = stars.colors;
+  const starFarColor = new THREE.Color(config.secondaryColor);
+  const starNearColor = new THREE.Color(config.primaryColor);
+  const starAccentColor = new THREE.Color(config.accentColor);
+  const starColor = new THREE.Color();
+  const starCount = starPositions.length / 3;
+  const starLaneCount = 18;
+  const starRowCount = Math.ceil(starCount / starLaneCount);
+  const starDepth = totalDepth + 14;
+
+  // Keep stars in a slower, wider volume so the camera read is "moving through space"
+  // instead of only watching foreground orbs fly at the viewer.
+  for (let index = 0; index < starCount; index += 1) {
+    const laneIndex = index % starLaneCount;
+    const rowIndex = Math.floor(index / starLaneCount);
+    const laneRatio = laneIndex / Math.max(1, starLaneCount - 1);
+    const laneSigned = laneRatio * 2 - 1;
+    const rowRatio = rowIndex / Math.max(1, starRowCount - 1);
+    const phase = index * 0.73;
+    const parallax = 0.56 + (index % 5) * 0.07;
+    const x =
+      laneSigned * 11.4 +
+      Math.sin(phase * 0.81 + rowRatio * 3.2) * 0.7 +
+      Math.cos(rowRatio * 6.4 + phase * 0.17) * 0.42;
+    const y =
+      1.2 +
+      rowRatio * 3.8 +
+      Math.sin(phase * 0.46 + time * 0.18) * 0.34 +
+      Math.cos(laneSigned * 1.9 + rowRatio * 5.1) * 0.42;
+    const baseZ = -7 - rowRatio * 41 - (index % 3) * 0.9;
+    const displayZ = wrapDepth(baseZ + travelOffset * parallax, nearLimit + 4, starDepth);
+    const visibility = sampleDepthVisibility(displayZ, nearLimit + 4, starDepth);
+    const shimmer = 0.58 + (Math.sin(time * (0.28 + (index % 7) * 0.025) + phase) + 1) * 0.18;
+    const burst = 0.18 + choreography.fieldGain * 0.24 + visibility.nearSoft * choreography.auraGain * 0.24;
+    const intensity = (0.14 + visibility.far * 0.18 + visibility.nearSoft * 0.52) * shimmer + burst;
+
+    starColor.copy(starFarColor);
+    starColor.lerp(starAccentColor, visibility.far * 0.32 + choreography.rimGain * 0.04);
+    starColor.lerp(starNearColor, visibility.nearSoft * 0.68);
+
+    const cursor = index * 3;
+    starPositions[cursor] = x;
+    starPositions[cursor + 1] = y;
+    starPositions[cursor + 2] = displayZ;
+    starColors[cursor] = starColor.r * intensity;
+    starColors[cursor + 1] = starColor.g * intensity;
+    starColors[cursor + 2] = starColor.b * intensity;
+  }
+
+  stars.geometry.attributes.position.needsUpdate = true;
+  stars.geometry.attributes.color.needsUpdate = true;
 };

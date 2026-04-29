@@ -55,6 +55,14 @@ export type ThreeLightsGuidePlane = {
   zOffset: number;
 };
 
+export type ThreeLightsStarField = {
+  colors: Float32Array;
+  geometry: THREE.BufferGeometry;
+  material: THREE.PointsMaterial;
+  points: THREE.Points<THREE.BufferGeometry, THREE.PointsMaterial>;
+  positions: Float32Array;
+};
+
 export type ThreeLightsMeshBundle = {
   accent: LightsMeshLayer;
   core: LightsMeshLayer;
@@ -71,6 +79,7 @@ export type ThreeLightsMeshBundle = {
   horizonMaterial: THREE.MeshBasicMaterial;
   horizonMesh: THREE.Mesh<THREE.CircleGeometry, THREE.MeshBasicMaterial>;
   signature: string;
+  stars: ThreeLightsStarField;
   surfaceAccent: LightsMeshLayer;
   surfaceDots: LightsMeshLayer;
 };
@@ -98,6 +107,7 @@ export type UpdateLightsInstancesInput = {
     | "surfaceAccent"
     | "surfaceDots"
   >;
+  stars: ThreeLightsMeshBundle["stars"];
   seeds: LightsBeamSeed[];
 };
 
