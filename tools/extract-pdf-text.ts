@@ -1,5 +1,6 @@
 import path from "node:path";
 import {spawn} from "node:child_process";
+import {resolvePythonCommand} from "./lib/python-runtime";
 
 const run = (command: string, args: string[]) =>
   new Promise<void>((resolve, reject) => {
@@ -37,17 +38,13 @@ const parseArgs = () => {
 
 const main = async () => {
   const {inputPdf, outputText} = parseArgs();
-  await run("conda", [
-    "run",
-    "-n",
-    "kwai",
-    "python",
-    "services/paper-ingest/extract_pdf_text.py",
+  const pythonCommand = resolvePythonCommand("services/paper-ingest/extract_pdf_text.py", [
     "--input-pdf",
     inputPdf,
     "--output-text",
     outputText,
   ]);
+  await run(pythonCommand.command, pythonCommand.args);
 };
 
 main().catch((error) => {

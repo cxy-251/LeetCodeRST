@@ -324,6 +324,18 @@ npm run build
 76. `build-source-bundle` 产物现在会记录本次背景图选择策略：
    - `coverSelection.mode`
    - `coverSelection.sourceDir`
+77. 运行时已开始去除对作者本机环境的硬编码依赖：
+   - `generate-audio.ts` 与 `extract-pdf-text.ts` 已支持通过环境变量切换 `conda` 或系统 Python
+   - `ffprobe` 路径也已支持通过环境变量覆盖
+78. 已新增 Docker 交付层：
+   - `Dockerfile`
+   - `docker-compose.yml`
+   - `.dockerignore`
+   - `docs/docker-deployment.md`
+79. Docker 默认面向的使用方式：
+   - 宿主机运行 LM Studio
+   - 容器内运行论文处理、音频生成、视频渲染和预览站
+   - 默认通过 `host.docker.internal:1234/v1` 访问宿主机本地模型
 
 ---
 

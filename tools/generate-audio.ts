@@ -10,6 +10,7 @@ import {
   stableHash,
   writeRunSummary,
 } from "./lib/run-artifacts";
+import {resolveFfprobeBinary, resolvePythonCommand} from "./lib/python-runtime";
 import type {
   AudioAsset,
   ProductionManifest,
@@ -20,6 +21,7 @@ import type {
 
 const DEFAULT_PRODUCTION_MANIFEST = path.resolve("data/manifests/demo-paper.json");
 const DEFAULT_RENDER_MANIFEST = path.resolve("data/generated-meta/demo-paper-001.render.json");
+const FfprobeBinary = resolveFfprobeBinary();
 const run = (command: string, args: string[]) =>
   new Promise<void>((resolve, reject) => {
     const child = spawn(command, args, {stdio: "inherit"});
@@ -129,7 +131,7 @@ const distributeSegmentsByDuration = (
 };
 
 const probeAudioDurationMs = async (audioPath: string) => {
-  const result = await runWithCapture("/opt/homebrew/bin/ffprobe", [
+  const result = await runWithCapture(FfprobeBinary, [
     "-v",
     "error",
     "-show_entries",
@@ -300,12 +302,7 @@ const main = async () => {
     }
 
     if (!cacheHit) {
-      await run("conda", [
-        "run",
-        "-n",
-        "kwai",
-        "python",
-        "services/tts-python/src/main.py",
+      const pythonCommand = resolvePythonCommand("services/tts-python/src/main.py", [
         "--scene-id",
         scene.id,
         "--text",
@@ -321,6 +318,7 @@ const main = async () => {
         "--output-meta",
         cachePaths.metaPath,
       ]);
+      await run(pythonCommand.command, pythonCommand.args);
     }
 
     await linkOrCopyFile(cachePaths.audioPath, outputAudio);

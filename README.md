@@ -50,6 +50,17 @@ npm run lint
 npm run build
 ```
 
+## Docker 入口
+
+```bash
+docker compose build
+docker compose up
+```
+
+更完整的部署方式见：
+
+- `./docs/docker-deployment.md`
+
 ## 顶层维护目录
 
 - `apps/`

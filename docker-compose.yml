@@ -1,0 +1,21 @@
+services:
+  paper-to-video:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3100:3100"
+    environment:
+      LM_STUDIO_BASE_URL: ${LM_STUDIO_BASE_URL:-http://host.docker.internal:1234/v1}
+      LM_STUDIO_MODEL: ${LM_STUDIO_MODEL:-gemma-4-e4b}
+      LM_STUDIO_API_KEY: ${LM_STUDIO_API_KEY:-lm-studio}
+      PAPER_TO_VIDEO_PYTHON_MODE: ${PAPER_TO_VIDEO_PYTHON_MODE:-direct}
+      PAPER_TO_VIDEO_PYTHON_BIN: ${PAPER_TO_VIDEO_PYTHON_BIN:-python3}
+      PAPER_TO_VIDEO_FFPROBE_BIN: ${PAPER_TO_VIDEO_FFPROBE_BIN:-ffprobe}
+      REMOTION_GL: ${REMOTION_GL:-angle}
+      REMOTION_CONCURRENCY: ${REMOTION_CONCURRENCY:-2}
+    volumes:
+      - ./data:/app/data
+      - ./output:/app/output
+      - ./public:/app/public
+    command: ["npm", "run", "dev:editor", "--", "--host", "0.0.0.0", "--port", "3100"]

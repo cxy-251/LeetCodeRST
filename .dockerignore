@@ -1,0 +1,12 @@
+node_modules
+dist
+build
+output
+.git
+.DS_Store
+data/source-bundles/generated
+data/manifests/generated
+data/video-batches/generated
+data/content-profiles/generated
+public/generated-audio
+public/generated-images

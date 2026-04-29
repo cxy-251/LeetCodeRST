@@ -7,8 +7,8 @@ try:
     from pypdf import PdfReader
 except Exception as exc:  # pragma: no cover - import-time environment check
     raise SystemExit(
-        "pypdf is required for PDF text extraction in the kwai environment. "
-        "Install it with `conda run -n kwai pip install pypdf`."
+        "pypdf is required for PDF text extraction. "
+        "Install it in the active Python runtime with `pip install pypdf`."
     ) from exc
 
 
