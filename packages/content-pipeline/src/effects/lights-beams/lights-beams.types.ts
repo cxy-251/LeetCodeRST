@@ -64,6 +64,7 @@ export type ThreeLightsMeshBundle = {
   orbGeometry: THREE.SphereGeometry;
   floorTiles: ThreeLightsFloorTile[];
   glow: LightsMeshLayer;
+  groundAura: LightsMeshLayer;
   groundGlow: LightsMeshLayer;
   groundRim: LightsMeshLayer;
   horizonGeometry: THREE.CircleGeometry;
@@ -84,6 +85,7 @@ export type UpdateLightsInstancesInput = {
     | "accent"
     | "core"
     | "glow"
+    | "groundAura"
     | "groundGlow"
     | "groundRim"
     | "surfaceAccent"

@@ -241,6 +241,12 @@ export const updateLightsInstances = ({
     helper.updateMatrix();
     meshes.groundGlow.mesh.setMatrixAt(index, helper.matrix);
 
+    helper.position.set(state.x, -2.09 + floorHeight + 0.015, displayZ);
+    helper.rotation.set(-Math.PI / 2, 0, 0);
+    helper.scale.setScalar((1.12 + highlightFactor * 1.86) * (0.82 + breathing * 0.18));
+    helper.updateMatrix();
+    meshes.groundAura.mesh.setMatrixAt(index, helper.matrix);
+
     helper.position.set(state.x, -2.083 + floorHeight + 0.03, displayZ);
     helper.rotation.set(-Math.PI / 2, 0, 0);
     helper.scale.setScalar((0.34 + visibility.far * 0.32 + highlightFactor * 0.22) * rimOnlyFactor);
@@ -251,6 +257,7 @@ export const updateLightsInstances = ({
   meshes.glow.mesh.instanceMatrix.needsUpdate = true;
   meshes.core.mesh.instanceMatrix.needsUpdate = true;
   meshes.accent.mesh.instanceMatrix.needsUpdate = true;
+  meshes.groundAura.mesh.instanceMatrix.needsUpdate = true;
   meshes.groundGlow.mesh.instanceMatrix.needsUpdate = true;
   meshes.groundRim.mesh.instanceMatrix.needsUpdate = true;
 

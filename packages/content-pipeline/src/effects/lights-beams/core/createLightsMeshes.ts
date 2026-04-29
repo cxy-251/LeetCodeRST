@@ -282,6 +282,13 @@ export const createLightsMeshes = ({
       opacity: 0.14,
       root,
     }),
+    groundAura: createGroundLayer({
+      color: glowColor,
+      count: beamCount,
+      geometry: groundDiscGeometry,
+      opacity: 0.055,
+      root,
+    }),
     groundRim: createGroundLayer({
       color: accentColor,
       count: beamCount,

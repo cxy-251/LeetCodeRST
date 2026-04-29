@@ -114,6 +114,7 @@ export class ThreeLightsEngine {
     this.bundle.core.material.color.set(config.primaryColor);
     this.bundle.glow.material.color.set(config.secondaryColor);
     this.bundle.accent.material.color.set(config.accentColor);
+    this.bundle.groundAura.material.color.set(config.secondaryColor);
     this.bundle.groundGlow.material.color.set(config.secondaryColor);
     this.bundle.groundRim.material.color.set(config.accentColor);
     this.bundle.surfaceDots.material.color.set(config.secondaryColor);
@@ -161,6 +162,7 @@ export class ThreeLightsEngine {
         accent: this.bundle.accent,
         core: this.bundle.core,
         glow: this.bundle.glow,
+        groundAura: this.bundle.groundAura,
         groundGlow: this.bundle.groundGlow,
         groundRim: this.bundle.groundRim,
         surfaceAccent: this.bundle.surfaceAccent,
@@ -210,6 +212,7 @@ export class ThreeLightsEngine {
     this.bundle.glow.mesh.dispose();
     this.bundle.core.mesh.dispose();
     this.bundle.accent.mesh.dispose();
+    this.bundle.groundAura.mesh.dispose();
     this.bundle.groundGlow.mesh.dispose();
     this.bundle.groundRim.mesh.dispose();
     this.bundle.surfaceDots.mesh.dispose();
@@ -217,6 +220,7 @@ export class ThreeLightsEngine {
     this.bundle.glow.material.dispose();
     this.bundle.core.material.dispose();
     this.bundle.accent.material.dispose();
+    this.bundle.groundAura.material.dispose();
     this.bundle.groundGlow.material.dispose();
     this.bundle.groundRim.material.dispose();
     this.bundle.surfaceDots.material.dispose();

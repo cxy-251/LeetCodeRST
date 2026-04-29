@@ -34,6 +34,7 @@ export const disposeThreeLights = ({
   bundle.glow?.mesh?.dispose();
   bundle.core?.mesh?.dispose();
   bundle.accent?.mesh?.dispose();
+  bundle.groundAura?.mesh?.dispose();
   bundle.groundGlow?.mesh?.dispose();
   bundle.groundRim?.mesh?.dispose();
   bundle.surfaceDots?.mesh?.dispose();
@@ -41,6 +42,7 @@ export const disposeThreeLights = ({
   bundle.glow?.material?.dispose();
   bundle.core?.material?.dispose();
   bundle.accent?.material?.dispose();
+  bundle.groundAura?.material?.dispose();
   bundle.groundGlow?.material?.dispose();
   bundle.groundRim?.material?.dispose();
   bundle.surfaceDots?.material?.dispose();

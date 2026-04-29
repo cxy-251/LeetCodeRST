@@ -1067,6 +1067,31 @@ Residual note:
 
 ---
 
+## 28. 2026-04-29 Lights Aura Pass
+
+This pass added a lightweight bloom-style aura layer without introducing a separate postprocessing stack.
+
+1. Each major light marker now includes an additional oversized, low-opacity ground aura disc.
+   - `packages/content-pipeline/src/effects/lights-beams/core/createLightsMeshes.ts`
+   - `packages/content-pipeline/src/effects/lights-beams/core/updateLightsInstances.ts`
+2. The new aura is driven by the same near/far visibility and breathing logic as the main lights, so the closer markers feel more luminous without breaking the existing field choreography.
+   - `packages/content-pipeline/src/effects/lights-beams/core/updateLightsInstances.ts`
+3. Engine lifecycle was extended so the new aura layer is updated, recolored, and disposed with the rest of the family bundle.
+   - `packages/content-pipeline/src/effects/lights-beams/lights-beams.types.ts`
+   - `packages/content-pipeline/src/effects/lights-beams/core/ThreeLightsEngine.ts`
+   - `packages/content-pipeline/src/effects/lights-beams/core/disposeThreeLights.ts`
+
+Verification:
+
+1. `npm run lint`
+2. `npm run build`
+
+Residual note:
+
+1. This improves bloom perception in a stable way for both editor and renderer, but it is still a fake-bloom approach rather than a full-screen postprocessing pipeline.
+
+---
+
 ## 22. 2026-04-29 Lights Beams Perspective Rework
 
 This follow-up changed `lights-beams` from a flat central burst into a more scene-like interpretation of the Hello Enjoy `Lights` reference.
