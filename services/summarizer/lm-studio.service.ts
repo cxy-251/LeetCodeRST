@@ -17,6 +17,25 @@ const RESPONSE_SCHEMA_EXAMPLE = {
   bullets: ["要点 1", "要点 2", "要点 3"],
 };
 
+const STRICT_RESPONSE_SCHEMA = {
+  type: "object",
+  additionalProperties: false,
+  required: ["hook", "problem", "method", "value", "ending", "bullets"],
+  properties: {
+    hook: {type: "string"},
+    problem: {type: "string"},
+    method: {type: "string"},
+    value: {type: "string"},
+    ending: {type: "string"},
+    bullets: {
+      type: "array",
+      minItems: 3,
+      maxItems: 3,
+      items: {type: "string"},
+    },
+  },
+} as const;
+
 const extractContent = (payload: ChatCompletionResponse) => {
   const raw = payload.choices?.[0]?.message?.content;
   if (typeof raw === "string") {
@@ -33,13 +52,65 @@ const extractContent = (payload: ChatCompletionResponse) => {
   return "";
 };
 
-const parseDraft = (raw: string): SummaryDraft => {
-  const normalized = raw
+const normalizeJsonText = (raw: string) =>
+  raw
     .replace(/^```json\s*/i, "")
     .replace(/^```\s*/i, "")
     .replace(/\s*```$/i, "")
+    .replace(/[“”]/g, "\"")
+    .replace(/[‘’]/g, "'")
     .trim();
-  const parsed = JSON.parse(normalized) as Partial<SummaryDraft>;
+
+const extractJsonObject = (raw: string) => {
+  const start = raw.indexOf("{");
+  const end = raw.lastIndexOf("}");
+  if (start === -1 || end === -1 || end <= start) {
+    return raw;
+  }
+
+  return raw.slice(start, end + 1);
+};
+
+const stripTrailingCommas = (raw: string) => raw.replace(/,\s*([}\]])/g, "$1");
+
+const tryParseDraft = (raw: string): SummaryDraft | null => {
+  const normalized = normalizeJsonText(raw);
+  const candidates = [
+    normalized,
+    extractJsonObject(normalized),
+    stripTrailingCommas(normalized),
+    stripTrailingCommas(extractJsonObject(normalized)),
+  ];
+
+  for (const candidate of candidates) {
+    try {
+      const parsed = JSON.parse(candidate) as Partial<SummaryDraft>;
+      const bullets = Array.isArray(parsed.bullets)
+        ? parsed.bullets.map((item) => `${item ?? ""}`.trim()).filter(Boolean).slice(0, 3)
+        : [];
+
+      return {
+        hook: `${parsed.hook ?? ""}`.trim(),
+        problem: `${parsed.problem ?? ""}`.trim(),
+        method: `${parsed.method ?? ""}`.trim(),
+        value: `${parsed.value ?? ""}`.trim(),
+        ending: `${parsed.ending ?? ""}`.trim(),
+        bullets,
+      };
+    } catch {
+      continue;
+    }
+  }
+
+  return null;
+};
+
+const parseDraft = (raw: string): SummaryDraft => {
+  const parsed = tryParseDraft(raw);
+  if (!parsed) {
+    throw new SyntaxError("Unable to parse LM Studio completion into strict JSON");
+  }
+
   const bullets = Array.isArray(parsed.bullets)
     ? parsed.bullets.map((item) => `${item ?? ""}`.trim()).filter(Boolean).slice(0, 3)
     : [];
@@ -52,6 +123,79 @@ const parseDraft = (raw: string): SummaryDraft => {
     ending: `${parsed.ending ?? ""}`.trim(),
     bullets,
   };
+};
+
+const requestCompletion = async ({
+  config,
+  messages,
+  maxTokens,
+  temperature,
+  preferStructuredOutput,
+}: {
+  config: LmStudioSummaryConfig;
+  messages: Array<{role: "system" | "user"; content: string}>;
+  maxTokens: number;
+  temperature: number;
+  preferStructuredOutput: boolean;
+}) => {
+  const url = `${config.baseUrl.replace(/\/+$/, "")}/chat/completions`;
+  const buildBody = (structured: boolean) => ({
+    model: config.model,
+    temperature,
+    max_tokens: maxTokens,
+    messages,
+    ...(structured
+      ? {
+          response_format: {
+            type: "json_schema",
+            json_schema: {
+              name: "paper_video_script",
+              schema: STRICT_RESPONSE_SCHEMA,
+            },
+          },
+        }
+      : {}),
+  });
+
+  const doRequest = async (structured: boolean) => {
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${config.apiKey}`,
+      },
+      body: JSON.stringify(buildBody(structured)),
+    });
+
+    return response;
+  };
+
+  const response = await doRequest(preferStructuredOutput);
+  if (!response.ok && preferStructuredOutput && [400, 404, 422, 500].includes(response.status)) {
+    const fallbackResponse = await doRequest(false);
+    if (!fallbackResponse.ok) {
+      throw new Error(`LM Studio request failed: ${fallbackResponse.status} ${fallbackResponse.statusText}`);
+    }
+
+    return (await fallbackResponse.json()) as ChatCompletionResponse;
+  }
+
+  if (!response.ok) {
+    throw new Error(`LM Studio request failed: ${response.status} ${response.statusText}`);
+  }
+
+  return (await response.json()) as ChatCompletionResponse;
+};
+
+const buildRepairPrompt = (raw: string) => {
+  return [
+    "下面是一段格式损坏的 JSON 风格输出。",
+    "请你把它修复成严格合法 JSON，并且只输出 JSON。",
+    "必须包含以下字段：hook, problem, method, value, ending, bullets。",
+    "bullets 必须是长度为 3 的字符串数组。",
+    "",
+    raw,
+  ].join("\n");
 };
 
 const validateDraft = (draft: SummaryDraft) => {
@@ -102,40 +246,58 @@ export const summarizeWithLmStudio = async (
   context: PaperSummaryContext,
   config: LmStudioSummaryConfig,
 ): Promise<SummaryDraft> => {
-  const response = await fetch(`${config.baseUrl.replace(/\/+$/, "")}/chat/completions`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${config.apiKey}`,
-    },
-    body: JSON.stringify({
-      model: config.model,
-      temperature: config.temperature,
-      max_tokens: config.maxOutputTokens,
-      messages: [
-        {
-          role: "system",
-          content: "You convert research papers into concise Chinese short-video script JSON.",
-        },
-        {
-          role: "user",
-          content: buildPrompt(paper, context),
-        },
-      ],
-    }),
+  const payload = await requestCompletion({
+    config,
+    maxTokens: config.maxOutputTokens,
+    temperature: config.temperature,
+    preferStructuredOutput: true,
+    messages: [
+      {
+        role: "system",
+        content: "You convert research papers into concise Chinese short-video script JSON.",
+      },
+      {
+        role: "user",
+        content: buildPrompt(paper, context),
+      },
+    ],
   });
 
-  if (!response.ok) {
-    throw new Error(`LM Studio request failed: ${response.status} ${response.statusText}`);
-  }
-
-  const payload = (await response.json()) as ChatCompletionResponse;
   const content = extractContent(payload);
   if (!content) {
     throw new Error("LM Studio returned an empty completion");
   }
 
-  const draft = parseDraft(content);
+  let draft = tryParseDraft(content);
+
+  if (!draft) {
+    const repairedPayload = await requestCompletion({
+      config,
+      maxTokens: Math.min(config.maxOutputTokens, 800),
+      temperature: 0,
+      preferStructuredOutput: true,
+      messages: [
+        {
+          role: "system",
+          content: "You repair malformed JSON into strict JSON.",
+        },
+        {
+          role: "user",
+          content: buildRepairPrompt(content),
+        },
+      ],
+    });
+    const repairedContent = extractContent(repairedPayload);
+    draft = repairedContent ? tryParseDraft(repairedContent) : null;
+  }
+
+  if (!draft) {
+    throw new SyntaxError(
+      `LM Studio returned non-parseable JSON. Preview: ${normalizeJsonText(content).slice(0, 240)}`,
+    );
+  }
+
+  draft = parseDraft(JSON.stringify(draft));
   validateDraft(draft);
   return draft;
 };
