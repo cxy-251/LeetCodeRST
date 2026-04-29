@@ -2,8 +2,8 @@
 
 ## 1. 项目位置
 
-- 工作目录：`/Users/cxy251/Code/02codeX`
-- GitHub 仓库：`https://github.com/cxy-251/paperToVideo.git`
+- 工作目录：仓库根目录
+- GitHub 仓库：按当前远端配置为准
 - 当前分支：`main`
 
 ---
@@ -68,7 +68,7 @@ npm run build
 - `data/manifests/demo-paper.local.json`
 - `data/images/case-beauty-portrait-source.jpeg`
 - `data/images/case-beauty-portrait-9x16.jpg`
-- 根目录原始文件 `large-1760723512-2370bb8a2f7bdc27e8d0eac60e925c4a.jpeg`
+- 根目录原始本地参考图文件
 
 这些文件已写入本地 `.git/info/exclude`，不会进入远端仓库。
 

@@ -21,7 +21,7 @@
 输出模板如下：
 ```
 
-请把 [video-script-template.json](/Users/cxy251/Code/02codeX/services/summarizer/video-script-template.json) 的内容一并提供给外部 AI。
+请把同目录下的 `video-script-template.json` 内容一并提供给外部 AI。
 
 ## Quality Bar
 

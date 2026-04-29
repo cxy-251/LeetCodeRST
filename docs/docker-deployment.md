@@ -23,9 +23,9 @@
 
 ## 2. 关键文件
 
-- `/Users/cxy251/Code/02codeX/Dockerfile`
-- `/Users/cxy251/Code/02codeX/docker-compose.yml`
-- `/Users/cxy251/Code/02codeX/.dockerignore`
+- `Dockerfile`
+- `docker-compose.yml`
+- `.dockerignore`
 
 ## 3. 构建镜像
 
