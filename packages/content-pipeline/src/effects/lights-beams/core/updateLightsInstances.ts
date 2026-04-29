@@ -12,19 +12,19 @@ const LAYER_TUNING: Record<"accent" | "core" | "glow", LayerTuning> = {
   glow: {
     nearMix: 1,
     pulseBias: 0.08,
-    scale: 0.46,
+    scale: 0.38,
     yOffset: 0.18,
   },
   core: {
     nearMix: 1,
     pulseBias: 0.1,
-    scale: 0.86,
+    scale: 1.28,
     yOffset: 0.1,
   },
   accent: {
     nearMix: 0.34,
     pulseBias: 0.08,
-    scale: 0.56,
+    scale: 0.88,
     yOffset: 0.08,
   },
 };
@@ -201,8 +201,8 @@ export const updateLightsInstances = ({
     });
   });
 
-  const glowRadius = 0.56 + config.beamLength * 1.02;
-  const coreRadius = 0.34 + config.beamThickness * 5.2;
+  const glowRadius = 0.42 + config.beamLength * 0.84;
+  const coreRadius = 0.5 + config.beamThickness * 6.1;
   const farOrbBase = 0.18;
   const farOrbGain = 0.26;
   const colorPrimary = new THREE.Color(config.primaryColor);
@@ -249,10 +249,10 @@ export const updateLightsInstances = ({
       const presence = tuning.nearMix * highlightFactor + (1 - tuning.nearMix) * farPresence;
       const nearScaleBoost =
         layerName === "glow"
-          ? 1 + visibility.nearSoft * 0.12
+          ? 1 + visibility.nearSoft * 0.06
           : layerName === "core"
-            ? 1 + visibility.nearSoft * 0.58
-            : 1 + visibility.nearSoft * 0.22;
+            ? 1 + visibility.nearSoft * 0.82
+            : 1 + visibility.nearSoft * 0.34;
 
       helper.position.set(state.x, -2.1 + floorHeight + tuning.yOffset, displayZ);
       helper.rotation.set(0, seed.baseAngle + time * 0.08, 0);
@@ -280,10 +280,10 @@ export const updateLightsInstances = ({
     helper.position.set(state.x, -2.085 + floorHeight + 0.025, displayZ);
     helper.rotation.set(-Math.PI / 2, 0, 0);
     helper.scale.setScalar(
-      (0.46 + highlightFactor * 0.94) *
+      (0.34 + highlightFactor * 0.72) *
         choreography.orbGain *
         (0.86 + breathing * 0.22) *
-        (1 + visibility.nearSoft * 0.22),
+        (1 + visibility.nearSoft * 0.12),
     );
     helper.updateMatrix();
     meshes.groundGlow.mesh.setMatrixAt(index, helper.matrix);
@@ -291,10 +291,10 @@ export const updateLightsInstances = ({
     helper.position.set(state.x, -2.09 + floorHeight + 0.015, displayZ);
     helper.rotation.set(-Math.PI / 2, 0, 0);
     helper.scale.setScalar(
-      (1.12 + highlightFactor * 1.86) *
+      (0.82 + highlightFactor * 1.12) *
         choreography.auraGain *
         (0.82 + breathing * 0.18) *
-        (1 + visibility.nearSoft * 0.18),
+        (1 + visibility.nearSoft * 0.08),
     );
     helper.updateMatrix();
     meshes.groundAura.mesh.setMatrixAt(index, helper.matrix);

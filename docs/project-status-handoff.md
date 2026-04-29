@@ -1040,6 +1040,33 @@ Verification:
 
 ---
 
+## 27. 2026-04-30 Lights Beams Large-Orb Pass
+
+This pass pushed the orb read further toward the original reference by making the visible ball body much larger relative to the environment.
+
+What changed:
+
+1. The visible orb core was scaled up again.
+   - `packages/content-pipeline/src/effects/lights-beams/core/updateLightsInstances.ts`
+   - near-field balls now use a much larger `core` body and a stronger accent shell
+2. The actual glow shell was reduced further.
+   - the subject should read as a big lit orb, not a tiny dot inside a glow cloud
+3. Ground aura / ground glow were toned down again.
+   - `packages/content-pipeline/src/effects/lights-beams/core/ThreeLightsEngine.ts`
+   - this gives the ball itself more visual ownership in the near field
+
+Why this matters:
+
+1. The user feedback is that the reference scene feels dominated by large foreground orbs.
+2. Previous passes improved color and continuity, but the perceived subject size was still too small compared to the floor and scene scaffold.
+
+Verification:
+
+1. `npm run lint`
+2. `npm run build`
+
+---
+
 ## 31. 2026-04-30 Lights Bloom And Source Model Pass
 
 This pass aligned `lights-beams` more closely with the later-stage HelloEnjoy `Lights` structure and added a real screen-space bloom pass.
