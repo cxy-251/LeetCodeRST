@@ -29,6 +29,20 @@ const buildBeamSeeds = (count: number, seed: number): LightsBeamSeed[] =>
     speed: 0.018 + hashNoise(seed * 809 + index * 17.47) * 0.04,
   }));
 
+const clamp01 = (value: number) => Math.max(0, Math.min(1, value));
+
+const smoothPulse = (value: number, start: number, peak: number, end: number) => {
+  if (value <= start || value >= end) {
+    return 0;
+  }
+
+  if (value < peak) {
+    return clamp01((value - start) / Math.max(0.0001, peak - start));
+  }
+
+  return clamp01((end - value) / Math.max(0.0001, end - peak));
+};
+
 export class ThreeLightsEngine {
   private readonly renderer: THREE.WebGLRenderer;
   private readonly scene: THREE.Scene;
@@ -127,8 +141,20 @@ export class ThreeLightsEngine {
 
     const frame = Math.max(0, params.simulationFrame ?? params.absoluteFrame);
     const time = frame * config.motionSpeed * 6.9;
+    const choreographyPhase = (time * 0.055) % 1;
+    const pulseSection = smoothPulse(choreographyPhase, 0.08, 0.24, 0.42);
+    const surgeSection = smoothPulse(choreographyPhase, 0.38, 0.58, 0.8);
+    const settleSection = smoothPulse(choreographyPhase, 0.72, 0.88, 1);
+    const choreography = {
+      auraGain: 0.9 + pulseSection * 0.45 + surgeSection * 0.26,
+      fieldGain: 0.82 + pulseSection * 0.28 + surgeSection * 0.14,
+      nearBias: pulseSection * 0.18 + surgeSection * 0.34,
+      orbGain: 0.84 + pulseSection * 0.22 + surgeSection * 0.24,
+      rimGain: 0.9 + settleSection * 0.16 + surgeSection * 0.12,
+    };
     const forwardPhase = (time * 0.11) % 1;
-    const cameraDolly = forwardPhase * 12.6;
+    const cameraBoost = 1 + surgeSection * 0.22 + pulseSection * 0.08;
+    const cameraDolly = forwardPhase * 12.6 * cameraBoost;
     applyForwardDollyRig({
       camera: this.camera,
       target: this.lookAtTarget,
@@ -147,6 +173,29 @@ export class ThreeLightsEngine {
       targetYDrift: 0.08,
       targetZDrift: 0.8,
     });
+    const fog = this.scene.fog;
+    if (fog instanceof THREE.FogExp2) {
+      fog.density = 0.022 + surgeSection * 0.006 - pulseSection * 0.002;
+    }
+    this.bundle.glow.material.opacity = 0.08 * choreography.orbGain;
+    this.bundle.core.material.opacity = 0.22 * choreography.orbGain;
+    this.bundle.accent.material.opacity = 0.25 * choreography.rimGain;
+    this.bundle.groundAura.material.opacity = 0.055 * choreography.auraGain;
+    this.bundle.groundGlow.material.opacity = 0.14 * choreography.orbGain;
+    this.bundle.groundRim.material.opacity = 0.24 * choreography.rimGain;
+    this.bundle.surfaceDots.material.opacity = 0.14 * choreography.fieldGain;
+    this.bundle.surfaceAccent.material.opacity = 0.2 * choreography.fieldGain;
+    this.bundle.horizonMaterial.opacity = 0.12 + pulseSection * 0.06 + surgeSection * 0.04;
+    this.bundle.floorTiles.forEach((tile) => {
+      tile.fillMaterial.opacity = 0.06 + pulseSection * 0.04;
+      tile.wireMaterial.opacity = 0.22 + surgeSection * 0.14 + settleSection * 0.06;
+      tile.guideRails.forEach((plane) => {
+        plane.material.opacity = 0.2 + surgeSection * 0.14;
+      });
+      tile.guideDashes.forEach((plane) => {
+        plane.material.opacity = 0.2 + pulseSection * 0.12 + surgeSection * 0.06;
+      });
+    });
     this.bundle.horizonMesh.position.set(
       Math.sin(time * 0.08) * 0.24,
       4.8 + Math.cos(time * 0.11) * 0.12,
@@ -154,6 +203,7 @@ export class ThreeLightsEngine {
     );
 
     updateLightsInstances({
+      choreography,
       config,
       floorTiles: this.bundle.floorTiles,
       frame,

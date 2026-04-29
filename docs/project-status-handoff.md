@@ -1092,6 +1092,32 @@ Residual note:
 
 ---
 
+## 29. 2026-04-29 Lights Choreography Pass
+
+This pass introduced a repeating scene-phrase system for `lights-beams` so the family no longer sits in one constant visual state.
+
+1. The engine now computes looped choreography sections that drive:
+   - field intensity
+   - near-light emphasis
+   - aura gain
+   - rim gain
+   - camera push
+2. Material opacities for floor wires, guide rails, guide dashes, horizon haze, and light layers now breathe with those sections instead of staying static.
+   - `packages/content-pipeline/src/effects/lights-beams/core/ThreeLightsEngine.ts`
+3. Instance scaling for orb, aura, ring, and surface-dot layers now also responds to the choreography envelope, not just local breathing noise.
+   - `packages/content-pipeline/src/effects/lights-beams/core/updateLightsInstances.ts`
+
+Verification:
+
+1. `npm run lint`
+2. `npm run build`
+
+Residual note:
+
+1. This closes part of the gap versus the reference by adding stage progression, but it still does not reproduce the original source's full audio-reactive event scripting.
+
+---
+
 ## 22. 2026-04-29 Lights Beams Perspective Rework
 
 This follow-up changed `lights-beams` from a flat central burst into a more scene-like interpretation of the Hello Enjoy `Lights` reference.

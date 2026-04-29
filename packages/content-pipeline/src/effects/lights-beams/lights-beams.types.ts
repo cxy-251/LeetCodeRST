@@ -76,6 +76,13 @@ export type ThreeLightsMeshBundle = {
 };
 
 export type UpdateLightsInstancesInput = {
+  choreography: {
+    auraGain: number;
+    fieldGain: number;
+    nearBias: number;
+    orbGain: number;
+    rimGain: number;
+  };
   config: LightsEffectConfig;
   floorTiles: ThreeLightsMeshBundle["floorTiles"];
   frame: number;

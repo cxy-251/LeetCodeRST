@@ -136,6 +136,7 @@ const computeOrbState = ({
 };
 
 export const updateLightsInstances = ({
+  choreography,
   config,
   floorTiles,
   frame,
@@ -208,7 +209,7 @@ export const updateLightsInstances = ({
     const floorHeight = sampleFloorHeight(state.x, displayZ, time, config.spread);
     const breathing = 0.72 + (Math.sin(time * (1.05 + seed.speed * 5.5) + seed.phase) + 1) * 0.24;
     const visibility = sampleDepthVisibility(displayZ, nearLimit, totalDepth);
-    const highlightFactor = visibility.nearSoft;
+    const highlightFactor = Math.min(1, visibility.nearSoft + choreography.nearBias * visibility.near);
     const rimOnlyFactor = 0.42 + highlightFactor * 0.58;
 
     (["glow", "core", "accent"] as const).forEach((layerName) => {
@@ -228,6 +229,7 @@ export const updateLightsInstances = ({
       helper.scale.setScalar(
         radius *
           tuning.scale *
+          choreography.orbGain *
           (breathing + tuning.pulseBias) *
           (layerName === "accent" ? rimOnlyFactor : presence),
       );
@@ -237,19 +239,31 @@ export const updateLightsInstances = ({
 
     helper.position.set(state.x, -2.085 + floorHeight + 0.025, displayZ);
     helper.rotation.set(-Math.PI / 2, 0, 0);
-    helper.scale.setScalar((0.46 + highlightFactor * 0.94) * (0.86 + breathing * 0.22));
+    helper.scale.setScalar(
+      (0.46 + highlightFactor * 0.94) *
+        choreography.orbGain *
+        (0.86 + breathing * 0.22),
+    );
     helper.updateMatrix();
     meshes.groundGlow.mesh.setMatrixAt(index, helper.matrix);
 
     helper.position.set(state.x, -2.09 + floorHeight + 0.015, displayZ);
     helper.rotation.set(-Math.PI / 2, 0, 0);
-    helper.scale.setScalar((1.12 + highlightFactor * 1.86) * (0.82 + breathing * 0.18));
+    helper.scale.setScalar(
+      (1.12 + highlightFactor * 1.86) *
+        choreography.auraGain *
+        (0.82 + breathing * 0.18),
+    );
     helper.updateMatrix();
     meshes.groundAura.mesh.setMatrixAt(index, helper.matrix);
 
     helper.position.set(state.x, -2.083 + floorHeight + 0.03, displayZ);
     helper.rotation.set(-Math.PI / 2, 0, 0);
-    helper.scale.setScalar((0.34 + visibility.far * 0.32 + highlightFactor * 0.22) * rimOnlyFactor);
+    helper.scale.setScalar(
+      (0.34 + visibility.far * 0.32 + highlightFactor * 0.22) *
+        choreography.rimGain *
+        rimOnlyFactor,
+    );
     helper.updateMatrix();
     meshes.groundRim.mesh.setMatrixAt(index, helper.matrix);
   });
@@ -278,12 +292,16 @@ export const updateLightsInstances = ({
 
     helper.position.set(x, -2.08 + floorHeight + 0.03, displayZ);
     helper.rotation.set(0, 0, 0);
-    helper.scale.setScalar((0.028 + visibility.near * 0.036) * shimmer);
+    helper.scale.setScalar((0.028 + visibility.near * 0.036) * choreography.fieldGain * shimmer);
     helper.updateMatrix();
     meshes.surfaceDots.mesh.setMatrixAt(index, helper.matrix);
 
     helper.position.set(x, -2.08 + floorHeight + 0.035, displayZ);
-    helper.scale.setScalar((0.012 + visibility.nearSoft * 0.024) * (0.8 + visibility.nearSoft * 0.35));
+    helper.scale.setScalar(
+      (0.012 + visibility.nearSoft * 0.024) *
+        choreography.fieldGain *
+        (0.8 + visibility.nearSoft * 0.35),
+    );
     helper.updateMatrix();
     meshes.surfaceAccent.mesh.setMatrixAt(index, helper.matrix);
   }
