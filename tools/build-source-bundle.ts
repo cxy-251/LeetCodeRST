@@ -1,6 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import {shuffleWithSeed} from "./lib/deterministic-random";
+import {resolveDefaultBackgroundDir} from "./lib/paper-url-batch";
+import {isCoverSelectionModeId, resolveBackgroundImageSelection} from "../services/image-provider/image-provider.service";
+import type {CoverSelectionModeId} from "../services/image-provider/image-provider.types";
 
 type PaperMetadata = {
   arxivId: string;
@@ -16,6 +18,10 @@ type PaperMetadata = {
 
 type SourceBundle = {
   generatedAt: string;
+  coverSelection: {
+    mode: CoverSelectionModeId;
+    sourceDir: string | null;
+  };
   papers: Array<
     PaperMetadata & {
       localTextPath?: string;
@@ -31,7 +37,6 @@ type SourceBundle = {
 
 const OUTPUT_PATH = path.resolve("data/source-bundles/latest-ai-batch.json");
 const PAPER_CACHE_ROOT = path.resolve("output/cache/papers");
-const IMAGE_CACHE_ROOT = path.resolve("output/cache/images");
 
 const readJson = async <T,>(targetPath: string) =>
   JSON.parse(await fs.readFile(targetPath, "utf-8")) as T;
@@ -51,48 +56,29 @@ const parseArgs = (args: string[]) => {
     paperIds: paperIds.length > 0 ? new Set(paperIds) : null,
     output: take("--output") ? path.resolve(take("--output") as string) : OUTPUT_PATH,
     backgroundDir: take("--background-dir") ? path.resolve(take("--background-dir") as string) : undefined,
+    coverSelectionMode: take("--cover-selection-mode") ?? "local-folder-random",
     seed: Number.parseInt(take("--seed") ?? "42", 10),
   };
 };
 
-const collectImageFiles = async (rootDir: string): Promise<string[]> => {
-  const entries = await fs.readdir(rootDir, {withFileTypes: true});
-  const files: string[] = [];
-
-  for (const entry of entries) {
-    const resolved = path.join(rootDir, entry.name);
-    if (entry.isDirectory()) {
-      files.push(...(await collectImageFiles(resolved)));
-      continue;
-    }
-
-    if (/\.(png|jpg|jpeg|webp|svg)$/i.test(entry.name)) {
-      files.push(resolved);
-    }
-  }
-
-  return files.sort();
-};
-
 const main = async () => {
   const options = parseArgs(process.argv.slice(2));
+  if (!isCoverSelectionModeId(options.coverSelectionMode)) {
+    throw new Error(`Unsupported cover selection mode: ${options.coverSelectionMode}`);
+  }
+
   const paperDirs = (await fs.readdir(PAPER_CACHE_ROOT, {withFileTypes: true}))
     .filter((entry) => entry.isDirectory())
     .map((entry) => path.join(PAPER_CACHE_ROOT, entry.name))
     .sort();
 
-  const backgroundImagePaths = options.backgroundDir
-    ? await collectImageFiles(options.backgroundDir)
-    : (await fs.readdir(IMAGE_CACHE_ROOT))
-      .filter((name) => /\.(png|jpg|jpeg|webp)$/i.test(name))
-      .sort()
-      .map((name) => path.join(IMAGE_CACHE_ROOT, name));
-
-  const randomizedBackgrounds = shuffleWithSeed(backgroundImagePaths, options.seed);
-  const backgroundImages = randomizedBackgrounds.map((localPath, index) => ({
-    id: `bg-${String(index + 1).padStart(2, "0")}`,
-    localPath,
-  }));
+  const backgroundDir = options.backgroundDir ?? await resolveDefaultBackgroundDir();
+  const coverSelection = await resolveBackgroundImageSelection({
+    backgroundDir,
+    seed: options.seed,
+    mode: options.coverSelectionMode,
+  });
+  const backgroundImages = coverSelection.backgroundImages;
 
   const papers = await Promise.all(
     paperDirs.map(async (paperDir, index) => {
@@ -120,6 +106,10 @@ const main = async () => {
 
   const bundle: SourceBundle = {
     generatedAt: new Date().toISOString(),
+    coverSelection: {
+      mode: coverSelection.mode,
+      sourceDir: coverSelection.sourceDir,
+    },
     papers: filteredPapers,
     backgroundImages,
   };

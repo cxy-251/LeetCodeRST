@@ -26,6 +26,11 @@
 - `*.types.ts`
 - `README.md`
 
+当前建议文件：
+
+- `image-provider.service.ts`
+- `image-provider.types.ts`
+
 # 边界说明
 
 这里只处理“怎么拿图”。

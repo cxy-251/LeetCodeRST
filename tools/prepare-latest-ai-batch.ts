@@ -51,6 +51,8 @@ const parseArgs = (args: string[]) => {
   return {
     category: take("--category") ?? "cs.AI",
     limit: Number.parseInt(take("--limit") ?? "3", 10),
+    backgroundDir: take("--background-dir") ? path.resolve(take("--background-dir") as string) : undefined,
+    coverSelectionMode: take("--cover-selection-mode") ?? "local-folder-random",
     batchOutput: take("--batch-output")
       ? path.resolve(take("--batch-output") as string)
       : path.resolve("data/video-batches/generated/latest-ai-batch.csv"),
@@ -109,6 +111,9 @@ const main = async () => {
     "tools/build-source-bundle.ts",
     "--paper-ids",
     fetchedIds,
+    ...(options.backgroundDir ? ["--background-dir", options.backgroundDir] : []),
+    "--cover-selection-mode",
+    options.coverSelectionMode,
   ]);
   await run("node", [
     "--import",

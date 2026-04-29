@@ -56,6 +56,7 @@ const parseArgs = (args: string[]) => {
       .filter(Boolean) as string[],
     paperUrlFile: take("--paper-url-file") ? path.resolve(take("--paper-url-file") as string) : undefined,
     backgroundDir: take("--background-dir") ? path.resolve(take("--background-dir") as string) : undefined,
+    coverSelectionMode: take("--cover-selection-mode") ?? "local-folder-random",
     effectPool: take("--effect-pool") ?? "life-game,snake-grid,particle-orbit,lights-beams,rubiks-solver",
     seed: Number.parseInt(take("--seed") ?? "42", 10),
     voiceName: take("--voice-name") ?? "zh-CN-XiaoxiaoNeural",
@@ -127,6 +128,8 @@ const main = async () => {
     paths.sourceBundlePath,
     "--background-dir",
     backgroundDir,
+    "--cover-selection-mode",
+    options.coverSelectionMode,
     "--seed",
     String(options.seed),
   ]);

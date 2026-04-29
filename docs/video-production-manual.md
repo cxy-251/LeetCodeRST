@@ -26,6 +26,11 @@
 - 背景：看什么图
 - 特效：中间层怎么动
 
+另外，论文网址自动生产链路现在还有一个额外开关：
+
+- `coverSelectionMode`
+  控制背景图是如何被选出来的
+
 ## 2. 单个视频的标准生成方式
 
 ### 2.0 直接从论文网址生成视频
@@ -55,6 +60,7 @@ npm run produce:paper-urls -- \
 - 背景图会从这个目录里随机挑
 - 特效会从当前支持的 effect family 里随机挑一个
 - 默认总结模式是 `rule-based`，不会调用外部 AI API
+- 默认背景图策略是 `local-folder-random`
 
 如果你不传 `--background-dir`，系统会优先尝试：
 
@@ -88,6 +94,31 @@ npm run produce:paper-urls -- \
 - 背景图随机分配
 - effect 随机分配
 - batch 里每行的基础种子
+
+### 2.0.2.1 控制背景图选择策略
+
+当前已经正式支持的安全策略有两种：
+
+1. `local-folder-random`
+   从你给定的本地图目录里随机选图
+2. `local-folder-cycle`
+   从你给定的本地图目录里按排序轮流选图
+
+例如：
+
+```bash
+npm run produce:paper-urls -- \
+  --paper-url https://arxiv.org/abs/2604.22748 \
+  --background-dir data/images/prepared \
+  --cover-selection-mode local-folder-cycle
+```
+
+后续已经预留但暂未实现的策略：
+
+- `ai-generated-cover`
+- `licensed-source`
+
+它们现在是保留接口，不会默认启用。
 
 ### 2.0.3 切到 LM Studio 本地模型
 
@@ -259,6 +290,16 @@ npm run prepare:cover-image -- \
 ```
 
 然后有两种接法：
+
+### 4.3 背景图版权建议
+
+当前推荐的安全做法是：
+
+1. 使用你自己本地准备好的图片目录
+2. 使用你自己生成、并确认允许商用的 AI 图片
+3. 使用明确可商用 / 可再分发的授权素材
+
+当前不建议把“自动抓任意网图”直接接入生产链路，因为公开视频发布存在较明显版权风险。
 
 1. 先做成 `coverProfile`
 2. 直接在 batch CSV 的 `cover_image_path` 里填路径
@@ -451,6 +492,15 @@ npm run produce:video -- --batch-config data/video-batches/demo-batch.csv --rows
 
 ```bash
 npm run prepare:latest-ai-batch -- --limit 3
+```
+
+如果想明确指定背景图策略：
+
+```bash
+npm run prepare:latest-ai-batch -- \
+  --limit 3 \
+  --background-dir data/images/prepared \
+  --cover-selection-mode local-folder-random
 ```
 
 如果想让“最新论文批量准备”阶段直接走 LM Studio：
