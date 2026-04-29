@@ -58,6 +58,7 @@ export type ThreeLightsGuidePlane = {
 export type ThreeLightsMeshBundle = {
   accent: LightsMeshLayer;
   core: LightsMeshLayer;
+  dotGeometry: THREE.SphereGeometry;
   orbGeometry: THREE.SphereGeometry;
   floorTiles: ThreeLightsFloorTile[];
   glow: LightsMeshLayer;
@@ -65,6 +66,8 @@ export type ThreeLightsMeshBundle = {
   horizonMaterial: THREE.MeshBasicMaterial;
   horizonMesh: THREE.Mesh<THREE.CircleGeometry, THREE.MeshBasicMaterial>;
   signature: string;
+  surfaceAccent: LightsMeshLayer;
+  surfaceDots: LightsMeshLayer;
 };
 
 export type UpdateLightsInstancesInput = {
@@ -72,7 +75,10 @@ export type UpdateLightsInstancesInput = {
   floorTiles: ThreeLightsMeshBundle["floorTiles"];
   frame: number;
   helper: THREE.Object3D;
-  meshes: Pick<ThreeLightsMeshBundle, "accent" | "core" | "glow">;
+  meshes: Pick<
+    ThreeLightsMeshBundle,
+    "accent" | "core" | "glow" | "surfaceAccent" | "surfaceDots"
+  >;
   seeds: LightsBeamSeed[];
 };
 

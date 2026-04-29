@@ -1013,6 +1013,35 @@ Verification:
 
 ---
 
+## 26. 2026-04-29 Lights Source-Informed Field Pass
+
+This pass compared our `lights-beams` family against the public `Lights` demo source and upgraded the family toward the missing terrain richness.
+
+1. The main quality gap was identified as structural rather than cosmetic:
+   - the official demo combines a terrain system, anchored orb field, camera/player rig, and layered scene accents
+   - our version previously relied mostly on orb instances plus a single floor field
+2. `lights-beams` now adds a dedicated surface dot field so the ripple terrain reads like a continuous luminous landscape instead of a sparse orb-only scene.
+   - `packages/content-pipeline/src/effects/lights-beams/core/createLightsMeshes.ts`
+   - `packages/content-pipeline/src/effects/lights-beams/core/updateLightsInstances.ts`
+3. The camera defaults were retuned again to read more like a low flight over the field instead of a static showcase frame.
+   - `packages/content-pipeline/src/effects/lights-beams/core/ThreeLightsEngine.ts`
+4. The family default colors and motion values were softened so the out-of-box preset is closer to the Hello Enjoy reference language.
+   - `packages/content-pipeline/src/module-api.ts`
+5. The new surface layers are fully wired into bundle lifecycle and disposal.
+   - `packages/content-pipeline/src/effects/lights-beams/lights-beams.types.ts`
+   - `packages/content-pipeline/src/effects/lights-beams/core/disposeThreeLights.ts`
+
+Verification:
+
+1. `npm run lint`
+2. `npm run build`
+
+Residual note:
+
+1. `lights-beams` is now structurally closer to the public source language, but it still does not replicate the original demo's full music/event choreography or postprocessing stack.
+
+---
+
 ## 22. 2026-04-29 Lights Beams Perspective Rework
 
 This follow-up changed `lights-beams` from a flat central burst into a more scene-like interpretation of the Hello Enjoy `Lights` reference.

@@ -79,8 +79,8 @@ export class ThreeLightsEngine {
     this.scene.add(this.root);
     this.scene.fog = new THREE.FogExp2(0x071320, 0.026);
     this.camera = new THREE.PerspectiveCamera(34, options.width / options.height, 0.1, 100);
-    this.camera.position.set(0, 1.55, 6.8);
-    this.camera.lookAt(0, -0.4, -12.5);
+    this.camera.position.set(0, 1.38, 7.6);
+    this.camera.lookAt(0, -0.58, -15.2);
 
     const defaultConfig = resolveLightsEffectConfig(undefined);
     this.bundle = createLightsMeshes({
@@ -114,6 +114,8 @@ export class ThreeLightsEngine {
     this.bundle.core.material.color.set(config.primaryColor);
     this.bundle.glow.material.color.set(config.secondaryColor);
     this.bundle.accent.material.color.set(config.accentColor);
+    this.bundle.surfaceDots.material.color.set(config.secondaryColor);
+    this.bundle.surfaceAccent.material.color.set(config.accentColor);
     this.bundle.floorTiles.forEach((tile) => {
       tile.fillMaterial.color.set(config.secondaryColor);
       tile.wireMaterial.color.set(config.primaryColor);
@@ -121,26 +123,26 @@ export class ThreeLightsEngine {
     this.bundle.horizonMaterial.color.set(config.accentColor);
 
     const frame = Math.max(0, params.simulationFrame ?? params.absoluteFrame);
-    const time = frame * config.motionSpeed * 8.9;
-    const forwardPhase = (time * 0.13) % 1;
-    const cameraDolly = forwardPhase * 8.8;
+    const time = frame * config.motionSpeed * 6.9;
+    const forwardPhase = (time * 0.11) % 1;
+    const cameraDolly = forwardPhase * 12.6;
     applyForwardDollyRig({
       camera: this.camera,
       target: this.lookAtTarget,
       time,
       baseX: 0,
-      baseY: 1.48,
-      baseZ: 7.4,
+      baseY: 1.34,
+      baseZ: 8.3,
       dollyOffset: cameraDolly,
-      dollyMultiplier: 1.12,
-      xDrift: 0.48,
-      yDrift: 0.08,
-      zDrift: 0.08,
-      targetY: -0.58,
-      targetZ: -14.8,
-      targetXDrift: 0.5,
+      dollyMultiplier: 1.48,
+      xDrift: 0.22,
+      yDrift: 0.05,
+      zDrift: 0.06,
+      targetY: -0.68,
+      targetZ: -18.6,
+      targetXDrift: 0.28,
       targetYDrift: 0.08,
-      targetZDrift: 1.1,
+      targetZDrift: 0.8,
     });
     this.bundle.horizonMesh.position.set(
       Math.sin(time * 0.08) * 0.24,
@@ -157,6 +159,8 @@ export class ThreeLightsEngine {
         accent: this.bundle.accent,
         core: this.bundle.core,
         glow: this.bundle.glow,
+        surfaceAccent: this.bundle.surfaceAccent,
+        surfaceDots: this.bundle.surfaceDots,
       },
       seeds,
     });
@@ -181,6 +185,7 @@ export class ThreeLightsEngine {
 
     this.root.clear();
     this.bundle.orbGeometry.dispose();
+    this.bundle.dotGeometry.dispose();
     this.bundle.floorTiles.forEach((tile) => {
       tile.geometry.dispose();
       tile.fillMaterial.dispose();
@@ -199,9 +204,13 @@ export class ThreeLightsEngine {
     this.bundle.glow.mesh.dispose();
     this.bundle.core.mesh.dispose();
     this.bundle.accent.mesh.dispose();
+    this.bundle.surfaceDots.mesh.dispose();
+    this.bundle.surfaceAccent.mesh.dispose();
     this.bundle.glow.material.dispose();
     this.bundle.core.material.dispose();
     this.bundle.accent.material.dispose();
+    this.bundle.surfaceDots.material.dispose();
+    this.bundle.surfaceAccent.material.dispose();
 
     this.bundle = createLightsMeshes({
       accentColor: config.accentColor,

@@ -13,6 +13,7 @@ export const disposeThreeLights = ({
   scene: THREE.Scene;
 }) => {
   bundle.orbGeometry?.dispose();
+  bundle.dotGeometry?.dispose();
   bundle.floorTiles?.forEach((tile) => {
     tile.geometry?.dispose();
     tile.fillMaterial?.dispose();
@@ -31,9 +32,13 @@ export const disposeThreeLights = ({
   bundle.glow?.mesh?.dispose();
   bundle.core?.mesh?.dispose();
   bundle.accent?.mesh?.dispose();
+  bundle.surfaceDots?.mesh?.dispose();
+  bundle.surfaceAccent?.mesh?.dispose();
   bundle.glow?.material?.dispose();
   bundle.core?.material?.dispose();
   bundle.accent?.material?.dispose();
+  bundle.surfaceDots?.material?.dispose();
+  bundle.surfaceAccent?.material?.dispose();
   root.clear();
   scene.clear();
   renderer.dispose();

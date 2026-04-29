@@ -95,6 +95,8 @@ export const createLightsMeshes = ({
   root: THREE.Group;
 }): ThreeLightsMeshBundle => {
   const orbGeometry = new THREE.SphereGeometry(1, 24, 24);
+  const dotGeometry = new THREE.SphereGeometry(1, 10, 10);
+  const surfaceDotCount = Math.max(144, beamCount * 14);
 
   const floorTiles = Array.from({length: 4}, (_, index) => {
     const geometry = new THREE.PlaneGeometry(30, 18, 44, 42);
@@ -188,6 +190,7 @@ export const createLightsMeshes = ({
 
   return {
     orbGeometry,
+    dotGeometry,
     floorTiles,
     horizonGeometry: horizon.geometry,
     horizonMaterial: horizon.material,
@@ -215,6 +218,22 @@ export const createLightsMeshes = ({
       geometry: orbGeometry,
       layerName: "accent",
       opacity: 0.34,
+      root,
+    }),
+    surfaceDots: createLayer({
+      color: glowColor,
+      count: surfaceDotCount,
+      geometry: dotGeometry,
+      layerName: "glow",
+      opacity: 0.16,
+      root,
+    }),
+    surfaceAccent: createLayer({
+      color: accentColor,
+      count: surfaceDotCount,
+      geometry: dotGeometry,
+      layerName: "core",
+      opacity: 0.22,
       root,
     }),
   };

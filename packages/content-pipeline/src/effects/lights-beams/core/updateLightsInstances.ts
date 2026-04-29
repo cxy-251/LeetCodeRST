@@ -57,6 +57,15 @@ const sampleFloorHeight = (x: number, worldZ: number, time: number, spread: numb
   return (radialA + radialB + radialC + longWave + ridgeWave) * (0.34 + nearField * 0.76);
 };
 
+const sampleDepthVisibility = (displayZ: number, nearLimit: number, totalDepth: number) => {
+  const normalized = Math.max(0, Math.min(1, (displayZ - (nearLimit - totalDepth)) / totalDepth));
+  return {
+    far: 1 - normalized,
+    near: normalized,
+    nearSoft: Math.pow(normalized, 1.35),
+  };
+};
+
 const wrapDepth = (value: number, nearLimit: number, depthRange: number) => {
   let resolved = value;
   while (resolved > nearLimit) {
@@ -134,10 +143,10 @@ export const updateLightsInstances = ({
   meshes,
   seeds,
 }: UpdateLightsInstancesInput) => {
-  const time = frame * config.motionSpeed * 11.2;
+  const time = frame * config.motionSpeed * 8.9;
   const tileLength = 18;
   const totalDepth = tileLength * floorTiles.length;
-  const travelPhase = (time * 0.11) % 1;
+  const travelPhase = (time * 0.085) % 1;
   const travelOffset = travelPhase * totalDepth;
   const nearLimit = 6.5;
 
@@ -198,8 +207,8 @@ export const updateLightsInstances = ({
     const displayZ = wrapDepth(state.z + travelOffset, nearLimit, totalDepth);
     const floorHeight = sampleFloorHeight(state.x, displayZ, time, config.spread);
     const breathing = 0.72 + (Math.sin(time * (1.05 + seed.speed * 5.5) + seed.phase) + 1) * 0.24;
-    const nearFactor = Math.max(0, Math.min(1, (displayZ - (nearLimit - totalDepth)) / totalDepth));
-    const highlightFactor = Math.pow(nearFactor, 1.45);
+    const visibility = sampleDepthVisibility(displayZ, nearLimit, totalDepth);
+    const highlightFactor = visibility.nearSoft;
     const rimOnlyFactor = 0.42 + highlightFactor * 0.58;
 
     (["glow", "core", "accent"] as const).forEach((layerName) => {
@@ -212,7 +221,7 @@ export const updateLightsInstances = ({
             ? coreRadius
             : Math.max(0.08, coreRadius * 0.36);
 
-      const presence = tuning.nearMix * highlightFactor + (1 - tuning.nearMix);
+      const presence = tuning.nearMix * highlightFactor + (1 - tuning.nearMix) * (0.55 + visibility.far * 0.45);
 
       helper.position.set(state.x, -2.1 + floorHeight + tuning.yOffset, displayZ);
       helper.rotation.set(0, seed.baseAngle + time * 0.08, 0);
@@ -230,4 +239,34 @@ export const updateLightsInstances = ({
   meshes.glow.mesh.instanceMatrix.needsUpdate = true;
   meshes.core.mesh.instanceMatrix.needsUpdate = true;
   meshes.accent.mesh.instanceMatrix.needsUpdate = true;
+
+  const surfaceLaneCount = 14;
+  const surfaceRowCount = Math.ceil(meshes.surfaceDots.mesh.count / surfaceLaneCount);
+  for (let index = 0; index < meshes.surfaceDots.mesh.count; index += 1) {
+    const laneIndex = index % surfaceLaneCount;
+    const rowIndex = Math.floor(index / surfaceLaneCount);
+    const laneRatio = laneIndex / (surfaceLaneCount - 1);
+    const laneSigned = laneRatio * 2 - 1;
+    const x = laneSigned * 8.4 + (rowIndex % 2 === 0 ? 0.36 : -0.36);
+    const rowDepth = rowIndex / Math.max(1, surfaceRowCount - 1);
+    const baseZ = -2.6 - rowDepth * 31.5;
+    const displayZ = wrapDepth(baseZ + travelOffset, nearLimit, totalDepth);
+    const floorHeight = sampleFloorHeight(x, displayZ, time, config.spread);
+    const visibility = sampleDepthVisibility(displayZ, nearLimit, totalDepth);
+    const shimmer = 0.68 + (Math.sin(time * 1.25 + laneIndex * 0.45 + rowIndex * 0.18) + 1) * 0.16;
+
+    helper.position.set(x, -2.08 + floorHeight + 0.03, displayZ);
+    helper.rotation.set(0, 0, 0);
+    helper.scale.setScalar((0.028 + visibility.near * 0.036) * shimmer);
+    helper.updateMatrix();
+    meshes.surfaceDots.mesh.setMatrixAt(index, helper.matrix);
+
+    helper.position.set(x, -2.08 + floorHeight + 0.035, displayZ);
+    helper.scale.setScalar((0.012 + visibility.nearSoft * 0.024) * (0.8 + visibility.nearSoft * 0.35));
+    helper.updateMatrix();
+    meshes.surfaceAccent.mesh.setMatrixAt(index, helper.matrix);
+  }
+
+  meshes.surfaceDots.mesh.instanceMatrix.needsUpdate = true;
+  meshes.surfaceAccent.mesh.instanceMatrix.needsUpdate = true;
 };
