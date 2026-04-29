@@ -23,7 +23,7 @@ const LAYER_TUNING: Record<"accent" | "core" | "glow", LayerTuning> = {
   accent: {
     nearMix: 0.25,
     pulseBias: 0.08,
-    scale: 0.66,
+    scale: 0.82,
     yOffset: 0.04,
   },
 };
@@ -69,30 +69,60 @@ const wrapDepth = (value: number, nearLimit: number, depthRange: number) => {
 };
 
 const computeOrbState = ({
+  index,
+  totalCount,
   seed,
   variant,
 }: {
+  index: number;
+  totalCount: number;
   seed: UpdateLightsInstancesInput["seeds"][number];
   variant: UpdateLightsInstancesInput["config"]["variant"];
 }) => {
+  const laneCount = variant === "fan" ? 6 : variant === "bloom" ? 5 : 4;
+  const depthRows = Math.max(1, Math.ceil(totalCount / laneCount));
+  const laneIndex = index % laneCount;
+  const depthIndex = Math.floor(index / laneCount);
+  const laneRatio = laneIndex / (laneCount - 1);
+  const laneSigned = laneRatio * 2 - 1;
+  const depthRatio = depthRows === 1 ? 0 : depthIndex / Math.max(1, depthRows - 1);
+  const laneJitter = seed.drift * 0.42;
+  const depthJitter = Math.sin(seed.phase) * 0.9;
+
   if (variant === "bloom") {
     return {
-      x: Math.cos(seed.baseAngle) * (1.2 + seed.orbit * 5.6),
-      z: -6 - seed.depth * 24 - Math.sin(seed.baseAngle * 0.35) * 3.8,
+      x:
+        laneSigned * 5.4 +
+        Math.sin(seed.baseAngle * 0.8) * 0.8 +
+        laneJitter,
+      z:
+        -6 -
+        depthRatio * 26 -
+        Math.cos(seed.baseAngle * 0.45) * 1.1 +
+        depthJitter,
     };
   }
 
   if (variant === "fan") {
-    const lane = seed.lane * 2 - 1;
     return {
-      x: lane * 6 + Math.sin(seed.baseAngle) * 0.9,
-      z: -5 - seed.depth * 22,
+      x:
+        laneSigned * 7.2 +
+        Math.sin(seed.baseAngle * 0.9) * (0.6 + depthRatio * 0.4) +
+        laneJitter,
+      z: -5 - depthRatio * 24 + depthJitter,
     };
   }
 
   return {
-    x: Math.cos(seed.baseAngle) * (0.8 + seed.orbit * 4.2),
-    z: -4 - seed.depth * 18 - Math.sin(seed.baseAngle * 0.8) * 1.8,
+    x:
+      laneSigned * 4.6 +
+      Math.sin(seed.baseAngle * 0.7) * 0.65 +
+      laneJitter,
+    z:
+      -4 -
+      depthRatio * 22 -
+      Math.sin(seed.baseAngle * 0.65) * 0.75 +
+      depthJitter,
   };
 };
 
@@ -160,6 +190,8 @@ export const updateLightsInstances = ({
 
   seeds.forEach((seed, index) => {
     const state = computeOrbState({
+      index,
+      totalCount: seeds.length,
       seed,
       variant: config.variant,
     });
@@ -168,7 +200,7 @@ export const updateLightsInstances = ({
     const breathing = 0.72 + (Math.sin(time * (1.05 + seed.speed * 5.5) + seed.phase) + 1) * 0.24;
     const nearFactor = Math.max(0, Math.min(1, (displayZ - (nearLimit - totalDepth)) / totalDepth));
     const highlightFactor = Math.pow(nearFactor, 1.45);
-    const rimOnlyFactor = 0.14 + highlightFactor * 0.86;
+    const rimOnlyFactor = 0.42 + highlightFactor * 0.58;
 
     (["glow", "core", "accent"] as const).forEach((layerName) => {
       const tuning = LAYER_TUNING[layerName];

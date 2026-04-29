@@ -113,7 +113,7 @@ export const DEFAULT_PARTICLE_EFFECT: ParticleEffectConfig = {
 
 export const DEFAULT_LIGHTS_EFFECT: LightsEffectConfig = {
   variant: "pulse",
-  beamCount: 18,
+  beamCount: 36,
   beamLength: 0.6,
   beamThickness: 0.028,
   orbitRadius: 0.28,
