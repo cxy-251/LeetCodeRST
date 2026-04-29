@@ -303,6 +303,9 @@ npm run build
 70. `produce:paper-urls` 与 `prepare:latest-ai-batch` 已支持把总结模式一路透传到分析阶段：
    - 默认仍是 `rule-based`
    - 用户本地如果运行 LM Studio，可直接改成 `lm-studio`
+71. 用户当前本地 LM Studio 默认模型已记录为：
+   - `gemma-4-e4b`
+   - 本地接口地址：`http://127.0.0.1:1234/v1`
 
 ---
 

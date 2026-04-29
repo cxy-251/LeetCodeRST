@@ -98,14 +98,14 @@ npm run produce:paper-urls -- \
   --paper-url https://arxiv.org/abs/2604.22748 \
   --background-dir data/images/prepared \
   --summary-mode lm-studio \
-  --lm-studio-model qwen3-14b
+  --lm-studio-model gemma-4-e4b
 ```
 
 推荐的环境变量方式：
 
 ```bash
 export LM_STUDIO_BASE_URL=http://127.0.0.1:1234/v1
-export LM_STUDIO_MODEL=qwen3-14b
+export LM_STUDIO_MODEL=gemma-4-e4b
 export LM_STUDIO_API_KEY=lm-studio
 ```
 
@@ -459,7 +459,7 @@ npm run prepare:latest-ai-batch -- --limit 3
 npm run prepare:latest-ai-batch -- \
   --limit 3 \
   --summary-mode lm-studio \
-  --lm-studio-model qwen3-14b
+  --lm-studio-model gemma-4-e4b
 ```
 
 这条命令会串起：
