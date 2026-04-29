@@ -66,7 +66,7 @@ const App: React.FC = () => {
         modules={effectStageModel.modules}
         onPrimaryAction={() => effectState.setIsRunning(true)}
         resetToken={effectState.resetToken}
-        seed={effectState.manifest.seed}
+        seed={effectState.runtimeSeed}
         simulationFrame={effectState.simulationFrame}
         width={EFFECT_LAB_RENDER_WIDTH}
       />

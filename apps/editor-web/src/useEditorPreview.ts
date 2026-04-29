@@ -256,11 +256,15 @@ export const useEffectPreview = (route: EffectRoute | null): EffectPreviewState 
   const [isRunning, setIsRunning] = useState(false);
   const [simulationFrame, setSimulationFrame] = useState(0);
   const [resetToken, setResetToken] = useState(0);
+  const [runtimeSeed, setRuntimeSeed] = useState(1);
   const [moduleOverrides, setModuleOverrides] = useState({} as NonNullable<RenderManifest["modules"]>);
   const usesEngineDrivenFrames =
     route?.effectId === "cellular-life" ||
     route?.effectId === "lights-beams" ||
     route?.effectId === "rubiks-auto-solve";
+
+  const nextRuntimeSeed = (baseSeed: number) =>
+    Math.max(1, Math.trunc(baseSeed + Math.random() * 100000 + Date.now() % 9973));
 
   useEffect(() => {
     /**
@@ -271,6 +275,7 @@ export const useEffectPreview = (route: EffectRoute | null): EffectPreviewState 
     setIsRunning(false);
     setResetToken((token) => token + 1);
     setModuleOverrides({});
+    setRuntimeSeed(nextRuntimeSeed(manifest?.seed ?? 1));
   }, [route?.effectId]);
 
   useEffect(() => {
@@ -304,6 +309,7 @@ export const useEffectPreview = (route: EffectRoute | null): EffectPreviewState 
     setSimulationFrame(0);
     setResetToken((token) => token + 1);
     setModuleOverrides({});
+    setRuntimeSeed(nextRuntimeSeed(manifest?.seed ?? 1));
   };
 
   const controlDefinitions = useMemo(
@@ -333,6 +339,7 @@ export const useEffectPreview = (route: EffectRoute | null): EffectPreviewState 
     moduleOverrides,
     resetToken,
     resetSimulation,
+    runtimeSeed,
     scene,
     setControlValue,
     setIsRunning,
