@@ -55,6 +55,12 @@ const parseArgs = (args: string[]) => {
       ? path.resolve(take("--batch-output") as string)
       : path.resolve("data/video-batches/generated/latest-ai-batch.csv"),
     effectCycle: take("--effect-cycle") ?? "life-game,snake-grid,particle-orbit,lights-beams,rubiks-solver",
+    summaryMode: take("--summary-mode") ?? "rule-based",
+    lmStudioBaseUrl: take("--lm-studio-base-url"),
+    lmStudioModel: take("--lm-studio-model"),
+    lmStudioApiKey: take("--lm-studio-api-key"),
+    lmStudioTemperature: take("--lm-studio-temperature"),
+    lmStudioMaxOutputTokens: take("--lm-studio-max-output-tokens"),
   };
 };
 
@@ -104,7 +110,18 @@ const main = async () => {
     "--paper-ids",
     fetchedIds,
   ]);
-  await run("node", ["--import", "tsx", "tools/analyze-paper-sources.ts"]);
+  await run("node", [
+    "--import",
+    "tsx",
+    "tools/analyze-paper-sources.ts",
+    "--summary-mode",
+    options.summaryMode,
+    ...(options.lmStudioBaseUrl ? ["--lm-studio-base-url", options.lmStudioBaseUrl] : []),
+    ...(options.lmStudioModel ? ["--lm-studio-model", options.lmStudioModel] : []),
+    ...(options.lmStudioApiKey ? ["--lm-studio-api-key", options.lmStudioApiKey] : []),
+    ...(options.lmStudioTemperature ? ["--lm-studio-temperature", options.lmStudioTemperature] : []),
+    ...(options.lmStudioMaxOutputTokens ? ["--lm-studio-max-output-tokens", options.lmStudioMaxOutputTokens] : []),
+  ]);
   await run("node", ["--import", "tsx", "tools/scaffold-paper-manifests.ts"]);
   await run("node", [
     "--import",

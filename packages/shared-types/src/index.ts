@@ -73,6 +73,8 @@ export type ContentProfileConfig = {
   path?: string;
 };
 
+export type SummaryModeId = "rule-based" | "lm-studio";
+
 export type CoverProfileConfig = {
   id: string;
   path?: string;

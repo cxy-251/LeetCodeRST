@@ -54,6 +54,7 @@ npm run produce:paper-urls -- \
 - `--background-dir` 指向你自己的背景图目录
 - 背景图会从这个目录里随机挑
 - 特效会从当前支持的 effect family 里随机挑一个
+- 默认总结模式是 `rule-based`，不会调用外部 AI API
 
 如果你不传 `--background-dir`，系统会优先尝试：
 
@@ -87,6 +88,35 @@ npm run produce:paper-urls -- \
 - 背景图随机分配
 - effect 随机分配
 - batch 里每行的基础种子
+
+### 2.0.3 切到 LM Studio 本地模型
+
+如果你本地已经开了 LM Studio，可以直接把论文总结模式切到本地模型：
+
+```bash
+npm run produce:paper-urls -- \
+  --paper-url https://arxiv.org/abs/2604.22748 \
+  --background-dir data/images/prepared \
+  --summary-mode lm-studio \
+  --lm-studio-model qwen3-14b
+```
+
+推荐的环境变量方式：
+
+```bash
+export LM_STUDIO_BASE_URL=http://127.0.0.1:1234/v1
+export LM_STUDIO_MODEL=qwen3-14b
+export LM_STUDIO_API_KEY=lm-studio
+```
+
+然后执行：
+
+```bash
+npm run produce:paper-urls -- \
+  --paper-url https://arxiv.org/abs/2604.22748 \
+  --background-dir data/images/prepared \
+  --summary-mode lm-studio
+```
 
 ### 2.1 直接渲染一个 manifest
 
@@ -185,6 +215,17 @@ npm run import:summary-json -- \
 ```
 
 切过去。
+
+### 3.3 三种论文文案来源
+
+当前系统支持 3 种论文文案来源：
+
+1. `rule-based`
+   默认自动模式，不依赖模型 API
+2. `lm-studio`
+   本地模型自动模式，适合想提高质量但不走外部 API 的情况
+3. `external-json`
+   先让外部 AI 按模板总结，再通过 `import:summary-json` 导入
 
 ## 4. 背景图怎么切换
 
@@ -410,6 +451,15 @@ npm run produce:video -- --batch-config data/video-batches/demo-batch.csv --rows
 
 ```bash
 npm run prepare:latest-ai-batch -- --limit 3
+```
+
+如果想让“最新论文批量准备”阶段直接走 LM Studio：
+
+```bash
+npm run prepare:latest-ai-batch -- \
+  --limit 3 \
+  --summary-mode lm-studio \
+  --lm-studio-model qwen3-14b
 ```
 
 这条命令会串起：

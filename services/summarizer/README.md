@@ -1,12 +1,14 @@
 # 目录职责
 
-`services/summarizer/` 负责论文总结输入契约、外部 AI 总结模板和导入服务。
+`services/summarizer/` 负责论文总结输入契约、规则式总结、LM Studio 本地模型适配和外部 AI 总结导入服务。
 
 # 允许内容
 
 - 总结 JSON 模板
 - 提示词文档
 - 总结导入 service
+- 规则式总结 service
+- LM Studio 本地总结 service
 - 类型定义
 
 # 禁止内容
@@ -28,12 +30,22 @@
 - 提示词：`video-script-prompt.md`
 - 示例：`video-script-example.json`
 - 导入逻辑：`import-summary.service.ts`
+- 总结调度：`summarize-paper.service.ts`
+- 规则式总结：`rule-based-summary.service.ts`
+- LM Studio 适配：`lm-studio.service.ts`
 - 类型：`import-summary.types.ts`
 
 # 边界说明
 
-这里负责“外部 AI 应该怎样返回结构化总结”。
+这里负责“论文文本如何被总结成统一结构”。
 真正把 profile 装进视频链路的脚本在 `tools/`，内容落盘位置在 `data/content-profiles/`。
+
+当前支持两种自动总结模式：
+
+- `rule-based`
+  纯规则 / 启发式，不依赖模型 API
+- `lm-studio`
+  通过 LM Studio 的 OpenAI 兼容本地接口生成脚本草案
 
 # Codex 规则
 

@@ -290,6 +290,19 @@ npm run build
 67. `video-production-manual.md` 已更新：
    - 新增单个论文网址直接出视频的操作说明
    - 新增网址文件批量出视频的操作说明
+68. 论文总结链路已正式拆成两种自动模式：
+   - `rule-based`
+   - `lm-studio`
+69. `analyze-paper-sources.ts` 已支持：
+   - `--summary-mode rule-based|lm-studio`
+   - `--lm-studio-base-url`
+   - `--lm-studio-model`
+   - `--lm-studio-api-key`
+   - `--lm-studio-temperature`
+   - `--lm-studio-max-output-tokens`
+70. `produce:paper-urls` 与 `prepare:latest-ai-batch` 已支持把总结模式一路透传到分析阶段：
+   - 默认仍是 `rule-based`
+   - 用户本地如果运行 LM Studio，可直接改成 `lm-studio`
 
 ---
 
@@ -323,6 +336,7 @@ npm run build
 - `tools/scaffold-paper-manifests.ts`
 - `tools/create-video-manifest.ts`
 - `tools/prepare-latest-ai-batch.ts`
+- `tools/produce-paper-urls.ts`
 - `tools/lib/manifest-factory.ts`
 - `tools/lib/video-batch.ts`
 - `tools/lib/image-processing.ts`
@@ -347,6 +361,10 @@ npm run build
 ### 论文接入
 
 - `services/paper-ingest/extract_pdf_text.py`
+- `services/summarizer/summarize-paper.service.ts`
+- `services/summarizer/rule-based-summary.service.ts`
+- `services/summarizer/lm-studio.service.ts`
+- `services/summarizer/summarizer.types.ts`
 - `data/source-bundles/latest-ai-batch.json`
 - `data/source-bundles/latest-ai-analysis.json`
 - `data/manifests/ingest/*.json`
@@ -453,6 +471,10 @@ npm run build
 16. effect lab 布局已改成“手机画面 + 贴边控制侧栏”，参数面板不再和预览结果分离
 17. `ThreeLife` 已完成纯引擎拆分，网页实时页和 Remotion 视频层现在共享同一套 `renderFrame()` 核心逻辑
 18. `life-game` 实验页已实测恢复实时运行，控制面板在当前窄屏视口中也能保持右侧嵌入
+19. 论文总结链路已支持 `summaryMode`：
+   - `rule-based`
+   - `lm-studio`
+20. `produce:paper-urls` 与 `prepare:latest-ai-batch` 已可以把总结模式一路透传到分析阶段
 
 ### 未完成
 
@@ -466,6 +488,7 @@ npm run build
 8. 外部总结 JSON 导入虽然已经可用，但当前仍是“宽松别名兼容 + 标准落盘”，还没有建立严格的 schema version 管理
 9. 特效实验页目前已经支持参数调节，但还没有把这套控件直接反写成可保存 preset 或 manifest patch
 10. 同一类特效虽然已经支持 variant / shape / distribution / trajectory，但这些组合目前主要停留在实验页，还没有正式沉淀成可复用的 profile registry
+11. `lm-studio` 本地总结链路虽然接口已经接好，但还没有在当前仓库环境里用真实本地模型做端到端实机验证
 
 ### 当前不完善
 
@@ -485,6 +508,7 @@ npm run build
 12. `editor-web` 构建当前仍会出现 `chunk size > 500kB` 的 Vite 提示，这不阻塞功能，但后续最好继续做按路由或 effect family 的拆包
 13. effect lab 在更窄网页宽度下虽然已经尽量保持右侧侧栏，但当视口进一步变窄时仍会退化；如果后续要长期面向桌面实验页使用，建议把信息区再进一步上移，给舞台让出更多横向空间
 14. effect lab 的舞台虽然已经改成更适合网页的宽幅区域，但目前仍然是“固定侧栏 + 响应式主舞台”的第一版；如果后续要上更多复杂特效，建议再加可折叠侧栏或分段参数分组
+15. `lm-studio` 当前按 OpenAI 兼容本地接口设计，后续如果用户实际使用的 LM Studio 响应格式或模型名策略与默认假设不同，仍需根据本机配置再微调
 
 ---
 

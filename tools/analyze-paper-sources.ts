@@ -1,5 +1,8 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import type {SummaryModeId} from "@paper-to-video/shared-types";
+import {summarizePaper} from "../services/summarizer/summarize-paper.service";
+import type {LmStudioSummaryConfig} from "../services/summarizer/summarizer.types";
 
 type SourcePaper = {
   arxivId: string;
@@ -22,6 +25,8 @@ type SourceBundle = {
 };
 
 type AnalysisEntry = SourcePaper & {
+  summaryMode: SummaryModeId;
+  summaryModel?: string;
   abstractSentences: string[];
   sectionHeadings: string[];
   scriptDraft: {
@@ -37,139 +42,73 @@ type AnalysisEntry = SourcePaper & {
 const DEFAULT_INPUT_PATH = path.resolve("data/source-bundles/latest-ai-batch.json");
 const DEFAULT_OUTPUT_PATH = path.resolve("data/source-bundles/latest-ai-analysis.json");
 
-const splitSentences = (text: string) =>
-  text
-    .replace(/\s+/g, " ")
-    .split(/(?<=[.?!])\s+/)
-    .map((item) => item.trim())
-    .filter(Boolean);
-
-const extractAbstractSentences = (rawText: string, fallbackSummary: string) => {
-  const text = rawText.replace(/\s+/g, " ");
-  const abstractStart = text.match(/As AI systems|Dense vector retrieval|The plan existence problem/i);
-
-  if (!abstractStart) {
-    return splitSentences(fallbackSummary).slice(0, 4);
-  }
-
-  const startIndex = abstractStart.index ?? 0;
-  const abstractWindow = text.slice(startIndex, startIndex + 2400);
-  return splitSentences(abstractWindow).slice(0, 6);
+const isSummaryModeId = (value: string): value is SummaryModeId => {
+  return value === "rule-based" || value === "lm-studio";
 };
 
-const extractSectionHeadings = (rawText: string) => {
-  return [...rawText.matchAll(/§\d+(?:\.\d+)?\s+([^\n]+)/g)]
-    .map((match) => match[1].trim())
-    .filter((heading, index, all) => heading.length > 1 && all.indexOf(heading) === index)
-    .slice(0, 10);
-};
-
-const detectPaperMode = (paper: SourcePaper) => {
-  const title = paper.title.toLowerCase();
-  const summary = paper.summary.toLowerCase();
-
-  if (title.includes("survey") || title.includes("foundations") || summary.includes("taxonomy")) {
-    return "survey";
-  }
-
-  if (title.includes("proof") || summary.includes("undecidable")) {
-    return "theory";
-  }
-
-  return "method";
-};
-
-const sentenceOr = (sentences: string[], index: number, fallback: string) => sentences[index] ?? fallback;
-
-const buildScriptDraft = (paper: SourcePaper, abstractSentences: string[], sectionHeadings: string[]) => {
-  const mode = detectPaperMode(paper);
-  const shortTitle = paper.title.replace(/\s+/g, " ").trim();
-
-  if (mode === "survey") {
-    return {
-      hook: `这篇论文不是在做单点模型改进，而是在重新整理 AI agent 的 world modeling 全景。`,
-      problem: `作者想解决的问题是：当智能体开始在真实环境里持续行动时，我们到底该怎样定义和评估 world model。`,
-      method: `论文提出了一个 levels x laws 的分析框架，把能力层级和约束类型放到同一张图里，并梳理了 ${sectionHeadings.slice(0, 3).join("、")} 等关键脉络。`,
-      value: `它的价值不只是综述，而是把 predictor、simulator、evolver 这些能力层级统一到了同一个研究坐标系里。`,
-      ending: `如果你在关注 agent、world model 和长期规划，这篇综述非常适合作为进入这个方向的起点。`,
-      bullets: [
-        "统一 world model 的能力层级",
-        "把物理、数字、社会、科学环境放进同一框架",
-        "更适合用来理解 agent 系统下一步往哪走",
-      ],
-    };
-  }
-
-  if (mode === "theory") {
-    return {
-      hook: `这篇论文切的是一个很底层的问题：某些规划问题，从理论上就可能根本不可判定。`,
-      problem: `作者讨论的是 epistemic planning 里的 plan existence 问题，也就是给定目标和动作后，是否存在一条可达路径。`,
-      method: `核心结果是一个 undecidability proof。即使把动作条件限制得很弱，这个计划存在性问题依然可能不可判定。`,
-      value: `这类结论的意义在于，它告诉我们哪些规划设定天然会碰到理论边界，而不是单纯算法还不够强。`,
-      ending: `如果你关心 AI 规划、逻辑推理和形式化方法，这篇短论文的理论信号很强。`,
-      bullets: [
-        "研究对象是 epistemic planning",
-        "结果是 plan existence 不可判定",
-        "提示某些规划任务存在理论极限",
-      ],
-    };
-  }
-
-  const lead = sentenceOr(
-    abstractSentences,
-    0,
-    "这篇论文围绕检索增强生成里的 dense retriever 优化展开。",
-  );
-  const methodSentence = abstractSentences.find((sentence) => /We propose|framework|objective/i.test(sentence)) ??
-    sentenceOr(abstractSentences, 1, paper.summary);
-  const resultSentence = abstractSentences.find((sentence) => /improves|faster|Recall|MAP|F1/i.test(sentence)) ??
-    sentenceOr(abstractSentences, 2, paper.summary);
-
-  return {
-    hook: `这篇论文关注的是 RAG 检索环节的一个实际瓶颈：向量召回很快，但不一定真的最有用。`,
-    problem: `作者想解决的是检索质量和推理成本之间的矛盾，也就是怎样既保留 dense retrieval 的速度，又靠近 LLM utility re-ranking 的效果。`,
-    method: `论文的核心方法可以概括为：${methodSentence}`,
-    value: `实验上最值得看的是：${resultSentence}`,
-    ending: `如果你正在做 RAG、dense retriever 或者检索排序，这篇工作很适合作为性能和成本平衡的参考。`,
-    bullets: [
-      "把检索目标改成对齐生成 utility",
-      "不依赖测试时 LLM 重排序",
-      "更适合大规模 RAG 实际部署",
-    ],
-  };
-};
-
-const main = async () => {
-  const args = process.argv.slice(2);
+const parseArgs = (args: string[]) => {
   const take = (flag: string) => {
     const index = args.indexOf(flag);
     return index >= 0 ? args[index + 1] : undefined;
   };
 
-  const inputPath = take("--input") ? path.resolve(take("--input") as string) : DEFAULT_INPUT_PATH;
-  const outputPath = take("--output") ? path.resolve(take("--output") as string) : DEFAULT_OUTPUT_PATH;
-  const bundle = JSON.parse(await fs.readFile(inputPath, "utf-8")) as SourceBundle;
+  const summaryModeRaw = take("--summary-mode") ?? "rule-based";
+  if (!isSummaryModeId(summaryModeRaw)) {
+    throw new Error(`Unsupported summary mode: ${summaryModeRaw}`);
+  }
+
+  const lmStudioConfig: LmStudioSummaryConfig = {
+    baseUrl: take("--lm-studio-base-url") ?? process.env.LM_STUDIO_BASE_URL ?? "http://127.0.0.1:1234/v1",
+    model: take("--lm-studio-model") ?? process.env.LM_STUDIO_MODEL ?? "lm-studio-local-model",
+    apiKey: take("--lm-studio-api-key") ?? process.env.LM_STUDIO_API_KEY ?? "lm-studio",
+    temperature: Number.parseFloat(take("--lm-studio-temperature") ?? process.env.LM_STUDIO_TEMPERATURE ?? "0.2"),
+    maxOutputTokens: Number.parseInt(
+      take("--lm-studio-max-output-tokens") ?? process.env.LM_STUDIO_MAX_OUTPUT_TOKENS ?? "1200",
+      10,
+    ),
+  };
+
+  return {
+    inputPath: take("--input") ? path.resolve(take("--input") as string) : DEFAULT_INPUT_PATH,
+    outputPath: take("--output") ? path.resolve(take("--output") as string) : DEFAULT_OUTPUT_PATH,
+    summaryMode: summaryModeRaw,
+    lmStudioConfig,
+  };
+};
+
+const main = async () => {
+  const options = parseArgs(process.argv.slice(2));
+  const bundle = JSON.parse(await fs.readFile(options.inputPath, "utf-8")) as SourceBundle;
   const papers: AnalysisEntry[] = [];
 
   for (const paper of bundle.papers) {
     const rawText = paper.localTextPath ? await fs.readFile(paper.localTextPath, "utf-8") : paper.summary;
-    const abstractSentences = extractAbstractSentences(rawText, paper.summary);
-    const sectionHeadings = extractSectionHeadings(rawText);
+    const summary = await summarizePaper({
+      paper,
+      rawText,
+      summaryMode: options.summaryMode,
+      lmStudioConfig: options.summaryMode === "lm-studio" ? options.lmStudioConfig : undefined,
+    });
+
     papers.push({
       ...paper,
-      abstractSentences,
-      sectionHeadings,
-      scriptDraft: buildScriptDraft(paper, abstractSentences, sectionHeadings),
+      summaryMode: summary.summaryMode,
+      summaryModel: summary.modelName,
+      abstractSentences: summary.abstractSentences,
+      sectionHeadings: summary.sectionHeadings,
+      scriptDraft: summary.scriptDraft,
     });
   }
 
-  await fs.mkdir(path.dirname(outputPath), {recursive: true});
+  await fs.mkdir(path.dirname(options.outputPath), {recursive: true});
   await fs.writeFile(
-    outputPath,
+    options.outputPath,
     JSON.stringify(
       {
         generatedAt: new Date().toISOString(),
-        sourceBundlePath: inputPath,
+        sourceBundlePath: options.inputPath,
+        summaryMode: options.summaryMode,
+        summaryModel: options.summaryMode === "lm-studio" ? options.lmStudioConfig.model : null,
         papers,
       },
       null,
@@ -178,7 +117,7 @@ const main = async () => {
     "utf-8",
   );
 
-  console.log(`Analysis bundle written to ${outputPath}`);
+  console.log(`Analysis bundle written to ${options.outputPath}`);
 };
 
 main().catch((error) => {

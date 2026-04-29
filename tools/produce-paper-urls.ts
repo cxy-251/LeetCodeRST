@@ -61,6 +61,12 @@ const parseArgs = (args: string[]) => {
     voiceName: take("--voice-name") ?? "zh-CN-XiaoxiaoNeural",
     voiceRate: take("--voice-rate") ?? "+80%",
     voicePitch: take("--voice-pitch") ?? "+0Hz",
+    summaryMode: take("--summary-mode") ?? "rule-based",
+    lmStudioBaseUrl: take("--lm-studio-base-url"),
+    lmStudioModel: take("--lm-studio-model"),
+    lmStudioApiKey: take("--lm-studio-api-key"),
+    lmStudioTemperature: take("--lm-studio-temperature"),
+    lmStudioMaxOutputTokens: take("--lm-studio-max-output-tokens"),
     batchId: take("--batch-id"),
     mockMode: args.includes("--mock"),
   };
@@ -133,6 +139,13 @@ const main = async () => {
     paths.sourceBundlePath,
     "--output",
     paths.analysisBundlePath,
+    "--summary-mode",
+    options.summaryMode,
+    ...(options.lmStudioBaseUrl ? ["--lm-studio-base-url", options.lmStudioBaseUrl] : []),
+    ...(options.lmStudioModel ? ["--lm-studio-model", options.lmStudioModel] : []),
+    ...(options.lmStudioApiKey ? ["--lm-studio-api-key", options.lmStudioApiKey] : []),
+    ...(options.lmStudioTemperature ? ["--lm-studio-temperature", options.lmStudioTemperature] : []),
+    ...(options.lmStudioMaxOutputTokens ? ["--lm-studio-max-output-tokens", options.lmStudioMaxOutputTokens] : []),
   ]);
 
   await run("node", [
