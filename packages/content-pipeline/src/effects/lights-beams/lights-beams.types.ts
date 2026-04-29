@@ -40,8 +40,19 @@ export type ThreeLightsFloorTile = {
   fillMaterial: THREE.MeshBasicMaterial;
   fillMesh: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
   geometry: THREE.PlaneGeometry;
+  guideDashes: ThreeLightsGuidePlane[];
+  guideRails: ThreeLightsGuidePlane[];
   wireMaterial: THREE.MeshBasicMaterial;
   wireMesh: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
+};
+
+export type ThreeLightsGuidePlane = {
+  basePositions: Float32Array;
+  geometry: THREE.PlaneGeometry;
+  material: THREE.MeshBasicMaterial;
+  mesh: THREE.Mesh<THREE.PlaneGeometry, THREE.MeshBasicMaterial>;
+  xOffset: number;
+  zOffset: number;
 };
 
 export type ThreeLightsMeshBundle = {

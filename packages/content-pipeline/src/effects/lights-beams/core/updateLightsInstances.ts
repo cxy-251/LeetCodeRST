@@ -131,6 +131,28 @@ export const updateLightsInstances = ({
     }
 
     tile.geometry.attributes.position.needsUpdate = true;
+
+    const guidePlanes = [...tile.guideRails, ...tile.guideDashes];
+    guidePlanes.forEach((plane) => {
+      const planeWrappedZ = wrapDepth(baseZ + plane.zOffset + travelOffset, nearLimit, totalDepth);
+      plane.mesh.position.x = plane.xOffset;
+      plane.mesh.position.z = planeWrappedZ;
+
+      const planePositions = plane.geometry.attributes.position.array as Float32Array;
+      for (let cursor = 0; cursor < plane.basePositions.length; cursor += 3) {
+        const localX = plane.basePositions[cursor];
+        const localY = plane.basePositions[cursor + 1];
+        const localZ = plane.basePositions[cursor + 2];
+        const worldX = plane.xOffset + localX;
+        const worldZ = planeWrappedZ + localZ;
+
+        planePositions[cursor] = localX;
+        planePositions[cursor + 1] = localY + sampleFloorHeight(worldX, worldZ, time, config.spread) + 0.018;
+        planePositions[cursor + 2] = localZ;
+      }
+
+      plane.geometry.attributes.position.needsUpdate = true;
+    });
   });
 
   const glowRadius = 0.72 + config.beamLength * 1.34;

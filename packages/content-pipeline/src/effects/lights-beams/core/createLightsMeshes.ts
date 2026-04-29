@@ -38,6 +38,48 @@ const createLayer = ({
   } as const;
 };
 
+const createGuidePlane = ({
+  color,
+  length,
+  opacity,
+  root,
+  width,
+  xOffset,
+  zOffset,
+}: {
+  color: string;
+  length: number;
+  opacity: number;
+  root: THREE.Group;
+  width: number;
+  xOffset: number;
+  zOffset: number;
+}) => {
+  const geometry = new THREE.PlaneGeometry(width, length, 1, Math.max(1, Math.round(length * 3)));
+  geometry.rotateX(-Math.PI / 2);
+  const basePositions = new Float32Array(geometry.attributes.position.array as ArrayLike<number>);
+  const material = new THREE.MeshBasicMaterial({
+    color,
+    transparent: true,
+    opacity,
+    depthWrite: false,
+    blending: THREE.AdditiveBlending,
+    side: THREE.DoubleSide,
+  });
+  const mesh = new THREE.Mesh(geometry, material);
+  mesh.position.set(xOffset, -2.06, zOffset);
+  root.add(mesh);
+
+  return {
+    basePositions,
+    geometry,
+    material,
+    mesh,
+    xOffset,
+    zOffset,
+  } as const;
+};
+
 export const createLightsMeshes = ({
   accentColor,
   beamCount,
@@ -80,11 +122,55 @@ export const createLightsMeshes = ({
     wireMesh.position.copy(fillMesh.position);
     root.add(wireMesh);
 
+    const guideRails = [
+      createGuidePlane({
+        color: glowColor,
+        length: 18,
+        opacity: 0.22,
+        root,
+        width: 0.18,
+        xOffset: -7.25,
+        zOffset: fillMesh.position.z,
+      }),
+      createGuidePlane({
+        color: accentColor,
+        length: 18,
+        opacity: 0.26,
+        root,
+        width: 0.24,
+        xOffset: 0,
+        zOffset: fillMesh.position.z,
+      }),
+      createGuidePlane({
+        color: glowColor,
+        length: 18,
+        opacity: 0.22,
+        root,
+        width: 0.18,
+        xOffset: 7.25,
+        zOffset: fillMesh.position.z,
+      }),
+    ];
+
+    const guideDashes = [-6.2, -2.4, 1.4, 5.2].map((offset) =>
+      createGuidePlane({
+        color: accentColor,
+        length: 1.6,
+        opacity: 0.38,
+        root,
+        width: 0.42,
+        xOffset: 0,
+        zOffset: fillMesh.position.z + offset,
+      }),
+    );
+
     return {
       basePositions,
       fillMaterial,
       fillMesh,
       geometry,
+      guideDashes,
+      guideRails,
       wireMaterial,
       wireMesh,
     };

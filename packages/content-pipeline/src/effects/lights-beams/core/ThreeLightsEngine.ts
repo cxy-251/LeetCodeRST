@@ -121,17 +121,17 @@ export class ThreeLightsEngine {
 
     const frame = Math.max(0, params.simulationFrame ?? params.absoluteFrame);
     const time = frame * config.motionSpeed * 10.5;
-    const forwardPhase = (time * 0.11) % 1;
-    const cameraDolly = forwardPhase * 6.2;
+    const forwardPhase = (time * 0.13) % 1;
+    const cameraDolly = forwardPhase * 8.8;
     this.lookAtTarget.set(
       Math.sin(time * 0.16) * 0.5,
       -0.58 + Math.sin(time * 0.28) * 0.08,
-      -13.2 - cameraDolly * 1.35 + Math.sin(time * 0.11) * 1.2,
+      -14.8 - cameraDolly * 1.55 + Math.sin(time * 0.11) * 1.1,
     );
     this.camera.position.set(
       Math.sin(time * 0.17) * 0.48,
       1.48 + Math.cos(time * 0.13) * 0.08,
-      6.85 - cameraDolly + Math.sin(time * 0.08) * 0.08,
+      7.4 - cameraDolly * 1.12 + Math.sin(time * 0.08) * 0.08,
     );
     this.camera.lookAt(this.lookAtTarget);
     this.bundle.horizonMesh.position.set(
@@ -177,6 +177,14 @@ export class ThreeLightsEngine {
       tile.geometry.dispose();
       tile.fillMaterial.dispose();
       tile.wireMaterial.dispose();
+      tile.guideRails.forEach((plane) => {
+        plane.geometry.dispose();
+        plane.material.dispose();
+      });
+      tile.guideDashes.forEach((plane) => {
+        plane.geometry.dispose();
+        plane.material.dispose();
+      });
     });
     this.bundle.horizonGeometry.dispose();
     this.bundle.horizonMaterial.dispose();

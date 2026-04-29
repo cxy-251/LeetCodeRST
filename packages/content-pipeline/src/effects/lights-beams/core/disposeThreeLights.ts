@@ -17,6 +17,14 @@ export const disposeThreeLights = ({
     tile.geometry?.dispose();
     tile.fillMaterial?.dispose();
     tile.wireMaterial?.dispose();
+    tile.guideRails?.forEach((plane) => {
+      plane.geometry?.dispose();
+      plane.material?.dispose();
+    });
+    tile.guideDashes?.forEach((plane) => {
+      plane.geometry?.dispose();
+      plane.material?.dispose();
+    });
   });
   bundle.horizonGeometry?.dispose();
   bundle.horizonMaterial?.dispose();
