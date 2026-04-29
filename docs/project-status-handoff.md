@@ -279,6 +279,10 @@ npm run build
    - 共享镜头运动
    - 共享 halo / shadow 这类 stage accents
    - 目标是让后续新增 Three.js 案例时先复用展示语言，再叠加自己的核心算法
+64. 已新增 WebGL 特效单独录制入口：
+   - `npm run produce:effect -- --effect-profile rubiks-solver`
+   - 会生成单场景、无论文文本、无背景图、无音频的 effect-only 视频
+   - 当前适合作为 Three.js 案例复刻和特效素材输出入口
    - 两侧保留长导轨和侧边虚线标记
    - 目标是让“镜头往前穿行”更像沿着场域两边掠过
 59. 已新增面向实际生产的使用手册：

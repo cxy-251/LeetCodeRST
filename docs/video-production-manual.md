@@ -42,6 +42,38 @@
 
 ## 2. 单个视频的标准生成方式
 
+### 2.0 WebGL 特效单独录制
+
+如果你不想挂论文文本、背景图和配音，只想把某一个 WebGL 特效单独录成视频素材，可以直接用：
+
+```bash
+npm run produce:effect -- --effect-profile rubiks-solver
+```
+
+常用参数：
+
+```bash
+npm run produce:effect -- \
+  --effect-profile lights-beams \
+  --duration-seconds 12 \
+  --seed 42
+```
+
+支持的 `effect-profile` 当前包括：
+
+- `life-game`
+- `snake-grid`
+- `particle-orbit`
+- `lights-beams`
+- `rubiks-solver`
+
+说明：
+
+1. 这条命令会生成一份“effect-only render manifest”
+2. 不依赖论文文本、背景图或音频
+3. 输出仍然进入 `output/runs/.../video/`
+4. 适合专门录制 Three.js / WebGL 特效素材
+
 ### 2.0 直接从论文网址生成视频
 
 如果你现在不想再手工改 manifest、content profile、batch CSV，而是希望：

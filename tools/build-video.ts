@@ -102,12 +102,14 @@ const prepareStaticAssets = async (manifest: RenderManifest): Promise<RenderMani
 };
 
 const main = async () => {
-  const latestRun = await readLatestRun().catch(() => null);
-  const renderManifest = process.argv[2]
-    ? path.resolve(process.argv[2])
+  const skipRunRegistry = process.argv.includes("--skip-run-registry");
+  const positionalArgs = process.argv.slice(2).filter((arg) => arg !== "--skip-run-registry");
+  const latestRun = skipRunRegistry ? null : await readLatestRun().catch(() => null);
+  const renderManifest = positionalArgs[0]
+    ? path.resolve(positionalArgs[0])
     : latestRun?.renderManifestPath ?? DEFAULT_RENDER_MANIFEST;
-  const output = process.argv[3]
-    ? path.resolve(process.argv[3])
+  const output = positionalArgs[1]
+    ? path.resolve(positionalArgs[1])
     : latestRun?.videoPath ?? DEFAULT_OUTPUT;
   const manifestRaw = await fs.readFile(renderManifest, "utf-8");
   const manifest = await prepareStaticAssets(JSON.parse(manifestRaw) as RenderManifest);

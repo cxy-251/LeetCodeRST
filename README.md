@@ -46,6 +46,7 @@
 
 ```bash
 npm run produce:video
+npm run produce:effect -- --effect-profile rubiks-solver
 npm run lint
 npm run build
 ```
