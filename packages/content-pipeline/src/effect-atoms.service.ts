@@ -479,7 +479,7 @@ export const SNAKE_EFFECT_CONTROLS: EffectControlDefinition[] = [
     section: "cellularEffect",
     field: "foodCount",
     min: 1,
-    max: 12,
+    max: 48,
     step: 1,
   },
 ];

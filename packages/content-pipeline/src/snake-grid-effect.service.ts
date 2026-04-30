@@ -12,6 +12,7 @@ type Point = {
 };
 
 const DIRECTIONS: Direction[] = ["up", "right", "down", "left"];
+const GROWTH_PER_FOOD = 3;
 
 const hashNoise = (value: number, seed: number) => {
   const result = Math.sin(value * 12.9898 + seed * 78.233) * 43758.5453;
@@ -226,7 +227,11 @@ export const buildSnakeGridCells = ({
 
     if (eatenFoodIndex >= 0) {
       foods.splice(eatenFoodIndex, 1);
-      targetLength += 2;
+      /**
+       * The upgraded snake lab is meant to feel like a fast-clearing showcase
+       * rather than a survival game, so each pickup grows the snake a bit more.
+       */
+      targetLength += GROWTH_PER_FOOD;
       refillFoods();
     }
 

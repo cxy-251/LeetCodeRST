@@ -10,6 +10,8 @@ type SnakeMeshRefs = {
   food: THREE.InstancedMesh | null;
 };
 
+const MAX_SNAKE_INSTANCES = 4096;
+
 const disposeMeshMaterial = (mesh: THREE.InstancedMesh | null) => {
   if (!mesh) {
     return;
@@ -75,7 +77,7 @@ export const useThreeSnakeRenderer = ({
         transparent: true,
         opacity: 1,
       });
-      const mesh = new THREE.InstancedMesh(geometry, material, 256);
+      const mesh = new THREE.InstancedMesh(geometry, material, MAX_SNAKE_INSTANCES);
       mesh.frustumCulled = false;
       mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       scene.add(mesh);

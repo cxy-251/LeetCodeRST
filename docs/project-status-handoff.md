@@ -263,6 +263,8 @@ npm run build
    - 蛇会自动追踪最近目标
    - editor / Remotion / effect-only 渲染共用同一套食物生成逻辑
    - effect lab 已新增 `Food Count` 参数
+   - 当前默认 `Food Count` 已提升到高密度模式，用于更快清场
+   - 单次吃到食物后的增长幅度也已提高，便于更快接近“通关”读感
 59. 当前已新增源码交付打包入口：
    - `npm run release:package`
    - 基于 git 已跟踪文件生成可交付目录
