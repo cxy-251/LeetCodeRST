@@ -15,6 +15,11 @@ type SnakeMeshRefs = {
 const MAX_SNAKE_INSTANCES = 4096;
 const SNAKE_GRID_WIDTH_RATIO = 0.58;
 const SNAKE_GRID_HEIGHT_RATIO = 0.58;
+const toEvenAtLeast = (value: number, minimum: number) => {
+  const evenMinimum = minimum % 2 === 0 ? minimum : minimum + 1;
+  const floored = Math.max(evenMinimum, value);
+  return floored % 2 === 0 ? floored : floored - 1;
+};
 
 const disposeMeshMaterial = (mesh: THREE.InstancedMesh | null) => {
   if (!mesh) {
@@ -160,8 +165,8 @@ export const useThreeSnakeRenderer = ({
     }
 
     const resolvedFrame = simulationFrame ?? absoluteFrame ?? 0;
-    const cols = Math.max(14, Math.round(config.cellColumns * SNAKE_GRID_WIDTH_RATIO));
-    const rows = Math.max(24, Math.round(config.cellRows * SNAKE_GRID_HEIGHT_RATIO));
+    const cols = toEvenAtLeast(Math.round(config.cellColumns * SNAKE_GRID_WIDTH_RATIO), 14);
+    const rows = toEvenAtLeast(Math.round(config.cellRows * SNAKE_GRID_HEIGHT_RATIO), 24);
     const cells = buildSnakeGridCells({
       cols,
       rows,
