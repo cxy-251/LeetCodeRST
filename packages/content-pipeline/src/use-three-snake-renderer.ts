@@ -7,10 +7,14 @@ import type {ThreeLifeEffectProps} from "./three-life-effect.types";
 type SnakeMeshRefs = {
   body: THREE.InstancedMesh | null;
   head: THREE.InstancedMesh | null;
-  food: THREE.InstancedMesh | null;
+  foodLow: THREE.InstancedMesh | null;
+  foodMid: THREE.InstancedMesh | null;
+  foodHigh: THREE.InstancedMesh | null;
 };
 
 const MAX_SNAKE_INSTANCES = 4096;
+const SNAKE_GRID_WIDTH_RATIO = 0.58;
+const SNAKE_GRID_HEIGHT_RATIO = 0.58;
 
 const disposeMeshMaterial = (mesh: THREE.InstancedMesh | null) => {
   if (!mesh) {
@@ -40,10 +44,29 @@ export const useThreeSnakeRenderer = ({
   const meshRefs = useRef<SnakeMeshRefs>({
     body: null,
     head: null,
-    food: null,
+    foodLow: null,
+    foodMid: null,
+    foodHigh: null,
   });
   const helper = useMemo(() => new THREE.Object3D(), []);
   const config = resolveCellularEffectConfig(modules);
+  const foodLowColor = useMemo(
+    () => new THREE.Color().setHSL((((config.birthHue + 54) % 360) + 360) / 360, 0.92, 0.76),
+    [config.birthHue],
+  );
+  const foodMidColor = useMemo(
+    () =>
+      new THREE.Color().setHSL(
+        (((config.birthHue + 6) % 360) + 360) / 360,
+        Math.min(1, config.birthSaturation / 100),
+        Math.min(1, Math.max(0, config.birthLightness / 100)),
+      ),
+    [config.birthHue, config.birthLightness, config.birthSaturation],
+  );
+  const foodHighColor = useMemo(
+    () => new THREE.Color().setHSL((((config.birthHue - 38) % 360) + 360) / 360, 1, 0.7),
+    [config.birthHue],
+  );
 
   useEffect(() => {
     if (!canvasRef.current) {
@@ -86,7 +109,9 @@ export const useThreeSnakeRenderer = ({
 
     const bodyMesh = createLayerMesh(config.primaryColor);
     const headMesh = createLayerMesh(config.secondaryColor);
-    const foodMesh = createLayerMesh(config.birthColor);
+    const foodLowMesh = createLayerMesh(foodLowColor.getStyle());
+    const foodMidMesh = createLayerMesh(foodMidColor.getStyle());
+    const foodHighMesh = createLayerMesh(foodHighColor.getStyle());
 
     rendererRef.current = renderer;
     sceneRef.current = scene;
@@ -94,37 +119,49 @@ export const useThreeSnakeRenderer = ({
     meshRefs.current = {
       body: bodyMesh,
       head: headMesh,
-      food: foodMesh,
+      foodLow: foodLowMesh,
+      foodMid: foodMidMesh,
+      foodHigh: foodHighMesh,
     };
 
     return () => {
       disposeMeshMaterial(meshRefs.current.body);
       disposeMeshMaterial(meshRefs.current.head);
-      disposeMeshMaterial(meshRefs.current.food);
+      disposeMeshMaterial(meshRefs.current.foodLow);
+      disposeMeshMaterial(meshRefs.current.foodMid);
+      disposeMeshMaterial(meshRefs.current.foodHigh);
       meshRefs.current.body?.dispose();
       meshRefs.current.head?.dispose();
-      meshRefs.current.food?.dispose();
+      meshRefs.current.foodLow?.dispose();
+      meshRefs.current.foodMid?.dispose();
+      meshRefs.current.foodHigh?.dispose();
       geometry.dispose();
       renderer.dispose();
       rendererRef.current = null;
       sceneRef.current = null;
       cameraRef.current = null;
-      meshRefs.current = {body: null, head: null, food: null};
+      meshRefs.current = {body: null, head: null, foodLow: null, foodMid: null, foodHigh: null};
     };
-  }, [height, width]);
+  }, [foodHighColor, foodLowColor, foodMidColor, height, width]);
 
   useEffect(() => {
     const renderer = rendererRef.current;
     const scene = sceneRef.current;
     const camera = cameraRef.current;
-    const {body: bodyMesh, head: headMesh, food: foodMesh} = meshRefs.current;
-    if (!renderer || !scene || !camera || !bodyMesh || !headMesh || !foodMesh) {
+    const {
+      body: bodyMesh,
+      head: headMesh,
+      foodLow: foodLowMesh,
+      foodMid: foodMidMesh,
+      foodHigh: foodHighMesh,
+    } = meshRefs.current;
+    if (!renderer || !scene || !camera || !bodyMesh || !headMesh || !foodLowMesh || !foodMidMesh || !foodHighMesh) {
       return;
     }
 
     const resolvedFrame = simulationFrame ?? absoluteFrame ?? 0;
-    const cols = Math.max(12, Math.round(config.cellColumns));
-    const rows = Math.max(18, Math.round(config.cellRows));
+    const cols = Math.max(14, Math.round(config.cellColumns * SNAKE_GRID_WIDTH_RATIO));
+    const rows = Math.max(24, Math.round(config.cellRows * SNAKE_GRID_HEIGHT_RATIO));
     const cells = buildSnakeGridCells({
       cols,
       rows,
@@ -143,13 +180,18 @@ export const useThreeSnakeRenderer = ({
 
     (bodyMesh.material as THREE.MeshBasicMaterial).color.set(config.primaryColor);
     (headMesh.material as THREE.MeshBasicMaterial).color.set(config.secondaryColor);
-    (foodMesh.material as THREE.MeshBasicMaterial).color.set(config.birthColor);
+    (foodLowMesh.material as THREE.MeshBasicMaterial).color.copy(foodLowColor);
+    (foodMidMesh.material as THREE.MeshBasicMaterial).color.copy(foodMidColor);
+    (foodHighMesh.material as THREE.MeshBasicMaterial).color.copy(foodHighColor);
 
     let bodyCount = 0;
     let headCount = 0;
-    let foodCount = 0;
+    let foodLowCount = 0;
+    let foodMidCount = 0;
+    let foodHighCount = 0;
     cells.forEach((cell) => {
-      const inset = cell.tone === "food" ? 3 + config.cellPadding * 1.4 : 1.1 + config.cellPadding;
+      const isFood = cell.tone.startsWith("food");
+      const inset = isFood ? 2.4 + config.cellPadding * 1.15 : 1.1 + config.cellPadding;
       const drawWidth = Math.max(2, (cellWidth - inset * 2) * config.cellScale);
       const drawHeight = Math.max(2, (cellHeight - inset * 2) * config.cellScale);
       helper.position.set(
@@ -162,9 +204,15 @@ export const useThreeSnakeRenderer = ({
       if (cell.tone === "head") {
         headMesh.setMatrixAt(headCount, helper.matrix);
         headCount += 1;
-      } else if (cell.tone === "food") {
-        foodMesh.setMatrixAt(foodCount, helper.matrix);
-        foodCount += 1;
+      } else if (cell.tone === "food-low") {
+        foodLowMesh.setMatrixAt(foodLowCount, helper.matrix);
+        foodLowCount += 1;
+      } else if (cell.tone === "food-mid") {
+        foodMidMesh.setMatrixAt(foodMidCount, helper.matrix);
+        foodMidCount += 1;
+      } else if (cell.tone === "food-high") {
+        foodHighMesh.setMatrixAt(foodHighCount, helper.matrix);
+        foodHighCount += 1;
       } else {
         bodyMesh.setMatrixAt(bodyCount, helper.matrix);
         bodyCount += 1;
@@ -173,21 +221,28 @@ export const useThreeSnakeRenderer = ({
 
     bodyMesh.count = bodyCount;
     headMesh.count = headCount;
-    foodMesh.count = foodCount;
+    foodLowMesh.count = foodLowCount;
+    foodMidMesh.count = foodMidCount;
+    foodHighMesh.count = foodHighCount;
     bodyMesh.instanceMatrix.needsUpdate = true;
     headMesh.instanceMatrix.needsUpdate = true;
-    foodMesh.instanceMatrix.needsUpdate = true;
+    foodLowMesh.instanceMatrix.needsUpdate = true;
+    foodMidMesh.instanceMatrix.needsUpdate = true;
+    foodHighMesh.instanceMatrix.needsUpdate = true;
     renderer.render(scene, camera);
   }, [
     absoluteFrame,
-    config.birthColor,
     config.cellColumns,
     config.cellPadding,
     config.cellScale,
     config.cellRows,
     config.foodCount,
     config.primaryColor,
+    config.secondaryColor,
     config.stepEveryFrames,
+    foodHighColor,
+    foodLowColor,
+    foodMidColor,
     height,
     helper,
     modules,

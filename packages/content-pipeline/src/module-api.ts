@@ -64,7 +64,7 @@ export const DEFAULT_CELLULAR_EFFECT: CellularEffectConfig = {
   stepEveryFrames: 2,
   cellPadding: 0.5,
   cellScale: 1,
-  foodCount: 24,
+  foodCount: 30,
   cornerRadius: 0.45,
   edgeMode: "wrap",
   colorPreset: "mint-ice",
