@@ -887,6 +887,49 @@ Verification:
 
 ---
 
+## 22. 2026-04-30 Lights Beams Pulse Hero Pair Stabilization
+
+This pass stopped the `lights-beams` pulse variant from degenerating into large dark balls that rushed the camera and reset harshly.
+
+What changed:
+
+1. The pulse presentation was split away from the generic instanced orb field.
+   - `packages/content-pipeline/src/effects/lights-beams/core/createLightsMeshes.ts`
+   - `packages/content-pipeline/src/effects/lights-beams/lights-beams.types.ts`
+   - two dedicated hero orb meshes are now created for the pulse family path
+2. The pulse variant now updates a stable mid-ground hero pair instead of driving the main instanced orb layers toward the near plane.
+   - `packages/content-pipeline/src/effects/lights-beams/core/updateLightsInstances.ts`
+   - the pair keeps its relative spacing
+   - the pair is anchored against the ripple terrain instead of "flying into" the viewer
+   - the pulse path no longer reuses the old near-camera wrap behavior
+3. Pulse hero orb colors now come directly from the configured palette, instead of getting lost in the old dark instanced color read.
+   - left / right hero orbs now render as visible cyan / magenta solids in the effect lab
+4. Pulse-specific ground aura/rim layers are disabled so the stage no longer shows a giant halo disc around the pair.
+   - the result is closer to "two embedded solid orbs on the terrain" than "two lights inside a ring"
+5. The pulse camera motion was reduced to a bounded continuous dolly band.
+   - `packages/content-pipeline/src/effects/lights-beams/core/ThreeLightsEngine.ts`
+   - this removes the visible card/reset feel from the old pass
+
+Why this matters:
+
+1. The previous pulse implementation still behaved like foreground orbs were crossing the camera, which produced:
+   - large black silhouettes
+   - sudden near-plane growth
+   - visible reset/card-like jumps
+2. The new pulse path is now a dedicated hero-pair staging mode, which matches the current direction better:
+   - readable color
+   - stable spacing
+   - continuous motion
+   - less accidental screen-filling behavior
+
+Verification:
+
+1. `npm run lint`
+2. `npm run build`
+3. In-app browser inspection of `/effects/lights-beams` across multiple sampled frames after `Ignite Lights`
+
+---
+
 ## 22. 2026-04-30 Lights Beams Density And Palette Correction
 
 This pass corrected two recurring visual problems in `lights-beams`: too many near-field orbs suddenly filling the frame, and orb colors reading as dark / muddy instead of vivid.

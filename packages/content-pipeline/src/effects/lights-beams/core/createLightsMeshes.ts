@@ -25,6 +25,7 @@ const createLayer = ({
     blending: layerName === "core" ? THREE.NormalBlending : THREE.AdditiveBlending,
     wireframe: layerName === "accent",
     vertexColors: true,
+    fog: false,
   });
 
   const mesh = new THREE.InstancedMesh(geometry, material, Math.max(1, count));
@@ -114,6 +115,32 @@ const createGuidePlane = ({
     mesh,
     xOffset,
     zOffset,
+  } as const;
+};
+
+const createPulseHeroes = ({
+  root,
+}: {
+  root: THREE.Group;
+}) => {
+  const geometry = new THREE.SphereGeometry(1, 28, 28);
+  const materials = Array.from({length: 2}, () =>
+    new THREE.MeshBasicMaterial({
+      color: "#ffffff",
+      transparent: false,
+      fog: false,
+    }),
+  );
+  const meshes = materials.map((material) => {
+    const mesh = new THREE.Mesh(geometry, material);
+    mesh.visible = false;
+    root.add(mesh);
+    return mesh;
+  });
+
+  return {
+    materials,
+    meshes,
   } as const;
 };
 
@@ -246,6 +273,7 @@ export const createLightsMeshes = ({
   const starPoints = new THREE.Points(starGeometry, starMaterial);
   starPoints.frustumCulled = false;
   root.add(starPoints);
+  const pulseHeroes = createPulseHeroes({root});
 
   return {
     orbGeometry,
@@ -256,6 +284,7 @@ export const createLightsMeshes = ({
     horizonGeometry: horizon.geometry,
     horizonMaterial: horizon.material,
     horizonMesh,
+    pulseHeroes,
     signature: `orbs:${beamCount}`,
     stars: {
       colors: starColors,

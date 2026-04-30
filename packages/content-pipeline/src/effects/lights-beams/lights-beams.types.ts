@@ -63,6 +63,11 @@ export type ThreeLightsStarField = {
   positions: Float32Array;
 };
 
+export type ThreeLightsPulseHeroes = {
+  materials: THREE.MeshBasicMaterial[];
+  meshes: THREE.Mesh<THREE.SphereGeometry, THREE.MeshBasicMaterial>[];
+};
+
 export type ThreeLightsMeshBundle = {
   accent: LightsMeshLayer;
   core: LightsMeshLayer;
@@ -78,6 +83,7 @@ export type ThreeLightsMeshBundle = {
   horizonGeometry: THREE.CircleGeometry;
   horizonMaterial: THREE.MeshBasicMaterial;
   horizonMesh: THREE.Mesh<THREE.CircleGeometry, THREE.MeshBasicMaterial>;
+  pulseHeroes: ThreeLightsPulseHeroes;
   signature: string;
   stars: ThreeLightsStarField;
   surfaceAccent: LightsMeshLayer;
@@ -107,6 +113,7 @@ export type UpdateLightsInstancesInput = {
     | "surfaceAccent"
     | "surfaceDots"
   >;
+  pulseHeroes: ThreeLightsMeshBundle["pulseHeroes"];
   stars: ThreeLightsMeshBundle["stars"];
   seeds: LightsBeamSeed[];
 };

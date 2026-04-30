@@ -33,6 +33,8 @@ export const disposeThreeLights = ({
   bundle.horizonMaterial?.dispose();
   bundle.stars?.geometry?.dispose();
   bundle.stars?.material?.dispose();
+  bundle.pulseHeroes?.meshes?.forEach((mesh) => mesh.removeFromParent());
+  bundle.pulseHeroes?.materials?.forEach((material) => material?.dispose());
   bundle.glow?.mesh?.dispose();
   bundle.core?.mesh?.dispose();
   bundle.accent?.mesh?.dispose();

@@ -128,10 +128,10 @@ const computeOrbState = ({
   }
 
   if (variant === "pulse") {
-    const pairGap = 1.55;
+    const pairGap = 1.02;
     const pairX = laneSigned * pairGap + seed.drift * 0.12;
-    const rowDepth = -5.4 - depthIndex * 7.8;
-    const rowJitter = Math.sin(seed.phase) * 0.28;
+    const rowDepth = -11.8 - depthIndex * 2.8;
+    const rowJitter = Math.sin(seed.phase) * 0.08;
 
     return {
       x: pairX,
@@ -159,6 +159,7 @@ export const updateLightsInstances = ({
   frame,
   helper,
   meshes,
+  pulseHeroes,
   stars,
   seeds,
 }: UpdateLightsInstancesInput) => {
@@ -220,33 +221,83 @@ export const updateLightsInstances = ({
   const colorPrimary = new THREE.Color(config.primaryColor);
   const colorSecondary = new THREE.Color(config.secondaryColor);
   const colorAccent = new THREE.Color(config.accentColor);
+  const colorLift = new THREE.Color("#ffffff");
   const mixColor = new THREE.Color();
   const orbColorFar = new THREE.Color();
   const orbColorNear = new THREE.Color();
   const accentColorResolved = new THREE.Color();
+  const activeOrbSeeds = config.variant === "pulse" ? [] : seeds;
 
-  seeds.forEach((seed, index) => {
+  meshes.glow.mesh.count = activeOrbSeeds.length;
+  meshes.core.mesh.count = activeOrbSeeds.length;
+  meshes.accent.mesh.count = activeOrbSeeds.length;
+  meshes.groundAura.mesh.count = activeOrbSeeds.length;
+  meshes.groundGlow.mesh.count = activeOrbSeeds.length;
+  meshes.groundRim.mesh.count = activeOrbSeeds.length;
+
+  pulseHeroes.meshes.forEach((mesh) => {
+    mesh.visible = config.variant === "pulse";
+  });
+
+  if (config.variant === "pulse") {
+    pulseHeroes.meshes.forEach((mesh, index) => {
+      const seed = seeds[index];
+      if (!seed) {
+        mesh.visible = false;
+        return;
+      }
+
+      const state = computeOrbState({
+        index,
+        totalCount: Math.max(2, seeds.length),
+        seed,
+        variant: "pulse",
+      });
+      const displayZ = state.z + Math.sin(time * 0.12 + seed.phase) * 0.05;
+      const floorHeight = sampleFloorHeight(state.x, displayZ, time, config.spread);
+      const breathing = 0.86 + (Math.sin(time * (0.72 + seed.speed * 2.8) + seed.phase) + 1) * 0.08;
+      const visibility = sampleDepthVisibility(displayZ, nearLimit, totalDepth);
+      const laneMix = index === 0 ? 0.18 : 0.82;
+      const heroColor = new THREE.Color(config.primaryColor).lerp(new THREE.Color(config.accentColor), laneMix);
+      heroColor.lerp(new THREE.Color(config.secondaryColor), 0.08 + visibility.nearSoft * 0.12);
+
+      mesh.material.color.copy(heroColor);
+      mesh.position.set(state.x, -2.1 + floorHeight + 0.32, displayZ);
+      mesh.scale.setScalar((0.68 + visibility.nearSoft * 0.12) * choreography.orbGain * breathing);
+      mesh.visible = true;
+    });
+  }
+
+  activeOrbSeeds.forEach((seed, index) => {
     const state = computeOrbState({
       index,
       totalCount: seeds.length,
       seed,
       variant: config.variant,
     });
-    const displayZ = wrapDepth(state.z + travelOffset, nearLimit, totalDepth);
+    const isPulse = config.variant === "pulse";
+    const displayZ =
+      isPulse
+        ? state.z + Math.sin(time * 0.12 + seed.phase) * 0.05
+        : wrapDepth(state.z + travelOffset, nearLimit, totalDepth);
     const floorHeight = sampleFloorHeight(state.x, displayZ, time, config.spread);
     const breathing = 0.72 + (Math.sin(time * (1.05 + seed.speed * 5.5) + seed.phase) + 1) * 0.24;
     const visibility = sampleDepthVisibility(displayZ, nearLimit, totalDepth);
+    const fadeStart = isPulse ? nearLimit + 8 : 2.2;
+    const fadeEnd = isPulse ? nearLimit + 9 : nearLimit;
     const nearExitFade =
-      displayZ <= 2.2 ? 1 : Math.max(0, 1 - (displayZ - 2.2) / (nearLimit - 2.2));
+      displayZ <= fadeStart ? 1 : Math.max(0, 1 - (displayZ - fadeStart) / (fadeEnd - fadeStart));
     const highlightFactor = Math.min(1, visibility.nearSoft + choreography.nearBias * visibility.near);
     const rimOnlyFactor = 0.42 + highlightFactor * 0.58;
     const nearBreathBoost = 1 + visibility.nearSoft * 0.28;
+    const heroLift = isPulse ? 0.44 : 0;
     const paletteMix = 0.18 + seed.lane * 0.38;
     const accentMix = 0.18 + seed.depth * 0.26;
     mixColor.copy(colorPrimary).lerp(colorSecondary, paletteMix);
     orbColorFar.copy(colorSecondary).lerp(colorAccent, 0.06 + seed.depth * 0.1);
     orbColorNear.copy(colorPrimary).lerp(colorAccent, 0.08 + accentMix * 0.34);
     orbColorNear.lerp(colorSecondary, 0.12 + seed.lane * 0.12);
+    orbColorNear.lerp(colorLift, isPulse ? 0.52 : 0.06);
     accentColorResolved.copy(colorAccent).lerp(colorPrimary, 0.12 + visibility.nearSoft * 0.18);
 
     (["glow", "core", "accent"] as const).forEach((layerName) => {
@@ -259,7 +310,7 @@ export const updateLightsInstances = ({
             ? coreRadius
             : Math.max(0.08, coreRadius * 0.36);
 
-      const farPresence = farOrbBase + visibility.far * farOrbGain;
+      const farPresence = isPulse ? 0.84 : farOrbBase + visibility.far * farOrbGain;
       const presence =
         (tuning.nearMix * highlightFactor + (1 - tuning.nearMix) * farPresence) * nearExitFade;
       const nearScaleBoost =
@@ -268,14 +319,36 @@ export const updateLightsInstances = ({
           : layerName === "core"
             ? 1 + visibility.nearSoft * 0.42
             : 1 + visibility.nearSoft * 0.18;
+      const pulseNearScaleDamping =
+        isPulse
+          ? layerName === "core"
+            ? 0
+            : layerName === "accent"
+              ? 0
+              : 0.12
+          : 1;
       const embedOffset =
         layerName === "core"
           ? radius * tuning.scale * 0.26
           : layerName === "accent"
             ? radius * tuning.scale * 0.2
             : radius * tuning.scale * 0.08;
+      const resolvedEmbedOffset =
+        isPulse ? embedOffset * 0.2 : embedOffset;
+      const pulseHeroScale =
+        isPulse
+          ? layerName === "core"
+            ? 0.38
+            : layerName === "accent"
+              ? 0.18
+              : 0.04
+          : 1;
 
-      helper.position.set(state.x, -2.1 + floorHeight + tuning.yOffset - embedOffset, displayZ);
+      helper.position.set(
+        state.x,
+        -2.1 + floorHeight + tuning.yOffset - resolvedEmbedOffset + heroLift,
+        displayZ,
+      );
       helper.rotation.set(0, seed.baseAngle + time * 0.08, 0);
       helper.scale.setScalar(
         radius *
@@ -283,18 +356,21 @@ export const updateLightsInstances = ({
           choreography.orbGain *
           (breathing + tuning.pulseBias) *
           nearBreathBoost *
-          nearScaleBoost *
+          (1 + (nearScaleBoost - 1) * pulseNearScaleDamping) *
+          pulseHeroScale *
           (layerName === "accent" ? rimOnlyFactor * nearExitFade : presence),
       );
       helper.updateMatrix();
       mesh.setMatrixAt(index, helper.matrix);
 
       const resolvedColor =
-        layerName === "core"
-          ? orbColorNear
-          : layerName === "accent"
-            ? accentColorResolved
-            : orbColorFar;
+        isPulse
+          ? colorLift
+          : layerName === "core"
+            ? orbColorNear
+            : layerName === "accent"
+              ? accentColorResolved
+              : orbColorFar;
       mesh.setColorAt(index, resolvedColor);
     });
 

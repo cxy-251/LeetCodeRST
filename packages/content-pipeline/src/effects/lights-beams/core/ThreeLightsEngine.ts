@@ -142,12 +142,19 @@ export class ThreeLightsEngine {
     const config = this.resolveConfig(params.modules);
     const seeds = this.resolveSeeds(config.beamCount, params.seed);
     this.ensureBundle(config);
+    const isPulse = config.variant === "pulse";
 
     // Keep orb materials neutral so per-instance colors stay vivid instead of
     // getting multiplied down into muddy / near-black tones.
-    this.bundle.core.material.color.set("#ffffff");
-    this.bundle.glow.material.color.set("#ffffff");
-    this.bundle.accent.material.color.set("#ffffff");
+    if (isPulse) {
+      this.bundle.core.material.color.set(config.primaryColor);
+      this.bundle.glow.material.color.set(config.secondaryColor);
+      this.bundle.accent.material.color.set(config.accentColor);
+    } else {
+      this.bundle.core.material.color.set("#ffffff");
+      this.bundle.glow.material.color.set("#ffffff");
+      this.bundle.accent.material.color.set("#ffffff");
+    }
     const atmosphereFill = new THREE.Color("#102233");
     const atmosphereLines = new THREE.Color("#3e7aa4");
     const atmosphereAccent = new THREE.Color("#6aa7d9");
@@ -191,7 +198,12 @@ export class ThreeLightsEngine {
     };
     const forwardPhase = (time * 0.11) % 1;
     const cameraBoost = 1 + surgeSection * 0.22 + pulseSection * 0.08;
-    const cameraDolly = forwardPhase * 12.6 * cameraBoost;
+    // Pulse is now a stable hero-pair presentation instead of a rush-toward-camera pass.
+    // Keep the camera moving, but bound it to a continuous dolly band so the pair never
+    // explodes at the near plane or visibly "resets" after crossing the viewer.
+    const cameraDolly = isPulse
+      ? 0.28 + (Math.sin(time * 0.16) + 1) * 0.12
+      : forwardPhase * 12.6 * cameraBoost;
     applyForwardDollyRig({
       camera: this.camera,
       target: this.lookAtTarget,
@@ -264,6 +276,7 @@ export class ThreeLightsEngine {
         surfaceAccent: this.bundle.surfaceAccent,
         surfaceDots: this.bundle.surfaceDots,
       },
+      pulseHeroes: this.bundle.pulseHeroes,
       stars: this.bundle.stars,
       seeds,
     });
