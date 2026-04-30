@@ -258,6 +258,11 @@ npm run build
    - 目标是避免默认状态下镜头推进过急
 58. `lights-beams` 的前进参照物已从中轴转向两侧：
    - 中轴导向线已移除
+59. `snake-grid` 已从单食物升级为确定性多食物池：
+   - 同屏可维持多个 food block
+   - 蛇会自动追踪最近目标
+   - editor / Remotion / effect-only 渲染共用同一套食物生成逻辑
+   - effect lab 已新增 `Food Count` 参数
 59. 当前已新增源码交付打包入口：
    - `npm run release:package`
    - 基于 git 已跟踪文件生成可交付目录

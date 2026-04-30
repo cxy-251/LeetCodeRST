@@ -10,6 +10,10 @@ import {
   getSceneVisualIds,
   getThemePalette,
   resolveBackgroundMotionConfig,
+  resolveCellularEffectConfig,
+  resolveLightsEffectConfig,
+  resolveParticleEffectConfig,
+  resolveRubiksEffectConfig,
   resolveSceneBackgroundEffectId,
   resolveTextMotionConfig,
 } from "@paper-to-video/content-pipeline";
@@ -497,7 +501,31 @@ export const createEffectStageModel = ({
   simulationFrame: number;
 }): EffectLayoutResolution => {
   const palette = getThemePalette(manifest.theme.id);
-  const backgroundMotion = resolveBackgroundMotionConfig(manifest.modules);
+  const mergedModules = {
+    ...(manifest.modules ?? {}),
+    ...(moduleOverrides ?? {}),
+    cellularEffect: {
+      ...(manifest.modules?.cellularEffect ?? {}),
+      ...(moduleOverrides?.cellularEffect ?? {}),
+    },
+    particleEffect: {
+      ...(manifest.modules?.particleEffect ?? {}),
+      ...(moduleOverrides?.particleEffect ?? {}),
+    },
+    lightsEffect: {
+      ...(manifest.modules?.lightsEffect ?? {}),
+      ...(moduleOverrides?.lightsEffect ?? {}),
+    },
+    rubiksEffect: {
+      ...(manifest.modules?.rubiksEffect ?? {}),
+      ...(moduleOverrides?.rubiksEffect ?? {}),
+    },
+    backgroundMotion: {
+      ...(manifest.modules?.backgroundMotion ?? {}),
+      ...(moduleOverrides?.backgroundMotion ?? {}),
+    },
+  };
+  const backgroundMotion = resolveBackgroundMotionConfig(mergedModules);
   const visualLayout = getCoverLayoutConfig("cover-full", backgroundMotion.panTravelPercent);
 
   /**
@@ -512,28 +540,12 @@ export const createEffectStageModel = ({
     coverImageSrc: null,
     effectId: effectRoute.effectId,
     modules: {
-      ...(manifest.modules ?? {}),
-      ...(moduleOverrides ?? {}),
-      cellularEffect: {
-        ...(manifest.modules?.cellularEffect ?? {}),
-        ...(moduleOverrides?.cellularEffect ?? {}),
-      },
-      particleEffect: {
-        ...(manifest.modules?.particleEffect ?? {}),
-        ...(moduleOverrides?.particleEffect ?? {}),
-      },
-      lightsEffect: {
-        ...(manifest.modules?.lightsEffect ?? {}),
-        ...(moduleOverrides?.lightsEffect ?? {}),
-      },
-      rubiksEffect: {
-        ...(manifest.modules?.rubiksEffect ?? {}),
-        ...(moduleOverrides?.rubiksEffect ?? {}),
-      },
-      backgroundMotion: {
-        ...(manifest.modules?.backgroundMotion ?? {}),
-        ...(moduleOverrides?.backgroundMotion ?? {}),
-      },
+      ...mergedModules,
+      cellularEffect: resolveCellularEffectConfig(mergedModules),
+      particleEffect: resolveParticleEffectConfig(mergedModules),
+      lightsEffect: resolveLightsEffectConfig(mergedModules),
+      rubiksEffect: resolveRubiksEffectConfig(mergedModules),
+      backgroundMotion: resolveBackgroundMotionConfig(mergedModules),
     },
     palette,
     renderHeight: EFFECT_LAB_RENDER_HEIGHT,

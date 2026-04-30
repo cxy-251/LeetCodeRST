@@ -64,6 +64,7 @@ export const DEFAULT_CELLULAR_EFFECT: CellularEffectConfig = {
   stepEveryFrames: 2,
   cellPadding: 0.5,
   cellScale: 1,
+  foodCount: 5,
   cornerRadius: 0.45,
   edgeMode: "wrap",
   colorPreset: "mint-ice",
@@ -394,6 +395,7 @@ export const resolveCellularEffectConfig = (
 
   return {
     ...resolved,
+    foodCount: Math.max(1, Math.round(resolved.foodCount)),
     primaryColor: hslToHex(
       resolved.primaryHue,
       resolved.primarySaturation,

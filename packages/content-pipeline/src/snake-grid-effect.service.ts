@@ -38,6 +38,20 @@ const wrapDistance = (from: number, to: number, size: number) => {
 
 const pointKey = (point: Point) => `${point.x},${point.y}`;
 
+const getFoodDistanceScore = ({
+  from,
+  food,
+  cols,
+  rows,
+}: {
+  from: Point;
+  food: Point;
+  cols: number;
+  rows: number;
+}) => {
+  return wrapDistance(from.x, food.x, cols) + wrapDistance(from.y, food.y, rows);
+};
+
 const sortDirectionsTowardFood = ({
   head,
   food,
@@ -52,10 +66,8 @@ const sortDirectionsTowardFood = ({
   return [...DIRECTIONS].sort((left, right) => {
     const leftPoint = stepForward(head, left, cols, rows);
     const rightPoint = stepForward(head, right, cols, rows);
-    const leftScore =
-      wrapDistance(leftPoint.x, food.x, cols) + wrapDistance(leftPoint.y, food.y, rows);
-    const rightScore =
-      wrapDistance(rightPoint.x, food.x, cols) + wrapDistance(rightPoint.y, food.y, rows);
+    const leftScore = getFoodDistanceScore({from: leftPoint, food, cols, rows});
+    const rightScore = getFoodDistanceScore({from: rightPoint, food, cols, rows});
 
     return leftScore - rightScore;
   });
@@ -65,24 +77,27 @@ const spawnFood = ({
   cols,
   rows,
   seed,
-  eatenCount,
+  spawnCursor,
   snake,
+  existingFoods,
 }: {
   cols: number;
   rows: number;
   seed: number;
-  eatenCount: number;
+  spawnCursor: number;
   snake: Point[];
+  existingFoods: Point[];
 }) => {
-  const occupied = new Set(snake.map(pointKey));
+  const occupied = new Set([...snake, ...existingFoods].map(pointKey));
 
   /**
-   * Food stays alive until the snake reaches it. When spawning a new target,
-   * we walk a deterministic sequence so editor and final render stay identical.
+   * Food stays alive until the snake reaches it. We spawn each item from a
+   * deterministic cursor so the editor preview, Remotion render, and effect-only
+   * output all reuse the exact same food field without React state.
    */
   for (let attempt = 0; attempt < cols * rows; attempt += 1) {
-    const x = Math.floor(hashNoise(eatenCount * 37 + attempt * 11 + 7, seed) * cols) % cols;
-    const y = Math.floor(hashNoise(eatenCount * 53 + attempt * 17 + 19, seed) * rows) % rows;
+    const x = Math.floor(hashNoise(spawnCursor * 37 + attempt * 11 + 7, seed) * cols) % cols;
+    const y = Math.floor(hashNoise(spawnCursor * 53 + attempt * 17 + 19, seed) * rows) % rows;
     const candidate = {x, y};
 
     if (!occupied.has(pointKey(candidate))) {
@@ -93,21 +108,46 @@ const spawnFood = ({
   return {x: 0, y: 0};
 };
 
+const findNearestFood = ({
+  head,
+  foods,
+  cols,
+  rows,
+}: {
+  head: Point;
+  foods: Point[];
+  cols: number;
+  rows: number;
+}) => {
+  return foods.reduce<Point | null>((closest, candidate) => {
+    if (!closest) {
+      return candidate;
+    }
+
+    return getFoodDistanceScore({from: head, food: candidate, cols, rows}) <
+      getFoodDistanceScore({from: head, food: closest, cols, rows})
+      ? candidate
+      : closest;
+  }, null);
+};
+
 const chooseNextHead = ({
   snake,
-  food,
+  targetFood,
   cols,
   rows,
 }: {
   snake: Point[];
-  food: Point;
+  targetFood: Point | null;
   cols: number;
   rows: number;
 }) => {
   const head = snake[0];
   const movableBody = snake.slice(0, -1);
   const blocked = new Set(movableBody.map(pointKey));
-  const ordered = sortDirectionsTowardFood({head, food, cols, rows});
+  const ordered = targetFood
+    ? sortDirectionsTowardFood({head, food: targetFood, cols, rows})
+    : [...DIRECTIONS];
 
   for (const direction of ordered) {
     const next = stepForward(head, direction, cols, rows);
@@ -131,15 +171,17 @@ export const buildSnakeGridCells = ({
   rows,
   frame,
   seed,
+  foodCount,
 }: {
   cols: number;
   rows: number;
   frame: number;
   seed: number;
+  foodCount: number;
 }) => {
   const steps = Math.max(0, Math.floor(frame / 3));
   let targetLength = 18;
-  let eatenCount = 0;
+  let spawnCursor = 0;
   const snake: Point[] = [];
 
   for (let index = 0; index < targetLength; index += 1) {
@@ -149,17 +191,43 @@ export const buildSnakeGridCells = ({
     });
   }
 
-  let food = spawnFood({cols, rows, seed, eatenCount, snake});
+  const foods: Point[] = [];
+
+  const refillFoods = () => {
+    while (foods.length < foodCount) {
+      foods.push(
+        spawnFood({
+          cols,
+          rows,
+          seed,
+          spawnCursor,
+          snake,
+          existingFoods: foods,
+        }),
+      );
+      spawnCursor += 1;
+    }
+  };
+
+  refillFoods();
 
   for (let step = 0; step < steps; step += 1) {
-    const nextHead = chooseNextHead({snake, food, cols, rows});
+    const targetFood = findNearestFood({
+      head: snake[0],
+      foods,
+      cols,
+      rows,
+    });
+    const nextHead = chooseNextHead({snake, targetFood, cols, rows});
     snake.unshift(nextHead);
-    const ateFood = nextHead.x === food.x && nextHead.y === food.y;
+    const eatenFoodIndex = foods.findIndex(
+      (food) => nextHead.x === food.x && nextHead.y === food.y,
+    );
 
-    if (ateFood) {
-      eatenCount += 1;
+    if (eatenFoodIndex >= 0) {
+      foods.splice(eatenFoodIndex, 1);
       targetLength += 2;
-      food = spawnFood({cols, rows, seed, eatenCount, snake});
+      refillFoods();
     }
 
     while (snake.length > targetLength) {
@@ -172,7 +240,9 @@ export const buildSnakeGridCells = ({
     y: cell.y,
     tone: index === 0 ? "head" : "body",
   }));
-  cells.push({...food, tone: "food"});
+  foods.forEach((food) => {
+    cells.push({...food, tone: "food"});
+  });
 
   return cells;
 };

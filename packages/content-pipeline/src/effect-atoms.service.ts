@@ -471,6 +471,17 @@ export const SNAKE_EFFECT_CONTROLS: EffectControlDefinition[] = [
     max: 8,
     step: 1,
   },
+  {
+    id: "snake-food-count",
+    kind: "range",
+    label: "Food Count",
+    description: "Controls how many food blocks stay active at the same time inside the grid.",
+    section: "cellularEffect",
+    field: "foodCount",
+    min: 1,
+    max: 12,
+    step: 1,
+  },
 ];
 
 export const createModuleOverride = ({

@@ -75,7 +75,7 @@ export const useThreeSnakeRenderer = ({
         transparent: true,
         opacity: 1,
       });
-      const mesh = new THREE.InstancedMesh(geometry, material, 96);
+      const mesh = new THREE.InstancedMesh(geometry, material, 256);
       mesh.frustumCulled = false;
       mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
       scene.add(mesh);
@@ -128,6 +128,7 @@ export const useThreeSnakeRenderer = ({
       rows,
       frame: Math.floor(resolvedFrame / Math.max(1, config.stepEveryFrames)),
       seed,
+      foodCount: config.foodCount,
     });
     const cellWidth = width / cols;
     const cellHeight = height / rows;
@@ -182,6 +183,7 @@ export const useThreeSnakeRenderer = ({
     config.cellPadding,
     config.cellScale,
     config.cellRows,
+    config.foodCount,
     config.primaryColor,
     config.stepEveryFrames,
     height,

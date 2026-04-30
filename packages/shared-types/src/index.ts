@@ -104,6 +104,7 @@ export type CellularEffectConfig = {
   stepEveryFrames: number;
   cellPadding: number;
   cellScale: number;
+  foodCount: number;
   cornerRadius: number;
   edgeMode: "wrap";
   colorPreset: "mint-ice" | "sunset-pop" | "violet-cyan";
