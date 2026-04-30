@@ -915,6 +915,10 @@ What changed:
    - the hero pair now uses dedicated `MeshStandardMaterial` meshes instead of reusing the instanced orb path
    - a simple ambient + key + rim light rig was added for this family so the pulse pair reads as a solid object
    - floor fill now writes depth, letting the terrain visually eat into the lower hemisphere so the pair feels more embedded in the ripple field
+7. The pulse hero pair was lowered further into the terrain after visual review.
+   - `packages/content-pipeline/src/effects/lights-beams/core/updateLightsInstances.ts`
+   - the pair now sits closer to the ripple surface while keeping stable spacing and solid color
+   - this makes the presentation read more like two embedded ground lights than two floating spheres
 
 Why this matters:
 

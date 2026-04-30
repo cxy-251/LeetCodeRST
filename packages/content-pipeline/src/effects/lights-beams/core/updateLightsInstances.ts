@@ -262,8 +262,8 @@ export const updateLightsInstances = ({
       heroColor.lerp(new THREE.Color(config.secondaryColor), 0.08 + visibility.nearSoft * 0.12);
 
       mesh.material.color.copy(heroColor);
-      mesh.position.set(state.x, -2.1 + floorHeight + 0.18, displayZ);
-      mesh.scale.setScalar((0.68 + visibility.nearSoft * 0.12) * choreography.orbGain * breathing);
+      mesh.position.set(state.x, -2.1 + floorHeight + 0.05, displayZ);
+      mesh.scale.setScalar((0.72 + visibility.nearSoft * 0.1) * choreography.orbGain * breathing);
       mesh.visible = true;
     });
   }
