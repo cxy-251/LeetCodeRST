@@ -51,20 +51,20 @@ export const useThreeSnakeRenderer = ({
   const helper = useMemo(() => new THREE.Object3D(), []);
   const config = resolveCellularEffectConfig(modules);
   const foodLowColor = useMemo(
-    () => new THREE.Color().setHSL((((config.birthHue + 54) % 360) + 360) / 360, 0.92, 0.76),
+    () => new THREE.Color().setHSL((((config.birthHue + 40) % 360) + 360) / 360, 0.88, 0.72),
     [config.birthHue],
   );
   const foodMidColor = useMemo(
     () =>
       new THREE.Color().setHSL(
-        (((config.birthHue + 6) % 360) + 360) / 360,
+        (((config.birthHue + 0) % 360) + 360) / 360,
         Math.min(1, config.birthSaturation / 100),
         Math.min(1, Math.max(0, config.birthLightness / 100)),
       ),
     [config.birthHue, config.birthLightness, config.birthSaturation],
   );
   const foodHighColor = useMemo(
-    () => new THREE.Color().setHSL((((config.birthHue - 38) % 360) + 360) / 360, 1, 0.7),
+    () => new THREE.Color().setHSL((((config.birthHue - 34) % 360) + 360) / 360, 1, 0.66),
     [config.birthHue],
   );
 

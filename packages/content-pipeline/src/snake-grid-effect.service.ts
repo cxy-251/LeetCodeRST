@@ -304,7 +304,7 @@ export const buildSnakeGridCells = ({
   seed: number;
   foodCount: number;
 }) => {
-  const steps = Math.max(0, Math.floor(frame / 3));
+  const steps = Math.max(0, Math.floor(frame / 2));
   let targetLength = 18;
   let spawnCursor = 0;
   const wrap = false;
