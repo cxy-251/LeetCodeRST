@@ -64,8 +64,8 @@ export type ThreeLightsStarField = {
 };
 
 export type ThreeLightsPulseHeroes = {
-  materials: THREE.MeshBasicMaterial[];
-  meshes: THREE.Mesh<THREE.SphereGeometry, THREE.MeshBasicMaterial>[];
+  materials: THREE.MeshStandardMaterial[];
+  meshes: THREE.Mesh<THREE.SphereGeometry, THREE.MeshStandardMaterial>[];
 };
 
 export type ThreeLightsMeshBundle = {

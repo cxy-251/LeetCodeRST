@@ -909,6 +909,12 @@ What changed:
 5. The pulse camera motion was reduced to a bounded continuous dolly band.
    - `packages/content-pipeline/src/effects/lights-beams/core/ThreeLightsEngine.ts`
    - this removes the visible card/reset feel from the old pass
+6. The pulse hero pair was then upgraded from flat dark balls to lit solid meshes.
+   - `packages/content-pipeline/src/effects/lights-beams/core/createLightsMeshes.ts`
+   - `packages/content-pipeline/src/effects/lights-beams/core/ThreeLightsEngine.ts`
+   - the hero pair now uses dedicated `MeshStandardMaterial` meshes instead of reusing the instanced orb path
+   - a simple ambient + key + rim light rig was added for this family so the pulse pair reads as a solid object
+   - floor fill now writes depth, letting the terrain visually eat into the lower hemisphere so the pair feels more embedded in the ripple field
 
 Why this matters:
 
@@ -921,6 +927,7 @@ Why this matters:
    - stable spacing
    - continuous motion
    - less accidental screen-filling behavior
+3. By separating pulse heroes from the generic orb field, later work can keep refining this "two large embedded lights" language without destabilizing the fan/bloom families.
 
 Verification:
 

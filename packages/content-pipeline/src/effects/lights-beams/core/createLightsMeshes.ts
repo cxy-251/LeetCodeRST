@@ -125,10 +125,13 @@ const createPulseHeroes = ({
 }) => {
   const geometry = new THREE.SphereGeometry(1, 28, 28);
   const materials = Array.from({length: 2}, () =>
-    new THREE.MeshBasicMaterial({
+    new THREE.MeshStandardMaterial({
       color: "#ffffff",
-      transparent: false,
+      emissive: "#ffffff",
+      emissiveIntensity: 0.36,
       fog: false,
+      metalness: 0.04,
+      roughness: 0.26,
     }),
   );
   const meshes = materials.map((material) => {
@@ -172,8 +175,8 @@ export const createLightsMeshes = ({
     const fillMaterial = new THREE.MeshBasicMaterial({
       color: coreColor,
       transparent: true,
-      opacity: 0.08,
-      depthWrite: false,
+      opacity: 0.1,
+      depthWrite: true,
       side: THREE.DoubleSide,
     });
     const fillMesh = new THREE.Mesh(geometry, fillMaterial);

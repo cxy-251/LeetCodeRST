@@ -50,6 +50,9 @@ export class ThreeLightsEngine {
   private readonly renderer: THREE.WebGLRenderer;
   private readonly scene: THREE.Scene;
   private readonly camera: THREE.PerspectiveCamera;
+  private readonly ambientLight: THREE.AmbientLight;
+  private readonly keyLight: THREE.DirectionalLight;
+  private readonly rimLight: THREE.DirectionalLight;
   private readonly composer: EffectComposer;
   private readonly bloomPass: UnrealBloomPass;
   private readonly root = new THREE.Group();
@@ -98,6 +101,12 @@ export class ThreeLightsEngine {
     this.scene = new THREE.Scene();
     this.scene.add(this.root);
     this.scene.fog = new THREE.FogExp2(0x071320, 0.03);
+    this.ambientLight = new THREE.AmbientLight("#7fbaff", 0.95);
+    this.keyLight = new THREE.DirectionalLight("#dff6ff", 1.7);
+    this.keyLight.position.set(-4.5, 7.5, 5.2);
+    this.rimLight = new THREE.DirectionalLight("#ff9fe6", 0.9);
+    this.rimLight.position.set(4.8, 2.1, 3.6);
+    this.scene.add(this.ambientLight, this.keyLight, this.rimLight);
     this.camera = new THREE.PerspectiveCamera(34, options.width / options.height, 0.1, 100);
     this.camera.position.set(0, 1.38, 7.6);
     this.camera.lookAt(0, -0.58, -15.2);
