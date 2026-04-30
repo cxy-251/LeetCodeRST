@@ -16,12 +16,23 @@ type FoodItem = Point & {
   tone: "food-low" | "food-mid" | "food-high";
 };
 
+type MoveEvaluation = {
+  nextHead: Point;
+  areaScore: number;
+  bestFoodScore: number;
+  tailDistance: number;
+  tailReachable: boolean;
+  immediateFoodValue: number;
+};
+
 const DIRECTIONS: Direction[] = ["up", "right", "down", "left"];
 
 const hashNoise = (value: number, seed: number) => {
   const result = Math.sin(value * 12.9898 + seed * 78.233) * 43758.5453;
   return result - Math.floor(result);
 };
+
+const pointKey = (point: Point) => `${point.x},${point.y}`;
 
 const stepForward = (
   point: Point,
@@ -44,29 +55,43 @@ const stepForward = (
 
 const manhattanDistance = (from: Point, to: Point) => Math.abs(to.x - from.x) + Math.abs(to.y - from.y);
 
-const pointKey = (point: Point) => `${point.x},${point.y}`;
-
-const sortDirectionsTowardFood = ({
-  head,
-  food,
+const buildDistanceField = ({
+  start,
   cols,
   rows,
   wrap,
+  blocked,
 }: {
-  head: Point;
-  food: Point;
+  start: Point;
   cols: number;
   rows: number;
   wrap: boolean;
+  blocked: Set<string>;
 }) => {
-  return [...DIRECTIONS].sort((left, right) => {
-    const leftPoint = stepForward(head, left, cols, rows, wrap) ?? head;
-    const rightPoint = stepForward(head, right, cols, rows, wrap) ?? head;
-    const leftScore = manhattanDistance(leftPoint, food);
-    const rightScore = manhattanDistance(rightPoint, food);
+  const queue: Point[] = [start];
+  const visited = new Map<string, number>([[pointKey(start), 0]]);
 
-    return leftScore - rightScore;
-  });
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    const currentDistance = visited.get(pointKey(current)) ?? 0;
+
+    for (const direction of DIRECTIONS) {
+      const next = stepForward(current, direction, cols, rows, wrap);
+      if (!next) {
+        continue;
+      }
+
+      const key = pointKey(next);
+      if (blocked.has(key) || visited.has(key)) {
+        continue;
+      }
+
+      visited.set(key, currentDistance + 1);
+      queue.push(next);
+    }
+  }
+
+  return visited;
 };
 
 const pickFoodProfile = (spawnCursor: number, seed: number): Pick<FoodItem, "value" | "tone"> => {
@@ -100,9 +125,8 @@ const spawnFood = ({
   const occupied = new Set([...snake, ...existingFoods].map(pointKey));
 
   /**
-   * Food stays alive until the snake reaches it. We spawn each item from a
-   * deterministic cursor so editor preview, Remotion render, and effect-only
-   * output share the exact same arena state.
+   * Deterministic food spawning keeps the editor preview, Remotion render, and
+   * effect-only output on the exact same board without runtime React state.
    */
   for (let attempt = 0; attempt < cols * rows; attempt += 1) {
     const x = Math.floor(hashNoise(spawnCursor * 37 + attempt * 11 + 7, seed) * cols) % cols;
@@ -125,59 +149,93 @@ const spawnFood = ({
   } satisfies FoodItem;
 };
 
-const findBestFoodTarget = ({
-  head,
-  foods,
+const simulateSnakeMove = ({
+  snake,
+  nextHead,
+  nextLength,
 }: {
-  head: Point;
-  foods: FoodItem[];
+  snake: Point[];
+  nextHead: Point;
+  nextLength: number;
 }) => {
-  return foods.reduce<FoodItem | null>((closest, candidate) => {
-    if (!closest) {
-      return candidate;
+  const nextSnake = [nextHead, ...snake];
+  while (nextSnake.length > nextLength) {
+    nextSnake.pop();
+  }
+  return nextSnake;
+};
+
+const evaluateMove = ({
+  nextHead,
+  snake,
+  foods,
+  cols,
+  rows,
+  wrap,
+}: {
+  nextHead: Point;
+  snake: Point[];
+  foods: FoodItem[];
+  cols: number;
+  rows: number;
+  wrap: boolean;
+}): MoveEvaluation => {
+  const eatenFood = foods.find((food) => food.x === nextHead.x && food.y === nextHead.y) ?? null;
+  const nextLength = snake.length + (eatenFood?.value ?? 0);
+  const nextSnake = simulateSnakeMove({snake, nextHead, nextLength});
+  const tail = nextSnake[nextSnake.length - 1];
+  const blocked = new Set(nextSnake.slice(0, -1).map(pointKey));
+  const distances = buildDistanceField({
+    start: nextHead,
+    cols,
+    rows,
+    wrap,
+    blocked,
+  });
+  const tailDistance = distances.get(pointKey(tail)) ?? Number.POSITIVE_INFINITY;
+  const remainingFoods = eatenFood
+    ? foods.filter((food) => !(food.x === eatenFood.x && food.y === eatenFood.y))
+    : foods;
+
+  let bestFoodScore = Number.NEGATIVE_INFINITY;
+  remainingFoods.forEach((food) => {
+    const distance = distances.get(pointKey(food));
+    if (distance === undefined) {
+      return;
     }
 
-    const candidateScore = manhattanDistance(head, candidate) - candidate.value * 0.9;
-    const closestScore = manhattanDistance(head, closest) - closest.value * 0.9;
-
-    if (candidateScore === closestScore) {
-      return candidate.value > closest.value ? candidate : closest;
+    const score = food.value * 10 - distance * 0.9;
+    if (score > bestFoodScore) {
+      bestFoodScore = score;
     }
+  });
 
-    return candidateScore < closestScore ? candidate : closest;
-  }, null);
+  return {
+    nextHead,
+    areaScore: distances.size,
+    bestFoodScore,
+    tailDistance,
+    tailReachable: Number.isFinite(tailDistance),
+    immediateFoodValue: eatenFood?.value ?? 0,
+  };
 };
 
 const chooseNextHead = ({
   snake,
-  targetFood,
+  foods,
   cols,
   rows,
   wrap,
 }: {
   snake: Point[];
-  targetFood: FoodItem | null;
+  foods: FoodItem[];
   cols: number;
   rows: number;
   wrap: boolean;
 }) => {
   const head = snake[0];
-  const movableBody = snake.slice(0, -1);
-  const blocked = new Set(movableBody.map(pointKey));
-  const ordered = targetFood
-    ? sortDirectionsTowardFood({head, food: targetFood, cols, rows, wrap})
-    : [...DIRECTIONS];
-
-  for (const direction of ordered) {
-    const next = stepForward(head, direction, cols, rows, wrap);
-    if (!next) {
-      continue;
-    }
-
-    if (!blocked.has(pointKey(next))) {
-      return next;
-    }
-  }
+  const blocked = new Set(snake.slice(0, -1).map(pointKey));
+  const evaluations: MoveEvaluation[] = [];
 
   for (const direction of DIRECTIONS) {
     const next = stepForward(head, direction, cols, rows, wrap);
@@ -185,12 +243,52 @@ const chooseNextHead = ({
       continue;
     }
 
-    if (!blocked.has(pointKey(next))) {
-      return next;
+    if (blocked.has(pointKey(next))) {
+      continue;
     }
+
+    evaluations.push(
+      evaluateMove({
+        nextHead: next,
+        snake,
+        foods,
+        cols,
+        rows,
+        wrap,
+      }),
+    );
   }
 
-  return stepForward(head, ordered[0] ?? "right", cols, rows, wrap) ?? head;
+  if (evaluations.length === 0) {
+    return head;
+  }
+
+  /**
+   * We only take food-chasing moves that still leave an escape route to the tail.
+   * When that is not possible, we pick the move that keeps the largest reachable
+   * area so the snake avoids folding itself into a dead pocket.
+   */
+  evaluations.sort((left, right) => {
+    if (left.tailReachable !== right.tailReachable) {
+      return left.tailReachable ? -1 : 1;
+    }
+
+    if (left.immediateFoodValue !== right.immediateFoodValue) {
+      return right.immediateFoodValue - left.immediateFoodValue;
+    }
+
+    if (left.bestFoodScore !== right.bestFoodScore) {
+      return right.bestFoodScore - left.bestFoodScore;
+    }
+
+    if (left.areaScore !== right.areaScore) {
+      return right.areaScore - left.areaScore;
+    }
+
+    return left.tailDistance - right.tailDistance;
+  });
+
+  return evaluations[0]?.nextHead ?? head;
 };
 
 export const buildSnakeGridCells = ({
@@ -240,11 +338,13 @@ export const buildSnakeGridCells = ({
   refillFoods();
 
   for (let step = 0; step < steps; step += 1) {
-    const targetFood = findBestFoodTarget({
-      head: snake[0],
+    const nextHead = chooseNextHead({
+      snake,
       foods,
+      cols,
+      rows,
+      wrap,
     });
-    const nextHead = chooseNextHead({snake, targetFood, cols, rows, wrap});
     snake.unshift(nextHead);
     const eatenFoodIndex = foods.findIndex(
       (food) => nextHead.x === food.x && nextHead.y === food.y,
@@ -253,11 +353,6 @@ export const buildSnakeGridCells = ({
     if (eatenFoodIndex >= 0) {
       const eatenFood = foods[eatenFoodIndex];
       foods.splice(eatenFoodIndex, 1);
-      /**
-       * Different food tiers act like score multipliers. High-value pickups grow
-       * the snake faster so the effect reads like a quick clear rather than a
-       * slow single-target chase.
-       */
       targetLength += eatenFood?.value ?? 1;
       refillFoods();
     }
