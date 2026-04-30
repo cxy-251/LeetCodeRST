@@ -11,22 +11,75 @@ type Point = {
   y: number;
 };
 
-type FoodItem = {
-  index: number;
+type FoodItem = Point & {
   value: 1 | 2 | 4;
   tone: Extract<SnakeCellTone, "food-low" | "food-mid" | "food-high">;
 };
 
+type SnakeStrategy = "survival-chase" | "safe-loop";
+
+type SnakeState = {
+  snake: Point[];
+  foods: FoodItem[];
+  targetLength: number;
+  spawnCursor: number;
+};
+
+type SnakeSimulationCache = {
+  key: string;
+  strategy: SnakeStrategy;
+  cols: number;
+  rows: number;
+  seed: number;
+  foodCount: number;
+  frame: number;
+  layout: LoopLayout;
+  maxLength: number;
+  state: SnakeState;
+};
+
 type LoopLayout = {
   order: Point[];
+  indexByKey: Map<string, number>;
 };
+
+type MoveEvaluation = {
+  nextHead: Point;
+  areaScore: number;
+  foodDistance: number;
+  foodValue: number;
+  tailDistance: number;
+  tailReachable: boolean;
+};
+
+const simulationCache = new Map<string, SnakeSimulationCache>();
+
+const DIRECTIONS: Point[] = [
+  {x: 0, y: -1},
+  {x: 1, y: 0},
+  {x: 0, y: 1},
+  {x: -1, y: 0},
+];
 
 const hashNoise = (value: number, seed: number) => {
   const result = Math.sin(value * 12.9898 + seed * 78.233) * 43758.5453;
   return result - Math.floor(result);
 };
 
+const pointKey = (point: Point) => `${point.x},${point.y}`;
+
+const pointsEqual = (left: Point, right: Point) => left.x === right.x && left.y === right.y;
+
 const modulo = (value: number, size: number) => ((value % size) + size) % size;
+
+const clonePoint = (point: Point) => ({x: point.x, y: point.y});
+
+const cloneState = (state: SnakeState): SnakeState => ({
+  snake: state.snake.map(clonePoint),
+  foods: state.foods.map((food) => ({...food})),
+  targetLength: state.targetLength,
+  spawnCursor: state.spawnCursor,
+});
 
 const buildSafeLoop = (cols: number, rows: number): LoopLayout => {
   const order: Point[] = [];
@@ -52,7 +105,10 @@ const buildSafeLoop = (cols: number, rows: number): LoopLayout => {
     order.push({x: 0, y});
   }
 
-  return {order};
+  return {
+    order,
+    indexByKey: new Map(order.map((point, index) => [pointKey(point), index])),
+  };
 };
 
 const pickFoodProfile = (spawnCursor: number, seed: number): Pick<FoodItem, "value" | "tone"> => {
@@ -68,32 +124,192 @@ const pickFoodProfile = (spawnCursor: number, seed: number): Pick<FoodItem, "val
   return {value: 1, tone: "food-low"};
 };
 
-const spawnFoodOnLoop = ({
-  layout,
+const getNeighbor = (point: Point, direction: Point, cols: number, rows: number): Point | null => {
+  const next = {
+    x: point.x + direction.x,
+    y: point.y + direction.y,
+  };
+
+  if (next.x < 0 || next.x >= cols || next.y < 0 || next.y >= rows) {
+    return null;
+  }
+
+  return next;
+};
+
+const buildDistanceField = ({
+  start,
+  cols,
+  rows,
+  blocked,
+  allowTargetKey,
+}: {
+  start: Point;
+  cols: number;
+  rows: number;
+  blocked: Set<string>;
+  allowTargetKey?: string;
+}) => {
+  const queue: Point[] = [start];
+  const distances = new Map<string, number>([[pointKey(start), 0]]);
+
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    const currentDistance = distances.get(pointKey(current)) ?? 0;
+
+    for (const direction of DIRECTIONS) {
+      const next = getNeighbor(current, direction, cols, rows);
+      if (!next) {
+        continue;
+      }
+
+      const key = pointKey(next);
+      if (distances.has(key)) {
+        continue;
+      }
+
+      if (blocked.has(key) && key !== allowTargetKey) {
+        continue;
+      }
+
+      distances.set(key, currentDistance + 1);
+      queue.push(next);
+    }
+  }
+
+  return distances;
+};
+
+const buildShortestPath = ({
+  start,
+  target,
+  cols,
+  rows,
+  blocked,
+  allowTargetKey,
+}: {
+  start: Point;
+  target: Point;
+  cols: number;
+  rows: number;
+  blocked: Set<string>;
+  allowTargetKey?: string;
+}) => {
+  const targetKey = pointKey(target);
+  const queue: Point[] = [start];
+  const visited = new Set<string>([pointKey(start)]);
+  const previous = new Map<string, string>();
+  const pointByKey = new Map<string, Point>([[pointKey(start), start]]);
+
+  while (queue.length > 0) {
+    const current = queue.shift()!;
+    const currentKey = pointKey(current);
+    if (currentKey === targetKey) {
+      break;
+    }
+
+    for (const direction of DIRECTIONS) {
+      const next = getNeighbor(current, direction, cols, rows);
+      if (!next) {
+        continue;
+      }
+
+      const key = pointKey(next);
+      if (visited.has(key)) {
+        continue;
+      }
+
+      if (blocked.has(key) && key !== allowTargetKey) {
+        continue;
+      }
+
+      visited.add(key);
+      previous.set(key, currentKey);
+      pointByKey.set(key, next);
+      queue.push(next);
+    }
+  }
+
+  if (!visited.has(targetKey)) {
+    return null;
+  }
+
+  const path: Point[] = [];
+  let cursor = targetKey;
+  while (cursor !== pointKey(start)) {
+    const point = pointByKey.get(cursor);
+    if (!point) {
+      break;
+    }
+    path.unshift(point);
+    cursor = previous.get(cursor) ?? pointKey(start);
+  }
+
+  return path;
+};
+
+const simulatePath = ({
+  snake,
+  foods,
+  path,
+  maxLength,
+}: {
+  snake: Point[];
+  foods: FoodItem[];
+  path: Point[];
+  maxLength: number;
+}) => {
+  const nextSnake = snake.map(clonePoint);
+  const nextFoods = foods.map((food) => ({...food}));
+  let targetLength = snake.length;
+
+  for (const step of path) {
+    const foodIndex = nextFoods.findIndex((food) => pointsEqual(food, step));
+    nextSnake.unshift(clonePoint(step));
+
+    if (foodIndex >= 0) {
+      const food = nextFoods[foodIndex];
+      nextFoods.splice(foodIndex, 1);
+      targetLength = Math.min(maxLength, targetLength + (food?.value ?? 1));
+    }
+
+    while (nextSnake.length > targetLength) {
+      nextSnake.pop();
+    }
+  }
+
+  return {
+    snake: nextSnake,
+    foods: nextFoods,
+    targetLength,
+  };
+};
+
+const spawnFood = ({
+  cols,
+  rows,
   seed,
   spawnCursor,
-  snakeIndices,
-  foods,
+  snake,
+  existingFoods,
 }: {
-  layout: LoopLayout;
+  cols: number;
+  rows: number;
   seed: number;
   spawnCursor: number;
-  snakeIndices: number[];
-  foods: FoodItem[];
+  snake: Point[];
+  existingFoods: FoodItem[];
 }) => {
-  const occupied = new Set<number>([...snakeIndices, ...foods.map((food) => food.index)]);
-  const cycleLength = layout.order.length;
+  const occupied = new Set([...snake, ...existingFoods].map(pointKey));
+  const capacity = cols * rows;
 
-  /**
-   * The snake now follows a deterministic safe loop. We only spawn food on
-   * unoccupied indices of that same loop so the editor preview, Remotion render,
-   * and effect-only render all stay perfectly in sync.
-   */
-  for (let attempt = 0; attempt < cycleLength; attempt += 1) {
-    const index = Math.floor(hashNoise(spawnCursor * 37 + attempt * 11 + 7, seed) * cycleLength) % cycleLength;
-    if (!occupied.has(index)) {
+  for (let attempt = 0; attempt < capacity; attempt += 1) {
+    const x = Math.floor(hashNoise(spawnCursor * 37 + attempt * 11 + 7, seed) * cols) % cols;
+    const y = Math.floor(hashNoise(spawnCursor * 53 + attempt * 17 + 19, seed) * rows) % rows;
+    const candidate = {x, y};
+    if (!occupied.has(pointKey(candidate))) {
       return {
-        index,
+        ...candidate,
         ...pickFoodProfile(spawnCursor + attempt, seed),
       } satisfies FoodItem;
     }
@@ -102,95 +318,447 @@ const spawnFoodOnLoop = ({
   return null;
 };
 
+const refillFoods = ({
+  state,
+  cols,
+  rows,
+  seed,
+  foodCount,
+}: {
+  state: SnakeState;
+  cols: number;
+  rows: number;
+  seed: number;
+  foodCount: number;
+}) => {
+  const freeCells = cols * rows - state.snake.length;
+  const desiredFoodCount = Math.min(foodCount, Math.max(0, freeCells - 1));
+
+  while (state.foods.length > desiredFoodCount) {
+    state.foods.pop();
+  }
+
+  while (state.foods.length < desiredFoodCount) {
+    const nextFood = spawnFood({
+      cols,
+      rows,
+      seed,
+      spawnCursor: state.spawnCursor,
+      snake: state.snake,
+      existingFoods: state.foods,
+    });
+
+    if (!nextFood) {
+      break;
+    }
+
+    state.foods.push(nextFood);
+    state.spawnCursor += 1;
+  }
+};
+
+const buildInitialState = ({
+  cols,
+  rows,
+  seed,
+  foodCount,
+  layout,
+  maxLength,
+}: {
+  cols: number;
+  rows: number;
+  seed: number;
+  foodCount: number;
+  layout: LoopLayout;
+  maxLength: number;
+}) => {
+  const startLength = Math.min(18, maxLength);
+  const startIndex = Math.floor(hashNoise(seed * 13.1 + 7, seed + 11) * layout.order.length) % layout.order.length;
+  const snake: Point[] = [];
+
+  for (let index = 0; index < startLength; index += 1) {
+    const point = layout.order[modulo(startIndex - index, layout.order.length)] ?? layout.order[0]!;
+    snake.push(clonePoint(point));
+  }
+
+  const state: SnakeState = {
+    snake,
+    foods: [],
+    targetLength: startLength,
+    spawnCursor: 0,
+  };
+
+  refillFoods({
+    state,
+    cols,
+    rows,
+    seed,
+    foodCount,
+  });
+
+  return state;
+};
+
+const applySingleStep = ({
+  state,
+  nextHead,
+  maxLength,
+}: {
+  state: SnakeState;
+  nextHead: Point;
+  maxLength: number;
+}) => {
+  state.snake.unshift(clonePoint(nextHead));
+  const eatenFoodIndex = state.foods.findIndex((food) => pointsEqual(food, nextHead));
+  if (eatenFoodIndex >= 0) {
+    const eatenFood = state.foods[eatenFoodIndex];
+    state.foods.splice(eatenFoodIndex, 1);
+    state.targetLength = Math.min(maxLength, state.targetLength + (eatenFood?.value ?? 1));
+  }
+
+  while (state.snake.length > state.targetLength) {
+    state.snake.pop();
+  }
+};
+
+const pickSafeFoodPath = ({
+  state,
+  cols,
+  rows,
+  maxLength,
+}: {
+  state: SnakeState;
+  cols: number;
+  rows: number;
+  maxLength: number;
+}) => {
+  const head = state.snake[0]!;
+  const bodyBlocked = new Set(state.snake.slice(0, -1).map(pointKey));
+  const tail = state.snake[state.snake.length - 1]!;
+  const tailKey = pointKey(tail);
+  let bestPath: Point[] | null = null;
+  let bestScore = Number.NEGATIVE_INFINITY;
+
+  for (const food of state.foods) {
+    const foodPath = buildShortestPath({
+      start: head,
+      target: food,
+      cols,
+      rows,
+      blocked: bodyBlocked,
+      allowTargetKey: tailKey,
+    });
+
+    if (!foodPath || foodPath.length === 0) {
+      continue;
+    }
+
+    const simulated = simulatePath({
+      snake: state.snake,
+      foods: state.foods,
+      path: foodPath,
+      maxLength,
+    });
+    const nextHead = simulated.snake[0]!;
+    const nextTail = simulated.snake[simulated.snake.length - 1]!;
+    const nextBlocked = new Set(simulated.snake.slice(0, -1).map(pointKey));
+    const tailDistances = buildDistanceField({
+      start: nextHead,
+      cols,
+      rows,
+      blocked: nextBlocked,
+      allowTargetKey: pointKey(nextTail),
+    });
+    const tailDistance = tailDistances.get(pointKey(nextTail));
+    if (tailDistance === undefined) {
+      continue;
+    }
+
+    /**
+     * Survival stays the top priority. We only take a food route if we can still
+     * reach the tail after the whole chase, which keeps an escape corridor alive
+     * instead of greedily sealing the snake into its own body.
+     */
+    const score = food.value * 1000 - foodPath.length * 24 + tailDistances.size * 0.6 - tailDistance * 0.3;
+    if (score > bestScore) {
+      bestScore = score;
+      bestPath = foodPath;
+    }
+  }
+
+  return bestPath;
+};
+
+const evaluateFallbackMoves = ({
+  state,
+  cols,
+  rows,
+}: {
+  state: SnakeState;
+  cols: number;
+  rows: number;
+}) => {
+  const head = state.snake[0]!;
+  const currentTail = state.snake[state.snake.length - 1]!;
+  const currentTailKey = pointKey(currentTail);
+  const blocked = new Set(state.snake.slice(0, -1).map(pointKey));
+  const evaluations: MoveEvaluation[] = [];
+
+  for (const direction of DIRECTIONS) {
+    const next = getNeighbor(head, direction, cols, rows);
+    if (!next) {
+      continue;
+    }
+
+    const key = pointKey(next);
+    if (blocked.has(key) && key !== currentTailKey) {
+      continue;
+    }
+
+    const food = state.foods.find((item) => pointsEqual(item, next));
+    const nextSnake = [next, ...state.snake];
+    let nextLength = state.snake.length;
+    if (food) {
+      nextLength += food.value;
+    }
+    while (nextSnake.length > nextLength) {
+      nextSnake.pop();
+    }
+
+    const nextTail = nextSnake[nextSnake.length - 1]!;
+    const nextBlocked = new Set(nextSnake.slice(0, -1).map(pointKey));
+    const distances = buildDistanceField({
+      start: next,
+      cols,
+      rows,
+      blocked: nextBlocked,
+      allowTargetKey: pointKey(nextTail),
+    });
+    const tailDistance = distances.get(pointKey(nextTail));
+    let bestFoodDistance = Number.POSITIVE_INFINITY;
+    let bestFoodValue = 0;
+
+    state.foods.forEach((candidate) => {
+      if (pointsEqual(candidate, next)) {
+        return;
+      }
+      const distance = distances.get(pointKey(candidate));
+      if (distance === undefined) {
+        return;
+      }
+      if (distance < bestFoodDistance || (distance === bestFoodDistance && candidate.value > bestFoodValue)) {
+        bestFoodDistance = distance;
+        bestFoodValue = candidate.value;
+      }
+    });
+
+    evaluations.push({
+      nextHead: next,
+      areaScore: distances.size,
+      foodDistance: Number.isFinite(bestFoodDistance) ? bestFoodDistance : 9999,
+      foodValue: bestFoodValue + (food?.value ?? 0),
+      tailDistance: tailDistance ?? Number.POSITIVE_INFINITY,
+      tailReachable: tailDistance !== undefined,
+    });
+  }
+
+  evaluations.sort((left, right) => {
+    if (left.tailReachable !== right.tailReachable) {
+      return left.tailReachable ? -1 : 1;
+    }
+    if (left.areaScore !== right.areaScore) {
+      return right.areaScore - left.areaScore;
+    }
+    if (left.foodValue !== right.foodValue) {
+      return right.foodValue - left.foodValue;
+    }
+    if (left.foodDistance !== right.foodDistance) {
+      return left.foodDistance - right.foodDistance;
+    }
+    return left.tailDistance - right.tailDistance;
+  });
+
+  return evaluations[0]?.nextHead ?? head;
+};
+
+const chooseSurvivalChaseMove = ({
+  state,
+  cols,
+  rows,
+  layout,
+  maxLength,
+}: {
+  state: SnakeState;
+  cols: number;
+  rows: number;
+  layout: LoopLayout;
+  maxLength: number;
+}) => {
+  const safeFoodPath = pickSafeFoodPath({
+    state,
+    cols,
+    rows,
+    maxLength,
+  });
+  if (safeFoodPath && safeFoodPath.length > 0) {
+    return safeFoodPath[0]!;
+  }
+
+  const head = state.snake[0]!;
+  const tail = state.snake[state.snake.length - 1]!;
+  const bodyBlocked = new Set(state.snake.slice(0, -1).map(pointKey));
+  const tailPath = buildShortestPath({
+    start: head,
+    target: tail,
+    cols,
+    rows,
+    blocked: bodyBlocked,
+    allowTargetKey: pointKey(tail),
+  });
+  if (tailPath && tailPath.length > 0) {
+    return tailPath[0]!;
+  }
+
+  const loopIndex = layout.indexByKey.get(pointKey(head)) ?? 0;
+  const loopNext = layout.order[modulo(loopIndex + 1, layout.order.length)];
+  if (loopNext) {
+    const tailKey = pointKey(tail);
+    const blocked = new Set(state.snake.slice(0, -1).map(pointKey));
+    if (!blocked.has(pointKey(loopNext)) || pointKey(loopNext) === tailKey) {
+      return clonePoint(loopNext);
+    }
+  }
+
+  return evaluateFallbackMoves({
+    state,
+    cols,
+    rows,
+  });
+};
+
+const chooseSafeLoopMove = ({
+  state,
+  layout,
+}: {
+  state: SnakeState;
+  layout: LoopLayout;
+}) => {
+  const head = state.snake[0]!;
+  const loopIndex = layout.indexByKey.get(pointKey(head)) ?? 0;
+  return clonePoint(layout.order[modulo(loopIndex + 1, layout.order.length)] ?? layout.order[0]!);
+};
+
+const advanceSimulation = ({
+  cache,
+  targetFrame,
+  cols,
+  rows,
+  seed,
+  foodCount,
+}: {
+  cache: SnakeSimulationCache;
+  targetFrame: number;
+  cols: number;
+  rows: number;
+  seed: number;
+  foodCount: number;
+}) => {
+  while (cache.frame < targetFrame) {
+    const nextHead =
+      cache.strategy === "safe-loop"
+        ? chooseSafeLoopMove({state: cache.state, layout: cache.layout})
+        : chooseSurvivalChaseMove({
+            state: cache.state,
+            cols,
+            rows,
+            layout: cache.layout,
+            maxLength: cache.maxLength,
+          });
+
+    applySingleStep({
+      state: cache.state,
+      nextHead,
+      maxLength: cache.maxLength,
+    });
+    refillFoods({
+      state: cache.state,
+      cols,
+      rows,
+      seed,
+      foodCount,
+    });
+    cache.frame += 1;
+  }
+};
+
 export const buildSnakeGridCells = ({
   cols,
   rows,
   frame,
   seed,
   foodCount,
+  strategy = "survival-chase",
 }: {
   cols: number;
   rows: number;
   frame: number;
   seed: number;
   foodCount: number;
+  strategy?: SnakeStrategy;
 }) => {
-  const loop = buildSafeLoop(cols, rows);
-  const cycleLength = loop.order.length;
-  const steps = Math.max(0, Math.floor(frame));
-  const maxLength = Math.max(16, cycleLength - Math.max(8, Math.min(cycleLength - 1, foodCount + 6)));
-  let targetLength = Math.min(18, maxLength);
-  let spawnCursor = 0;
-  const startIndex = Math.floor(hashNoise(seed * 13.1 + 7, seed + 11) * cycleLength) % cycleLength;
-  const snakeIndices: number[] = [];
+  const resolvedStrategy = strategy ?? "survival-chase";
+  const resolvedFrame = Math.max(0, Math.floor(frame));
+  const cacheKey = `${resolvedStrategy}:${cols}:${rows}:${seed}:${foodCount}`;
+  let cache = simulationCache.get(cacheKey);
 
-  /**
-   * Initializing the body as a contiguous segment on the loop guarantees that
-   * every subsequent step stays safe as long as we keep following the same loop.
-   */
-  for (let index = 0; index < targetLength; index += 1) {
-    snakeIndices.push(modulo(startIndex - index, cycleLength));
-  }
-
-  const foods: FoodItem[] = [];
-
-  const refillFoods = () => {
-    const desiredFoodCount = Math.min(foodCount, Math.max(0, cycleLength - snakeIndices.length - 2));
-    while (foods.length > desiredFoodCount) {
-      foods.pop();
-    }
-
-    while (foods.length < desiredFoodCount) {
-      const nextFood = spawnFoodOnLoop({
-        layout: loop,
+  if (!cache || resolvedFrame < cache.frame) {
+    const layout = buildSafeLoop(cols, rows);
+    const maxLength =
+      resolvedStrategy === "safe-loop"
+        ? Math.max(16, layout.order.length - 1)
+        : Math.max(16, cols * rows - 1);
+    cache = {
+      key: cacheKey,
+      strategy: resolvedStrategy,
+      cols,
+      rows,
+      seed,
+      foodCount,
+      frame: 0,
+      layout,
+      maxLength,
+      state: buildInitialState({
+        cols,
+        rows,
         seed,
-        spawnCursor,
-        snakeIndices,
-        foods,
-      });
-
-      if (!nextFood) {
-        break;
-      }
-
-      foods.push(nextFood);
-      spawnCursor += 1;
-    }
-  };
-
-  refillFoods();
-
-  for (let step = 0; step < steps; step += 1) {
-    const nextHeadIndex = modulo(snakeIndices[0] + 1, cycleLength);
-    const eatenFoodIndex = foods.findIndex((food) => food.index === nextHeadIndex);
-    if (eatenFoodIndex >= 0) {
-      const eatenFood = foods[eatenFoodIndex];
-      foods.splice(eatenFoodIndex, 1);
-      targetLength = Math.min(maxLength, targetLength + (eatenFood?.value ?? 1));
-    }
-
-    snakeIndices.unshift(nextHeadIndex);
-    while (snakeIndices.length > targetLength) {
-      snakeIndices.pop();
-    }
-
-    refillFoods();
+        foodCount,
+        layout,
+        maxLength,
+      }),
+    };
+    simulationCache.set(cacheKey, cache);
   }
 
-  const cells: SnakeCell[] = snakeIndices.map((index, cellIndex) => {
-    const point = loop.order[index] ?? loop.order[0] ?? {x: 0, y: 0};
-    return {
-      x: point.x,
-      y: point.y,
-      tone: cellIndex === 0 ? "head" : "body",
-    };
+  advanceSimulation({
+    cache,
+    targetFrame: resolvedFrame,
+    cols,
+    rows,
+    seed,
+    foodCount,
   });
+  const state = cloneState(cache.state);
 
-  foods.forEach((food) => {
-    const point = loop.order[food.index] ?? loop.order[0] ?? {x: 0, y: 0};
+  const cells: SnakeCell[] = state.snake.map((cell, index) => ({
+    x: cell.x,
+    y: cell.y,
+    tone: index === 0 ? "head" : "body",
+  }));
+
+  state.foods.forEach((food) => {
     cells.push({
-      x: point.x,
-      y: point.y,
+      x: food.x,
+      y: food.y,
       tone: food.tone,
     });
   });

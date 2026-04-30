@@ -173,6 +173,7 @@ export const useThreeSnakeRenderer = ({
       frame: Math.floor(resolvedFrame / Math.max(1, config.stepEveryFrames)),
       seed,
       foodCount: config.foodCount,
+      strategy: config.snakeStrategy,
     });
     const cellWidth = width / cols;
     const cellHeight = height / rows;
@@ -242,6 +243,7 @@ export const useThreeSnakeRenderer = ({
     config.cellScale,
     config.cellRows,
     config.foodCount,
+    config.snakeStrategy,
     config.primaryColor,
     config.secondaryColor,
     config.stepEveryFrames,

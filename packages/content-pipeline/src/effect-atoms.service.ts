@@ -384,6 +384,18 @@ export const RUBIKS_EFFECT_CONTROLS: EffectControlDefinition[] = [
 
 export const SNAKE_EFFECT_CONTROLS: EffectControlDefinition[] = [
   {
+    id: "snake-strategy",
+    kind: "select",
+    label: "Routing Mode",
+    description: "Choose between the smarter survival-first route and the deterministic safe loop fallback.",
+    section: "cellularEffect",
+    field: "snakeStrategy",
+    options: [
+      {label: "Survival Chase", value: "survival-chase"},
+      {label: "Safe Loop", value: "safe-loop"},
+    ],
+  },
+  {
     id: "snake-primary-hue",
     kind: "range",
     label: "Primary Hue",
