@@ -304,7 +304,12 @@ export const buildSnakeGridCells = ({
   seed: number;
   foodCount: number;
 }) => {
-  const steps = Math.max(0, Math.floor(frame / 2));
+  /**
+   * The editor control already scales input frames by `stepEveryFrames`.
+   * Keeping another hidden `/ 2` here made the snake feel like it was slowing
+   * down over time even when the slider stayed at its fastest setting.
+   */
+  const steps = Math.max(0, Math.floor(frame));
   let targetLength = 18;
   let spawnCursor = 0;
   const wrap = false;
