@@ -65,7 +65,7 @@ export const DEFAULT_CELLULAR_EFFECT: CellularEffectConfig = {
   cellPadding: 0.5,
   cellScale: 1,
   foodCount: 30,
-  snakeStrategy: "survival-chase",
+  snakeStrategy: "row-sweep",
   cornerRadius: 0.45,
   edgeMode: "wrap",
   colorPreset: "mint-ice",

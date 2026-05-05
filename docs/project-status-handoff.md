@@ -369,6 +369,14 @@ npm run build
    - 刷食物会优先落在当前安全前向弧段里，减少长蛇后期只转圈不进食的情况
    - 只有占用率显著变高后，`survival-chase` 才会强制以追尾保命为首要策略
    - 长蛇阶段会优先吃距离更近、吃完后仍能保留安全区和尾巴通路的食物
+78. `snake-grid` 现已拆成三种可切换路线模式：
+   - `row-sweep`：默认模式，稳定回行/扫行，配合更近的前向刷食物
+   - `survival-chase`：前期更积极追食物，长度上来后自动切回安全回行
+   - `safe-loop`：保留原保底解法，严格按安全闭环巡航
+79. `snake-grid` 当前三种模式都已做长帧模拟验证：
+   - `row-sweep`：3000 帧内 `collisionFrames = 0`
+   - `survival-chase`：3000 帧内 `collisionFrames = 0`
+   - `safe-loop`：3000 帧内 `collisionFrames = 0`
 75. `produce:paper-urls` 与 `prepare:latest-ai-batch` 已支持：
    - `--cover-selection-mode`
    - `--background-dir`

@@ -392,6 +392,7 @@ export const SNAKE_EFFECT_CONTROLS: EffectControlDefinition[] = [
     field: "snakeStrategy",
     options: [
       {label: "Survival Chase", value: "survival-chase"},
+      {label: "Row Sweep", value: "row-sweep"},
       {label: "Safe Loop", value: "safe-loop"},
     ],
   },

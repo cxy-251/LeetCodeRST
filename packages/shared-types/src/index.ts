@@ -105,7 +105,7 @@ export type CellularEffectConfig = {
   cellPadding: number;
   cellScale: number;
   foodCount: number;
-  snakeStrategy: "survival-chase" | "safe-loop";
+  snakeStrategy: "survival-chase" | "row-sweep" | "safe-loop";
   cornerRadius: number;
   edgeMode: "wrap";
   colorPreset: "mint-ice" | "sunset-pop" | "violet-cyan";
