@@ -7,6 +7,7 @@ import type {ThreeLifeEffectProps} from "./three-life-effect.types";
 type SnakeMeshRefs = {
   body: THREE.InstancedMesh | null;
   head: THREE.InstancedMesh | null;
+  collision: THREE.InstancedMesh | null;
   foodLow: THREE.InstancedMesh | null;
   foodMid: THREE.InstancedMesh | null;
   foodHigh: THREE.InstancedMesh | null;
@@ -49,6 +50,7 @@ export const useThreeSnakeRenderer = ({
   const meshRefs = useRef<SnakeMeshRefs>({
     body: null,
     head: null,
+    collision: null,
     foodLow: null,
     foodMid: null,
     foodHigh: null,
@@ -114,6 +116,7 @@ export const useThreeSnakeRenderer = ({
 
     const bodyMesh = createLayerMesh(config.primaryColor);
     const headMesh = createLayerMesh(config.secondaryColor);
+    const collisionMesh = createLayerMesh("#ff425f");
     const foodLowMesh = createLayerMesh(foodLowColor.getStyle());
     const foodMidMesh = createLayerMesh(foodMidColor.getStyle());
     const foodHighMesh = createLayerMesh(foodHighColor.getStyle());
@@ -124,6 +127,7 @@ export const useThreeSnakeRenderer = ({
     meshRefs.current = {
       body: bodyMesh,
       head: headMesh,
+      collision: collisionMesh,
       foodLow: foodLowMesh,
       foodMid: foodMidMesh,
       foodHigh: foodHighMesh,
@@ -132,11 +136,13 @@ export const useThreeSnakeRenderer = ({
     return () => {
       disposeMeshMaterial(meshRefs.current.body);
       disposeMeshMaterial(meshRefs.current.head);
+      disposeMeshMaterial(meshRefs.current.collision);
       disposeMeshMaterial(meshRefs.current.foodLow);
       disposeMeshMaterial(meshRefs.current.foodMid);
       disposeMeshMaterial(meshRefs.current.foodHigh);
       meshRefs.current.body?.dispose();
       meshRefs.current.head?.dispose();
+      meshRefs.current.collision?.dispose();
       meshRefs.current.foodLow?.dispose();
       meshRefs.current.foodMid?.dispose();
       meshRefs.current.foodHigh?.dispose();
@@ -145,7 +151,7 @@ export const useThreeSnakeRenderer = ({
       rendererRef.current = null;
       sceneRef.current = null;
       cameraRef.current = null;
-      meshRefs.current = {body: null, head: null, foodLow: null, foodMid: null, foodHigh: null};
+      meshRefs.current = {body: null, head: null, collision: null, foodLow: null, foodMid: null, foodHigh: null};
     };
   }, [foodHighColor, foodLowColor, foodMidColor, height, width]);
 
@@ -156,11 +162,12 @@ export const useThreeSnakeRenderer = ({
     const {
       body: bodyMesh,
       head: headMesh,
+      collision: collisionMesh,
       foodLow: foodLowMesh,
       foodMid: foodMidMesh,
       foodHigh: foodHighMesh,
     } = meshRefs.current;
-    if (!renderer || !scene || !camera || !bodyMesh || !headMesh || !foodLowMesh || !foodMidMesh || !foodHighMesh) {
+    if (!renderer || !scene || !camera || !bodyMesh || !headMesh || !collisionMesh || !foodLowMesh || !foodMidMesh || !foodHighMesh) {
       return;
     }
 
@@ -192,6 +199,7 @@ export const useThreeSnakeRenderer = ({
 
     let bodyCount = 0;
     let headCount = 0;
+    let collisionCount = 0;
     let foodLowCount = 0;
     let foodMidCount = 0;
     let foodHighCount = 0;
@@ -210,6 +218,9 @@ export const useThreeSnakeRenderer = ({
       if (cell.tone === "head") {
         headMesh.setMatrixAt(headCount, helper.matrix);
         headCount += 1;
+      } else if (cell.tone === "collision") {
+        collisionMesh.setMatrixAt(collisionCount, helper.matrix);
+        collisionCount += 1;
       } else if (cell.tone === "food-low") {
         foodLowMesh.setMatrixAt(foodLowCount, helper.matrix);
         foodLowCount += 1;
@@ -227,11 +238,13 @@ export const useThreeSnakeRenderer = ({
 
     bodyMesh.count = bodyCount;
     headMesh.count = headCount;
+    collisionMesh.count = collisionCount;
     foodLowMesh.count = foodLowCount;
     foodMidMesh.count = foodMidCount;
     foodHighMesh.count = foodHighCount;
     bodyMesh.instanceMatrix.needsUpdate = true;
     headMesh.instanceMatrix.needsUpdate = true;
+    collisionMesh.instanceMatrix.needsUpdate = true;
     foodLowMesh.instanceMatrix.needsUpdate = true;
     foodMidMesh.instanceMatrix.needsUpdate = true;
     foodHighMesh.instanceMatrix.needsUpdate = true;

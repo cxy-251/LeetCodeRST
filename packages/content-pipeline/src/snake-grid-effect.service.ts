@@ -1,4 +1,4 @@
-type SnakeCellTone = "head" | "body" | "food-low" | "food-mid" | "food-high";
+type SnakeCellTone = "head" | "body" | "collision" | "food-low" | "food-mid" | "food-high";
 
 type SnakeCell = {
   x: number;
@@ -449,6 +449,7 @@ const pickSafeFoodPath = ({
   const tailKey = pointKey(tail);
   let bestPath: Point[] | null = null;
   let bestScore = Number.NEGATIVE_INFINITY;
+  const occupancyRatio = state.snake.length / Math.max(1, cols * rows);
 
   for (const food of state.foods) {
     const foodPath = buildShortestPath({
@@ -485,6 +486,20 @@ const pickSafeFoodPath = ({
       continue;
     }
 
+    const maxChaseDistance =
+      occupancyRatio > 0.32 ? 2 : occupancyRatio > 0.24 ? 3 : occupancyRatio > 0.16 ? 4 : 8;
+    if (foodPath.length > maxChaseDistance) {
+      continue;
+    }
+
+    const safeAreaFloor =
+      occupancyRatio > 0.25
+        ? Math.min(cols * rows - 1, simulated.snake.length + Math.max(14, state.foods.length + 4))
+        : Math.min(cols * rows - 1, simulated.snake.length + Math.max(8, Math.floor(state.foods.length * 0.6)));
+    if (tailDistances.size < safeAreaFloor) {
+      continue;
+    }
+
     /**
      * Survival stays the top priority. We only take a food route if we can still
      * reach the tail after the whole chase, which keeps an escape corridor alive
@@ -492,10 +507,10 @@ const pickSafeFoodPath = ({
      */
     const preference = getFoodPriorityWeight(food);
     const score =
-      preference * 140 -
-      foodPath.length * 24 +
-      tailDistances.size * 0.6 -
-      tailDistance * 0.3;
+      preference * 88 -
+      foodPath.length * 26 +
+      tailDistances.size * 0.18 -
+      tailDistance * 0.72;
     if (score > bestScore) {
       bestScore = score;
       bestPath = foodPath;
@@ -622,10 +637,6 @@ const chooseSurvivalChaseMove = ({
     rows,
     maxLength,
   });
-  if (safeFoodPath && safeFoodPath.length > 0) {
-    return safeFoodPath[0]!;
-  }
-
   const head = state.snake[0]!;
   const tail = state.snake[state.snake.length - 1]!;
   const bodyBlocked = new Set(state.snake.slice(0, -1).map(pointKey));
@@ -637,8 +648,22 @@ const chooseSurvivalChaseMove = ({
     blocked: bodyBlocked,
     allowTargetKey: pointKey(tail),
   });
+  const occupancyRatio = state.snake.length / Math.max(1, cols * rows);
+  const shouldFavorTail = occupancyRatio >= 0.12;
+
+  if (!shouldFavorTail && safeFoodPath && safeFoodPath.length > 0) {
+    return safeFoodPath[0]!;
+  }
+
   if (tailPath && tailPath.length > 0) {
+    if (!shouldFavorTail && safeFoodPath && safeFoodPath.length > 0 && safeFoodPath.length <= Math.max(3, tailPath.length - 2)) {
+      return safeFoodPath[0]!;
+    }
     return tailPath[0]!;
+  }
+
+  if (safeFoodPath && safeFoodPath.length > 0) {
+    return safeFoodPath[0]!;
   }
 
   const loopIndex = layout.indexByKey.get(pointKey(head)) ?? 0;
@@ -776,6 +801,20 @@ export const buildSnakeGridCells = ({
     y: cell.y,
     tone: index === 0 ? "head" : "body",
   }));
+
+  const occupancy = new Map<string, number>();
+  cells.forEach((cell) => {
+    if (cell.tone === "body" || cell.tone === "head") {
+      const key = pointKey(cell);
+      occupancy.set(key, (occupancy.get(key) ?? 0) + 1);
+    }
+  });
+
+  cells.forEach((cell) => {
+    if ((cell.tone === "body" || cell.tone === "head") && (occupancy.get(pointKey(cell)) ?? 0) > 1) {
+      cell.tone = "collision";
+    }
+  });
 
   state.foods.forEach((food) => {
     cells.push({
