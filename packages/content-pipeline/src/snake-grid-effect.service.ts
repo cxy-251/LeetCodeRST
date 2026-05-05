@@ -71,6 +71,7 @@ const pointKey = (point: Point) => `${point.x},${point.y}`;
 const pointsEqual = (left: Point, right: Point) => left.x === right.x && left.y === right.y;
 
 const modulo = (value: number, size: number) => ((value % size) + size) % size;
+const loopDistance = (from: number, to: number, size: number) => modulo(to - from, size);
 
 const clonePoint = (point: Point) => ({x: point.x, y: point.y});
 
@@ -303,6 +304,8 @@ const spawnFood = ({
   spawnCursor,
   snake,
   existingFoods,
+  layout,
+  strategy,
 }: {
   cols: number;
   rows: number;
@@ -310,9 +313,52 @@ const spawnFood = ({
   spawnCursor: number;
   snake: Point[];
   existingFoods: FoodItem[];
+  layout?: LoopLayout;
+  strategy?: SnakeStrategy;
 }) => {
   const occupied = new Set([...snake, ...existingFoods].map(pointKey));
   const capacity = cols * rows;
+
+  const tryPreferredWindow = () => {
+    if (!layout || strategy !== "survival-chase" || snake.length === 0) {
+      return null;
+    }
+
+    const cycleLength = layout.order.length;
+    const headIndex = layout.indexByKey.get(pointKey(snake[0]!));
+    const tailIndex = layout.indexByKey.get(pointKey(snake[snake.length - 1]!));
+    if (headIndex === undefined || tailIndex === undefined) {
+      return null;
+    }
+
+    const freeArc = Math.max(0, loopDistance(headIndex, tailIndex, cycleLength) - 1);
+    if (freeArc < 8) {
+      return null;
+    }
+
+    const windowStart = 3;
+    const windowSize = Math.max(6, Math.min(freeArc - 2, Math.floor(freeArc * 0.45)));
+    for (let attempt = 0; attempt < Math.max(windowSize * 2, 24); attempt += 1) {
+      const offset =
+        windowStart +
+        (Math.floor(hashNoise(spawnCursor * 37 + attempt * 19 + 11, seed) * windowSize) % windowSize);
+      const index = modulo(headIndex + offset, cycleLength);
+      const candidate = layout.order[index];
+      if (candidate && !occupied.has(pointKey(candidate))) {
+        return {
+          ...candidate,
+          ...pickFoodProfile(spawnCursor + attempt, seed),
+        } satisfies FoodItem;
+      }
+    }
+
+    return null;
+  };
+
+  const preferredFood = tryPreferredWindow();
+  if (preferredFood) {
+    return preferredFood;
+  }
 
   for (let attempt = 0; attempt < capacity; attempt += 1) {
     const x = Math.floor(hashNoise(spawnCursor * 37 + attempt * 11 + 7, seed) * cols) % cols;
@@ -335,12 +381,16 @@ const refillFoods = ({
   rows,
   seed,
   foodCount,
+  layout,
+  strategy,
 }: {
   state: SnakeState;
   cols: number;
   rows: number;
   seed: number;
   foodCount: number;
+  layout?: LoopLayout;
+  strategy?: SnakeStrategy;
 }) => {
   const freeCells = cols * rows - state.snake.length;
   const desiredFoodCount = Math.min(foodCount, Math.max(0, freeCells - 1));
@@ -357,6 +407,8 @@ const refillFoods = ({
       spawnCursor: state.spawnCursor,
       snake: state.snake,
       existingFoods: state.foods,
+      layout,
+      strategy,
     });
 
     if (!nextFood) {
@@ -375,6 +427,7 @@ const buildInitialState = ({
   foodCount,
   layout,
   maxLength,
+  strategy,
 }: {
   cols: number;
   rows: number;
@@ -382,6 +435,7 @@ const buildInitialState = ({
   foodCount: number;
   layout: LoopLayout;
   maxLength: number;
+  strategy: SnakeStrategy;
 }) => {
   const startLength = Math.min(18, maxLength);
   const startIndex = Math.floor(hashNoise(seed * 13.1 + 7, seed + 11) * layout.order.length) % layout.order.length;
@@ -405,6 +459,8 @@ const buildInitialState = ({
     rows,
     seed,
     foodCount,
+    layout,
+    strategy,
   });
 
   return state;
@@ -487,15 +543,14 @@ const pickSafeFoodPath = ({
     }
 
     const maxChaseDistance =
-      occupancyRatio > 0.32 ? 2 : occupancyRatio > 0.24 ? 3 : occupancyRatio > 0.16 ? 4 : 8;
+      occupancyRatio > 0.4 ? 2 : occupancyRatio > 0.3 ? 3 : occupancyRatio > 0.2 ? 5 : 9;
     if (foodPath.length > maxChaseDistance) {
       continue;
     }
 
-    const safeAreaFloor =
-      occupancyRatio > 0.25
-        ? Math.min(cols * rows - 1, simulated.snake.length + Math.max(14, state.foods.length + 4))
-        : Math.min(cols * rows - 1, simulated.snake.length + Math.max(8, Math.floor(state.foods.length * 0.6)));
+    const reserveCells =
+      occupancyRatio > 0.38 ? 10 : occupancyRatio > 0.28 ? 8 : occupancyRatio > 0.18 ? 7 : 6;
+    const safeAreaFloor = Math.min(cols * rows - 1, simulated.snake.length + reserveCells);
     if (tailDistances.size < safeAreaFloor) {
       continue;
     }
@@ -507,7 +562,7 @@ const pickSafeFoodPath = ({
      */
     const preference = getFoodPriorityWeight(food);
     const score =
-      preference * 88 -
+      preference * 62 -
       foodPath.length * 26 +
       tailDistances.size * 0.18 -
       tailDistance * 0.72;
@@ -649,14 +704,51 @@ const chooseSurvivalChaseMove = ({
     allowTargetKey: pointKey(tail),
   });
   const occupancyRatio = state.snake.length / Math.max(1, cols * rows);
-  const shouldFavorTail = occupancyRatio >= 0.12;
+  const loopIndex = layout.indexByKey.get(pointKey(head)) ?? 0;
+  const loopNext = layout.order[modulo(loopIndex + 1, layout.order.length)];
+  const followLoopIfSafe = () => {
+    if (!loopNext) {
+      return null;
+    }
+    const tailKey = pointKey(tail);
+    const blocked = new Set(state.snake.slice(0, -1).map(pointKey));
+    if (!blocked.has(pointKey(loopNext)) || pointKey(loopNext) === tailKey) {
+      return clonePoint(loopNext);
+    }
+    return null;
+  };
+  const shouldFavorTail = occupancyRatio >= 0.32;
+  const foodCommitDistance =
+    occupancyRatio >= 0.42 ? 2 : occupancyRatio >= 0.32 ? 3 : occupancyRatio >= 0.2 ? 4 : 6;
+  const shouldEnterLoopCruise = occupancyRatio >= 0.08;
 
-  if (!shouldFavorTail && safeFoodPath && safeFoodPath.length > 0) {
-    return safeFoodPath[0]!;
+  if (shouldEnterLoopCruise) {
+    const loopMove = followLoopIfSafe();
+    if (loopMove) {
+      return loopMove;
+    }
+
+    if (tailPath && tailPath.length > 0) {
+      return tailPath[0]!;
+    }
+
+    if (safeFoodPath && safeFoodPath.length > 0) {
+      return safeFoodPath[0]!;
+    }
+  }
+
+  if (safeFoodPath && safeFoodPath.length > 0) {
+    if (!shouldFavorTail || safeFoodPath.length <= foodCommitDistance) {
+      return safeFoodPath[0]!;
+    }
   }
 
   if (tailPath && tailPath.length > 0) {
-    if (!shouldFavorTail && safeFoodPath && safeFoodPath.length > 0 && safeFoodPath.length <= Math.max(3, tailPath.length - 2)) {
+    if (
+      safeFoodPath &&
+      safeFoodPath.length > 0 &&
+      safeFoodPath.length <= Math.max(foodCommitDistance, tailPath.length - 2)
+    ) {
       return safeFoodPath[0]!;
     }
     return tailPath[0]!;
@@ -666,14 +758,9 @@ const chooseSurvivalChaseMove = ({
     return safeFoodPath[0]!;
   }
 
-  const loopIndex = layout.indexByKey.get(pointKey(head)) ?? 0;
-  const loopNext = layout.order[modulo(loopIndex + 1, layout.order.length)];
-  if (loopNext) {
-    const tailKey = pointKey(tail);
-    const blocked = new Set(state.snake.slice(0, -1).map(pointKey));
-    if (!blocked.has(pointKey(loopNext)) || pointKey(loopNext) === tailKey) {
-      return clonePoint(loopNext);
-    }
+  const loopMove = followLoopIfSafe();
+  if (loopMove) {
+    return loopMove;
   }
 
   return evaluateFallbackMoves({
@@ -733,6 +820,8 @@ const advanceSimulation = ({
       rows,
       seed,
       foodCount,
+      layout: cache.layout,
+      strategy: cache.strategy,
     });
     cache.frame += 1;
   }
@@ -781,6 +870,7 @@ export const buildSnakeGridCells = ({
         foodCount,
         layout,
         maxLength,
+        strategy: resolvedStrategy,
       }),
     };
     simulationCache.set(cacheKey, cache);

@@ -344,7 +344,7 @@ npm run build
    - 默认仍是 `rule-based`
    - 用户本地如果运行 LM Studio，可直接改成 `lm-studio`
 71. 用户当前本地 LM Studio 默认模型已记录为：
-   - `gemma-4-e4b`
+   - `qwen/qwen3.5-9b`
    - 本地接口地址：`http://127.0.0.1:1234/v1`
 72. `LM Studio` 适配层已增强容错：
    - 优先请求结构化 JSON 输出
@@ -365,6 +365,10 @@ npm run build
    - 蛇在更早的长度阶段就会优先追尾留路
    - 只有食物距离很近且安全区足够时，才会优先吃食物
    - 如果仍出现身体重叠，重叠格会用红色显式标记
+77. `snake-grid` 已继续修成“安全前提下持续进食”：
+   - 刷食物会优先落在当前安全前向弧段里，减少长蛇后期只转圈不进食的情况
+   - 只有占用率显著变高后，`survival-chase` 才会强制以追尾保命为首要策略
+   - 长蛇阶段会优先吃距离更近、吃完后仍能保留安全区和尾巴通路的食物
 75. `produce:paper-urls` 与 `prepare:latest-ai-batch` 已支持：
    - `--cover-selection-mode`
    - `--background-dir`
