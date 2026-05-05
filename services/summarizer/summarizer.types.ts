@@ -31,6 +31,8 @@ export type LmStudioSummaryConfig = {
   apiKey: string;
   temperature: number;
   maxOutputTokens: number;
+  maxInputChars: number;
+  compactInputChars: number;
 };
 
 export type SummaryResult = {

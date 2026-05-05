@@ -4,7 +4,9 @@ type ChatCompletionResponse = {
   choices?: Array<{
     message?: {
       content?: string | Array<{type?: string; text?: string}>;
+      reasoning_content?: string;
     };
+    finish_reason?: string;
   }>;
 };
 
@@ -47,6 +49,25 @@ const extractContent = (payload: ChatCompletionResponse) => {
       .map((item) => item.text ?? "")
       .join("")
       .trim();
+  }
+
+  return "";
+};
+
+const extractReasoningContent = (payload: ChatCompletionResponse) =>
+  payload.choices?.[0]?.message?.reasoning_content?.trim() ?? "";
+
+const extractFinalResponseFromReasoning = (reasoning: string) => {
+  const patterns = [
+    /(?:Construct Final Response|Final Response|Final Answer|最终回答|最终输出)\s*[:：]\s*([\s\S]+)$/i,
+    /(?:输出如下|答案如下)\s*[:：]\s*([\s\S]+)$/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = pattern.exec(reasoning);
+    if (match?.[1]) {
+      return match[1].trim();
+    }
   }
 
   return "";
@@ -298,14 +319,24 @@ const requestCompletion = async ({
   if (!response.ok && preferStructuredOutput && [400, 404, 422, 500].includes(response.status)) {
     const fallbackResponse = await doRequest(false);
     if (!fallbackResponse.ok) {
-      throw new Error(`LM Studio request failed: ${fallbackResponse.status} ${fallbackResponse.statusText}`);
+      const fallbackBody = await fallbackResponse.text().catch(() => "");
+      throw new Error(
+        `LM Studio request failed: ${fallbackResponse.status} ${fallbackResponse.statusText}${
+          fallbackBody ? ` — ${fallbackBody.slice(0, 240)}` : ""
+        }`,
+      );
     }
 
     return (await fallbackResponse.json()) as ChatCompletionResponse;
   }
 
   if (!response.ok) {
-    throw new Error(`LM Studio request failed: ${response.status} ${response.statusText}`);
+    const errorBody = await response.text().catch(() => "");
+    throw new Error(
+      `LM Studio request failed: ${response.status} ${response.statusText}${
+        errorBody ? ` — ${errorBody.slice(0, 240)}` : ""
+      }`,
+    );
   }
 
   return (await response.json()) as ChatCompletionResponse;
@@ -342,6 +373,69 @@ const buildTaggedRepairPrompt = (raw: string) => {
   ].join("\n");
 };
 
+const recoverDraftFromMalformedResponse = async ({
+  config,
+  raw,
+}: {
+  config: LmStudioSummaryConfig;
+  raw: string;
+}) => {
+  const directDraft = tryParseDraft(raw);
+  if (directDraft) {
+    return directDraft;
+  }
+
+  const repairedPayload = await requestCompletion({
+    config,
+    maxTokens: Math.max(Math.min(config.maxOutputTokens, 1200), 900),
+    temperature: 0,
+    preferStructuredOutput: true,
+    messages: [
+      {
+        role: "system",
+        content: "You repair malformed JSON into strict JSON.",
+      },
+      {
+        role: "user",
+        content: buildRepairPrompt(raw),
+      },
+    ],
+  });
+  let repairedContent = extractContent(repairedPayload);
+  const repairedReasoning = extractReasoningContent(repairedPayload);
+  if (!repairedContent && repairedReasoning) {
+    repairedContent = extractFinalResponseFromReasoning(repairedReasoning) || repairedReasoning;
+  }
+  const repairedDraft = repairedContent ? tryParseDraft(repairedContent) : null;
+  if (repairedDraft) {
+    return repairedDraft;
+  }
+
+  const taggedPayload = await requestCompletion({
+    config,
+    maxTokens: Math.max(Math.min(config.maxOutputTokens, 1200), 900),
+    temperature: 0,
+    preferStructuredOutput: false,
+    messages: [
+      {
+        role: "system",
+        content: "You rewrite malformed output into a stable tagged plain-text structure.",
+      },
+      {
+        role: "user",
+        content: buildTaggedRepairPrompt(raw),
+      },
+    ],
+  });
+  let taggedContent = extractContent(taggedPayload);
+  const taggedReasoning = extractReasoningContent(taggedPayload);
+  if (!taggedContent && taggedReasoning) {
+    taggedContent = extractFinalResponseFromReasoning(taggedReasoning) || taggedReasoning;
+  }
+
+  return taggedContent ? parseTaggedDraft(taggedContent) : null;
+};
+
 const validateDraft = (draft: SummaryDraft) => {
   const requiredKeys: Array<keyof SummaryDraft> = ["hook", "problem", "method", "value", "ending"];
 
@@ -356,10 +450,86 @@ const validateDraft = (draft: SummaryDraft) => {
   }
 };
 
-const buildPrompt = (paper: SourcePaperForSummary, context: PaperSummaryContext) => {
-  const excerpt = context.rawText.replace(/\s+/g, " ").slice(0, 14000);
-  const headings = context.sectionHeadings.slice(0, 8).join(" | ") || "N/A";
-  const abstract = context.abstractSentences.slice(0, 6).join(" ");
+const normalizeRawText = (rawText: string) =>
+  rawText
+    .replace(/\r/g, "\n")
+    .replace(/[ \t]+/g, " ")
+    .replace(/\n{3,}/g, "\n\n")
+    .trim();
+
+const extractFocusedExcerpt = (rawText: string, maxChars: number) => {
+  const normalized = normalizeRawText(rawText);
+  if (!normalized) {
+    return "";
+  }
+
+  const sections = normalized
+    .split(/\n{2,}/)
+    .map((section) => section.trim())
+    .filter(Boolean);
+
+  const priorityKeywords = [
+    "abstract",
+    "introduction",
+    "method",
+    "approach",
+    "experiment",
+    "results",
+    "conclusion",
+    "discussion",
+    "摘要",
+    "引言",
+    "方法",
+    "实验",
+    "结果",
+    "结论",
+  ];
+
+  const prioritized = sections.filter((section) =>
+    priorityKeywords.some((keyword) => section.toLowerCase().includes(keyword)),
+  );
+  const orderedSections = [...prioritized, ...sections.filter((section) => !prioritized.includes(section))];
+
+  let excerpt = "";
+  for (const section of orderedSections) {
+    const nextSection = excerpt ? `${excerpt}\n\n${section}` : section;
+    if (nextSection.length > maxChars) {
+      break;
+    }
+    excerpt = nextSection;
+  }
+
+  if (!excerpt) {
+    return normalized.slice(0, maxChars);
+  }
+
+  return excerpt.slice(0, maxChars);
+};
+
+const buildPrompt = (
+  paper: SourcePaperForSummary,
+  context: PaperSummaryContext,
+  excerptChars: number,
+  compact = false,
+) => {
+  const excerpt = extractFocusedExcerpt(context.rawText, excerptChars);
+  const headings = context.sectionHeadings.slice(0, compact ? 5 : 8).join(" | ") || "N/A";
+  const abstractSentences = context.abstractSentences.slice(0, compact ? 4 : 6);
+  const abstract = abstractSentences.join(" ");
+  const sourceSummary = paper.summary.trim().slice(0, compact ? 800 : 1400);
+  const styleRules = compact
+    ? [
+        "1. 语言使用中文。",
+        "2. 每个字段控制在 1 句话，尽量精炼。",
+        "3. bullets 固定输出 3 条，面向短视频观众。",
+        "4. 只输出 JSON，不要解释。",
+      ]
+    : [
+        "1. 语言使用中文。",
+        "2. 每个字段用 1 到 2 句话，适合短视频配音。",
+        "3. bullets 固定输出 3 条，简洁、面向观众。",
+        "4. 不要写 markdown，不要解释。",
+      ];
 
   return [
     "你是一个论文短视频脚本生成器。",
@@ -368,21 +538,27 @@ const buildPrompt = (paper: SourcePaperForSummary, context: PaperSummaryContext)
     JSON.stringify(RESPONSE_SCHEMA_EXAMPLE, null, 2),
     "",
     "要求：",
-    "1. 语言使用中文。",
-    "2. 每个字段用 1 到 2 句话，适合短视频配音。",
-    "3. bullets 固定输出 3 条，简洁、面向观众。",
-    "4. 不要写 markdown，不要解释。",
+    ...styleRules,
     "",
     `论文标题：${paper.title}`,
     `论文编号：${paper.arxivId}`,
     `论文方向：${paper.categories.join(" / ")}`,
     `发布日期：${paper.publishedAt}`,
+    `论文摘要原文：${sourceSummary}`,
     `摘要句：${abstract}`,
     `章节线索：${headings}`,
     "",
-    "论文文本片段：",
+    compact ? "关键正文摘录：" : "论文文本片段：",
     excerpt,
   ].join("\n");
+};
+
+const isContextLimitError = (error: unknown) => {
+  const message = error instanceof Error ? error.message : `${error ?? ""}`;
+  return (
+    /400\b/.test(message) &&
+    /(context size|context window|exceeds the available context size|too many tokens|prompt is too long)/i.test(message)
+  );
 };
 
 export const summarizeWithLmStudio = async (
@@ -390,71 +566,79 @@ export const summarizeWithLmStudio = async (
   context: PaperSummaryContext,
   config: LmStudioSummaryConfig,
 ): Promise<SummaryDraft> => {
-  const payload = await requestCompletion({
-    config,
-    maxTokens: config.maxOutputTokens,
-    temperature: config.temperature,
-    preferStructuredOutput: true,
-    messages: [
-      {
-        role: "system",
-        content: "You convert research papers into concise Chinese short-video script JSON.",
-      },
-      {
-        role: "user",
-        content: buildPrompt(paper, context),
-      },
-    ],
-  });
+  const runSummaryRequest = async (
+    compact = false,
+    preferStructuredOutput = true,
+    maxTokensOverride?: number,
+  ) =>
+    requestCompletion({
+      config,
+      maxTokens:
+        maxTokensOverride ??
+        (compact ? Math.min(config.maxOutputTokens, 1200) : config.maxOutputTokens),
+      temperature: config.temperature,
+      preferStructuredOutput,
+      messages: [
+        {
+          role: "system",
+          content: "You convert research papers into concise Chinese short-video script JSON.",
+        },
+        {
+          role: "user",
+          content: buildPrompt(
+            paper,
+            context,
+            compact ? config.compactInputChars : config.maxInputChars,
+            compact,
+          ),
+        },
+      ],
+    });
 
-  const content = extractContent(payload);
+  let payload: ChatCompletionResponse;
+  try {
+    payload = await runSummaryRequest(false, true);
+  } catch (error) {
+    if (!isContextLimitError(error)) {
+      throw error;
+    }
+
+    payload = await runSummaryRequest(true, false, Math.max(config.maxOutputTokens, 2200));
+  }
+
+  let content = extractContent(payload);
+  const reasoningContent = extractReasoningContent(payload);
+  if (!content && reasoningContent) {
+    content = extractFinalResponseFromReasoning(reasoningContent);
+  }
+
+  if (!content) {
+    const fallbackPayload = await runSummaryRequest(true, false, Math.max(config.maxOutputTokens, 2200));
+    content = extractContent(fallbackPayload);
+    const fallbackReasoning = extractReasoningContent(fallbackPayload);
+    if (!content && fallbackReasoning) {
+      content = extractFinalResponseFromReasoning(fallbackReasoning);
+      if (!content) {
+        const recoveredDraft = await recoverDraftFromMalformedResponse({
+          config,
+          raw: fallbackReasoning,
+        });
+        if (recoveredDraft) {
+          validateDraft(recoveredDraft);
+          return recoveredDraft;
+        }
+      }
+    }
+  }
+
   if (!content) {
     throw new Error("LM Studio returned an empty completion");
   }
 
-  let draft = tryParseDraft(content);
-
-  if (!draft) {
-    const repairedPayload = await requestCompletion({
-      config,
-      maxTokens: Math.min(config.maxOutputTokens, 800),
-      temperature: 0,
-      preferStructuredOutput: true,
-      messages: [
-        {
-          role: "system",
-          content: "You repair malformed JSON into strict JSON.",
-        },
-        {
-          role: "user",
-          content: buildRepairPrompt(content),
-        },
-      ],
-    });
-    const repairedContent = extractContent(repairedPayload);
-    draft = repairedContent ? tryParseDraft(repairedContent) : null;
-  }
-
-  if (!draft) {
-    const taggedPayload = await requestCompletion({
-      config,
-      maxTokens: Math.min(config.maxOutputTokens, 800),
-      temperature: 0,
-      preferStructuredOutput: false,
-      messages: [
-        {
-          role: "system",
-          content: "You rewrite malformed output into a stable tagged plain-text structure.",
-        },
-        {
-          role: "user",
-          content: buildTaggedRepairPrompt(content),
-        },
-      ],
-    });
-    const taggedContent = extractContent(taggedPayload);
-    draft = taggedContent ? parseTaggedDraft(taggedContent) : null;
-  }
+  let draft = await recoverDraftFromMalformedResponse({
+    config,
+    raw: content,
+  });
 
   if (!draft) {
     throw new SyntaxError(

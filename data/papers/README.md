@@ -5,6 +5,7 @@
 # 允许内容
 
 - 手工放入的 PDF 样本
+- 论文网址输入 CSV / TXT
 - 辅助说明文本
 
 # 禁止内容
@@ -23,6 +24,8 @@
 # 命名规则
 
 - PDF：`<paper-id>.pdf`
+- 网址 CSV：`paper-urls.csv` 或 `paper-urls.example.csv`
+- 网址 TXT：`paper-urls.txt`
 - 说明：`<paper-id>.md` 或 `README.md`
 
 # 边界说明

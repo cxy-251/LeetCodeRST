@@ -91,13 +91,16 @@ docker compose run --rm paper-to-video \
 
 - LM Studio 跑在宿主机
 - 地址是：`http://host.docker.internal:1234/v1`
-- 模型名是：`gemma-4-e4b`
+- 模型名是：`qwen/qwen3.5-9b`
 
 如果你的宿主机配置不同，可以通过环境变量覆盖：
 
 ```bash
 LM_STUDIO_BASE_URL=http://host.docker.internal:1234/v1 \
-LM_STUDIO_MODEL=gemma-4-e4b \
+LM_STUDIO_MODEL=qwen/qwen3.5-9b \
+LM_STUDIO_MAX_OUTPUT_TOKENS=2200 \
+LM_STUDIO_MAX_INPUT_CHARS=9000 \
+LM_STUDIO_COMPACT_INPUT_CHARS=2600 \
 docker compose run --rm paper-to-video \
   npm run produce:paper-urls -- \
   --paper-url https://arxiv.org/abs/2604.22748 \

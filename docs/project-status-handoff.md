@@ -340,6 +340,8 @@ npm run build
    - `--lm-studio-api-key`
    - `--lm-studio-temperature`
    - `--lm-studio-max-output-tokens`
+   - `--lm-studio-max-input-chars`
+   - `--lm-studio-compact-input-chars`
 70. `produce:paper-urls` 与 `prepare:latest-ai-batch` 已支持把总结模式一路透传到分析阶段：
    - 默认仍是 `rule-based`
    - 用户本地如果运行 LM Studio，可直接改成 `lm-studio`
@@ -353,15 +355,22 @@ npm run build
 73. `LM Studio` 适配层现已补上“按字段边界抽取”的兜底：
    - 即使模型把正文里的双引号写坏，也能尝试按 `hook/problem/method/value/ending/bullets` 顺序硬解析
    - 如果 JSON 完全不稳，还会退回到标签式文本格式 `HOOK:/PROBLEM:/...`
-74. 背景图来源已开始抽成正式策略层：
+74. `LM Studio` 现已对小上下文模型做输入收缩：
+   - 默认不再直接堆整篇论文，而是改成“摘要原文 + 摘要句 + 章节线索 + 关键正文摘录”
+   - 当前默认会保留较多正文上下文，适配用户已手动调大的本地模型 context
+   - 若模型仍报上下文超限，会自动退回到更紧凑的 compact prompt
+75. `LM Studio` 现已兼容 `qwen/qwen3.5-9b` 这类会优先输出 `reasoning_content` 的模型：
+   - 默认输出预算提高到 `2200`
+   - 若 `content` 为空，会尝试从 `reasoning_content` 中恢复最终答案
+76. 背景图来源已开始抽成正式策略层：
    - `local-folder-random`
    - `local-folder-cycle`
    - `ai-generated-cover`（预留）
    - `licensed-source`（预留）
-75. `snake-grid` 的食物价值与寻路偏好已开始解耦：
+77. `snake-grid` 的食物价值与寻路偏好已开始解耦：
    - 食物增长价值仍保留分档
    - 但追食物时的偏好权重已被调平，避免蛇长期只追同一种高价值食物
-76. `snake-grid` 的 `survival-chase` 已进一步偏向保命：
+78. `snake-grid` 的 `survival-chase` 已进一步偏向保命：
    - 蛇在更早的长度阶段就会优先追尾留路
    - 只有食物距离很近且安全区足够时，才会优先吃食物
    - 如果仍出现身体重叠，重叠格会用红色显式标记
@@ -943,6 +952,9 @@ What changed:
 5. `donut-spin` defaults were also retuned:
    - smaller first-load size
    - full donut should fit more comfortably in the portrait frame
+6. `data/papers/` now includes a same-directory example input:
+   - `data/papers/paper-urls.example.csv`
+   - recommended user file remains `data/papers/paper-urls.csv`
    - donut composition now sits slightly lower in the frame
 
 Why this matters:

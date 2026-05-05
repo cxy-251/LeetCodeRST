@@ -63,7 +63,15 @@ const parseArgs = (args: string[]) => {
     apiKey: take("--lm-studio-api-key") ?? process.env.LM_STUDIO_API_KEY ?? "lm-studio",
     temperature: Number.parseFloat(take("--lm-studio-temperature") ?? process.env.LM_STUDIO_TEMPERATURE ?? "0.2"),
     maxOutputTokens: Number.parseInt(
-      take("--lm-studio-max-output-tokens") ?? process.env.LM_STUDIO_MAX_OUTPUT_TOKENS ?? "1200",
+      take("--lm-studio-max-output-tokens") ?? process.env.LM_STUDIO_MAX_OUTPUT_TOKENS ?? "2200",
+      10,
+    ),
+    maxInputChars: Number.parseInt(
+      take("--lm-studio-max-input-chars") ?? process.env.LM_STUDIO_MAX_INPUT_CHARS ?? "9000",
+      10,
+    ),
+    compactInputChars: Number.parseInt(
+      take("--lm-studio-compact-input-chars") ?? process.env.LM_STUDIO_COMPACT_INPUT_CHARS ?? "2600",
       10,
     ),
   };

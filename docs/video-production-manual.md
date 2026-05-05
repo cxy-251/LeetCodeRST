@@ -129,6 +129,10 @@ npm run produce:paper-urls:donut -- \
   --paper-url-csv data/papers/paper-urls.csv
 ```
 
+如果你还没建文件，可以先参考同级示例：
+
+- `data/papers/paper-urls.example.csv`
+
 CSV 格式只需要一列网址，支持两种形式：
 
 ```csv
@@ -225,6 +229,9 @@ npm run produce:paper-urls -- \
 export LM_STUDIO_BASE_URL=http://127.0.0.1:1234/v1
 export LM_STUDIO_MODEL=qwen/qwen3.5-9b
 export LM_STUDIO_API_KEY=lm-studio
+export LM_STUDIO_MAX_OUTPUT_TOKENS=2200
+export LM_STUDIO_MAX_INPUT_CHARS=9000
+export LM_STUDIO_COMPACT_INPUT_CHARS=2600
 ```
 
 然后执行：
@@ -235,6 +242,14 @@ npm run produce:paper-urls -- \
   --background-dir data/images/prepared \
   --summary-mode lm-studio
 ```
+
+说明：
+
+- 对于 `qwen/qwen3.5-9b` 这类会先推理再回答的本地模型，项目现在会优先发送“摘要 + 章节线索 + 关键正文摘录”，默认会保留较多正文上下文。
+- 对于会先输出 `reasoning_content` 的模型，项目现在会提高默认输出预算，并尝试从推理结果里恢复最终答案。
+- 如果你的模型仍然报上下文超限，可以继续降低：
+  - `LM_STUDIO_MAX_INPUT_CHARS`
+  - `LM_STUDIO_COMPACT_INPUT_CHARS`
 
 ### 2.1 直接渲染一个 manifest
 
