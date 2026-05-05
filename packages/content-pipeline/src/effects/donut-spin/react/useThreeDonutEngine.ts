@@ -1,4 +1,4 @@
-import {useEffect, useRef, useState} from "react";
+import {useCallback, useLayoutEffect, useRef} from "react";
 import {ThreeDonutEngine} from "../core/ThreeDonutEngine";
 
 export const useThreeDonutEngine = ({
@@ -8,10 +8,15 @@ export const useThreeDonutEngine = ({
   height: number;
   width: number;
 }) => {
-  const [canvas, setCanvas] = useState<HTMLCanvasElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const engineRef = useRef<ThreeDonutEngine | null>(null);
 
-  useEffect(() => {
+  const attachCanvas = useCallback((node: HTMLCanvasElement | null) => {
+    canvasRef.current = node;
+  }, []);
+
+  useLayoutEffect(() => {
+    const canvas = canvasRef.current;
     if (!canvas) {
       return;
     }
@@ -23,14 +28,14 @@ export const useThreeDonutEngine = ({
       engine.dispose();
       engineRef.current = null;
     };
-  }, [canvas]);
+  }, [height, width]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     engineRef.current?.resize(width, height);
   }, [height, width]);
 
   return {
-    canvasRef: setCanvas,
+    canvasRef: attachCanvas,
     engineRef,
   };
 };

@@ -1,4 +1,4 @@
-import React, {useEffect} from "react";
+import React, {useLayoutEffect} from "react";
 import {useCurrentFrame} from "remotion";
 import {useThreeDonutEngine} from "./useThreeDonutEngine";
 import type {RemotionDonutLayerProps} from "../donut-spin.types";
@@ -17,7 +17,7 @@ export const RemotionDonutLayer: React.FC<RemotionDonutLayerProps> = ({
   const resolvedFrame = simulationFrame ?? absoluteFrame ?? remotionFrame;
   const {canvasRef, engineRef} = useThreeDonutEngine({height, width});
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     engineRef.current?.renderFrame({
       absoluteFrame: resolvedFrame,
       activationFrame,

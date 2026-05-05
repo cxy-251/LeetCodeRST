@@ -1,4 +1,4 @@
-import React, {useEffect, useMemo, useRef} from "react";
+import React, {useEffect, useLayoutEffect, useMemo, useRef} from "react";
 import {useThreeDonutEngine} from "./useThreeDonutEngine";
 import type {WebDonutLayerProps} from "../donut-spin.types";
 
@@ -41,7 +41,7 @@ export const WebDonutLayer: React.FC<WebDonutLayerProps> = ({
     [engineRef],
   );
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     renderCurrentFrame();
   }, [renderCurrentFrame, resetToken, activationFrame, modules, seed]);
 
@@ -76,7 +76,7 @@ export const WebDonutLayer: React.FC<WebDonutLayerProps> = ({
     };
   }, [isRunning, renderCurrentFrame, resetToken]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     elapsedFrameRef.current = 0;
     startedAtRef.current = null;
     renderCurrentFrame();
