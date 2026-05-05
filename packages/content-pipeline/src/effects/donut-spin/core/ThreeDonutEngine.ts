@@ -35,10 +35,10 @@ export class ThreeDonutEngine {
   private readonly composer: EffectComposer;
   private readonly bloomPass: UnrealBloomPass;
   private readonly root = new THREE.Group();
-  private readonly ambientLight = new THREE.AmbientLight(0xf0f4ff, 0.92);
-  private readonly keyLight = new THREE.DirectionalLight(0xffffff, 1.42);
-  private readonly fillLight = new THREE.DirectionalLight(0xff8fd2, 0.54);
-  private readonly rimLight = new THREE.DirectionalLight(0x7de7ff, 1.04);
+  private readonly ambientLight = new THREE.AmbientLight(0xf0f4ff, 0.68);
+  private readonly keyLight = new THREE.DirectionalLight(0xffffff, 1.08);
+  private readonly fillLight = new THREE.DirectionalLight(0xff8fd2, 0.34);
+  private readonly rimLight = new THREE.DirectionalLight(0x7de7ff, 0.72);
   private readonly cameraTarget = new THREE.Vector3();
   private readonly helper = new THREE.Object3D();
   private bundle: ThreeDonutMeshBundle;
@@ -95,7 +95,7 @@ export class ThreeDonutEngine {
 
     this.composer = new EffectComposer(this.renderer);
     this.composer.addPass(new RenderPass(this.scene, this.camera));
-    this.bloomPass = new UnrealBloomPass(new THREE.Vector2(options.width, options.height), 0.45, 0.65, 0.18);
+    this.bloomPass = new UnrealBloomPass(new THREE.Vector2(options.width, options.height), 0.22, 0.38, 0.28);
     this.composer.addPass(this.bloomPass);
 
     const defaultConfig = resolveDonutEffectConfig(undefined);
@@ -132,14 +132,14 @@ export class ThreeDonutEngine {
     const time = frame * 0.016 * config.spinSpeed + params.seed * 0.0017;
 
     this.bundle.bodyMaterial.color.set(config.primaryColor);
-    this.bundle.bodyMaterial.emissive.set(config.secondaryColor).multiplyScalar(config.glowIntensity * 0.12);
+    this.bundle.bodyMaterial.emissive.set(config.secondaryColor).multiplyScalar(config.glowIntensity * 0.048);
     this.bundle.glowMaterial.color.set(config.secondaryColor);
-    this.bundle.glowMaterial.opacity = 0.08 + config.glowIntensity * 0.04;
+    this.bundle.glowMaterial.opacity = 0.012 + config.glowIntensity * 0.018;
     this.bundle.wireMaterial.color.set(config.accentColor);
-    this.bundle.wireMaterial.opacity = 0.38 + config.glowIntensity * 0.12;
+    this.bundle.wireMaterial.opacity = 0.14 + config.glowIntensity * 0.08;
     this.bundle.haloDisc.material.color.set(config.secondaryColor);
-    this.bundle.shadowDisc.material.opacity = 0.18;
-    this.bundle.haloDisc.material.opacity = 0.05 + config.glowIntensity * 0.06;
+    this.bundle.shadowDisc.material.opacity = 0.1;
+    this.bundle.haloDisc.material.opacity = 0;
 
     this.root.rotation.x = Math.sin(time * 0.42) * config.wobbleAmount * 0.42;
     this.root.rotation.y = time * 0.58 * config.spinSpeed;
@@ -185,9 +185,9 @@ export class ThreeDonutEngine {
       this.bundle.pearlMesh.instanceColor.needsUpdate = true;
     }
 
-    this.bloomPass.strength = 0.26 + config.glowIntensity * 0.42;
-    this.bloomPass.radius = 0.36 + config.glowIntensity * 0.18;
-    this.bloomPass.threshold = Math.max(0.08, 0.2 - config.glowIntensity * 0.06);
+    this.bloomPass.strength = 0.12 + config.glowIntensity * 0.2;
+    this.bloomPass.radius = 0.24 + config.glowIntensity * 0.1;
+    this.bloomPass.threshold = Math.max(0.22, 0.34 - config.glowIntensity * 0.05);
 
     this.composer.render();
   }

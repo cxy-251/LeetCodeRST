@@ -921,6 +921,39 @@ Verification:
 
 ---
 
+## 23. 2026-05-05 Donut Spin Default Tone Refinement
+
+This pass refined the first-load `donut-spin` look after validating it in the effect lab.
+
+What changed:
+
+1. The colored support glow under the donut was removed from the default presentation.
+   - the stage halo disc is now effectively disabled
+   - the remaining ground support is a much quieter neutral shadow only
+2. The donut family defaults were dimmed so the first-load state is less blown out.
+   - lower `glowIntensity` defaults for `classic / arcade / cosmic`
+   - softer emissive contribution on the donut body and orbit pearls
+   - reduced wire / glow visibility
+3. The screen-space bloom baseline was reduced and made more selective.
+   - lower bloom strength
+   - lower bloom radius
+   - higher threshold
+4. The scene lighting was softened.
+   - ambient / key / fill / rim intensities were all reduced
+
+Why this matters:
+
+1. The user explicitly called out the colored disc under the donut as unwanted.
+2. The original first-load presentation was too bright for a clean effect-lab baseline.
+3. This pass keeps the donut family readable while making it feel less harsh and less neon-heavy by default.
+
+Verification:
+
+1. `npm run lint`
+2. `npm run build`
+
+---
+
 ## 22. 2026-05-05 Donut Spin WebGL Effect Family
 
 This pass added a new rotating donut effect family as a first-class WebGL atom and effect-only render target.

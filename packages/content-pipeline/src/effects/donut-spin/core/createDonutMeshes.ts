@@ -20,12 +20,12 @@ export const createDonutMeshes = ({
   const bodyGeometry = new THREE.TorusGeometry(radius, tubeRadius, 42, 160);
   const bodyMaterial = new THREE.MeshPhysicalMaterial({
     color: primaryColor,
-    roughness: 0.18,
-    metalness: 0.24,
-    clearcoat: 1,
-    clearcoatRoughness: 0.12,
-    emissive: new THREE.Color(primaryColor).multiplyScalar(0.08),
-    sheen: 0.4,
+    roughness: 0.24,
+    metalness: 0.16,
+    clearcoat: 0.82,
+    clearcoatRoughness: 0.18,
+    emissive: new THREE.Color(primaryColor).multiplyScalar(0.028),
+    sheen: 0.22,
     sheenColor: new THREE.Color(secondaryColor),
   });
   const bodyMesh = new THREE.Mesh(bodyGeometry, bodyMaterial);
@@ -34,7 +34,7 @@ export const createDonutMeshes = ({
   const glowMaterial = new THREE.MeshBasicMaterial({
     color: secondaryColor,
     transparent: true,
-    opacity: 0.08,
+    opacity: 0.028,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
   });
@@ -44,7 +44,7 @@ export const createDonutMeshes = ({
   const wireMaterial = new THREE.MeshBasicMaterial({
     color: secondaryColor,
     transparent: true,
-    opacity: 0.62,
+    opacity: 0.22,
     blending: THREE.AdditiveBlending,
     depthWrite: false,
     wireframe: true,
@@ -54,12 +54,12 @@ export const createDonutMeshes = ({
   const pearlGeometry = new THREE.SphereGeometry(tubeRadius * 0.52, 20, 20);
   const pearlMaterial = new THREE.MeshStandardMaterial({
     color: 0xffffff,
-    emissive: new THREE.Color(secondaryColor).multiplyScalar(0.18),
-    emissiveIntensity: 1,
-    roughness: 0.24,
-    metalness: 0.18,
+    emissive: new THREE.Color(secondaryColor).multiplyScalar(0.08),
+    emissiveIntensity: 0.72,
+    roughness: 0.32,
+    metalness: 0.12,
     transparent: true,
-    opacity: 0.96,
+    opacity: 0.92,
     vertexColors: true,
   });
   const pearlMesh = new THREE.InstancedMesh(pearlGeometry, pearlMaterial, pearlCount);
@@ -67,15 +67,15 @@ export const createDonutMeshes = ({
 
   const shadowDisc = createStageDisc({
     color: 0x04070b,
-    opacity: 0.2,
+    opacity: 0.14,
     radius: radius * 3.4,
     scaleY: 0.84,
     y: -radius * 1.72,
   });
   const haloDisc = createStageDisc({
     additive: true,
-    color: 0x18365c,
-    opacity: 0.08,
+    color: 0x000000,
+    opacity: 0,
     radius: radius * 4.6,
     scaleY: 0.92,
     y: -radius * 1.75,
