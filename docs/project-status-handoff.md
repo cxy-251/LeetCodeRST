@@ -921,6 +921,42 @@ Verification:
 
 ---
 
+## 24. 2026-05-05 Donut Paper Batch Pipeline
+
+This pass added a dedicated batch-production path for paper URLs that always renders the `donut-spin` family.
+
+What changed:
+
+1. A new command was added:
+   - `npm run produce:paper-urls:donut -- --paper-url-csv <file>`
+2. This new command expects a CSV containing only paper URLs.
+   - header `paper_url` is supported
+   - headerless single-column CSV is also supported
+3. The batch mode now forces a fixed production style:
+   - local `LM Studio` summary flow by default
+   - `donut-spin` for every scene from hero to ending
+   - no cover image / no background image selection
+   - per-paper deterministic random donut parameters
+4. A no-cover image selection mode was added:
+   - `cover-selection-mode = none`
+   - source bundles can now be generated without assigning background images
+5. `donut-spin` defaults were also retuned:
+   - smaller first-load size
+   - full donut should fit more comfortably in the portrait frame
+   - donut composition now sits slightly lower in the frame
+
+Why this matters:
+
+1. The user wanted a production mode where papers vary but the visual language stays fixed around one effect family.
+2. This gives the project a repeatable “single effect template” workflow that is closer to productized batch rendering.
+
+Verification:
+
+1. `npm run lint`
+2. `npm run build`
+
+---
+
 ## 23. 2026-05-05 Donut Spin Default Tone Refinement
 
 This pass refined the first-load `donut-spin` look after validating it in the effect lab.

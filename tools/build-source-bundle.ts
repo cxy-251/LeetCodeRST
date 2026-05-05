@@ -72,7 +72,10 @@ const main = async () => {
     .map((entry) => path.join(PAPER_CACHE_ROOT, entry.name))
     .sort();
 
-  const backgroundDir = options.backgroundDir ?? await resolveDefaultBackgroundDir();
+  const backgroundDir =
+    options.coverSelectionMode === "none"
+      ? undefined
+      : options.backgroundDir ?? await resolveDefaultBackgroundDir();
   const coverSelection = await resolveBackgroundImageSelection({
     backgroundDir,
     seed: options.seed,

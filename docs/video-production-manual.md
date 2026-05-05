@@ -111,6 +111,49 @@ npm run produce:paper-urls -- \
 1. `data/images/prepared`
 2. `data/images`
 
+### 2.0.4 只用论文网址 CSV，统一生成甜甜圈论文视频
+
+如果你想要这种固定模式：
+
+- CSV 里只放论文网址
+- 全片统一使用 `donut-spin`
+- 不使用背景图
+- 从首页到结尾都挂甜甜圈特效
+- 每篇论文随机一组合理的甜甜圈初始参数
+- 总结走本地 `LM Studio`
+
+可以直接用：
+
+```bash
+npm run produce:paper-urls:donut -- \
+  --paper-url-csv data/papers/paper-urls.csv
+```
+
+CSV 格式只需要一列网址，支持两种形式：
+
+```csv
+paper_url
+https://arxiv.org/abs/2604.22748
+https://arxiv.org/abs/2604.22736
+```
+
+或者无表头：
+
+```csv
+https://arxiv.org/abs/2604.22748
+https://arxiv.org/abs/2604.22736
+```
+
+这条命令会自动做：
+
+1. 抓取并下载 PDF
+2. 抽取文本
+3. 使用本地 `LM Studio` 生成总结草案
+4. 生成 `contentProfile`
+5. 为每篇论文写入一份“无背景图 + 全片 donut-spin”的 manifest
+6. 按论文生成一组稳定可复现的甜甜圈随机参数
+7. 批量渲染视频
+
 ### 2.0.1 控制随机特效池
 
 如果你只想让它在部分特效里随机，比如只在生命游戏和灯光特效里选：

@@ -5,6 +5,7 @@ import type {BackgroundImageSelection, CoverSelectionModeId} from "./image-provi
 const IMAGE_FILE_PATTERN = /\.(png|jpg|jpeg|webp|svg)$/i;
 
 export const SUPPORTED_COVER_SELECTION_MODES: CoverSelectionModeId[] = [
+  "none",
   "local-folder-random",
   "local-folder-cycle",
   "ai-generated-cover",
@@ -88,11 +89,22 @@ export const resolveBackgroundImageSelection = async ({
   seed,
   mode,
 }: {
-  backgroundDir: string;
+  backgroundDir?: string;
   seed: number;
   mode: CoverSelectionModeId;
 }): Promise<BackgroundImageSelection> => {
+  if (mode === "none") {
+    return {
+      mode,
+      sourceDir: null,
+      backgroundImages: [],
+    };
+  }
+
   if (mode === "local-folder-random" || mode === "local-folder-cycle") {
+    if (!backgroundDir) {
+      throw new Error(`cover selection mode "${mode}" requires a background directory.`);
+    }
     return assignFromLocalFolder({backgroundDir, seed, mode});
   }
 

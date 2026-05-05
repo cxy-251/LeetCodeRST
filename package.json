@@ -25,6 +25,7 @@
     "prepare:cover-image": "node --import tsx tools/prepare-cover-image.ts",
     "prepare:latest-ai-batch": "node --import tsx tools/prepare-latest-ai-batch.ts",
     "produce:paper-urls": "node --import tsx tools/produce-paper-urls.ts",
+    "produce:paper-urls:donut": "node --import tsx tools/produce-paper-url-donut-batch.ts",
     "produce:effect": "node --import tsx tools/produce-effect-video.ts",
     "import:summary-json": "node --import tsx tools/import-summary-json.ts",
     "scaffold:paper-manifests": "node --import tsx tools/scaffold-paper-manifests.ts",

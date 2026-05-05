@@ -12,6 +12,27 @@ export const readPaperUrlFile = async (filePath: string) => {
     .filter((line) => line && !line.startsWith("#"));
 };
 
+export const readPaperUrlCsv = async (filePath: string) => {
+  const raw = await fs.readFile(filePath, "utf-8");
+  const rows = raw
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter((line) => line && !line.startsWith("#"));
+
+  if (rows.length === 0) {
+    return [];
+  }
+
+  const values = rows.map((row) => row.split(",").map((cell) => cell.trim()).filter(Boolean));
+  const firstCell = values[0]?.[0]?.toLowerCase() ?? "";
+  const hasHeader = firstCell === "paper_url" || firstCell === "url";
+  const records = hasHeader ? values.slice(1) : values;
+
+  return records
+    .map((cells) => cells[0])
+    .filter((value): value is string => Boolean(value));
+};
+
 const directoryHasImages = async (dirPath: string) => {
   try {
     const entries = await fs.readdir(dirPath, {withFileTypes: true});

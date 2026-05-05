@@ -1,4 +1,5 @@
 export type CoverSelectionModeId =
+  | "none"
   | "local-folder-random"
   | "local-folder-cycle"
   | "ai-generated-cover"
