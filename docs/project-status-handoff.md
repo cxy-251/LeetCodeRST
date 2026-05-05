@@ -358,6 +358,9 @@ npm run build
    - `local-folder-cycle`
    - `ai-generated-cover`（预留）
    - `licensed-source`（预留）
+75. `snake-grid` 的食物价值与寻路偏好已开始解耦：
+   - 食物增长价值仍保留分档
+   - 但追食物时的偏好权重已被调平，避免蛇长期只追同一种高价值食物
 75. `produce:paper-urls` 与 `prepare:latest-ai-batch` 已支持：
    - `--cover-selection-mode`
    - `--background-dir`

@@ -124,6 +124,17 @@ const pickFoodProfile = (spawnCursor: number, seed: number): Pick<FoodItem, "val
   return {value: 1, tone: "food-low"};
 };
 
+const getFoodPriorityWeight = (food: Pick<FoodItem, "tone">) => {
+  switch (food.tone) {
+    case "food-high":
+      return 1.36;
+    case "food-mid":
+      return 1.16;
+    default:
+      return 1;
+  }
+};
+
 const getNeighbor = (point: Point, direction: Point, cols: number, rows: number): Point | null => {
   const next = {
     x: point.x + direction.x,
@@ -479,7 +490,12 @@ const pickSafeFoodPath = ({
      * reach the tail after the whole chase, which keeps an escape corridor alive
      * instead of greedily sealing the snake into its own body.
      */
-    const score = food.value * 1000 - foodPath.length * 24 + tailDistances.size * 0.6 - tailDistance * 0.3;
+    const preference = getFoodPriorityWeight(food);
+    const score =
+      preference * 140 -
+      foodPath.length * 24 +
+      tailDistances.size * 0.6 -
+      tailDistance * 0.3;
     if (score > bestScore) {
       bestScore = score;
       bestPath = foodPath;
@@ -546,17 +562,23 @@ const evaluateFallbackMoves = ({
       if (distance === undefined) {
         return;
       }
-      if (distance < bestFoodDistance || (distance === bestFoodDistance && candidate.value > bestFoodValue)) {
+      const candidatePriority = getFoodPriorityWeight(candidate);
+      if (
+        distance < bestFoodDistance ||
+        (distance === bestFoodDistance && candidatePriority > bestFoodValue)
+      ) {
         bestFoodDistance = distance;
-        bestFoodValue = candidate.value;
+        bestFoodValue = candidatePriority;
       }
     });
+
+    const immediatePriority = food ? getFoodPriorityWeight(food) : 0;
 
     evaluations.push({
       nextHead: next,
       areaScore: distances.size,
       foodDistance: Number.isFinite(bestFoodDistance) ? bestFoodDistance : 9999,
-      foodValue: bestFoodValue + (food?.value ?? 0),
+      foodValue: bestFoodValue + immediatePriority,
       tailDistance: tailDistance ?? Number.POSITIVE_INFINITY,
       tailReachable: tailDistance !== undefined,
     });
