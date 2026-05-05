@@ -681,6 +681,25 @@ output/runs/<project-id>/<run-id>/
 - `output/latest-run.json`
 - `output/video-runs.csv`
 
+如果你是批量渲染，系统现在还会额外复制一份“浅层成片目录”：
+
+```text
+output/batches/<batch-id>/videos/
+```
+
+这里会把当前批次的最终 mp4 全部放在同一个文件夹里，方便直接找成片。
+同目录还会有：
+
+- `output/batches/<batch-id>/videos.csv`
+
+它记录了：
+
+- 行号
+- 行 ID
+- 浅层成片路径
+- 深层 run 视频路径
+- 对应 manifest 路径
+
 ## 10. 缓存与避免重复生成
 
 当前系统已经支持：
@@ -697,6 +716,19 @@ output/runs/<project-id>/<run-id>/
 
 - 相同论文 PDF 不会反复下载
 - 相同文本 + 相同 voice 参数不会重复生成 mp3
+
+### 我可以删 `output/` 吗
+
+可以，但要知道代价：
+
+- 删掉后，历史 run 会消失
+- `output/cache/papers` 会清空，论文 PDF 会重新下载
+- `output/cache/audio` 会清空，音频会重新生成
+
+如果你只是想清理“成片太乱”，更推荐保留 `output/cache/`，只关注：
+
+- 深层追溯目录：`output/runs/...`
+- 浅层批次成片目录：`output/batches/<batch-id>/videos/`
 
 ## 11. 当前建议你优先改哪些内容
 

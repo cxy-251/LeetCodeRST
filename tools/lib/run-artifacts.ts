@@ -5,6 +5,7 @@ import type {ProductionManifest} from "@paper-to-video/shared-types";
 
 const OUTPUT_ROOT = path.resolve("output");
 const RUNS_ROOT = path.join(OUTPUT_ROOT, "runs");
+const BATCHES_ROOT = path.join(OUTPUT_ROOT, "batches");
 const CACHE_ROOT = path.join(OUTPUT_ROOT, "cache");
 const AUDIO_CACHE_ROOT = path.join(CACHE_ROOT, "audio");
 const PAPER_CACHE_ROOT = path.join(CACHE_ROOT, "papers");
@@ -49,6 +50,13 @@ export type RunContext = {
   videoPath: string;
 };
 
+export type BatchExportContext = {
+  batchId: string;
+  rootDir: string;
+  videoDir: string;
+  indexPath: string;
+};
+
 export const getRunContext = (projectId: string, runId: string): RunContext => {
   const projectSlug = slugify(projectId);
   const rootDir = path.join(RUNS_ROOT, projectSlug, runId);
@@ -84,6 +92,22 @@ export const ensureRunDirectories = async (context: RunContext) => {
       context.videoDir,
     ].map((dir) => fs.mkdir(dir, {recursive: true})),
   );
+};
+
+export const getBatchExportContext = (batchId: string): BatchExportContext => {
+  const safeBatchId = slugify(batchId);
+  const rootDir = path.join(BATCHES_ROOT, safeBatchId);
+
+  return {
+    batchId: safeBatchId,
+    rootDir,
+    videoDir: path.join(rootDir, "videos"),
+    indexPath: path.join(rootDir, "videos.csv"),
+  };
+};
+
+export const ensureBatchExportDirectories = async (context: BatchExportContext) => {
+  await fs.mkdir(context.videoDir, {recursive: true});
 };
 
 export const ensureCacheDirectories = async () => {
@@ -196,4 +220,32 @@ export const appendRegistryRow = async (row: Record<string, string>) => {
   }
 
   await fs.appendFile(REGISTRY_CSV, line, "utf-8");
+};
+
+export const appendBatchVideoRow = async (
+  context: BatchExportContext,
+  row: Record<string, string>,
+) => {
+  await ensureBatchExportDirectories(context);
+
+  const headers = [
+    "created_at",
+    "row_number",
+    "row_id",
+    "project_id",
+    "run_id",
+    "batch_video_path",
+    "run_video_path",
+    "manifest_path",
+  ];
+
+  const line = `${headers.map((header) => escapeCsv(row[header] ?? "")).join(",")}\n`;
+
+  try {
+    await fs.access(context.indexPath);
+  } catch {
+    await fs.writeFile(context.indexPath, `${headers.join(",")}\n`, "utf-8");
+  }
+
+  await fs.appendFile(context.indexPath, line, "utf-8");
 };

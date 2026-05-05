@@ -1,6 +1,14 @@
 import path from "node:path";
 import {spawn} from "node:child_process";
 import {materializeBatchManifest, parseRowSelection, readVideoBatchRows} from "./lib/video-batch";
+import {
+  appendBatchVideoRow,
+  getBatchExportContext,
+  linkOrCopyFile,
+  readLatestRun,
+  slugify,
+  type BatchExportContext,
+} from "./lib/run-artifacts";
 
 const run = (command: string, args: string[]) =>
   new Promise<void>((resolve, reject) => {
@@ -69,6 +77,35 @@ const renderSingleManifest = async ({
   await run("node", ["--import", "tsx", "tools/build-video.ts"]);
 };
 
+const copyBatchVideoToShallowOutput = async ({
+  batchContext,
+  manifestPath,
+  rowId,
+  rowNumber,
+}: {
+  batchContext: BatchExportContext;
+  manifestPath: string;
+  rowId: string;
+  rowNumber: number;
+}) => {
+  const latestRun = await readLatestRun();
+  const extension = path.extname(latestRun.videoPath) || ".mp4";
+  const fileName = `${String(rowNumber).padStart(2, "0")}-${slugify(rowId)}${extension}`;
+  const targetPath = path.join(batchContext.videoDir, fileName);
+
+  await linkOrCopyFile(latestRun.videoPath, targetPath);
+  await appendBatchVideoRow(batchContext, {
+    created_at: new Date().toISOString(),
+    row_number: String(rowNumber),
+    row_id: rowId,
+    project_id: latestRun.projectId,
+    run_id: latestRun.runId,
+    batch_video_path: targetPath,
+    run_video_path: latestRun.videoPath,
+    manifest_path: manifestPath,
+  });
+};
+
 const main = async () => {
   const options = parseArgs(process.argv.slice(2));
 
@@ -82,6 +119,7 @@ const main = async () => {
 
   const rows = await readVideoBatchRows(options.batchConfigPath);
   const rowSelection = parseRowSelection(options.rows, rows.length);
+  const batchContext = getBatchExportContext(path.basename(options.batchConfigPath, path.extname(options.batchConfigPath)));
 
   for (const row of rows) {
     if (!row.enabled) {
@@ -101,6 +139,13 @@ const main = async () => {
     await renderSingleManifest({
       manifestPath: outputPath,
       mockMode: options.mockMode,
+    });
+
+    await copyBatchVideoToShallowOutput({
+      batchContext,
+      manifestPath: outputPath,
+      rowId: row.rowId,
+      rowNumber: row.rowNumber,
     });
   }
 };
