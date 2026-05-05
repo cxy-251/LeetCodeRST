@@ -83,11 +83,11 @@ export class ThreeDonutEngine {
     this.scene = new THREE.Scene();
     this.scene.add(this.root);
     this.scene.fog = new THREE.Fog(0x050913, 8, 22);
-    this.root.position.set(0, -0.42, 0);
+    this.root.position.set(0, -0.66, 0);
 
     this.camera = new THREE.PerspectiveCamera(34, options.width / options.height, 0.1, 100);
-    this.camera.position.set(0, 1.02, 7.2);
-    this.camera.lookAt(0, -0.34, 0);
+    this.camera.position.set(0, 0.92, 7.7);
+    this.camera.lookAt(0, -0.58, 0);
 
     this.keyLight.position.set(5.4, 4.6, 6.2);
     this.fillLight.position.set(-5.2, 1.8, 4.8);
@@ -142,7 +142,7 @@ export class ThreeDonutEngine {
     this.bundle.shadowDisc.material.opacity = 0.1;
     this.bundle.haloDisc.material.opacity = 0;
 
-    this.root.rotation.x = Math.sin(time * 0.42) * config.wobbleAmount * 0.42;
+    this.root.rotation.x = Math.sin(time * 0.42) * config.wobbleAmount * 0.38;
     this.root.rotation.y = time * 0.58 * config.spinSpeed;
     this.root.rotation.z = Math.cos(time * 0.33) * config.wobbleAmount * 0.24;
 
@@ -150,16 +150,16 @@ export class ThreeDonutEngine {
       camera: this.camera,
       target: this.cameraTarget,
       time,
-      orbitSpeed: 0.18 * config.orbitSpeed,
-      radius: 7,
-      radiusJitter: 0.16,
-      centerY: 0.94,
-      heightJitter: 0.08,
-      lateralJitter: 0.18,
-      targetY: -0.34,
-      targetYJitter: 0.04,
+      orbitSpeed: 0.16 * config.orbitSpeed,
+      radius: 7.45,
+      radiusJitter: 0.12,
+      centerY: 0.84,
+      heightJitter: 0.05,
+      lateralJitter: 0.14,
+      targetY: -0.58,
+      targetYJitter: 0.03,
       targetZ: 0,
-      targetZJitter: 0.12,
+      targetZJitter: 0.08,
     });
 
     const orbitRadius = config.ringRadius + config.tubeRadius * 1.42;
