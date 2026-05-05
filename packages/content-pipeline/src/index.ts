@@ -11,6 +11,7 @@ export {
 export {
   DEFAULT_BACKGROUND_MOTION,
   DEFAULT_CELLULAR_EFFECT,
+  DEFAULT_DONUT_EFFECT,
   DEFAULT_LIGHTS_EFFECT,
   DEFAULT_PARTICLE_EFFECT,
   DEFAULT_RUBIKS_EFFECT,
@@ -18,6 +19,7 @@ export {
   DEFAULT_TYPOGRAPHY_SCALE,
   resolveBackgroundMotionConfig,
   resolveCellularEffectConfig,
+  resolveDonutEffectConfig,
   resolveLightsEffectConfig,
   resolveParticleEffectConfig,
   resolveRubiksEffectConfig,
@@ -34,6 +36,14 @@ export {
   useThreeLifeEngine,
   WebThreeLifeLayer,
 } from "./effects/three-life";
+export {
+  RemotionDonutLayer,
+  ThreeDonutEngine,
+  createDonutMeshes,
+  disposeThreeDonut,
+  useThreeDonutEngine,
+  WebDonutLayer,
+} from "./effects/donut-spin";
 export {
   RemotionLightsLayer,
   ThreeLightsEngine,
@@ -61,6 +71,14 @@ export type {
   ThreeLifeRenderParams,
   WebThreeLifeLayerProps,
 } from "./effects/three-life";
+export type {
+  DonutOrbitSeed,
+  RemotionDonutLayerProps,
+  ThreeDonutEngineOptions,
+  ThreeDonutMeshBundle,
+  ThreeDonutRenderParams,
+  WebDonutLayerProps,
+} from "./effects/donut-spin";
 export type {
   LightsBeamSeed,
   LightsMeshLayer,

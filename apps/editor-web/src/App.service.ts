@@ -11,6 +11,7 @@ import {
   getThemePalette,
   resolveBackgroundMotionConfig,
   resolveCellularEffectConfig,
+  resolveDonutEffectConfig,
   resolveLightsEffectConfig,
   resolveParticleEffectConfig,
   resolveRubiksEffectConfig,
@@ -167,6 +168,14 @@ export const effectRoutes: EffectRoute[] = [
     source: "default",
   },
   {
+    id: "effect-donut-spin",
+    href: "/effects/donut-spin",
+    title: "Donut Spin Effect",
+    description: "单独查看旋转甜甜圈型 WebGL 中间层原子，用于承接更强调中心主体、材质和珠点环绕的案例方向。",
+    effectId: "donut-spin",
+    source: "default",
+  },
+  {
     id: "effect-lights-beams",
     href: "/effects/lights-beams",
     title: "Lights Beams Effect",
@@ -221,6 +230,11 @@ export const effectProfileOptions: ProfileOption<WebGLEffectProfileId>[] = [
     id: "particle-orbit",
     label: "Particle Orbit",
     description: "Centered particle orbit field inspired by Three.js atmosphere studies.",
+  },
+  {
+    id: "donut-spin",
+    label: "Donut Spin",
+    description: "Glossy rotating donut with orbiting pearls as a bold central subject.",
   },
   {
     id: "lights-beams",
@@ -375,6 +389,8 @@ export const getEffectStartLabel = (effectId: EffectRoute["effectId"]) => {
       return "Start Snake Grid";
     case "particle-orbit":
       return "Start Particle Orbit";
+    case "donut-spin":
+      return "Spin Donut";
     case "lights-beams":
       return "Ignite Lights";
     case "rubiks-auto-solve":
@@ -508,13 +524,17 @@ export const createEffectStageModel = ({
       ...(manifest.modules?.cellularEffect ?? {}),
       ...(moduleOverrides?.cellularEffect ?? {}),
     },
-    particleEffect: {
-      ...(manifest.modules?.particleEffect ?? {}),
-      ...(moduleOverrides?.particleEffect ?? {}),
-    },
-    lightsEffect: {
-      ...(manifest.modules?.lightsEffect ?? {}),
-      ...(moduleOverrides?.lightsEffect ?? {}),
+      particleEffect: {
+        ...(manifest.modules?.particleEffect ?? {}),
+        ...(moduleOverrides?.particleEffect ?? {}),
+      },
+      donutEffect: {
+        ...(manifest.modules?.donutEffect ?? {}),
+        ...(moduleOverrides?.donutEffect ?? {}),
+      },
+      lightsEffect: {
+        ...(manifest.modules?.lightsEffect ?? {}),
+        ...(moduleOverrides?.lightsEffect ?? {}),
     },
     rubiksEffect: {
       ...(manifest.modules?.rubiksEffect ?? {}),
@@ -543,6 +563,7 @@ export const createEffectStageModel = ({
       ...mergedModules,
       cellularEffect: resolveCellularEffectConfig(mergedModules),
       particleEffect: resolveParticleEffectConfig(mergedModules),
+      donutEffect: resolveDonutEffectConfig(mergedModules),
       lightsEffect: resolveLightsEffectConfig(mergedModules),
       rubiksEffect: resolveRubiksEffectConfig(mergedModules),
       backgroundMotion: resolveBackgroundMotionConfig(mergedModules),

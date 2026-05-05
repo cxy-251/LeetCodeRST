@@ -1,10 +1,12 @@
 import React from "react";
+import {RemotionDonutLayer, WebDonutLayer} from "./effects/donut-spin";
 import {RemotionThreeLifeLayer, WebThreeLifeLayer} from "./effects/three-life";
 import {RemotionLightsLayer, WebLightsLayer} from "./effects/lights-beams";
 import {RemotionRubiksLayer, WebRubiksLayer} from "./effects/rubiks-cube";
 import {ThreeSnakeEffect} from "./three-snake-effect";
 import {ThreeParticleEffect} from "./three-particle-effect";
 import {
+  DONUT_EFFECT_CONTROLS,
   LIGHTS_EFFECT_CONTROLS,
   LIFE_EFFECT_CONTROLS,
   PARTICLE_EFFECT_CONTROLS,
@@ -164,6 +166,45 @@ const CellularLifeAtom: React.FC<EffectAtomRuntimeProps> = ({
   });
 };
 
+const renderDonutLayer = ({
+  absoluteFrame,
+  activationFrame,
+  height,
+  isRunning,
+  mode,
+  modules,
+  resetToken,
+  seed,
+  simulationFrame,
+  width,
+}: EffectAtomRuntimeProps) => {
+  if (mode === "interactive") {
+    return (
+      <WebDonutLayer
+        activationFrame={activationFrame}
+        height={height}
+        isRunning={Boolean(isRunning)}
+        modules={modules}
+        resetToken={resetToken}
+        seed={seed}
+        width={width}
+      />
+    );
+  }
+
+  return (
+    <RemotionDonutLayer
+      absoluteFrame={absoluteFrame}
+      activationFrame={activationFrame}
+      height={height}
+      modules={modules}
+      seed={seed}
+      simulationFrame={simulationFrame}
+      width={width}
+    />
+  );
+};
+
 const SnakeGridAtom: React.FC<EffectAtomRuntimeProps> = ({
   absoluteFrame,
   activationFrame,
@@ -206,6 +247,32 @@ const ParticleOrbitAtom: React.FC<EffectAtomRuntimeProps> = ({
       width={width}
     />
   );
+};
+
+const DonutSpinAtom: React.FC<EffectAtomRuntimeProps> = ({
+  absoluteFrame,
+  activationFrame,
+  height,
+  isRunning,
+  mode,
+  modules,
+  resetToken,
+  seed,
+  simulationFrame,
+  width,
+}) => {
+  return renderDonutLayer({
+    absoluteFrame,
+    activationFrame,
+    height,
+    isRunning,
+    mode,
+    modules,
+    resetToken,
+    seed,
+    simulationFrame,
+    width,
+  });
 };
 
 const LightsBeamsAtom: React.FC<EffectAtomRuntimeProps> = ({
@@ -309,6 +376,21 @@ const CellularLaunchAtom: React.FC<EffectAtomRuntimeProps> = ({
           width={width}
         />
       );
+    }
+
+    if (continuousEffectId === "donut-spin") {
+      return renderDonutLayer({
+        absoluteFrame,
+        activationFrame,
+        height,
+        isRunning,
+        mode,
+        modules,
+        resetToken,
+        seed,
+        simulationFrame,
+        width,
+      });
     }
 
     if (continuousEffectId === "lights-beams") {
@@ -563,6 +645,13 @@ export const EFFECT_ATOMS: Record<EffectAtomId, EffectAtomDefinition> = {
     description: "受常见 Three.js 粒子星云案例启发的轨道粒子层，已经调整为更强调画面中央主视觉的构图。",
     Component: ParticleOrbitAtom,
     controls: PARTICLE_EFFECT_CONTROLS,
+  },
+  "donut-spin": {
+    id: "donut-spin",
+    title: "Donut Spin",
+    description: "实体旋转甜甜圈 WebGL 中间层，强调中心主体、 glossy 材质和围绕甜甜圈的发光珠点。",
+    Component: DonutSpinAtom,
+    controls: DONUT_EFFECT_CONTROLS,
   },
   "lights-launch": {
     id: "lights-launch",

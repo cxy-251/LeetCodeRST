@@ -16,6 +16,8 @@ export const mapEffectProfileToAtomId = (effectProfileId: WebGLEffectProfileId):
       return "snake-grid";
     case "particle-orbit":
       return "particle-orbit";
+    case "donut-spin":
+      return "donut-spin";
     case "lights-beams":
       return "lights-beams";
     case "rubiks-solver":

@@ -1,6 +1,7 @@
 import type {
   BackgroundMotionConfig,
   CellularEffectConfig,
+  DonutEffectConfig,
   LightsEffectConfig,
   ParticleEffectConfig,
   RubiksEffectConfig,
@@ -128,6 +129,20 @@ export const DEFAULT_LIGHTS_EFFECT: LightsEffectConfig = {
   primaryColor: "#62f3ff",
   secondaryColor: "#4a8fff",
   accentColor: "#ff5fc0",
+};
+
+export const DEFAULT_DONUT_EFFECT: DonutEffectConfig = {
+  variant: "classic",
+  ringRadius: 1.46,
+  tubeRadius: 0.44,
+  spinSpeed: 1.08,
+  orbitSpeed: 1,
+  wobbleAmount: 0.34,
+  pearlCount: 9,
+  glowIntensity: 0.72,
+  primaryColor: "#ff8cc8",
+  secondaryColor: "#7be9ff",
+  accentColor: "#ffd27a",
 };
 
 export const DEFAULT_RUBIKS_EFFECT: RubiksEffectConfig = {
@@ -292,6 +307,48 @@ const PARTICLE_VARIANTS: Record<
   },
 };
 
+const DONUT_VARIANTS: Record<
+  DonutEffectConfig["variant"],
+  Partial<DonutEffectConfig>
+> = {
+  classic: {
+    ringRadius: 1.46,
+    tubeRadius: 0.44,
+    spinSpeed: 1.08,
+    orbitSpeed: 1,
+    wobbleAmount: 0.34,
+    pearlCount: 9,
+    glowIntensity: 0.72,
+    primaryColor: "#ff8cc8",
+    secondaryColor: "#7be9ff",
+    accentColor: "#ffd27a",
+  },
+  arcade: {
+    ringRadius: 1.34,
+    tubeRadius: 0.4,
+    spinSpeed: 1.28,
+    orbitSpeed: 1.18,
+    wobbleAmount: 0.24,
+    pearlCount: 12,
+    glowIntensity: 0.86,
+    primaryColor: "#6ef1ff",
+    secondaryColor: "#ff7acb",
+    accentColor: "#fff18b",
+  },
+  cosmic: {
+    ringRadius: 1.6,
+    tubeRadius: 0.36,
+    spinSpeed: 0.86,
+    orbitSpeed: 0.84,
+    wobbleAmount: 0.48,
+    pearlCount: 7,
+    glowIntensity: 0.92,
+    primaryColor: "#b3a0ff",
+    secondaryColor: "#8effff",
+    accentColor: "#ffca7a",
+  },
+};
+
 const LIGHTS_VARIANTS: Record<
   LightsEffectConfig["variant"],
   Partial<LightsEffectConfig>
@@ -432,6 +489,18 @@ export const resolveParticleEffectConfig = (
   return {
     ...DEFAULT_PARTICLE_EFFECT,
     ...PARTICLE_VARIANTS[variant],
+    ...overrides,
+  };
+};
+
+export const resolveDonutEffectConfig = (
+  modules?: VisualModuleConfig,
+): DonutEffectConfig => {
+  const overrides = modules?.donutEffect ?? {};
+  const variant = overrides.variant ?? DEFAULT_DONUT_EFFECT.variant;
+  return {
+    ...DEFAULT_DONUT_EFFECT,
+    ...DONUT_VARIANTS[variant],
     ...overrides,
   };
 };

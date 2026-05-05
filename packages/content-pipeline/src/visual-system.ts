@@ -46,6 +46,7 @@ export const resolveSceneBackgroundEffectId = (
     resolved === "cellular-life" ||
     resolved === "snake-grid" ||
     resolved === "particle-orbit" ||
+    resolved === "donut-spin" ||
     resolved === "lights-beams" ||
     resolved === "rubiks-auto-solve"
   ) {
@@ -55,6 +56,10 @@ export const resolveSceneBackgroundEffectId = (
 
     if (effectProfile?.id === "particle-orbit") {
       return "particle-orbit";
+    }
+
+    if (effectProfile?.id === "donut-spin") {
+      return "donut-spin";
     }
 
     if (effectProfile?.id === "lights-beams") {

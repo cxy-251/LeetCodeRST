@@ -95,6 +95,7 @@ const BackgroundEffectLayer: React.FC<{
     effectId === "cellular-launch" ||
     effectId === "snake-grid" ||
     effectId === "particle-orbit" ||
+    effectId === "donut-spin" ||
     effectId === "lights-launch" ||
     effectId === "lights-beams" ||
     effectId === "rubiks-launch" ||
@@ -109,6 +110,8 @@ const BackgroundEffectLayer: React.FC<{
             ? "snake-grid"
             : continuousEffectId === "particle-orbit"
               ? "particle-orbit"
+              : continuousEffectId === "donut-spin"
+                ? "donut-spin"
               : continuousEffectId === "lights-beams"
                 ? "lights-beams"
               : continuousEffectId === "rubiks-auto-solve"

@@ -48,6 +48,8 @@
 
 ```bash
 npm run produce:effect -- --effect-profile rubiks-solver
+
+npm run produce:effect -- --effect-profile donut-spin
 ```
 
 常用参数：
@@ -64,6 +66,7 @@ npm run produce:effect -- \
 - `life-game`
 - `snake-grid`
 - `particle-orbit`
+- `donut-spin`
 - `lights-beams`
 - `rubiks-solver`
 
@@ -382,6 +385,7 @@ manifest 中改：
 - `life-game`
 - `snake-grid`
 - `particle-orbit`
+- `donut-spin`
 - `lights-beams`
 - `rubiks-solver`
 

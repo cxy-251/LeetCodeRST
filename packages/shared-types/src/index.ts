@@ -52,6 +52,7 @@ export type BackgroundEffectId =
   | "cellular-life"
   | "snake-grid"
   | "particle-orbit"
+  | "donut-spin"
   | "lights-launch"
   | "lights-beams"
   | "rubiks-launch"
@@ -61,6 +62,7 @@ export type WebGLEffectProfileId =
   | "life-game"
   | "snake-grid"
   | "particle-orbit"
+  | "donut-spin"
   | "lights-beams"
   | "rubiks-solver";
 
@@ -153,6 +155,20 @@ export type ParticleEffectConfig = {
   accentColor: string;
 };
 
+export type DonutEffectConfig = {
+  variant: "classic" | "arcade" | "cosmic";
+  ringRadius: number;
+  tubeRadius: number;
+  spinSpeed: number;
+  orbitSpeed: number;
+  wobbleAmount: number;
+  pearlCount: number;
+  glowIntensity: number;
+  primaryColor: string;
+  secondaryColor: string;
+  accentColor: string;
+};
+
 export type RubiksEffectConfig = {
   turnFrames: number;
   holdFrames: number;
@@ -184,6 +200,7 @@ export type VisualModuleConfig = {
   backgroundMotion?: Partial<BackgroundMotionConfig>;
   cellularEffect?: Partial<CellularEffectConfig>;
   particleEffect?: Partial<ParticleEffectConfig>;
+  donutEffect?: Partial<DonutEffectConfig>;
   lightsEffect?: Partial<LightsEffectConfig>;
   rubiksEffect?: Partial<RubiksEffectConfig>;
   typography?: Partial<TypographyScaleConfig>;

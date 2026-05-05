@@ -75,6 +75,10 @@ export const resolveContinuousEffectId = (manifest: RenderManifest): BackgroundE
     return "particle-orbit";
   }
 
+  if (manifest.effectProfile?.id === "donut-spin") {
+    return "donut-spin";
+  }
+
   if (manifest.effectProfile?.id === "lights-beams") {
     return "lights-beams";
   }

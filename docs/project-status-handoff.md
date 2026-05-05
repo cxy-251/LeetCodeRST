@@ -921,6 +921,44 @@ Verification:
 
 ---
 
+## 22. 2026-05-05 Donut Spin WebGL Effect Family
+
+This pass added a new rotating donut effect family as a first-class WebGL atom and effect-only render target.
+
+What changed:
+
+1. A new `donut-spin` family was added under:
+   - `packages/content-pipeline/src/effects/donut-spin/`
+   - pure Three.js engine in `core/`
+   - shared web / Remotion adapters in `react/`
+2. The family uses a single `ThreeDonutEngine` for both interactive preview and Remotion rendering.
+   - web preview runs through `requestAnimationFrame`
+   - Remotion uses the same `renderFrame()` entry point
+3. New shared config support was added:
+   - `effectProfile.id = "donut-spin"`
+   - `backgroundEffectId = "donut-spin"`
+   - `modules.donutEffect`
+4. The editor and runtime stack now recognize the new family:
+   - effect lab route: `/effects/donut-spin`
+   - template effect dropdown includes `Donut Spin`
+   - render runtime, template preview, and effect-only video path all accept the new family
+5. Script-side allowlists were updated so production commands can use the new family:
+   - `tools/lib/effect-profiles.ts`
+   - `tools/lib/effect-video.ts`
+   - `docs/video-production-manual.md`
+
+Why this matters:
+
+1. The project now has another center-subject Three.js family that leans on geometry, material, orbiting detail, and bloom rather than game logic.
+2. This family follows the same modular boundary as `lights-beams` and `rubiks-solver`, so future showcase-style recreations can plug into the same effect architecture.
+
+Verification:
+
+1. `npm run lint`
+2. `npm run build`
+
+---
+
 ## 22. 2026-04-30 Lights Beams Pulse Hero Pair Stabilization
 
 This pass stopped the `lights-beams` pulse variant from degenerating into large dark balls that rushed the camera and reset harshly.

@@ -260,6 +260,7 @@ export const useEffectPreview = (route: EffectRoute | null): EffectPreviewState 
   const [moduleOverrides, setModuleOverrides] = useState({} as NonNullable<RenderManifest["modules"]>);
   const usesEngineDrivenFrames =
     route?.effectId === "cellular-life" ||
+    route?.effectId === "donut-spin" ||
     route?.effectId === "lights-beams" ||
     route?.effectId === "rubiks-auto-solve";
 
