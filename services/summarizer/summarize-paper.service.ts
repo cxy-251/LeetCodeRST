@@ -1,5 +1,6 @@
 import type {SummaryModeId} from "@paper-to-video/shared-types";
-import {buildRuleBasedSummaryDraft, extractAbstractSentences, extractSectionHeadings} from "./rule-based-summary.service";
+import {buildRuleBasedSummaryDraft, detectPaperMode, extractAbstractSentences, extractSectionHeadings} from "./rule-based-summary.service";
+import {polishSummaryDraft} from "./summary-polish.service";
 import {summarizeWithLmStudio} from "./lm-studio.service";
 import type {LmStudioSummaryConfig, SourcePaperForSummary, SummaryResult} from "./summarizer.types";
 
@@ -43,7 +44,10 @@ export const summarizePaper = async ({
 
   return {
     summaryMode: "rule-based",
-    scriptDraft: buildRuleBasedSummaryDraft(paper, context),
+    scriptDraft: polishSummaryDraft({
+      draft: buildRuleBasedSummaryDraft(paper, context),
+      paperMode: detectPaperMode(paper),
+    }),
     abstractSentences,
     sectionHeadings,
   };

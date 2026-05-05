@@ -1,3 +1,5 @@
+import {detectPaperMode} from "./rule-based-summary.service";
+import {polishSummaryDraft} from "./summary-polish.service";
 import type {LmStudioSummaryConfig, PaperSummaryContext, SourcePaperForSummary, SummaryDraft} from "./summarizer.types";
 
 type ChatCompletionResponse = {
@@ -37,6 +39,15 @@ const STRICT_RESPONSE_SCHEMA = {
     },
   },
 } as const;
+
+const SHORT_RESPONSE_SCHEMA_EXAMPLE = {
+  hook: "先说最值得看的点",
+  problem: "这篇论文要解决什么",
+  method: "作者到底做了什么",
+  value: "为什么值得看",
+  ending: "一句收尾结论",
+  bullets: ["要点一", "要点二", "要点三"],
+};
 
 const extractContent = (payload: ChatCompletionResponse) => {
   const raw = payload.choices?.[0]?.message?.content;
@@ -457,6 +468,52 @@ const normalizeRawText = (rawText: string) =>
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 
+const SECTION_HINTS = {
+  intro: [/^\s*(introduction|1 introduction|引言)\b/im, /^\s*(motivation|背景)\b/im],
+  method: [/^\s*(method|methods|approach|framework|model|methodology)\b/im, /^\s*(2 |3 )?(approach|framework|method)\b/im],
+  result: [/^\s*(experiments|results|evaluation|conclusion|discussion)\b/im, /^\s*(实验|结果|结论)\b/im],
+} as const;
+
+const extractSectionSnippet = (rawText: string, patterns: readonly RegExp[], maxChars: number) => {
+  for (const pattern of patterns) {
+    const match = pattern.exec(rawText);
+    if (!match?.index && match?.index !== 0) {
+      continue;
+    }
+
+    return rawText.slice(match.index, match.index + maxChars).trim();
+  }
+
+  return "";
+};
+
+const buildEvidencePacket = (
+  paper: SourcePaperForSummary,
+  context: PaperSummaryContext,
+  excerptChars: number,
+  compact = false,
+) => {
+  const normalized = normalizeRawText(context.rawText);
+  const sourceSummary = paper.summary.trim().slice(0, compact ? 900 : 1500);
+  const abstract = context.abstractSentences.slice(0, compact ? 4 : 6).join(" ");
+  const headings = context.sectionHeadings.slice(0, compact ? 5 : 8);
+  const introSnippet = extractSectionSnippet(normalized, SECTION_HINTS.intro, compact ? 700 : 1200);
+  const methodSnippet = extractSectionSnippet(normalized, SECTION_HINTS.method, compact ? 700 : 1200);
+  const resultSnippet = extractSectionSnippet(normalized, SECTION_HINTS.result, compact ? 700 : 1200);
+  const focusedExcerpt = extractFocusedExcerpt(normalized, excerptChars);
+
+  return {
+    mode: detectPaperMode(paper),
+    sourceSummary,
+    abstract,
+    headings,
+    introSnippet,
+    methodSnippet,
+    resultSnippet,
+    focusedExcerpt,
+  };
+};
+
 const extractFocusedExcerpt = (rawText: string, maxChars: number) => {
   const normalized = normalizeRawText(rawText);
   if (!normalized) {
@@ -512,44 +569,89 @@ const buildPrompt = (
   excerptChars: number,
   compact = false,
 ) => {
-  const excerpt = extractFocusedExcerpt(context.rawText, excerptChars);
-  const headings = context.sectionHeadings.slice(0, compact ? 5 : 8).join(" | ") || "N/A";
-  const abstractSentences = context.abstractSentences.slice(0, compact ? 4 : 6);
-  const abstract = abstractSentences.join(" ");
-  const sourceSummary = paper.summary.trim().slice(0, compact ? 800 : 1400);
+  const evidence = buildEvidencePacket(paper, context, excerptChars, compact);
   const styleRules = compact
     ? [
         "1. 语言使用中文。",
-        "2. 每个字段控制在 1 句话，尽量精炼。",
-        "3. bullets 固定输出 3 条，面向短视频观众。",
-        "4. 只输出 JSON，不要解释。",
+        "2. 每个字段只写 1 句话，尽量短。",
+        "3. hook 先说最值得看的点，不要复述标题。",
+        "4. bullets 固定 3 条，每条 8 到 18 个汉字，不要句号。",
+        "5. 只输出 JSON。",
       ]
     : [
-        "1. 语言使用中文。",
-        "2. 每个字段用 1 到 2 句话，适合短视频配音。",
-        "3. bullets 固定输出 3 条，简洁、面向观众。",
-        "4. 不要写 markdown，不要解释。",
+        "1. 语言使用中文，面向短视频观众，不要像论文摘要翻译。",
+        "2. hook 要像前 3 秒开场，先说最值得看的点，不要空话。",
+        "3. problem / method / value / ending 各写 1 句话，尽量控制在 18 到 38 个汉字。",
+        "4. 如果是综述/框架型论文，强调它重新整理了什么、统一了什么坐标系。",
+        "5. 如果是理论论文，强调它证明了什么边界或不可能性。",
+        "6. 如果是方法论文，强调怎么做、带来什么结果。",
+        "7. bullets 固定 3 条，每条 8 到 18 个汉字，不要句号、不要长句。",
+        "8. 避免空泛表达，例如“通过这套全面图谱”“值得进一步展开”。",
+        "9. 不要捏造实验数字；不确定就说贡献，不说具体数值。",
+        "10. 只输出 JSON，不要 markdown，不要解释。",
       ];
 
   return [
-    "你是一个论文短视频脚本生成器。",
-    "请阅读下面的论文信息，输出合法 JSON，并且只输出 JSON。",
+    "你是一个论文短视频脚本总编，不是论文翻译器。",
+    "请根据下面的论文证据，写出适合 5 页竖屏短视频的中文脚本 JSON。",
     "输出格式必须与这个结构一致：",
-    JSON.stringify(RESPONSE_SCHEMA_EXAMPLE, null, 2),
+    JSON.stringify(SHORT_RESPONSE_SCHEMA_EXAMPLE, null, 2),
     "",
-    "要求：",
+    "写作要求：",
     ...styleRules,
     "",
+    `论文类型提示：${evidence.mode}`,
     `论文标题：${paper.title}`,
     `论文编号：${paper.arxivId}`,
     `论文方向：${paper.categories.join(" / ")}`,
     `发布日期：${paper.publishedAt}`,
-    `论文摘要原文：${sourceSummary}`,
-    `摘要句：${abstract}`,
-    `章节线索：${headings}`,
     "",
-    compact ? "关键正文摘录：" : "论文文本片段：",
-    excerpt,
+    `官方摘要：${evidence.sourceSummary}`,
+    `关键摘要句：${evidence.abstract}`,
+    `章节线索：${evidence.headings.join(" | ") || "N/A"}`,
+    "",
+    compact ? "引言摘录：" : "引言/动机摘录：",
+    evidence.introSnippet || evidence.focusedExcerpt,
+    "",
+    compact ? "方法摘录：" : "方法/框架摘录：",
+    evidence.methodSnippet || evidence.focusedExcerpt,
+    "",
+    compact ? "结果摘录：" : "结果/结论摘录：",
+    evidence.resultSnippet || evidence.focusedExcerpt,
+  ].join("\n");
+};
+
+const buildReviewPrompt = ({
+  paper,
+  context,
+  draft,
+}: {
+  paper: SourcePaperForSummary;
+  context: PaperSummaryContext;
+  draft: SummaryDraft;
+}) => {
+  const evidence = buildEvidencePacket(paper, context, 2200, true);
+
+  return [
+    "你是论文短视频脚本的审稿编辑。",
+    "请审核下面这份中文脚本初稿是否真正抓住论文核心，再重写成更短、更清楚、更像人话的版本。",
+    "只输出合法 JSON。",
+    "目标：",
+    "1. 先说最值得看的点，不要复述标题。",
+    "2. 讲清问题、方法、价值，不要空话。",
+    "3. method 和 value 必须体现论文真正的核心贡献。",
+    "4. bullets 是幻灯片要点，不是完整句，每条 8 到 18 个汉字。",
+    "5. 不要照抄英文摘要，不要堆术语，不要写“通过这套全面图谱”这类空泛句。",
+    "",
+    `论文类型提示：${evidence.mode}`,
+    `标题：${paper.title}`,
+    `摘要句：${evidence.abstract}`,
+    `章节线索：${evidence.headings.join(" | ") || "N/A"}`,
+    `方法/结论摘录：${evidence.methodSnippet || evidence.focusedExcerpt}`,
+    `结果/结论摘录：${evidence.resultSnippet || evidence.focusedExcerpt}`,
+    "",
+    "当前初稿：",
+    JSON.stringify(draft, null, 2),
   ].join("\n");
 };
 
@@ -566,6 +668,7 @@ export const summarizeWithLmStudio = async (
   context: PaperSummaryContext,
   config: LmStudioSummaryConfig,
 ): Promise<SummaryDraft> => {
+  const paperMode = detectPaperMode(paper);
   const runSummaryRequest = async (
     compact = false,
     preferStructuredOutput = true,
@@ -648,5 +751,50 @@ export const summarizeWithLmStudio = async (
 
   draft = parseDraft(JSON.stringify(draft));
   validateDraft(draft);
-  return draft;
+
+  try {
+    const reviewPayload = await requestCompletion({
+      config,
+      maxTokens: Math.min(config.maxOutputTokens, 1400),
+      temperature: Math.min(config.temperature, 0.15),
+      preferStructuredOutput: true,
+      messages: [
+        {
+          role: "system",
+          content: "You edit Chinese short-video paper scripts into tighter JSON.",
+        },
+        {
+          role: "user",
+          content: buildReviewPrompt({
+            paper,
+            context,
+            draft,
+          }),
+        },
+      ],
+    });
+
+    let reviewedContent = extractContent(reviewPayload);
+    const reviewedReasoning = extractReasoningContent(reviewPayload);
+    if (!reviewedContent && reviewedReasoning) {
+      reviewedContent = extractFinalResponseFromReasoning(reviewedReasoning) || reviewedReasoning;
+    }
+
+    if (reviewedContent) {
+      const reviewedDraft = await recoverDraftFromMalformedResponse({
+        config,
+        raw: reviewedContent,
+      });
+      if (reviewedDraft) {
+        draft = reviewedDraft;
+      }
+    }
+  } catch {
+    // Keep the first successful draft if the editorial pass fails.
+  }
+
+  return polishSummaryDraft({
+    draft,
+    paperMode,
+  });
 };

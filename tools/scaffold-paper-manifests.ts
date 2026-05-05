@@ -54,7 +54,7 @@ const buildContentProfile = (paper: SourceBundle["papers"][number]): ContentProf
         narrationText: draft.hook,
         content: {
           title: paper.title,
-          body: `arXiv ${paper.arxivId} · ${paper.categories.join(" / ")}`,
+          body: draft.hook,
         },
       },
       problem: {
@@ -67,19 +67,16 @@ const buildContentProfile = (paper: SourceBundle["papers"][number]): ContentProf
       method: {
         narrationText: draft.method,
         content: {
-          title: "关键信息",
-          bullets: draft.bullets.slice(0, 3),
+          title: "核心方法",
+          body: draft.method,
         },
       },
       value: {
         narrationText: draft.value,
         content: {
           title: "为什么值得看？",
-          bullets: [
-            draft.value,
-            `所属方向：${paper.categories.join(" / ")}`,
-            `发布时间：${paper.publishedAt.slice(0, 10)}`,
-          ],
+          body: draft.value,
+          bullets: draft.bullets.slice(0, 3),
         },
       },
       ending: {

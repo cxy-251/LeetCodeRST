@@ -52,30 +52,30 @@ export const buildRuleBasedSummaryDraft = (
 
   if (mode === "survey") {
     return {
-      hook: `这篇论文不是在做单点模型改进，而是在重新整理 AI agent 的 world modeling 全景。`,
-      problem: `作者想解决的问题是：当智能体开始在真实环境里持续行动时，我们到底该怎样定义和评估 world model。`,
-      method: `论文提出了一个 levels x laws 的分析框架，把能力层级和约束类型放到同一张图里，并梳理了 ${context.sectionHeadings.slice(0, 3).join("、")} 等关键脉络。`,
-      value: `它的价值不只是综述，而是把 predictor、simulator、evolver 这些能力层级统一到了同一个研究坐标系里。`,
-      ending: `如果你在关注 agent、world model 和长期规划，这篇综述非常适合作为进入这个方向的起点。`,
+      hook: "这篇论文最重要的，不是提新模型，而是重新整理 world model 全景。",
+      problem: "智能体开始持续行动后，研究界一直缺一套统一的 world model 定义和评估框架。",
+      method: `作者提出 levels×laws 框架，把能力层级和环境约束放进同一张图里，并串起 ${context.sectionHeadings.slice(0, 3).join("、")} 这些主线。`,
+      value: "它把 predictor、simulator、evolver 放进同一个坐标系，更适合判断 agent 下一步往哪走。",
+      ending: "如果你想系统理解 agent 和 world model，这篇综述就是一张路线图。",
       bullets: [
-        "统一 world model 的能力层级",
-        "把物理、数字、社会、科学环境放进同一框架",
-        "更适合用来理解 agent 系统下一步往哪走",
+        "统一能力层级",
+        "统一环境约束",
+        "串起 agent 路线图",
       ],
     };
   }
 
   if (mode === "theory") {
     return {
-      hook: `这篇论文切的是一个很底层的问题：某些规划问题，从理论上就可能根本不可判定。`,
-      problem: `作者讨论的是 epistemic planning 里的 plan existence 问题，也就是给定目标和动作后，是否存在一条可达路径。`,
-      method: `核心结果是一个 undecidability proof。即使把动作条件限制得很弱，这个计划存在性问题依然可能不可判定。`,
-      value: `这类结论的意义在于，它告诉我们哪些规划设定天然会碰到理论边界，而不是单纯算法还不够强。`,
-      ending: `如果你关心 AI 规划、逻辑推理和形式化方法，这篇短论文的理论信号很强。`,
+      hook: "这篇论文最硬核的地方，是它证明有些规划问题从根上就解不了。",
+      problem: "作者讨论的是 epistemic planning 里的 plan existence，也就是目标是否存在一条可达解。",
+      method: "核心结论是一个不可判定性证明：哪怕动作条件收得很弱，问题依然可能无解。",
+      value: "它提醒我们，有些规划瓶颈不是算法不够强，而是理论边界本来就在那里。",
+      ending: "如果你关心 AI 规划和形式化推理，这篇论文的理论信号很强。",
       bullets: [
-        "研究对象是 epistemic planning",
-        "结果是 plan existence 不可判定",
-        "提示某些规划任务存在理论极限",
+        "研究 epistemic planning",
+        "证明 plan existence 不可判定",
+        "指出规划理论边界",
       ],
     };
   }
@@ -86,15 +86,15 @@ export const buildRuleBasedSummaryDraft = (
     sentenceOr(context.abstractSentences, 2, paper.summary);
 
   return {
-    hook: `这篇论文关注的是 RAG 检索环节的一个实际瓶颈：向量召回很快，但不一定真的最有用。`,
-    problem: `作者想解决的是检索质量和推理成本之间的矛盾，也就是怎样既保留 dense retrieval 的速度，又靠近 LLM utility re-ranking 的效果。`,
+    hook: "这篇论文盯上的，是一个真实瓶颈：检索很快，但不一定真有用。",
+    problem: "作者想解决检索质量和推理成本的矛盾，也就是怎样兼顾速度和最终答案质量。",
     method: `论文的核心方法可以概括为：${methodSentence}`,
     value: `实验上最值得看的是：${resultSentence}`,
-    ending: `如果你正在做 RAG、dense retriever 或者检索排序，这篇工作很适合作为性能和成本平衡的参考。`,
+    ending: "如果你在做 RAG 或检索排序，这篇工作更像一份很实用的提效方案。",
     bullets: [
-      "把检索目标改成对齐生成 utility",
-      "不依赖测试时 LLM 重排序",
-      "更适合大规模 RAG 实际部署",
+      "检索目标对齐生成收益",
+      "减少测试时重排序",
+      "更适合大规模部署",
     ],
   };
 };
