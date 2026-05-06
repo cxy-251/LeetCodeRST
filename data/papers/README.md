@@ -28,6 +28,14 @@
 - 网址 TXT：`paper-urls.txt`
 - 说明：`<paper-id>.md` 或 `README.md`
 
+推荐的论文网址 CSV 结构：
+
+```csv
+paper_url,status
+https://arxiv.org/abs/2604.22748,unprocessed
+https://arxiv.org/abs/2604.22736,processed
+```
+
 # 边界说明
 
 这里是手工输入区，不是缓存区。

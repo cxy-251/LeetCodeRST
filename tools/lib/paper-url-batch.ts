@@ -5,6 +5,23 @@ import {makeRunId, slugify} from "./run-artifacts";
 
 const IMAGE_FILE_PATTERN = /\.(png|jpg|jpeg|webp|svg)$/i;
 
+export type PaperUrlStatus = "processed" | "unprocessed";
+
+export type PaperUrlRecord = {
+  paperUrl: string;
+  status: PaperUrlStatus;
+};
+
+const normalizeStatus = (value: string | undefined): PaperUrlStatus => {
+  const normalized = (value ?? "").trim().toLowerCase();
+
+  if (["processed", "done", "complete", "completed", "已处理", "done"].includes(normalized)) {
+    return "processed";
+  }
+
+  return "unprocessed";
+};
+
 export const readPaperUrlFile = async (filePath: string) => {
   const raw = await fs.readFile(filePath, "utf-8");
   return raw
@@ -14,6 +31,11 @@ export const readPaperUrlFile = async (filePath: string) => {
 };
 
 export const readPaperUrlCsv = async (filePath: string) => {
+  const records = await readPaperUrlCsvRecords(filePath);
+  return records.map((record) => record.paperUrl);
+};
+
+export const readPaperUrlCsvRecords = async (filePath: string): Promise<PaperUrlRecord[]> => {
   const raw = await fs.readFile(filePath, "utf-8");
   const rows = raw
     .split(/\r?\n/)
@@ -25,13 +47,22 @@ export const readPaperUrlCsv = async (filePath: string) => {
   }
 
   const values = rows.map((row) => row.split(",").map((cell) => cell.trim()).filter(Boolean));
-  const firstCell = values[0]?.[0]?.toLowerCase() ?? "";
-  const hasHeader = firstCell === "paper_url" || firstCell === "url";
-  const records = hasHeader ? values.slice(1) : values;
+  const headers = values[0]?.map((cell) => cell.toLowerCase()) ?? [];
+  const hasHeader = headers.includes("paper_url") || headers.includes("url");
+  const dataRows = hasHeader ? values.slice(1) : values;
+  const urlIndex = hasHeader ? Math.max(headers.indexOf("paper_url"), headers.indexOf("url")) : 0;
+  const statusIndex = hasHeader ? headers.indexOf("status") : -1;
 
-  return records
-    .map((cells) => cells[0])
-    .filter((value): value is string => Boolean(value));
+  return dataRows
+    .map((cells) => {
+      const paperUrl = cells[urlIndex] ?? cells[0] ?? "";
+      const status = normalizeStatus(statusIndex >= 0 ? cells[statusIndex] : undefined);
+      return {
+        paperUrl,
+        status,
+      } satisfies PaperUrlRecord;
+    })
+    .filter((record) => Boolean(record.paperUrl));
 };
 
 export const normalizePaperUrlList = (values: string[]) => {
@@ -59,6 +90,38 @@ export const normalizePaperUrlList = (values: string[]) => {
   return result;
 };
 
+export const normalizePaperUrlRecords = (records: PaperUrlRecord[]) => {
+  const seen = new Map<string, PaperUrlRecord>();
+
+  for (const record of records) {
+    const normalized = record.paperUrl.trim();
+    if (!normalized) {
+      continue;
+    }
+
+    const arxivId = parseArxivIdFromInput(normalized);
+    const canonical = arxivId ? toCanonicalArxivAbsUrl(arxivId) : normalized;
+    const dedupeKey = arxivId ? arxivId.toLowerCase() : canonical.toLowerCase();
+    const nextRecord: PaperUrlRecord = {
+      paperUrl: canonical,
+      status: record.status,
+    };
+
+    const previous = seen.get(dedupeKey);
+    if (!previous) {
+      seen.set(dedupeKey, nextRecord);
+      continue;
+    }
+
+    seen.set(dedupeKey, {
+      paperUrl: previous.paperUrl,
+      status: previous.status === "processed" || nextRecord.status === "processed" ? "processed" : "unprocessed",
+    });
+  }
+
+  return [...seen.values()];
+};
+
 export const writePaperUrlCsv = async ({
   filePath,
   urls,
@@ -68,6 +131,19 @@ export const writePaperUrlCsv = async ({
 }) => {
   const normalized = normalizePaperUrlList(urls);
   const raw = ["paper_url", ...normalized].join("\n");
+  await fs.mkdir(path.dirname(filePath), {recursive: true});
+  await fs.writeFile(filePath, `${raw}\n`, "utf-8");
+};
+
+export const writePaperUrlCsvRecords = async ({
+  filePath,
+  records,
+}: {
+  filePath: string;
+  records: PaperUrlRecord[];
+}) => {
+  const normalized = normalizePaperUrlRecords(records);
+  const raw = ["paper_url,status", ...normalized.map((record) => `${record.paperUrl},${record.status}`)].join("\n");
   await fs.mkdir(path.dirname(filePath), {recursive: true});
   await fs.writeFile(filePath, `${raw}\n`, "utf-8");
 };

@@ -1,6 +1,11 @@
 import path from "node:path";
 import {spawn} from "node:child_process";
-import {buildPaperUrlBatchPaths, makePaperUrlBatchId, readPaperUrlCsv} from "./lib/paper-url-batch";
+import {
+  buildPaperUrlBatchPaths,
+  makePaperUrlBatchId,
+  readPaperUrlCsvRecords,
+  writePaperUrlCsvRecords,
+} from "./lib/paper-url-batch";
 import {
   resolveDonutBatchBaseSeed,
   writeDonutBatchCsv,
@@ -78,10 +83,12 @@ const toProfileId = (arxivId: string) => `arxiv-${arxivId.replace(/[^\w]+/g, "-"
 
 const main = async () => {
   const options = parseArgs(process.argv.slice(2));
-  const paperUrls = await readPaperUrlCsv(options.paperUrlCsv);
+  const paperRecords = await readPaperUrlCsvRecords(options.paperUrlCsv);
+  const unprocessedRecords = paperRecords.filter((record) => record.status !== "processed");
+  const paperUrls = unprocessedRecords.map((record) => record.paperUrl);
 
   if (paperUrls.length === 0) {
-    throw new Error("The CSV file did not contain any paper URLs.");
+    throw new Error("The CSV file did not contain any unprocessed paper URLs.");
   }
 
   const batchId = options.batchId ?? makePaperUrlBatchId("paper-url-donut-batch");
@@ -189,6 +196,21 @@ const main = async () => {
     "--batch-config",
     paths.batchCsvPath,
   ]);
+
+  const processedUrlSet = new Set(paperUrls);
+  const updatedRecords = paperRecords.map((record) =>
+    processedUrlSet.has(record.paperUrl)
+      ? {
+          ...record,
+          status: "processed" as const,
+        }
+      : record,
+  );
+
+  await writePaperUrlCsvRecords({
+    filePath: options.paperUrlCsv,
+    records: updatedRecords,
+  });
 };
 
 main().catch((error) => {

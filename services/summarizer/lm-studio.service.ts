@@ -462,11 +462,17 @@ const recoverDraftFromMalformedResponse = async ({
   return taggedContent ? parseTaggedDraft(taggedContent) : null;
 };
 
-const validateDraft = (draft: SummaryDraft) => {
+const validateDraft = ({
+  draft,
+  allowPartial = false,
+}: {
+  draft: SummaryDraft;
+  allowPartial?: boolean;
+}) => {
   const requiredKeys: Array<keyof SummaryDraft> = ["hook", "problem", "method", "value", "ending"];
 
   for (const key of requiredKeys) {
-    if (!draft[key].trim()) {
+    if (!draft[key].trim() && !allowPartial) {
       throw new Error(`LM Studio summary is missing required field: ${key}`);
     }
   }
@@ -872,8 +878,14 @@ export const summarizeWithLmStudio = async (
           raw: fallbackReasoning,
         });
         if (recoveredDraft) {
-          validateDraft(recoveredDraft);
-          return recoveredDraft;
+          const mergedRecoveredDraft = mergeDraftWithBaseline({
+            draft: recoveredDraft,
+            baseline: baselineDraft,
+            anchors: technicalAnchors,
+            paperMode,
+          });
+          validateDraft({draft: mergedRecoveredDraft});
+          return mergedRecoveredDraft;
         }
       }
     }
@@ -895,7 +907,6 @@ export const summarizeWithLmStudio = async (
   }
 
   draft = parseDraft(JSON.stringify(draft));
-  validateDraft(draft);
   draft = mergeDraftWithBaseline({
     draft,
     baseline: baselineDraft,
@@ -959,10 +970,14 @@ export const summarizeWithLmStudio = async (
     paperMode,
   });
 
-  return mergeDraftWithBaseline({
+  const finalizedDraft = mergeDraftWithBaseline({
     draft: polishedDraft,
     baseline: polishedBaseline,
     anchors: technicalAnchors,
     paperMode,
   });
+
+  validateDraft({draft: finalizedDraft});
+
+  return finalizedDraft;
 };

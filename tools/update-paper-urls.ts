@@ -1,6 +1,11 @@
 import path from "node:path";
 import {fetchLatestArxivPapers, parseArxivIdFromInput, toCanonicalArxivAbsUrl} from "./lib/arxiv";
-import {normalizePaperUrlList, readPaperUrlCsv, writePaperUrlCsv} from "./lib/paper-url-batch";
+import {
+  normalizePaperUrlRecords,
+  readPaperUrlCsvRecords,
+  writePaperUrlCsvRecords,
+  type PaperUrlRecord,
+} from "./lib/paper-url-batch";
 
 const DEFAULT_OUTPUT = path.resolve("data/papers/paper-urls.csv");
 const DEFAULT_CATEGORY = "cs.AI";
@@ -30,24 +35,29 @@ const main = async () => {
 
   const latestUrls = latest.map((paper) => toCanonicalArxivAbsUrl(paper.arxivId));
 
-  let existingUrls: string[] = [];
+  let existingRecords: PaperUrlRecord[] = [];
   try {
-    existingUrls = await readPaperUrlCsv(options.output);
+    existingRecords = await readPaperUrlCsvRecords(options.output);
   } catch {
-    existingUrls = [];
+    existingRecords = [];
   }
 
-  const merged = normalizePaperUrlList([...latestUrls, ...existingUrls]);
-  const existingIds = new Set(existingUrls.map((value) => parseArxivIdFromInput(value)?.toLowerCase() ?? value.toLowerCase()));
+  const merged = normalizePaperUrlRecords([
+    ...latestUrls.map((paperUrl) => ({paperUrl, status: "unprocessed" as const})),
+    ...existingRecords,
+  ]);
+  const existingIds = new Set(
+    existingRecords.map((record) => parseArxivIdFromInput(record.paperUrl)?.toLowerCase() ?? record.paperUrl.toLowerCase()),
+  );
   const added = latestUrls.filter((value) => {
     const arxivId = parseArxivIdFromInput(value)?.toLowerCase() ?? value.toLowerCase();
     return !existingIds.has(arxivId);
   });
 
   if (!options.dryRun) {
-    await writePaperUrlCsv({
+    await writePaperUrlCsvRecords({
       filePath: options.output,
-      urls: merged,
+      records: merged,
     });
   }
 
@@ -60,7 +70,7 @@ const main = async () => {
         added: added.length,
         total: merged.length,
         dryRun: options.dryRun,
-        urls: merged,
+        records: merged,
       },
       null,
       2,

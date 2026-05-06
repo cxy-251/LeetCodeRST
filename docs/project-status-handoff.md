@@ -125,6 +125,14 @@ npm run build
    - 从 arXiv 按 submitted date 抓取最新论文链接
    - 和现有 CSV 去重合并
    - 以“最新在前”的顺序写回 `data/papers/paper-urls.csv`
+25. `data/papers/paper-urls.csv` 现已支持 `paper_url,status` 双列模式：
+   - `status=unprocessed` 的论文会被批量命令处理
+   - `status=processed` 的论文默认跳过
+   - 整批成功后会自动把本次已处理行写回成 `processed`
+26. `LM Studio` 总结链路已从“字段缺一个就整批失败”改成：
+   - 先用规则保底稿补齐缺失字段
+   - 再做最终校验
+   - 这样 `missing required field: value` 不会再轻易把整批中断
 
 ### 工程组织
 

@@ -139,20 +139,29 @@ npm run produce:paper-urls:donut -- \
 
 这样你可以直接拿它做“这套文案能力能不能迁移到别的论文”测试。
 
-CSV 格式只需要一列网址，支持两种形式：
+CSV 现在推荐使用两列：
 
 ```csv
-paper_url
+paper_url,status
+https://arxiv.org/abs/2604.22748,unprocessed
+https://arxiv.org/abs/2604.22736,processed
+```
+
+兼容旧格式：
+
+```csv
 https://arxiv.org/abs/2604.22748
 https://arxiv.org/abs/2604.22736
 ```
 
-或者无表头：
+说明：
 
-```csv
-https://arxiv.org/abs/2604.22748
-https://arxiv.org/abs/2604.22736
-```
+- `status=unprocessed`
+  这条论文还没跑，命令会处理它
+- `status=processed`
+  这条论文已处理过，命令默认跳过
+- 如果整批成功，当前批次里被处理的行会自动写回成 `processed`
+- 如果还是旧的一列格式，系统会默认把所有链接视为 `unprocessed`
 
 这条命令会自动做：
 
@@ -166,6 +175,7 @@ https://arxiv.org/abs/2604.22736
 
 说明：
 
+- 这条命令默认只会处理 CSV 中 `status != processed` 的行。
 - 同一批次里，每篇论文都会拿到不同的甜甜圈参数。
 - 如果你不传 `--seed`，系统会按当前批次 id 自动生成一套新的基准随机种子，所以不同批次默认会有不同配色和旋转节奏。
 - 如果你想复现同一批甜甜圈参数，再显式传入同一个 `--seed` 即可。
