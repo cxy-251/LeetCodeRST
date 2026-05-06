@@ -100,12 +100,12 @@ const polishSentence = ({
   const deFluffed = normalizePunctuation(removeWeakOpeners(clauseLimited));
   const maxChars =
     mode === "hook"
-      ? 84
+      ? 82
       : mode === "ending"
-        ? 54
+        ? 58
         : mode === "method" || mode === "value"
-          ? 160
-          : 92;
+          ? 128
+          : 96;
 
   return trimByChars(deFluffed || clauseLimited || cleaned, maxChars);
 };
@@ -118,7 +118,7 @@ const polishBullet = (value: string) =>
       .replace(/[。；;！!？?]+$/u, "")
       .trim(),
     ),
-    24,
+    32,
   );
 
 const isUsableBullet = (value: string) => {

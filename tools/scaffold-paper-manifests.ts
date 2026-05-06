@@ -95,7 +95,7 @@ const buildContentProfile = (paper: SourceBundle["papers"][number]): ContentProf
         content: {
           title: "为什么值得看？",
           body: displayDraft.value.body,
-          bullets: displayDraft.value.bullets.slice(0, 3),
+          bullets: displayDraft.value.bullets,
         },
       },
       ending: {
