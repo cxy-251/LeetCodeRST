@@ -93,7 +93,7 @@ const buildContentProfile = (paper: SourceBundle["papers"][number]): ContentProf
       value: {
         narrationText: draft.value,
         content: {
-          title: "为什么值得看？",
+          title: "技术价值",
           body: displayDraft.value.body,
           bullets: displayDraft.value.bullets,
         },

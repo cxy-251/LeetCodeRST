@@ -145,6 +145,7 @@ CSV 现在推荐使用两列：
 paper_url,status
 https://arxiv.org/abs/2604.22748,unprocessed
 https://arxiv.org/abs/2604.22736,processed
+https://arxiv.org/abs/9999.99999,error
 ```
 
 兼容旧格式：
@@ -160,7 +161,11 @@ https://arxiv.org/abs/2604.22736
   这条论文还没跑，命令会处理它
 - `status=processed`
   这条论文已处理过，命令默认跳过
-- 如果整批成功，当前批次里被处理的行会自动写回成 `processed`
+- `status=error`
+  这条论文上一次处理失败，命令默认跳过；如果要重试，手工改回 `unprocessed`
+- 命令现在按“逐篇顺序处理”执行，不是整批绑死
+- 某一篇失败时，这一行会被写回成 `error`，但后续论文会继续生成
+- 当前批次里成功处理的行会自动写回成 `processed`
 - 如果还是旧的一列格式，系统会默认把所有链接视为 `unprocessed`
 
 这条命令会自动做：

@@ -68,11 +68,14 @@ const normalizePunctuation = (value: string) =>
 
 const rewriteWeakEnding = (value: string) =>
   value
-    .replace(/建议你先收藏起来/gu, "值得先读")
-    .replace(/建议先收藏起来/gu, "值得先读")
-    .replace(/建议先收藏/gu, "值得先读")
-    .replace(/值得收藏起来/gu, "值得先读")
-    .replace(/值得一看/gu, "值得先读");
+    .replace(/建议你先收藏起来/gu, "看完你就能抓住这篇论文的主线")
+    .replace(/建议先收藏起来/gu, "看完你就能抓住这篇论文的主线")
+    .replace(/建议先收藏/gu, "看完你就能抓住这篇论文的主线")
+    .replace(/值得收藏起来/gu, "看完你就能抓住这篇论文的主线")
+    .replace(/值得先读/gu, "能直接帮你抓住论文主线")
+    .replace(/值得一读/gu, "能直接帮你抓住论文主线")
+    .replace(/值得一看/gu, "能直接帮你抓住论文主线")
+    .replace(/值得看/gu, "能直接帮你抓住论文主线");
 
 const polishSentence = ({
   value,

@@ -5,7 +5,7 @@ import {makeRunId, slugify} from "./run-artifacts";
 
 const IMAGE_FILE_PATTERN = /\.(png|jpg|jpeg|webp|svg)$/i;
 
-export type PaperUrlStatus = "processed" | "unprocessed";
+export type PaperUrlStatus = "processed" | "unprocessed" | "error";
 
 export type PaperUrlRecord = {
   paperUrl: string;
@@ -17,6 +17,10 @@ const normalizeStatus = (value: string | undefined): PaperUrlStatus => {
 
   if (["processed", "done", "complete", "completed", "已处理", "done"].includes(normalized)) {
     return "processed";
+  }
+
+  if (["error", "failed", "failure", "problem", "broken", "有问题", "失败", "出错"].includes(normalized)) {
+    return "error";
   }
 
   return "unprocessed";
@@ -115,7 +119,12 @@ export const normalizePaperUrlRecords = (records: PaperUrlRecord[]) => {
 
     seen.set(dedupeKey, {
       paperUrl: previous.paperUrl,
-      status: previous.status === "processed" || nextRecord.status === "processed" ? "processed" : "unprocessed",
+      status:
+        previous.status === "processed" || nextRecord.status === "processed"
+          ? "processed"
+          : previous.status === "error" || nextRecord.status === "error"
+            ? "error"
+            : "unprocessed",
     });
   }
 

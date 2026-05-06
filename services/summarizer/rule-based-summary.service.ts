@@ -68,7 +68,7 @@ export const buildRuleBasedSummaryDraft = (
         hasScale
           ? "它的价值不只是综述，而是把 400 多篇工作和 100 多个代表系统放回同一套坐标系，让你看清一个系统缺的是短期预测、长期模拟，还是失败后的模型更新。"
           : "它的价值不只是综述，而是把 predictor、simulator、evolver 这些概念放回同一个坐标系，方便判断 agent 下一步该往哪走。",
-      ending: "如果你想看懂 agent 世界模型的路线图，这篇论文更像一张总地图，先读它再看具体算法会省很多时间。",
+      ending: "看完这篇，你就能分清 predictor、simulator、evolver 各自解决什么问题，以及不同 agent 为什么会卡在完全不同的 world model 瓶颈上。",
       bullets: [
         "三层能力框架",
         "四类环境约束",
@@ -83,7 +83,7 @@ export const buildRuleBasedSummaryDraft = (
       problem: "作者研究的是 epistemic planning 里的 plan existence，也就是给定目标、知识状态和一组动作之后，到底存不存在一条可达计划。",
       method: "它把条件收得很弱：precondition 的 modal depth 最多只有 1，而且没有 postcondition；即便这样，作者仍然证明 plan existence 是不可判定的。",
       value: "这等于划出了一条理论边界，说明有些瓶颈不是算法没调好，而是问题本身就不存在通用可计算解。对做 agent 规划的人来说，这会直接决定你该去找可解子类还是额外结构假设。",
-      ending: "如果你关心智能体规划的理论上限，这篇论文值得看，因为它直接告诉你哪些方向继续堆 planner 也没用。",
+      ending: "看完这篇，你会知道哪些 epistemic planning 问题天生没有通用解，以及哪些方向继续堆 planner 也不会解决根本困难。",
       bullets: [
         "研究 plan existence",
         "弱条件下仍不可判定",
@@ -101,8 +101,8 @@ export const buildRuleBasedSummaryDraft = (
     hook: "这篇论文盯上的，是一个很真实的瓶颈：检索很快，但拿回来的内容不一定真能帮模型答对问题。",
     problem: "作者想解决的是检索质量和推理成本的矛盾，也就是怎样既保住速度，又让检索结果更贴近最终答案质量。",
     method: `论文的核心方法可以概括为：${methodSentence} 重点不是单独提一个小模块，而是重写检索、排序和生成之间的协同方式。`,
-    value: `实验上最值得看的地方是：${resultSentence} 如果这件事能在成本不明显上升的情况下成立，它就不只是指标提升，而是部署价值。`,
-    ending: "如果你在做 RAG 或检索排序，这篇工作更像一份很实用的提效方案，而且你能直接借它判断系统里最该改哪一层。",
+    value: `实验真正说明的是：${resultSentence} 如果这件事能在成本不明显上升的情况下成立，它就不只是指标提升，而是部署价值。`,
+    ending: "看完这篇，你就能判断这类系统的核心改动点到底在召回、重排还是生成阶段，而不是只记住一个新模块名字。",
     bullets: [
       "检索目标对齐生成收益",
       "减少测试时重排序",

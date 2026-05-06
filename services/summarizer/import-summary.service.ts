@@ -99,7 +99,7 @@ const sectionDefaultTitle = (key: SectionKey, paperTitle: string) => {
     case "method":
       return "核心方法";
     case "value":
-      return "为什么值得看？";
+      return "技术价值";
     case "ending":
       return "一句话结论";
   }

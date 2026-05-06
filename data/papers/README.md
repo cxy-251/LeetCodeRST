@@ -34,7 +34,17 @@
 paper_url,status
 https://arxiv.org/abs/2604.22748,unprocessed
 https://arxiv.org/abs/2604.22736,processed
+https://arxiv.org/abs/9999.99999,error
 ```
+
+状态说明：
+
+- `unprocessed`
+  - 还未处理，会被批量命令继续生成
+- `processed`
+  - 已经成功生成过，后续默认跳过
+- `error`
+  - 上次处理时出错，后续默认跳过；需要重试时手工改回 `unprocessed`
 
 # 边界说明
 
