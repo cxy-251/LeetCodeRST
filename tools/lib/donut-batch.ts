@@ -21,6 +21,15 @@ const round = (value: number, digits = 2) => Number.parseFloat(value.toFixed(dig
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
+const hashStringToSeed = (value: string) => {
+  let hash = 0;
+  for (const character of value) {
+    hash = (hash * 31 + character.charCodeAt(0)) >>> 0;
+  }
+
+  return Math.max(1, hash);
+};
+
 const hslToHex = (h: number, s: number, l: number) => {
   const hue = ((h % 360) + 360) % 360;
   const saturation = clamp(s, 0, 100) / 100;
@@ -95,6 +104,20 @@ export const buildRandomDonutEffectConfig = (seed: number): Partial<DonutEffectC
   };
 };
 
+export const resolveDonutBatchBaseSeed = ({
+  batchId,
+  explicitSeed,
+}: {
+  batchId: string;
+  explicitSeed?: number;
+}) => {
+  if (Number.isFinite(explicitSeed)) {
+    return explicitSeed as number;
+  }
+
+  return hashStringToSeed(batchId);
+};
+
 export const applyDonutBatchPreset = ({
   manifest,
   seed,
@@ -106,6 +129,7 @@ export const applyDonutBatchPreset = ({
 
   return {
     ...manifest,
+    seed,
     effectProfile: {
       id: "donut-spin",
     },

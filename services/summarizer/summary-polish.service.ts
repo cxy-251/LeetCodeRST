@@ -9,6 +9,28 @@ const stripOuterQuotes = (value: string) =>
 
 const collapseWhitespace = (value: string) => value.replace(/\s+/g, " ").trim();
 
+const REASONING_MARKERS = [
+  /\bWait\b/i,
+  /\bLet's\b/i,
+  /\bI should\b/i,
+  /\bTo be safe\b/i,
+  /\bNeed to check\b/i,
+  /\bRecount\b/i,
+  /\bcharacter count\b/i,
+  /\bchars?\b/i,
+] as const;
+
+const stripReasoningLeak = (value: string) => {
+  for (const marker of REASONING_MARKERS) {
+    const match = marker.exec(value);
+    if (match?.index !== undefined && match.index > 0) {
+      return value.slice(0, match.index).trim();
+    }
+  }
+
+  return value;
+};
+
 const removeWeakOpeners = (value: string) =>
   value
     .replace(/^这篇论文(主要|核心)?(是在|想要|试图)?/u, "")
@@ -38,6 +60,13 @@ const trimByChars = (value: string, limit: number) => {
   return trimmed || value.slice(0, limit);
 };
 
+const normalizePunctuation = (value: string) =>
+  value
+    .replace(/[。]{2,}/gu, "。")
+    .replace(/[，]{2,}/gu, "，")
+    .replace(/[；]{2,}/gu, "；")
+    .trim();
+
 const polishSentence = ({
   value,
   mode,
@@ -52,26 +81,42 @@ const polishSentence = ({
     .replace(/\s*）\s*/g, "）")
     .replace(/\s*×\s*/g, "×");
 
-  const clauseLimited = trimByClauses(cleaned, mode === "hook" ? 2 : 1);
-  const deFluffed = removeWeakOpeners(clauseLimited);
+  const deLeaked = stripReasoningLeak(cleaned);
+  const clauseLimited = trimByClauses(deLeaked, mode === "ending" ? 1 : 2);
+  const deFluffed = normalizePunctuation(removeWeakOpeners(clauseLimited));
   const maxChars =
     mode === "hook"
-      ? 42
+      ? 60
       : mode === "ending"
-        ? 34
-        : 38;
+        ? 44
+        : 58;
 
   return trimByChars(deFluffed || clauseLimited || cleaned, maxChars);
 };
 
 const polishBullet = (value: string) =>
   trimByChars(
-    collapseWhitespace(stripOuterQuotes(value))
+    stripReasoningLeak(
+      collapseWhitespace(stripOuterQuotes(value))
       .replace(/^[-*•]\s*/u, "")
       .replace(/[。；;！!？?]+$/u, "")
       .trim(),
+    ),
     24,
   );
+
+const isUsableBullet = (value: string) => {
+  if (!value || value.length < 4) {
+    return false;
+  }
+
+  if (REASONING_MARKERS.some((marker) => marker.test(value))) {
+    return false;
+  }
+
+  const asciiCount = (value.match(/[A-Za-z]/g) ?? []).length;
+  return asciiCount <= Math.max(4, Math.floor(value.length / 4));
+};
 
 const buildFallbackBullets = (draft: SummaryDraft) => {
   const candidates = [draft.method, draft.value, draft.problem]
@@ -80,6 +125,34 @@ const buildFallbackBullets = (draft: SummaryDraft) => {
     .filter((item) => item.length >= 6);
 
   return candidates.slice(0, 3);
+};
+
+const toDisplaySentence = ({
+  value,
+  mode,
+}: {
+  value: string;
+  mode: "hook" | "problem" | "method" | "value" | "ending";
+}) => {
+  const spoken = polishSentence({value, mode});
+  const firstClause = spoken
+    .split(/[，；：]/u)
+    .map((item) => item.trim())
+    .filter(Boolean)[0] ?? spoken;
+
+  const noTrail = firstClause
+    .replace(/(其实|本质上|更像是|说白了|换句话说)/gu, "")
+    .replace(/[。！？!?]+$/u, "")
+    .trim();
+
+  const maxChars =
+    mode === "hook"
+      ? 24
+      : mode === "ending"
+        ? 22
+        : 20;
+
+  return trimByChars(noTrail || spoken, maxChars);
 };
 
 export const polishSummaryDraft = ({
@@ -91,7 +164,7 @@ export const polishSummaryDraft = ({
 }): SummaryDraft => {
   const bullets = draft.bullets
     .map((item) => polishBullet(item))
-    .filter((item, index, all) => item && all.indexOf(item) === index);
+    .filter((item, index, all) => isUsableBullet(item) && all.indexOf(item) === index);
 
   const fallbackBullets = buildFallbackBullets(draft);
   const normalizedBullets = [...bullets, ...fallbackBullets].slice(0, 3);
@@ -112,6 +185,35 @@ export const polishSummaryDraft = ({
         ? normalizedBullets
         : [
             ...normalizedBullets,
+            ...["核心问题更清楚", "方法结构更明确", "价值判断更直接"],
+          ].slice(0, 3),
+  };
+};
+
+export const buildDisplayDraft = ({
+  draft,
+  paperMode,
+}: {
+  draft: SummaryDraft;
+  paperMode: PaperMode;
+}): SummaryDraft => {
+  const polished = polishSummaryDraft({draft, paperMode});
+  const bullets = polished.bullets
+    .map((item) => polishBullet(item))
+    .filter((item, index, all) => isUsableBullet(item) && all.indexOf(item) === index)
+    .slice(0, 3);
+
+  return {
+    hook: toDisplaySentence({value: polished.hook, mode: "hook"}),
+    problem: toDisplaySentence({value: polished.problem, mode: "problem"}),
+    method: toDisplaySentence({value: polished.method, mode: "method"}),
+    value: toDisplaySentence({value: polished.value, mode: "value"}),
+    ending: toDisplaySentence({value: polished.ending, mode: "ending"}),
+    bullets:
+      bullets.length >= 3
+        ? bullets
+        : [
+            ...bullets,
             ...["核心问题更清楚", "方法结构更明确", "价值判断更直接"],
           ].slice(0, 3),
   };

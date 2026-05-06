@@ -1,5 +1,7 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import {detectPaperMode} from "../services/summarizer/rule-based-summary.service";
+import {buildDisplayDraft} from "../services/summarizer/summary-polish.service";
 import {slugify} from "./lib/run-artifacts";
 import type {ContentProfileDocument, ProductionManifest} from "@paper-to-video/shared-types";
 
@@ -37,6 +39,17 @@ const buildContentProfile = (paper: SourceBundle["papers"][number]): ContentProf
     ending: `如果你在关注 ${paper.categories.join(" / ")} 方向，这篇 ${paper.arxivId} 值得进一步展开。`,
     bullets: [paper.summary],
   };
+  const paperMode = detectPaperMode({
+    arxivId: paper.arxivId,
+    title: paper.title,
+    summary: paper.summary,
+    categories: paper.categories,
+    publishedAt: paper.publishedAt,
+  });
+  const displayDraft = buildDisplayDraft({
+    draft,
+    paperMode,
+  });
 
   return {
     id: `arxiv-${paper.arxivId.replace(/[^\w]+/g, "-").toLowerCase()}`,
@@ -54,36 +67,36 @@ const buildContentProfile = (paper: SourceBundle["papers"][number]): ContentProf
         narrationText: draft.hook,
         content: {
           title: paper.title,
-          body: draft.hook,
+          body: displayDraft.hook,
         },
       },
       problem: {
         narrationText: draft.problem,
         content: {
           title: "这篇论文在解决什么？",
-          body: draft.problem,
+          body: displayDraft.problem,
         },
       },
       method: {
         narrationText: draft.method,
         content: {
           title: "核心方法",
-          body: draft.method,
+          body: displayDraft.method,
         },
       },
       value: {
         narrationText: draft.value,
         content: {
           title: "为什么值得看？",
-          body: draft.value,
-          bullets: draft.bullets.slice(0, 3),
+          body: displayDraft.value,
+          bullets: displayDraft.bullets.slice(0, 3),
         },
       },
       ending: {
         narrationText: draft.ending,
         content: {
           title: "一句话结论",
-          body: draft.ending,
+          body: displayDraft.ending,
         },
       },
     },

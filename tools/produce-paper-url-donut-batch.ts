@@ -1,7 +1,11 @@
 import path from "node:path";
 import {spawn} from "node:child_process";
 import {buildPaperUrlBatchPaths, makePaperUrlBatchId, readPaperUrlCsv} from "./lib/paper-url-batch";
-import {writeDonutBatchCsv, writeDonutBatchManifests} from "./lib/donut-batch";
+import {
+  resolveDonutBatchBaseSeed,
+  writeDonutBatchCsv,
+  writeDonutBatchManifests,
+} from "./lib/donut-batch";
 
 type FetchedPaper = {
   arxivId: string;
@@ -63,7 +67,7 @@ const parseArgs = (args: string[]) => {
     lmStudioTemperature: take("--lm-studio-temperature"),
     lmStudioMaxOutputTokens: take("--lm-studio-max-output-tokens"),
     batchId: take("--batch-id"),
-    seed: Number.parseInt(take("--seed") ?? "42", 10),
+    seed: take("--seed") ? Number.parseInt(take("--seed") as string, 10) : undefined,
     voiceName: take("--voice-name") ?? "zh-CN-XiaoxiaoNeural",
     voiceRate: take("--voice-rate") ?? "+80%",
     voicePitch: take("--voice-pitch") ?? "+0Hz",
@@ -81,6 +85,10 @@ const main = async () => {
   }
 
   const batchId = options.batchId ?? makePaperUrlBatchId("paper-url-donut-batch");
+  const baseSeed = resolveDonutBatchBaseSeed({
+    batchId,
+    explicitSeed: options.seed,
+  });
   const paths = buildPaperUrlBatchPaths(batchId);
 
   const fetchedRaw = await runWithCapture("node", [
@@ -157,7 +165,7 @@ const main = async () => {
   const rows = fetchedPapers.map((paper, index) => ({
     rowId: paper.arxivId,
     contentProfileId: toProfileId(paper.arxivId),
-    seed: options.seed + index,
+    seed: baseSeed + index * 101,
   }));
 
   await writeDonutBatchManifests({
