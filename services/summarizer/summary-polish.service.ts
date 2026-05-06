@@ -66,16 +66,56 @@ const normalizePunctuation = (value: string) =>
     .replace(/[；]{2,}/gu, "；")
     .trim();
 
+const expandTerms = (value: string) => {
+  return value
+    .replace(/(?<![（(])\bagentic RAG\b/gi, "__AGENTIC_RAG__")
+    .replace(/(?<![（(])\bRAG\b/gi, "__RAG__")
+    .replace(/(?<![（(])\bLLMs\b/g, "__LLMS__")
+    .replace(/(?<![（(])\bLLM\b/g, "__LLM__")
+    .replace(/(?<![（(])\bGUI agents?\b/gi, "__GUI_AGENT__")
+    .replace(/(?<![（(])\bRL\b/g, "__RL__")
+    .replace(/(?<![（(])\bAI agents?\b/gi, "__AI_AGENT__")
+    .replace(/(?<![（(])\bworld model\b/gi, "__WORLD_MODEL__")
+    .replace(/(?<![（(])\bplan existence\b/gi, "__PLAN_EXISTENCE__")
+    .replace(/(?<![（(])\bepistemic planning\b/gi, "__EPISTEMIC_PLANNING__")
+    .replace(/(?<![（(])\bpointed Kripke model\b/gi, "__POINTED_KRIPKE__")
+    .replace(/(?<![（(])\bepistemic actions?\b/gi, "__EPISTEMIC_ACTION__")
+    .replace(/(?<![（(])\bmodal depth\b/gi, "__MODAL_DEPTH__")
+    .replace(/(?<![（(])\bpostconditions?\b/gi, "__POSTCONDITION__")
+    .replace(/(?<![（(])\brollouts?\b/gi, "__ROLLOUT__")
+    .replace(/__AGENTIC_RAG__/g, "主动规划式检索增强生成（agentic RAG）")
+    .replace(/__RAG__/g, "检索增强生成（RAG）")
+    .replace(/__LLMS__/g, "大语言模型（LLM）")
+    .replace(/__LLM__/g, "大语言模型（LLM）")
+    .replace(/__GUI_AGENT__/g, "图形界面智能体（GUI agent）")
+    .replace(/__RL__/g, "强化学习（RL）")
+    .replace(/__AI_AGENT__/g, "AI 智能体")
+    .replace(/__WORLD_MODEL__/g, "世界模型")
+    .replace(/__PLAN_EXISTENCE__/g, "计划存在性")
+    .replace(/__EPISTEMIC_PLANNING__/g, "认知规划（epistemic planning）")
+    .replace(/__POINTED_KRIPKE__/g, "带真实世界指针的知识状态图（pointed Kripke model）")
+    .replace(/__EPISTEMIC_ACTION__/g, "认知动作（epistemic action）")
+    .replace(/__MODAL_DEPTH__/g, "模态深度（modal depth）")
+    .replace(/__POSTCONDITION__/g, "后置条件（postcondition）")
+    .replace(/__ROLLOUT__/g, "多步推演")
+    .replace(/大语言模型（(?:大语言模型（)+LLM）(?:）)+/g, "大语言模型（LLM）")
+    .replace(/主动规划式检索增强生成（agentic\s+检索增强生成（RAG））/g, "主动规划式检索增强生成（agentic RAG）")
+    .replace(/标准\s+检索增强生成（RAG）/g, "标准检索增强生成（RAG）");
+};
+
 const rewriteWeakEnding = (value: string) =>
   value
-    .replace(/建议你先收藏起来/gu, "看完你就能抓住这篇论文的主线")
-    .replace(/建议先收藏起来/gu, "看完你就能抓住这篇论文的主线")
-    .replace(/建议先收藏/gu, "看完你就能抓住这篇论文的主线")
-    .replace(/值得收藏起来/gu, "看完你就能抓住这篇论文的主线")
-    .replace(/值得先读/gu, "能直接帮你抓住论文主线")
-    .replace(/值得一读/gu, "能直接帮你抓住论文主线")
-    .replace(/值得一看/gu, "能直接帮你抓住论文主线")
-    .replace(/值得看/gu, "能直接帮你抓住论文主线");
+    .replace(/建议你先收藏起来/gu, "这篇论文的主线已经很明确")
+    .replace(/建议先收藏起来/gu, "这篇论文的主线已经很明确")
+    .replace(/建议先收藏/gu, "这篇论文的主线已经很明确")
+    .replace(/值得收藏起来/gu, "这篇论文的主线已经很明确")
+    .replace(/值得先读/gu, "这篇论文的重点已经讲清楚")
+    .replace(/值得一读/gu, "这篇论文的重点已经讲清楚")
+    .replace(/值得一看/gu, "这篇论文的重点已经讲清楚")
+    .replace(/值得看/gu, "这篇论文的重点已经讲清楚")
+    .replace(/看完这篇[，,]?\s*你(?:就)?会知道/gu, "这篇论文真正说明的是")
+    .replace(/看完你(?:就)?会知道/gu, "真正关键的是")
+    .replace(/看完你(?:就)?能抓住这篇论文的主线/gu, "这篇论文的主线是");
 
 const polishSentence = ({
   value,
@@ -85,13 +125,12 @@ const polishSentence = ({
   mode: "hook" | "problem" | "method" | "value" | "ending";
 }) => {
   const cleaned = collapseWhitespace(stripOuterQuotes(value))
-    .replace(/world model/gi, "world model")
-    .replace(/AI agent/gi, "AI agent")
+    .replace(/AI智能体/gu, "AI 智能体")
     .replace(/\s*（\s*/g, "（")
     .replace(/\s*）\s*/g, "）")
     .replace(/\s*×\s*/g, "×");
 
-  const deLeaked = stripReasoningLeak(cleaned);
+  const deLeaked = expandTerms(stripReasoningLeak(cleaned));
   const endingNormalized = mode === "ending" ? rewriteWeakEnding(deLeaked) : deLeaked;
   const valueNormalized =
     mode === "value"

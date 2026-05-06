@@ -74,8 +74,12 @@ const extractNamedArtifacts = (text: string) => {
 const inferMethodPaperFocus = (paper: SourcePaperForSummary, context: PaperSummaryContext) => {
   const text = `${paper.title} ${paper.summary} ${context.sectionHeadings.join(" ")}`.toLowerCase();
 
+  if (/symptom|conversational|triage|diagnos|assessment/.test(text)) {
+    return "对话式问诊能否主动补齐关键信息";
+  }
+
   if (/clinical|medicine|radiology|medical|safety/.test(text)) {
-    return "医疗大模型在真实部署中的安全性和高风险错误";
+    return "医疗系统在真实部署中的可靠性和高风险错误";
   }
 
   if (/benchmark|dataset|evaluation|leaderboard/.test(text)) {
@@ -95,6 +99,32 @@ const inferMethodPaperFocus = (paper: SourcePaperForSummary, context: PaperSumma
   }
 
   return "系统真正的性能瓶颈和失败来源";
+};
+
+const extractProblemSignal = (text: string) => {
+  const normalized = text.toLowerCase();
+
+  if (/symptom|conversational|triage|assessment/.test(normalized)) {
+    return "现有工具往往只是被动接收症状，缺少像医生一样主动追问的能力";
+  }
+
+  if (/clinical|medicine|radiology|medical/.test(normalized)) {
+    return "平均分数很高，并不代表它在高风险场景里真的安全";
+  }
+
+  if (/retrieval|rag|search|ranking/.test(normalized)) {
+    return "大家常把检索链路做得越来越复杂，却不一定真正提高最终答案质量";
+  }
+
+  if (/planning|planner|agent/.test(normalized)) {
+    return "系统能不能完成复杂任务，往往卡在行动策略、环境反馈和长期规划之间的衔接";
+  }
+
+  if (/benchmark|dataset|evaluation/.test(normalized)) {
+    return "总分看起来漂亮，不代表关键能力真的被测到了";
+  }
+
+  return "现有方法往往只能覆盖局部步骤，离真实任务还差关键一环";
 };
 
 const extractMethodDimensions = (text: string) => {
@@ -190,7 +220,7 @@ export const buildRuleBasedSummaryDraft = (
         hasScale
           ? "它的价值不只是综述，而是把 400 多篇工作和 100 多个代表系统放回同一套坐标系，让你看清一个系统缺的是短期预测、长期模拟，还是失败后的模型更新。"
           : "它的价值不只是综述，而是把 predictor、simulator、evolver 这些概念放回同一个坐标系，方便判断 agent 下一步该往哪走。",
-      ending: "看完这篇，你就能分清 predictor、simulator、evolver 各自解决什么问题，以及不同 agent 为什么会卡在完全不同的 world model 瓶颈上。",
+      ending: "这篇综述真正留下的是一把尺子：你可以直接判断一个智能体缺的是短期预测、多步模拟，还是失败后的模型修正能力。",
       bullets: [
         "三层能力框架",
         "四类环境约束",
@@ -205,7 +235,7 @@ export const buildRuleBasedSummaryDraft = (
       problem: "作者研究的是 epistemic planning 里的 plan existence，也就是给定目标、知识状态和一组动作之后，到底存不存在一条可达计划。",
       method: "它把条件收得很弱：precondition 的 modal depth 最多只有 1，而且没有 postcondition；即便这样，作者仍然证明 plan existence 是不可判定的。",
       value: "这等于划出了一条理论边界，说明有些瓶颈不是算法没调好，而是问题本身就不存在通用可计算解。对做 agent 规划的人来说，这会直接决定你该去找可解子类还是额外结构假设。",
-      ending: "看完这篇，你会知道哪些 epistemic planning 问题天生没有通用解，以及哪些方向继续堆 planner 也不会解决根本困难。",
+      ending: "结论很直接：即便把条件压到很弱，这类认知规划问题依然不可判定，继续堆通用 planner 也不会跨过这条理论边界。",
       bullets: [
         "研究 plan existence",
         "弱条件下仍不可判定",
@@ -220,6 +250,7 @@ export const buildRuleBasedSummaryDraft = (
     sentenceOr(context.abstractSentences, 2, paper.summary);
   const artifacts = extractNamedArtifacts([paper.title, paper.summary, ...context.abstractSentences].join(" "));
   const focus = inferMethodPaperFocus(paper, context);
+  const problemSignal = extractProblemSignal(`${paper.title} ${paper.summary} ${context.abstractSentences.join(" ")}`);
   const dimensions = extractMethodDimensions(`${paper.summary} ${context.abstractSentences.join(" ")}`);
   const evaluationSetup = extractEvaluationSetup(`${paper.summary} ${context.abstractSentences.join(" ")}`);
   const methodFindings = extractMethodFindings(`${paper.summary} ${context.abstractSentences.join(" ")}`);
@@ -239,20 +270,22 @@ export const buildRuleBasedSummaryDraft = (
       ? `实验设置也不是只看一条曲线，而是直接比较 ${evaluationSetup.join("、")}。`
       : "";
   const valueLead = leadArtifact
-    ? `${leadArtifact} 的真正价值，不只是把平均指标抬高，而是把过去混在总分里的风险、代价或失败模式单独暴露出来。`
-    : `这项工作的真正价值，不只是把平均指标抬高，而是把过去混在总分里的风险、代价或失败模式单独暴露出来。`;
+    ? `${leadArtifact} 的真正价值，不只是给出一个新系统，而是把 ${focus} 这件事拆成了可以单独验证的环节。`
+    : `这项工作的真正价值，不只是给出一个新系统，而是把 ${focus} 这件事拆成了可以单独验证的环节。`;
   const findingSentence = methodFindings.length > 0 ? methodFindings.join("；") : "";
 
   return {
     hook: `这篇论文盯上的，不是表面分数，而是 ${focus} 这个真正决定系统好不好用的核心问题。`,
-    problem: `作者想解决的是：很多系统把平均准确率当成唯一指标，但真正影响落地效果的，往往是 ${focus}。`,
+    problem: `作者想解决的是：${problemSignal}。真正决定系统能不能落地的，往往是 ${focus}。`,
     method: [methodLead, dimensionSentence, setupSentence].filter(Boolean).join(" "),
-    value: `${valueLead} ${findingSentence || (resultSentence ? "论文还用实验进一步说明，这种差别不是抽象概念，而是会真实影响系统判断和部署方式。" : "")}`.trim(),
-    ending: `看完这篇，你会知道这类系统真正该盯住的不是表面分数，而是 ${focus}。`,
+    value: `${valueLead} ${findingSentence || (resultSentence ? "论文还用实验说明，这种差别不是抽象概念，而是会真实改变系统表现和部署决策。" : "")}`.trim(),
+    ending: methodFindings[0]
+      ? `这篇论文真正说明的是：${methodFindings[0]}，而 ${focus} 不能再被粗暴压成一个总分。`
+      : `这篇论文真正说明的是：${focus} 必须被拆开分析，不能只看最后一个漂亮总分。`,
     bullets: [
       leadArtifact ? `核心方法：${leadArtifact}` : "核心方法：系统级重构",
-      supportingArtifact ? `评测配套：${supportingArtifact}` : "重点看失败模式和部署条件",
-      methodFindings[0] ?? focus,
+      supportingArtifact ? `关键配套：${supportingArtifact}` : `核心场景：${focus}`,
+      methodFindings[0] ?? `关键变量：${dimensions.slice(0, 2).join("、") || focus}`,
     ],
   };
 };

@@ -11,8 +11,41 @@ import type {
 const cleanText = (value: string) =>
   value
     .replace(/\s+/g, " ")
-    .replace(/AI agent/gi, "AI agent")
-    .replace(/world model/gi, "world model")
+    .replace(/(?<![（(])\bagentic RAG\b/gi, "__AGENTIC_RAG__")
+    .replace(/(?<![（(])\bRAG\b/gi, "__RAG__")
+    .replace(/(?<![（(])\bLLMs\b/g, "__LLMS__")
+    .replace(/(?<![（(])\bLLM\b/g, "__LLM__")
+    .replace(/(?<![（(])\bGUI agents?\b/gi, "__GUI_AGENT__")
+    .replace(/(?<![（(])\bRL\b/g, "__RL__")
+    .replace(/(?<![（(])\bAI agents?\b/gi, "__AI_AGENT__")
+    .replace(/(?<![（(])\bagents?\b/gi, "__AGENT__")
+    .replace(/(?<![（(])\bworld model\b/gi, "__WORLD_MODEL__")
+    .replace(/(?<![（(])\bplan existence\b/gi, "__PLAN_EXISTENCE__")
+    .replace(/(?<![（(])\bepistemic planning\b/gi, "__EPISTEMIC_PLANNING__")
+    .replace(/(?<![（(])\bpointed Kripke model\b/gi, "__POINTED_KRIPKE__")
+    .replace(/(?<![（(])\bepistemic actions?\b/gi, "__EPISTEMIC_ACTION__")
+    .replace(/(?<![（(])\bmodal depth\b/gi, "__MODAL_DEPTH__")
+    .replace(/(?<![（(])\bpostconditions?\b/gi, "__POSTCONDITION__")
+    .replace(/(?<![（(])\brollouts?\b/gi, "__ROLLOUT__")
+    .replace(/__AGENTIC_RAG__/g, "主动规划式检索增强生成（agentic RAG）")
+    .replace(/__RAG__/g, "检索增强生成（RAG）")
+    .replace(/__LLMS__/g, "大语言模型（LLM）")
+    .replace(/__LLM__/g, "大语言模型（LLM）")
+    .replace(/__GUI_AGENT__/g, "图形界面智能体（GUI agent）")
+    .replace(/__RL__/g, "强化学习（RL）")
+    .replace(/__AI_AGENT__/g, "AI 智能体")
+    .replace(/__AGENT__/g, "智能体")
+    .replace(/__WORLD_MODEL__/g, "世界模型")
+    .replace(/__PLAN_EXISTENCE__/g, "计划存在性")
+    .replace(/__EPISTEMIC_PLANNING__/g, "认知规划（epistemic planning）")
+    .replace(/__POINTED_KRIPKE__/g, "带真实世界指针的知识状态图（pointed Kripke model）")
+    .replace(/__EPISTEMIC_ACTION__/g, "认知动作（epistemic action）")
+    .replace(/__MODAL_DEPTH__/g, "模态深度（modal depth）")
+    .replace(/__POSTCONDITION__/g, "后置条件（postcondition）")
+    .replace(/__ROLLOUT__/g, "多步推演")
+    .replace(/大语言模型（(?:大语言模型（)+LLM）(?:）)+/g, "大语言模型（LLM）")
+    .replace(/主动规划式检索增强生成（agentic\s+检索增强生成（RAG））/g, "主动规划式检索增强生成（agentic RAG）")
+    .replace(/标准\s+检索增强生成（RAG）/g, "标准检索增强生成（RAG）")
     .replace(/\s*（\s*/g, "（")
     .replace(/\s*）\s*/g, "）")
     .replace(/\s*×\s*/g, "×")
@@ -97,6 +130,36 @@ const composeDistinctBody = (primary: string, fallback: string, maxChars: number
       : normalizedFallback;
 
   return composeBody([normalizedPrimary, fallbackBody], maxChars);
+};
+
+const inferMethodFocusLabel = (text: string) => {
+  const normalized = text.toLowerCase();
+
+  if (/symptom|conversational|triage|assessment/.test(normalized)) {
+    return "主动问诊与关键信息补齐";
+  }
+
+  if (/clinical|medicine|radiology|medical|safety/.test(normalized)) {
+    return "医疗系统的真实可靠性";
+  }
+
+  if (/retrieval|rag|search|ranking/.test(normalized)) {
+    return "检索链路对答案质量的影响";
+  }
+
+  if (/planning|planner|agent/.test(normalized)) {
+    return "智能体的长期行动策略";
+  }
+
+  if (/benchmark|dataset|evaluation/.test(normalized)) {
+    return "评测指标与真实能力的差距";
+  }
+
+  if (/vision|video|image|multimodal/.test(normalized)) {
+    return "多模态系统的真实稳定性";
+  }
+
+  return "系统落地时的关键瓶颈";
 };
 
 const appendIfMissing = (base: string, addition: string) => {
@@ -229,7 +292,7 @@ const buildSurveyDisplayDraft = ({
   const valueBody = composeBody(
     [
       "这套框架把 400+ 论文和 100+ 代表系统放回同一坐标系，能直接解释为什么同样叫 world model 的方法，会在不同环境约束下暴露完全不同的失败点。",
-      "因此你不仅能看懂术语，还能判断某个 agent 到底缺的是短期预测、长期 rollout，还是失败后的模型修正能力。",
+      "因此你不仅能看懂术语，还能判断某个智能体到底缺的是短期预测、长期多步推演，还是失败后的模型修正能力。",
     ],
     182,
   );
@@ -242,10 +305,10 @@ const buildSurveyDisplayDraft = ({
     problem: {
       body: problemBody,
       bullets: uniqueBullets([
-        "world model 可能指一步预测器",
-        "也可能指可 rollout 的长期模拟器",
+        "世界模型可能只指一步预测器",
+        "也可能指可做长期多步推演的模拟器",
         "定义混乱会让评测结果失真",
-        "不同 community 往往在讨论不同对象",
+        "不同研究社区往往在讨论不同对象",
       ]),
     },
     method: {
@@ -267,13 +330,7 @@ const buildSurveyDisplayDraft = ({
       ]),
     },
     ending: {
-      body: composeBody(
-        [
-        polishedDraft.ending,
-          "看完这篇，你会知道 world model 不是一个词，而是一张能力、规律和失败模式共同构成的路线图。",
-        ],
-        104,
-      ),
+      body: "这篇综述真正留下的是一把尺子：你可以直接判断一个智能体缺的是预测、模拟，还是失败后的模型修正能力。",
       bullets: [],
     },
   };
@@ -343,13 +400,7 @@ const buildTheoryDisplayDraft = ({
       ]),
     },
     ending: {
-      body: composeBody(
-        [
-          polishedDraft.ending,
-          "如果你关心 agent 的理论上限，这篇论文会直接告诉你哪些方向天生无解，哪些方向才值得继续做。",
-        ],
-        98,
-      ),
+      body: "结论很直接：即便把条件压到很弱，这类认知规划问题仍然不可判定，后续研究必须绕开这条理论边界。",
       bullets: [],
     },
   };
@@ -371,6 +422,7 @@ const buildMethodDisplayDraft = ({
   const dimensions = extractMethodDimensions(evidenceText);
   const evaluationFacts = extractEvaluationFacts(evidenceText);
   const findingBullets = extractFindingBullets(evidenceText);
+  const focusLabel = inferMethodFocusLabel(evidenceText);
   const hookSource = isEnglishHeavy(polishedDraft.hook) ? baselineDraft.hook : polishedDraft.hook;
   const problemSource = isEnglishHeavy(polishedDraft.problem) ? baselineDraft.problem : polishedDraft.problem;
   const methodSource = isEnglishHeavy(polishedDraft.method)
@@ -384,7 +436,7 @@ const buildMethodDisplayDraft = ({
   const hookBody = composeBody(
     [
       stripEnglishFragments(problemSource),
-      findingBullets[0] ?? "",
+      findingBullets[0] ? `最关键的发现是：${findingBullets[0]}。` : "",
     ],
     146,
   );
@@ -431,10 +483,10 @@ const buildMethodDisplayDraft = ({
   );
   const problemBullets = uniqueBullets(
     [
-      ...findingBullets,
       artifacts[0] ? `论文主角：${artifacts[0]}` : "",
-      "误区：平均准确率不等于真实安全",
+      `核心场景：${focusLabel}`,
       dimensions.length > 0 ? `核心变量：${dimensions.slice(0, 3).join("、")}` : "",
+      ...findingBullets,
       fallbackBullets[0] ?? "",
     ],
     4,
@@ -459,7 +511,7 @@ const buildMethodDisplayDraft = ({
       bullets: valueBullets.length >= 2 ? valueBullets : [],
     },
     ending: {
-      body: composeDistinctBody(endingSource, baselineDraft.ending, 108),
+      body: composeBody([endingSource], 108),
       bullets: [],
     },
   };

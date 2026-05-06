@@ -62,10 +62,10 @@ const STRICT_RESPONSE_SCHEMA = {
 
 const SHORT_RESPONSE_SCHEMA_EXAMPLE = {
   hook: "如果 AI 真要在环境里持续行动，它最缺的其实不是会说话，而是会预测世界接下来怎么变。",
-  problem: "现在大家都在说 world model，但不同社区的定义非常散，结果就是很多方法根本没法放在一起比较。",
-  method: "这篇论文搭了一个双轴框架，一边看能力层级，一边看环境约束，把 world model 重新整理成一张图。",
+  problem: "现在大家都在说世界模型，但不同社区的定义非常散，结果就是很多方法根本没法放在一起比较。",
+  method: "这篇论文搭了一个双轴框架，一边看能力层级，一边看环境约束，把世界模型重新整理成一张图。",
   value: "它的价值不只是综述，而是给智能体系统设计和评估提供了一套统一坐标系。",
-  ending: "看完这篇，你就能知道 agent 的 world model 到底分几层、差在哪、为什么会失败。",
+  ending: "它真正留下的是一把尺子：你能直接判断一个智能体缺的是短期预测、多步模拟，还是失败后的模型修正能力。",
   bullets: ["要点一", "要点二", "要点三"],
 };
 
@@ -640,12 +640,12 @@ const buildEvidencePacket = (
   compact = false,
 ) => {
   const normalized = normalizeRawText(context.rawText);
-  const sourceSummary = paper.summary.trim().slice(0, compact ? 900 : 1500);
-  const abstract = context.abstractSentences.slice(0, compact ? 4 : 6).join(" ");
-  const headings = context.sectionHeadings.slice(0, compact ? 5 : 8);
-  const introSnippet = extractSectionSnippet(normalized, SECTION_HINTS.intro, compact ? 700 : 1200);
-  const methodSnippet = extractSectionSnippet(normalized, SECTION_HINTS.method, compact ? 700 : 1200);
-  const resultSnippet = extractSectionSnippet(normalized, SECTION_HINTS.result, compact ? 700 : 1200);
+  const sourceSummary = paper.summary.trim().slice(0, compact ? 420 : 1500);
+  const abstract = context.abstractSentences.slice(0, compact ? 3 : 6).join(" ");
+  const headings = context.sectionHeadings.slice(0, compact ? 4 : 8);
+  const introSnippet = extractSectionSnippet(normalized, SECTION_HINTS.intro, compact ? 460 : 1200);
+  const methodSnippet = extractSectionSnippet(normalized, SECTION_HINTS.method, compact ? 460 : 1200);
+  const resultSnippet = extractSectionSnippet(normalized, SECTION_HINTS.result, compact ? 460 : 1200);
   const focusedExcerpt = extractFocusedExcerpt(normalized, excerptChars);
 
   return {
@@ -739,10 +739,12 @@ const buildPrompt = (
         "11. bullets 固定 3 条，每条 8 到 18 个汉字，是给屏幕显示的要点，不要句号、不要长句。",
         "12. 避免空泛表达，例如“通过这套全面图谱”“值得进一步展开”。",
         "13. 不要捏造实验数字；不确定就说贡献，不说具体数值。",
-        "14. 禁止直接粘贴英文摘要原句；必要时可以保留英文术语名，但必须用中文解释它是什么。",
+        "14. 禁止直接粘贴英文摘要原句；必要时可以保留英文术语名，但必须先用中文解释它是什么。",
         "15. 禁止使用“先收藏”“值得一读”“推荐去看原论文”“先读论文再说”这类引流口吻；默认假设观众只看短视频也要理解主线。",
         "16. 只输出 JSON，不要 markdown，不要解释。",
         "17. 只允许根据当前论文证据作答，不要沿用别的论文话术、术语搭配或结论模板。",
+        "18. 每个缩写第一次出现时，都必须补中文解释，例如“检索增强生成（RAG）”“大语言模型（LLM）”。",
+        "19. 把这次请求视为完全独立的一篇论文，忽略之前处理过的任何论文、答案和表述习惯。",
       ];
 
   return [
@@ -804,6 +806,8 @@ const buildReviewPrompt = ({
     "8. 禁止使用“值得看”“值得先读”“建议收藏”“推荐去读原论文”这类引流表达。",
     "9. 如果初稿里有长段英文原句，必须翻成中文再输出。",
     "10. 只能根据当前论文证据改写，不要沿用其他论文的句式或结论。",
+    "11. 每个缩写第一次出现时都要补中文解释，例如“检索增强生成（RAG）”“大语言模型（LLM）”。",
+    "12. 把这次请求视为单篇论文的独立审稿，不要继承上一条论文的任何口吻、判断或句式。",
     "",
     `论文类型提示：${evidence.mode}`,
     `标题：${paper.title}`,
@@ -840,6 +844,7 @@ export const summarizeWithLmStudio = async (
     compact = false,
     preferStructuredOutput = true,
     maxTokensOverride?: number,
+    inputCharsOverride?: number,
   ) =>
     requestCompletion({
       config,
@@ -852,30 +857,66 @@ export const summarizeWithLmStudio = async (
         {
           role: "system",
           content:
-            "You are an expert AI-paper summarizer for Chinese short-video scripts. Use only the current paper evidence, never reuse text from other papers, and return strict JSON.",
+            "You are an expert AI-paper summarizer for Chinese short-video scripts. Treat every request as stateless, use only the current paper evidence, never reuse text from other papers, explain abbreviations in Chinese on first mention, and return strict JSON.",
         },
         {
           role: "user",
           content: buildPrompt(
             paper,
             context,
-            compact ? config.compactInputChars : config.maxInputChars,
+            inputCharsOverride ?? (compact ? config.compactInputChars : config.maxInputChars),
             compact,
           ),
         },
       ],
     });
 
-  let payload: ChatCompletionResponse;
-  try {
-    payload = await runSummaryRequest(false, true);
-  } catch (error) {
-    if (!isContextLimitError(error)) {
-      throw error;
+  const requestSummaryWithFallbacks = async () => {
+    const attempts = [
+      {compact: false, structured: true, maxTokens: config.maxOutputTokens, inputChars: config.maxInputChars},
+      {
+        compact: true,
+        structured: false,
+        maxTokens: Math.min(config.maxOutputTokens, 1200),
+        inputChars: Math.min(config.compactInputChars, 1400),
+      },
+      {
+        compact: true,
+        structured: false,
+        maxTokens: Math.min(config.maxOutputTokens, 900),
+        inputChars: Math.min(config.compactInputChars, 900),
+      },
+      {
+        compact: true,
+        structured: false,
+        maxTokens: Math.min(config.maxOutputTokens, 700),
+        inputChars: 620,
+      },
+    ] as const;
+
+    let lastError: unknown;
+
+    for (const attempt of attempts) {
+      try {
+        return await runSummaryRequest(
+          attempt.compact,
+          attempt.structured,
+          attempt.maxTokens,
+          attempt.inputChars,
+        );
+      } catch (error) {
+        if (!isContextLimitError(error)) {
+          throw error;
+        }
+
+        lastError = error;
+      }
     }
 
-    payload = await runSummaryRequest(true, false, Math.max(config.maxOutputTokens, 2200));
-  }
+    throw lastError instanceof Error ? lastError : new Error("LM Studio context fallback failed");
+  };
+
+  const payload: ChatCompletionResponse = await requestSummaryWithFallbacks();
 
   let content = extractContent(payload);
   const reasoningContent = extractReasoningContent(payload);
@@ -884,7 +925,7 @@ export const summarizeWithLmStudio = async (
   }
 
   if (!content) {
-    const fallbackPayload = await runSummaryRequest(true, false, Math.max(config.maxOutputTokens, 2200));
+    const fallbackPayload = await requestSummaryWithFallbacks();
     content = extractContent(fallbackPayload);
     const fallbackReasoning = extractReasoningContent(fallbackPayload);
     if (!content && fallbackReasoning) {
@@ -941,7 +982,7 @@ export const summarizeWithLmStudio = async (
         {
           role: "system",
           content:
-            "You are an expert editor for Chinese AI-paper short-video scripts. Remove fluff, English quote leakage, promotional wording, and cross-paper reuse. Return strict JSON only.",
+            "You are an expert editor for Chinese AI-paper short-video scripts. Treat every request as stateless, remove fluff, English quote leakage, unexplained abbreviations, promotional wording, and cross-paper reuse. Return strict JSON only.",
         },
         {
           role: "user",

@@ -83,11 +83,11 @@ export class ThreeDonutEngine {
     this.scene = new THREE.Scene();
     this.scene.add(this.root);
     this.scene.fog = new THREE.Fog(0x050913, 8, 22);
-    this.root.position.set(0, -0.66, 0);
+    this.root.position.set(0, -1.02, 0);
 
     this.camera = new THREE.PerspectiveCamera(34, options.width / options.height, 0.1, 100);
     this.camera.position.set(0, 0.92, 7.7);
-    this.camera.lookAt(0, -0.58, 0);
+    this.camera.lookAt(0, -0.44, 0);
 
     this.keyLight.position.set(5.4, 4.6, 6.2);
     this.fillLight.position.set(-5.2, 1.8, 4.8);
@@ -153,10 +153,10 @@ export class ThreeDonutEngine {
       orbitSpeed: 0.16 * config.orbitSpeed,
       radius: 7.45,
       radiusJitter: 0.12,
-      centerY: 0.84,
+      centerY: 0.92,
       heightJitter: 0.05,
       lateralJitter: 0.14,
-      targetY: -0.58,
+      targetY: -0.44,
       targetYJitter: 0.03,
       targetZ: 0,
       targetZJitter: 0.08,

@@ -34,18 +34,51 @@ const DEFAULT_CONTENT_PROFILE_DIR = path.resolve("data/content-profiles/generate
 const trimByChars = (value: string, limit: number) =>
   value.length <= limit ? value : value.slice(0, limit).replace(/[，、；：,.!?！？]+$/u, "").trim();
 
-const buildHookTitle = (body: string, fallback: string) => {
-  const source = `${body} ${fallback}`;
+const extractLeadArtifact = (title: string) => {
+  const colonPrefix = title.split(":")[0]?.trim() ?? "";
+  if (colonPrefix && colonPrefix.length >= 3 && colonPrefix.length <= 24) {
+    return colonPrefix;
+  }
+
+  const match = /\b(?:[A-Z][A-Za-z0-9]+(?:-[A-Za-z0-9]+)+|[A-Z][A-Za-z0-9]{3,})\b/.exec(title);
+  return match?.[0] ?? "";
+};
+
+const buildHookTitle = (body: string, fallback: string, paperTitle: string) => {
+  const source = `${body} ${fallback} ${paperTitle}`;
   if (/准确率/u.test(source) && /安全|高风险/u.test(source)) {
     return "高准确率不等于更安全";
   }
 
   if (/world model/i.test(source)) {
-    return "World Model 不是一个词";
+    return "世界模型不是一个词";
   }
 
   if (/不可判定|通用解|plan existence/i.test(source)) {
     return "这类规划题天生无通解";
+  }
+
+  if (/不能只|不等于|不是只靠/u.test(source)) {
+    const clause = source
+      .split(/[。！？]/u)
+      .map((item) => item.trim())
+      .find((item) => /不能只|不等于|不是只靠/u.test(item));
+    if (clause) {
+      return trimByChars(clause, 18);
+    }
+  }
+
+  const leadArtifact = extractLeadArtifact(paperTitle);
+  if (leadArtifact) {
+    if (/SymptomAI/i.test(leadArtifact)) {
+      return "AI 问诊不能只等病人开口";
+    }
+
+    if (/SaFE-Scale/i.test(leadArtifact)) {
+      return "高准确率不等于更安全";
+    }
+
+    return `${leadArtifact} 在解决什么`;
   }
 
   const prefix = body.split(" ")[0]?.trim() ?? "";
@@ -59,7 +92,7 @@ const buildHookTitle = (body: string, fallback: string) => {
     .filter(Boolean)[0];
 
   const candidate = firstSentence || fallback;
-  return trimByChars(candidate.replace(/\s+/g, " ").trim(), 22);
+  return trimByChars(candidate.replace(/\s+/g, " ").trim(), 18);
 };
 
 const stripHookTitlePrefix = (body: string, title: string) => {
@@ -77,7 +110,7 @@ const buildContentProfile = (paper: SourceBundle["papers"][number]): ContentProf
     problem: paper.summary,
     method: paper.summary,
     value: paper.summary,
-    ending: `如果你在关注 ${paper.categories.join(" / ")} 方向，这篇 ${paper.arxivId} 值得进一步展开。`,
+    ending: `这篇 ${paper.arxivId} 的主线是：把 ${paper.categories.join(" / ")} 方向里最关键的问题和方法边界讲清楚。`,
     bullets: [paper.summary],
   };
   const displayDraft = buildDisplayScriptDraft({
@@ -94,7 +127,12 @@ const buildContentProfile = (paper: SourceBundle["papers"][number]): ContentProf
       sectionHeadings: paper.sectionHeadings ?? [],
     },
   });
-  const hookTitle = buildHookTitle(displayDraft.hook.body, draft.hook);
+  const resolvedHookTitle = buildHookTitle(displayDraft.hook.body, draft.hook, paper.title);
+  const resolvedHookBody = stripHookTitlePrefix(displayDraft.hook.body, resolvedHookTitle);
+  const finalHookBody =
+    !resolvedHookBody || resolvedHookBody === resolvedHookTitle
+      ? trimByChars(displayDraft.problem.body || draft.problem, 116)
+      : resolvedHookBody;
 
   return {
     id: `arxiv-${paper.arxivId.replace(/[^\w]+/g, "-").toLowerCase()}`,
@@ -112,8 +150,8 @@ const buildContentProfile = (paper: SourceBundle["papers"][number]): ContentProf
         narrationText: draft.hook,
         content: {
           kicker: paper.title,
-          title: hookTitle,
-          body: stripHookTitlePrefix(displayDraft.hook.body, hookTitle),
+          title: resolvedHookTitle,
+          body: finalHookBody,
         },
       },
       problem: {
