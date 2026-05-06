@@ -13,6 +13,7 @@ type ChatCompletionResponse = {
 };
 
 const RESPONSE_SCHEMA_EXAMPLE = {
+  titleZh: "论文标题的直接中文翻译",
   hook: "开场钩子",
   problem: "论文在解决什么问题",
   method: "作者的核心方法是什么",
@@ -44,8 +45,9 @@ const containsExcessiveEnglish = (value: string) => {
 const STRICT_RESPONSE_SCHEMA = {
   type: "object",
   additionalProperties: false,
-  required: ["hook", "problem", "method", "value", "ending", "bullets"],
+  required: ["titleZh", "hook", "problem", "method", "value", "ending", "bullets"],
   properties: {
+    titleZh: {type: "string"},
     hook: {type: "string"},
     problem: {type: "string"},
     method: {type: "string"},
@@ -61,6 +63,7 @@ const STRICT_RESPONSE_SCHEMA = {
 } as const;
 
 const SHORT_RESPONSE_SCHEMA_EXAMPLE = {
+  titleZh: "智能体世界模型：基础、能力、规律与未来",
   hook: "如果 AI 真要在环境里持续行动，它最缺的其实不是会说话，而是会预测世界接下来怎么变。",
   problem: "现在大家都在说世界模型，但不同社区的定义非常散，结果就是很多方法根本没法放在一起比较。",
   method: "这篇论文搭了一个双轴框架，一边看能力层级，一边看环境约束，把世界模型重新整理成一张图。",
@@ -136,6 +139,14 @@ const cleanLooseValue = (raw: string) =>
 const tryParseLooseFieldObject = (raw: string): SummaryDraft | null => {
   const normalized = normalizeJsonText(raw);
   const fieldOrder = ["hook", "problem", "method", "value", "ending", "bullets"] as const;
+  const titleMarker = /"titleZh"\s*:\s*/i.exec(normalized);
+  if (titleMarker && titleMarker.index !== undefined) {
+    const titleStart = titleMarker.index + titleMarker[0].length;
+    const nextMatch = /,\s*"hook"\s*:/i.exec(normalized.slice(titleStart));
+    if (nextMatch?.index !== undefined) {
+      values.set("titleZh", cleanLooseValue(normalized.slice(titleStart, titleStart + nextMatch.index)));
+    }
+  }
   const values = new Map<string, string>();
 
   for (let index = 0; index < fieldOrder.length - 1; index += 1) {
@@ -177,6 +188,7 @@ const tryParseLooseFieldObject = (raw: string): SummaryDraft | null => {
     .slice(0, 3);
 
   return {
+    titleZh: values.get("titleZh") ?? "",
     hook: values.get("hook") ?? "",
     problem: values.get("problem") ?? "",
     method: values.get("method") ?? "",
@@ -192,6 +204,7 @@ const parseTaggedDraft = (raw: string): SummaryDraft | null => {
     .map((line) => line.trim())
     .filter(Boolean);
   const fields = {
+    titleZh: "",
     hook: "",
     problem: "",
     method: "",
@@ -203,12 +216,15 @@ const parseTaggedDraft = (raw: string): SummaryDraft | null => {
   let inBullets = false;
 
   for (const line of lines) {
-    const match = /^(HOOK|PROBLEM|METHOD|VALUE|ENDING|BULLETS)\s*[:：]\s*(.*)$/i.exec(line);
+    const match = /^(TITLE_ZH|HOOK|PROBLEM|METHOD|VALUE|ENDING|BULLETS)\s*[:：]\s*(.*)$/i.exec(line);
     if (match) {
       const key = match[1].toUpperCase();
       const value = match[2]?.trim() ?? "";
       inBullets = key === "BULLETS";
-      currentKey = inBullets ? null : (key.toLowerCase() as keyof typeof fields);
+      currentKey =
+        inBullets
+          ? null
+          : ((key === "TITLE_ZH" ? "titleZh" : key.toLowerCase()) as keyof typeof fields);
 
       if (currentKey) {
         fields[currentKey] = value;
@@ -229,7 +245,14 @@ const parseTaggedDraft = (raw: string): SummaryDraft | null => {
     }
   }
 
-  if (!fields.hook || !fields.problem || !fields.method || !fields.value || !fields.ending || bullets.length === 0) {
+  if (
+    !fields.hook ||
+    !fields.problem ||
+    !fields.method ||
+    !fields.value ||
+    !fields.ending ||
+    bullets.length === 0
+  ) {
     return null;
   }
 
@@ -256,6 +279,7 @@ const tryParseDraft = (raw: string): SummaryDraft | null => {
         : [];
 
       return {
+        titleZh: `${parsed.titleZh ?? ""}`.trim(),
         hook: `${parsed.hook ?? ""}`.trim(),
         problem: `${parsed.problem ?? ""}`.trim(),
         method: `${parsed.method ?? ""}`.trim(),
@@ -292,6 +316,7 @@ const parseDraft = (raw: string): SummaryDraft => {
     : [];
 
   return {
+    titleZh: `${parsed.titleZh ?? ""}`.trim(),
     hook: `${parsed.hook ?? ""}`.trim(),
     problem: `${parsed.problem ?? ""}`.trim(),
     method: `${parsed.method ?? ""}`.trim(),
@@ -377,7 +402,7 @@ const buildRepairPrompt = (raw: string) => {
   return [
     "下面是一段格式损坏的 JSON 风格输出。",
     "请你把它修复成严格合法 JSON，并且只输出 JSON。",
-    "必须包含以下字段：hook, problem, method, value, ending, bullets。",
+    "必须包含以下字段：titleZh, hook, problem, method, value, ending, bullets。",
     "bullets 必须是长度为 3 的字符串数组。",
     "",
     raw,
@@ -388,6 +413,7 @@ const buildTaggedRepairPrompt = (raw: string) => {
   return [
     "下面这段输出格式不稳定，请你重新整理成固定标签格式，并且只输出这些行。",
     "格式必须严格如下：",
+    "TITLE_ZH: ...",
     "HOOK: ...",
     "PROBLEM: ...",
     "METHOD: ...",
@@ -587,6 +613,7 @@ const mergeDraftWithBaseline = ({
   paperMode: PaperMode;
 }): SummaryDraft => {
   const merged: SummaryDraft = {
+    titleZh: draft.titleZh,
     hook: draft.hook,
     problem: draft.problem,
     method: draft.method,
@@ -595,7 +622,11 @@ const mergeDraftWithBaseline = ({
     bullets: draft.bullets,
   };
 
-  const fieldKeys: Array<keyof Omit<SummaryDraft, "bullets">> = ["hook", "problem", "method", "value", "ending"];
+  if (!merged.titleZh.trim()) {
+    merged.titleZh = baseline.titleZh;
+  }
+
+  const fieldKeys: Array<keyof Omit<SummaryDraft, "bullets" | "titleZh">> = ["hook", "problem", "method", "value", "ending"];
   for (const key of fieldKeys) {
     if (isWeakSentence({value: merged[key], anchors, mode: key, paperMode})) {
       merged[key] = baseline[key];
@@ -719,7 +750,7 @@ const buildPrompt = (
   const styleRules = compact
     ? [
         "1. 语言使用中文。",
-        "2. hook/problem/method/value/ending 这些字段是配音稿，不是屏幕标题。",
+        "2. titleZh 是论文英文标题的直接中文翻译；hook/problem/method/value/ending 这些字段是配音稿，不是屏幕标题。",
         "3. 每个字段写 1 到 2 句口语化短句，尽量自然。",
         "4. bullets 固定 3 条，每条 8 到 18 个汉字，不要句号。",
         "5. 只根据当前论文证据作答，不要借用其他论文的句式或结论。",
@@ -727,24 +758,25 @@ const buildPrompt = (
       ]
     : [
         "1. 语言使用中文，面向短视频观众，不要像论文摘要翻译。",
-        "2. hook / problem / method / value / ending 这些字段都是配音稿，要比屏幕文案更完整、更口语化。",
-        "3. 每个字段写 1 到 2 句自然短句，适合真人配音，尽量控制在 28 到 68 个汉字。",
-        "4. hook 要像前 3 秒开场，先说最核心的判断或最关键的发现，不要复述标题，不要空话。",
-        "5. problem 必须说清楚当前研究卡在哪里，为什么这是个真实瓶颈。",
-        "6. method 必须明确回答作者到底提出了什么新框架、新算法或新证明，不要只说“搭了一个框架”这种空句。",
-        "7. value 必须明确回答这件事带来了什么判断、能力提升、理论结论或统一视角，不能只说“很有价值”。",
-        "8. 如果是综述/框架型论文，强调它重新整理了什么、统一了什么坐标系。",
-        "9. 如果是理论论文，强调它证明了什么边界或不可能性。",
-        "10. 如果是方法论文，强调怎么做、解决了什么真实瓶颈、带来什么结果。",
-        "11. bullets 固定 3 条，每条 8 到 18 个汉字，是给屏幕显示的要点，不要句号、不要长句。",
-        "12. 避免空泛表达，例如“通过这套全面图谱”“值得进一步展开”。",
-        "13. 不要捏造实验数字；不确定就说贡献，不说具体数值。",
-        "14. 禁止直接粘贴英文摘要原句；必要时可以保留英文术语名，但必须先用中文解释它是什么。",
-        "15. 禁止使用“先收藏”“值得一读”“推荐去看原论文”“先读论文再说”这类引流口吻；默认假设观众只看短视频也要理解主线。",
-        "16. 只输出 JSON，不要 markdown，不要解释。",
-        "17. 只允许根据当前论文证据作答，不要沿用别的论文话术、术语搭配或结论模板。",
-        "18. 每个缩写第一次出现时，都必须补中文解释，例如“检索增强生成（RAG）”“大语言模型（LLM）”。",
-        "19. 把这次请求视为完全独立的一篇论文，忽略之前处理过的任何论文、答案和表述习惯。",
+        "2. titleZh 必须是论文英文标题的直接中文翻译，保留模型名、数据集名、系统名等专有名词英文，不要写成口号。",
+        "3. hook / problem / method / value / ending 这些字段都是配音稿，要比屏幕文案更完整、更口语化。",
+        "4. 每个字段写 1 到 2 句自然短句，适合真人配音，尽量控制在 28 到 68 个汉字。",
+        "5. hook 要像前 3 秒开场，先说最核心的判断或最关键的发现，不要复述标题，不要空话。",
+        "6. problem 必须说清楚当前研究卡在哪里，为什么这是个真实瓶颈。",
+        "7. method 必须明确回答作者到底提出了什么新框架、新算法或新证明，不要只说“搭了一个框架”这种空句。",
+        "8. value 必须明确回答这件事带来了什么判断、能力提升、理论结论或统一视角，不能只说“很有价值”。",
+        "9. 如果是综述/框架型论文，强调它重新整理了什么、统一了什么坐标系。",
+        "10. 如果是理论论文，强调它证明了什么边界或不可能性。",
+        "11. 如果是方法论文，强调怎么做、解决了什么真实瓶颈、带来什么结果。",
+        "12. bullets 固定 3 条，每条 8 到 18 个汉字，是给屏幕显示的要点，不要句号、不要长句。",
+        "13. 避免空泛表达，例如“通过这套全面图谱”“值得进一步展开”。",
+        "14. 不要捏造实验数字；不确定就说贡献，不说具体数值。",
+        "15. 禁止直接粘贴英文摘要原句；必要时可以保留英文术语名，但必须先用中文解释它是什么。",
+        "16. 禁止使用“先收藏”“值得一读”“推荐去看原论文”“先读论文再说”这类引流口吻；默认假设观众只看短视频也要理解主线。",
+        "17. 只输出 JSON，不要 markdown，不要解释。",
+        "18. 只允许根据当前论文证据作答，不要沿用别的论文话术、术语搭配或结论模板。",
+        "19. 每个缩写第一次出现时，都必须补中文解释，例如“检索增强生成（RAG）”“大语言模型（LLM）”。",
+        "20. 把这次请求视为完全独立的一篇论文，忽略之前处理过的任何论文、答案和表述习惯。",
       ];
 
   return [
@@ -796,7 +828,7 @@ const buildReviewPrompt = ({
     "请审核下面这份中文脚本初稿是否真正抓住论文核心，再重写成更清楚、更像人话的版本。",
     "只输出合法 JSON。",
     "目标：",
-    "1. hook/problem/method/value/ending 是配音稿，不是屏幕标题，要口语化、信息完整。",
+    "1. titleZh 是英文标题的直接中文翻译；hook/problem/method/value/ending 是配音稿，不是屏幕标题，要口语化、信息完整。",
     "2. 先说最核心的判断，不要复述标题。",
     "3. 讲清问题、方法、价值，不要空话。",
     "4. method 必须回答作者到底做了什么新东西；value 必须回答这件事为什么重要。",
@@ -808,6 +840,7 @@ const buildReviewPrompt = ({
     "10. 只能根据当前论文证据改写，不要沿用其他论文的句式或结论。",
     "11. 每个缩写第一次出现时都要补中文解释，例如“检索增强生成（RAG）”“大语言模型（LLM）”。",
     "12. 把这次请求视为单篇论文的独立审稿，不要继承上一条论文的任何口吻、判断或句式。",
+    "13. titleZh 不要写成营销标题，直接翻译论文英文标题即可。",
     "",
     `论文类型提示：${evidence.mode}`,
     `标题：${paper.title}`,

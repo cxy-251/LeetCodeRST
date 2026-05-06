@@ -43,6 +43,10 @@ const reinforceWithRuleBasedBaseline = ({
     bullets: [...draft.bullets],
   };
 
+  if (!nextDraft.titleZh.trim()) {
+    nextDraft.titleZh = baseline.titleZh;
+  }
+
   if (isWeakNarration(nextDraft.hook)) {
     nextDraft.hook = baseline.hook;
   }

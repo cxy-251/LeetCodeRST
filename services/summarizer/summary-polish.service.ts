@@ -117,6 +117,21 @@ const rewriteWeakEnding = (value: string) =>
     .replace(/看完你(?:就)?会知道/gu, "真正关键的是")
     .replace(/看完你(?:就)?能抓住这篇论文的主线/gu, "这篇论文的主线是");
 
+const polishTitleTranslation = (value: string) =>
+  trimByChars(
+    normalizePunctuation(
+      collapseWhitespace(stripOuterQuotes(value))
+        .replace(/^\s*中文标题\s*[:：]\s*/u, "")
+        .replace(/^\s*标题\s*[:：]\s*/u, "")
+        .replace(/^\s*论文标题\s*[:：]\s*/u, "")
+        .replace(/[“”]/g, "")
+        .replace(/\s*:\s*/g, "：")
+        .replace(/\s*-\s*/g, " - ")
+        .trim(),
+    ),
+    42,
+  );
+
 const polishSentence = ({
   value,
   mode,
@@ -233,6 +248,7 @@ export const polishSummaryDraft = ({
       : draft.ending;
 
   return {
+    titleZh: polishTitleTranslation(draft.titleZh),
     hook: polishSentence({value: draft.hook, mode: "hook"}),
     problem: polishSentence({value: draft.problem, mode: "problem"}),
     method: polishSentence({value: draft.method, mode: "method"}),
@@ -262,6 +278,7 @@ export const buildDisplayDraft = ({
     .slice(0, 3);
 
   return {
+    titleZh: polished.titleZh,
     hook: toDisplaySentence({value: polished.hook, mode: "hook"}),
     problem: toDisplaySentence({value: polished.problem, mode: "problem"}),
     method: toDisplaySentence({value: polished.method, mode: "method"}),

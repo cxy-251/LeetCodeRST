@@ -1,6 +1,7 @@
 import type {SummaryModeId} from "@paper-to-video/shared-types";
 
 export type SummaryDraft = {
+  titleZh: string;
   hook: string;
   problem: string;
   method: string;

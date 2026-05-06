@@ -17,6 +17,7 @@ type SourceBundle = {
     abstractSentences?: string[];
     sectionHeadings?: string[];
     scriptDraft?: {
+      titleZh?: string;
       hook: string;
       problem: string;
       method: string;
@@ -44,7 +45,22 @@ const extractLeadArtifact = (title: string) => {
   return match?.[0] ?? "";
 };
 
-const buildHookTitle = (body: string, fallback: string, paperTitle: string) => {
+const normalizeTranslatedTitle = (value: string) =>
+  trimByChars(
+    value
+      .replace(/\s+/g, " ")
+      .replace(/\s*:\s*/g, "：")
+      .replace(/[“”]/g, "")
+      .trim(),
+    42,
+  );
+
+const buildHookTitle = (body: string, fallback: string, paperTitle: string, titleZh?: string) => {
+  const normalizedTitleZh = normalizeTranslatedTitle(titleZh ?? "");
+  if (normalizedTitleZh) {
+    return normalizedTitleZh;
+  }
+
   const source = `${body} ${fallback} ${paperTitle}`;
   if (/准确率/u.test(source) && /安全|高风险/u.test(source)) {
     return "高准确率不等于更安全";
@@ -104,8 +120,29 @@ const stripHookTitlePrefix = (body: string, title: string) => {
   return normalizedBody;
 };
 
+const splitProblemBody = (body: string) => {
+  const normalized = body.replace(/\s+/g, " ").trim();
+  const markers = ["作者想解决的是", "作者真正想解决的是", "论文真正想解决的是"];
+
+  for (const marker of markers) {
+    const index = normalized.indexOf(marker);
+    if (index > 0) {
+      return {
+        leadIn: normalized.slice(0, index).replace(/[，。；：,.!?！？]+$/u, "").trim(),
+        core: normalized.slice(index).trim(),
+      };
+    }
+  }
+
+  return {
+    leadIn: "",
+    core: normalized,
+  };
+};
+
 const buildContentProfile = (paper: SourceBundle["papers"][number]): ContentProfileDocument => {
   const draft = paper.scriptDraft ?? {
+    titleZh: "",
     hook: paper.summary,
     problem: paper.summary,
     method: paper.summary,
@@ -127,12 +164,14 @@ const buildContentProfile = (paper: SourceBundle["papers"][number]): ContentProf
       sectionHeadings: paper.sectionHeadings ?? [],
     },
   });
-  const resolvedHookTitle = buildHookTitle(displayDraft.hook.body, draft.hook, paper.title);
+  const problemSplit = splitProblemBody(displayDraft.problem.body);
+  const resolvedHookTitle = buildHookTitle(displayDraft.hook.body, draft.hook, paper.title, draft.titleZh);
   const resolvedHookBody = stripHookTitlePrefix(displayDraft.hook.body, resolvedHookTitle);
   const finalHookBody =
     !resolvedHookBody || resolvedHookBody === resolvedHookTitle
-      ? trimByChars(displayDraft.problem.body || draft.problem, 116)
+      ? trimByChars(problemSplit.leadIn || displayDraft.problem.body || draft.problem, 116)
       : resolvedHookBody;
+  const finalProblemBody = trimByChars(problemSplit.core || displayDraft.problem.body || draft.problem, 198);
 
   return {
     id: `arxiv-${paper.arxivId.replace(/[^\w]+/g, "-").toLowerCase()}`,
@@ -158,7 +197,7 @@ const buildContentProfile = (paper: SourceBundle["papers"][number]): ContentProf
         narrationText: draft.problem,
         content: {
           title: "这篇论文在解决什么？",
-          body: displayDraft.problem.body,
+          body: finalProblemBody,
           bullets: displayDraft.problem.bullets,
         },
       },

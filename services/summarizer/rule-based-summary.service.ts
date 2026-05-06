@@ -42,6 +42,36 @@ export const detectPaperMode = (paper: SourcePaperForSummary): PaperMode => {
   return "method";
 };
 
+const buildRuleBasedTitleZh = (paper: SourcePaperForSummary, mode: PaperMode) => {
+  const normalizedTitle = paper.title.trim();
+
+  if (/agentic world modeling/i.test(normalizedTitle)) {
+    return "智能体世界模型：基础、能力、规律与未来";
+  }
+
+  if (/plan existence problem/i.test(normalizedTitle)) {
+    return "认知规划中计划存在性问题的不可判定性";
+  }
+
+  if (/symptomai/i.test(normalizedTitle)) {
+    return "SymptomAI：让 AI 问诊主动补齐关键信息";
+  }
+
+  if (/safe-scale/i.test(normalizedTitle)) {
+    return "SaFE-Scale：医疗大模型部署安全性的系统评测";
+  }
+
+  if (mode === "survey") {
+    return "世界模型综述：能力层级、规律约束与研究地图";
+  }
+
+  if (mode === "theory") {
+    return "认知规划的理论边界：什么问题根本无通解";
+  }
+
+  return "";
+};
+
 const sentenceOr = (sentences: string[], index: number, fallback: string) => sentences[index] ?? fallback;
 const includesAny = (value: string, patterns: RegExp[]) => patterns.some((pattern) => pattern.test(value));
 
@@ -210,6 +240,7 @@ export const buildRuleBasedSummaryDraft = (
     const hasScale = includesAny(evidenceText, [/400 works/i, /100 representative systems/i, /representative systems/i]);
 
     return {
+      titleZh: buildRuleBasedTitleZh(paper, mode),
       hook: "如果 AI 真要自己干活，它最缺的不是多说几句像人的话，而是能不能持续预测环境接下来会怎么变。",
       problem: "问题是现在大家都在说 world model，但有人指一步预测器，有人指完整模拟器，还有人把会自我修正的系统也算进去。术语一散，不同 agent 的方法就很难放在同一张表里比较。",
       method:
@@ -231,6 +262,7 @@ export const buildRuleBasedSummaryDraft = (
 
   if (mode === "theory") {
     return {
+      titleZh: buildRuleBasedTitleZh(paper, mode),
       hook: "这篇论文最硬核的地方，是它告诉你：有些规划问题不是暂时难解，而是原则上就不可能有通用求解器。",
       problem: "作者研究的是 epistemic planning 里的 plan existence，也就是给定目标、知识状态和一组动作之后，到底存不存在一条可达计划。",
       method: "它把条件收得很弱：precondition 的 modal depth 最多只有 1，而且没有 postcondition；即便这样，作者仍然证明 plan existence 是不可判定的。",
@@ -275,6 +307,7 @@ export const buildRuleBasedSummaryDraft = (
   const findingSentence = methodFindings.length > 0 ? methodFindings.join("；") : "";
 
   return {
+    titleZh: buildRuleBasedTitleZh(paper, mode),
     hook: `这篇论文盯上的，不是表面分数，而是 ${focus} 这个真正决定系统好不好用的核心问题。`,
     problem: `作者想解决的是：${problemSignal}。真正决定系统能不能落地的，往往是 ${focus}。`,
     method: [methodLead, dimensionSentence, setupSentence].filter(Boolean).join(" "),
