@@ -1,4 +1,4 @@
-import type {RenderScene} from "@paper-to-video/shared-types";
+import type {RenderManifest, RenderScene} from "@paper-to-video/shared-types";
 export {
   buildCellularLifeCells,
   getCoverLayoutConfig,
@@ -147,6 +147,14 @@ export const getSceneTitle = (scene: RenderScene) => {
   }
 
   return "PaperToVideo";
+};
+
+export const getSceneKicker = (scene: RenderScene, manifest: RenderManifest) => {
+  if (typeof scene.content.kicker === "string" && scene.content.kicker.trim()) {
+    return scene.content.kicker;
+  }
+
+  return `${manifest.paper.paperId} · AI Paper Digest`;
 };
 
 export const getSceneBody = (scene: RenderScene) => {

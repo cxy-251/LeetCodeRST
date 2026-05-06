@@ -311,7 +311,7 @@ npm run produce:paper-urls -- \
 说明：
 
 - 当前默认推荐模型已切到 `google/gemma-4-e4b`，因为它在方法类论文上更稳定，也更容易给出完整中文稿。
-- `qwen/qwen3.5-9b` 仍然可用，但当前在用户本机实测里更容易出现 500 或混入英文原句。
+- 当前默认推荐模型是 `google/gemma-4-e4b`，后续不再以 `qwen` 作为默认本地总结模型。
 - 对于会先输出 `reasoning_content` 的模型，项目现在会提高默认输出预算，并尝试从推理结果里恢复最终答案。
 - 本地模型产出的初稿不会直接落到视频里，当前链路会再做一轮结构化复审与规则保底校正。
 - 当前论文视频已经拆成两层文案：
@@ -719,7 +719,7 @@ npm run prepare:latest-ai-batch -- \
 npm run prepare:latest-ai-batch -- \
   --limit 3 \
   --summary-mode lm-studio \
-  --lm-studio-model qwen/qwen3.5-9b
+  --lm-studio-model google/gemma-4-e4b
 ```
 
 这条命令会串起：

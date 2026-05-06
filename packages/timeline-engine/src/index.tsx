@@ -10,6 +10,7 @@ import {
 import {
   getSceneBody,
   getSceneBullets,
+  getSceneKicker,
   getSceneTitle,
   getThemePalette,
   resolveTypographyScaleConfig,
@@ -50,7 +51,7 @@ const componentRegistry: Record<
   },
   "scene-kicker": (_node, context) => (
     <SceneKickerAtom
-      text={`${context.manifest.paper.paperId} · AI Paper Digest`}
+      text={getSceneKicker(context.scene, context.manifest)}
       color={getThemePalette(context.manifest.theme.id).accent}
       fontSize={resolveTypographyScaleConfig(context.manifest.modules).kickerSize}
     />

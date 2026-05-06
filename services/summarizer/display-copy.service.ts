@@ -99,6 +99,17 @@ const composeDistinctBody = (primary: string, fallback: string, maxChars: number
   return composeBody([normalizedPrimary, fallbackBody], maxChars);
 };
 
+const appendIfMissing = (base: string, addition: string) => {
+  const normalizedBase = cleanText(base);
+  const normalizedAddition = cleanText(addition);
+
+  if (!normalizedAddition || !normalizedBase) {
+    return normalizedAddition ? [normalizedBase, normalizedAddition].filter(Boolean).join(" ") : normalizedBase;
+  }
+
+  return normalizedBase.includes(normalizedAddition) ? normalizedBase : `${normalizedBase} ${normalizedAddition}`.trim();
+};
+
 const extractNamedArtifacts = (text: string) => {
   const ignore = new Set(["Clinical", "LLMs", "LLM", "AI", "The", "This", "We", "To", "As", "In", "On"]);
   return [...text.matchAll(/\b(?:[A-Z][A-Za-z0-9]+(?:-[A-Za-z0-9]+)+|[A-Z]{2,}(?:-[A-Z0-9]+)*)\b/g)]
@@ -176,35 +187,12 @@ const extractFindingBullets = (text: string) => {
   return findings.slice(0, 3);
 };
 
-const buildMethodHeadline = ({
-  paper,
-  polishedDraft,
-}: {
-  paper: SourcePaperForSummary;
-  polishedDraft: SummaryDraft;
-}) => {
-  const text = `${paper.title} ${paper.summary} ${polishedDraft.hook} ${polishedDraft.problem}`;
-
-  if (/accuracy.*safer behavior|高准确度.*安全|平均准确率/u.test(text)) {
-    return "高准确率不等于更安全";
-  }
-
-  if (/world model/i.test(text)) {
-    return "World Model 不是一个词";
-  }
-
-  if (/不可判定|plan existence/i.test(text)) {
-    return "这类规划题天生无通解";
-  }
-
-  return trimByChars(
-    polishedDraft.hook
-      .split(/[。！？]/u)[0]
-      ?.replace(/^在.+?下，/u, "")
-      .replace(/^如果/u, "")
-      .trim() ?? polishedDraft.hook,
-    24,
-  );
+const withoutExistingBullets = (candidates: string[], existing: string[]) => {
+  const normalizedExisting = new Set(existing.map((item) => cleanText(item)));
+  return candidates.filter((item) => {
+    const normalized = cleanText(item);
+    return normalized && !normalizedExisting.has(normalized);
+  });
 };
 
 const buildSurveyDisplayDraft = ({
@@ -393,19 +381,24 @@ const buildMethodDisplayDraft = ({
     : stripEnglishFragments(polishedDraft.value) || stripEnglishFragments(baselineDraft.value);
   const endingSource = isEnglishHeavy(polishedDraft.ending) ? baselineDraft.ending : polishedDraft.ending;
 
+  const hookBody = composeBody(
+    [
+      stripEnglishFragments(problemSource),
+      findingBullets[0] ?? "",
+    ],
+    146,
+  );
   const problemBody = composeDistinctBody(problemSource, baselineDraft.problem, 198);
   const methodBody = composeBody(
     [
-      methodSource,
-      dimensions.length > 0 ? `重点拆开比较 ${dimensions.join("、")} 这些变量。` : "",
+      appendIfMissing(methodSource, dimensions.length > 0 ? `重点拆开比较 ${dimensions.join("、")} 这些变量。` : ""),
       evaluationFacts.length > 0 ? `实验覆盖 ${evaluationFacts.join("、")}。` : "",
     ],
     208,
   );
   const valueBody = composeBody(
     [
-      valueSource,
-      findingBullets[0] ?? "",
+      appendIfMissing(valueSource, findingBullets[0] ?? ""),
       findingBullets[1] ?? "",
     ],
     206,
@@ -425,41 +418,45 @@ const buildMethodDisplayDraft = ({
     48,
   );
   const valueBullets = uniqueBullets(
+    withoutExistingBullets(
+      [
+        ...findingBullets,
+        dimensions.length > 0 ? `安全收益取决于 ${dimensions.slice(0, 3).join("、")}` : "",
+        ...fallbackBullets,
+      ],
+      methodBullets,
+    ),
+    4,
+    48,
+  );
+  const problemBullets = uniqueBullets(
     [
       ...findingBullets,
-      dimensions.length > 0 ? `安全收益取决于 ${dimensions.slice(0, 3).join("、")}` : "",
-      ...fallbackBullets,
+      artifacts[0] ? `论文主角：${artifacts[0]}` : "",
+      "误区：平均准确率不等于真实安全",
+      dimensions.length > 0 ? `核心变量：${dimensions.slice(0, 3).join("、")}` : "",
+      fallbackBullets[0] ?? "",
     ],
-    5,
-    48,
+    4,
+    46,
   );
 
   return {
     hook: {
-      body: composeDistinctBody(buildMethodHeadline({paper, polishedDraft}), hookSource, 120),
+      body: hookBody,
       bullets: [],
     },
     problem: {
       body: problemBody,
-      bullets: uniqueBullets(
-        [
-          artifacts[0] ? `论文主角：${artifacts[0]}` : "",
-          "误区：平均准确率不等于真实安全",
-          dimensions.length > 0 ? `核心变量：${dimensions.slice(0, 3).join("、")}` : "",
-          findingBullets[0] ?? "",
-          fallbackBullets[0] ?? "",
-        ],
-        4,
-        46,
-      ),
+      bullets: problemBullets,
     },
     method: {
       body: methodBody,
-      bullets: methodBullets,
+      bullets: methodBullets.length >= 2 ? methodBullets : [],
     },
     value: {
       body: valueBody,
-      bullets: valueBullets,
+      bullets: valueBullets.length >= 2 ? valueBullets : [],
     },
     ending: {
       body: composeDistinctBody(endingSource, baselineDraft.ending, 108),

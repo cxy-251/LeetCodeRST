@@ -111,6 +111,7 @@ const buildContentProfile = (paper: SourceBundle["papers"][number]): ContentProf
       hook: {
         narrationText: draft.hook,
         content: {
+          kicker: paper.title,
           title: hookTitle,
           body: stripHookTitlePrefix(displayDraft.hook.body, hookTitle),
         },

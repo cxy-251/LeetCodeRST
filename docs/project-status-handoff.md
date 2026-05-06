@@ -412,13 +412,12 @@ npm run build
    - 默认不再直接堆整篇论文，而是改成“摘要原文 + 摘要句 + 章节线索 + 关键正文摘录”
    - 当前默认会保留较多正文上下文，适配用户已手动调大的本地模型 context
    - 若模型仍报上下文超限，会自动退回到更紧凑的 compact prompt
-75. `LM Studio` 现已兼容 `qwen/qwen3.5-9b` 这类会优先输出 `reasoning_content` 的模型：
+75. `LM Studio` 现已兼容会优先输出 `reasoning_content` 的模型：
    - 默认输出预算提高到 `2200`
    - 若 `content` 为空，会尝试从 `reasoning_content` 中恢复最终答案
 76. 2026-05-06 的本机对比结果显示：
-   - `qwen/qwen3.5-9b` 在方法类论文上更容易 500 或混入英文原句
-   - `google/gemma-4-e4b` 至少能稳定返回更完整的中文稿
-   - 因此当前默认本地模型已切到 `google/gemma-4-e4b`
+   - `google/gemma-4-e4b` 在当前机器上更稳定，也更少混入英文原句
+   - 后续默认本地模型固定为 `google/gemma-4-e4b`
 77. 背景图来源已开始抽成正式策略层：
    - `local-folder-random`
    - `local-folder-cycle`

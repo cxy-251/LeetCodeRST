@@ -722,7 +722,8 @@ const buildPrompt = (
         "2. hook/problem/method/value/ending 这些字段是配音稿，不是屏幕标题。",
         "3. 每个字段写 1 到 2 句口语化短句，尽量自然。",
         "4. bullets 固定 3 条，每条 8 到 18 个汉字，不要句号。",
-        "5. 只输出 JSON。",
+        "5. 只根据当前论文证据作答，不要借用其他论文的句式或结论。",
+        "6. 只输出 JSON。",
       ]
     : [
         "1. 语言使用中文，面向短视频观众，不要像论文摘要翻译。",
@@ -741,10 +742,11 @@ const buildPrompt = (
         "14. 禁止直接粘贴英文摘要原句；必要时可以保留英文术语名，但必须用中文解释它是什么。",
         "15. 禁止使用“先收藏”“值得一读”“推荐去看原论文”“先读论文再说”这类引流口吻；默认假设观众只看短视频也要理解主线。",
         "16. 只输出 JSON，不要 markdown，不要解释。",
+        "17. 只允许根据当前论文证据作答，不要沿用别的论文话术、术语搭配或结论模板。",
       ];
 
   return [
-    "你是一个论文短视频脚本总编，不是论文翻译器。",
+    "你是一个 AI 论文总结专家兼短视频脚本总编，不是论文翻译器。",
     "请根据下面的论文证据，写出适合 5 页竖屏短视频的中文脚本 JSON。",
     "记住：hook/problem/method/value/ending 是朗读文案，bullets 是屏幕要点。",
     "输出格式必须与这个结构一致：",
@@ -788,7 +790,7 @@ const buildReviewPrompt = ({
   const evidence = buildEvidencePacket(paper, context, 2200, true);
 
   return [
-    "你是论文短视频脚本的审稿编辑。",
+    "你是 AI 论文短视频脚本的审稿编辑，专门负责删掉空话、英文直抄、引流口吻和串题内容。",
     "请审核下面这份中文脚本初稿是否真正抓住论文核心，再重写成更清楚、更像人话的版本。",
     "只输出合法 JSON。",
     "目标：",
@@ -801,6 +803,7 @@ const buildReviewPrompt = ({
     "7. 如果有更具体的核心判断，就优先说具体判断，不要说泛泛的大词。",
     "8. 禁止使用“值得看”“值得先读”“建议收藏”“推荐去读原论文”这类引流表达。",
     "9. 如果初稿里有长段英文原句，必须翻成中文再输出。",
+    "10. 只能根据当前论文证据改写，不要沿用其他论文的句式或结论。",
     "",
     `论文类型提示：${evidence.mode}`,
     `标题：${paper.title}`,
@@ -848,7 +851,8 @@ export const summarizeWithLmStudio = async (
       messages: [
         {
           role: "system",
-          content: "You convert research papers into concise Chinese short-video script JSON.",
+          content:
+            "You are an expert AI-paper summarizer for Chinese short-video scripts. Use only the current paper evidence, never reuse text from other papers, and return strict JSON.",
         },
         {
           role: "user",
@@ -936,7 +940,8 @@ export const summarizeWithLmStudio = async (
       messages: [
         {
           role: "system",
-          content: "You edit Chinese short-video paper scripts into tighter JSON.",
+          content:
+            "You are an expert editor for Chinese AI-paper short-video scripts. Remove fluff, English quote leakage, promotional wording, and cross-paper reuse. Return strict JSON only.",
         },
         {
           role: "user",
