@@ -133,6 +133,12 @@ npm run produce:paper-urls:donut -- \
 
 - `data/papers/paper-urls.example.csv`
 
+这个示例里现在已经放了两类链接：
+- 最近实际验证过的论文
+- 一批经典论文样例，例如 Transformer、BERT、GPT-3、ResNet、VAE
+
+这样你可以直接拿它做“这套文案能力能不能迁移到别的论文”测试。
+
 CSV 格式只需要一列网址，支持两种形式：
 
 ```csv
@@ -165,6 +171,42 @@ https://arxiv.org/abs/2604.22736
 - 如果你想复现同一批甜甜圈参数，再显式传入同一个 `--seed` 即可。
 - 论文抓取现在优先命中本地 `output/cache/papers`，即使 CSV 里写的是不带 `v1` 的 arXiv 链接，也会优先复用已缓存版本。
 - 语音生成阶段已经补上自动重试；如果偶发 `edge-tts` 超时，系统会先重试几次，而不是立刻整批失败。
+
+### 2.0.5 自动维护论文网址 CSV
+
+如果你后面想持续抓最新论文链接，并且要求：
+
+- 不和之前重复
+- 最新论文排在前面
+- 始终维护一份可直接批量生成视频的 CSV
+
+现在可以直接用：
+
+```bash
+npm run update:paper-urls -- \
+  --output data/papers/paper-urls.csv \
+  --category cs.AI \
+  --limit 20
+```
+
+这条命令会：
+
+1. 按提交时间倒序抓取最新 arXiv 论文
+2. 统一转成 `https://arxiv.org/abs/<paperId>` 形式
+3. 和你现有 CSV 去重合并
+4. 把最新且未重复的链接放在文件前面
+
+也就是说，后面推荐流程是：
+
+1. 先更新论文链接池
+```bash
+npm run update:paper-urls -- --output data/papers/paper-urls.csv --category cs.AI --limit 20
+```
+
+2. 再批量生成甜甜圈论文视频
+```bash
+npm run produce:paper-urls:donut -- --paper-url-csv data/papers/paper-urls.csv
+```
 
 ### 2.0.1 控制随机特效池
 

@@ -21,6 +21,7 @@
     "build:video-batch": "node --import tsx tools/build-video-batch.ts",
     "create:manifest": "node --import tsx tools/create-video-manifest.ts",
     "fetch:arxiv-ai": "node --import tsx tools/fetch-arxiv-ai.ts",
+    "update:paper-urls": "node --import tsx tools/update-paper-urls.ts",
     "extract:pdf-text": "node --import tsx tools/extract-pdf-text.ts",
     "prepare:cover-image": "node --import tsx tools/prepare-cover-image.ts",
     "prepare:latest-ai-batch": "node --import tsx tools/prepare-latest-ai-batch.ts",

@@ -120,6 +120,11 @@ npm run build
 22. 朗读稿与屏显稿当前已明确分工：
    - `narrationText` 保持相对克制，负责口语化讲主线
    - `content.body / bullets` 承担更多定义、条件、技术要点和结论边界
+23. `data/papers/paper-urls.example.csv` 已补入一批经典论文样例，可直接用于跨论文风格复用测试
+24. 已新增 `npm run update:paper-urls`：
+   - 从 arXiv 按 submitted date 抓取最新论文链接
+   - 和现有 CSV 去重合并
+   - 以“最新在前”的顺序写回 `data/papers/paper-urls.csv`
 
 ### 工程组织
 

@@ -185,6 +185,8 @@ export const parseArxivIdFromInput = (value: string) => {
   return null;
 };
 
+export const toCanonicalArxivAbsUrl = (arxivId: string) => `https://arxiv.org/abs/${arxivId}`;
+
 export const parseFeed = (xml: string): ArxivPaper[] => {
   const entries = [...xml.matchAll(/<entry>([\s\S]*?)<\/entry>/g)].map((match) => match[1]);
 
@@ -227,6 +229,25 @@ export const fetchArxivPaperById = async (arxivId: string) => {
   }
 
   return paper;
+};
+
+export const fetchLatestArxivPapers = async ({
+  category,
+  limit,
+}: {
+  category: string;
+  limit: number;
+}) => {
+  const queryUrl =
+    `http://export.arxiv.org/api/query?search_query=cat:${encodeURIComponent(category)}` +
+    `&sortBy=submittedDate&sortOrder=descending&max_results=${limit}`;
+
+  const xml = await fetchTextWithRetry({
+    url: queryUrl,
+    label: `arXiv feed ${category}`,
+  });
+
+  return parseFeed(xml);
 };
 
 export const downloadPdfIfMissing = async ({

@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import {parseArxivIdFromInput, toCanonicalArxivAbsUrl} from "./arxiv";
 import {makeRunId, slugify} from "./run-artifacts";
 
 const IMAGE_FILE_PATTERN = /\.(png|jpg|jpeg|webp|svg)$/i;
@@ -31,6 +32,44 @@ export const readPaperUrlCsv = async (filePath: string) => {
   return records
     .map((cells) => cells[0])
     .filter((value): value is string => Boolean(value));
+};
+
+export const normalizePaperUrlList = (values: string[]) => {
+  const seen = new Set<string>();
+  const result: string[] = [];
+
+  for (const value of values) {
+    const normalized = value.trim();
+    if (!normalized) {
+      continue;
+    }
+
+    const arxivId = parseArxivIdFromInput(normalized);
+    const canonical = arxivId ? toCanonicalArxivAbsUrl(arxivId) : normalized;
+    const dedupeKey = arxivId ? arxivId.toLowerCase() : canonical.toLowerCase();
+
+    if (seen.has(dedupeKey)) {
+      continue;
+    }
+
+    seen.add(dedupeKey);
+    result.push(canonical);
+  }
+
+  return result;
+};
+
+export const writePaperUrlCsv = async ({
+  filePath,
+  urls,
+}: {
+  filePath: string;
+  urls: string[];
+}) => {
+  const normalized = normalizePaperUrlList(urls);
+  const raw = ["paper_url", ...normalized].join("\n");
+  await fs.mkdir(path.dirname(filePath), {recursive: true});
+  await fs.writeFile(filePath, `${raw}\n`, "utf-8");
 };
 
 const directoryHasImages = async (dirPath: string) => {
