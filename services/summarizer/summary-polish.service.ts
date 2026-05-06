@@ -103,12 +103,12 @@ const polishSentence = ({
   const deFluffed = normalizePunctuation(removeWeakOpeners(clauseLimited));
   const maxChars =
     mode === "hook"
-      ? 82
+      ? 92
       : mode === "ending"
-        ? 58
+        ? 72
         : mode === "method" || mode === "value"
-          ? 128
-          : 96;
+          ? 220
+          : 156;
 
   return trimByChars(deFluffed || clauseLimited || cleaned, maxChars);
 };

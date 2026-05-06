@@ -36,6 +36,11 @@ const GENERIC_SENTENCE_PATTERNS = [
   /方便评估比较/u,
 ] as const;
 
+const containsExcessiveEnglish = (value: string) => {
+  const letters = (value.match(/[A-Za-z]/g) ?? []).length;
+  return letters >= 22 || /(?:\b[A-Za-z][A-Za-z0-9-]*\b[\s,;:()（）]*){5,}/.test(value);
+};
+
 const STRICT_RESPONSE_SCHEMA = {
   type: "object",
   additionalProperties: false,
@@ -535,6 +540,10 @@ const isWeakSentence = ({
   const normalized = trimmed.toLowerCase();
 
   if (mode === "method" || mode === "value") {
+    if (containsExcessiveEnglish(trimmed)) {
+      return true;
+    }
+
     if (GENERIC_SENTENCE_PATTERNS.some((pattern) => pattern.test(trimmed)) && !sentenceHasAnchor(trimmed, anchors)) {
       return true;
     }
@@ -729,8 +738,9 @@ const buildPrompt = (
         "11. bullets 固定 3 条，每条 8 到 18 个汉字，是给屏幕显示的要点，不要句号、不要长句。",
         "12. 避免空泛表达，例如“通过这套全面图谱”“值得进一步展开”。",
         "13. 不要捏造实验数字；不确定就说贡献，不说具体数值。",
-        "14. 禁止使用“先收藏”“值得一读”“推荐去看原论文”“先读论文再说”这类引流口吻；默认假设观众只看短视频也要理解主线。",
-        "15. 只输出 JSON，不要 markdown，不要解释。",
+        "14. 禁止直接粘贴英文摘要原句；必要时可以保留英文术语名，但必须用中文解释它是什么。",
+        "15. 禁止使用“先收藏”“值得一读”“推荐去看原论文”“先读论文再说”这类引流口吻；默认假设观众只看短视频也要理解主线。",
+        "16. 只输出 JSON，不要 markdown，不要解释。",
       ];
 
   return [
@@ -790,6 +800,7 @@ const buildReviewPrompt = ({
     "6. 不要照抄英文摘要，不要堆术语，不要写“通过这套全面图谱”这类空泛句。",
     "7. 如果有更具体的核心判断，就优先说具体判断，不要说泛泛的大词。",
     "8. 禁止使用“值得看”“值得先读”“建议收藏”“推荐去读原论文”这类引流表达。",
+    "9. 如果初稿里有长段英文原句，必须翻成中文再输出。",
     "",
     `论文类型提示：${evidence.mode}`,
     `标题：${paper.title}`,

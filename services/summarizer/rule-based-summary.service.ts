@@ -45,6 +45,128 @@ export const detectPaperMode = (paper: SourcePaperForSummary): PaperMode => {
 const sentenceOr = (sentences: string[], index: number, fallback: string) => sentences[index] ?? fallback;
 const includesAny = (value: string, patterns: RegExp[]) => patterns.some((pattern) => pattern.test(value));
 
+const capitalizeTerm = (value: string) => value.replace(/\s+/g, " ").trim();
+
+const extractNamedArtifacts = (text: string) => {
+  const ignore = new Set([
+    "Clinical",
+    "LLMs",
+    "LLM",
+    "AI",
+    "As",
+    "We",
+    "To",
+    "The",
+    "This",
+    "That",
+    "In",
+    "On",
+    "By",
+  ]);
+
+  return [...text.matchAll(/\b(?:[A-Z][A-Za-z0-9]+(?:-[A-Za-z0-9]+)+|[A-Z]{2,}(?:-[A-Z0-9]+)*)\b/g)]
+    .map((match) => capitalizeTerm(match[0] ?? ""))
+    .filter((item) => item.length >= 3 && !ignore.has(item))
+    .filter((item, index, all) => all.indexOf(item) === index)
+    .slice(0, 4);
+};
+
+const inferMethodPaperFocus = (paper: SourcePaperForSummary, context: PaperSummaryContext) => {
+  const text = `${paper.title} ${paper.summary} ${context.sectionHeadings.join(" ")}`.toLowerCase();
+
+  if (/clinical|medicine|radiology|medical|safety/.test(text)) {
+    return "医疗大模型在真实部署中的安全性和高风险错误";
+  }
+
+  if (/benchmark|dataset|evaluation|leaderboard/.test(text)) {
+    return "评测标准、失败模式和真实瓶颈";
+  }
+
+  if (/retrieval|rag|search|ranking/.test(text)) {
+    return "检索链路和最终答案质量之间的关系";
+  }
+
+  if (/agent|multi-agent|planner|planning/.test(text)) {
+    return "智能体系统在复杂任务里的关键能力";
+  }
+
+  if (/detection|detect/.test(text)) {
+    return "检测任务在复杂环境下的泛化和鲁棒性";
+  }
+
+  return "系统真正的性能瓶颈和失败来源";
+};
+
+const extractMethodDimensions = (text: string) => {
+  const normalized = text.toLowerCase();
+  const dimensions: string[] = [];
+
+  const mapping: Array<[RegExp, string]> = [
+    [/model scale/, "模型规模"],
+    [/context length/, "上下文长度"],
+    [/evidence quality|clean evidence|conflict evidence/, "证据质量"],
+    [/retrieval complexity|retrieval strategy|standard rag|agentic rag/, "检索方式"],
+    [/context exposure|max-context/, "上下文构造"],
+    [/inference-time compute|latency/, "推理时算力"],
+  ];
+
+  for (const [pattern, label] of mapping) {
+    if (pattern.test(normalized) && !dimensions.includes(label)) {
+      dimensions.push(label);
+    }
+  }
+
+  return dimensions.slice(0, 5);
+};
+
+const extractEvaluationSetup = (text: string) => {
+  const modelCount = /evaluated\s+(\d+)\s+(?:locally deployed\s+)?llms?/i.exec(text)?.[1];
+  const conditionCount = /across\s+(\d+)\s+deployment conditions/i.exec(text)?.[1];
+  const questionCount = /benchmark of\s+(\d+)\s+(?:multiple-choice\s+)?questions/i.exec(text)?.[1];
+
+  const parts: string[] = [];
+
+  if (questionCount) {
+    parts.push(`${questionCount} 道评测题`);
+  }
+
+  if (modelCount && conditionCount) {
+    parts.push(`${modelCount} 个模型 × ${conditionCount} 种部署条件`);
+  } else if (modelCount) {
+    parts.push(`${modelCount} 个模型`);
+  }
+
+  return parts;
+};
+
+const extractMethodFindings = (text: string) => {
+  const findings: string[] = [];
+  const normalized = text.toLowerCase();
+
+  if (/clean evidence produced the strongest improvement/.test(normalized)) {
+    findings.push("最有效的是高质量、干净的证据输入，不是更复杂的检索链路");
+  }
+
+  const highRiskDrop = /high-risk error from\s+([0-9.]+)%\s+to\s+([0-9.]+)%/i.exec(text);
+  if (highRiskDrop) {
+    findings.push(`高风险错误率可从 ${highRiskDrop[1]}% 降到 ${highRiskDrop[2]}%`);
+  }
+
+  if (/did not reproduce this safety profile/.test(normalized)) {
+    findings.push("标准 RAG 和 agentic RAG 没有复制这种安全收益");
+  }
+
+  if (/increased latency without closing the safety gap/.test(normalized)) {
+    findings.push("长上下文会增加延迟，但不会自动补齐安全差距");
+  }
+
+  if (/worst-case analysis showed/i.test(text)) {
+    findings.push("真正危险的错误集中在少数高风险问题上");
+  }
+
+  return findings.slice(0, 3);
+};
+
 export const buildRuleBasedSummaryDraft = (
   paper: SourcePaperForSummary,
   context: PaperSummaryContext,
@@ -96,17 +218,41 @@ export const buildRuleBasedSummaryDraft = (
     sentenceOr(context.abstractSentences, 1, paper.summary);
   const resultSentence = context.abstractSentences.find((sentence) => /improves|faster|Recall|MAP|F1/i.test(sentence)) ??
     sentenceOr(context.abstractSentences, 2, paper.summary);
+  const artifacts = extractNamedArtifacts([paper.title, paper.summary, ...context.abstractSentences].join(" "));
+  const focus = inferMethodPaperFocus(paper, context);
+  const dimensions = extractMethodDimensions(`${paper.summary} ${context.abstractSentences.join(" ")}`);
+  const evaluationSetup = extractEvaluationSetup(`${paper.summary} ${context.abstractSentences.join(" ")}`);
+  const methodFindings = extractMethodFindings(`${paper.summary} ${context.abstractSentences.join(" ")}`);
+  const leadArtifact = artifacts[0];
+  const supportingArtifact = artifacts[1];
+  const methodLead = leadArtifact
+    ? supportingArtifact
+      ? `作者提出 ${leadArtifact}，并配套 ${supportingArtifact}，把 ${focus} 从总分里单独拆出来衡量。`
+      : `作者提出 ${leadArtifact} 这套方法，重点不是单点刷分，而是把 ${focus} 拆开来看。`
+    : `作者的核心做法不是只改一个局部模块，而是重新组织整套系统，让 ${focus} 能被单独衡量和比较。`;
+  const dimensionSentence =
+    dimensions.length > 0
+      ? `它重点比较的是 ${dimensions.join("、")} 这些变量，想看清安全收益到底来自哪里。`
+      : "";
+  const setupSentence =
+    evaluationSetup.length > 0
+      ? `实验设置也不是只看一条曲线，而是直接比较 ${evaluationSetup.join("、")}。`
+      : "";
+  const valueLead = leadArtifact
+    ? `${leadArtifact} 的真正价值，不只是把平均指标抬高，而是把过去混在总分里的风险、代价或失败模式单独暴露出来。`
+    : `这项工作的真正价值，不只是把平均指标抬高，而是把过去混在总分里的风险、代价或失败模式单独暴露出来。`;
+  const findingSentence = methodFindings.length > 0 ? methodFindings.join("；") : "";
 
   return {
-    hook: "这篇论文盯上的，是一个很真实的瓶颈：检索很快，但拿回来的内容不一定真能帮模型答对问题。",
-    problem: "作者想解决的是检索质量和推理成本的矛盾，也就是怎样既保住速度，又让检索结果更贴近最终答案质量。",
-    method: `论文的核心方法可以概括为：${methodSentence} 重点不是单独提一个小模块，而是重写检索、排序和生成之间的协同方式。`,
-    value: `实验真正说明的是：${resultSentence} 如果这件事能在成本不明显上升的情况下成立，它就不只是指标提升，而是部署价值。`,
-    ending: "看完这篇，你就能判断这类系统的核心改动点到底在召回、重排还是生成阶段，而不是只记住一个新模块名字。",
+    hook: `这篇论文盯上的，不是表面分数，而是 ${focus} 这个真正决定系统好不好用的核心问题。`,
+    problem: `作者想解决的是：很多系统把平均准确率当成唯一指标，但真正影响落地效果的，往往是 ${focus}。`,
+    method: [methodLead, dimensionSentence, setupSentence].filter(Boolean).join(" "),
+    value: `${valueLead} ${findingSentence || (resultSentence ? "论文还用实验进一步说明，这种差别不是抽象概念，而是会真实影响系统判断和部署方式。" : "")}`.trim(),
+    ending: `看完这篇，你会知道这类系统真正该盯住的不是表面分数，而是 ${focus}。`,
     bullets: [
-      "检索目标对齐生成收益",
-      "减少测试时重排序",
-      "更适合大规模部署",
+      leadArtifact ? `核心方法：${leadArtifact}` : "核心方法：系统级重构",
+      supportingArtifact ? `评测配套：${supportingArtifact}` : "重点看失败模式和部署条件",
+      methodFindings[0] ?? focus,
     ],
   };
 };

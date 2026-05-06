@@ -28,7 +28,20 @@ const trimByChars = (value: string, limit: number) => {
   return value.slice(0, limit).replace(/[，、；：,.!?！？]+$/u, "").trim();
 };
 
-const uniqueBullets = (items: string[], limit = 4) => {
+const englishLetterCount = (value: string) => (value.match(/[A-Za-z]/g) ?? []).length;
+
+const isEnglishHeavy = (value: string) => {
+  const letters = englishLetterCount(value);
+  return letters >= 22 || /(?:\b[A-Za-z][A-Za-z0-9-]*\b[\s,;:()（）]*){5,}/.test(value);
+};
+
+const stripEnglishFragments = (value: string) =>
+  cleanText(value)
+    .replace(/(?:\b[A-Za-z][A-Za-z0-9-]*\b[\s,;:()（）]*){5,}/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const uniqueBullets = (items: string[], limit = 4, maxChars = 46) => {
   const seen = new Set<string>();
   const bullets: string[] = [];
 
@@ -38,10 +51,10 @@ const uniqueBullets = (items: string[], limit = 4) => {
         .replace(/^[-*•]\s*/u, "")
         .replace(/[。；;！!？?]+$/u, "")
         .trim(),
-      34,
+      maxChars,
     );
 
-    if (!normalized || normalized.length < 4 || seen.has(normalized)) {
+    if (!normalized || normalized.length < 4 || seen.has(normalized) || isEnglishHeavy(normalized)) {
       continue;
     }
 
@@ -70,6 +83,128 @@ const composeBody = (parts: string[], maxChars: number) => {
   }
 
   return trimByChars(text, maxChars);
+};
+
+const composeDistinctBody = (primary: string, fallback: string, maxChars: number) => {
+  const normalizedPrimary = cleanText(primary);
+  const normalizedFallback = cleanText(fallback);
+  const fallbackBody =
+    !normalizedFallback ||
+    normalizedFallback === normalizedPrimary ||
+    normalizedPrimary.includes(normalizedFallback) ||
+    normalizedFallback.includes(normalizedPrimary)
+      ? ""
+      : normalizedFallback;
+
+  return composeBody([normalizedPrimary, fallbackBody], maxChars);
+};
+
+const extractNamedArtifacts = (text: string) => {
+  const ignore = new Set(["Clinical", "LLMs", "LLM", "AI", "The", "This", "We", "To", "As", "In", "On"]);
+  return [...text.matchAll(/\b(?:[A-Z][A-Za-z0-9]+(?:-[A-Za-z0-9]+)+|[A-Z]{2,}(?:-[A-Z0-9]+)*)\b/g)]
+    .map((match) => match[0]?.trim() ?? "")
+    .filter((item) => item.length >= 3 && !ignore.has(item))
+    .filter((item, index, all) => all.indexOf(item) === index)
+    .slice(0, 4);
+};
+
+const extractMethodDimensions = (text: string) => {
+  const normalized = text.toLowerCase();
+  const dimensions: string[] = [];
+  const mapping: Array<[RegExp, string]> = [
+    [/model scale/, "模型规模"],
+    [/context length/, "上下文长度"],
+    [/evidence quality|clean evidence|conflict evidence/, "证据质量"],
+    [/retrieval complexity|retrieval strategy|standard rag|agentic rag/, "检索方式"],
+    [/context exposure|max-context/, "上下文构造"],
+    [/inference-time compute|latency/, "推理时算力"],
+  ];
+
+  for (const [pattern, label] of mapping) {
+    if (pattern.test(normalized) && !dimensions.includes(label)) {
+      dimensions.push(label);
+    }
+  }
+
+  return dimensions.slice(0, 5);
+};
+
+const extractEvaluationFacts = (text: string) => {
+  const modelCount = /evaluated\s+(\d+)\s+(?:locally deployed\s+)?llms?/i.exec(text)?.[1];
+  const conditionCount = /across\s+(\d+)\s+deployment conditions/i.exec(text)?.[1];
+  const questionCount = /benchmark of\s+(\d+)\s+(?:multiple-choice\s+)?questions/i.exec(text)?.[1];
+  const facts: string[] = [];
+
+  if (questionCount) {
+    facts.push(`${questionCount} 道任务题`);
+  }
+
+  if (modelCount && conditionCount) {
+    facts.push(`${modelCount} 个模型 × ${conditionCount} 种条件`);
+  } else if (modelCount) {
+    facts.push(`${modelCount} 个模型对比`);
+  }
+
+  return facts;
+};
+
+const extractFindingBullets = (text: string) => {
+  const findings: string[] = [];
+  const normalized = text.toLowerCase();
+
+  if (/clean evidence produced the strongest improvement/.test(normalized)) {
+    findings.push("干净证据最有效，不是更复杂的 RAG");
+  }
+
+  const highRiskDrop = /high-risk error from\s+([0-9.]+)%\s+to\s+([0-9.]+)%/i.exec(text);
+  if (highRiskDrop) {
+    findings.push(`高风险错误率 ${highRiskDrop[1]}%→${highRiskDrop[2]}%`);
+  }
+
+  if (/did not reproduce this safety profile/.test(normalized)) {
+    findings.push("标准 RAG 没复制这种安全收益");
+  }
+
+  if (/increased latency without closing the safety gap/.test(normalized)) {
+    findings.push("长上下文更慢，但没补齐安全差距");
+  }
+
+  if (/worst-case analysis showed/i.test(text)) {
+    findings.push("真正危险的错误集中在少数高风险题");
+  }
+
+  return findings.slice(0, 3);
+};
+
+const buildMethodHeadline = ({
+  paper,
+  polishedDraft,
+}: {
+  paper: SourcePaperForSummary;
+  polishedDraft: SummaryDraft;
+}) => {
+  const text = `${paper.title} ${paper.summary} ${polishedDraft.hook} ${polishedDraft.problem}`;
+
+  if (/accuracy.*safer behavior|高准确度.*安全|平均准确率/u.test(text)) {
+    return "高准确率不等于更安全";
+  }
+
+  if (/world model/i.test(text)) {
+    return "World Model 不是一个词";
+  }
+
+  if (/不可判定|plan existence/i.test(text)) {
+    return "这类规划题天生无通解";
+  }
+
+  return trimByChars(
+    polishedDraft.hook
+      .split(/[。！？]/u)[0]
+      ?.replace(/^在.+?下，/u, "")
+      .replace(/^如果/u, "")
+      .trim() ?? polishedDraft.hook,
+    24,
+  );
 };
 
 const buildSurveyDisplayDraft = ({
@@ -233,82 +368,101 @@ const buildTheoryDisplayDraft = ({
 };
 
 const buildMethodDisplayDraft = ({
+  paper,
+  context,
   polishedDraft,
   baselineDraft,
 }: {
+  paper: SourcePaperForSummary;
+  context: Pick<PaperSummaryContext, "abstractSentences" | "sectionHeadings">;
   polishedDraft: SummaryDraft;
   baselineDraft: SummaryDraft;
 }): DisplayScriptDraft => {
-  const problemBody = composeBody(
-    [
-      polishedDraft.problem,
-      "真正的问题不是有没有检索，而是检索回来的信息能不能直接提升最终答案质量，以及系统到底该把预算花在召回、重排还是生成上。",
-    ],
-    168,
-  );
+  const evidenceText = [paper.title, paper.summary, ...context.abstractSentences, ...context.sectionHeadings].join(" ");
+  const artifacts = extractNamedArtifacts(evidenceText);
+  const dimensions = extractMethodDimensions(evidenceText);
+  const evaluationFacts = extractEvaluationFacts(evidenceText);
+  const findingBullets = extractFindingBullets(evidenceText);
+  const hookSource = isEnglishHeavy(polishedDraft.hook) ? baselineDraft.hook : polishedDraft.hook;
+  const problemSource = isEnglishHeavy(polishedDraft.problem) ? baselineDraft.problem : polishedDraft.problem;
+  const methodSource = isEnglishHeavy(polishedDraft.method)
+    ? stripEnglishFragments(baselineDraft.method)
+    : stripEnglishFragments(polishedDraft.method) || stripEnglishFragments(baselineDraft.method);
+  const valueSource = isEnglishHeavy(polishedDraft.value)
+    ? stripEnglishFragments(baselineDraft.value)
+    : stripEnglishFragments(polishedDraft.value) || stripEnglishFragments(baselineDraft.value);
+  const endingSource = isEnglishHeavy(polishedDraft.ending) ? baselineDraft.ending : polishedDraft.ending;
 
+  const problemBody = composeDistinctBody(problemSource, baselineDraft.problem, 198);
   const methodBody = composeBody(
     [
-      polishedDraft.method,
-      "也就是说，它不是单点提速，而是在重写检索、排序和生成之间的接口关系，决定信息在哪一步被过滤、聚合和真正消费。",
+      methodSource,
+      dimensions.length > 0 ? `重点拆开比较 ${dimensions.join("、")} 这些变量。` : "",
+      evaluationFacts.length > 0 ? `实验覆盖 ${evaluationFacts.join("、")}。` : "",
     ],
-    178,
+    208,
   );
-
   const valueBody = composeBody(
     [
-      polishedDraft.value,
-      "如果实验里同时保住质量和推理成本，这类方法就不只是学术指标，而是部署价值，因为它会直接影响推理延迟、吞吐和线上成本。",
+      valueSource,
+      findingBullets[0] ?? "",
+      findingBullets[1] ?? "",
     ],
-    174,
+    206,
   );
 
   const fallbackBullets = baselineDraft.bullets;
+  const methodBullets = uniqueBullets(
+    [
+      artifacts[0] ? `${artifacts[0]}：核心方法/框架` : "",
+      artifacts[1] ? `${artifacts[1]}：关键评测或数据设置` : "",
+      dimensions.length > 0 ? `比较 ${dimensions.join("、")}` : "",
+      ...evaluationFacts,
+      ...findingBullets,
+      ...fallbackBullets,
+    ],
+    5,
+    48,
+  );
+  const valueBullets = uniqueBullets(
+    [
+      ...findingBullets,
+      dimensions.length > 0 ? `安全收益取决于 ${dimensions.slice(0, 3).join("、")}` : "",
+      ...fallbackBullets,
+    ],
+    5,
+    48,
+  );
 
   return {
     hook: {
-      body: composeBody(
-        [
-          polishedDraft.hook,
-          "它要解决的是系统级瓶颈，而不是只把某个子模块单独做强。",
-        ],
-        100,
-      ),
+      body: composeDistinctBody(buildMethodHeadline({paper, polishedDraft}), hookSource, 120),
       bullets: [],
     },
     problem: {
       body: problemBody,
-      bullets: uniqueBullets([
-        polishedDraft.problem,
-        fallbackBullets[0] ?? "",
-        "关注最终答案质量而不是中间代理指标",
-        "先问收益落在哪一层，再决定调检索还是调生成",
-      ]),
+      bullets: uniqueBullets(
+        [
+          artifacts[0] ? `论文主角：${artifacts[0]}` : "",
+          "误区：平均准确率不等于真实安全",
+          dimensions.length > 0 ? `核心变量：${dimensions.slice(0, 3).join("、")}` : "",
+          findingBullets[0] ?? "",
+          fallbackBullets[0] ?? "",
+        ],
+        4,
+        46,
+      ),
     },
     method: {
       body: methodBody,
-      bullets: uniqueBullets([
-        polishedDraft.method,
-        fallbackBullets[1] ?? "",
-        "重写检索、排序、生成之间的协同方式",
-        "方法新意通常体现在接口重组而不是单模块替换",
-      ]),
+      bullets: methodBullets,
     },
     value: {
       body: valueBody,
-      bullets: uniqueBullets([
-        polishedDraft.value,
-        ...(fallbackBullets ?? []),
-      ]),
+      bullets: valueBullets,
     },
     ending: {
-      body: composeBody(
-        [
-          polishedDraft.ending,
-          "如果你关心的是把方法真正落到系统里，这篇工作的参考价值会比单看指标更高，因为它会告诉你预算该投在哪个子模块。",
-        ],
-        104,
-      ),
+      body: composeDistinctBody(endingSource, baselineDraft.ending, 108),
       bullets: [],
     },
   };
@@ -342,5 +496,10 @@ export const buildDisplayScriptDraft = ({
     return buildTheoryDisplayDraft({polishedDraft, baselineDraft});
   }
 
-  return buildMethodDisplayDraft({polishedDraft, baselineDraft});
+  return buildMethodDisplayDraft({
+    paper,
+    context,
+    polishedDraft,
+    baselineDraft,
+  });
 };

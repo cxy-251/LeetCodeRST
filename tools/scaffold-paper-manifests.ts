@@ -31,6 +31,46 @@ const DEFAULT_INPUT_PATH = path.resolve("data/source-bundles/latest-ai-analysis.
 const DEFAULT_OUTPUT_DIR = path.resolve("data/manifests/ingest");
 const DEFAULT_CONTENT_PROFILE_DIR = path.resolve("data/content-profiles/generated");
 
+const trimByChars = (value: string, limit: number) =>
+  value.length <= limit ? value : value.slice(0, limit).replace(/[，、；：,.!?！？]+$/u, "").trim();
+
+const buildHookTitle = (body: string, fallback: string) => {
+  const source = `${body} ${fallback}`;
+  if (/准确率/u.test(source) && /安全|高风险/u.test(source)) {
+    return "高准确率不等于更安全";
+  }
+
+  if (/world model/i.test(source)) {
+    return "World Model 不是一个词";
+  }
+
+  if (/不可判定|通用解|plan existence/i.test(source)) {
+    return "这类规划题天生无通解";
+  }
+
+  const prefix = body.split(" ")[0]?.trim() ?? "";
+  if (prefix && prefix.length >= 6 && prefix.length <= 18) {
+    return prefix;
+  }
+
+  const firstSentence = body
+    .split(/[。！？]/u)
+    .map((item) => item.trim())
+    .filter(Boolean)[0];
+
+  const candidate = firstSentence || fallback;
+  return trimByChars(candidate.replace(/\s+/g, " ").trim(), 22);
+};
+
+const stripHookTitlePrefix = (body: string, title: string) => {
+  const normalizedBody = body.replace(/\s+/g, " ").trim();
+  if (normalizedBody.startsWith(`${title} `)) {
+    return normalizedBody.slice(title.length).trim();
+  }
+
+  return normalizedBody;
+};
+
 const buildContentProfile = (paper: SourceBundle["papers"][number]): ContentProfileDocument => {
   const draft = paper.scriptDraft ?? {
     hook: paper.summary,
@@ -54,6 +94,7 @@ const buildContentProfile = (paper: SourceBundle["papers"][number]): ContentProf
       sectionHeadings: paper.sectionHeadings ?? [],
     },
   });
+  const hookTitle = buildHookTitle(displayDraft.hook.body, draft.hook);
 
   return {
     id: `arxiv-${paper.arxivId.replace(/[^\w]+/g, "-").toLowerCase()}`,
@@ -70,8 +111,8 @@ const buildContentProfile = (paper: SourceBundle["papers"][number]): ContentProf
       hook: {
         narrationText: draft.hook,
         content: {
-          title: paper.title,
-          body: displayDraft.hook.body,
+          title: hookTitle,
+          body: stripHookTitlePrefix(displayDraft.hook.body, hookTitle),
         },
       },
       problem: {

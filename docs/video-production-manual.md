@@ -285,14 +285,14 @@ npm run produce:paper-urls -- \
   --paper-url https://arxiv.org/abs/2604.22748 \
   --background-dir data/images/prepared \
   --summary-mode lm-studio \
-  --lm-studio-model qwen/qwen3.5-9b
+  --lm-studio-model google/gemma-4-e4b
 ```
 
 推荐的环境变量方式：
 
 ```bash
 export LM_STUDIO_BASE_URL=http://127.0.0.1:1234/v1
-export LM_STUDIO_MODEL=qwen/qwen3.5-9b
+export LM_STUDIO_MODEL=google/gemma-4-e4b
 export LM_STUDIO_API_KEY=lm-studio
 export LM_STUDIO_MAX_OUTPUT_TOKENS=2200
 export LM_STUDIO_MAX_INPUT_CHARS=9000
@@ -310,7 +310,8 @@ npm run produce:paper-urls -- \
 
 说明：
 
-- 对于 `qwen/qwen3.5-9b` 这类会先推理再回答的本地模型，项目现在会优先发送“摘要 + 章节线索 + 关键正文摘录”，默认会保留较多正文上下文。
+- 当前默认推荐模型已切到 `google/gemma-4-e4b`，因为它在方法类论文上更稳定，也更容易给出完整中文稿。
+- `qwen/qwen3.5-9b` 仍然可用，但当前在用户本机实测里更容易出现 500 或混入英文原句。
 - 对于会先输出 `reasoning_content` 的模型，项目现在会提高默认输出预算，并尝试从推理结果里恢复最终答案。
 - 本地模型产出的初稿不会直接落到视频里，当前链路会再做一轮结构化复审与规则保底校正。
 - 当前论文视频已经拆成两层文案：

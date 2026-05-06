@@ -399,7 +399,7 @@ npm run build
    - 默认仍是 `rule-based`
    - 用户本地如果运行 LM Studio，可直接改成 `lm-studio`
 71. 用户当前本地 LM Studio 默认模型已记录为：
-   - `qwen/qwen3.5-9b`
+   - `google/gemma-4-e4b`
    - 本地接口地址：`http://127.0.0.1:1234/v1`
 72. `LM Studio` 适配层已增强容错：
    - 优先请求结构化 JSON 输出
@@ -415,7 +415,11 @@ npm run build
 75. `LM Studio` 现已兼容 `qwen/qwen3.5-9b` 这类会优先输出 `reasoning_content` 的模型：
    - 默认输出预算提高到 `2200`
    - 若 `content` 为空，会尝试从 `reasoning_content` 中恢复最终答案
-76. 背景图来源已开始抽成正式策略层：
+76. 2026-05-06 的本机对比结果显示：
+   - `qwen/qwen3.5-9b` 在方法类论文上更容易 500 或混入英文原句
+   - `google/gemma-4-e4b` 至少能稳定返回更完整的中文稿
+   - 因此当前默认本地模型已切到 `google/gemma-4-e4b`
+77. 背景图来源已开始抽成正式策略层：
    - `local-folder-random`
    - `local-folder-cycle`
    - `ai-generated-cover`（预留）

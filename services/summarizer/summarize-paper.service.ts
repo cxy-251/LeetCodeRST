@@ -25,6 +25,9 @@ const TOO_SHORT_RATIO = 0.72;
 const hasSignal = (value: string, patterns: readonly RegExp[]) => patterns.some((pattern) => pattern.test(value));
 const isWeakNarration = (value: string) => !value || value.trim().length < 6 || /^[.。…\s]+$/u.test(value.trim());
 const isTooShortComparedToBaseline = (value: string, baseline: string) => value.trim().length < Math.floor(baseline.trim().length * TOO_SHORT_RATIO);
+const hasDanglingEnding = (value: string) =>
+  /(?:[和与及]\s*(?:[A-Za-z][A-Za-z0-9-]*\s*){1,4}|[和与及])$/u.test(value.trim()) ||
+  /(?:，|；|:|：)\s*$/.test(value.trim());
 
 const reinforceWithRuleBasedBaseline = ({
   draft,
@@ -49,6 +52,14 @@ const reinforceWithRuleBasedBaseline = ({
   }
 
   if (PROMOTIONAL_PATTERNS.some((pattern) => pattern.test(nextDraft.value))) {
+    nextDraft.value = baseline.value;
+  }
+
+  if (hasDanglingEnding(nextDraft.method) || isTooShortComparedToBaseline(nextDraft.method, baseline.method)) {
+    nextDraft.method = baseline.method;
+  }
+
+  if (hasDanglingEnding(nextDraft.value) || isTooShortComparedToBaseline(nextDraft.value, baseline.value)) {
     nextDraft.value = baseline.value;
   }
 
