@@ -139,6 +139,7 @@ const cleanLooseValue = (raw: string) =>
 const tryParseLooseFieldObject = (raw: string): SummaryDraft | null => {
   const normalized = normalizeJsonText(raw);
   const fieldOrder = ["hook", "problem", "method", "value", "ending", "bullets"] as const;
+  const values = new Map<string, string>();
   const titleMarker = /"titleZh"\s*:\s*/i.exec(normalized);
   if (titleMarker && titleMarker.index !== undefined) {
     const titleStart = titleMarker.index + titleMarker[0].length;
@@ -147,7 +148,6 @@ const tryParseLooseFieldObject = (raw: string): SummaryDraft | null => {
       values.set("titleZh", cleanLooseValue(normalized.slice(titleStart, titleStart + nextMatch.index)));
     }
   }
-  const values = new Map<string, string>();
 
   for (let index = 0; index < fieldOrder.length - 1; index += 1) {
     const key = fieldOrder[index];
@@ -671,12 +671,13 @@ const buildEvidencePacket = (
   compact = false,
 ) => {
   const normalized = normalizeRawText(context.rawText);
-  const sourceSummary = paper.summary.trim().slice(0, compact ? 420 : 1500);
-  const abstract = context.abstractSentences.slice(0, compact ? 3 : 6).join(" ");
-  const headings = context.sectionHeadings.slice(0, compact ? 4 : 8);
-  const introSnippet = extractSectionSnippet(normalized, SECTION_HINTS.intro, compact ? 460 : 1200);
-  const methodSnippet = extractSectionSnippet(normalized, SECTION_HINTS.method, compact ? 460 : 1200);
-  const resultSnippet = extractSectionSnippet(normalized, SECTION_HINTS.result, compact ? 460 : 1200);
+  const compactSnippetLimit = Math.max(120, Math.min(excerptChars, 220));
+  const sourceSummary = paper.summary.trim().slice(0, compact ? Math.min(220, excerptChars) : 1500);
+  const abstract = context.abstractSentences.slice(0, compact ? 2 : 6).join(" ");
+  const headings = context.sectionHeadings.slice(0, compact ? 3 : 8);
+  const introSnippet = extractSectionSnippet(normalized, SECTION_HINTS.intro, compact ? compactSnippetLimit : 1200);
+  const methodSnippet = extractSectionSnippet(normalized, SECTION_HINTS.method, compact ? compactSnippetLimit : 1200);
+  const resultSnippet = extractSectionSnippet(normalized, SECTION_HINTS.result, compact ? compactSnippetLimit : 1200);
   const focusedExcerpt = extractFocusedExcerpt(normalized, excerptChars);
 
   return {
@@ -861,7 +862,7 @@ const isContextLimitError = (error: unknown) => {
   const message = error instanceof Error ? error.message : `${error ?? ""}`;
   return (
     /400\b/.test(message) &&
-    /(context size|context window|exceeds the available context size|too many tokens|prompt is too long)/i.test(message)
+    /(context size|context window|context length|exceeds the available context size|too many tokens|prompt is too long|n_keep|n_ctx)/i.test(message)
   );
 };
 
@@ -911,19 +912,25 @@ export const summarizeWithLmStudio = async (
         compact: true,
         structured: false,
         maxTokens: Math.min(config.maxOutputTokens, 1200),
-        inputChars: Math.min(config.compactInputChars, 1400),
+        inputChars: Math.min(config.compactInputChars, 1200),
       },
       {
         compact: true,
         structured: false,
         maxTokens: Math.min(config.maxOutputTokens, 900),
-        inputChars: Math.min(config.compactInputChars, 900),
+        inputChars: Math.min(config.compactInputChars, 720),
       },
       {
         compact: true,
         structured: false,
         maxTokens: Math.min(config.maxOutputTokens, 700),
-        inputChars: 620,
+        inputChars: 420,
+      },
+      {
+        compact: true,
+        structured: false,
+        maxTokens: Math.min(config.maxOutputTokens, 520),
+        inputChars: 280,
       },
     ] as const;
 
