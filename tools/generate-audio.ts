@@ -22,7 +22,7 @@ import type {
 const DEFAULT_PRODUCTION_MANIFEST = path.resolve("data/manifests/demo-paper.json");
 const DEFAULT_RENDER_MANIFEST = path.resolve("data/generated-meta/demo-paper-001.render.json");
 const FfprobeBinary = resolveFfprobeBinary();
-const TTS_RETRY_DELAYS_MS = [0, 1800, 4200];
+const TTS_RETRY_DELAYS_MS = [0, 1800, 4200, 9000, 18000];
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const run = (command: string, args: string[]) =>

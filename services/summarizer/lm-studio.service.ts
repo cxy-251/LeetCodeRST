@@ -1,6 +1,6 @@
-import {detectPaperMode} from "./rule-based-summary.service";
+import {buildRuleBasedSummaryDraft, detectPaperMode} from "./rule-based-summary.service";
 import {polishSummaryDraft} from "./summary-polish.service";
-import type {LmStudioSummaryConfig, PaperSummaryContext, SourcePaperForSummary, SummaryDraft} from "./summarizer.types";
+import type {LmStudioSummaryConfig, PaperMode, PaperSummaryContext, SourcePaperForSummary, SummaryDraft} from "./summarizer.types";
 
 type ChatCompletionResponse = {
   choices?: Array<{
@@ -20,6 +20,21 @@ const RESPONSE_SCHEMA_EXAMPLE = {
   ending: "结尾总结",
   bullets: ["要点 1", "要点 2", "要点 3"],
 };
+
+const GENERIC_SENTENCE_PATTERNS = [
+  /搭了一个.*框架/u,
+  /很有价值/u,
+  /值得先读/u,
+  /值得一读/u,
+  /统一.*坐标系/u,
+  /重新梳理清楚/u,
+  /非常重要/u,
+  /帮助.*建立/u,
+  /提供.*统一/u,
+  /双轴框架/u,
+  /重新整理成图/u,
+  /方便评估比较/u,
+] as const;
 
 const STRICT_RESPONSE_SCHEMA = {
   type: "object",
@@ -455,10 +470,126 @@ const validateDraft = (draft: SummaryDraft) => {
       throw new Error(`LM Studio summary is missing required field: ${key}`);
     }
   }
+};
 
-  if (draft.bullets.length === 0) {
-    throw new Error("LM Studio summary is missing bullets");
+const extractTechnicalAnchors = (paper: SourcePaperForSummary, context: PaperSummaryContext) => {
+  const text = [paper.title, paper.summary, ...context.abstractSentences, ...context.sectionHeadings].join(" ");
+  const anchors = new Set<string>();
+  const knownPatterns = [
+    /levels?\s*[×x]\s*laws/gi,
+    /L1 Predictor/gi,
+    /L2 Simulator/gi,
+    /L3 Evolver/gi,
+    /physical/gi,
+    /digital/gi,
+    /social/gi,
+    /scientific/gi,
+    /plan existence/gi,
+    /epistemic planning/gi,
+    /modal depth/gi,
+    /postconditions?/gi,
+    /undecidable|undecidability/gi,
+    /action-conditioned rollouts?/gi,
+    /minimal reproducible evaluation package/gi,
+  ];
+
+  for (const pattern of knownPatterns) {
+    for (const match of text.matchAll(pattern)) {
+      const value = match[0]?.trim();
+      if (value) {
+        anchors.add(value);
+      }
+    }
   }
+
+  return [...anchors];
+};
+
+const sentenceHasAnchor = (value: string, anchors: string[]) => {
+  const normalized = value.toLowerCase();
+  return anchors.some((anchor) => normalized.includes(anchor.toLowerCase()));
+};
+
+const isWeakSentence = ({
+  value,
+  anchors,
+  mode,
+  paperMode,
+}: {
+  value: string;
+  anchors: string[];
+  mode: keyof Omit<SummaryDraft, "bullets">;
+  paperMode: PaperMode;
+}) => {
+  const trimmed = value.trim();
+  if (!trimmed || trimmed.length < 12) {
+    return true;
+  }
+
+  const normalized = trimmed.toLowerCase();
+
+  if (mode === "method" || mode === "value") {
+    if (GENERIC_SENTENCE_PATTERNS.some((pattern) => pattern.test(trimmed)) && !sentenceHasAnchor(trimmed, anchors)) {
+      return true;
+    }
+
+    if (!sentenceHasAnchor(trimmed, anchors) && /(框架|方法|价值|坐标系|综述|重要|统一)/u.test(trimmed)) {
+      return true;
+    }
+
+    if (paperMode === "survey" && mode === "method") {
+      const surveyAnchors = ["l1 predictor", "l2 simulator", "l3 evolver", "levels×laws", "levels x laws", "physical", "digital", "social", "scientific"];
+      if (!surveyAnchors.some((anchor) => normalized.includes(anchor))) {
+        return true;
+      }
+    }
+
+    if (paperMode === "theory" && mode === "method") {
+      const theoryAnchors = ["plan existence", "modal depth", "postcondition", "不可判定"];
+      if (!theoryAnchors.some((anchor) => normalized.includes(anchor.toLowerCase()))) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+};
+
+const isWeakBullet = (value: string) =>
+  !value ||
+  value.length < 5 ||
+  /(更清楚|更明确|更直接|值得先读|路线图|统一坐标系)$/u.test(value);
+
+const mergeDraftWithBaseline = ({
+  draft,
+  baseline,
+  anchors,
+  paperMode,
+}: {
+  draft: SummaryDraft;
+  baseline: SummaryDraft;
+  anchors: string[];
+  paperMode: PaperMode;
+}): SummaryDraft => {
+  const merged: SummaryDraft = {
+    hook: draft.hook,
+    problem: draft.problem,
+    method: draft.method,
+    value: draft.value,
+    ending: draft.ending,
+    bullets: draft.bullets,
+  };
+
+  const fieldKeys: Array<keyof Omit<SummaryDraft, "bullets">> = ["hook", "problem", "method", "value", "ending"];
+  for (const key of fieldKeys) {
+    if (isWeakSentence({value: merged[key], anchors, mode: key, paperMode})) {
+      merged[key] = baseline[key];
+    }
+  }
+
+  const usableBullets = merged.bullets.filter((bullet) => !isWeakBullet(bullet));
+  merged.bullets = usableBullets.length >= 3 ? usableBullets.slice(0, 3) : baseline.bullets;
+  return merged;
 };
 
 const normalizeRawText = (rawText: string) =>
@@ -630,10 +761,12 @@ const buildReviewPrompt = ({
   paper,
   context,
   draft,
+  baseline,
 }: {
   paper: SourcePaperForSummary;
   context: PaperSummaryContext;
   draft: SummaryDraft;
+  baseline: SummaryDraft;
 }) => {
   const evidence = buildEvidencePacket(paper, context, 2200, true);
 
@@ -657,6 +790,9 @@ const buildReviewPrompt = ({
     `方法/结论摘录：${evidence.methodSnippet || evidence.focusedExcerpt}`,
     `结果/结论摘录：${evidence.resultSnippet || evidence.focusedExcerpt}`,
     "",
+    "保底事实草案（更偏技术锚点，可参考但不要照抄）：",
+    JSON.stringify(baseline, null, 2),
+    "",
     "当前初稿：",
     JSON.stringify(draft, null, 2),
   ].join("\n");
@@ -676,6 +812,8 @@ export const summarizeWithLmStudio = async (
   config: LmStudioSummaryConfig,
 ): Promise<SummaryDraft> => {
   const paperMode = detectPaperMode(paper);
+  const baselineDraft = buildRuleBasedSummaryDraft(paper, context);
+  const technicalAnchors = extractTechnicalAnchors(paper, context);
   const runSummaryRequest = async (
     compact = false,
     preferStructuredOutput = true,
@@ -758,6 +896,12 @@ export const summarizeWithLmStudio = async (
 
   draft = parseDraft(JSON.stringify(draft));
   validateDraft(draft);
+  draft = mergeDraftWithBaseline({
+    draft,
+    baseline: baselineDraft,
+    anchors: technicalAnchors,
+    paperMode,
+  });
 
   try {
     const reviewPayload = await requestCompletion({
@@ -776,6 +920,7 @@ export const summarizeWithLmStudio = async (
             paper,
             context,
             draft,
+            baseline: baselineDraft,
           }),
         },
       ],
@@ -793,15 +938,31 @@ export const summarizeWithLmStudio = async (
         raw: reviewedContent,
       });
       if (reviewedDraft) {
-        draft = reviewedDraft;
+        draft = mergeDraftWithBaseline({
+          draft: reviewedDraft,
+          baseline: baselineDraft,
+          anchors: technicalAnchors,
+          paperMode,
+        });
       }
     }
   } catch {
     // Keep the first successful draft if the editorial pass fails.
   }
 
-  return polishSummaryDraft({
+  const polishedDraft = polishSummaryDraft({
     draft,
+    paperMode,
+  });
+  const polishedBaseline = polishSummaryDraft({
+    draft: baselineDraft,
+    paperMode,
+  });
+
+  return mergeDraftWithBaseline({
+    draft: polishedDraft,
+    baseline: polishedBaseline,
+    anchors: technicalAnchors,
     paperMode,
   });
 };

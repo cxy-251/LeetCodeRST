@@ -35,7 +35,6 @@ const removeWeakOpeners = (value: string) =>
   value
     .replace(/^这篇论文(主要|核心)?(是在|想要|试图)?/u, "")
     .replace(/^作者(主要|核心)?(提出|讨论|研究)的是?/u, "")
-    .replace(/^它的价值不只是/u, "")
     .trim();
 
 const trimByClauses = (value: string, maxClauses: number) => {
@@ -91,14 +90,22 @@ const polishSentence = ({
 
   const deLeaked = stripReasoningLeak(cleaned);
   const endingNormalized = mode === "ending" ? rewriteWeakEnding(deLeaked) : deLeaked;
-  const clauseLimited = trimByClauses(endingNormalized, mode === "ending" ? 1 : 2);
+  const valueNormalized =
+    mode === "value"
+      ? endingNormalized
+          .replace(/^它的价值不只是综述/u, "这不只是综述")
+          .replace(/^它的价值不只是/u, "它真正的价值在于")
+      : endingNormalized;
+  const clauseLimited = trimByClauses(valueNormalized, mode === "ending" ? 1 : 2);
   const deFluffed = normalizePunctuation(removeWeakOpeners(clauseLimited));
   const maxChars =
     mode === "hook"
-      ? 60
+      ? 84
       : mode === "ending"
-        ? 44
-        : 58;
+        ? 54
+        : mode === "method" || mode === "value"
+          ? 160
+          : 92;
 
   return trimByChars(deFluffed || clauseLimited || cleaned, maxChars);
 };

@@ -105,6 +105,10 @@ npm run build
    - `problem` 更强调真实瓶颈
    - `method` 必须明确作者提出了什么
    - `value` 必须明确为什么重要，而不是泛泛而谈
+19. 本地 `LM Studio` 输出现在会再经过一层“规则保底稿强化”：
+   - 如果模型把 `method / value / bullets` 说空了
+   - 系统会回退到更具体的规则稿
+   - 尽量保住论文里的技术锚点，例如 `levels×laws`、`L1/L2/L3`、`modal depth`、`undecidable`
 
 ### 工程组织
 

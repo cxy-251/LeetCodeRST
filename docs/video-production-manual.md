@@ -263,6 +263,10 @@ npm run produce:paper-urls -- \
   - 先说论文真正解决了什么瓶颈
   - `method` 必须明确作者到底提出了什么
   - `value` 必须明确这件事为什么重要
+- 当前 `LM Studio` 总结链路又加了一层“规则保底稿校正”：
+  - 如果本地模型把 `method / value` 说空了
+  - 系统会用规则提取出的技术锚点稿回填
+  - 例如 `L1/L2/L3`、`levels×laws`、`modal depth`、`undecidable` 这类论文核心术语
 - 如果你的模型仍然报上下文超限，可以继续降低：
   - `LM_STUDIO_MAX_INPUT_CHARS`
   - `LM_STUDIO_COMPACT_INPUT_CHARS`
