@@ -94,7 +94,7 @@ npm run build
 14. 本地 `LM Studio` 总结链路已升级为“证据提取 -> 初稿 -> 二次复审 -> 文案压缩”，不再把模型初稿原样落到视频页面
 15. 论文内容现在区分为两套文案：
    - `narrationText` 负责口语化朗读
-   - `content.body / bullets` 负责屏幕精炼显示
+   - `content.body / bullets` 负责屏幕技术化显示，不再只是朗读稿缩写
 16. arXiv 单篇 / 批量抓取已改为缓存优先：
    - 即使输入是不带版本号的 arXiv 链接，也会优先命中 `output/cache/papers/<paperId>vN/metadata.json`
    - 显式 paper URL / paper id 不再并发打 `export.arxiv.org`，避免 429
@@ -109,6 +109,10 @@ npm run build
    - 如果模型把 `method / value / bullets` 说空了
    - 系统会回退到更具体的规则稿
    - 尽量保住论文里的技术锚点，例如 `levels×laws`、`L1/L2/L3`、`modal depth`、`undecidable`
+20. `paper -> contentProfile` 组装层已新增“屏显扩写”：
+   - `problem / method / value` 会被扩成更完整的正文 + bullets
+   - 屏显稿会补术语解释、方法分层、约束条件和贡献要点
+   - 目标是观众只看短视频，也能先掌握论文主体知识点
 
 ### 工程组织
 

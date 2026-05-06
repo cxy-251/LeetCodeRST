@@ -1,7 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import {detectPaperMode} from "../services/summarizer/rule-based-summary.service";
-import {buildDisplayDraft} from "../services/summarizer/summary-polish.service";
+import {buildDisplayScriptDraft} from "../services/summarizer/display-copy.service";
 import {slugify} from "./lib/run-artifacts";
 import type {ContentProfileDocument, ProductionManifest} from "@paper-to-video/shared-types";
 
@@ -15,6 +14,8 @@ type SourceBundle = {
     localPdfPath: string;
     localTextPath?: string;
     suggestedCoverImagePath: string | null;
+    abstractSentences?: string[];
+    sectionHeadings?: string[];
     scriptDraft?: {
       hook: string;
       problem: string;
@@ -39,16 +40,19 @@ const buildContentProfile = (paper: SourceBundle["papers"][number]): ContentProf
     ending: `如果你在关注 ${paper.categories.join(" / ")} 方向，这篇 ${paper.arxivId} 值得进一步展开。`,
     bullets: [paper.summary],
   };
-  const paperMode = detectPaperMode({
-    arxivId: paper.arxivId,
-    title: paper.title,
-    summary: paper.summary,
-    categories: paper.categories,
-    publishedAt: paper.publishedAt,
-  });
-  const displayDraft = buildDisplayDraft({
+  const displayDraft = buildDisplayScriptDraft({
+    paper: {
+      arxivId: paper.arxivId,
+      title: paper.title,
+      summary: paper.summary,
+      categories: paper.categories,
+      publishedAt: paper.publishedAt,
+    },
     draft,
-    paperMode,
+    context: {
+      abstractSentences: paper.abstractSentences ?? [],
+      sectionHeadings: paper.sectionHeadings ?? [],
+    },
   });
 
   return {
@@ -67,36 +71,38 @@ const buildContentProfile = (paper: SourceBundle["papers"][number]): ContentProf
         narrationText: draft.hook,
         content: {
           title: paper.title,
-          body: displayDraft.hook,
+          body: displayDraft.hook.body,
         },
       },
       problem: {
         narrationText: draft.problem,
         content: {
           title: "这篇论文在解决什么？",
-          body: displayDraft.problem,
+          body: displayDraft.problem.body,
+          bullets: displayDraft.problem.bullets,
         },
       },
       method: {
         narrationText: draft.method,
         content: {
           title: "核心方法",
-          body: displayDraft.method,
+          body: displayDraft.method.body,
+          bullets: displayDraft.method.bullets,
         },
       },
       value: {
         narrationText: draft.value,
         content: {
           title: "为什么值得看？",
-          body: displayDraft.value,
-          bullets: displayDraft.bullets.slice(0, 3),
+          body: displayDraft.value.body,
+          bullets: displayDraft.value.bullets.slice(0, 3),
         },
       },
       ending: {
         narrationText: draft.ending,
         content: {
           title: "一句话结论",
-          body: displayDraft.ending,
+          body: displayDraft.ending.body,
         },
       },
     },
@@ -183,8 +189,8 @@ const buildManifest = (
       typography: {
         kickerSize: "clamp(0.88rem, 1.15vw + 0.5rem, 1.62rem)",
         titleSize: "clamp(2.52rem, 5.15vw + 0.74rem, 5.72rem)",
-        bodySize: "clamp(1.22rem, 2vw + 0.56rem, 2.48rem)",
-        bulletSize: "clamp(1.12rem, 1.82vw + 0.54rem, 2.16rem)",
+        bodySize: "clamp(1.02rem, 1.7vw + 0.5rem, 2.08rem)",
+        bulletSize: "clamp(0.94rem, 1.45vw + 0.48rem, 1.78rem)",
         subtitleSize: "clamp(1.14rem, 1.55vw + 0.56rem, 1.98rem)",
       },
     },

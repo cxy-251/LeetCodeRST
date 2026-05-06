@@ -9,6 +9,19 @@ export type SummaryDraft = {
   bullets: string[];
 };
 
+export type DisplaySceneDraft = {
+  body: string;
+  bullets: string[];
+};
+
+export type DisplayScriptDraft = {
+  hook: DisplaySceneDraft;
+  problem: DisplaySceneDraft;
+  method: DisplaySceneDraft;
+  value: DisplaySceneDraft;
+  ending: DisplaySceneDraft;
+};
+
 export type SourcePaperForSummary = {
   arxivId: string;
   title: string;

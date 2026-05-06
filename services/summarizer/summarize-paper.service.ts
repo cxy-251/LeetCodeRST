@@ -13,12 +13,15 @@ type SummarizePaperOptions = {
 
 const SURVEY_METHOD_SIGNALS = [/L1 Predictor/i, /L2 Simulator/i, /L3 Evolver/i, /levels?\s*[×x]\s*laws/i, /physical/i, /digital/i, /social/i, /scientific/i];
 const SURVEY_VALUE_SIGNALS = [/400/u, /100/u, /RL/i, /GUI/i, /multi-agent/i, /scientific/i];
+const SURVEY_PROBLEM_SIGNALS = [/world model/i, /一步/u, /预测/u, /模拟/u, /比较/u, /定义/u];
 const THEORY_METHOD_SIGNALS = [/plan existence/i, /modal depth/i, /postcondition/i, /不可判定/u];
 const THEORY_VALUE_SIGNALS = [/理论边界/u, /不可判定/u, /通用/u, /可计算/u];
+const THEORY_PROBLEM_SIGNALS = [/plan existence/i, /模态/u, /知识/u, /动作/u, /目标/u];
 const GENERIC_PHRASES = [/统一坐标/u, /双轴框架/u, /画了张清晰地图/u, /方便.*理解/u, /提供.*评估/u, /很重要/u] as const;
 const GENERIC_BULLET_PATTERNS = [/统一坐标系/u, /助力/u, /提供.*评估/u, /方便.*理解/u] as const;
 
 const hasSignal = (value: string, patterns: readonly RegExp[]) => patterns.some((pattern) => pattern.test(value));
+const isWeakNarration = (value: string) => !value || value.trim().length < 6 || /^[.。…\s]+$/u.test(value.trim());
 
 const reinforceWithRuleBasedBaseline = ({
   draft,
@@ -34,7 +37,18 @@ const reinforceWithRuleBasedBaseline = ({
     bullets: [...draft.bullets],
   };
 
+  if (isWeakNarration(nextDraft.hook)) {
+    nextDraft.hook = baseline.hook;
+  }
+
+  if (isWeakNarration(nextDraft.ending)) {
+    nextDraft.ending = baseline.ending;
+  }
+
   if (paperMode === "survey") {
+    if (!hasSignal(nextDraft.problem, SURVEY_PROBLEM_SIGNALS) || GENERIC_PHRASES.some((pattern) => pattern.test(nextDraft.problem))) {
+      nextDraft.problem = baseline.problem;
+    }
     if (!hasSignal(nextDraft.method, SURVEY_METHOD_SIGNALS) || GENERIC_PHRASES.some((pattern) => pattern.test(nextDraft.method))) {
       nextDraft.method = baseline.method;
     }
@@ -44,6 +58,9 @@ const reinforceWithRuleBasedBaseline = ({
   }
 
   if (paperMode === "theory") {
+    if (!hasSignal(nextDraft.problem, THEORY_PROBLEM_SIGNALS)) {
+      nextDraft.problem = baseline.problem;
+    }
     if (!hasSignal(nextDraft.method, THEORY_METHOD_SIGNALS)) {
       nextDraft.method = baseline.method;
     }
