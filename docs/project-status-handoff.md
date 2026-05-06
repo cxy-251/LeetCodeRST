@@ -95,6 +95,16 @@ npm run build
 15. 论文内容现在区分为两套文案：
    - `narrationText` 负责口语化朗读
    - `content.body / bullets` 负责屏幕精炼显示
+16. arXiv 单篇 / 批量抓取已改为缓存优先：
+   - 即使输入是不带版本号的 arXiv 链接，也会优先命中 `output/cache/papers/<paperId>vN/metadata.json`
+   - 显式 paper URL / paper id 不再并发打 `export.arxiv.org`，避免 429
+17. `edge-tts` 语音生成已补上重试：
+   - 对 timeout / 临时网络类失败会自动重试几次
+   - 减少批量生产时因单条语音超时导致整批中断
+18. 本地 `LM Studio` 提示词进一步强化了“抓核心贡献”：
+   - `problem` 更强调真实瓶颈
+   - `method` 必须明确作者提出了什么
+   - `value` 必须明确为什么重要，而不是泛泛而谈
 
 ### 工程组织
 

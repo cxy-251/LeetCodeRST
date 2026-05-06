@@ -67,6 +67,14 @@ const normalizePunctuation = (value: string) =>
     .replace(/[；]{2,}/gu, "；")
     .trim();
 
+const rewriteWeakEnding = (value: string) =>
+  value
+    .replace(/建议你先收藏起来/gu, "值得先读")
+    .replace(/建议先收藏起来/gu, "值得先读")
+    .replace(/建议先收藏/gu, "值得先读")
+    .replace(/值得收藏起来/gu, "值得先读")
+    .replace(/值得一看/gu, "值得先读");
+
 const polishSentence = ({
   value,
   mode,
@@ -82,7 +90,8 @@ const polishSentence = ({
     .replace(/\s*×\s*/g, "×");
 
   const deLeaked = stripReasoningLeak(cleaned);
-  const clauseLimited = trimByClauses(deLeaked, mode === "ending" ? 1 : 2);
+  const endingNormalized = mode === "ending" ? rewriteWeakEnding(deLeaked) : deLeaked;
+  const clauseLimited = trimByClauses(endingNormalized, mode === "ending" ? 1 : 2);
   const deFluffed = normalizePunctuation(removeWeakOpeners(clauseLimited));
   const maxChars =
     mode === "hook"

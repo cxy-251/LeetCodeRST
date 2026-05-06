@@ -53,7 +53,14 @@ const main = async () => {
     .filter(Boolean);
 
   const papers = explicitIds.length > 0
-    ? await Promise.all(explicitIds.map((arxivId) => fetchArxivPaperById(arxivId)))
+    ? await (async () => {
+        const items = [];
+        for (const arxivId of explicitIds) {
+          items.push(await fetchArxivPaperById(arxivId));
+        }
+
+        return items;
+      })()
     : await (async () => {
         const queryUrl =
           `http://export.arxiv.org/api/query?search_query=cat:${encodeURIComponent(options.category)}` +

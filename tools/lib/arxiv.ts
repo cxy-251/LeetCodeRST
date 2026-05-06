@@ -31,6 +31,127 @@ const getTags = (input: string, tag: string) =>
     decodeXml(match[1].trim()),
   );
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const isRetryableStatus = (status: number) => status === 429 || status >= 500;
+
+const fetchTextWithRetry = async ({
+  url,
+  label,
+  attempts = 4,
+}: {
+  url: string;
+  label: string;
+  attempts?: number;
+}) => {
+  let lastStatus = 0;
+
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const response = await fetch(url);
+    if (response.ok) {
+      return response.text();
+    }
+
+    lastStatus = response.status;
+    if (!isRetryableStatus(response.status) || attempt === attempts - 1) {
+      throw new Error(`Failed to fetch ${label}: ${response.status}`);
+    }
+
+    await sleep(700 * (attempt + 1));
+  }
+
+  throw new Error(`Failed to fetch ${label}: ${lastStatus}`);
+};
+
+const fetchBufferWithRetry = async ({
+  url,
+  label,
+  attempts = 4,
+}: {
+  url: string;
+  label: string;
+  attempts?: number;
+}) => {
+  let lastStatus = 0;
+
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    const response = await fetch(url);
+    if (response.ok) {
+      return Buffer.from(await response.arrayBuffer());
+    }
+
+    lastStatus = response.status;
+    if (!isRetryableStatus(response.status) || attempt === attempts - 1) {
+      throw new Error(`Failed to download ${label}: ${response.status}`);
+    }
+
+    await sleep(700 * (attempt + 1));
+  }
+
+  throw new Error(`Failed to download ${label}: ${lastStatus}`);
+};
+
+const readCachedPaperMetadata = async (arxivId: string) => {
+  const resolveCandidatePaperIds = async (inputId: string) => {
+    const normalizedId = inputId.replace("/", "_");
+    const candidates = [normalizedId];
+
+    // Users often provide arXiv URLs without the explicit version suffix
+    // (for example `2604.22748`), while our local cache is stored under the
+    // concrete fetched id (`2604.22748v1`). Prefer the exact id first, then
+    // fall back to the newest cached version if present.
+    if (!/v\d+$/i.test(normalizedId)) {
+      const paperCacheRoot = path.dirname(getPaperCacheDir("placeholder"));
+
+      try {
+        const entries = await fs.readdir(paperCacheRoot, {withFileTypes: true});
+        const versionedMatches = entries
+          .filter(
+            (entry) =>
+              entry.isDirectory() &&
+              new RegExp(`^${normalizedId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}v\\d+$`, "i").test(
+                entry.name,
+              ),
+          )
+          .sort((left, right) => {
+            const leftVersion = Number.parseInt(left.name.match(/v(\d+)$/i)?.[1] ?? "0", 10);
+            const rightVersion = Number.parseInt(right.name.match(/v(\d+)$/i)?.[1] ?? "0", 10);
+            return rightVersion - leftVersion;
+          })
+          .map((entry) => entry.name);
+
+        candidates.push(...versionedMatches);
+      } catch {
+        // If the cache root is not readable yet, just fall through and let the
+        // normal fetch path handle it.
+      }
+    }
+
+    return [...new Set(candidates)];
+  };
+
+  const candidatePaperIds = await resolveCandidatePaperIds(arxivId);
+
+  for (const candidatePaperId of candidatePaperIds) {
+    const paperCacheDir = getPaperCacheDir(candidatePaperId);
+    const metadataPath = path.join(paperCacheDir, "metadata.json");
+
+    try {
+      const raw = await fs.readFile(metadataPath, "utf-8");
+      const metadata = JSON.parse(raw) as ArxivPaper & {localPdfPath?: string};
+      if (!metadata?.arxivId || !metadata?.title || !metadata?.summary) {
+        continue;
+      }
+
+      return metadata;
+    } catch {
+      continue;
+    }
+  }
+
+  return null;
+};
+
 export const parseArxivIdFromInput = (value: string) => {
   const trimmed = value.trim();
   if (!trimmed) {
@@ -87,14 +208,17 @@ export const parseFeed = (xml: string): ArxivPaper[] => {
 };
 
 export const fetchArxivPaperById = async (arxivId: string) => {
-  const queryUrl =
-    `http://export.arxiv.org/api/query?id_list=${encodeURIComponent(arxivId)}&max_results=1`;
-  const response = await fetch(queryUrl);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch arXiv paper ${arxivId}: ${response.status}`);
+  const cached = await readCachedPaperMetadata(arxivId);
+  if (cached) {
+    return cached;
   }
 
-  const xml = await response.text();
+  const queryUrl =
+    `http://export.arxiv.org/api/query?id_list=${encodeURIComponent(arxivId)}&max_results=1`;
+  const xml = await fetchTextWithRetry({
+    url: queryUrl,
+    label: `arXiv paper ${arxivId}`,
+  });
   const papers = parseFeed(xml);
   const paper = papers[0];
 
@@ -120,12 +244,10 @@ export const downloadPdfIfMissing = async ({
   try {
     await fs.access(pdfPath);
   } catch {
-    const response = await fetch(paper.pdfUrl);
-    if (!response.ok) {
-      throw new Error(`Failed to download PDF ${paper.pdfUrl}: ${response.status}`);
-    }
-
-    const buffer = Buffer.from(await response.arrayBuffer());
+    const buffer = await fetchBufferWithRetry({
+      url: paper.pdfUrl,
+      label: `PDF ${paper.pdfUrl}`,
+    });
     await fs.writeFile(pdfPath, buffer);
   }
 

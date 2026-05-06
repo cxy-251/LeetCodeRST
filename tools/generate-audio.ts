@@ -22,6 +22,9 @@ import type {
 const DEFAULT_PRODUCTION_MANIFEST = path.resolve("data/manifests/demo-paper.json");
 const DEFAULT_RENDER_MANIFEST = path.resolve("data/generated-meta/demo-paper-001.render.json");
 const FfprobeBinary = resolveFfprobeBinary();
+const TTS_RETRY_DELAYS_MS = [0, 1800, 4200];
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const run = (command: string, args: string[]) =>
   new Promise<void>((resolve, reject) => {
     const child = spawn(command, args, {stdio: "inherit"});
@@ -35,6 +38,46 @@ const run = (command: string, args: string[]) =>
     });
     child.on("error", reject);
   });
+
+const isRetryableTtsError = (error: unknown) => {
+  const message = error instanceof Error ? error.message : `${error ?? ""}`;
+  return /timeout|timed out|speech\.platform\.bing\.com|ECONNRESET|ENOTFOUND|EAI_AGAIN/i.test(message);
+};
+
+const synthesizeWithRetry = async ({
+  command,
+  args,
+  audioPath,
+  metaPath,
+}: {
+  command: string;
+  args: string[];
+  audioPath: string;
+  metaPath: string;
+}) => {
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < TTS_RETRY_DELAYS_MS.length; attempt += 1) {
+    const delayMs = TTS_RETRY_DELAYS_MS[attempt];
+    if (delayMs > 0) {
+      await sleep(delayMs);
+    }
+
+    await Promise.all([fs.rm(audioPath, {force: true}), fs.rm(metaPath, {force: true})]);
+
+    try {
+      await run(command, args);
+      return;
+    } catch (error) {
+      lastError = error;
+      if (!isRetryableTtsError(error) || attempt === TTS_RETRY_DELAYS_MS.length - 1) {
+        throw error;
+      }
+    }
+  }
+
+  throw lastError instanceof Error ? lastError : new Error("Unknown TTS synthesis failure");
+};
 
 const runWithCapture = (command: string, args: string[]) =>
   new Promise<string>((resolve, reject) => {
@@ -318,7 +361,12 @@ const main = async () => {
         "--output-meta",
         cachePaths.metaPath,
       ]);
-      await run(pythonCommand.command, pythonCommand.args);
+      await synthesizeWithRetry({
+        command: pythonCommand.command,
+        args: pythonCommand.args,
+        audioPath: cachePaths.audioPath,
+        metaPath: cachePaths.metaPath,
+      });
     }
 
     await linkOrCopyFile(cachePaths.audioPath, outputAudio);
