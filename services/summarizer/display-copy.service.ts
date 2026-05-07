@@ -3,6 +3,7 @@ import {polishSummaryDraft} from "./summary-polish.service";
 import type {
   DisplaySceneDraft,
   DisplayScriptDraft,
+  NarrationScriptDraft,
   PaperSummaryContext,
   SourcePaperForSummary,
   SummaryDraft,
@@ -164,14 +165,32 @@ const filterDistinctBullets = (candidates: string[], existing: string[], minCoun
   return next.length >= minCount ? next : [];
 };
 
+const mergeDistinctParts = (parts: string[]) => {
+  const next: string[] = [];
+
+  for (const part of parts) {
+    const normalized = cleanText(part);
+    if (!normalized) {
+      continue;
+    }
+
+    if (
+      next.some((existing) => {
+        const current = cleanText(existing);
+        return current === normalized || current.includes(normalized) || normalized.includes(current);
+      })
+    ) {
+      continue;
+    }
+
+    next.push(normalized);
+  }
+
+  return next;
+};
+
 const composeBody = (parts: string[], maxChars: number) => {
-  const text = cleanText(
-    parts
-      .map((part) => part.trim())
-      .filter(Boolean)
-      .join(" ")
-      .replace(/\s+/g, " "),
-  );
+  const text = cleanText(mergeDistinctParts(parts).join(" ").replace(/\s+/g, " "));
 
   if (!text) {
     return "";
@@ -192,6 +211,19 @@ const composeDistinctBody = (primary: string, fallback: string, maxChars: number
       : normalizedFallback;
 
   return composeBody([normalizedPrimary, fallbackBody], maxChars);
+};
+
+const composeNarration = (parts: string[], maxChars: number) => {
+  const text = mergeDistinctParts(parts)
+    .map((part) => (/[。！？]$/u.test(part) ? part : `${part}。`))
+    .join("");
+
+  return trimByChars(
+    cleanText(text)
+      .replace(/。(?=[，；：])/gu, "")
+      .replace(/[。]{2,}/gu, "。"),
+    maxChars,
+  );
 };
 
 const inferMethodFocusLabel = (text: string) => {
@@ -604,6 +636,173 @@ const buildMethodDisplayDraft = ({
   };
 };
 
+const buildSurveyNarrationDraft = ({
+}: {
+  polishedDraft: SummaryDraft;
+}): NarrationScriptDraft => {
+  return {
+    hook: composeNarration(
+      [
+        "如果一个智能体真要在环境里持续行动，它缺的往往不是会说话，而是能不能连续预测世界接下来怎么变。",
+        "这篇综述真正做的，不是再发一个新模型，而是先把 world model 这个词拆开，看大家谈的到底是不是同一种能力。",
+      ],
+      154,
+    ),
+    problem: composeNarration(
+      [
+        "现在 world model 这个词，可能指一步预测器，也可能指能做长期多步推演的模拟器，甚至还可能指会在失败后更新假设的系统。",
+        "术语一混，强化学习、图形界面智能体和科研智能体这些工作就很难放到同一张表里比较。",
+      ],
+      228,
+    ),
+    method: composeNarration(
+      [
+        "作者用 levels×laws 这张双轴表把文献重新排了一遍：能力层从 L1 Predictor、L2 Simulator 到 L3 Evolver，环境约束则分成 physical、digital、social、scientific 四类。",
+        "你可以把它理解成，先给所有 world model 工作重新定位，再讨论它们各自真正擅长什么。",
+      ],
+      242,
+    ),
+    value: composeNarration(
+      [
+        "这套框架的价值，不是推荐某一个 backbone，而是告诉你：一个系统总是失败，到底是短期预测弱、长期模拟弱，还是失败后的模型修正能力弱。",
+        "所以它第一次把 world model 变成了一张能直接拿来设计、分析和评测的能力地图。",
+      ],
+      226,
+    ),
+    ending: composeNarration(
+      [
+        "一句话说，这篇论文把 world model 从一个流行词，变成了一把能直接判断智能体短板的尺子。",
+      ],
+      92,
+    ),
+  };
+};
+
+const buildTheoryNarrationDraft = ({
+}: {
+  polishedDraft: SummaryDraft;
+}): NarrationScriptDraft => {
+  return {
+    hook: composeNarration(
+      [
+        "这篇论文最硬核的地方在于，它讨论的不是怎么把 planner 调得更强，而是这类规划题从理论上有没有通用解。",
+        "也就是说，它关心的是问题本身有没有边界，而不是某个工程技巧能不能再提一点分。",
+      ],
+      150,
+    ),
+    problem: composeNarration(
+      [
+        "论文研究的是认知规划里的计划存在性，也就是给定目标、知识状态和一组认知动作之后，到底有没有一条动作序列能把目标做成。",
+        "这里问的不是最优，而是有没有任何一条计划存在。",
+      ],
+      216,
+    ),
+    method: composeNarration(
+      [
+        "作者把条件压得很弱：precondition 的 modal depth 最多只有 1，而且动作没有 postcondition。",
+        "即便这样，论文仍然证明这类 plan existence 问题是不可判定的。",
+      ],
+      208,
+    ),
+    value: composeNarration(
+      [
+        "这条结果真正重要的地方在于，它给 epistemic planning 画出了一条硬边界：有些瓶颈不是算法没调好，而是问题本身就不存在统一可计算解。",
+        "这会直接影响后续研究该去找可解子类、近似方法，还是额外结构假设。",
+      ],
+      228,
+    ),
+    ending: composeNarration(
+      [
+        "所以这篇论文留下的主线很直接：继续堆通用 planner，并不能越过这条不可判定的理论边界。",
+      ],
+      92,
+    ),
+  };
+};
+
+const buildMethodNarrationDraft = ({
+  paper,
+  context,
+  polishedDraft,
+  baselineDraft,
+}: {
+  paper: SourcePaperForSummary;
+  context: Pick<PaperSummaryContext, "abstractSentences" | "sectionHeadings">;
+  polishedDraft: SummaryDraft;
+  baselineDraft: SummaryDraft;
+}): NarrationScriptDraft => {
+  const evidenceText = [paper.title, paper.summary, ...context.abstractSentences, ...context.sectionHeadings].join(" ");
+  const artifacts = extractNamedArtifacts(evidenceText);
+  const dimensions = extractMethodDimensions(evidenceText);
+  const evaluationFacts = extractEvaluationFacts(evidenceText);
+  const findingBullets = extractFindingBullets(evidenceText);
+  const focusLabel = inferMethodFocusLabel(evidenceText);
+  const hookSource = isEnglishHeavy(polishedDraft.hook) ? baselineDraft.hook : polishedDraft.hook;
+  const problemSource = isEnglishHeavy(polishedDraft.problem) ? baselineDraft.problem : polishedDraft.problem;
+  const methodSource = isEnglishHeavy(polishedDraft.method)
+    ? stripEnglishFragments(baselineDraft.method)
+    : stripEnglishFragments(polishedDraft.method) || stripEnglishFragments(baselineDraft.method);
+  const valueSource = isEnglishHeavy(polishedDraft.value)
+    ? stripEnglishFragments(baselineDraft.value)
+    : stripEnglishFragments(polishedDraft.value) || stripEnglishFragments(baselineDraft.value);
+  const endingSource = isEnglishHeavy(polishedDraft.ending) ? baselineDraft.ending : polishedDraft.ending;
+  const leadArtifact = artifacts[0];
+  const supportingArtifact = artifacts[1];
+
+  return {
+    hook: composeNarration(
+      [
+        leadArtifact
+          ? `${leadArtifact} 这篇论文最想回答的，不是总分还能不能再涨一点，而是 ${focusLabel} 到底受什么因素控制。`
+          : `这篇论文最想回答的，不是总分还能不能再涨一点，而是 ${focusLabel} 到底受什么因素控制。`,
+        findingBullets[0] ? `它一上来就把最关键的结果摆在台面上：${findingBullets[0]}。` : "",
+      ],
+      168,
+    ),
+    problem: composeNarration(
+      [
+        dimensions.length > 0
+          ? `很多团队会同时去调 ${dimensions.join("、")} 这些常见提升手段，但作者真正想知道的是，哪一种真的能把 ${focusLabel} 做稳，哪一种只是把平均分抬高。`
+          : `作者真正想搞清楚的是，系统到了真实场景里为什么会先在 ${focusLabel} 这一环失稳。`,
+        !dimensions.length ? composeDistinctBody(problemSource, baselineDraft.problem, 128) : "",
+        "如果只看一个平均分，你很难判断问题到底来自模型本身、证据输入，还是检索链路。",
+      ],
+      232,
+    ),
+    method: composeNarration(
+      [
+        leadArtifact
+          ? supportingArtifact
+            ? `他们先搭了 ${leadArtifact}，再配上 ${supportingArtifact}，把关键能力从总分里单独拆出来测。`
+            : `他们先搭了 ${leadArtifact}，把关键能力从总分里单独拆出来测。`
+          : "他们的做法不是只看最终答案，而是把关键能力从总分里单独拆出来测。",
+        evaluationFacts.length > 0 ? `具体实验覆盖 ${evaluationFacts.join("、")}。` : methodSource,
+        dimensions.length > 0 ? `重点比较的变量是 ${dimensions.join("、")}。` : "",
+      ],
+      248,
+    ),
+    value: composeNarration(
+      [
+        findingBullets[0]
+          ? `最关键的结果是：${findingBullets[0]}。`
+          : valueSource,
+        findingBullets[1] ? `第二个结论是：${findingBullets[1]}。` : "",
+        findingBullets[2] ? `第三个结论是：${findingBullets[2]}。` : "",
+        !findingBullets.length ? valueSource : "这说明真正有效的提升路径，和大家直觉里觉得会涨分的做法，并不是一回事。",
+      ],
+      236,
+    ),
+    ending: composeNarration(
+      [
+        findingBullets[0]
+          ? `最后把主线压成一句话，就是 ${findingBullets[0]}，这才是这篇论文真正给出的判断。`
+          : endingSource,
+      ],
+      98,
+    ),
+  };
+};
+
 export const buildDisplayScriptDraft = ({
   paper,
   draft,
@@ -640,4 +839,40 @@ export const buildDisplayScriptDraft = ({
       baselineDraft,
     }),
   );
+};
+
+export const buildNarrationScriptDraft = ({
+  paper,
+  draft,
+  context,
+}: {
+  paper: SourcePaperForSummary;
+  draft: SummaryDraft;
+  context: Pick<PaperSummaryContext, "abstractSentences" | "sectionHeadings">;
+}): NarrationScriptDraft => {
+  const paperMode = detectPaperMode(paper);
+  const polishedDraft = polishSummaryDraft({draft, paperMode});
+  const baselineDraft = polishSummaryDraft({
+    draft: buildRuleBasedSummaryDraft(paper, {
+      rawText: "",
+      abstractSentences: context.abstractSentences,
+      sectionHeadings: context.sectionHeadings,
+    }),
+    paperMode,
+  });
+
+  if (paperMode === "survey") {
+    return buildSurveyNarrationDraft({polishedDraft});
+  }
+
+  if (paperMode === "theory") {
+    return buildTheoryNarrationDraft({polishedDraft});
+  }
+
+  return buildMethodNarrationDraft({
+    paper,
+    context,
+    polishedDraft,
+    baselineDraft,
+  });
 };

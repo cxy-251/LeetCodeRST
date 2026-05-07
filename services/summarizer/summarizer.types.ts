@@ -23,6 +23,14 @@ export type DisplayScriptDraft = {
   ending: DisplaySceneDraft;
 };
 
+export type NarrationScriptDraft = {
+  hook: string;
+  problem: string;
+  method: string;
+  value: string;
+  ending: string;
+};
+
 export type SourcePaperForSummary = {
   arxivId: string;
   title: string;

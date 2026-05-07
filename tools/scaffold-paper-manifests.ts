@@ -1,6 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
-import {buildDisplayScriptDraft} from "../services/summarizer/display-copy.service";
+import {buildDisplayScriptDraft, buildNarrationScriptDraft} from "../services/summarizer/display-copy.service";
 import {slugify} from "./lib/run-artifacts";
 import type {ContentProfileDocument, ProductionManifest} from "@paper-to-video/shared-types";
 
@@ -164,6 +164,20 @@ const buildContentProfile = (paper: SourceBundle["papers"][number]): ContentProf
       sectionHeadings: paper.sectionHeadings ?? [],
     },
   });
+  const narrationDraft = buildNarrationScriptDraft({
+    paper: {
+      arxivId: paper.arxivId,
+      title: paper.title,
+      summary: paper.summary,
+      categories: paper.categories,
+      publishedAt: paper.publishedAt,
+    },
+    draft,
+    context: {
+      abstractSentences: paper.abstractSentences ?? [],
+      sectionHeadings: paper.sectionHeadings ?? [],
+    },
+  });
   const problemSplit = splitProblemBody(displayDraft.problem.body);
   const resolvedHookTitle = buildHookTitle(displayDraft.hook.body, draft.hook, paper.title, draft.titleZh);
   const resolvedHookBody = stripHookTitlePrefix(displayDraft.hook.body, resolvedHookTitle);
@@ -186,7 +200,7 @@ const buildContentProfile = (paper: SourceBundle["papers"][number]): ContentProf
     },
     scenes: {
       hook: {
-        narrationText: draft.hook,
+        narrationText: narrationDraft.hook,
         content: {
           kicker: paper.title,
           title: resolvedHookTitle,
@@ -194,7 +208,7 @@ const buildContentProfile = (paper: SourceBundle["papers"][number]): ContentProf
         },
       },
       problem: {
-        narrationText: draft.problem,
+        narrationText: narrationDraft.problem,
         content: {
           title: "这篇论文在解决什么？",
           body: finalProblemBody,
@@ -202,7 +216,7 @@ const buildContentProfile = (paper: SourceBundle["papers"][number]): ContentProf
         },
       },
       method: {
-        narrationText: draft.method,
+        narrationText: narrationDraft.method,
         content: {
           title: "核心方法",
           body: displayDraft.method.body,
@@ -210,7 +224,7 @@ const buildContentProfile = (paper: SourceBundle["papers"][number]): ContentProf
         },
       },
       value: {
-        narrationText: draft.value,
+        narrationText: narrationDraft.value,
         content: {
           title: "技术价值",
           body: displayDraft.value.body,
@@ -218,7 +232,7 @@ const buildContentProfile = (paper: SourceBundle["papers"][number]): ContentProf
         },
       },
       ending: {
-        narrationText: draft.ending,
+        narrationText: narrationDraft.ending,
         content: {
           title: "一句话结论",
           body: displayDraft.ending.body,
