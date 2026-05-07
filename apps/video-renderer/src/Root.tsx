@@ -252,9 +252,9 @@ const SceneCard: React.FC<{
 }> = ({scene, manifest}) => {
   const KUAISHOU_SAFE_INSET = {
     top: 96,
-    right: 176,
+    right: 128,
     bottom: 392,
-    left: 78,
+    left: 128,
     primaryOffsetY: 92,
   } as const;
   const localFrame = useCurrentFrame();
