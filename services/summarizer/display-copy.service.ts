@@ -106,6 +106,64 @@ const uniqueBullets = (items: string[], limit = 4, maxChars = 46) => {
   return bullets;
 };
 
+const bulletSignature = (value: string) =>
+  cleanText(value)
+    .replace(/^论文主角：/u, "")
+    .replace(/^核心场景：/u, "")
+    .replace(/^核心变量：/u, "")
+    .replace(/^核心方法：/u, "")
+    .replace(/^关键配套：/u, "")
+    .replace(/^比较/u, "")
+    .replace(/^安全收益取决于/u, "")
+    .replace(/[：:、，。；！？（）()\s]/gu, "")
+    .toLowerCase();
+
+const isSimilarBullet = (candidate: string, existing: string) => {
+  const left = bulletSignature(candidate);
+  const right = bulletSignature(existing);
+
+  if (!left || !right) {
+    return false;
+  }
+
+  if (left === right || left.includes(right) || right.includes(left)) {
+    return true;
+  }
+
+  const leftTokens = cleanText(candidate)
+    .split(/[：:、，。；！？（）()\s]+/u)
+    .map((item) => item.trim())
+    .filter((item) => item.length >= 2);
+  const rightTokens = cleanText(existing)
+    .split(/[：:、，。；！？（）()\s]+/u)
+    .map((item) => item.trim())
+    .filter((item) => item.length >= 2);
+
+  if (leftTokens.length === 0 || rightTokens.length === 0) {
+    return false;
+  }
+
+  const overlap = leftTokens.filter((token) => rightTokens.includes(token));
+  return overlap.length >= Math.min(2, Math.min(leftTokens.length, rightTokens.length));
+};
+
+const filterDistinctBullets = (candidates: string[], existing: string[], minCount = 2) => {
+  const next: string[] = [];
+
+  for (const candidate of candidates) {
+    if (
+      existing.some((item) => isSimilarBullet(candidate, item)) ||
+      next.some((item) => isSimilarBullet(candidate, item))
+    ) {
+      continue;
+    }
+
+    next.push(candidate);
+  }
+
+  return next.length >= minCount ? next : [];
+};
+
 const composeBody = (parts: string[], maxChars: number) => {
   const text = cleanText(
     parts
@@ -258,8 +316,33 @@ const withoutExistingBullets = (candidates: string[], existing: string[]) => {
   const normalizedExisting = new Set(existing.map((item) => cleanText(item)));
   return candidates.filter((item) => {
     const normalized = cleanText(item);
-    return normalized && !normalizedExisting.has(normalized);
+    return normalized && !normalizedExisting.has(normalized) && !existing.some((other) => isSimilarBullet(item, other));
   });
+};
+
+const dedupeDisplayDraftBullets = (draft: DisplayScriptDraft): DisplayScriptDraft => {
+  const prior: string[] = [];
+  const problemBullets = filterDistinctBullets(draft.problem.bullets, prior, 1);
+  prior.push(...problemBullets);
+  const methodBullets = filterDistinctBullets(draft.method.bullets, prior, 2);
+  prior.push(...methodBullets);
+  const valueBullets = filterDistinctBullets(draft.value.bullets, prior, 2);
+
+  return {
+    ...draft,
+    problem: {
+      ...draft.problem,
+      bullets: problemBullets,
+    },
+    method: {
+      ...draft.method,
+      bullets: methodBullets,
+    },
+    value: {
+      ...draft.value,
+      bullets: valueBullets,
+    },
+  };
 };
 
 const buildSurveyDisplayDraft = ({
@@ -542,17 +625,19 @@ export const buildDisplayScriptDraft = ({
   });
 
   if (paperMode === "survey") {
-    return buildSurveyDisplayDraft({polishedDraft, baselineDraft});
+    return dedupeDisplayDraftBullets(buildSurveyDisplayDraft({polishedDraft, baselineDraft}));
   }
 
   if (paperMode === "theory") {
-    return buildTheoryDisplayDraft({polishedDraft, baselineDraft});
+    return dedupeDisplayDraftBullets(buildTheoryDisplayDraft({polishedDraft, baselineDraft}));
   }
 
-  return buildMethodDisplayDraft({
-    paper,
-    context,
-    polishedDraft,
-    baselineDraft,
-  });
+  return dedupeDisplayDraftBullets(
+    buildMethodDisplayDraft({
+      paper,
+      context,
+      polishedDraft,
+      baselineDraft,
+    }),
+  );
 };

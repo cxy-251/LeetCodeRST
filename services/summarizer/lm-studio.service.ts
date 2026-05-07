@@ -866,6 +866,13 @@ const isContextLimitError = (error: unknown) => {
   );
 };
 
+const createContextLimitHint = (config: LmStudioSummaryConfig) =>
+  [
+    "LM Studio 上下文长度不足，当前请求没有继续自动收紧输入。",
+    `请在 LM Studio 里调高该模型的 context length 后重试。`,
+    `当前本地配置：LM_STUDIO_MODEL=${config.model}，LM_STUDIO_MAX_INPUT_CHARS=${config.maxInputChars}。`,
+  ].join(" ");
+
 export const summarizeWithLmStudio = async (
   paper: SourcePaperForSummary,
   context: PaperSummaryContext,
@@ -906,54 +913,16 @@ export const summarizeWithLmStudio = async (
     });
 
   const requestSummaryWithFallbacks = async () => {
-    const attempts = [
-      {compact: false, structured: true, maxTokens: config.maxOutputTokens, inputChars: config.maxInputChars},
-      {
-        compact: true,
-        structured: false,
-        maxTokens: Math.min(config.maxOutputTokens, 1200),
-        inputChars: Math.min(config.compactInputChars, 1200),
-      },
-      {
-        compact: true,
-        structured: false,
-        maxTokens: Math.min(config.maxOutputTokens, 900),
-        inputChars: Math.min(config.compactInputChars, 720),
-      },
-      {
-        compact: true,
-        structured: false,
-        maxTokens: Math.min(config.maxOutputTokens, 700),
-        inputChars: 420,
-      },
-      {
-        compact: true,
-        structured: false,
-        maxTokens: Math.min(config.maxOutputTokens, 520),
-        inputChars: 280,
-      },
-    ] as const;
-
-    let lastError: unknown;
-
-    for (const attempt of attempts) {
-      try {
-        return await runSummaryRequest(
-          attempt.compact,
-          attempt.structured,
-          attempt.maxTokens,
-          attempt.inputChars,
-        );
-      } catch (error) {
-        if (!isContextLimitError(error)) {
-          throw error;
-        }
-
-        lastError = error;
+    try {
+      return await runSummaryRequest(false, true, config.maxOutputTokens, config.maxInputChars);
+    } catch (error) {
+      if (isContextLimitError(error)) {
+        const baseMessage = error instanceof Error ? error.message : `${error ?? ""}`;
+        throw new Error(`${createContextLimitHint(config)} 原始报错：${baseMessage}`);
       }
-    }
 
-    throw lastError instanceof Error ? lastError : new Error("LM Studio context fallback failed");
+      throw error;
+    }
   };
 
   const payload: ChatCompletionResponse = await requestSummaryWithFallbacks();
