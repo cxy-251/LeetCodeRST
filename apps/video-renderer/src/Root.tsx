@@ -250,6 +250,13 @@ const SceneCard: React.FC<{
   scene: RenderScene;
   manifest: RenderManifest;
 }> = ({scene, manifest}) => {
+  const KUAISHOU_SAFE_INSET = {
+    top: 96,
+    right: 176,
+    bottom: 392,
+    left: 78,
+    primaryOffsetY: 92,
+  } as const;
   const localFrame = useCurrentFrame();
   const {fps} = useVideoConfig();
   const theme = getThemePalette(manifest.theme.id);
@@ -307,7 +314,7 @@ const SceneCard: React.FC<{
       />
       <AbsoluteFill
         style={{
-          padding: 72,
+          padding: `${KUAISHOU_SAFE_INSET.top}px ${KUAISHOU_SAFE_INSET.right}px ${KUAISHOU_SAFE_INSET.bottom}px ${KUAISHOU_SAFE_INSET.left}px`,
           color: theme.fg,
           justifyContent: "space-between",
           fontFamily: "PingFang SC, Hiragino Sans GB, Microsoft YaHei, sans-serif",
@@ -318,7 +325,8 @@ const SceneCard: React.FC<{
             display: "flex",
             flexDirection: "column",
             gap: 24,
-            marginTop: 60,
+            marginTop: KUAISHOU_SAFE_INSET.primaryOffsetY,
+            maxWidth: "min(100%, 54rem)",
           }}
         >
           {primaryNodes.map((node, index) => {
@@ -342,7 +350,16 @@ const SceneCard: React.FC<{
             );
           })}
         </div>
-        {secondaryNodes.length > 0 ? secondaryNodes[0] : null}
+        {secondaryNodes.length > 0 ? (
+          <div
+            style={{
+              maxWidth: "min(100%, 54rem)",
+              alignSelf: "flex-start",
+            }}
+          >
+            {secondaryNodes[0]}
+          </div>
+        ) : null}
       </AbsoluteFill>
     </AbsoluteFill>
   );
