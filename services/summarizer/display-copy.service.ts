@@ -58,12 +58,31 @@ const cleanText = (value: string) =>
     .replace(/[，]{2,}/gu, "，")
     .trim();
 
+const hasSentenceEnding = (value: string) => /[。！？!?]$/u.test(value.trim());
+
 const trimByChars = (value: string, limit: number) => {
   if (value.length <= limit) {
     return value;
   }
 
-  return value.slice(0, limit).replace(/[，、；：,.!?！？]+$/u, "").trim();
+  const sliced = value.slice(0, limit);
+  const lastSentenceBoundary = Math.max(
+    sliced.lastIndexOf("。"),
+    sliced.lastIndexOf("！"),
+    sliced.lastIndexOf("？"),
+    sliced.lastIndexOf("；"),
+  );
+
+  if (lastSentenceBoundary >= Math.floor(limit * 0.6)) {
+    return sliced.slice(0, lastSentenceBoundary + 1).trim();
+  }
+
+  const lastSoftBoundary = Math.max(sliced.lastIndexOf("，"), sliced.lastIndexOf("："));
+  if (lastSoftBoundary >= Math.floor(limit * 0.7)) {
+    return sliced.slice(0, lastSoftBoundary).trim();
+  }
+
+  return sliced.replace(/[，、；：,.!?！？]+$/u, "").trim();
 };
 
 const englishLetterCount = (value: string) => (value.match(/[A-Za-z]/g) ?? []).length;
@@ -190,13 +209,23 @@ const mergeDistinctParts = (parts: string[]) => {
 };
 
 const composeBody = (parts: string[], maxChars: number) => {
-  const text = cleanText(mergeDistinctParts(parts).join(" ").replace(/\s+/g, " "));
+  const text = cleanText(
+    mergeDistinctParts(parts)
+      .map((part) => (hasSentenceEnding(part) ? part : `${part}。`))
+      .join(" ")
+      .replace(/\s+/g, " "),
+  );
 
   if (!text) {
     return "";
   }
 
-  return trimByChars(text, maxChars);
+  return trimByChars(
+    text
+      .replace(/。(?=[，；：])/gu, "")
+      .replace(/[。]{2,}/gu, "。"),
+    maxChars,
+  );
 };
 
 const composeDistinctBody = (primary: string, fallback: string, maxChars: number) => {
@@ -229,6 +258,10 @@ const composeNarration = (parts: string[], maxChars: number) => {
 const inferMethodFocusLabel = (text: string) => {
   const normalized = text.toLowerCase();
 
+  if (/diffusion|dit|outlier token|image generation|denoiser/.test(normalized)) {
+    return "扩散 Transformer 里的异常 token 为什么会破坏生成质量";
+  }
+
   if (/symptom|conversational|triage|assessment/.test(normalized)) {
     return "主动问诊与关键信息补齐";
   }
@@ -256,6 +289,66 @@ const inferMethodFocusLabel = (text: string) => {
   return "系统落地时的关键瓶颈";
 };
 
+const extractMethodProblemSignal = (text: string) => {
+  const normalized = text.toLowerCase();
+
+  if (/diffusion|dit|outlier token|image generation|denoiser/.test(normalized)) {
+    return "模型内部会冒出一小批权重过高、但局部语义被破坏的异常 token，最后把图像生成过程带偏";
+  }
+
+  if (/symptom|conversational|triage|assessment/.test(normalized)) {
+    return "很多系统只能被动接收症状，缺少像医生一样主动追问和补齐关键信息的能力";
+  }
+
+  if (/clinical|medicine|radiology|medical/.test(normalized)) {
+    return "平均分数很高，并不代表模型在高风险医疗场景里真的安全";
+  }
+
+  if (/retrieval|rag|search|ranking/.test(normalized)) {
+    return "很多检索链路越做越复杂，但最终答案质量不一定真的更稳";
+  }
+
+  if (/planning|planner|agent/.test(normalized)) {
+    return "系统能不能完成复杂任务，往往卡在长期规划、环境反馈和动作衔接这一环";
+  }
+
+  if (/benchmark|dataset|evaluation/.test(normalized)) {
+    return "总分看起来不错，不代表关键能力真的被测到了";
+  }
+
+  return "现有方法往往只能覆盖局部步骤，离真实任务还差关键一环";
+};
+
+const buildMethodProblemFollowup = (text: string) => {
+  const normalized = text.toLowerCase();
+
+  if (/diffusion|dit|outlier token|image generation|denoiser/.test(normalized)) {
+    return "在 DiT 这类架构里，真正失稳的往往不是最后那一张图，而是中间注意力已经被少数异常 token 抢走。";
+  }
+
+  if (/symptom|conversational|triage|assessment/.test(normalized)) {
+    return "真正麻烦的地方，是系统在信息还不完整时就急着下判断，后面再高分也补不回前面漏掉的病情线索。";
+  }
+
+  if (/clinical|medicine|radiology|medical/.test(normalized)) {
+    return "最危险的不是平均分低一点，而是少数高风险场景里的错误会直接影响真实决策。";
+  }
+
+  if (/retrieval|rag|search|ranking/.test(normalized)) {
+    return "最难的地方不是把链路做长，而是弄清哪些证据真的在帮答案变稳，哪些只是把流程变复杂。";
+  }
+
+  if (/planning|planner|agent/.test(normalized)) {
+    return "真正的瓶颈往往出在多步执行过程中，一环判断失真，后面的行动就会连续偏掉。";
+  }
+
+  if (/benchmark|dataset|evaluation/.test(normalized)) {
+    return "真正的麻烦是，平均分会把失败模式盖住，让你误以为系统已经能稳定落地。";
+  }
+
+  return "";
+};
+
 const appendIfMissing = (base: string, addition: string) => {
   const normalizedBase = cleanText(base);
   const normalizedAddition = cleanText(addition);
@@ -274,6 +367,162 @@ const extractNamedArtifacts = (text: string) => {
     .filter((item) => item.length >= 3 && !ignore.has(item))
     .filter((item, index, all) => all.indexOf(item) === index)
     .slice(0, 4);
+};
+
+const extractIntroducedMethodName = (text: string) => {
+  const patterns = [
+    /(?:introduce|introduced|propose|proposed|present|presented)\s+([A-Z][A-Za-z0-9-]+(?:\s+[A-Z][A-Za-z0-9-]+){0,3})\s*\(([A-Z0-9-]+)\)/i,
+    /(?:introduce|introduced|propose|proposed|present|presented)\s+([A-Z][A-Za-z0-9-]+(?:\s+[A-Z][A-Za-z0-9-]+){0,3})/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = pattern.exec(text);
+    if (!match) {
+      continue;
+    }
+
+    const name = match[1]?.trim() ?? "";
+    const short = match[2]?.trim() ?? "";
+    if (name && short) {
+      return `${name}（${short}）`;
+    }
+
+    if (name) {
+      return name;
+    }
+  }
+
+  return "";
+};
+
+const localizeArtifactName = (artifact: string) => {
+  if (/dual-stage registers|dsr/i.test(artifact)) {
+    return "双阶段寄存器（DSR）";
+  }
+
+  if (/representation autoencoder|rae/i.test(artifact)) {
+    return "表征自编码器（RAE）";
+  }
+
+  if (/diffusion transformers?|dits?\b/i.test(artifact)) {
+    return "扩散Transformer（DiT）";
+  }
+
+  if (/vision transformers?|vits?\b/i.test(artifact)) {
+    return "视觉Transformer（ViT）";
+  }
+
+  return cleanText(artifact);
+};
+
+const describeArtifact = (artifact: string, text: string) => {
+  const joined = `${artifact} ${text}`.toLowerCase();
+
+  if (/dual-stage registers|dsr/.test(joined)) {
+    return "双阶段寄存器（DSR），一种同时作用在编码器和去噪器里的异常 token 干预机制";
+  }
+
+  if (/representation autoencoder|rae/.test(joined)) {
+    return "表征自编码器（RAE），先把图像压成高层语义表示的编码管线";
+  }
+
+  if (/diffusion transformer|dits?\b/.test(joined)) {
+    return "扩散Transformer（DiT），负责在逐步去噪过程中生成图像的主干网络";
+  }
+
+  if (/vision transformer|vits?\b/.test(joined)) {
+    return "视觉Transformer（ViT），把图像切成 patch 再做注意力建模的编码器";
+  }
+
+  if (/agentic rag/.test(joined)) {
+    return "主动规划式检索增强生成（agentic RAG），会主动规划检索和推理步骤的 RAG 链路";
+  }
+
+  if (/\brag\b/.test(joined)) {
+    return "检索增强生成（RAG），先检索资料再生成答案的问答链路";
+  }
+
+  return "";
+};
+
+const stripArtifactPrefix = (definition: string, artifactLabel: string) => {
+  const normalizedDefinition = cleanText(definition);
+  const normalizedLabel = cleanText(artifactLabel);
+
+  if (!normalizedDefinition || !normalizedLabel) {
+    return normalizedDefinition;
+  }
+
+  if (normalizedDefinition.startsWith(`${normalizedLabel}，`)) {
+    return normalizedDefinition.slice(normalizedLabel.length + 1).trim();
+  }
+
+  if (normalizedDefinition.startsWith(`${normalizedLabel},`)) {
+    return normalizedDefinition.slice(normalizedLabel.length + 1).trim();
+  }
+
+  return normalizedDefinition;
+};
+
+const buildMethodMechanismSentence = (text: string) => {
+  const normalized = text.toLowerCase();
+
+  if (/register/.test(normalized) && /encoder/.test(normalized) && /denoiser/.test(normalized)) {
+    return "核心机制是在编码器和去噪器两端都加寄存器，一边吸收预训练编码器里的异常表示，一边压住中间层里会抢注意力的异常 token。";
+  }
+
+  if (/clean evidence|retrieval complexity|agentic rag|standard rag|context length/.test(normalized)) {
+    return "核心机制不是盲目换更大模型，而是把证据质量、检索方式和上下文构造这些变量拆开比较，直接定位哪一环真的在影响结果。";
+  }
+
+  if (/symptom|conversational|triage|assessment/.test(normalized)) {
+    return "核心机制是让系统像医生一样主动追问，把缺失的关键信息补齐后，再继续做判断。";
+  }
+
+  if (/multi-agent|critic|verifier|knowledge graph/.test(normalized)) {
+    return "核心机制是把任务拆给多个角色：先路由问题、再做工具分析、再做检索和验证，让不同环节各自承担明确职责。";
+  }
+
+  return "";
+};
+
+const buildResultSummarySentence = (findings: string[]) => {
+  if (findings.length === 0) {
+    return "";
+  }
+
+  if (findings.length === 1) {
+    return `结果上最关键的一条就是：${findings[0]}。`;
+  }
+
+  return `结果上最关键的两点是：${findings[0]}；${findings[1]}。`;
+};
+
+const buildMechanismBullets = (text: string) => {
+  const normalized = text.toLowerCase();
+  const bullets: string[] = [];
+
+  if (/register/.test(normalized) && /encoder/.test(normalized)) {
+    bullets.push("编码器侧加入寄存器吸收异常表示");
+  }
+
+  if (/register/.test(normalized) && /denoiser/.test(normalized)) {
+    bullets.push("去噪器侧压住中间层异常 token");
+  }
+
+  if (/clean evidence/.test(normalized)) {
+    bullets.push("把干净证据和复杂检索链路拆开比较");
+  }
+
+  if (/retrieval complexity|agentic rag|standard rag/.test(normalized)) {
+    bullets.push("检索方式单独对比，不只看总答案");
+  }
+
+  if (/symptom|triage|assessment/.test(normalized)) {
+    bullets.push("先主动追问再做症状判断");
+  }
+
+  return bullets.slice(0, 3);
 };
 
 const extractMethodDimensions = (text: string) => {
@@ -339,6 +588,18 @@ const extractFindingBullets = (text: string) => {
 
   if (/worst-case analysis showed/i.test(text)) {
     findings.push("真正危险的错误集中在少数高风险题");
+  }
+
+  if (/reduce outlier artifacts/i.test(normalized)) {
+    findings.push("能减少异常 token 带来的生成伪影");
+  }
+
+  if (/improve generation quality/i.test(normalized)) {
+    findings.push("同时提升最终图像生成质量");
+  }
+
+  if (/outlier-token control/i.test(normalized)) {
+    findings.push("异常 token 控制是更强 DiT 的关键组成");
   }
 
   return findings.slice(0, 3);
@@ -538,10 +799,13 @@ const buildMethodDisplayDraft = ({
 }): DisplayScriptDraft => {
   const evidenceText = [paper.title, paper.summary, ...context.abstractSentences, ...context.sectionHeadings].join(" ");
   const artifacts = extractNamedArtifacts(evidenceText);
+  const introducedMethodName = extractIntroducedMethodName(evidenceText);
   const dimensions = extractMethodDimensions(evidenceText);
   const evaluationFacts = extractEvaluationFacts(evidenceText);
   const findingBullets = extractFindingBullets(evidenceText);
   const focusLabel = inferMethodFocusLabel(evidenceText);
+  const problemSignal = extractMethodProblemSignal(evidenceText);
+  const problemFollowup = buildMethodProblemFollowup(evidenceText);
   const hookSource = isEnglishHeavy(polishedDraft.hook) ? baselineDraft.hook : polishedDraft.hook;
   const problemSource = isEnglishHeavy(polishedDraft.problem) ? baselineDraft.problem : polishedDraft.problem;
   const methodSource = isEnglishHeavy(polishedDraft.method)
@@ -551,39 +815,71 @@ const buildMethodDisplayDraft = ({
     ? stripEnglishFragments(baselineDraft.value)
     : stripEnglishFragments(polishedDraft.value) || stripEnglishFragments(baselineDraft.value);
   const endingSource = isEnglishHeavy(polishedDraft.ending) ? baselineDraft.ending : polishedDraft.ending;
+  const leadArtifact = introducedMethodName || artifacts[0] || "";
+  const supportingArtifact = artifacts.find((artifact) => artifact !== leadArtifact) ?? "";
+  const leadArtifactLabel = leadArtifact ? localizeArtifactName(leadArtifact) : "";
+  const supportingArtifactLabel = supportingArtifact ? localizeArtifactName(supportingArtifact) : "";
+  const leadDefinition = leadArtifact ? describeArtifact(leadArtifact, evidenceText) : "";
+  const supportingDefinition = supportingArtifact ? describeArtifact(supportingArtifact, evidenceText) : "";
+  const leadDefinitionRemainder = leadDefinition ? stripArtifactPrefix(leadDefinition, leadArtifactLabel) : "";
+  const supportingDefinitionRemainder =
+    supportingDefinition && supportingArtifactLabel
+      ? stripArtifactPrefix(supportingDefinition, supportingArtifactLabel)
+      : "";
+  const mechanismSentence = buildMethodMechanismSentence(evidenceText);
+  const resultSentence = buildResultSummarySentence(findingBullets);
+  const mechanismBullets = buildMechanismBullets(evidenceText);
 
   const hookBody = composeBody(
     [
-      stripEnglishFragments(problemSource),
-      findingBullets[0] ? `最关键的发现是：${findingBullets[0]}。` : "",
+      leadArtifactLabel
+        ? `${leadArtifactLabel} 这篇论文盯住的问题是：${problemSignal}`
+        : `${problemSignal}`,
+      findingBullets[0] ? `最关键的结果是：${findingBullets[0]}。` : "",
     ],
-    146,
+    152,
   );
-  const problemBody = composeDistinctBody(problemSource, baselineDraft.problem, 198);
+  const problemBody = composeBody(
+    [
+      `作者想解决的是：${problemSignal}。`,
+      dimensions.length > 0
+        ? `难点在于，${dimensions.join("、")} 这些变量会一起影响结果，只看最后总分很难判断到底是哪一环先出了问题。`
+        : problemFollowup || "难点不在最终那一张图好不好看，而在你很难直接看到到底是哪一层内部机制先把系统带偏了。",
+      !problemFollowup && problemSource && !problemSource.includes(problemSignal)
+        ? trimByChars(stripEnglishFragments(problemSource), 72)
+        : "",
+    ],
+    188,
+  );
   const methodBody = composeBody(
     [
-      appendIfMissing(methodSource, dimensions.length > 0 ? `重点拆开比较 ${dimensions.join("、")} 这些变量。` : ""),
+      leadArtifactLabel ? `作者真正提出的主方法是 ${leadArtifactLabel}。` : "",
+      leadDefinitionRemainder ? `它本质上是${leadDefinitionRemainder}。` : "",
+      supportingDefinitionRemainder && supportingDefinition !== leadDefinition
+        ? `配套组件则是${supportingDefinitionRemainder}。`
+        : "",
+      mechanismSentence || appendIfMissing(methodSource, dimensions.length > 0 ? `重点拆开比较 ${dimensions.join("、")} 这些变量。` : ""),
       evaluationFacts.length > 0 ? `实验覆盖 ${evaluationFacts.join("、")}。` : "",
     ],
     208,
   );
   const valueBody = composeBody(
-    [
-      appendIfMissing(valueSource, findingBullets[0] ?? ""),
-      findingBullets[1] ?? "",
-    ],
+    findingBullets.length > 0
+      ? [
+          `实验结果不是抽象概念，而是非常具体：${findingBullets.join("；")}。`,
+          "这说明要把这类系统做稳，不能只靠堆大模型，而要直接处理出问题的内部机制。",
+        ]
+      : [appendIfMissing(valueSource, resultSentence), findingBullets[2] ?? ""],
     206,
   );
 
-  const fallbackBullets = baselineDraft.bullets;
   const methodBullets = uniqueBullets(
     [
-      artifacts[0] ? `${artifacts[0]}：核心方法/框架` : "",
-      artifacts[1] ? `${artifacts[1]}：关键评测或数据设置` : "",
+      leadArtifactLabel ? `主方法：${leadArtifactLabel}` : "",
+      supportingArtifactLabel ? `配套组件：${supportingArtifactLabel}` : "",
+      ...mechanismBullets,
       dimensions.length > 0 ? `比较 ${dimensions.join("、")}` : "",
       ...evaluationFacts,
-      ...findingBullets,
-      ...fallbackBullets,
     ],
     5,
     48,
@@ -593,7 +889,6 @@ const buildMethodDisplayDraft = ({
       [
         ...findingBullets,
         dimensions.length > 0 ? `安全收益取决于 ${dimensions.slice(0, 3).join("、")}` : "",
-        ...fallbackBullets,
       ],
       methodBullets,
     ),
@@ -602,11 +897,10 @@ const buildMethodDisplayDraft = ({
   );
   const problemBullets = uniqueBullets(
     [
-      artifacts[0] ? `论文主角：${artifacts[0]}` : "",
+      leadArtifactLabel ? `论文主角：${leadArtifactLabel}` : "",
       `核心场景：${focusLabel}`,
+      leadDefinition ? trimByChars(`术语解释：${leadDefinition}`, 46) : "",
       dimensions.length > 0 ? `核心变量：${dimensions.slice(0, 3).join("、")}` : "",
-      ...findingBullets,
-      fallbackBullets[0] ?? "",
     ],
     4,
     46,
@@ -733,10 +1027,13 @@ const buildMethodNarrationDraft = ({
 }): NarrationScriptDraft => {
   const evidenceText = [paper.title, paper.summary, ...context.abstractSentences, ...context.sectionHeadings].join(" ");
   const artifacts = extractNamedArtifacts(evidenceText);
+  const introducedMethodName = extractIntroducedMethodName(evidenceText);
   const dimensions = extractMethodDimensions(evidenceText);
   const evaluationFacts = extractEvaluationFacts(evidenceText);
   const findingBullets = extractFindingBullets(evidenceText);
   const focusLabel = inferMethodFocusLabel(evidenceText);
+  const problemSignal = extractMethodProblemSignal(evidenceText);
+  const problemFollowup = buildMethodProblemFollowup(evidenceText);
   const hookSource = isEnglishHeavy(polishedDraft.hook) ? baselineDraft.hook : polishedDraft.hook;
   const problemSource = isEnglishHeavy(polishedDraft.problem) ? baselineDraft.problem : polishedDraft.problem;
   const methodSource = isEnglishHeavy(polishedDraft.method)
@@ -746,56 +1043,65 @@ const buildMethodNarrationDraft = ({
     ? stripEnglishFragments(baselineDraft.value)
     : stripEnglishFragments(polishedDraft.value) || stripEnglishFragments(baselineDraft.value);
   const endingSource = isEnglishHeavy(polishedDraft.ending) ? baselineDraft.ending : polishedDraft.ending;
-  const leadArtifact = artifacts[0];
-  const supportingArtifact = artifacts[1];
+  const leadArtifact = introducedMethodName || artifacts[0] || "";
+  const supportingArtifact = artifacts.find((artifact) => artifact !== leadArtifact) ?? "";
+  const leadArtifactLabel = leadArtifact ? localizeArtifactName(leadArtifact) : "";
+  const supportingArtifactLabel = supportingArtifact ? localizeArtifactName(supportingArtifact) : "";
+  const leadDefinition = leadArtifact ? describeArtifact(leadArtifact, evidenceText) : "";
+  const leadDefinitionRemainder = leadDefinition ? stripArtifactPrefix(leadDefinition, leadArtifactLabel) : "";
+  const mechanismSentence = buildMethodMechanismSentence(evidenceText);
+  const resultSentence = buildResultSummarySentence(findingBullets);
 
   return {
     hook: composeNarration(
       [
-        leadArtifact
-          ? `${leadArtifact} 这篇论文最想回答的，不是总分还能不能再涨一点，而是 ${focusLabel} 到底受什么因素控制。`
-          : `这篇论文最想回答的，不是总分还能不能再涨一点，而是 ${focusLabel} 到底受什么因素控制。`,
+        leadArtifactLabel
+          ? `${leadArtifactLabel} 这篇论文真正盯住的，是 ${focusLabel}。`
+          : `这篇论文真正盯住的，是 ${focusLabel}。`,
         findingBullets[0] ? `它一上来就把最关键的结果摆在台面上：${findingBullets[0]}。` : "",
       ],
       168,
     ),
     problem: composeNarration(
       [
+        `作者真正想解决的是：${problemSignal}。`,
         dimensions.length > 0
-          ? `很多团队会同时去调 ${dimensions.join("、")} 这些常见提升手段，但作者真正想知道的是，哪一种真的能把 ${focusLabel} 做稳，哪一种只是把平均分抬高。`
-          : `作者真正想搞清楚的是，系统到了真实场景里为什么会先在 ${focusLabel} 这一环失稳。`,
-        !dimensions.length ? composeDistinctBody(problemSource, baselineDraft.problem, 128) : "",
-        "如果只看一个平均分，你很难判断问题到底来自模型本身、证据输入，还是检索链路。",
+          ? `难点在于，${dimensions.join("、")} 这些变量会一起影响结果，只看最后总分，你分不清到底是哪一环真的在起作用。`
+          : problemFollowup || "难点在于，最终那张图或者最后那个总分，根本不能告诉你到底是哪一层内部机制先出了问题。",
+        !problemFollowup && problemSource && !problemSource.includes(problemSignal)
+          ? trimByChars(stripEnglishFragments(problemSource), 72)
+          : "",
       ],
-      232,
+      206,
     ),
     method: composeNarration(
       [
-        leadArtifact
-          ? supportingArtifact
-            ? `他们先搭了 ${leadArtifact}，再配上 ${supportingArtifact}，把关键能力从总分里单独拆出来测。`
-            : `他们先搭了 ${leadArtifact}，把关键能力从总分里单独拆出来测。`
-          : "他们的做法不是只看最终答案，而是把关键能力从总分里单独拆出来测。",
-        evaluationFacts.length > 0 ? `具体实验覆盖 ${evaluationFacts.join("、")}。` : methodSource,
+        leadArtifactLabel ? `这篇论文的主方法叫 ${leadArtifactLabel}。` : "这篇论文的做法，是直接对出问题的中间机制下手。",
+        leadDefinitionRemainder ? `如果翻成人话，它就是${leadDefinitionRemainder}。` : "",
+        supportingArtifactLabel ? `配套组件是 ${supportingArtifactLabel}。` : "",
+        mechanismSentence || methodSource,
+        evaluationFacts.length > 0 ? `具体实验覆盖 ${evaluationFacts.join("、")}。` : "",
         dimensions.length > 0 ? `重点比较的变量是 ${dimensions.join("、")}。` : "",
       ],
       248,
     ),
     value: composeNarration(
-      [
-        findingBullets[0]
-          ? `最关键的结果是：${findingBullets[0]}。`
-          : valueSource,
-        findingBullets[1] ? `第二个结论是：${findingBullets[1]}。` : "",
-        findingBullets[2] ? `第三个结论是：${findingBullets[2]}。` : "",
-        !findingBullets.length ? valueSource : "这说明真正有效的提升路径，和大家直觉里觉得会涨分的做法，并不是一回事。",
-      ],
+      findingBullets.length > 0
+        ? [
+            resultSentence,
+            findingBullets[2] ? `再往下看，${findingBullets[2]}。` : "",
+            "这说明这篇论文真正给出的，不是一个漂亮口号，而是一条很具体的改进方向：直接控制出问题的内部机制。",
+          ]
+        : [
+            valueSource,
+            "这说明真正有效的提升路径，和大家直觉里觉得会涨分的做法，并不是一回事。",
+          ],
       236,
     ),
     ending: composeNarration(
       [
         findingBullets[0]
-          ? `最后把主线压成一句话，就是 ${findingBullets[0]}，这才是这篇论文真正给出的判断。`
+          ? `最后把主线压成一句话，就是 ${findingBullets[0]}。`
           : endingSource,
       ],
       98,

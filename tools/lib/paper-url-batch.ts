@@ -5,7 +5,7 @@ import {makeRunId, slugify} from "./run-artifacts";
 
 const IMAGE_FILE_PATTERN = /\.(png|jpg|jpeg|webp|svg)$/i;
 
-export type PaperUrlStatus = "processed" | "unprocessed" | "error";
+export type PaperUrlStatus = "processed" | "published" | "unprocessed" | "error";
 
 export type PaperUrlRecord = {
   paperUrl: string;
@@ -14,6 +14,10 @@ export type PaperUrlRecord = {
 
 const normalizeStatus = (value: string | undefined): PaperUrlStatus => {
   const normalized = (value ?? "").trim().toLowerCase();
+
+  if (["published", "posted", "live", "已发布", "已上线"].includes(normalized)) {
+    return "published";
+  }
 
   if (["processed", "done", "complete", "completed", "已处理", "done"].includes(normalized)) {
     return "processed";
@@ -120,7 +124,9 @@ export const normalizePaperUrlRecords = (records: PaperUrlRecord[]) => {
     seen.set(dedupeKey, {
       paperUrl: previous.paperUrl,
       status:
-        previous.status === "processed" || nextRecord.status === "processed"
+        previous.status === "published" || nextRecord.status === "published"
+          ? "published"
+          : previous.status === "processed" || nextRecord.status === "processed"
           ? "processed"
           : previous.status === "error" || nextRecord.status === "error"
             ? "error"
@@ -152,7 +158,7 @@ export const writePaperUrlCsvRecords = async ({
   records: PaperUrlRecord[];
 }) => {
   const normalized = normalizePaperUrlRecords(records);
-  const raw = ["paper_url,status", ...normalized.map((record) => `${record.paperUrl},${record.status}`)].join("\n");
+  const raw = ["paper_url, status", ...normalized.map((record) => `${record.paperUrl}, ${record.status}`)].join("\n");
   await fs.mkdir(path.dirname(filePath), {recursive: true});
   await fs.writeFile(filePath, `${raw}\n`, "utf-8");
 };

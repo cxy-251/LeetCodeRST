@@ -25,6 +25,7 @@ const RESPONSE_SCHEMA_EXAMPLE = {
 const GENERIC_SENTENCE_PATTERNS = [
   /搭了一个.*框架/u,
   /很有价值/u,
+  /真正价值/u,
   /值得先读/u,
   /值得一读/u,
   /统一.*坐标系/u,
@@ -63,13 +64,13 @@ const STRICT_RESPONSE_SCHEMA = {
 } as const;
 
 const SHORT_RESPONSE_SCHEMA_EXAMPLE = {
-  titleZh: "智能体世界模型：基础、能力、规律与未来",
-  hook: "如果 AI 真要在环境里持续行动，它最缺的其实不是会说话，而是会预测世界接下来怎么变。",
-  problem: "现在大家都在说世界模型，但不同社区的定义非常散，结果就是很多方法根本没法放在一起比较。",
-  method: "这篇论文搭了一个双轴框架，一边看能力层级，一边看环境约束，把世界模型重新整理成一张图。",
-  value: "它的价值不只是综述，而是给智能体系统设计和评估提供了一套统一坐标系。",
-  ending: "它真正留下的是一把尺子：你能直接判断一个智能体缺的是短期预测、多步模拟，还是失败后的模型修正能力。",
-  bullets: ["要点一", "要点二", "要点三"],
+  titleZh: "论文英文标题的直接中文翻译",
+  hook: "先用一句人话点出这篇论文最重要的判断或发现。",
+  problem: "说明作者真正想解决的瓶颈，别复述标题。",
+  method: "明确作者提出了什么方法、框架、证明或系统。",
+  value: "说明这件事带来的技术价值、理论结论或关键结果。",
+  ending: "最后一句直接收束成结论，不要引导观众去看原文。",
+  bullets: ["屏显要点一", "屏显要点二", "屏显要点三"],
 };
 
 const extractContent = (payload: ChatCompletionResponse) => {
@@ -542,6 +543,56 @@ const extractTechnicalAnchors = (paper: SourcePaperForSummary, context: PaperSum
   return [...anchors];
 };
 
+const extractEvidenceArtifacts = (paper: SourcePaperForSummary, context: PaperSummaryContext) => {
+  const text = [paper.title, paper.summary, ...context.abstractSentences, ...context.sectionHeadings].join(" ");
+  const artifacts = new Set<string>();
+  const ignore = new Set([
+    "AI",
+    "The",
+    "This",
+    "That",
+    "We",
+    "Our",
+    "To",
+    "As",
+    "In",
+    "On",
+    "For",
+    "With",
+  ]);
+
+  for (const match of text.matchAll(/\b(?:[A-Z][A-Za-z0-9]+(?:-[A-Za-z0-9]+)+|[A-Z]{2,}(?:-[A-Z0-9]+)*)\b/g)) {
+    const value = match[0]?.trim();
+    if (!value || value.length < 2 || ignore.has(value)) {
+      continue;
+    }
+
+    artifacts.add(value.toLowerCase());
+  }
+
+  return [...artifacts];
+};
+
+const extractSentenceArtifacts = (value: string) =>
+  [...value.matchAll(/\b(?:[A-Z][A-Za-z0-9]+(?:-[A-Za-z0-9]+)+|[A-Z]{2,}(?:-[A-Z0-9]+)*)\b/g)]
+    .map((match) => match[0]?.trim().toLowerCase() ?? "")
+    .filter(Boolean);
+
+const containsUnsupportedArtifacts = ({
+  value,
+  evidenceArtifacts,
+}: {
+  value: string;
+  evidenceArtifacts: string[];
+}) => {
+  const artifacts = extractSentenceArtifacts(value);
+  if (artifacts.length === 0) {
+    return false;
+  }
+
+  return artifacts.some((artifact) => !evidenceArtifacts.includes(artifact));
+};
+
 const sentenceHasAnchor = (value: string, anchors: string[]) => {
   const normalized = value.toLowerCase();
   return anchors.some((anchor) => normalized.includes(anchor.toLowerCase()));
@@ -550,11 +601,13 @@ const sentenceHasAnchor = (value: string, anchors: string[]) => {
 const isWeakSentence = ({
   value,
   anchors,
+  evidenceArtifacts,
   mode,
   paperMode,
 }: {
   value: string;
   anchors: string[];
+  evidenceArtifacts: string[];
   mode: keyof Omit<SummaryDraft, "bullets">;
   paperMode: PaperMode;
 }) => {
@@ -567,6 +620,10 @@ const isWeakSentence = ({
 
   if (mode === "method" || mode === "value") {
     if (containsExcessiveEnglish(trimmed)) {
+      return true;
+    }
+
+    if (containsUnsupportedArtifacts({value: trimmed, evidenceArtifacts})) {
       return true;
     }
 
@@ -605,11 +662,13 @@ const mergeDraftWithBaseline = ({
   draft,
   baseline,
   anchors,
+  evidenceArtifacts,
   paperMode,
 }: {
   draft: SummaryDraft;
   baseline: SummaryDraft;
   anchors: string[];
+  evidenceArtifacts: string[];
   paperMode: PaperMode;
 }): SummaryDraft => {
   const merged: SummaryDraft = {
@@ -628,7 +687,7 @@ const mergeDraftWithBaseline = ({
 
   const fieldKeys: Array<keyof Omit<SummaryDraft, "bullets" | "titleZh">> = ["hook", "problem", "method", "value", "ending"];
   for (const key of fieldKeys) {
-    if (isWeakSentence({value: merged[key], anchors, mode: key, paperMode})) {
+    if (isWeakSentence({value: merged[key], anchors, evidenceArtifacts, mode: key, paperMode})) {
       merged[key] = baseline[key];
     }
   }
@@ -881,6 +940,7 @@ export const summarizeWithLmStudio = async (
   const paperMode = detectPaperMode(paper);
   const baselineDraft = buildRuleBasedSummaryDraft(paper, context);
   const technicalAnchors = extractTechnicalAnchors(paper, context);
+  const evidenceArtifacts = extractEvidenceArtifacts(paper, context);
   const runSummaryRequest = async (
     compact = false,
     preferStructuredOutput = true,
@@ -949,6 +1009,7 @@ export const summarizeWithLmStudio = async (
             draft: recoveredDraft,
             baseline: baselineDraft,
             anchors: technicalAnchors,
+            evidenceArtifacts,
             paperMode,
           });
           validateDraft({draft: mergedRecoveredDraft});
@@ -978,6 +1039,7 @@ export const summarizeWithLmStudio = async (
     draft,
     baseline: baselineDraft,
     anchors: technicalAnchors,
+    evidenceArtifacts,
     paperMode,
   });
 
@@ -1021,6 +1083,7 @@ export const summarizeWithLmStudio = async (
           draft: reviewedDraft,
           baseline: baselineDraft,
           anchors: technicalAnchors,
+          evidenceArtifacts,
           paperMode,
         });
       }
@@ -1042,6 +1105,7 @@ export const summarizeWithLmStudio = async (
     draft: polishedDraft,
     baseline: polishedBaseline,
     anchors: technicalAnchors,
+    evidenceArtifacts,
     paperMode,
   });
 

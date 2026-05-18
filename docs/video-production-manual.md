@@ -142,10 +142,11 @@ npm run produce:paper-urls:donut -- \
 CSV 现在推荐使用两列：
 
 ```csv
-paper_url,status
-https://arxiv.org/abs/2604.22748,unprocessed
-https://arxiv.org/abs/2604.22736,processed
-https://arxiv.org/abs/9999.99999,error
+paper_url, status
+https://arxiv.org/abs/2604.22748, unprocessed
+https://arxiv.org/abs/2604.22736, processed
+https://arxiv.org/abs/1706.03762, published
+https://arxiv.org/abs/9999.99999, error
 ```
 
 兼容旧格式：
@@ -161,6 +162,9 @@ https://arxiv.org/abs/2604.22736
   这条论文还没跑，命令会处理它
 - `status=processed`
   这条论文已处理过，命令默认跳过
+- `status=published`
+  这条论文已经生成并发布过，命令默认跳过
+  但它仍然参与去重检查，不会被最新抓取结果重复加回
 - `status=error`
   这条论文上一次处理失败，命令默认跳过；如果要重试，手工改回 `unprocessed`
 - 命令现在按“逐篇顺序处理”执行，不是整批绑死
@@ -180,7 +184,7 @@ https://arxiv.org/abs/2604.22736
 
 说明：
 
-- 这条命令默认只会处理 CSV 中 `status != processed` 的行。
+- 这条命令默认只会处理 CSV 中 `status=unprocessed` 的行。
 - 同一批次里，每篇论文都会拿到不同的甜甜圈参数。
 - 如果你不传 `--seed`，系统会按当前批次 id 自动生成一套新的基准随机种子，所以不同批次默认会有不同配色和旋转节奏。
 - 如果你想复现同一批甜甜圈参数，再显式传入同一个 `--seed` 即可。
@@ -209,7 +213,14 @@ npm run update:paper-urls -- \
 1. 按提交时间倒序抓取最新 arXiv 论文
 2. 统一转成 `https://arxiv.org/abs/<paperId>` 形式
 3. 和你现有 CSV 去重合并
-4. 把最新且未重复的链接放在文件前面
+4. 如果最新一页里有重复论文，会继续向更早的页面查找
+5. 尽量补足 `--limit` 指定数量的“新论文”
+6. 把最新且未重复的链接放在文件前面
+
+注意：
+
+- `--limit 20` 现在表示“目标新增 20 篇未出现过的论文”，不是“只看最新 20 篇然后直接写回”。
+- 如果最近的很多论文你都已经抓过了，命令会继续向更旧的页面扫描，直到补满或者当前扫描窗口没有更多新论文。
 
 也就是说，后面推荐流程是：
 

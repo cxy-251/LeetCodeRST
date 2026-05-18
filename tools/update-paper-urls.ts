@@ -10,6 +10,7 @@ import {
 const DEFAULT_OUTPUT = path.resolve("data/papers/paper-urls.csv");
 const DEFAULT_CATEGORY = "cs.AI";
 const DEFAULT_LIMIT = 10;
+const MAX_SCAN_PAGES = 20;
 
 const parseArgs = () => {
   const args = process.argv.slice(2);
@@ -28,12 +29,7 @@ const parseArgs = () => {
 
 const main = async () => {
   const options = parseArgs();
-  const latest = await fetchLatestArxivPapers({
-    category: options.category,
-    limit: Number.isFinite(options.limit) && options.limit > 0 ? options.limit : DEFAULT_LIMIT,
-  });
-
-  const latestUrls = latest.map((paper) => toCanonicalArxivAbsUrl(paper.arxivId));
+  const targetAddCount = Number.isFinite(options.limit) && options.limit > 0 ? options.limit : DEFAULT_LIMIT;
 
   let existingRecords: PaperUrlRecord[] = [];
   try {
@@ -42,17 +38,54 @@ const main = async () => {
     existingRecords = [];
   }
 
-  const merged = normalizePaperUrlRecords([
-    ...latestUrls.map((paperUrl) => ({paperUrl, status: "unprocessed" as const})),
-    ...existingRecords,
-  ]);
   const existingIds = new Set(
     existingRecords.map((record) => parseArxivIdFromInput(record.paperUrl)?.toLowerCase() ?? record.paperUrl.toLowerCase()),
   );
-  const added = latestUrls.filter((value) => {
-    const arxivId = parseArxivIdFromInput(value)?.toLowerCase() ?? value.toLowerCase();
-    return !existingIds.has(arxivId);
-  });
+  const fetchedUrls: string[] = [];
+  const addedUrls: string[] = [];
+  let start = 0;
+  let pagesFetched = 0;
+
+  while (addedUrls.length < targetAddCount && pagesFetched < MAX_SCAN_PAGES) {
+    const latest = await fetchLatestArxivPapers({
+      category: options.category,
+      limit: targetAddCount,
+      start,
+    });
+
+    if (latest.length === 0) {
+      break;
+    }
+
+    pagesFetched += 1;
+    start += latest.length;
+
+    for (const paper of latest) {
+      const paperUrl = toCanonicalArxivAbsUrl(paper.arxivId);
+      fetchedUrls.push(paperUrl);
+      const arxivId = parseArxivIdFromInput(paperUrl)?.toLowerCase() ?? paperUrl.toLowerCase();
+
+      if (existingIds.has(arxivId)) {
+        continue;
+      }
+
+      existingIds.add(arxivId);
+      addedUrls.push(paperUrl);
+
+      if (addedUrls.length >= targetAddCount) {
+        break;
+      }
+    }
+
+    if (latest.length < targetAddCount) {
+      break;
+    }
+  }
+
+  const merged = normalizePaperUrlRecords([
+    ...addedUrls.map((paperUrl) => ({paperUrl, status: "unprocessed" as const})),
+    ...existingRecords,
+  ]);
 
   if (!options.dryRun) {
     await writePaperUrlCsvRecords({
@@ -66,11 +99,14 @@ const main = async () => {
       {
         output: options.output,
         category: options.category,
-        latestFetched: latestUrls.length,
-        added: added.length,
+        targetAddCount,
+        latestFetched: fetchedUrls.length,
+        pagesFetched,
+        added: addedUrls.length,
         total: merged.length,
         dryRun: options.dryRun,
-        records: merged,
+        addedUrls,
+        previewHead: merged.slice(0, 8),
       },
       null,
       2,

@@ -27,21 +27,39 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const run = (command: string, args: string[]) =>
   new Promise<void>((resolve, reject) => {
-    const child = spawn(command, args, {stdio: "inherit"});
+    const child = spawn(command, args, {stdio: ["ignore", "pipe", "pipe"]});
+    let stdout = "";
+    let stderr = "";
+
+    child.stdout.on("data", (chunk) => {
+      const text = chunk.toString();
+      stdout += text;
+      process.stdout.write(text);
+    });
+
+    child.stderr.on("data", (chunk) => {
+      const text = chunk.toString();
+      stderr += text;
+      process.stderr.write(text);
+    });
+
     child.on("exit", (code) => {
       if (code === 0) {
         resolve();
         return;
       }
 
-      reject(new Error(`${command} exited with code ${code ?? "unknown"}`));
+      const details = stderr.trim() || stdout.trim();
+      reject(new Error(`${command} exited with code ${code ?? "unknown"}${details ? `\n${details}` : ""}`));
     });
     child.on("error", reject);
   });
 
 const isRetryableTtsError = (error: unknown) => {
   const message = error instanceof Error ? error.message : `${error ?? ""}`;
-  return /timeout|timed out|speech\.platform\.bing\.com|ECONNRESET|ENOTFOUND|EAI_AGAIN/i.test(message);
+  return /timeout|timed out|speech\.platform\.bing\.com|ECONNRESET|ENOTFOUND|EAI_AGAIN|ws_connect|aiohttp|CancelledError/i.test(
+    message,
+  );
 };
 
 const synthesizeWithRetry = async ({

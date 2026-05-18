@@ -131,7 +131,7 @@ const main = async () => {
   const unprocessedRecords = paperRecords.filter((record) => record.status === "unprocessed");
 
   if (unprocessedRecords.length === 0) {
-    throw new Error("The CSV file did not contain any unprocessed paper URLs.");
+    throw new Error("The CSV file did not contain any paper URLs with status=unprocessed.");
   }
 
   const batchId = options.batchId ?? makePaperUrlBatchId("paper-url-donut-batch");

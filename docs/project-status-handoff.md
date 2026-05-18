@@ -125,9 +125,10 @@ npm run build
    - 从 arXiv 按 submitted date 抓取最新论文链接
    - 和现有 CSV 去重合并
    - 以“最新在前”的顺序写回 `data/papers/paper-urls.csv`
-25. `data/papers/paper-urls.csv` 现已支持 `paper_url,status` 双列模式：
+25. `data/papers/paper-urls.csv` 现已支持 `paper_url, status` 双列模式：
    - `status=unprocessed` 的论文会被批量命令处理
    - `status=processed` 的论文默认跳过
+   - `status=published` 的论文默认跳过，但仍参与去重检查
    - `status=error` 的论文默认跳过；需要重试时手工改回 `unprocessed`
    - `produce:paper-urls:donut` 现在按“逐篇顺序处理”执行
    - 单篇失败时只会把当前行写回成 `error`，不会阻塞后续论文

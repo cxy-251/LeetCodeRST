@@ -17,6 +17,7 @@ output/runs/*
 output/video-runs.csv
 output/latest-run.json
 output/cache/*
+output/batches/*
 public/generated-audio/*
 public/generated-images/*
 apps/video-renderer/public/generated-audio/*
@@ -30,4 +31,5 @@ data/content-profiles/generated/*.json
 data/video-batches/generated/*.csv
 data/images/prepared/*
 release/
+secondTry/
 !.gitkeep

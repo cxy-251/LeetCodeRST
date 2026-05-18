@@ -9,15 +9,25 @@ export const splitSentences = (text: string) =>
 
 export const extractAbstractSentences = (rawText: string, fallbackSummary: string) => {
   const text = rawText.replace(/\s+/g, " ");
-  const abstractStart = text.match(/As AI systems|Dense vector retrieval|The plan existence problem/i);
+  const abstractMatch = /(?:^|\n|\s)(abstract|摘要)\s*[:：]?\s*/i.exec(rawText);
 
-  if (!abstractStart) {
+  if (abstractMatch?.index !== undefined) {
+    const startIndex = abstractMatch.index + abstractMatch[0].length;
+    const following = rawText.slice(startIndex);
+    const sectionBoundary =
+      following.search(/\n\s*(?:1[\s.]+introduction|introduction|1[\s.]+背景|引言|keywords?)\b/i);
+    const abstractWindow = (sectionBoundary > 0 ? following.slice(0, sectionBoundary) : following).replace(/\s+/g, " ");
+    const abstractSentences = splitSentences(abstractWindow).slice(0, 6);
+    if (abstractSentences.length > 0) {
+      return abstractSentences;
+    }
+  }
+
+  if (fallbackSummary.trim()) {
     return splitSentences(fallbackSummary).slice(0, 4);
   }
 
-  const startIndex = abstractStart.index ?? 0;
-  const abstractWindow = text.slice(startIndex, startIndex + 2400);
-  return splitSentences(abstractWindow).slice(0, 6);
+  return splitSentences(text.slice(0, 2400)).slice(0, 6);
 };
 
 export const extractSectionHeadings = (rawText: string) => {
@@ -101,8 +111,38 @@ const extractNamedArtifacts = (text: string) => {
     .slice(0, 4);
 };
 
+const extractIntroducedMethodName = (text: string) => {
+  const patterns = [
+    /(?:introduce|introduced|propose|proposed|present|presented)\s+([A-Z][A-Za-z0-9-]+(?:\s+[A-Z][A-Za-z0-9-]+){0,3})\s*\(([A-Z0-9-]+)\)/i,
+    /(?:introduce|introduced|propose|proposed|present|presented)\s+([A-Z][A-Za-z0-9-]+(?:\s+[A-Z][A-Za-z0-9-]+){0,3})/i,
+  ];
+
+  for (const pattern of patterns) {
+    const match = pattern.exec(text);
+    if (!match) {
+      continue;
+    }
+
+    const name = match[1]?.trim() ?? "";
+    const short = match[2]?.trim() ?? "";
+    if (name && short) {
+      return `${name}（${short}）`;
+    }
+
+    if (name) {
+      return name;
+    }
+  }
+
+  return "";
+};
+
 const inferMethodPaperFocus = (paper: SourcePaperForSummary, context: PaperSummaryContext) => {
   const text = `${paper.title} ${paper.summary} ${context.sectionHeadings.join(" ")}`.toLowerCase();
+
+  if (/diffusion|dit|outlier token|image generation|denoiser/.test(text)) {
+    return "扩散 Transformer 内部异常 token 对生成质量的影响";
+  }
 
   if (/symptom|conversational|triage|diagnos|assessment/.test(text)) {
     return "对话式问诊能否主动补齐关键信息";
@@ -133,6 +173,10 @@ const inferMethodPaperFocus = (paper: SourcePaperForSummary, context: PaperSumma
 
 const extractProblemSignal = (text: string) => {
   const normalized = text.toLowerCase();
+
+  if (/diffusion|dit|outlier token|image generation|denoiser/.test(normalized)) {
+    return "模型内部会冒出一小批权重过高、但局部语义被破坏的异常 token，最后把图像生成过程带偏";
+  }
 
   if (/symptom|conversational|triage|assessment/.test(normalized)) {
     return "现有工具往往只是被动接收症状，缺少像医生一样主动追问的能力";
@@ -224,6 +268,18 @@ const extractMethodFindings = (text: string) => {
     findings.push("真正危险的错误集中在少数高风险问题上");
   }
 
+  if (/reduce outlier artifacts/i.test(normalized)) {
+    findings.push("能减少异常 token 带来的生成伪影");
+  }
+
+  if (/improve generation quality/i.test(normalized)) {
+    findings.push("同时提升最终图像生成质量");
+  }
+
+  if (/outlier-token control/i.test(normalized)) {
+    findings.push("异常 token 控制是更强 DiT 的关键组成");
+  }
+
   return findings.slice(0, 3);
 };
 
@@ -281,18 +337,19 @@ export const buildRuleBasedSummaryDraft = (
   const resultSentence = context.abstractSentences.find((sentence) => /improves|faster|Recall|MAP|F1/i.test(sentence)) ??
     sentenceOr(context.abstractSentences, 2, paper.summary);
   const artifacts = extractNamedArtifacts([paper.title, paper.summary, ...context.abstractSentences].join(" "));
+  const introducedMethodName = extractIntroducedMethodName([paper.summary, ...context.abstractSentences].join(" "));
   const focus = inferMethodPaperFocus(paper, context);
   const problemSignal = extractProblemSignal(`${paper.title} ${paper.summary} ${context.abstractSentences.join(" ")}`);
   const dimensions = extractMethodDimensions(`${paper.summary} ${context.abstractSentences.join(" ")}`);
   const evaluationSetup = extractEvaluationSetup(`${paper.summary} ${context.abstractSentences.join(" ")}`);
   const methodFindings = extractMethodFindings(`${paper.summary} ${context.abstractSentences.join(" ")}`);
-  const leadArtifact = artifacts[0];
-  const supportingArtifact = artifacts[1];
+  const leadArtifact = introducedMethodName || artifacts[0];
+  const supportingArtifact = artifacts.find((artifact) => artifact !== leadArtifact);
   const methodLead = leadArtifact
     ? supportingArtifact
-      ? `作者提出 ${leadArtifact}，并配套 ${supportingArtifact}，把 ${focus} 从总分里单独拆出来衡量。`
-      : `作者提出 ${leadArtifact} 这套方法，重点不是单点刷分，而是把 ${focus} 拆开来看。`
-    : `作者的核心做法不是只改一个局部模块，而是重新组织整套系统，让 ${focus} 能被单独衡量和比较。`;
+      ? `作者提出 ${leadArtifact}，并配套 ${supportingArtifact}，分别处理 ${focus} 里的关键环节。`
+      : `作者提出 ${leadArtifact} 这套方法，直接针对 ${focus} 里最容易失稳的部分动手。`
+    : `作者的核心做法不是只改一个局部模块，而是重新组织整套系统，直接处理 ${focus} 里最关键的失稳环节。`;
   const dimensionSentence =
     dimensions.length > 0
       ? `它重点比较的是 ${dimensions.join("、")} 这些变量，想看清安全收益到底来自哪里。`
@@ -302,8 +359,8 @@ export const buildRuleBasedSummaryDraft = (
       ? `实验设置也不是只看一条曲线，而是直接比较 ${evaluationSetup.join("、")}。`
       : "";
   const valueLead = leadArtifact
-    ? `${leadArtifact} 的真正价值，不只是给出一个新系统，而是把 ${focus} 这件事拆成了可以单独验证的环节。`
-    : `这项工作的真正价值，不只是给出一个新系统，而是把 ${focus} 这件事拆成了可以单独验证的环节。`;
+    ? `${leadArtifact} 最关键的贡献，不是再堆一个更大的系统，而是把 ${focus} 里真正会失稳的环节拆开验证。`
+    : `这项工作的关键贡献，不是再堆一个更大的系统，而是把 ${focus} 里真正会失稳的环节拆开验证。`;
   const findingSentence = methodFindings.length > 0 ? methodFindings.join("；") : "";
 
   return {
@@ -311,10 +368,15 @@ export const buildRuleBasedSummaryDraft = (
     hook: `这篇论文盯上的，不是表面分数，而是 ${focus} 这个真正决定系统好不好用的核心问题。`,
     problem: `作者想解决的是：${problemSignal}。真正决定系统能不能落地的，往往是 ${focus}。`,
     method: [methodLead, dimensionSentence, setupSentence].filter(Boolean).join(" "),
-    value: `${valueLead} ${findingSentence || (resultSentence ? "论文还用实验说明，这种差别不是抽象概念，而是会真实改变系统表现和部署决策。" : "")}`.trim(),
+    value: `${valueLead} ${
+      findingSentence ||
+      (resultSentence
+        ? "实验进一步说明，这种差别会真实改变系统表现，而不是只影响一个抽象总分。"
+        : "")
+    }`.trim(),
     ending: methodFindings[0]
-      ? `这篇论文真正说明的是：${methodFindings[0]}，而 ${focus} 不能再被粗暴压成一个总分。`
-      : `这篇论文真正说明的是：${focus} 必须被拆开分析，不能只看最后一个漂亮总分。`,
+      ? `这篇论文最后说明的是：${methodFindings[0]}，所以 ${focus} 不能再被粗暴压成一个总分。`
+      : `这篇论文最后说明的是：${focus} 必须被拆开分析，不能只看最后一个漂亮总分。`,
     bullets: [
       leadArtifact ? `核心方法：${leadArtifact}` : "核心方法：系统级重构",
       supportingArtifact ? `关键配套：${supportingArtifact}` : `核心场景：${focus}`,

@@ -35,10 +35,28 @@ const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 const isRetryableStatus = (status: number) => status === 429 || status >= 500;
 
+const parseRetryAfterMs = (value: string | null) => {
+  if (!value) {
+    return null;
+  }
+
+  const seconds = Number.parseFloat(value);
+  if (Number.isFinite(seconds) && seconds >= 0) {
+    return Math.round(seconds * 1000);
+  }
+
+  const timestamp = Date.parse(value);
+  if (!Number.isNaN(timestamp)) {
+    return Math.max(0, timestamp - Date.now());
+  }
+
+  return null;
+};
+
 const fetchTextWithRetry = async ({
   url,
   label,
-  attempts = 4,
+  attempts = 6,
 }: {
   url: string;
   label: string;
@@ -54,10 +72,16 @@ const fetchTextWithRetry = async ({
 
     lastStatus = response.status;
     if (!isRetryableStatus(response.status) || attempt === attempts - 1) {
-      throw new Error(`Failed to fetch ${label}: ${response.status}`);
+      const retryHint =
+        response.status === 429
+          ? " arXiv returned 429. Wait a bit and retry, or reduce the rate of new-paper fetches."
+          : "";
+      throw new Error(`Failed to fetch ${label}: ${response.status}${retryHint}`);
     }
 
-    await sleep(700 * (attempt + 1));
+    const retryAfterMs = parseRetryAfterMs(response.headers.get("retry-after"));
+    const defaultDelayMs = response.status === 429 ? 2500 * (attempt + 1) : 900 * (attempt + 1);
+    await sleep(Math.max(retryAfterMs ?? 0, defaultDelayMs));
   }
 
   throw new Error(`Failed to fetch ${label}: ${lastStatus}`);
@@ -66,7 +90,7 @@ const fetchTextWithRetry = async ({
 const fetchBufferWithRetry = async ({
   url,
   label,
-  attempts = 4,
+  attempts = 6,
 }: {
   url: string;
   label: string;
@@ -82,10 +106,16 @@ const fetchBufferWithRetry = async ({
 
     lastStatus = response.status;
     if (!isRetryableStatus(response.status) || attempt === attempts - 1) {
-      throw new Error(`Failed to download ${label}: ${response.status}`);
+      const retryHint =
+        response.status === 429
+          ? " arXiv returned 429. Wait a bit and retry, or reduce the rate of new-paper fetches."
+          : "";
+      throw new Error(`Failed to download ${label}: ${response.status}${retryHint}`);
     }
 
-    await sleep(700 * (attempt + 1));
+    const retryAfterMs = parseRetryAfterMs(response.headers.get("retry-after"));
+    const defaultDelayMs = response.status === 429 ? 2500 * (attempt + 1) : 900 * (attempt + 1);
+    await sleep(Math.max(retryAfterMs ?? 0, defaultDelayMs));
   }
 
   throw new Error(`Failed to download ${label}: ${lastStatus}`);
@@ -234,13 +264,15 @@ export const fetchArxivPaperById = async (arxivId: string) => {
 export const fetchLatestArxivPapers = async ({
   category,
   limit,
+  start = 0,
 }: {
   category: string;
   limit: number;
+  start?: number;
 }) => {
   const queryUrl =
     `http://export.arxiv.org/api/query?search_query=cat:${encodeURIComponent(category)}` +
-    `&sortBy=submittedDate&sortOrder=descending&max_results=${limit}`;
+    `&sortBy=submittedDate&sortOrder=descending&start=${start}&max_results=${limit}`;
 
   const xml = await fetchTextWithRetry({
     url: queryUrl,
