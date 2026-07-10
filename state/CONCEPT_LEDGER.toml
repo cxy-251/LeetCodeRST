@@ -1,34 +1,199 @@
 [meta]
 version = 1
-last_problem = 0
+last_problem = 3
 
-# 本文件保存跨题、跨对话的教学状态。
-# 每个知识点使用稳定的唯一 ID，例如：
-#
-# [concepts."python.enumerate"]
-# kind = "syntax"
-# first_problem = 1
-# last_problem = 3
-# occurrences = 2
-# teaching_state = "reinforcing"
-# difficult = false
-#
-# [concepts."algorithm.dynamic_programming.state_design"]
-# kind = "algorithm"
-# first_problem = 53
-# last_problem = 72
-# occurrences = 3
-# teaching_state = "refresh"
-# difficult = true
-#
 # teaching_state 可用值：
 # introduced   首次完整解释
-# reinforcing  后续短提醒
+# reinforcing  后续一到数次短提醒
 # familiar     普通使用无需解释
 # refresh      长间隔或新边界，需要重新提醒
 # mastered     仅解释特殊语义、性能或风险
-#
-# difficult = true 表示该知识属于需要周期性复现的疑难算法、
-# 状态设计、证明或高级数据结构，不能按普通语法快速衰减。
 
-[concepts]
+[concepts."algorithm.complement_lookup"]
+kind = "algorithm"
+first_problem = 1
+last_problem = 1
+occurrences = 1
+teaching_state = "introduced"
+difficult = false
+note = "把两数之和转化为查询 target - value。"
+
+[concepts."data_structure.hash_map"]
+kind = "data_structure"
+first_problem = 1
+last_problem = 3
+occurrences = 2
+teaching_state = "reinforcing"
+difficult = false
+note = "0001 保存数值到下标，0003 保存字符到最后位置。"
+
+[concepts."c.open_addressing_hash_table"]
+kind = "data_structure"
+first_problem = 1
+last_problem = 1
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "C 无标准哈希表，0001 展示最小开放寻址实现。"
+
+[concepts."cpp.unordered_map_lookup"]
+kind = "library"
+first_problem = 1
+last_problem = 1
+occurrences = 1
+teaching_state = "introduced"
+difficult = false
+note = "find 返回迭代器，end 表示未找到。"
+
+[concepts."python.dict_membership"]
+kind = "library"
+first_problem = 1
+last_problem = 3
+occurrences = 2
+teaching_state = "reinforcing"
+difficult = false
+note = "0001 使用 in，0003 使用 get 提供默认位置。"
+
+[concepts."java.hash_map_safe_lookup"]
+kind = "library"
+first_problem = 1
+last_problem = 3
+occurrences = 2
+teaching_state = "reinforcing"
+difficult = false
+note = "containsKey、getOrDefault 与键缺失语义。"
+
+[concepts."rust.hash_map_lookup_and_entry"]
+kind = "library"
+first_problem = 1
+last_problem = 1
+occurrences = 1
+teaching_state = "introduced"
+difficult = false
+note = "get 返回 Option，entry.or_insert 保留旧位置。"
+
+[concepts."go.map_comma_ok"]
+kind = "syntax"
+first_problem = 1
+last_problem = 1
+occurrences = 1
+teaching_state = "introduced"
+difficult = false
+note = "逗号 ok 区分键不存在与零值。"
+
+[concepts."typescript.map_optional_lookup"]
+kind = "library"
+first_problem = 1
+last_problem = 3
+occurrences = 2
+teaching_state = "reinforcing"
+difficult = false
+note = "Map.get 返回 number | undefined，下标 0 不能用真假值判断。"
+
+[concepts."csharp.dictionary_try_get_value"]
+kind = "library"
+first_problem = 1
+last_problem = 3
+occurrences = 2
+teaching_state = "reinforcing"
+difficult = false
+note = "TryGetValue 同时返回是否存在与对应值。"
+
+[concepts."julia.dict_and_one_based_index"]
+kind = "syntax"
+first_problem = 1
+last_problem = 3
+occurrences = 2
+teaching_state = "reinforcing"
+difficult = false
+note = "Dict 查询及 Julia 一基索引与题目零基接口的差异。"
+
+[concepts."r.environment_hash_map"]
+kind = "data_structure"
+first_problem = 1
+last_problem = 3
+occurrences = 2
+teaching_state = "reinforcing"
+difficult = false
+note = "使用 environment 的哈希绑定模拟键值映射。"
+
+[concepts."data_structure.singly_linked_list"]
+kind = "data_structure"
+first_problem = 2
+last_problem = 2
+occurrences = 1
+teaching_state = "introduced"
+difficult = false
+note = "节点保存 val 与 next，后续链表题复用平台类型约定。"
+
+[concepts."technique.dummy_node"]
+kind = "algorithm"
+first_problem = 2
+last_problem = 2
+occurrences = 1
+teaching_state = "introduced"
+difficult = false
+note = "使用固定哑节点统一首次插入与后续追加。"
+
+[concepts."algorithm.digit_carry_simulation"]
+kind = "algorithm"
+first_problem = 2
+last_problem = 2
+occurrences = 1
+teaching_state = "introduced"
+difficult = false
+note = "当前结果位由两输入位和上一位 carry 决定。"
+
+[concepts."rust.option_box_linked_list"]
+kind = "syntax"
+first_problem = 2
+last_problem = 2
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "Option<Box<ListNode>>、take 与所有权移动。"
+
+[concepts."julia.mutable_recursive_node"]
+kind = "syntax"
+first_problem = 2
+last_problem = 2
+occurrences = 1
+teaching_state = "introduced"
+difficult = false
+note = "Julia 链表统一使用 mutable struct。"
+
+[concepts."r.environment_reference_node"]
+kind = "syntax"
+first_problem = 2
+last_problem = 2
+occurrences = 1
+teaching_state = "introduced"
+difficult = false
+note = "R 链表统一使用 environment 获得引用语义。"
+
+[concepts."algorithm.sliding_window"]
+kind = "algorithm"
+first_problem = 3
+last_problem = 3
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "两个单调边界维护连续合法区间，后续出现时周期复现。"
+
+[concepts."algorithm.last_seen_boundary_jump"]
+kind = "algorithm"
+first_problem = 3
+last_problem = 3
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "字符最后位置允许 left 直接跳到重复位置之后。"
+
+[concepts."string.character_iteration_units"]
+kind = "syntax"
+first_problem = 3
+last_problem = 3
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "区分字节、UTF-16 代码单元、码点与字形簇。"
