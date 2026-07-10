@@ -9,30 +9,30 @@ content_language = "zh-CN"
 code_comment_language = "zh-CN"
 
 [progress]
-next_problem = 4
-completed_count = 3
-completed_ranges = ["0001-0003"]
+next_problem = 7
+completed_count = 6
+completed_ranges = ["0001-0006"]
 premium_skipped = []
 blocked = []
 needs_revision = []
 
 [last_batch]
 status = "completed"
-start = 1
-end = 3
+start = 4
+end = 6
 completed = 3
 premium_skipped = []
-summary = "完成哈希表、链表逐位加法和滑动窗口三份十语言 RST 教程。"
+summary = "完成二分分割、中点扩展和周期索引三份十语言 RST 教程。"
 
 [next_batch]
 status = "ready"
-start = 4
-end = 6
-purpose = "继续按题号推进，并根据前三题实际效果调整篇幅与注释衰减。"
+start = 7
+end = 9
+purpose = "继续按题号推进，控制关联题目数量并观察语法注释衰减。"
 
 [next_action]
-summary = "用户检查 0001-0003 的 RST 效果后，从 LeetCode 0004 继续。"
+summary = "从 LeetCode 0007 开始；单题关联通常 1 至 3 个，最多 5 个。"
 
 [last_update]
-summary = "Created LeetCode 0001-0003 lessons and synchronized the concept ledger."
-content_commit = "99c5ef8eafc155fc245a9c8d3bcd442f1c0b5af1"
+summary = "Created LeetCode 0004-0006 lessons and added bounded related-problem rules."
+content_commit = "5b99e19bf67a6ad6b1d8112a418fff9c7e26350d"
