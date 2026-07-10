@@ -3,7 +3,8 @@ name = "leetcode-multilang-rst"
 phase = "lessons_started"
 format = "rst"
 ordering = "leetcode_number_ascending"
-direct_main = true
+automation_workflow = "single_problem_fixed_branch_pr"
+automation_branch = "automation/leetcode-current"
 build_required = false
 content_language = "zh-CN"
 code_comment_language = "zh-CN"
@@ -31,7 +32,7 @@ end = 8
 purpose = "一次只精写一道题，以 RST 教学质量为首要目标。"
 
 [next_action]
-summary = "从 LeetCode 0008 开始；先读取自动化质量门和最近至少 5 道完整题目。"
+summary = "从 LeetCode 0008 开始；复用 automation/leetcode-current 固定分支，只创建一个非 Draft PR。"
 
 [last_update]
-summary = "LeetCode 0007 已完成；后续自动任务使用单题原子提交直接快进 main。"
+summary = "自动任务已统一为单题固定分支、单 PR、squash merge 流程。"
