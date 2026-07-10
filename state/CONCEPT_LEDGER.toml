@@ -1,6 +1,6 @@
 [meta]
 version = 1
-last_problem = 7
+last_problem = 8
 
 # teaching_state 可用值：
 # introduced   首次完整解释
@@ -192,11 +192,11 @@ note = "字符最后位置允许 left 直接跳到重复位置之后。"
 [concepts."string.character_iteration_units"]
 kind = "syntax"
 first_problem = 3
-last_problem = 6
-occurrences = 3
+last_problem = 8
+occurrences = 4
 teaching_state = "reinforcing"
 difficult = true
-note = "0003、0005、0006 区分字节、UTF-16 代码单元、码点与字形簇。"
+note = "0003、0005、0006 区分字节、UTF-16 代码单元、码点与字形簇；0008 只识别 ASCII 空格、符号和十进制数字。"
 
 [concepts."algorithm.binary_search_partition"]
 kind = "algorithm"
@@ -273,20 +273,20 @@ note = "使用 StringBuilder、Vec、列表或字符缓冲区避免反复创建�
 [concepts."algorithm.decimal_digit_pop_push"]
 kind = "algorithm"
 first_problem = 7
-last_problem = 7
-occurrences = 1
-teaching_state = "introduced"
+last_problem = 8
+occurrences = 2
+teaching_state = "reinforcing"
 difficult = false
-note = "用向零截断的商删除最低位，用余数弹出最低位，再乘十压入结果。"
+note = "0007 从整数弹出末位再压入结果；0008 从字符读取数字再压入十进制累积值。"
 
 [concepts."proof.pre_operation_overflow_guard"]
 kind = "proof"
 first_problem = 7
-last_problem = 7
-occurrences = 1
-teaching_state = "introduced"
+last_problem = 8
+occurrences = 2
+teaching_state = "reinforcing"
 difficult = true
-note = "在乘十和加末位之前，以 INT_MAX/10、INT_MIN/10 和末位 7/-8 判断安全范围。"
+note = "0007 用 INT_MAX/10 与末位判断；0008 用 value > (limit - digit)/10 在乘十前钳制。"
 
 [concepts."numeric.truncating_division_and_remainder"]
 kind = "syntax"
@@ -296,3 +296,30 @@ occurrences = 1
 teaching_state = "introduced"
 difficult = true
 note = "比较十种语言的负数整除与余数语义；Python、R、TypeScript、Julia 显式向零截断。"
+
+[concepts."algorithm.ordered_string_parse_phases"]
+kind = "algorithm"
+first_problem = 8
+last_problem = 8
+occurrences = 1
+teaching_state = "introduced"
+difficult = false
+note = "按前导空格、可选符号、连续数字三个不可回退阶段解析字符串。"
+
+[concepts."proof.sign_dependent_clamp_limit"]
+kind = "proof"
+first_problem = 8
+last_problem = 8
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "正数绝对值上限为 2147483647，负数为 2147483648，压入前按当前符号选择边界。"
+
+[concepts."string.ascii_digit_scan"]
+kind = "syntax"
+first_problem = 8
+last_problem = 8
+occurrences = 1
+teaching_state = "introduced"
+difficult = false
+note = "只接受 ASCII '0' 到 '9'；Rust、Go、Julia 可按字节扫描，其他语言按字符或代码单元比较。"

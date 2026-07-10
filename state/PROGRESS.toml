@@ -10,29 +10,29 @@ content_language = "zh-CN"
 code_comment_language = "zh-CN"
 
 [progress]
-next_problem = 8
-completed_count = 7
-completed_ranges = ["0001-0007"]
+next_problem = 9
+completed_count = 8
+completed_ranges = ["0001-0008"]
 premium_skipped = []
 blocked = []
 needs_revision = []
 
 [last_batch]
 status = "completed"
-start = 7
-end = 7
+start = 8
+end = 8
 completed = 1
 premium_skipped = []
-summary = "完成 Reverse Integer 单题十语言 RST 教程，重点覆盖向零截断、负数余数与压入前溢出判断。"
+summary = "完成 String to Integer (atoi) 单题十语言 RST 教程，重点覆盖有序扫描阶段、停止条件、十进制累积与 32 位溢出钳制。"
 
 [next_batch]
 status = "ready"
-start = 8
-end = 8
+start = 9
+end = 9
 purpose = "一次只精写一道题，以 RST 教学质量为首要目标。"
 
 [next_action]
-summary = "从 LeetCode 0008 开始；复用 automation/leetcode-current 固定分支，只创建一个非 Draft PR。"
+summary = "从 LeetCode 0009 开始；复用 automation/leetcode-current 固定分支，只创建一个非 Draft PR。"
 
 [last_update]
-summary = "自动任务已统一为单题固定分支、单 PR、squash merge 流程。"
+summary = "LeetCode 0008 已完成；自动任务继续使用单题固定分支、单 PR、squash merge 流程。"
