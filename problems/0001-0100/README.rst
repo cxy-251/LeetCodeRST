@@ -14,11 +14,12 @@ LeetCode 0001–0100
 #. `0006. Zigzag Conversion <0006-zigzag-conversion.rst>`_
 #. `0007. Reverse Integer <0007-reverse-integer.rst>`_
 #. `0008. String to Integer (atoi) <0008-string-to-integer-atoi.rst>`_
+#. `0009. Palindrome Number <0009-palindrome-number.rst>`_
 
 下一题
 ------
 
-``0009. Palindrome Number``
+``0010. Regular Expression Matching``
 
 阅读顺序
 --------

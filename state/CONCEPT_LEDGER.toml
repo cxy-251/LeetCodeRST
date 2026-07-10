@@ -1,6 +1,6 @@
 [meta]
 version = 1
-last_problem = 8
+last_problem = 9
 
 # teaching_state 可用值：
 # introduced   首次完整解释
@@ -246,11 +246,11 @@ note = "枚举字符中心和字符间隙中心，向两侧扩展得到最长回
 [concepts."proof.palindrome_center_symmetry"]
 kind = "proof"
 first_problem = 5
-last_problem = 5
-occurrences = 1
-teaching_state = "introduced"
+last_problem = 9
+occurrences = 2
+teaching_state = "reinforcing"
 difficult = false
-note = "每个回文子串都有唯一中心，枚举两类中心不会漏解。"
+note = "0005 枚举字符串回文中心；0009 比较整数十进制表示的镜像两半。"
 
 [concepts."algorithm.periodic_index_mapping"]
 kind = "algorithm"
@@ -273,11 +273,11 @@ note = "使用 StringBuilder、Vec、列表或字符缓冲区避免反复创建�
 [concepts."algorithm.decimal_digit_pop_push"]
 kind = "algorithm"
 first_problem = 7
-last_problem = 8
-occurrences = 2
-teaching_state = "reinforcing"
+last_problem = 9
+occurrences = 3
+teaching_state = "familiar"
 difficult = false
-note = "0007 从整数弹出末位再压入结果；0008 从字符读取数字再压入十进制累积值。"
+note = "0007 完整反转整数，0008 从字符累积十进制值，0009 只反转数字后一半。"
 
 [concepts."proof.pre_operation_overflow_guard"]
 kind = "proof"
@@ -291,11 +291,11 @@ note = "0007 用 INT_MAX/10 与末位判断；0008 用 value > (limit - digit)/1
 [concepts."numeric.truncating_division_and_remainder"]
 kind = "syntax"
 first_problem = 7
-last_problem = 7
-occurrences = 1
-teaching_state = "introduced"
+last_problem = 9
+occurrences = 2
+teaching_state = "reinforcing"
 difficult = true
-note = "比较十种语言的负数整除与余数语义；Python、R、TypeScript、Julia 显式向零截断。"
+note = "0007 比较负数整除差异；0009 快速排除后只处理非负整数，TypeScript 仍需 Math.trunc。"
 
 [concepts."algorithm.ordered_string_parse_phases"]
 kind = "algorithm"
@@ -323,3 +323,30 @@ occurrences = 1
 teaching_state = "introduced"
 difficult = false
 note = "只接受 ASCII '0' 到 '9'；Rust、Go、Julia 可按字节扫描，其他语言按字符或代码单元比较。"
+
+[concepts."algorithm.reverse_half_digits"]
+kind = "algorithm"
+first_problem = 9
+last_problem = 9
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "只把右半数字逆序到 reversed_half，以 x > reversed_half 判断两侧交叉。"
+
+[concepts."proof.odd_center_digit_removal"]
+kind = "proof"
+first_problem = 9
+last_problem = 9
+occurrences = 1
+teaching_state = "introduced"
+difficult = false
+note = "奇数位整数中，reversed_half / 10 删除无需配对的中间数字。"
+
+[concepts."proof.overflow_avoidance_by_partial_construction"]
+kind = "proof"
+first_problem = 9
+last_problem = 9
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "只构造约一半位数的反转值，从结构上避免完整整数反转溢出。"

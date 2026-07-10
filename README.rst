@@ -68,8 +68,9 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
 #. `0006. Zigzag Conversion <problems/0001-0100/0006-zigzag-conversion.rst>`_
 #. `0007. Reverse Integer <problems/0001-0100/0007-reverse-integer.rst>`_
 #. `0008. String to Integer (atoi) <problems/0001-0100/0008-string-to-integer-atoi.rst>`_
+#. `0009. Palindrome Number <problems/0001-0100/0009-palindrome-number.rst>`_
 
-下一题是 ``0009. Palindrome Number``。实际进度以 ``state/PROGRESS.toml`` 为准。
+下一题是 ``0010. Regular Expression Matching``。实际进度以 ``state/PROGRESS.toml`` 为准。
 
 开始工作
 --------
@@ -95,9 +96,9 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
 当前状态
 --------
 
-0001 至 0008 已完成。当前样板已经覆盖哈希表、链表、滑动窗口、二分分割、回文
-中心扩展、周期索引、整数逐位反转，以及字符串到 32 位整数的阶段化扫描与溢出钳制。
-下一题从 0009 开始；自动任务每次只精写一道题，并以 RST 教学质量高于题量。
+0001 至 0009 已完成。当前样板已经覆盖哈希表、链表、滑动窗口、二分分割、回文
+中心扩展、周期索引、整数逐位反转、字符串到整数的阶段化扫描，以及整数回文的半反转
+停止不变量。下一题从 0010 开始；自动任务每次只精写一道题，并以 RST 教学质量高于题量。
 
 定时自动任务复用唯一固定分支 ``automation/leetcode-current``，每轮只创建一个非 Draft PR，
 通过质量检查后 squash merge 到 ``main``。禁止题号分支、时间戳分支和额外 finalize PR。
@@ -126,7 +127,7 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
        README.rst
        0001-two-sum.rst
        ...
-       0008-string-to-integer-atoi.rst
+       0009-palindrome-number.rst
    state/
      PROGRESS.toml
      CONCEPT_LEDGER.toml
