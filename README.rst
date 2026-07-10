@@ -16,9 +16,12 @@ LeetCode 多语言 RST 学习仓库
 内容语言
 --------
 
-题目 RST 的正文、图注、提示、警告、自检答案和代码教学注释统一使用简体中文。LeetCode 官方英文题名、文件 slug、代码标识符、关键字、API、类型名和标准库名称保留英文。
+题目 RST 的正文、图注、提示、警告、自检答案和代码教学注释统一使用简体中文。
+LeetCode 官方英文题名、文件 slug、代码标识符、关键字、API、类型名和标准库名称
+保留英文。
 
-代码变量、函数和类型使用各语言惯用的英文命名，不使用中文标识符。完整规则见 ``docs/CONTENT_LANGUAGE_POLICY.rst``。
+代码变量、函数和类型使用各语言惯用的英文命名，不使用中文标识符。完整规则见
+``docs/CONTENT_LANGUAGE_POLICY.rst``。
 
 固定核心语言
 ------------
@@ -36,7 +39,8 @@ LeetCode 多语言 RST 学习仓库
 * Julia；
 * R。
 
-JavaScript 运行时知识在 TypeScript 章节中教学；SQL 用于数据库题；Bash 或 POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
+JavaScript 运行时知识在 TypeScript 章节中教学；SQL 用于数据库题；Bash 或
+POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
 
 解法与基础类型
 --------------
@@ -49,7 +53,18 @@ JavaScript 运行时知识在 TypeScript 章节中教学；SQL 用于数据库�
 * 语法和 API 解释写在代码块内，代码行优先不超过 88 列；
 * 链表、树、图、动态规划和回溯等内容可以使用 Mermaid 表达状态变化。
 
-完整规则见 ``docs/SOLUTION_AND_TYPES_POLICY.rst`` 和 ``docs/RST_STYLE_GUIDE.rst``。
+完整规则见 ``docs/SOLUTION_AND_TYPES_POLICY.rst`` 和
+``docs/RST_STYLE_GUIDE.rst``。
+
+首批题目
+--------
+
+#. `0001. Two Sum <problems/0001-0100/0001-two-sum.rst>`_
+#. `0002. Add Two Numbers <problems/0001-0100/0002-add-two-numbers.rst>`_
+#. `0003. Longest Substring Without Repeating Characters <problems/0001-0100/0003-longest-substring-without-repeating-characters.rst>`_
+
+下一题是 ``0004. Median of Two Sorted Arrays``。实际进度以
+``state/PROGRESS.toml`` 为准。
 
 开始工作
 --------
@@ -66,12 +81,15 @@ JavaScript 运行时知识在 TypeScript 章节中教学；SQL 用于数据库�
 #. ``state/CONCEPT_LEDGER.toml``
 #. 最近至少 5 道已完成题目
 
-``AGENTS.md`` 是项目的最高执行规则。仓库文件是跨对话交接依据，不能依赖上一段对话中的隐含记忆。
+``AGENTS.md`` 是项目的最高执行规则。仓库文件是跨对话交接依据，不能依赖上一段
+对话中的隐含记忆。
 
 当前状态
 --------
 
-基础规则已经完成，已经具备开始编写 LeetCode 题目的条件。下一步从 LeetCode 0001 开始制作少量样板题，先稳定十种核心语言的写法、主解法与对照解法的比例、中文注释密度、基础类型复用和 Mermaid 表达，再扩大批次。
+0001 至 0003 已完成，用于校准十种核心语言、主解法与对照解法、中文代码注释、
+基础类型复用和 Mermaid 表达。用户检查这三份 RST 的实际阅读效果后，从 0004
+继续按编号推进。
 
 本项目直接在 ``main`` 上推进。除非用户明确要求，不创建分支或 PR。
 
@@ -92,6 +110,10 @@ JavaScript 运行时知识在 TypeScript 章节中教学；SQL 用于数据库�
    problems/
      README.rst
      0001-0100/
+       README.rst
+       0001-two-sum.rst
+       0002-add-two-numbers.rst
+       0003-longest-substring-without-repeating-characters.rst
    state/
      PROGRESS.toml
      CONCEPT_LEDGER.toml
@@ -99,9 +121,11 @@ JavaScript 运行时知识在 TypeScript 章节中教学；SQL 用于数据库�
 文档形式
 --------
 
-题目正文和项目说明以 RST 为主。仓库不建立 Sphinx、文档站点、CI 构建或发布系统，内容以直接阅读源文件为目标。
+题目正文和项目说明以 RST 为主。仓库不建立 Sphinx、文档站点、CI 构建或发布
+系统，内容以直接阅读源文件为目标。
 
 仓库前身
 --------
 
-本仓库原用于 ``paperToVideo`` 项目。改造前 ``main`` 的最终状态保存在 ``archive/paperToVideo-before-reset`` 分支中，原有阶段分支和 Git 历史继续保留。
+本仓库原用于 ``paperToVideo`` 项目。改造前 ``main`` 的最终状态保存在
+``archive/paperToVideo-before-reset`` 分支中，原有阶段分支和 Git 历史继续保留。
