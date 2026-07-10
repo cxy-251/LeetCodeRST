@@ -34,5 +34,4 @@ purpose = "一次只精写一道题，以 RST 教学质量为首要目标。"
 summary = "从 LeetCode 0008 开始；先读取自动化质量门和最近至少 5 道完整题目。"
 
 [last_update]
-summary = "Created LeetCode 0007 lesson and advanced the single-problem automation workflow."
-content_commit = "36e578e1b9e5b4664615a58a0a36c4062e2d5ec9"
+summary = "LeetCode 0007 已完成；后续自动任务使用单题原子提交直接快进 main。"
