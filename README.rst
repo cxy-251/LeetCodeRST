@@ -83,6 +83,7 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
 #. ``docs/CONTENT_LANGUAGE_POLICY.rst``
 #. ``docs/RST_STYLE_GUIDE.rst``
 #. ``docs/AUTOMATION_QUALITY_GATE.rst``
+#. ``docs/AUTOMATION_DIRECT_MAIN_POLICY.rst``
 #. ``state/PROGRESS.toml``
 #. ``state/CONCEPT_LEDGER.toml``
 #. 最近至少 5 道已完成题目
@@ -97,8 +98,9 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
 中心扩展、周期索引和整数逐位反转。下一题从 0008 开始；自动任务每次只精写一道题，
 并以 RST 教学质量高于题量。
 
-本项目当前直接在 ``main`` 上推进。用户明确授权的自动任务按
-``docs/AUTOMATION_QUALITY_GATE.rst`` 使用单题分支、PR 与 squash merge。
+本项目当前直接在 ``main`` 上推进。定时自动任务禁止创建分支、PR 或 Draft；只有当前题、
+根 README、范围索引、进度和知识账本全部通过检查后，才允许用一个原子提交快进
+``main``。完整规则见 ``docs/AUTOMATION_DIRECT_MAIN_POLICY.rst``。
 
 文件组织
 --------
@@ -115,6 +117,7 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
      CONTENT_LANGUAGE_POLICY.rst
      RST_STYLE_GUIDE.rst
      AUTOMATION_QUALITY_GATE.rst
+     AUTOMATION_DIRECT_MAIN_POLICY.rst
      PROBLEM_TEMPLATE.rst
    problems/
      README.rst
