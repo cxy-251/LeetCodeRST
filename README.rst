@@ -88,8 +88,9 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
 #. ``state/CONCEPT_LEDGER.toml``
 #. 最近至少 5 道已完成题目
 
-``AGENTS.md`` 是项目的最高执行规则。仓库文件是跨对话交接依据，不能依赖上一段
-对话中的隐含记忆。
+``AGENTS.md`` 是普通人工协作的最高执行规则。用户明确授权的定时自动任务采用
+``docs/AUTOMATION_QUALITY_GATE.rst`` 与 ``docs/AUTOMATION_DIRECT_MAIN_POLICY.rst``
+规定的单题固定分支流程。仓库文件是跨对话交接依据，不能依赖上一段对话中的隐含记忆。
 
 当前状态
 --------
@@ -98,9 +99,9 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
 中心扩展、周期索引和整数逐位反转。下一题从 0008 开始；自动任务每次只精写一道题，
 并以 RST 教学质量高于题量。
 
-本项目当前直接在 ``main`` 上推进。定时自动任务禁止创建分支、PR 或 Draft；只有当前题、
-根 README、范围索引、进度和知识账本全部通过检查后，才允许用一个原子提交快进
-``main``。完整规则见 ``docs/AUTOMATION_DIRECT_MAIN_POLICY.rst``。
+定时自动任务永远只复用 ``automation/leetcode-current`` 一个固定分支，每轮创建一个
+非 Draft PR，质量检查通过后 squash merge 到 ``main``。禁止创建题号分支、时间戳分支、
+批次分支或额外的 finalize PR。完整规则见 ``docs/AUTOMATION_DIRECT_MAIN_POLICY.rst``。
 
 文件组织
 --------
