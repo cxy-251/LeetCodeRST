@@ -1,28 +1,38 @@
 [project]
 name = "leetcode-multilang-rst"
-phase = "foundation_complete"
+phase = "lessons_started"
 format = "rst"
 ordering = "leetcode_number_ascending"
 direct_main = true
 build_required = false
+content_language = "zh-CN"
+code_comment_language = "zh-CN"
 
 [progress]
-next_problem = 1
-completed_count = 0
-completed_ranges = []
+next_problem = 4
+completed_count = 3
+completed_ranges = ["0001-0003"]
 premium_skipped = []
 blocked = []
 needs_revision = []
 
-[current_batch]
-status = "ready"
+[last_batch]
+status = "completed"
 start = 1
 end = 3
-purpose = "Create the first lessons and calibrate main versus contrast solutions, ten-language coverage, inline teaching comments, shared types, and Mermaid usage."
+completed = 3
+premium_skipped = []
+summary = "完成哈希表、链表逐位加法和滑动窗口三份十语言 RST 教程。"
+
+[next_batch]
+status = "ready"
+start = 4
+end = 6
+purpose = "继续按题号推进，并根据前三题实际效果调整篇幅与注释衰减。"
 
 [next_action]
-summary = "Create LeetCode 0001-0003 as the first RST teaching batch, then update this file and the concept ledger."
+summary = "用户检查 0001-0003 的 RST 效果后，从 LeetCode 0004 继续。"
 
 [last_update]
-summary = "Defined solution selection, standard-library versus teaching implementations, code comment line-width rules, Mermaid usage, and shared foundation-type reuse."
-content_commit = "a0fd90f0433ab0a2afc45f1dd3a44b7e5b82dc14"
+summary = "Created LeetCode 0001-0003 lessons and synchronized the concept ledger."
+content_commit = "99c5ef8eafc155fc245a9c8d3bcd442f1c0b5af1"
