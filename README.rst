@@ -13,6 +13,13 @@ LeetCode 多语言 RST 学习仓库
 * 题目内容使用原创重述，不复制平台完整题干与官方题解；
 * 无法访问的 Premium 题目登记后跳过，后续有合法材料时再补写。
 
+内容语言
+--------
+
+题目 RST 的正文、图注、提示、警告、自检答案和代码教学注释统一使用简体中文。LeetCode 官方英文题名、文件 slug、代码标识符、关键字、API、类型名和标准库名称保留英文。
+
+代码变量、函数和类型使用各语言惯用的英文命名，不使用中文标识符。完整规则见 ``docs/CONTENT_LANGUAGE_POLICY.rst``。
+
 固定核心语言
 ------------
 
@@ -53,6 +60,7 @@ JavaScript 运行时知识在 TypeScript 章节中教学；SQL 用于数据库�
 #. ``docs/PROJECT_VISION.rst``
 #. ``docs/LANGUAGE_SCOPE.rst``
 #. ``docs/SOLUTION_AND_TYPES_POLICY.rst``
+#. ``docs/CONTENT_LANGUAGE_POLICY.rst``
 #. ``docs/RST_STYLE_GUIDE.rst``
 #. ``state/PROGRESS.toml``
 #. ``state/CONCEPT_LEDGER.toml``
@@ -63,7 +71,7 @@ JavaScript 运行时知识在 TypeScript 章节中教学；SQL 用于数据库�
 当前状态
 --------
 
-基础规则已经完成。下一步从 LeetCode 0001 开始制作少量样板题，先稳定十种核心语言的写法、主解法与对照解法的比例、注释密度、基础类型复用和 Mermaid 表达，再扩大批次。
+基础规则已经完成，已经具备开始编写 LeetCode 题目的条件。下一步从 LeetCode 0001 开始制作少量样板题，先稳定十种核心语言的写法、主解法与对照解法的比例、中文注释密度、基础类型复用和 Mermaid 表达，再扩大批次。
 
 本项目直接在 ``main`` 上推进。除非用户明确要求，不创建分支或 PR。
 
@@ -78,6 +86,7 @@ JavaScript 运行时知识在 TypeScript 章节中教学；SQL 用于数据库�
      PROJECT_VISION.rst
      LANGUAGE_SCOPE.rst
      SOLUTION_AND_TYPES_POLICY.rst
+     CONTENT_LANGUAGE_POLICY.rst
      RST_STYLE_GUIDE.rst
      PROBLEM_TEMPLATE.rst
    problems/
