@@ -42,8 +42,8 @@ LeetCode 官方英文题名、文件 slug、代码标识符、关键字、API、
 JavaScript 运行时知识在 TypeScript 章节中教学；SQL 用于数据库题；Bash 或
 POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
 
-解法与基础类型
---------------
+解法、基础类型与关联
+--------------------
 
 * 每题选择一个主解法，完整覆盖 10 种核心语言；
 * 对照解法只在复杂度、数据结构或算法思路存在实质差异时保留；
@@ -51,20 +51,23 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
 * ``ListNode``、``TreeNode`` 等平台类型不在每道题重复定义；
 * Julia 与 R 使用统一的仓库级可变节点约定；
 * 语法和 API 解释写在代码块内，代码行优先不超过 88 列；
-* 链表、树、图、动态规划和回溯等内容可以使用 Mermaid 表达状态变化。
+* 链表、树、图、动态规划和回溯等内容可以使用 Mermaid 表达状态变化；
+* 单题关联通常保留 1 至 3 个，最多 5 个，没有强关联时直接省略。
 
-完整规则见 ``docs/SOLUTION_AND_TYPES_POLICY.rst`` 和
-``docs/RST_STYLE_GUIDE.rst``。
+完整规则见 ``docs/SOLUTION_AND_TYPES_POLICY.rst``、
+``docs/RELATED_PROBLEMS_POLICY.rst`` 和 ``docs/RST_STYLE_GUIDE.rst``。
 
-首批题目
---------
+已完成题目
+----------
 
 #. `0001. Two Sum <problems/0001-0100/0001-two-sum.rst>`_
 #. `0002. Add Two Numbers <problems/0001-0100/0002-add-two-numbers.rst>`_
 #. `0003. Longest Substring Without Repeating Characters <problems/0001-0100/0003-longest-substring-without-repeating-characters.rst>`_
+#. `0004. Median of Two Sorted Arrays <problems/0001-0100/0004-median-of-two-sorted-arrays.rst>`_
+#. `0005. Longest Palindromic Substring <problems/0001-0100/0005-longest-palindromic-substring.rst>`_
+#. `0006. Zigzag Conversion <problems/0001-0100/0006-zigzag-conversion.rst>`_
 
-下一题是 ``0004. Median of Two Sorted Arrays``。实际进度以
-``state/PROGRESS.toml`` 为准。
+下一题是 ``0007. Reverse Integer``。实际进度以 ``state/PROGRESS.toml`` 为准。
 
 开始工作
 --------
@@ -75,6 +78,7 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
 #. ``docs/PROJECT_VISION.rst``
 #. ``docs/LANGUAGE_SCOPE.rst``
 #. ``docs/SOLUTION_AND_TYPES_POLICY.rst``
+#. ``docs/RELATED_PROBLEMS_POLICY.rst``
 #. ``docs/CONTENT_LANGUAGE_POLICY.rst``
 #. ``docs/RST_STYLE_GUIDE.rst``
 #. ``state/PROGRESS.toml``
@@ -87,11 +91,11 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
 当前状态
 --------
 
-0001 至 0003 已完成，用于校准十种核心语言、主解法与对照解法、中文代码注释、
-基础类型复用和 Mermaid 表达。用户检查这三份 RST 的实际阅读效果后，从 0004
-继续按编号推进。
+0001 至 0006 已完成。当前样板已经覆盖哈希表、链表、滑动窗口、二分分割、回文
+中心扩展和周期索引。下一批从 0007 开始，并继续观察十种语言中的注释衰减、字符
+单位差异和强关联筛选。
 
-本项目直接在 ``main`` 上推进。除非用户明确要求，不创建分支或 PR。
+本项目当前直接在 ``main`` 上推进。除非用户明确要求，不创建分支或 PR。
 
 文件组织
 --------
@@ -104,6 +108,7 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
      PROJECT_VISION.rst
      LANGUAGE_SCOPE.rst
      SOLUTION_AND_TYPES_POLICY.rst
+     RELATED_PROBLEMS_POLICY.rst
      CONTENT_LANGUAGE_POLICY.rst
      RST_STYLE_GUIDE.rst
      PROBLEM_TEMPLATE.rst
@@ -112,8 +117,8 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
      0001-0100/
        README.rst
        0001-two-sum.rst
-       0002-add-two-numbers.rst
-       0003-longest-substring-without-repeating-characters.rst
+       ...
+       0006-zigzag-conversion.rst
    state/
      PROGRESS.toml
      CONCEPT_LEDGER.toml
