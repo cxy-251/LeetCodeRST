@@ -1,6 +1,6 @@
 [meta]
 version = 1
-last_problem = 9
+last_problem = 10
 
 # teaching_state 可用值：
 # introduced   首次完整解释
@@ -192,11 +192,11 @@ note = "字符最后位置允许 left 直接跳到重复位置之后。"
 [concepts."string.character_iteration_units"]
 kind = "syntax"
 first_problem = 3
-last_problem = 8
-occurrences = 4
+last_problem = 10
+occurrences = 5
 teaching_state = "reinforcing"
 difficult = true
-note = "0003、0005、0006 区分字节、UTF-16 代码单元、码点与字形簇；0008 只识别 ASCII 空格、符号和十进制数字。"
+note = "0003、0005、0006 区分字符迭代单位；0008 只识别 ASCII 数字；0010 因题目限定 ASCII，可按字节或代码单元索引。"
 
 [concepts."algorithm.binary_search_partition"]
 kind = "algorithm"
@@ -228,11 +228,11 @@ note = "使用正负无穷哨兵统一处理分割位于数组两端。"
 [concepts."julia_r.zero_based_algorithm_coordinates"]
 kind = "syntax"
 first_problem = 4
-last_problem = 6
-occurrences = 2
+last_problem = 10
+occurrences = 3
 teaching_state = "reinforcing"
 difficult = false
-note = "算法公式使用零基数量或坐标，访问 Julia/R 数组时转换为一基下标。"
+note = "算法状态使用零基数量或坐标；0004、0006、0010 在 Julia/R 数组访问时转换为一基下标。"
 
 [concepts."algorithm.expand_around_center"]
 kind = "algorithm"
@@ -350,3 +350,39 @@ occurrences = 1
 teaching_state = "introduced"
 difficult = true
 note = "只构造约一半位数的反转值，从结构上避免完整整数反转溢出。"
+
+[concepts."algorithm.memoized_suffix_matching"]
+kind = "algorithm"
+first_problem = 10
+last_problem = 10
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "用 (i, j) 表示字符串后缀与模式后缀能否完整匹配，并缓存每个二维状态。"
+
+[concepts."algorithm.regex_star_zero_or_more"]
+kind = "algorithm"
+first_problem = 10
+last_problem = 10
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "x* 分成零次跳到 j+2，以及先匹配一个字符后保留 j 的至少一次分支。"
+
+[concepts."data_structure.tristate_boolean_memo"]
+kind = "data_structure"
+first_problem = 10
+last_problem = 10
+occurrences = 1
+teaching_state = "introduced"
+difficult = false
+note = "记忆表区分未计算、false 和 true，避免把失败状态误当作尚未访问。"
+
+[concepts."proof.regex_pattern_structure_partition"]
+kind = "proof"
+first_problem = 10
+last_problem = 10
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "按当前模式元素是否带星号分类，并在星号情形穷尽零次与至少一次两类合法结构。"
