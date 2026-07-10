@@ -1,8 +1,10 @@
 [project]
 name = "leetcode-multilang-rst"
-phase = "foundation"
+phase = "foundation_complete"
 format = "rst"
 ordering = "leetcode_number_ascending"
+direct_main = true
+build_required = false
 
 [progress]
 next_problem = 1
@@ -13,12 +15,14 @@ blocked = []
 needs_revision = []
 
 [current_batch]
-status = "not_started"
+status = "ready"
 start = 1
-end = 0
-branch = ""
-pull_request = ""
+end = 3
+purpose = "Create the first sample lessons and calibrate language coverage, explanation depth, and annotation decay."
+
+[next_action]
+summary = "Create LeetCode 0001-0003 as the first RST teaching batch, then update this file and the concept ledger."
 
 [last_update]
-summary = "Repository rebuilt with project rules and cross-conversation state."
-commit = ""
+summary = "Foundation rules aligned with direct-main editing and source-only RST documentation. Added the RST style guide and problem directory rules."
+content_commit = "e1b92bafd3d968a84e8573997fb09195625a74f8"
