@@ -1,7 +1,7 @@
 LeetCode 多语言 RST 学习仓库
 ============================
 
-本仓库正在重建为一套按 LeetCode 题号顺序推进的多语言算法学习资料。
+本仓库按 LeetCode 题号顺序建设多语言算法学习资料。
 
 项目目标
 --------
@@ -20,17 +20,21 @@ LeetCode 多语言 RST 学习仓库
 
 #. ``AGENTS.md``
 #. ``docs/PROJECT_VISION.rst``
+#. ``docs/RST_STYLE_GUIDE.rst``
 #. ``state/PROGRESS.toml``
 #. ``state/CONCEPT_LEDGER.toml``
+#. 最近至少 5 道已完成题目
 
-``AGENTS.md`` 是项目的最高执行规则。
+``AGENTS.md`` 是项目的最高执行规则。仓库文件是跨对话交接依据，不能依赖上一段对话中的隐含记忆。
 
-当前阶段
+当前状态
 --------
 
-当前 PR 只建立项目契约、教学原则、跨对话状态和题目模板。下一阶段从 LeetCode 0001 开始制作少量样板题，稳定语言范围、注释密度和 RST 结构后再扩大批次。
+当前处于基础系统阶段。下一步从 LeetCode 0001 开始制作少量样板题，先稳定语言范围、讲解层级、注释密度和 RST 结构，再扩大批次。
 
-目录规划
+本项目直接在 ``main`` 上推进。除非用户明确要求，不创建分支或 PR。
+
+文件组织
 --------
 
 ::
@@ -39,12 +43,22 @@ LeetCode 多语言 RST 学习仓库
    README.rst
    docs/
      PROJECT_VISION.rst
+     RST_STYLE_GUIDE.rst
      PROBLEM_TEMPLATE.rst
    problems/
+     README.rst
      0001-0100/
      0101-0200/
    state/
      PROGRESS.toml
      CONCEPT_LEDGER.toml
 
-仓库历史中的旧 paperToVideo 内容已在本重建分支中移除。旧提交仍保留在 Git 历史中，需要时可以回溯。
+文档形式
+--------
+
+题目正文和项目说明以 RST 为主。仓库不建立 Sphinx、文档站点、CI 构建或发布系统，内容以直接阅读源文件为目标。
+
+仓库前身
+--------
+
+本仓库原用于 ``paperToVideo`` 项目。改造前 ``main`` 的最终状态保存在 ``archive/paperToVideo-before-reset`` 分支中，原有阶段分支和 Git 历史继续保留。
