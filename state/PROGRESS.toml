@@ -35,4 +35,4 @@ summary = "从 LeetCode 0008 开始；先读取自动化质量门和最近至少
 
 [last_update]
 summary = "Created LeetCode 0007 lesson and advanced the single-problem automation workflow."
-content_commit = "pending-pr-merge"
+content_commit = "36e578e1b9e5b4664615a58a0a36c4062e2d5ec9"
