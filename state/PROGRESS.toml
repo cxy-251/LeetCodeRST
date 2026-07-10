@@ -10,29 +10,29 @@ content_language = "zh-CN"
 code_comment_language = "zh-CN"
 
 [progress]
-next_problem = 11
-completed_count = 10
-completed_ranges = ["0001-0010"]
+next_problem = 12
+completed_count = 11
+completed_ranges = ["0001-0011"]
 premium_skipped = []
 blocked = []
 needs_revision = []
 
 [last_batch]
 status = "completed"
-start = 10
-end = 10
+start = 11
+end = 11
 completed = 1
 premium_skipped = []
-summary = "完成 Regular Expression Matching 单题十语言 RST 教程，重点覆盖二维后缀状态、点号匹配、星号零次或多次分支、布尔三态记忆化与结构归纳正确性。"
+summary = "完成 Container With Most Water 单题十语言 RST 教程，重点覆盖短板效应、两端双指针、移动短板的排除证明、面积不变量与乘积溢出处理。"
 
 [next_batch]
 status = "ready"
-start = 11
-end = 11
+start = 12
+end = 12
 purpose = "一次只精写一道题，以 RST 教学质量为首要目标。"
 
 [next_action]
-summary = "从 LeetCode 0011 开始；复用 automation/leetcode-current 固定分支，只创建一个非 Draft PR。"
+summary = "从 LeetCode 0012 开始；复用 automation/leetcode-current 固定分支，只创建一个非 Draft PR。"
 
 [last_update]
-summary = "LeetCode 0010 已完成；自动任务继续使用单题固定分支、单 PR、squash merge 流程。"
+summary = "LeetCode 0011 已完成；自动任务继续使用单题固定分支、单 PR、squash merge 流程。"
