@@ -18,11 +18,11 @@ needs_revision = []
 status = "ready"
 start = 1
 end = 3
-purpose = "Create the first sample lessons and calibrate language coverage, explanation depth, and annotation decay."
+purpose = "Create the first lessons and calibrate main versus contrast solutions, ten-language coverage, inline teaching comments, shared types, and Mermaid usage."
 
 [next_action]
 summary = "Create LeetCode 0001-0003 as the first RST teaching batch, then update this file and the concept ledger."
 
 [last_update]
-summary = "Foundation rules aligned with direct-main editing and source-only RST documentation. Added the RST style guide and problem directory rules."
-content_commit = "e1b92bafd3d968a84e8573997fb09195625a74f8"
+summary = "Defined solution selection, standard-library versus teaching implementations, code comment line-width rules, Mermaid usage, and shared foundation-type reuse."
+content_commit = "a0fd90f0433ab0a2afc45f1dd3a44b7e5b82dc14"
