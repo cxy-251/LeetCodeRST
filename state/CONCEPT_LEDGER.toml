@@ -1,6 +1,6 @@
 [meta]
 version = 1
-last_problem = 3
+last_problem = 6
 
 # teaching_state 可用值：
 # introduced   首次完整解释
@@ -192,8 +192,80 @@ note = "字符最后位置允许 left 直接跳到重复位置之后。"
 [concepts."string.character_iteration_units"]
 kind = "syntax"
 first_problem = 3
-last_problem = 3
+last_problem = 6
+occurrences = 3
+teaching_state = "reinforcing"
+difficult = true
+note = "0003、0005、0006 区分字节、UTF-16 代码单元、码点与字形簇。"
+
+[concepts."algorithm.binary_search_partition"]
+kind = "algorithm"
+first_problem = 4
+last_problem = 4
 occurrences = 1
 teaching_state = "introduced"
 difficult = true
-note = "区分字节、UTF-16 代码单元、码点与字形簇。"
+note = "在较短数组上二分分割数量，以四个边界值确定中位数。"
+
+[concepts."proof.partition_boundary_ordering"]
+kind = "proof"
+first_problem = 4
+last_problem = 4
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "数组内部有序时，两个交叉不等式足以保证左右分区整体有序。"
+
+[concepts."technique.infinity_sentinel"]
+kind = "algorithm"
+first_problem = 4
+last_problem = 4
+occurrences = 1
+teaching_state = "introduced"
+difficult = false
+note = "使用正负无穷哨兵统一处理分割位于数组两端。"
+
+[concepts."julia_r.zero_based_algorithm_coordinates"]
+kind = "syntax"
+first_problem = 4
+last_problem = 6
+occurrences = 2
+teaching_state = "reinforcing"
+difficult = false
+note = "算法公式使用零基数量或坐标，访问 Julia/R 数组时转换为一基下标。"
+
+[concepts."algorithm.expand_around_center"]
+kind = "algorithm"
+first_problem = 5
+last_problem = 5
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "枚举字符中心和字符间隙中心，向两侧扩展得到最长回文。"
+
+[concepts."proof.palindrome_center_symmetry"]
+kind = "proof"
+first_problem = 5
+last_problem = 5
+occurrences = 1
+teaching_state = "introduced"
+difficult = false
+note = "每个回文子串都有唯一中心，枚举两类中心不会漏解。"
+
+[concepts."algorithm.periodic_index_mapping"]
+kind = "algorithm"
+first_problem = 6
+last_problem = 6
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "把 Z 字形路径模拟转化为周期长度和行内索引公式。"
+
+[concepts."string.incremental_builder"]
+kind = "library"
+first_problem = 5
+last_problem = 6
+occurrences = 2
+teaching_state = "reinforcing"
+difficult = false
+note = "使用 StringBuilder、Vec、列表或字符缓冲区避免反复创建字符串。"
