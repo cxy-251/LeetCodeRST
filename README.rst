@@ -66,8 +66,9 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
 #. `0004. Median of Two Sorted Arrays <problems/0001-0100/0004-median-of-two-sorted-arrays.rst>`_
 #. `0005. Longest Palindromic Substring <problems/0001-0100/0005-longest-palindromic-substring.rst>`_
 #. `0006. Zigzag Conversion <problems/0001-0100/0006-zigzag-conversion.rst>`_
+#. `0007. Reverse Integer <problems/0001-0100/0007-reverse-integer.rst>`_
 
-下一题是 ``0007. Reverse Integer``。实际进度以 ``state/PROGRESS.toml`` 为准。
+下一题是 ``0008. String to Integer (atoi)``。实际进度以 ``state/PROGRESS.toml`` 为准。
 
 开始工作
 --------
@@ -81,6 +82,7 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
 #. ``docs/RELATED_PROBLEMS_POLICY.rst``
 #. ``docs/CONTENT_LANGUAGE_POLICY.rst``
 #. ``docs/RST_STYLE_GUIDE.rst``
+#. ``docs/AUTOMATION_QUALITY_GATE.rst``
 #. ``state/PROGRESS.toml``
 #. ``state/CONCEPT_LEDGER.toml``
 #. 最近至少 5 道已完成题目
@@ -91,11 +93,12 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
 当前状态
 --------
 
-0001 至 0006 已完成。当前样板已经覆盖哈希表、链表、滑动窗口、二分分割、回文
-中心扩展和周期索引。下一批从 0007 开始，并继续观察十种语言中的注释衰减、字符
-单位差异和强关联筛选。
+0001 至 0007 已完成。当前样板已经覆盖哈希表、链表、滑动窗口、二分分割、回文
+中心扩展、周期索引和整数逐位反转。下一题从 0008 开始；自动任务每次只精写一道题，
+并以 RST 教学质量高于题量。
 
-本项目当前直接在 ``main`` 上推进。除非用户明确要求，不创建分支或 PR。
+本项目当前直接在 ``main`` 上推进。用户明确授权的自动任务按
+``docs/AUTOMATION_QUALITY_GATE.rst`` 使用单题分支、PR 与 squash merge。
 
 文件组织
 --------
@@ -111,6 +114,7 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
      RELATED_PROBLEMS_POLICY.rst
      CONTENT_LANGUAGE_POLICY.rst
      RST_STYLE_GUIDE.rst
+     AUTOMATION_QUALITY_GATE.rst
      PROBLEM_TEMPLATE.rst
    problems/
      README.rst
@@ -118,7 +122,7 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
        README.rst
        0001-two-sum.rst
        ...
-       0006-zigzag-conversion.rst
+       0007-reverse-integer.rst
    state/
      PROGRESS.toml
      CONCEPT_LEDGER.toml

@@ -12,11 +12,12 @@ LeetCode 0001–0100
 #. `0004. Median of Two Sorted Arrays <0004-median-of-two-sorted-arrays.rst>`_
 #. `0005. Longest Palindromic Substring <0005-longest-palindromic-substring.rst>`_
 #. `0006. Zigzag Conversion <0006-zigzag-conversion.rst>`_
+#. `0007. Reverse Integer <0007-reverse-integer.rst>`_
 
 下一题
 ------
 
-``0007. Reverse Integer``
+``0008. String to Integer (atoi)``
 
 阅读顺序
 --------

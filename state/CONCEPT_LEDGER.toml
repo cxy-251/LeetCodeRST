@@ -1,6 +1,6 @@
 [meta]
 version = 1
-last_problem = 6
+last_problem = 7
 
 # teaching_state 可用值：
 # introduced   首次完整解释
@@ -269,3 +269,30 @@ occurrences = 2
 teaching_state = "reinforcing"
 difficult = false
 note = "使用 StringBuilder、Vec、列表或字符缓冲区避免反复创建字符串。"
+
+[concepts."algorithm.decimal_digit_pop_push"]
+kind = "algorithm"
+first_problem = 7
+last_problem = 7
+occurrences = 1
+teaching_state = "introduced"
+difficult = false
+note = "用向零截断的商删除最低位，用余数弹出最低位，再乘十压入结果。"
+
+[concepts."proof.pre_operation_overflow_guard"]
+kind = "proof"
+first_problem = 7
+last_problem = 7
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "在乘十和加末位之前，以 INT_MAX/10、INT_MIN/10 和末位 7/-8 判断安全范围。"
+
+[concepts."numeric.truncating_division_and_remainder"]
+kind = "syntax"
+first_problem = 7
+last_problem = 7
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "比较十种语言的负数整除与余数语义；Python、R、TypeScript、Julia 显式向零截断。"
