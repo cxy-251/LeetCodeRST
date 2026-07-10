@@ -6,12 +6,30 @@ LeetCode 多语言 RST 学习仓库
 项目目标
 --------
 
-* 每道可访问题目对应一个 ``.rst`` 文件。
-* 按题号递增推进，让不同算法主题自然交错，形成间隔复习。
-* 同时学习算法与多种编程语言。
-* 语法知识采用解释衰减，疑难算法采用周期性复现。
-* 题目内容使用原创重述，不复制平台完整题干与官方题解。
+* 每道可访问题目对应一个 ``.rst`` 文件；
+* 按题号递增推进，让不同算法主题自然交错，形成间隔复习；
+* 同时学习算法与多种编程语言；
+* 语法知识采用解释衰减，疑难算法采用周期性复现；
+* 题目内容使用原创重述，不复制平台完整题干与官方题解；
 * 无法访问的 Premium 题目登记后跳过，后续有合法材料时再补写。
+
+固定核心语言
+------------
+
+普通算法题默认覆盖：
+
+* C；
+* C++；
+* Python；
+* Java；
+* Rust；
+* Go；
+* TypeScript；
+* C#；
+* Julia；
+* R。
+
+JavaScript 运行时知识在 TypeScript 章节中教学；SQL 用于数据库题；Bash 或 POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
 
 开始工作
 --------
@@ -20,6 +38,7 @@ LeetCode 多语言 RST 学习仓库
 
 #. ``AGENTS.md``
 #. ``docs/PROJECT_VISION.rst``
+#. ``docs/LANGUAGE_SCOPE.rst``
 #. ``docs/RST_STYLE_GUIDE.rst``
 #. ``state/PROGRESS.toml``
 #. ``state/CONCEPT_LEDGER.toml``
@@ -30,7 +49,7 @@ LeetCode 多语言 RST 学习仓库
 当前状态
 --------
 
-当前处于基础系统阶段。下一步从 LeetCode 0001 开始制作少量样板题，先稳定语言范围、讲解层级、注释密度和 RST 结构，再扩大批次。
+基础规则已经完成。下一步从 LeetCode 0001 开始制作少量样板题，先稳定十种核心语言的写法、讲解层级、注释密度和 RST 结构，再扩大批次。
 
 本项目直接在 ``main`` 上推进。除非用户明确要求，不创建分支或 PR。
 
@@ -43,12 +62,12 @@ LeetCode 多语言 RST 学习仓库
    README.rst
    docs/
      PROJECT_VISION.rst
+     LANGUAGE_SCOPE.rst
      RST_STYLE_GUIDE.rst
      PROBLEM_TEMPLATE.rst
    problems/
      README.rst
      0001-0100/
-     0101-0200/
    state/
      PROGRESS.toml
      CONCEPT_LEDGER.toml
