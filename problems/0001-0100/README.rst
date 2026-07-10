@@ -13,11 +13,12 @@ LeetCode 0001–0100
 #. `0005. Longest Palindromic Substring <0005-longest-palindromic-substring.rst>`_
 #. `0006. Zigzag Conversion <0006-zigzag-conversion.rst>`_
 #. `0007. Reverse Integer <0007-reverse-integer.rst>`_
+#. `0008. String to Integer (atoi) <0008-string-to-integer-atoi.rst>`_
 
 下一题
 ------
 
-``0008. String to Integer (atoi)``
+``0009. Palindrome Number``
 
 阅读顺序
 --------

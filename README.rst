@@ -67,8 +67,9 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
 #. `0005. Longest Palindromic Substring <problems/0001-0100/0005-longest-palindromic-substring.rst>`_
 #. `0006. Zigzag Conversion <problems/0001-0100/0006-zigzag-conversion.rst>`_
 #. `0007. Reverse Integer <problems/0001-0100/0007-reverse-integer.rst>`_
+#. `0008. String to Integer (atoi) <problems/0001-0100/0008-string-to-integer-atoi.rst>`_
 
-下一题是 ``0008. String to Integer (atoi)``。实际进度以 ``state/PROGRESS.toml`` 为准。
+下一题是 ``0009. Palindrome Number``。实际进度以 ``state/PROGRESS.toml`` 为准。
 
 开始工作
 --------
@@ -88,20 +89,19 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
 #. ``state/CONCEPT_LEDGER.toml``
 #. 最近至少 5 道已完成题目
 
-``AGENTS.md`` 是普通人工协作的最高执行规则。用户明确授权的定时自动任务采用
-``docs/AUTOMATION_QUALITY_GATE.rst`` 与 ``docs/AUTOMATION_DIRECT_MAIN_POLICY.rst``
-规定的单题固定分支流程。仓库文件是跨对话交接依据，不能依赖上一段对话中的隐含记忆。
+``AGENTS.md`` 是项目的最高执行规则。仓库文件是跨对话交接依据，不能依赖上一段
+对话中的隐含记忆。
 
 当前状态
 --------
 
-0001 至 0007 已完成。当前样板已经覆盖哈希表、链表、滑动窗口、二分分割、回文
-中心扩展、周期索引和整数逐位反转。下一题从 0008 开始；自动任务每次只精写一道题，
-并以 RST 教学质量高于题量。
+0001 至 0008 已完成。当前样板已经覆盖哈希表、链表、滑动窗口、二分分割、回文
+中心扩展、周期索引、整数逐位反转，以及字符串到 32 位整数的阶段化扫描与溢出钳制。
+下一题从 0009 开始；自动任务每次只精写一道题，并以 RST 教学质量高于题量。
 
-定时自动任务永远只复用 ``automation/leetcode-current`` 一个固定分支，每轮创建一个
-非 Draft PR，质量检查通过后 squash merge 到 ``main``。禁止创建题号分支、时间戳分支、
-批次分支或额外的 finalize PR。完整规则见 ``docs/AUTOMATION_DIRECT_MAIN_POLICY.rst``。
+定时自动任务复用唯一固定分支 ``automation/leetcode-current``，每轮只创建一个非 Draft PR，
+通过质量检查后 squash merge 到 ``main``。禁止题号分支、时间戳分支和额外 finalize PR。
+完整规则见 ``docs/AUTOMATION_DIRECT_MAIN_POLICY.rst``。
 
 文件组织
 --------
@@ -126,7 +126,7 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
        README.rst
        0001-two-sum.rst
        ...
-       0007-reverse-integer.rst
+       0008-string-to-integer-atoi.rst
    state/
      PROGRESS.toml
      CONCEPT_LEDGER.toml
