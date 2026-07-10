@@ -1,0 +1,24 @@
+[project]
+name = "leetcode-multilang-rst"
+phase = "foundation"
+format = "rst"
+ordering = "leetcode_number_ascending"
+
+[progress]
+next_problem = 1
+completed_count = 0
+completed_ranges = []
+premium_skipped = []
+blocked = []
+needs_revision = []
+
+[current_batch]
+status = "not_started"
+start = 1
+end = 0
+branch = ""
+pull_request = ""
+
+[last_update]
+summary = "Repository rebuilt with project rules and cross-conversation state."
+commit = ""

@@ -1,0 +1,34 @@
+[meta]
+version = 1
+last_problem = 0
+
+# 本文件保存跨题、跨对话的教学状态。
+# 每个知识点使用稳定的唯一 ID，例如：
+#
+# [concepts."python.enumerate"]
+# kind = "syntax"
+# first_problem = 1
+# last_problem = 3
+# occurrences = 2
+# teaching_state = "reinforcing"
+# difficult = false
+#
+# [concepts."algorithm.dynamic_programming.state_design"]
+# kind = "algorithm"
+# first_problem = 53
+# last_problem = 72
+# occurrences = 3
+# teaching_state = "refresh"
+# difficult = true
+#
+# teaching_state 可用值：
+# introduced   首次完整解释
+# reinforcing  后续短提醒
+# familiar     普通使用无需解释
+# refresh      长间隔或新边界，需要重新提醒
+# mastered     仅解释特殊语义、性能或风险
+#
+# difficult = true 表示该知识属于需要周期性复现的疑难算法、
+# 状态设计、证明或高级数据结构，不能按普通语法快速衰减。
+
+[concepts]
