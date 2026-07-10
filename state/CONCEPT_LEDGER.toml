@@ -1,6 +1,6 @@
 [meta]
 version = 1
-last_problem = 10
+last_problem = 11
 
 # teaching_state 可用值：
 # introduced   首次完整解释
@@ -228,11 +228,11 @@ note = "使用正负无穷哨兵统一处理分割位于数组两端。"
 [concepts."julia_r.zero_based_algorithm_coordinates"]
 kind = "syntax"
 first_problem = 4
-last_problem = 10
-occurrences = 3
+last_problem = 11
+occurrences = 4
 teaching_state = "reinforcing"
 difficult = false
-note = "算法状态使用零基数量或坐标；0004、0006、0010 在 Julia/R 数组访问时转换为一基下标。"
+note = "算法状态使用零基数量或坐标；0004、0006、0010 做数组换算，0011 的 Julia/R 一基位置差仍等于容器宽度。"
 
 [concepts."algorithm.expand_around_center"]
 kind = "algorithm"
@@ -282,11 +282,11 @@ note = "0007 完整反转整数，0008 从字符累积十进制值，0009 只反
 [concepts."proof.pre_operation_overflow_guard"]
 kind = "proof"
 first_problem = 7
-last_problem = 8
-occurrences = 2
+last_problem = 11
+occurrences = 3
 teaching_state = "reinforcing"
 difficult = true
-note = "0007 用 INT_MAX/10 与末位判断；0008 用 value > (limit - digit)/10 在乘十前钳制。"
+note = "0007、0008 在乘十前守卫；0011 在面积乘法前先提升至少一个操作数到 64 位。"
 
 [concepts."numeric.truncating_division_and_remainder"]
 kind = "syntax"
@@ -386,3 +386,30 @@ occurrences = 1
 teaching_state = "introduced"
 difficult = true
 note = "按当前模式元素是否带星号分类，并在星号情形穷尽零次与至少一次两类合法结构。"
+
+[concepts."algorithm.two_pointer_container"]
+kind = "algorithm"
+first_problem = 11
+last_problem = 11
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "从最大宽度开始，只移动较短边界，以线性时间收缩容器候选区间。"
+
+[concepts."proof.shorter_side_elimination"]
+kind = "proof"
+first_problem = 11
+last_problem = 11
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "固定短板后，任何更内侧配对都同时具有更小宽度且水位不高于短板，因此可整批排除。"
+
+[concepts."numeric.widen_before_product"]
+kind = "syntax"
+first_problem = 11
+last_problem = 11
+occurrences = 1
+teaching_state = "introduced"
+difficult = false
+note = "C 系语言在宽度与高度相乘前提升到 64 位，避免窄类型乘法先溢出。"
