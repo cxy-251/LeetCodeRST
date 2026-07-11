@@ -29,13 +29,20 @@ LeetCode 多语言 RST 学习仓库
 
 * 逐题按编号读取，不通过 PR 描述或完成报告代替内容审查；
 * 记录题意、证明、复杂度、字符模型、语言接口、内存和所有权等问题；
-* 把跨题模式写入模板、质量门和语言规则；
+* 把跨题模式写入前向规则和自动质量门；
 * 不修改 ``0001`` 至 ``0050`` 的历史题目 RST；
 * 审查完成前保留 ``next_problem = 51``，但暂不生成 0051。
 
-当前已经完整审查 ``0001`` 至 ``0015``，下一批为 ``0016`` 至 ``0020``。
-进度以 ``state/PROGRESS.toml`` 与 ``state/REVIEW_0001_0050.toml`` 为准，提炼结果见
-``docs/REVIEW_FINDINGS_0001_0050.rst``。
+当前已经完整审查 ``0001`` 至 ``0020``，下一批为 ``0021`` 至 ``0025``。
+总进度以 ``state/PROGRESS.toml`` 和 ``state/REVIEW_INDEX.toml`` 为准。
+
+审查记录分为：
+
+* ``state/REVIEW_0001_0050.toml``：保留 ``0001`` 至 ``0015`` 的完整旧记录；
+* ``state/reviews/``：从 ``0016`` 起按五题一批保存结构化记录；
+* ``docs/REVIEW_FINDINGS_0001_0050.rst``：保留前三批详细提炼；
+* ``docs/review-findings/``：保存后续批次的正文证据；
+* ``docs/FORWARD_RULES_0051_0100.rst``：汇总对新题真正执行的规则。
 
 审查证据边界
 ------------
@@ -73,28 +80,25 @@ Shell 题。完整边界见 ``docs/LANGUAGE_SCOPE.rst``。
 
 从实际 RST 审查中确认的规则会约束 0051 以后，例如：
 
-* 字符串题必须把精确字符约束与字节、代码单元、码点或字形簇模型绑定；
-* 复杂度计入 ``[]byte``、``collect``、``strsplit``、切片和结果复制；
-* C 失败路径不能返回看似合法的部分结果或把资源失败伪装成合法布尔值；
-* 二分证明必须覆盖搜索方向和排除安全性；
-* 必要导入、平台预置和语言版本前提必须明确；
-* 哈希解法区分期望与最坏复杂度；
-* 核心推导只完整出现一次，复现题只解释新增差异；
-* 边界算术必须先扩宽操作数再计算；
-* 整数逐位复杂度使用位数 ``d`` 或 ``log(|x| + 1)``；
-* R 的 ``<<-`` 不能被当作矩阵原地更新保证；
-* 递归深度必须由题目最大规模和语言栈限制共同证明；
-* 平台公开签名与内部宽类型分离；
-* 固定容量必须由最大输出长度证明；
-* 贪心选择必须有交换、上界或规范语法证明；
-* 整串预处理不能重复放进内层循环；
-* C 的 ``realloc`` 使用临时指针事务式更新；
-* Julia 与 R 的空范围必须显式守卫。
+* 精确约束支撑字符模型、数值宽度、索引边界和非空断言；
+* 复杂度计入输入规范化、递归栈、输出构造、结果扩容和返回复制；
+* C 失败路径不得返回部分结果，``realloc`` 必须事务式更新；
+* 固定容量与组合数量乘积必须由上界证明并检查溢出；
+* 数值检查覆盖连续加法、差值、绝对值、剪枝边界与最终窄化；
+* 贪心、二分、双指针和回溯证明覆盖真实决策；
+* 正文宣称的剪枝与优化必须和十语言代码实际一致；
+* 某语言使用不同算法时单独解释正确性和复杂度；
+* 链表节点所有权、释放责任和平台辅助接口必须明确；
+* R 的 ``<<-``、``c`` 追加和写时复制按真实语义计费；
+* Julia 与 R 的空范围必须显式守卫；
+* 标准库导入、最低版本和平台预置边界必须明确。
 
 完整规则见：
 
 * ``docs/REVIEW_AND_PREVENTION_POLICY.rst``；
 * ``docs/REVIEW_FINDINGS_0001_0050.rst``；
+* ``docs/review-findings/``；
+* ``docs/FORWARD_RULES_0051_0100.rst``；
 * ``docs/AUTOMATION_QUALITY_GATE.rst``；
 * ``docs/SOLUTION_AND_TYPES_POLICY.rst``；
 * ``docs/PROBLEM_TEMPLATE.rst``。
@@ -114,10 +118,13 @@ Shell 题。完整边界见 ``docs/LANGUAGE_SCOPE.rst``。
 #. ``docs/RELATED_PROBLEMS_POLICY.rst``；
 #. ``docs/REVIEW_AND_PREVENTION_POLICY.rst``；
 #. ``docs/REVIEW_FINDINGS_0001_0050.rst``；
+#. ``docs/review-findings/`` 中已经登记的批次文件；
+#. ``docs/FORWARD_RULES_0051_0100.rst``；
 #. ``docs/AUTOMATION_QUALITY_GATE.rst``；
 #. ``docs/AUTOMATION_DIRECT_MAIN_POLICY.rst``；
 #. ``state/PROGRESS.toml``；
-#. ``state/REVIEW_0001_0050.toml``；
+#. ``state/REVIEW_INDEX.toml``；
+#. ``state/REVIEW_0001_0050.toml`` 与 ``state/reviews/`` 中已登记的记录；
 #. ``state/CONCEPT_LEDGER.toml``。
 
 仓库文件是跨对话和跨执行环境的唯一共享状态。
@@ -138,6 +145,9 @@ Shell 题。完整边界见 ``docs/LANGUAGE_SCOPE.rst``。
      RELATED_PROBLEMS_POLICY.rst
      REVIEW_AND_PREVENTION_POLICY.rst
      REVIEW_FINDINGS_0001_0050.rst
+     FORWARD_RULES_0051_0100.rst
+     review-findings/
+       0016-0020.rst
      AUTOMATION_QUALITY_GATE.rst
      AUTOMATION_DIRECT_MAIN_POLICY.rst
      PROBLEM_TEMPLATE.rst
@@ -149,7 +159,10 @@ Shell 题。完整边界见 ``docs/LANGUAGE_SCOPE.rst``。
        0050-powx-n.rst
    state/
      PROGRESS.toml
+     REVIEW_INDEX.toml
      REVIEW_0001_0050.toml
+     reviews/
+       0016-0020.toml
      CONCEPT_LEDGER.toml
 
 文档形式
