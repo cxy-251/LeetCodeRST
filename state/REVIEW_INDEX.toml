@@ -9,10 +9,31 @@ modify_historical_rst = false
 pr_metadata_is_evidence = false
 status = "completed"
 
+[canonical]
+catalog = "docs/REVIEW_CATALOG_0001_0050.rst"
+forward_rules = "docs/FORWARD_RULES_0051_0100.rst"
+quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
+review_policy = "docs/REVIEW_AND_PREVENTION_POLICY.rst"
+solution_policy = "docs/SOLUTION_AND_TYPES_POLICY.rst"
+problem_template = "docs/PROBLEM_TEMPLATE.rst"
+conversation_workflow = "docs/AUTOMATION_DIRECT_MAIN_POLICY.rst"
+
+[precedence]
+order = [
+  "state/PROGRESS.toml",
+  "state/REVIEW_INDEX.toml corrections",
+  "docs/FORWARD_RULES_0051_0100.rst",
+  "specialized policies and template",
+  "batch review records and findings",
+  "commit, PR, and conversation summaries",
+]
+statement = "Higher-priority sources supersede lower-priority sources when wording conflicts."
+
 [records.legacy]
 path = "state/REVIEW_0001_0050.toml"
 covered_ranges = ["0001-0015"]
 status = "complete_for_range"
+findings = "docs/REVIEW_FINDINGS_0001_0050.rst"
 
 [records.batch_0016_0020]
 path = "state/reviews/0016-0020.toml"
@@ -66,13 +87,23 @@ findings = "docs/review-findings/0046-0050.rst"
 [corrections.julia_unitrange]
 status = "active"
 source = "https://docs.julialang.org/en/v1/base/collections/#Base.UnitRange"
-supersedes = "此前审查记录中关于 Julia a:b 在 a>b 时自动递减的描述"
-statement = "a:b 是隐式步长 +1 的 UnitRange；a>b 时为空，递减遍历需要显式负步长。"
+supersedes = "Earlier review notes claiming Julia a:b automatically descends when a>b."
+statement = "Julia a:b is a UnitRange with implicit step +1; it is empty when a>b. Descending iteration requires an explicit negative step such as n:-1:1."
+
+[corrections.historical_fix_scope]
+status = "active"
+supersedes = "Earlier public policies that required automatic repair of every deterministic issue found in 0001-0050."
+statement = "Review findings from 0001-0050 are applied prospectively. A historical problem is modified only when the user explicitly selects that problem for repair."
+
+[corrections.execution_workflow]
+status = "active"
+supersedes = "Earlier scheduled automation, fixed automation branches, and default pull-request workflow."
+statement = "Generation, review, and repair are triggered by an explicit user message and normally enter main as one atomic commit. Branches and pull requests are used when the user selects that collaboration workflow."
 
 [next_generation]
 start = 51
 end = 51
-purpose = "在用户对话指令下生成 0051 N-Queens，并完整执行最终前向规则。"
+purpose = "Generate 0051 N-Queens after an explicit user instruction and apply the canonical forward rules."
 
 [rule_sources]
 base_findings = "docs/REVIEW_FINDINGS_0001_0050.rst"

@@ -1,8 +1,8 @@
 LeetCode 多语言 RST 学习仓库
 ============================
 
-本仓库按 LeetCode 题号顺序建设多语言算法学习资料。每道可访问题目对应一个 RST 文件，
-同时学习算法状态、正确性证明、复杂度和十语言实现。
+本仓库按 LeetCode 题号顺序建设多语言算法学习资料。每道可访问题目对应一个 RST 文件，同时学习
+算法状态、正确性证明、复杂度和十语言实现。
 
 项目目标
 --------
@@ -17,49 +17,63 @@ LeetCode 多语言 RST 学习仓库
 当前状态
 --------
 
-``0001`` 至 ``0050`` 的首轮多语言 RST 已完成。
-
-``0001`` 至 ``0050`` 的逐题规则提炼也已完成。审查依据是每道题的完整正文、证明、复杂度和十语言代码。
-历史题目保持原样，稳定规则已经汇总到 ``docs/FORWARD_RULES_0051_0100.rst``。
+``0001`` 至 ``0050`` 的首轮多语言 RST 和逐题规则提炼均已完成。历史题目保持原样，稳定规则已经
+整理到 ``docs/FORWARD_RULES_0051_0100.rst``。
 
 下一题为 ``0051. N-Queens``。0051 与 0052 均为 Hard，下一批只处理 0051。
 
-进度入口
+核心入口
 --------
 
-* ``state/PROGRESS.toml``：内容生成与阶段状态；
-* ``state/REVIEW_INDEX.toml``：0001–0050 审查批次和更正索引；
-* ``docs/FORWARD_RULES_0051_0100.rst``：0051–0100 的最终执行规则；
+* ``state/PROGRESS.toml``：当前阶段、完成范围和下一题；
+* ``docs/FORWARD_RULES_0051_0100.rst``：0051–0100 唯一的完整执行规则；
+* ``docs/AUTOMATION_QUALITY_GATE.rst``：当前对话批次的验收步骤；
+* ``docs/PROBLEM_TEMPLATE.rst``：单题结构骨架；
+* ``docs/SOLUTION_AND_TYPES_POLICY.rst``：解法、平台类型和语言适配器；
+* ``docs/AUTOMATION_DIRECT_MAIN_POLICY.rst``：对话驱动执行流程；
 * ``problems/0001-0100/README.rst``：题目索引。
 
-审查记录
+审查资料
 --------
 
+``0001`` 至 ``0050`` 的所有审查信息已经落入仓库：
+
+* ``docs/REVIEW_CATALOG_0001_0050.rst``：资料目录、文件职责和规则优先级；
+* ``state/REVIEW_INDEX.toml``：覆盖范围、批次索引和事实更正；
 * ``state/REVIEW_0001_0050.toml``：0001–0015 结构化记录；
-* ``state/reviews/``：0016–0050 分批记录；
-* ``docs/REVIEW_FINDINGS_0001_0050.rst``：0001–0015 详细提炼；
-* ``docs/review-findings/``：0016–0050 分批证据。
+* ``state/reviews/``：0016–0050 分批结构化记录；
+* ``docs/REVIEW_FINDINGS_0001_0050.rst``：0001–0015 详细证据；
+* ``docs/review-findings/``：0016–0050 分批详细证据。
 
-Julia UnitRange 更正
--------------------
+批次记录是审查证据和追溯资料，最终执行规则以 ``docs/FORWARD_RULES_0051_0100.rst`` 为准。
 
-Julia ``a:b`` 是隐式步长 ``+1`` 的 ``UnitRange``；当 ``a>b`` 时为空。递减遍历使用显式负步长，
-例如 ``n:-1:1``。该结论覆盖此前审查记录中关于自动递减的错误描述。详细记录见
-``docs/review-findings/0046-0050.rst``。
+规则优先级
+----------
+
+出现重复或冲突时：
+
+#. ``state/PROGRESS.toml`` 决定当前阶段和下一步；
+#. ``state/REVIEW_INDEX.toml`` 的更正覆盖旧审查观察；
+#. ``docs/FORWARD_RULES_0051_0100.rst`` 决定新题质量规则；
+#. 专项策略和模板只负责各自范围；
+#. 批次记录用于追溯，不覆盖最终规则。
+
+Julia ``a:b`` 是隐式步长 ``+1`` 的 ``UnitRange``，``a>b`` 时为空；递减遍历使用显式负步长。该结论
+覆盖早期审查记录中的相反描述。
 
 执行方式
 --------
 
 所有生成、审查和修复由当前对话中的明确指令触发：
 
-#. 读取最新 ``main``、``state/PROGRESS.toml`` 和相关规则；
+#. 读取最新 ``main``、状态和相关规则；
 #. 确定本轮唯一范围；
 #. 完成内容与质量检查；
 #. 将本轮文件作为一个原子提交写入 ``main``；
 #. 复查提交差异、状态和下一步；
 #. 在对话中报告结果。
 
-详细工作流见 ``docs/AUTOMATION_DIRECT_MAIN_POLICY.rst``。
+分支和 PR 只在用户明确选择评审、多人协作或隔离实验时使用。
 
 开始工作
 --------
@@ -68,26 +82,22 @@ Julia ``a:b`` 是隐式步长 ``+1`` 的 ``UnitRange``；当 ``a>b`` 时为空�
 
 #. ``AGENTS.md``；
 #. 本文件；
-#. ``docs/PROJECT_VISION.rst``；
-#. ``docs/LANGUAGE_SCOPE.rst``；
-#. ``docs/SOLUTION_AND_TYPES_POLICY.rst``；
-#. ``docs/CONTENT_LANGUAGE_POLICY.rst``；
-#. ``docs/RST_STYLE_GUIDE.rst``；
-#. ``docs/RELATED_PROBLEMS_POLICY.rst``；
-#. ``docs/REVIEW_AND_PREVENTION_POLICY.rst``；
+#. ``state/PROGRESS.toml``；
 #. ``docs/FORWARD_RULES_0051_0100.rst``；
 #. ``docs/AUTOMATION_QUALITY_GATE.rst``；
+#. ``docs/PROBLEM_TEMPLATE.rst``；
+#. ``docs/SOLUTION_AND_TYPES_POLICY.rst``；
+#. ``docs/RST_STYLE_GUIDE.rst``；
 #. ``docs/AUTOMATION_DIRECT_MAIN_POLICY.rst``；
-#. ``state/PROGRESS.toml``；
-#. ``state/REVIEW_INDEX.toml``；
-#. ``state/CONCEPT_LEDGER.toml``。
+#. ``state/CONCEPT_LEDGER.toml``；
+#. 当前题及最近相关题目。
 
-仓库文件是跨对话和跨执行环境的共享状态。
+需要追溯审查来源时，再读取 ``docs/REVIEW_CATALOG_0001_0050.rst`` 和对应批次证据。
 
 文档形式
 --------
 
-题目正文和项目说明以 RST 为主。仓库内容以直接阅读源文件为目标。
+题目正文和项目说明以 RST 为主，仓库内容以直接阅读源文件为目标。
 
 仓库前身
 --------
