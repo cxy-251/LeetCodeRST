@@ -3,8 +3,8 @@ mode = "prospective_rules_only"
 source = "complete_rst_content"
 start = 1
 end = 50
-current = 26
-reviewed_count = 25
+current = 31
+reviewed_count = 30
 modify_historical_rst = false
 pr_metadata_is_evidence = false
 status = "in_progress"
@@ -28,10 +28,17 @@ end = 25
 status = "completed"
 findings = "docs/review-findings/0021-0025.rst"
 
-[next_batch]
+[records.batch_0026_0030]
+path = "state/reviews/0026-0030.toml"
 start = 26
 end = 30
-purpose = "完整读取 0026-0030 的 RST，继续提炼前向规则，不修改历史题目。"
+status = "completed"
+findings = "docs/review-findings/0026-0030.rst"
+
+[next_batch]
+start = 31
+end = 35
+purpose = "完整读取 0031-0035 的 RST，继续提炼前向规则，不修改历史题目。"
 
 [rule_sources]
 base_findings = "docs/REVIEW_FINDINGS_0001_0050.rst"
@@ -39,4 +46,5 @@ forward_rules = "docs/FORWARD_RULES_0051_0100.rst"
 batch_findings = [
   "docs/review-findings/0016-0020.rst",
   "docs/review-findings/0021-0025.rst",
+  "docs/review-findings/0026-0030.rst",
 ]
