@@ -33,11 +33,12 @@ LeetCode 0001–0100
 #. `0025. Reverse Nodes in k-Group <0025-reverse-nodes-in-k-group.rst>`_
 #. `0026. Remove Duplicates from Sorted Array <0026-remove-duplicates-from-sorted-array.rst>`_
 #. `0027. Remove Element <0027-remove-element.rst>`_
+#. `0028. Find the Index of the First Occurrence in a String <0028-find-the-index-of-the-first-occurrence-in-a-string.rst>`_
 
 下一题
 ------
 
-``0028. Find the Index of the First Occurrence in a String``
+``0029. Divide Two Integers``
 
 阅读顺序
 --------

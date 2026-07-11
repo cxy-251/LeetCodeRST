@@ -10,29 +10,29 @@ content_language = "zh-CN"
 code_comment_language = "zh-CN"
 
 [progress]
-next_problem = 28
-completed_count = 27
-completed_ranges = ["0001-0027"]
+next_problem = 29
+completed_count = 28
+completed_ranges = ["0001-0028"]
 premium_skipped = []
 blocked = []
 needs_revision = []
 
 [last_batch]
 status = "completed"
-start = 27
-end = 27
+start = 28
+end = 28
 completed = 1
 premium_skipped = []
-summary = "完成 0027 十语言 RST 教程，讲清固定谓词下的稳定原地压缩、有效前缀与读写指针安全性。"
+summary = "完成 0028 十语言 RST 教程，讲清候选起点边界、逐字符验证、最早匹配证明与字符串下标单位。"
 
 [next_batch]
 status = "ready"
-start = 28
-end = 28
+start = 29
+end = 29
 purpose = "自动任务每次只精写一道题，以 RST 教学质量为首要目标。"
 
 [next_action]
-summary = "从 LeetCode 0028 开始；自动任务启动时先同步 automation/leetcode-current 到最新 main。"
+summary = "从 LeetCode 0029 开始；自动任务启动时先同步 automation/leetcode-current 到最新 main。"
 
 [last_update]
-summary = "LeetCode 0027 已由小时单题任务完成；下一轮从最新 next_problem 接续。"
+summary = "LeetCode 0028 已由小时单题任务完成；下一轮从最新 next_problem 接续。"
