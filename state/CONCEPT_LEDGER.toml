@@ -1,6 +1,6 @@
 [meta]
 version = 1
-last_problem = 23
+last_problem = 26
 
 # teaching_state 可用值：
 # introduced   首次完整解释
@@ -120,20 +120,20 @@ note = "使用 environment 的哈希绑定模拟键值映射。"
 [concepts."data_structure.singly_linked_list"]
 kind = "data_structure"
 first_problem = 2
-last_problem = 23
-occurrences = 4
+last_problem = 25
+occurrences = 6
 teaching_state = "familiar"
 difficult = false
-note = "0002、0019、0021、0023 覆盖构造、删除、双路归并与 K 路归并。"
+note = "0002、0019、0021、0023、0024、0025 覆盖构造、删除、归并、局部交换与分组反转。"
 
 [concepts."technique.dummy_node"]
 kind = "algorithm"
 first_problem = 2
-last_problem = 23
-occurrences = 4
+last_problem = 25
+occurrences = 6
 teaching_state = "familiar"
 difficult = false
-note = "统一结果链表追加、头节点删除和多路归并的首节点边界。"
+note = "统一结果链表追加、头节点删除、归并、相邻交换与分组反转的首节点边界。"
 
 [concepts."algorithm.digit_carry_simulation"]
 kind = "algorithm"
@@ -147,17 +147,17 @@ note = "当前结果位由两输入位和上一位 carry 决定。"
 [concepts."rust.option_box_linked_list"]
 kind = "syntax"
 first_problem = 2
-last_problem = 23
-occurrences = 4
+last_problem = 25
+occurrences = 6
 teaching_state = "familiar"
 difficult = true
-note = "构造、删除和归并时使用 take 转移 Box 节点与后继所有权。"
+note = "使用 take 转移 Box 节点与后继所有权；0024 使用可变链接槽，0025 用安全递归连接分组。"
 
 [concepts."julia.mutable_recursive_node"]
 kind = "syntax"
 first_problem = 2
-last_problem = 23
-occurrences = 4
+last_problem = 25
+occurrences = 6
 teaching_state = "familiar"
 difficult = false
 note = "Julia 链表统一使用 mutable struct 提供引用式链接修改。"
@@ -165,8 +165,8 @@ note = "Julia 链表统一使用 mutable struct 提供引用式链接修改。"
 [concepts."r.environment_reference_node"]
 kind = "syntax"
 first_problem = 2
-last_problem = 23
-occurrences = 4
+last_problem = 25
+occurrences = 6
 teaching_state = "familiar"
 difficult = false
 note = "R 链表统一使用 environment 获得引用语义。"
@@ -196,7 +196,7 @@ last_problem = 20
 occurrences = 8
 teaching_state = "reinforcing"
 difficult = true
-note = "0003、0005、0006 区分字符单位；0008、0010、0013、0014、0020 在 ASCII 约束下按字节或代码单元扫描。"
+note = "0003、0005、0006 区分字符单位；0008、0010、0013、0014、0020 在 ASCII 约束下扫描。"
 
 [concepts."algorithm.binary_search_partition"]
 kind = "algorithm"
@@ -232,7 +232,7 @@ last_problem = 14
 occurrences = 5
 teaching_state = "reinforcing"
 difficult = false
-note = "算法使用零基数量或坐标；0014 再次区分前缀长度与 Julia/R 的一基字符位置。"
+note = "算法使用零基数量或坐标；Julia/R 接口需要映射到一基位置。"
 
 [concepts."algorithm.expand_around_center"]
 kind = "algorithm"
@@ -268,7 +268,7 @@ last_problem = 12
 occurrences = 3
 teaching_state = "familiar"
 difficult = false
-note = "0005、0006、0012 使用 StringBuilder、缓冲区或片段列表避免反复复制字符串。"
+note = "0005、0006、0012 使用缓冲区或片段列表避免反复复制字符串。"
 
 [concepts."algorithm.decimal_digit_pop_push"]
 kind = "algorithm"
@@ -277,7 +277,7 @@ last_problem = 9
 occurrences = 3
 teaching_state = "familiar"
 difficult = false
-note = "0007 完整反转整数，0008 从字符累积十进制值，0009 只反转数字后一半。"
+note = "0007 完整反转整数，0008 从字符累积十进制值，0009 只反转后一半。"
 
 [concepts."proof.pre_operation_overflow_guard"]
 kind = "proof"
@@ -286,7 +286,7 @@ last_problem = 11
 occurrences = 3
 teaching_state = "reinforcing"
 difficult = true
-note = "0007、0008 在乘十前守卫；0011 在面积乘法前先提升至少一个操作数到 64 位。"
+note = "0007、0008 在乘十前守卫；0011 在面积乘法前提升到 64 位。"
 
 [concepts."numeric.truncating_division_and_remainder"]
 kind = "syntax"
@@ -295,7 +295,7 @@ last_problem = 9
 occurrences = 2
 teaching_state = "reinforcing"
 difficult = true
-note = "0007 比较负数整除差异；0009 快速排除后只处理非负整数，TypeScript 仍需 Math.trunc。"
+note = "比较负数整除差异；TypeScript 使用 Math.trunc 表达截断。"
 
 [concepts."algorithm.ordered_string_parse_phases"]
 kind = "algorithm"
@@ -313,7 +313,7 @@ last_problem = 8
 occurrences = 1
 teaching_state = "introduced"
 difficult = true
-note = "正数绝对值上限为 2147483647，负数为 2147483648，压入前按当前符号选择边界。"
+note = "正负结果采用不同绝对值上限，压入数字前先检查边界。"
 
 [concepts."string.ascii_digit_scan"]
 kind = "syntax"
@@ -322,7 +322,7 @@ last_problem = 8
 occurrences = 1
 teaching_state = "introduced"
 difficult = false
-note = "只接受 ASCII '0' 到 '9'；Rust、Go、Julia 可按字节扫描，其他语言按字符或代码单元比较。"
+note = "只接受 ASCII '0' 到 '9'，按语言选择字节、字符或代码单元。"
 
 [concepts."algorithm.reverse_half_digits"]
 kind = "algorithm"
@@ -331,7 +331,7 @@ last_problem = 9
 occurrences = 1
 teaching_state = "introduced"
 difficult = true
-note = "只把右半数字逆序到 reversed_half，以 x > reversed_half 判断两侧交叉。"
+note = "只把右半数字逆序到 reversed_half，以两侧交叉条件停止。"
 
 [concepts."proof.odd_center_digit_removal"]
 kind = "proof"
@@ -340,7 +340,7 @@ last_problem = 9
 occurrences = 1
 teaching_state = "introduced"
 difficult = false
-note = "奇数位整数中，reversed_half / 10 删除无需配对的中间数字。"
+note = "奇数位整数比较时删除无需配对的中间数字。"
 
 [concepts."proof.overflow_avoidance_by_partial_construction"]
 kind = "proof"
@@ -349,7 +349,7 @@ last_problem = 9
 occurrences = 1
 teaching_state = "introduced"
 difficult = true
-note = "只构造约一半位数的反转值，从结构上避免完整整数反转溢出。"
+note = "只构造约一半位数的反转值，从结构上避免完整反转溢出。"
 
 [concepts."algorithm.memoized_suffix_matching"]
 kind = "algorithm"
@@ -358,7 +358,7 @@ last_problem = 10
 occurrences = 1
 teaching_state = "introduced"
 difficult = true
-note = "用 (i, j) 表示字符串后缀与模式后缀能否完整匹配，并缓存每个二维状态。"
+note = "用 (i, j) 表示字符串后缀与模式后缀能否完整匹配并缓存。"
 
 [concepts."algorithm.regex_star_zero_or_more"]
 kind = "algorithm"
@@ -367,7 +367,7 @@ last_problem = 10
 occurrences = 1
 teaching_state = "introduced"
 difficult = true
-note = "x* 分成零次跳到 j+2，以及先匹配一个字符后保留 j 的至少一次分支。"
+note = "x* 分成零次跳过与至少一次后保留模式位置两类分支。"
 
 [concepts."data_structure.tristate_boolean_memo"]
 kind = "data_structure"
@@ -376,7 +376,7 @@ last_problem = 10
 occurrences = 1
 teaching_state = "introduced"
 difficult = false
-note = "记忆表区分未计算、false 和 true，避免把失败状态误当作尚未访问。"
+note = "记忆表区分未计算、false 和 true。"
 
 [concepts."proof.regex_pattern_structure_partition"]
 kind = "proof"
@@ -385,7 +385,7 @@ last_problem = 10
 occurrences = 1
 teaching_state = "introduced"
 difficult = true
-note = "按当前模式元素是否带星号分类，并在星号情形穷尽零次与至少一次两类合法结构。"
+note = "按当前模式元素是否带星号分类，穷尽合法匹配结构。"
 
 [concepts."algorithm.two_pointer_container"]
 kind = "algorithm"
@@ -394,7 +394,7 @@ last_problem = 11
 occurrences = 1
 teaching_state = "introduced"
 difficult = true
-note = "从最大宽度开始，只移动较短边界，以线性时间收缩容器候选区间。"
+note = "从最大宽度开始，只移动较短边界，线性收缩候选区间。"
 
 [concepts."proof.shorter_side_elimination"]
 kind = "proof"
@@ -403,7 +403,7 @@ last_problem = 11
 occurrences = 1
 teaching_state = "introduced"
 difficult = true
-note = "固定短板后，任何更内侧配对都同时具有更小宽度且水位不高于短板，因此可整批排除。"
+note = "固定短板后，更内侧配对宽度更小且水位不高于短板。"
 
 [concepts."numeric.widen_before_product"]
 kind = "syntax"
@@ -412,7 +412,7 @@ last_problem = 11
 occurrences = 1
 teaching_state = "introduced"
 difficult = false
-note = "C 系语言在宽度与高度相乘前提升到 64 位，避免窄类型乘法先溢出。"
+note = "乘法前提升到 64 位，避免窄类型中间结果先溢出。"
 
 [concepts."algorithm.descending_roman_greedy"]
 kind = "algorithm"
@@ -421,7 +421,7 @@ last_problem = 12
 occurrences = 1
 teaching_state = "introduced"
 difficult = false
-note = "把基本符号和六个减法组合统一为降序带权片段，每次选择最大可用片段。"
+note = "把基本符号与减法组合统一为降序带权片段。"
 
 [concepts."proof.canonical_roman_token_decomposition"]
 kind = "proof"
@@ -430,7 +430,7 @@ last_problem = 12
 occurrences = 1
 teaching_state = "introduced"
 difficult = true
-note = "规范罗马数字可分解为降序合法片段；最大可用片段必须先出现，否则会产生更长或非法形式。"
+note = "规范罗马数字可分解为降序合法片段，最大可用片段应先出现。"
 
 [concepts."algorithm.local_subtractive_roman_scan"]
 kind = "algorithm"
@@ -439,7 +439,7 @@ last_problem = 13
 occurrences = 1
 teaching_state = "introduced"
 difficult = false
-note = "当前符号小于右邻居时取负，否则取正，用一次线性扫描完成罗马数字求值。"
+note = "当前符号小于右邻居时取负，否则取正。"
 
 [concepts."proof.signed_roman_symbol_contribution"]
 kind = "proof"
@@ -448,7 +448,7 @@ last_problem = 13
 occurrences = 1
 teaching_state = "introduced"
 difficult = false
-note = "减法对贡献为 -small + large，普通降序符号各自取正，所有字符恰好贡献一次。"
+note = "减法对贡献为 -small + large，普通符号各贡献一次。"
 
 [concepts."algorithm.vertical_common_prefix_scan"]
 kind = "algorithm"
@@ -457,7 +457,7 @@ last_problem = 14
 occurrences = 1
 teaching_state = "introduced"
 difficult = false
-note = "以首串为上界逐列比较所有字符串，在首个长度不足或字符不同时停止。"
+note = "以首串为上界逐列比较，在首个失败位置停止。"
 
 [concepts."proof.first_prefix_mismatch_boundary"]
 kind = "proof"
@@ -466,7 +466,7 @@ last_problem = 14
 occurrences = 1
 teaching_state = "introduced"
 difficult = false
-note = "首个失败位置之前已经全部匹配，而任何更长前缀都必须包含失败位置，因此当前长度最长。"
+note = "首个失败位置之前全部匹配，任何更长前缀都包含失败位置。"
 
 [concepts."string.ascii_prefix_slice"]
 kind = "syntax"
@@ -475,7 +475,7 @@ last_problem = 14
 occurrences = 1
 teaching_state = "introduced"
 difficult = true
-note = "小写英文字母约束下字节边界等于字符边界；一般 Unicode 字符串不能任意按字节切片。"
+note = "ASCII 约束下字节边界等于字符边界；一般 Unicode 不成立。"
 
 [concepts."algorithm.sorted_anchor_two_pointer_sum"]
 kind = "algorithm"
@@ -484,7 +484,7 @@ last_problem = 16
 occurrences = 2
 teaching_state = "reinforcing"
 difficult = true
-note = "排序后固定一个锚点，在右侧用双指针完成精确三数和与最近三数和搜索。"
+note = "排序后固定锚点，在右侧用双指针搜索精确或最近三数和。"
 
 [concepts."proof.monotone_sum_pointer_elimination"]
 kind = "proof"
@@ -493,7 +493,7 @@ last_problem = 16
 occurrences = 2
 teaching_state = "reinforcing"
 difficult = true
-note = "有序数组中，当前和过小时排除左端，过大时排除右端；移动前先处理当前候选。"
+note = "有序数组中总和过小时排除左端，过大时排除右端。"
 
 [concepts."technique.sorted_duplicate_skipping"]
 kind = "algorithm"
@@ -502,7 +502,7 @@ last_problem = 15
 occurrences = 1
 teaching_state = "introduced"
 difficult = false
-note = "重复锚点直接跳过；命中后越过相同左右值，使每个数值三元组只输出一次。"
+note = "跳过重复锚点和命中后的相同左右值。"
 
 [concepts."numeric.widen_three_value_sum"]
 kind = "syntax"
@@ -511,7 +511,7 @@ last_problem = 16
 occurrences = 2
 teaching_state = "reinforcing"
 difficult = false
-note = "固定宽度语言在三数求和和差值比较前提升到更宽类型，避免中间运算溢出。"
+note = "三数求和与差值比较前提升到更宽类型。"
 
 [concepts."algorithm.closest_candidate_invariant"]
 kind = "algorithm"
@@ -520,7 +520,7 @@ last_problem = 16
 occurrences = 1
 teaching_state = "introduced"
 difficult = true
-note = "best 始终保存所有已检查真实三元组中与 target 距离最小的总和。"
+note = "best 始终保存已检查候选中最接近 target 的真实总和。"
 
 [concepts."algorithm.backtracking_cartesian_product"]
 kind = "algorithm"
@@ -529,7 +529,7 @@ last_problem = 17
 occurrences = 1
 teaching_state = "introduced"
 difficult = true
-note = "递归每层选择当前集合的一个元素，枚举电话按键字母集合的完整笛卡尔积。"
+note = "递归每层选择当前集合一个元素，枚举完整笛卡尔积。"
 
 [concepts."data_structure.mutable_backtracking_path"]
 kind = "data_structure"
@@ -538,7 +538,7 @@ last_problem = 22
 occurrences = 2
 teaching_state = "reinforcing"
 difficult = false
-note = "0017 枚举字母组合，0022 复用路径生成合法括号并在返回时撤销。"
+note = "0017 与 0022 复用可变路径，并在返回时撤销选择。"
 
 [concepts."proof.backtracking_prefix_partition"]
 kind = "proof"
@@ -547,7 +547,7 @@ last_problem = 22
 occurrences = 2
 teaching_state = "reinforcing"
 difficult = true
-note = "递归前缀划分互不重叠的答案子集，每个完整结果沿唯一根到叶路径生成。"
+note = "递归前缀划分互不重叠的答案子集，每个结果沿唯一根到叶路径生成。"
 
 [concepts."complexity.output_sensitive_cartesian_product"]
 kind = "proof"
@@ -556,7 +556,7 @@ last_problem = 17
 occurrences = 1
 teaching_state = "introduced"
 difficult = false
-note = "若组合数为 P、字符串长度为 d，复制完整输出需要 O(P × d) 时间与输出空间。"
+note = "组合数为 P、长度为 d 时，复制输出需要 O(P × d)。"
 
 [concepts."algorithm.two_anchor_four_sum"]
 kind = "algorithm"
@@ -565,7 +565,7 @@ last_problem = 18
 occurrences = 1
 teaching_state = "introduced"
 difficult = true
-note = "排序后固定两个锚点，把四数和降为有序后缀中的两数和。"
+note = "排序后固定两个锚点，把四数和降为有序两数和。"
 
 [concepts."technique.sorted_sum_bounds_pruning"]
 kind = "algorithm"
@@ -574,7 +574,7 @@ last_problem = 18
 occurrences = 1
 teaching_state = "introduced"
 difficult = true
-note = "使用当前锚点可达到的最小和与最大和，安全地 break 或 continue。"
+note = "使用锚点可达到的最小和与最大和安全剪枝。"
 
 [concepts."algorithm.fixed_gap_linked_list_pointers"]
 kind = "algorithm"
@@ -583,7 +583,7 @@ last_problem = 19
 occurrences = 1
 teaching_state = "introduced"
 difficult = true
-note = "快指针领先 n 个节点后同步移动，使慢指针最终定位倒数第 n 个节点的前驱。"
+note = "快指针领先 n 个节点后同步移动，定位倒数节点前驱。"
 
 [concepts."proof.predecessor_link_deletion"]
 kind = "proof"
@@ -592,7 +592,7 @@ last_problem = 19
 occurrences = 1
 teaching_state = "introduced"
 difficult = false
-note = "单链表删除通过改写目标前驱的 next 跳过目标，哑节点保证头节点也有前驱。"
+note = "单链表删除通过改写目标前驱的 next 跳过目标。"
 
 [concepts."data_structure.unclosed_bracket_stack"]
 kind = "data_structure"
@@ -601,7 +601,7 @@ last_problem = 20
 occurrences = 1
 teaching_state = "introduced"
 difficult = false
-note = "栈按嵌套顺序保存当前前缀中尚未闭合的左括号。"
+note = "栈保存当前前缀中尚未闭合的左括号。"
 
 [concepts."proof.stack_top_bracket_matching"]
 kind = "proof"
@@ -610,7 +610,7 @@ last_problem = 20
 occurrences = 1
 teaching_state = "introduced"
 difficult = true
-note = "右括号只能匹配最近未闭合的同类型左括号；跳过栈顶会形成交叉闭合。"
+note = "右括号只能匹配最近未闭合的同类型左括号。"
 
 [concepts."algorithm.stable_two_way_linked_merge"]
 kind = "algorithm"
@@ -619,7 +619,7 @@ last_problem = 21
 occurrences = 1
 teaching_state = "introduced"
 difficult = false
-note = "只比较两条有序链表当前头节点，以尾指针稳定地复用并追加较小节点。"
+note = "比较两条有序链表当前头节点，稳定追加较小节点。"
 
 [concepts."proof.sorted_head_global_minimum"]
 kind = "proof"
@@ -628,7 +628,7 @@ last_problem = 23
 occurrences = 2
 teaching_state = "reinforcing"
 difficult = true
-note = "有序来源的最小未处理元素必在当前头部；0023 将双头候选推广到 K 个头节点。"
+note = "有序来源的最小未处理元素必在当前头部；0023 推广到 K 个来源。"
 
 [concepts."technique.remaining_sorted_suffix_splice"]
 kind = "algorithm"
@@ -637,7 +637,7 @@ last_problem = 21
 occurrences = 1
 teaching_state = "introduced"
 difficult = false
-note = "一侧耗尽后，另一侧有序后缀可整体接入结果尾部。"
+note = "一侧耗尽后，另一侧有序后缀可整体接入。"
 
 [concepts."algorithm.valid_parenthesis_prefix_backtracking"]
 kind = "algorithm"
@@ -655,7 +655,7 @@ last_problem = 22
 occurrences = 1
 teaching_state = "introduced"
 difficult = true
-note = "始终保持 0 <= close <= open <= n，长度到 2n 时自然得到完整合法序列。"
+note = "保持 0 <= close <= open <= n，长度到 2n 时得到合法序列。"
 
 [concepts."complexity.catalan_output_size"]
 kind = "proof"
@@ -664,7 +664,7 @@ last_problem = 22
 occurrences = 1
 teaching_state = "introduced"
 difficult = true
-note = "合法括号结果数为 Catalan 数 C_n，复制每个长度 2n 的输出得到 O(C_n × n)。"
+note = "合法括号结果数为 Catalan 数，复制输出需要 O(C_n × n)。"
 
 [concepts."data_structure.k_way_head_min_heap"]
 kind = "data_structure"
@@ -673,7 +673,7 @@ last_problem = 23
 occurrences = 1
 teaching_state = "introduced"
 difficult = true
-note = "最小堆为每条尚未耗尽链表保存一个当前头节点，堆大小不超过 k。"
+note = "最小堆为每条未耗尽链表保存一个当前头节点。"
 
 [concepts."proof.heap_top_global_minimum"]
 kind = "proof"
@@ -682,7 +682,7 @@ last_problem = 23
 occurrences = 1
 teaching_state = "introduced"
 difficult = true
-note = "每条链表头是该来源最小未处理节点，所有头节点的堆顶因此是全局最小未处理节点。"
+note = "所有来源当前头节点中的堆顶是全局最小未处理节点。"
 
 [concepts."complexity.total_nodes_log_k"]
 kind = "proof"
@@ -691,7 +691,7 @@ last_problem = 23
 occurrences = 1
 teaching_state = "introduced"
 difficult = false
-note = "总节点数 N 中每个节点执行常数次 O(log k) 堆操作，总时间 O(N log k)。"
+note = "总节点数 N 中每个节点执行常数次 O(log k) 堆操作。"
 
 [concepts."algorithm.custom_binary_min_heap"]
 kind = "algorithm"
@@ -700,4 +700,94 @@ last_problem = 23
 occurrences = 1
 teaching_state = "introduced"
 difficult = true
-note = "C、Rust、TypeScript、Julia、R 展示上浮与下沉维护数组二叉最小堆。"
+note = "用数组上浮和下沉维护二叉最小堆。"
+
+[concepts."algorithm.adjacent_linked_node_swap"]
+kind = "algorithm"
+first_problem = 24
+last_problem = 24
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "把 prev -> first -> second -> after 重连为 prev -> second -> first -> after。"
+
+[concepts."proof.local_link_reconnection_node_conservation"]
+kind = "proof"
+first_problem = 24
+last_problem = 24
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "局部交换同时保持组前、组内、组后三段连通，证明节点不丢失、不重复。"
+
+[concepts."rust.mutable_link_slot"]
+kind = "syntax"
+first_problem = 24
+last_problem = 24
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "用 &mut Option<Box<Node>> 表示可替换的链表入口，并通过 take 转移所有权。"
+
+[concepts."algorithm.k_group_half_open_reversal"]
+kind = "algorithm"
+first_problem = 25
+last_problem = 25
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "把每个完整分组建模为半开区间 [start, group_next) 并原地反转。"
+
+[concepts."technique.read_before_mutate_group_probe"]
+kind = "algorithm"
+first_problem = 25
+last_problem = 25
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "先只读走 k 步确认完整分组，再执行破坏性链接修改。"
+
+[concepts."proof.incomplete_suffix_preservation"]
+kind = "proof"
+first_problem = 25
+last_problem = 25
+occurrences = 1
+teaching_state = "introduced"
+difficult = false
+note = "探测失败前未修改链接，因此不足 k 个节点的后缀保持原序。"
+
+[concepts."algorithm.sorted_array_read_write_compaction"]
+kind = "algorithm"
+first_problem = 26
+last_problem = 26
+occurrences = 1
+teaching_state = "introduced"
+difficult = false
+note = "读指针扫描有序数组，写指针把每个新值压缩到有效前缀。"
+
+[concepts."proof.sorted_unique_prefix_invariant"]
+kind = "proof"
+first_problem = 26
+last_problem = 26
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "有效前缀始终包含已扫描区间的全部不同值，保持有序且无重复。"
+
+[concepts."technique.write_pointer_not_ahead_of_read"]
+kind = "algorithm"
+first_problem = 26
+last_problem = 26
+occurrences = 1
+teaching_state = "introduced"
+difficult = false
+note = "始终有 write <= read，向前覆盖不会破坏尚未读取的数据。"
+
+[concepts."julia_r.one_based_compaction_pointer"]
+kind = "syntax"
+first_problem = 26
+last_problem = 26
+occurrences = 1
+teaching_state = "introduced"
+difficult = false
+note = "Julia/R 用一基位置表达有效长度和写入位置；R 返回修改后的向量副本。"
