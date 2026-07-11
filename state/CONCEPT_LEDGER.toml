@@ -1,6 +1,6 @@
 [meta]
 version = 1
-last_problem = 20
+last_problem = 23
 
 # teaching_state 可用值：
 # introduced   首次完整解释
@@ -120,20 +120,20 @@ note = "使用 environment 的哈希绑定模拟键值映射。"
 [concepts."data_structure.singly_linked_list"]
 kind = "data_structure"
 first_problem = 2
-last_problem = 19
-occurrences = 2
-teaching_state = "reinforcing"
+last_problem = 23
+occurrences = 4
+teaching_state = "familiar"
 difficult = false
-note = "0002 首次使用平台单链表；0019 通过前驱链接删除倒数节点。"
+note = "0002、0019、0021、0023 覆盖构造、删除、双路归并与 K 路归并。"
 
 [concepts."technique.dummy_node"]
 kind = "algorithm"
 first_problem = 2
-last_problem = 19
-occurrences = 2
-teaching_state = "reinforcing"
+last_problem = 23
+occurrences = 4
+teaching_state = "familiar"
 difficult = false
-note = "0002 统一结果链表追加；0019 统一删除头节点与普通节点。"
+note = "统一结果链表追加、头节点删除和多路归并的首节点边界。"
 
 [concepts."algorithm.digit_carry_simulation"]
 kind = "algorithm"
@@ -147,27 +147,27 @@ note = "当前结果位由两输入位和上一位 carry 决定。"
 [concepts."rust.option_box_linked_list"]
 kind = "syntax"
 first_problem = 2
-last_problem = 19
-occurrences = 2
-teaching_state = "reinforcing"
+last_problem = 23
+occurrences = 4
+teaching_state = "familiar"
 difficult = true
-note = "0002 构造链表，0019 用 take 转移被删除节点的后继所有权。"
+note = "构造、删除和归并时使用 take 转移 Box 节点与后继所有权。"
 
 [concepts."julia.mutable_recursive_node"]
 kind = "syntax"
 first_problem = 2
-last_problem = 2
-occurrences = 1
-teaching_state = "introduced"
+last_problem = 23
+occurrences = 4
+teaching_state = "familiar"
 difficult = false
-note = "Julia 链表统一使用 mutable struct。"
+note = "Julia 链表统一使用 mutable struct 提供引用式链接修改。"
 
 [concepts."r.environment_reference_node"]
 kind = "syntax"
 first_problem = 2
-last_problem = 2
-occurrences = 1
-teaching_state = "introduced"
+last_problem = 23
+occurrences = 4
+teaching_state = "familiar"
 difficult = false
 note = "R 链表统一使用 environment 获得引用语义。"
 
@@ -534,20 +534,20 @@ note = "递归每层选择当前集合的一个元素，枚举电话按键字母
 [concepts."data_structure.mutable_backtracking_path"]
 kind = "data_structure"
 first_problem = 17
-last_problem = 17
-occurrences = 1
-teaching_state = "introduced"
+last_problem = 22
+occurrences = 2
+teaching_state = "reinforcing"
 difficult = false
-note = "共享可变路径通过追加与撤销或固定位置覆盖，在不同递归分支间复用前缀缓冲区。"
+note = "0017 枚举字母组合，0022 复用路径生成合法括号并在返回时撤销。"
 
 [concepts."proof.backtracking_prefix_partition"]
 kind = "proof"
 first_problem = 17
-last_problem = 17
-occurrences = 1
-teaching_state = "introduced"
+last_problem = 22
+occurrences = 2
+teaching_state = "reinforcing"
 difficult = true
-note = "每个递归前缀对应互不重叠的合法组合子集，每个完整组合沿唯一根到叶路径生成。"
+note = "递归前缀划分互不重叠的答案子集，每个完整结果沿唯一根到叶路径生成。"
 
 [concepts."complexity.output_sensitive_cartesian_product"]
 kind = "proof"
@@ -611,3 +611,93 @@ occurrences = 1
 teaching_state = "introduced"
 difficult = true
 note = "右括号只能匹配最近未闭合的同类型左括号；跳过栈顶会形成交叉闭合。"
+
+[concepts."algorithm.stable_two_way_linked_merge"]
+kind = "algorithm"
+first_problem = 21
+last_problem = 21
+occurrences = 1
+teaching_state = "introduced"
+difficult = false
+note = "只比较两条有序链表当前头节点，以尾指针稳定地复用并追加较小节点。"
+
+[concepts."proof.sorted_head_global_minimum"]
+kind = "proof"
+first_problem = 21
+last_problem = 23
+occurrences = 2
+teaching_state = "reinforcing"
+difficult = true
+note = "有序来源的最小未处理元素必在当前头部；0023 将双头候选推广到 K 个头节点。"
+
+[concepts."technique.remaining_sorted_suffix_splice"]
+kind = "algorithm"
+first_problem = 21
+last_problem = 21
+occurrences = 1
+teaching_state = "introduced"
+difficult = false
+note = "一侧耗尽后，另一侧有序后缀可整体接入结果尾部。"
+
+[concepts."algorithm.valid_parenthesis_prefix_backtracking"]
+kind = "algorithm"
+first_problem = 22
+last_problem = 22
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "只在 open < n 时加左括号，只在 close < open 时加右括号。"
+
+[concepts."proof.parenthesis_prefix_invariant"]
+kind = "proof"
+first_problem = 22
+last_problem = 22
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "始终保持 0 <= close <= open <= n，长度到 2n 时自然得到完整合法序列。"
+
+[concepts."complexity.catalan_output_size"]
+kind = "proof"
+first_problem = 22
+last_problem = 22
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "合法括号结果数为 Catalan 数 C_n，复制每个长度 2n 的输出得到 O(C_n × n)。"
+
+[concepts."data_structure.k_way_head_min_heap"]
+kind = "data_structure"
+first_problem = 23
+last_problem = 23
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "最小堆为每条尚未耗尽链表保存一个当前头节点，堆大小不超过 k。"
+
+[concepts."proof.heap_top_global_minimum"]
+kind = "proof"
+first_problem = 23
+last_problem = 23
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "每条链表头是该来源最小未处理节点，所有头节点的堆顶因此是全局最小未处理节点。"
+
+[concepts."complexity.total_nodes_log_k"]
+kind = "proof"
+first_problem = 23
+last_problem = 23
+occurrences = 1
+teaching_state = "introduced"
+difficult = false
+note = "总节点数 N 中每个节点执行常数次 O(log k) 堆操作，总时间 O(N log k)。"
+
+[concepts."algorithm.custom_binary_min_heap"]
+kind = "algorithm"
+first_problem = 23
+last_problem = 23
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "C、Rust、TypeScript、Julia、R 展示上浮与下沉维护数组二叉最小堆。"

@@ -26,11 +26,14 @@ LeetCode 0001–0100
 #. `0018. 4Sum <0018-4sum.rst>`_
 #. `0019. Remove Nth Node From End of List <0019-remove-nth-node-from-end-of-list.rst>`_
 #. `0020. Valid Parentheses <0020-valid-parentheses.rst>`_
+#. `0021. Merge Two Sorted Lists <0021-merge-two-sorted-lists.rst>`_
+#. `0022. Generate Parentheses <0022-generate-parentheses.rst>`_
+#. `0023. Merge k Sorted Lists <0023-merge-k-sorted-lists.rst>`_
 
 下一题
 ------
 
-``0021. Merge Two Sorted Lists``
+``0024. Swap Nodes in Pairs``
 
 阅读顺序
 --------
