@@ -3,8 +3,10 @@ name = "leetcode-multilang-rst"
 phase = "review_extracting_rules"
 format = "rst"
 ordering = "leetcode_number_ascending"
-automation_workflow = "difficulty_budget_fixed_branch_pr"
-automation_branch = "automation/leetcode-current"
+execution_mode = "conversation_only"
+scheduled_tasks_enabled = false
+git_workflow = "direct_main"
+branch_policy = "no_new_branch_or_pr_unless_user_explicitly_requests"
 build_required = false
 content_language = "zh-CN"
 code_comment_language = "zh-CN"
@@ -55,10 +57,20 @@ historical_end = 50
 historical_policy = "逐题读取正文获取优化方法，但不修改历史 RST；所有发现只转化为 0051-0100 的前向规则。"
 prospective_start = 51
 prospective_end = 100
-prospective_policy = "完成 0001-0050 逐题规则提炼后，完整执行 FORWARD_RULES_0051_0100.rst 与自动质量门。"
+prospective_policy = "完成 0001-0050 逐题规则提炼后，完整执行 FORWARD_RULES_0051_0100.rst 与质量门。"
+
+[execution]
+trigger = "explicit_user_message_in_active_conversation"
+background_execution = false
+scheduled_execution = false
+automatic_retry = false
+write_target = "main"
+create_branch_by_default = false
+create_pr_by_default = false
+policy = "docs/AUTOMATION_DIRECT_MAIN_POLICY.rst"
 
 [next_action]
-summary = "继续完整审查 0036-0040；只更新审查记录和公共规则，不修改题目文件。"
+summary = "等待用户在对话中明确要求后，继续完整审查 0036-0040；只更新审查记录和公共规则，不修改题目文件。"
 
 [last_update]
-summary = "已完整读取 0031-0035 的 RST，并提炼见证元素、主代码自洽、索引窄化覆盖 n、排列邻接证明、哨兵栈、二分返回语义和 C 首次写入前分配检查规则。"
+summary = "已停用 LeetCode 定时任务并切换为仅由对话触发、直接提交 main 的执行方式；审查进度保持在 0035，下一批为 0036-0040。"
