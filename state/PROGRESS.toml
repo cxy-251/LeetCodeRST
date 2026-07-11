@@ -38,16 +38,16 @@ mode = "prospective_rules_only"
 source = "complete_rst_content"
 start = 1
 end = 50
-current = 41
-reviewed_count = 40
+current = 46
+reviewed_count = 45
 batch_size = 5
 modify_historical_rst = false
 pr_metadata_is_evidence = false
 index = "state/REVIEW_INDEX.toml"
 legacy_record = "state/REVIEW_0001_0050.toml"
-latest_record = "state/reviews/0036-0040.toml"
+latest_record = "state/reviews/0041-0045.toml"
 base_findings = "docs/REVIEW_FINDINGS_0001_0050.rst"
-latest_findings = "docs/review-findings/0036-0040.rst"
+latest_findings = "docs/review-findings/0041-0045.rst"
 forward_rules = "docs/FORWARD_RULES_0051_0100.rst"
 
 [quality_scope]
@@ -67,7 +67,7 @@ collaboration_mode = "branch_or_pr_when_user_selects_review_workflow"
 policy = "docs/AUTOMATION_DIRECT_MAIN_POLICY.rst"
 
 [next_action]
-summary = "等待用户在对话中明确要求后，继续完整审查 0041-0045；更新审查记录、前向规则、索引和状态。"
+summary = "等待用户在对话中明确要求后，继续完整审查 0046-0050；更新审查记录、前向规则、索引和状态。"
 
 [last_update]
-summary = "已完整读取 0036-0040 的 RST，并提炼固定域复杂度、启发式顺序、调用级状态、并存缓冲区峰值、回溯节点与输出载荷、等价分支覆盖和语言语义校验规则。"
+summary = "已完整读取 0041-0045 的 RST，并提炼值派生下标守卫、永久槽位证明、聚合结果宽度、规范数字字符串、受控回退进度和区间 BFS 边界规则。"
