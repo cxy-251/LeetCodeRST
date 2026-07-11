@@ -1,0 +1,147 @@
+[batch]
+start = 16
+end = 20
+status = "completed"
+source = "complete_rst_content"
+modify_historical_rst = false
+pr_metadata_is_evidence = false
+summary = "完整读取 0016-0020 的 RST 正文与十语言代码，只提炼 0051-0100 的前向规则。"
+
+[problems."0016"]
+status = "reviewed"
+file = "problems/0001-0100/0016-3sum-closest.rst"
+observations = [
+  "真实三元组初始化 best、先评价再移动和精确命中下界解释完整。",
+  "正文未列出 nums、target 的精确数值范围，却在多语言中使用 int、Int、number 并最终窄化返回，无法从文档证明整条表达式安全。",
+  "Go 版本使用平台 int 完成三数和、差值和 abs；仅扩宽部分语言的 sum 不足以覆盖差值绝对值和最终返回。",
+  "C++ 使用 std::abs、vector、sort，Java 使用 Arrays、Math，但代码块没有直接导入或平台预置说明。",
+]
+rule_ids = [
+  "numeric_expression_closed_width",
+  "constraint_derived_numeric_width",
+  "platform_signature_exact",
+  "explicit_import_boundary",
+]
+
+[problems."0017"]
+status = "reviewed"
+file = "problems/0001-0100/0017-letter-combinations-of-a-phone-number.rst"
+observations = [
+  "递归层级、路径来源、叶子复制、完整性和无重复证明完整。",
+  "题目重述没有列出 digits 最大长度，C 却用 int 连乘组合数量并据此分配结果数组，缺少乘积溢出与 size_t 容量证明。",
+  "C 的结果数组、路径和每个组合分配都未检查失败，也没有清理已完成的部分结果。",
+  "R 每个叶子使用 result <<- c(result, value) 反复扩展向量，累计复制可能使实际成本高于 O(P*d)。",
+  "R 通过 path[index] <<- 修改父绑定，不能自动视为常数时间原地覆盖；应预分配结果或使用明确引用语义。",
+]
+rule_ids = [
+  "capacity_product_overflow",
+  "failure_path_not_partial_answer",
+  "output_accumulator_real_cost",
+  "r_mutable_memo_cost",
+  "recursion_depth_against_constraints",
+]
+
+[problems."0018"]
+status = "reviewed"
+file = "problems/0001-0100/0018-4sum.rst"
+observations = [
+  "双锚点、分层去重、单调双指针和上下界剪枝证明清楚。",
+  "正文把第一、第二锚点上下界剪枝写成主解法组成部分，但多种语言代码未实现这些剪枝，部分语言只实现第一层，文档与十语言实现不一致。",
+  "C 重复使用直接覆盖旧指针的 realloc，并且初始分配、行分配和并行数组扩容都缺少事务式失败处理。",
+  "Julia 在 n 小于 4 时执行 1:(n-3)，会形成递减范围并访问无效位置。",
+  "Java 使用 List.of 依赖 Java 9，代码没有声明版本前提。",
+]
+rule_ids = [
+  "documented_optimization_alignment",
+  "realloc_transactional_update",
+  "empty_range_guard",
+  "version_dependent_api",
+  "input_mutation_and_ownership",
+]
+
+[problems."0019"]
+status = "reviewed"
+file = "problems/0001-0100/0019-remove-nth-node-from-end-of-list.rst"
+observations = [
+  "固定间距、前驱定位和哑节点统一删除头部的证明完整。",
+  "Rust 因借用规则改用两遍法，并明确说明算法差异与相同渐进复杂度，是语言特化实现的正向样本。",
+  "C 显式 free 被删除节点，C++ 与托管语言只断链；正文没有给出平台节点所有权和释放责任的统一契约。",
+  "Python Optional、R 的 new_list_node/node_next/set_node_next 依赖外部定义，代码块没有直接导入、定义或明确引用统一平台辅助接口。",
+  "TypeScript 的非空断言和 Julia 的 something 依赖 n 合法且链表非空，需要由精确前提支撑。",
+]
+rule_ids = [
+  "language_specific_algorithm_divergence",
+  "node_ownership_deallocation_contract",
+  "platform_helper_contract",
+  "precondition_backed_assertion",
+]
+
+[problems."0020"]
+status = "reviewed"
+file = "problems/0001-0100/0020-valid-parentheses.rst"
+observations = [
+  "最近未闭合括号栈、栈顶唯一匹配和不可修复前缀失败证明完整。",
+  "精确六字符输入域能够支撑把所有非左括号分支视为右括号，这是前提驱动分支的正向样本。",
+  "C 按输入长度分配栈但未检查 malloc 失败；长度转换为 int 也缺少精确上界证明。",
+  "C++、Java、C# 的标准容器缺少直接导入或平台预置说明。",
+  "R 的 strsplit 额外分配字符向量，复杂度章节只描述栈空间，没有区分输入规范化空间。",
+]
+rule_ids = [
+  "valid_input_precondition_contract",
+  "failure_path_not_partial_answer",
+  "explicit_import_boundary",
+  "language_specific_copy_cost",
+]
+
+[rules."numeric_expression_closed_width"]
+status = "promoted"
+first_problem = 16
+problems = [16, 18]
+requirement = "数值安全检查覆盖输入提升、连续加法、减法、绝对值、剪枝边界、哨兵和最终窄化；不能只扩宽其中一个 sum。"
+
+[rules."capacity_product_overflow"]
+status = "promoted"
+first_problem = 17
+problems = [17]
+requirement = "组合数量和字节容量的乘积使用 size_t 或目标容量类型逐步检查溢出，再分配结果、路径和元数据。"
+
+[rules."output_accumulator_real_cost"]
+status = "promoted"
+first_problem = 17
+problems = [17]
+requirement = "结果追加按语言真实语义计费；R 禁止在大量输出循环中反复 c(result, value)，优先精确预分配、列表或引用语义容器。"
+
+[rules."documented_optimization_alignment"]
+status = "promoted"
+first_problem = 18
+problems = [18]
+requirement = "正文宣称为主解法组成部分的剪枝、去重和优化必须出现在全部对应实现中；否则标为可选优化并说明哪些语言采用。"
+
+[rules."language_specific_algorithm_divergence"]
+status = "promoted"
+first_problem = 19
+problems = [19]
+requirement = "某语言因所有权、借用或运行时语义改用不同算法时，单独说明状态、正确性和复杂度，不能假装与统一伪代码逐行相同。"
+
+[rules."node_ownership_deallocation_contract"]
+status = "promoted"
+first_problem = 19
+problems = [19]
+requirement = "链表删除、拼接和重排必须说明节点由平台、调用方还是函数拥有，以及断链后是否 free/delete/自动回收。"
+
+[rules."platform_helper_contract"]
+status = "promoted"
+first_problem = 19
+problems = [19]
+requirement = "平台节点类型、Optional、辅助构造器和访问函数必须直接定义、导入，或明确引用仓库统一接口；代码块不得依赖未说明的名字。"
+
+[rules."precondition_backed_assertion"]
+status = "promoted"
+first_problem = 19
+problems = [19, 20]
+requirement = "非空断言、unwrap、something、unreachable 和省略默认分支只能由题目精确前提证明；正文写出支撑它的长度、字符或合法性约束。"
+
+[next_batch]
+start = 21
+end = 25
+purpose = "完整读取 0021-0025 的 RST，继续提炼前向规则，不修改历史题目。"
