@@ -11,26 +11,26 @@ content_language = "zh-CN"
 code_comment_language = "zh-CN"
 
 [progress]
-next_problem = 52
-completed_count = 51
-completed_ranges = ["0001-0051"]
+next_problem = 54
+completed_count = 53
+completed_ranges = ["0001-0053"]
 premium_skipped = []
 blocked = []
 needs_revision = []
 
 [last_batch]
 status = "completed"
-start = 51
-end = 51
-completed = 1
+start = 52
+end = 53
+completed = 2
 premium_skipped = []
-summary = "完成 0051 N-Queens 十语言 RST 教程，覆盖按行回溯、列与对角线占用、可逆约束状态和输出敏感复杂度。"
+summary = "完成 0052 N-Queens II 与 0053 Maximum Subarray 十语言 RST 教程，覆盖当前行位掩码计数、对角线位移和 Kadane 滚动动态规划。"
 
 [next_batch]
 status = "ready"
-start = 52
-end = 53
-purpose = "继续生成 0052 N-Queens II 与 0053 Maximum Subarray；Hard + Medium 的难度预算为 6。"
+start = 54
+end = 56
+purpose = "继续生成 0054 Spiral Matrix、0055 Jump Game 与 0056 Merge Intervals；三道 Medium 的难度预算为 6。"
 
 [review]
 status = "completed"
@@ -71,7 +71,7 @@ index = "state/CONCEPT_LEDGER.toml"
 latest_record = "state/concepts/0051-0100.toml"
 
 [next_action]
-summary = "等待用户在对话中继续后，生成 0052 N-Queens II 与 0053 Maximum Subarray。"
+summary = "等待用户在对话中继续后，生成 0054 Spiral Matrix、0055 Jump Game 与 0056 Merge Intervals。"
 
 [last_update]
-summary = "已生成并验证 0051 N-Queens，进度推进到 0052；0051-0100 使用独立知识账本分段记录。"
+summary = "已生成并验证 0052 N-Queens II 与 0053 Maximum Subarray，进度推进到 0054。"
