@@ -11,26 +11,26 @@ content_language = "zh-CN"
 code_comment_language = "zh-CN"
 
 [progress]
-next_problem = 54
-completed_count = 53
-completed_ranges = ["0001-0053"]
+next_problem = 57
+completed_count = 56
+completed_ranges = ["0001-0056"]
 premium_skipped = []
 blocked = []
 needs_revision = []
 
 [last_batch]
 status = "completed"
-start = 52
-end = 53
-completed = 2
+start = 54
+end = 56
+completed = 3
 premium_skipped = []
-summary = "完成 0052 N-Queens II 与 0053 Maximum Subarray 十语言 RST 教程，覆盖当前行位掩码计数、对角线位移和 Kadane 滚动动态规划。"
+summary = "完成 0054 Spiral Matrix、0055 Jump Game 与 0056 Merge Intervals 十语言 RST 教程，覆盖矩形边界收缩、可达前缀和排序区间合并。"
 
 [next_batch]
 status = "ready"
-start = 54
-end = 56
-purpose = "继续生成 0054 Spiral Matrix、0055 Jump Game 与 0056 Merge Intervals；三道 Medium 的难度预算为 6。"
+start = 57
+end = 59
+purpose = "继续生成 0057 Insert Interval、0058 Length of Last Word 与 0059 Spiral Matrix II；Medium + Easy + Medium 的难度预算为 5。"
 
 [review]
 status = "completed"
@@ -71,7 +71,7 @@ index = "state/CONCEPT_LEDGER.toml"
 latest_record = "state/concepts/0051-0100.toml"
 
 [next_action]
-summary = "等待用户在对话中继续后，生成 0054 Spiral Matrix、0055 Jump Game 与 0056 Merge Intervals。"
+summary = "等待用户在对话中继续后，生成 0057 Insert Interval、0058 Length of Last Word 与 0059 Spiral Matrix II。"
 
 [last_update]
-summary = "已生成并验证 0052 N-Queens II 与 0053 Maximum Subarray，进度推进到 0054。"
+summary = "已生成并验证 0054 Spiral Matrix、0055 Jump Game 与 0056 Merge Intervals，进度推进到 0057。"
