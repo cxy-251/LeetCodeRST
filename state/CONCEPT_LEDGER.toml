@@ -1,6 +1,6 @@
 [meta]
 version = 1
-last_problem = 41
+last_problem = 43
 
 # teaching_state: introduced / reinforcing / familiar / refresh / mastered
 
@@ -19,27 +19,27 @@ last_problem = 41
 "r.environment_hash_map" = { kind = "data_structure", first_problem = 1, last_problem = 3, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "使用 environment 的哈希绑定模拟键值映射。" }
 "data_structure.singly_linked_list" = { kind = "data_structure", first_problem = 2, last_problem = 25, occurrences = 6, teaching_state = "familiar", difficult = false, note = "0002、0019、0021、0023、0024、0025 覆盖构造、删除、归并、局部交换与分组反转。" }
 "technique.dummy_node" = { kind = "algorithm", first_problem = 2, last_problem = 25, occurrences = 6, teaching_state = "familiar", difficult = false, note = "统一结果链表追加、头节点删除、归并、相邻交换与分组反转的首节点边界。" }
-"algorithm.digit_carry_simulation" = { kind = "algorithm", first_problem = 2, last_problem = 2, occurrences = 1, teaching_state = "introduced", difficult = false, note = "当前结果位由两输入位和上一位 carry 决定。" }
+"algorithm.digit_carry_simulation" = { kind = "algorithm", first_problem = 2, last_problem = 43, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0002 由输入位和上一位进位决定结果位；0043 将每个部分乘积拆成当前位与左邻进位。" }
 "rust.option_box_linked_list" = { kind = "syntax", first_problem = 2, last_problem = 25, occurrences = 6, teaching_state = "familiar", difficult = true, note = "使用 take 转移 Box 节点与后继所有权；0024 使用可变链接槽，0025 用安全递归连接分组。" }
 "julia.mutable_recursive_node" = { kind = "syntax", first_problem = 2, last_problem = 25, occurrences = 6, teaching_state = "familiar", difficult = false, note = "Julia 链表统一使用 mutable struct 提供引用式链接修改。" }
 "r.environment_reference_node" = { kind = "syntax", first_problem = 2, last_problem = 25, occurrences = 6, teaching_state = "familiar", difficult = false, note = "R 链表统一使用 environment 获得引用语义。" }
 "algorithm.sliding_window" = { kind = "algorithm", first_problem = 3, last_problem = 30, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "0003 维护字符窗口，0030 按词长偏移维护单词频次窗口。" }
 "algorithm.last_seen_boundary_jump" = { kind = "algorithm", first_problem = 3, last_problem = 3, occurrences = 1, teaching_state = "introduced", difficult = true, note = "字符最后位置允许 left 直接跳到重复位置之后。" }
-"string.character_iteration_units" = { kind = "syntax", first_problem = 3, last_problem = 38, occurrences = 12, teaching_state = "reinforcing", difficult = true, note = "字符串题持续区分字符、字节与代码单元；0038 的序列只含 ASCII 数字，可按字节执行连续分组。" }
+"string.character_iteration_units" = { kind = "syntax", first_problem = 3, last_problem = 43, occurrences = 13, teaching_state = "reinforcing", difficult = true, note = "字符串题持续区分字符、字节与代码单元；0038 与 0043 只含 ASCII 数字，可按字节读取。" }
 "algorithm.binary_search_partition" = { kind = "algorithm", first_problem = 4, last_problem = 4, occurrences = 1, teaching_state = "introduced", difficult = true, note = "在较短数组上二分分割数量，以四个边界值确定中位数。" }
 "proof.partition_boundary_ordering" = { kind = "proof", first_problem = 4, last_problem = 4, occurrences = 1, teaching_state = "introduced", difficult = true, note = "数组内部有序时，两个交叉不等式足以保证左右分区整体有序。" }
 "technique.infinity_sentinel" = { kind = "algorithm", first_problem = 4, last_problem = 4, occurrences = 1, teaching_state = "introduced", difficult = false, note = "使用正负无穷哨兵统一处理分割位于数组两端。" }
-"julia_r.zero_based_algorithm_coordinates" = { kind = "syntax", first_problem = 4, last_problem = 41, occurrences = 15, teaching_state = "reinforcing", difficult = false, note = "算法状态常用零基坐标；0033 至 0037 处理搜索与数独坐标，0041 再次区分零基 value - 1 与 Julia/R 一基 value 槽位。" }
+"julia_r.zero_based_algorithm_coordinates" = { kind = "syntax", first_problem = 4, last_problem = 43, occurrences = 16, teaching_state = "reinforcing", difficult = false, note = "算法状态常用零基坐标；0041 映射 value - 1，0043 则需把零基乘积槽位重新推导为 Julia/R 一基位置。" }
 "algorithm.expand_around_center" = { kind = "algorithm", first_problem = 5, last_problem = 5, occurrences = 1, teaching_state = "introduced", difficult = true, note = "枚举字符中心和字符间隙中心，向两侧扩展得到最长回文。" }
 "proof.palindrome_center_symmetry" = { kind = "proof", first_problem = 5, last_problem = 9, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0005 枚举字符串回文中心；0009 比较整数十进制表示的镜像两半。" }
 "algorithm.periodic_index_mapping" = { kind = "algorithm", first_problem = 6, last_problem = 6, occurrences = 1, teaching_state = "introduced", difficult = true, note = "把 Z 字形路径模拟转化为周期长度和行内索引公式。" }
-"string.incremental_builder" = { kind = "library", first_problem = 5, last_problem = 38, occurrences = 4, teaching_state = "familiar", difficult = false, note = "0005、0006、0012、0038 使用缓冲区或片段列表避免不可变字符串反复复制。" }
+"string.incremental_builder" = { kind = "library", first_problem = 5, last_problem = 43, occurrences = 5, teaching_state = "familiar", difficult = false, note = "0005、0006、0012、0038、0043 使用缓冲区或片段列表避免不可变字符串反复复制。" }
 "algorithm.decimal_digit_pop_push" = { kind = "algorithm", first_problem = 7, last_problem = 9, occurrences = 3, teaching_state = "familiar", difficult = false, note = "0007 完整反转整数，0008 从字符累积十进制值，0009 只反转后一半。" }
 "proof.pre_operation_overflow_guard" = { kind = "proof", first_problem = 7, last_problem = 29, occurrences = 4, teaching_state = "reinforcing", difficult = true, note = "0007、0008 在乘十前守卫，0011 先扩宽乘法，0029 在倍增前用差值判断边界。" }
 "numeric.truncating_division_and_remainder" = { kind = "syntax", first_problem = 7, last_problem = 29, occurrences = 3, teaching_state = "reinforcing", difficult = true, note = "0007 比较整数截断语义；0029 通过绝对值商与符号恢复实现向零截断。" }
 "algorithm.ordered_string_parse_phases" = { kind = "algorithm", first_problem = 8, last_problem = 8, occurrences = 1, teaching_state = "introduced", difficult = false, note = "按前导空格、可选符号、连续数字三个不可回退阶段解析字符串。" }
 "proof.sign_dependent_clamp_limit" = { kind = "proof", first_problem = 8, last_problem = 8, occurrences = 1, teaching_state = "introduced", difficult = true, note = "正负结果采用不同绝对值上限，压入数字前先检查边界。" }
-"string.ascii_digit_scan" = { kind = "syntax", first_problem = 8, last_problem = 38, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0008 扫描 ASCII 十进制数字；0038 的序列项也只由 ASCII 数字组成。" }
+"string.ascii_digit_scan" = { kind = "syntax", first_problem = 8, last_problem = 43, occurrences = 3, teaching_state = "reinforcing", difficult = false, note = "0008 扫描 ASCII 十进制数字；0038 连续分组；0043 把单字符转换为 0 至 9 参与竖式乘法。" }
 "algorithm.reverse_half_digits" = { kind = "algorithm", first_problem = 9, last_problem = 9, occurrences = 1, teaching_state = "introduced", difficult = true, note = "只把右半数字逆序到 reversed_half，以两侧交叉条件停止。" }
 "proof.odd_center_digit_removal" = { kind = "proof", first_problem = 9, last_problem = 9, occurrences = 1, teaching_state = "introduced", difficult = false, note = "奇数位整数比较时删除无需配对的中间数字。" }
 "proof.overflow_avoidance_by_partial_construction" = { kind = "proof", first_problem = 9, last_problem = 9, occurrences = 1, teaching_state = "introduced", difficult = true, note = "只构造约一半位数的反转值，从结构上避免完整反转溢出。" }
@@ -47,7 +47,7 @@ last_problem = 41
 "algorithm.regex_star_zero_or_more" = { kind = "algorithm", first_problem = 10, last_problem = 10, occurrences = 1, teaching_state = "introduced", difficult = true, note = "x* 分成零次跳过与至少一次后保留模式位置两类分支。" }
 "data_structure.tristate_boolean_memo" = { kind = "data_structure", first_problem = 10, last_problem = 10, occurrences = 1, teaching_state = "introduced", difficult = false, note = "记忆表区分未计算、false 和 true。" }
 "proof.regex_pattern_structure_partition" = { kind = "proof", first_problem = 10, last_problem = 10, occurrences = 1, teaching_state = "introduced", difficult = true, note = "按当前模式元素是否带星号分类，穷尽合法匹配结构。" }
-"algorithm.two_pointer_container" = { kind = "algorithm", first_problem = 11, last_problem = 11, occurrences = 1, teaching_state = "introduced", difficult = true, note = "从最大宽度开始，只移动较短边界，线性收缩候选区间。" }
+"algorithm.two_pointer_container" = { kind = "algorithm", first_problem = 11, last_problem = 42, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "0011 按当前短板排除容器候选；0042 按较小已知最大边界在线结算单柱水量。" }
 "proof.shorter_side_elimination" = { kind = "proof", first_problem = 11, last_problem = 11, occurrences = 1, teaching_state = "introduced", difficult = true, note = "固定短板后，更内侧配对宽度更小且水位不高于短板。" }
 "numeric.widen_before_product" = { kind = "syntax", first_problem = 11, last_problem = 29, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0011 乘法前提升到 64 位；0029 先提升再处理 INT_MIN 的绝对值。" }
 "algorithm.descending_roman_greedy" = { kind = "algorithm", first_problem = 12, last_problem = 12, occurrences = 1, teaching_state = "introduced", difficult = false, note = "把基本符号与减法组合统一为降序带权片段。" }
@@ -136,3 +136,11 @@ last_problem = 41
 "proof.value_slot_presence_equivalence" = { kind = "proof", first_problem = 41, last_problem = 41, occurrences = 1, teaching_state = "introduced", difficult = true, note = "置换结束后，有效值 v 出现当且仅当目标槽位 nums[v - 1] 等于 v。" }
 "technique.duplicate_target_guard" = { kind = "algorithm", first_problem = 41, last_problem = 41, occurrences = 1, teaching_state = "introduced", difficult = true, note = "目标槽位已保存相同值时停止交换，避免重复值形成无限循环。" }
 "syntax.short_circuit_index_guard" = { kind = "syntax", first_problem = 41, last_problem = 41, occurrences = 1, teaching_state = "introduced", difficult = false, note = "先用短路条件验证值域，再把值映射为数组下标，避免越界访问。" }
+"proof.per_position_trapped_water_formula" = { kind = "proof", first_problem = 42, last_problem = 42, occurrences = 1, teaching_state = "introduced", difficult = true, note = "单柱水量等于左右最高边界较小值减去当前高度。" }
+"algorithm.trapping_water_two_pointer_maxima" = { kind = "algorithm", first_problem = 42, last_problem = 42, occurrences = 1, teaching_state = "introduced", difficult = true, note = "维护左右已知最大高度，优先结算较小最大边界一侧并向内收缩。" }
+"proof.smaller_known_boundary_finalization" = { kind = "proof", first_problem = 42, last_problem = 42, occurrences = 1, teaching_state = "introduced", difficult = true, note = "较小已知最大边界已经成为当前端点的限制因素，未来内部更高柱不会改变该位置水量。" }
+"algorithm.decimal_string_grade_school_multiplication" = { kind = "algorithm", first_problem = 43, last_problem = 43, occurrences = 1, teaching_state = "introduced", difficult = true, note = "枚举两个十进制字符串的所有数字对，把部分乘积累加到长度 m+n 的结果数组。" }
+"proof.product_length_m_plus_n_bound" = { kind = "proof", first_problem = 43, last_problem = 43, occurrences = 1, teaching_state = "introduced", difficult = false, note = "长度 m 与 n 的非负十进制整数乘积小于 10^(m+n)，因此最多有 m+n 位。" }
+"technique.adjacent_decimal_carry_accumulation" = { kind = "algorithm", first_problem = 43, last_problem = 43, occurrences = 1, teaching_state = "introduced", difficult = true, note = "当前槽位保留 total % 10，total / 10 加入左邻高位并在后续迭代继续规范化。" }
+"syntax.one_based_product_slot_mapping" = { kind = "syntax", first_problem = 43, last_problem = 43, occurrences = 1, teaching_state = "introduced", difficult = true, note = "零基低位槽 i+j+1 映射到 Julia/R 一基位置 i+j，高位槽相应为 i+j-1。" }
+"interface.c_heap_owned_string_result" = { kind = "interface", first_problem = 43, last_problem = 43, occurrences = 1, teaching_state = "introduced", difficult = false, note = "C 返回动态分配的乘积字符串，调用者负责释放；临时数字数组在返回前释放。" }
