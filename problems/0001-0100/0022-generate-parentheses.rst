@@ -551,7 +551,8 @@ Julia
 
        function backtrack(position::Int, open::Int, close::Int)
            if position > 2 * n
-               push!(result, String(path))
+               # join 明确把字符向量复制为独立字符串。
+               push!(result, join(path))
                return
            end
 
