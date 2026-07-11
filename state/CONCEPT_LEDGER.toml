@@ -1,6 +1,6 @@
 [meta]
 version = 1
-last_problem = 11
+last_problem = 14
 
 # teaching_state 可用值：
 # introduced   首次完整解释
@@ -192,11 +192,11 @@ note = "字符最后位置允许 left 直接跳到重复位置之后。"
 [concepts."string.character_iteration_units"]
 kind = "syntax"
 first_problem = 3
-last_problem = 10
-occurrences = 5
+last_problem = 14
+occurrences = 7
 teaching_state = "reinforcing"
 difficult = true
-note = "0003、0005、0006 区分字符迭代单位；0008 只识别 ASCII 数字；0010 因题目限定 ASCII，可按字节或代码单元索引。"
+note = "0003、0005、0006 区分字符单位；0008、0010、0013、0014 在 ASCII 约束下按字节或代码单元扫描。"
 
 [concepts."algorithm.binary_search_partition"]
 kind = "algorithm"
@@ -228,11 +228,11 @@ note = "使用正负无穷哨兵统一处理分割位于数组两端。"
 [concepts."julia_r.zero_based_algorithm_coordinates"]
 kind = "syntax"
 first_problem = 4
-last_problem = 11
-occurrences = 4
+last_problem = 14
+occurrences = 5
 teaching_state = "reinforcing"
 difficult = false
-note = "算法状态使用零基数量或坐标；0004、0006、0010 做数组换算，0011 的 Julia/R 一基位置差仍等于容器宽度。"
+note = "算法使用零基数量或坐标；0014 再次区分前缀长度与 Julia/R 的一基字符位置。"
 
 [concepts."algorithm.expand_around_center"]
 kind = "algorithm"
@@ -264,11 +264,11 @@ note = "把 Z 字形路径模拟转化为周期长度和行内索引公式。"
 [concepts."string.incremental_builder"]
 kind = "library"
 first_problem = 5
-last_problem = 6
-occurrences = 2
-teaching_state = "reinforcing"
+last_problem = 12
+occurrences = 3
+teaching_state = "familiar"
 difficult = false
-note = "使用 StringBuilder、Vec、列表或字符缓冲区避免反复创建字符串。"
+note = "0005、0006、0012 使用 StringBuilder、缓冲区或片段列表避免反复复制字符串。"
 
 [concepts."algorithm.decimal_digit_pop_push"]
 kind = "algorithm"
@@ -413,3 +413,66 @@ occurrences = 1
 teaching_state = "introduced"
 difficult = false
 note = "C 系语言在宽度与高度相乘前提升到 64 位，避免窄类型乘法先溢出。"
+
+[concepts."algorithm.descending_roman_greedy"]
+kind = "algorithm"
+first_problem = 12
+last_problem = 12
+occurrences = 1
+teaching_state = "introduced"
+difficult = false
+note = "把基本符号和六个减法组合统一为降序带权片段，每次选择最大可用片段。"
+
+[concepts."proof.canonical_roman_token_decomposition"]
+kind = "proof"
+first_problem = 12
+last_problem = 12
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "规范罗马数字可分解为降序合法片段；最大可用片段必须先出现，否则会产生更长或非法形式。"
+
+[concepts."algorithm.local_subtractive_roman_scan"]
+kind = "algorithm"
+first_problem = 13
+last_problem = 13
+occurrences = 1
+teaching_state = "introduced"
+difficult = false
+note = "当前符号小于右邻居时取负，否则取正，用一次线性扫描完成罗马数字求值。"
+
+[concepts."proof.signed_roman_symbol_contribution"]
+kind = "proof"
+first_problem = 13
+last_problem = 13
+occurrences = 1
+teaching_state = "introduced"
+difficult = false
+note = "减法对贡献为 -small + large，普通降序符号各自取正，所有字符恰好贡献一次。"
+
+[concepts."algorithm.vertical_common_prefix_scan"]
+kind = "algorithm"
+first_problem = 14
+last_problem = 14
+occurrences = 1
+teaching_state = "introduced"
+difficult = false
+note = "以首串为上界逐列比较所有字符串，在首个长度不足或字符不同时停止。"
+
+[concepts."proof.first_prefix_mismatch_boundary"]
+kind = "proof"
+first_problem = 14
+last_problem = 14
+occurrences = 1
+teaching_state = "introduced"
+difficult = false
+note = "首个失败位置之前已经全部匹配，而任何更长前缀都必须包含失败位置，因此当前长度最长。"
+
+[concepts."string.ascii_prefix_slice"]
+kind = "syntax"
+first_problem = 14
+last_problem = 14
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "小写英文字母约束下字节边界等于字符边界；一般 Unicode 字符串不能任意按字节切片。"

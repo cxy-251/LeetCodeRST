@@ -17,11 +17,14 @@ LeetCode 0001–0100
 #. `0009. Palindrome Number <0009-palindrome-number.rst>`_
 #. `0010. Regular Expression Matching <0010-regular-expression-matching.rst>`_
 #. `0011. Container With Most Water <0011-container-with-most-water.rst>`_
+#. `0012. Integer to Roman <0012-integer-to-roman.rst>`_
+#. `0013. Roman to Integer <0013-roman-to-integer.rst>`_
+#. `0014. Longest Common Prefix <0014-longest-common-prefix.rst>`_
 
 下一题
 ------
 
-``0012. Integer to Roman``
+``0015. 3Sum``
 
 阅读顺序
 --------

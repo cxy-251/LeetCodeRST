@@ -71,8 +71,11 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
 #. `0009. Palindrome Number <problems/0001-0100/0009-palindrome-number.rst>`_
 #. `0010. Regular Expression Matching <problems/0001-0100/0010-regular-expression-matching.rst>`_
 #. `0011. Container With Most Water <problems/0001-0100/0011-container-with-most-water.rst>`_
+#. `0012. Integer to Roman <problems/0001-0100/0012-integer-to-roman.rst>`_
+#. `0013. Roman to Integer <problems/0001-0100/0013-roman-to-integer.rst>`_
+#. `0014. Longest Common Prefix <problems/0001-0100/0014-longest-common-prefix.rst>`_
 
-下一题是 ``0012. Integer to Roman``。实际进度以 ``state/PROGRESS.toml`` 为准。
+下一题是 ``0015. 3Sum``。实际进度以 ``state/PROGRESS.toml`` 为准。
 
 开始工作
 --------
@@ -98,10 +101,11 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
 当前状态
 --------
 
-0001 至 0011 已完成。当前样板已经覆盖哈希表、链表、滑动窗口、二分分割、回文
+0001 至 0014 已完成。当前样板已经覆盖哈希表、链表、滑动窗口、二分分割、回文
 中心扩展、周期索引、整数逐位反转、字符串到整数的阶段化扫描、整数回文的半反转、
-带点号与星号语义的二维后缀记忆化匹配，以及基于短板上界排除的两端双指针。下一题从
-0012 开始；自动任务每次只精写一道题，并以 RST 教学质量高于题量。
+带点号与星号语义的二维后缀记忆化匹配、基于短板上界排除的两端双指针、规范罗马数字
+的降序片段贪心与局部减法扫描，以及多字符串最长公共前缀的纵向比较。下一题从
+0015 开始；自动任务每次只精写一道题，并以 RST 教学质量高于题量。
 
 定时自动任务复用唯一固定分支 ``automation/leetcode-current``，每轮只创建一个非 Draft PR，
 通过质量检查后 squash merge 到 ``main``。禁止题号分支、时间戳分支和额外 finalize PR。
@@ -130,7 +134,7 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
        README.rst
        0001-two-sum.rst
        ...
-       0011-container-with-most-water.rst
+       0014-longest-common-prefix.rst
    state/
      PROGRESS.toml
      CONCEPT_LEDGER.toml
