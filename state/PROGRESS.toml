@@ -10,29 +10,29 @@ content_language = "zh-CN"
 code_comment_language = "zh-CN"
 
 [progress]
-next_problem = 46
-completed_count = 45
-completed_ranges = ["0001-0045"]
+next_problem = 49
+completed_count = 48
+completed_ranges = ["0001-0048"]
 premium_skipped = []
 blocked = []
 needs_revision = []
 
 [last_batch]
 status = "completed"
-start = 44
-end = 45
-completed = 2
+start = 46
+end = 48
+completed = 3
 premium_skipped = []
-summary = "完成 0044 与 0045 两题十语言 RST 教程，覆盖通配符最近星号受控回退与 BFS 层边界最少跳跃。"
+summary = "完成 0046 至 0048 三题十语言 RST 教程，覆盖原地交换排列、重复排列同层去重与矩阵转置旋转。"
 
 [next_batch]
 status = "ready"
-start = 46
-end = 48
-purpose = "下一批候选为 0046、0047、0048 三道 Medium，总分 6；任何批次不得越过 0050 审查检查点。"
+start = 49
+end = 50
+purpose = "下一批只处理 0049 与 0050，并在完成后进入 0001-0050 全量 RST 审查检查点；禁止生成 0051。"
 
 [next_action]
-summary = "从 LeetCode 0046 开始；自动任务同步最新 main 后按难度预算推进，完成 0050 后停止新题并进入 0001-0050 全量 RST 审查。"
+summary = "从 LeetCode 0049 开始；批次必须截断在 0050，完成后停止新题并进入全量 RST 审查。"
 
 [last_update]
-summary = "LeetCode 0044 至 0045 已作为手动 6 分批次完成；小时任务继续从最新 next_problem 接续。"
+summary = "LeetCode 0046 至 0048 已作为手动 6 分批次完成；小时任务继续从最新 next_problem 接续。"

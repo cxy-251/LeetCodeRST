@@ -51,17 +51,26 @@ LeetCode 0001–0100
 #. `0043. Multiply Strings <0043-multiply-strings.rst>`_
 #. `0044. Wildcard Matching <0044-wildcard-matching.rst>`_
 #. `0045. Jump Game II <0045-jump-game-ii.rst>`_
+#. `0046. Permutations <0046-permutations.rst>`_
+#. `0047. Permutations II <0047-permutations-ii.rst>`_
+#. `0048. Rotate Image <0048-rotate-image.rst>`_
 
 下一题
 ------
 
-``0046. Permutations``
+``0049. Group Anagrams``
 
 阅读顺序
 --------
 
 建议按题号连续阅读。题目中的语言注释会根据
 ``state/CONCEPT_LEDGER.toml`` 逐步减少；疑难算法会在后续题目中周期性重新解释。
+
+0050 审查检查点
+---------------
+
+下一批只允许处理 0049 和 0050。完成 0050 后停止生成新题，转入 0001 至 0050 的逐文件
+RST 审查；未明确解除检查点前禁止生成 0051。
 
 关联题目
 --------

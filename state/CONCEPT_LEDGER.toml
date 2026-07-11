@@ -1,6 +1,6 @@
 [meta]
 version = 1
-last_problem = 45
+last_problem = 48
 
 # teaching_state: introduced / reinforcing / familiar / refresh / mastered
 
@@ -29,7 +29,7 @@ last_problem = 45
 "algorithm.binary_search_partition" = { kind = "algorithm", first_problem = 4, last_problem = 4, occurrences = 1, teaching_state = "introduced", difficult = true, note = "在较短数组上二分分割数量，以四个边界值确定中位数。" }
 "proof.partition_boundary_ordering" = { kind = "proof", first_problem = 4, last_problem = 4, occurrences = 1, teaching_state = "introduced", difficult = true, note = "数组内部有序时，两个交叉不等式足以保证左右分区整体有序。" }
 "technique.infinity_sentinel" = { kind = "algorithm", first_problem = 4, last_problem = 4, occurrences = 1, teaching_state = "introduced", difficult = false, note = "使用正负无穷哨兵统一处理分割位于数组两端。" }
-"julia_r.zero_based_algorithm_coordinates" = { kind = "syntax", first_problem = 4, last_problem = 45, occurrences = 17, teaching_state = "reinforcing", difficult = false, note = "算法状态常用零基坐标；0043 映射乘积槽位，0045 将零基层边界映射到 Julia/R 一基数组位置。" }
+"julia_r.zero_based_algorithm_coordinates" = { kind = "syntax", first_problem = 4, last_problem = 48, occurrences = 18, teaching_state = "reinforcing", difficult = false, note = "算法状态常用零基坐标；0045 映射层边界，0048 将旋转坐标重新映射到 Julia/R 一基位置。" }
 "algorithm.expand_around_center" = { kind = "algorithm", first_problem = 5, last_problem = 5, occurrences = 1, teaching_state = "introduced", difficult = true, note = "枚举字符中心和字符间隙中心，向两侧扩展得到最长回文。" }
 "proof.palindrome_center_symmetry" = { kind = "proof", first_problem = 5, last_problem = 9, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0005 枚举字符串回文中心；0009 比较整数十进制表示的镜像两半。" }
 "algorithm.periodic_index_mapping" = { kind = "algorithm", first_problem = 6, last_problem = 6, occurrences = 1, teaching_state = "introduced", difficult = true, note = "把 Z 字形路径模拟转化为周期长度和行内索引公式。" }
@@ -58,12 +58,12 @@ last_problem = 45
 "proof.first_prefix_mismatch_boundary" = { kind = "proof", first_problem = 14, last_problem = 14, occurrences = 1, teaching_state = "introduced", difficult = false, note = "第一处不一致或最短字符串末尾决定最长公共前缀边界。" }
 "algorithm.sorted_anchor_two_pointer_sum" = { kind = "algorithm", first_problem = 15, last_problem = 16, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "排序后固定锚点，在右侧用双指针搜索精确或最近三数和。" }
 "proof.monotone_sum_pointer_elimination" = { kind = "proof", first_problem = 15, last_problem = 16, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "有序数组中总和过小时排除左端，过大时排除右端。" }
-"technique.sorted_duplicate_skipping" = { kind = "algorithm", first_problem = 15, last_problem = 40, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0015 跳过重复锚点与双指针值；0040 在同一递归层跳过重复候选。" }
+"technique.sorted_duplicate_skipping" = { kind = "algorithm", first_problem = 15, last_problem = 47, occurrences = 3, teaching_state = "reinforcing", difficult = false, note = "0015 跳过重复锚点；0040 与 0047 在同一递归层跳过等价重复值分支。" }
 "numeric.widen_three_value_sum" = { kind = "syntax", first_problem = 15, last_problem = 16, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "三数求和与差值比较前提升到更宽类型。" }
 "algorithm.closest_candidate_invariant" = { kind = "algorithm", first_problem = 16, last_problem = 16, occurrences = 1, teaching_state = "introduced", difficult = true, note = "best 始终保存已检查候选中最接近 target 的真实总和。" }
 "algorithm.backtracking_cartesian_product" = { kind = "algorithm", first_problem = 17, last_problem = 17, occurrences = 1, teaching_state = "introduced", difficult = true, note = "递归每层选择当前集合一个元素，枚举完整笛卡尔积。" }
-"data_structure.mutable_backtracking_path" = { kind = "data_structure", first_problem = 17, last_problem = 40, occurrences = 4, teaching_state = "familiar", difficult = false, note = "0017、0022、0039、0040 复用可变路径，并在返回时撤销选择。" }
-"proof.backtracking_prefix_partition" = { kind = "proof", first_problem = 17, last_problem = 40, occurrences = 4, teaching_state = "familiar", difficult = true, note = "递归前缀划分互不重叠的答案子树；0039、0040 通过起点和去重规则定义唯一组合路径。" }
+"data_structure.mutable_backtracking_path" = { kind = "data_structure", first_problem = 17, last_problem = 47, occurrences = 5, teaching_state = "familiar", difficult = false, note = "0017、0022、0039、0040、0047 复用可变路径，并在返回时撤销选择。" }
+"proof.backtracking_prefix_partition" = { kind = "proof", first_problem = 17, last_problem = 47, occurrences = 6, teaching_state = "familiar", difficult = true, note = "递归前缀划分互不重叠的答案子树；0046 按位置选择，0047 再加入重复值规范代表。" }
 "complexity.output_sensitive_cartesian_product" = { kind = "proof", first_problem = 17, last_problem = 17, occurrences = 1, teaching_state = "introduced", difficult = false, note = "组合数为 P、长度为 d 时，复制输出需要 O(P × d)。" }
 "algorithm.two_anchor_four_sum" = { kind = "algorithm", first_problem = 18, last_problem = 18, occurrences = 1, teaching_state = "introduced", difficult = true, note = "排序后固定两个锚点，把四数和降为有序两数和。" }
 "technique.sorted_sum_bounds_pruning" = { kind = "algorithm", first_problem = 18, last_problem = 40, occurrences = 3, teaching_state = "reinforcing", difficult = true, note = "0018 用最小最大和剪枝；0039、0040 排序后在候选大于 remaining 时停止本层。" }
@@ -128,9 +128,9 @@ last_problem = 45
 "algorithm.non_decreasing_combination_path" = { kind = "algorithm", first_problem = 39, last_problem = 40, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "排序并限制递归起点，使每个组合只按非递减数值顺序生成。" }
 "algorithm.reusable_candidate_index" = { kind = "algorithm", first_problem = 39, last_problem = 39, occurrences = 1, teaching_state = "introduced", difficult = false, note = "选择后递归仍传入当前下标，表达候选可不限次数复用。" }
 "proof.combination_canonical_order" = { kind = "proof", first_problem = 39, last_problem = 39, occurrences = 1, teaching_state = "introduced", difficult = true, note = "每个多重集合拥有唯一非递减表示，单调起点消除排列重复。" }
-"algorithm.same_depth_duplicate_skip" = { kind = "algorithm", first_problem = 40, last_problem = 40, occurrences = 1, teaching_state = "introduced", difficult = true, note = "仅当 index > start 时跳过相邻等值候选，删除同层等价分支并保留深层重复值。" }
+"algorithm.same_depth_duplicate_skip" = { kind = "algorithm", first_problem = 40, last_problem = 47, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "0040 按递归起点判断同层重复；0047 用 sorted + used 判断前一相同值是否仍可作为本层代表。" }
 "interface.one_use_per_array_index" = { kind = "interface", first_problem = 40, last_problem = 40, occurrences = 1, teaching_state = "introduced", difficult = false, note = "选择后递归从 index + 1 开始，保证每个输入下标至多使用一次。" }
-"proof.earliest_equal_index_completeness" = { kind = "proof", first_problem = 40, last_problem = 40, occurrences = 1, teaching_state = "introduced", difficult = true, note = "同层保留最早可用等值下标即可覆盖后续等值下标能形成的全部数值组合。" }
+"proof.earliest_equal_index_completeness" = { kind = "proof", first_problem = 40, last_problem = 47, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "同层只保留最早未使用的等值下标作为规范代表，删除等价分支而不漏解。" }
 "algorithm.in_place_value_index_placement" = { kind = "algorithm", first_problem = 41, last_problem = 41, occurrences = 1, teaching_state = "introduced", difficult = true, note = "把有效值 v 放入唯一目标槽位 v - 1，用输入数组本身编码 1..n 的出现性。" }
 "proof.first_missing_positive_pigeonhole_bound" = { kind = "proof", first_problem = 41, last_problem = 41, occurrences = 1, teaching_state = "introduced", difficult = true, note = "长度 n 的数组答案一定在 1..n+1；若 1..n 全部出现，则答案为 n+1。" }
 "proof.value_slot_presence_equivalence" = { kind = "proof", first_problem = 41, last_problem = 41, occurrences = 1, teaching_state = "introduced", difficult = true, note = "置换结束后，有效值 v 出现当且仅当目标槽位 nums[v - 1] 等于 v。" }
@@ -150,3 +150,10 @@ last_problem = 45
 "algorithm.jump_game_bfs_layer_boundary" = { kind = "algorithm", first_problem = 45, last_problem = 45, occurrences = 1, teaching_state = "introduced", difficult = true, note = "current_end 表示当前跳数可达层边界，farthest 汇总当前层再跳一次的最远边界。" }
 "proof.jump_next_frontier_union" = { kind = "proof", first_problem = 45, last_problem = 45, occurrences = 1, teaching_state = "introduced", difficult = true, note = "当前层所有连续可达区间的并集最右端等于 max(i + nums[i])，边界推进等价于 BFS 进入下一层。" }
 "technique.delay_jump_commit_at_layer_end" = { kind = "algorithm", first_problem = 45, last_problem = 45, occurrences = 1, teaching_state = "introduced", difficult = false, note = "扫描完整当前层后才增加跳数，避免提前选择尚未汇总全部候选的局部边界。" }
+"algorithm.in_place_suffix_swap_permutation" = { kind = "algorithm", first_problem = 46, last_problem = 46, occurrences = 1, teaching_state = "introduced", difficult = true, note = "递归深度 fixed 固定当前位置，与后缀每个候选交换，返回后交换复原。" }
+"proof.permutation_position_choice_bijection" = { kind = "proof", first_problem = 46, last_problem = 46, occurrences = 1, teaching_state = "introduced", difficult = true, note = "每个排列在每个位置有唯一元素选择序列，位置交换回溯恰好生成一次。" }
+"complexity.factorial_permutation_output" = { kind = "proof", first_problem = 46, last_problem = 47, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "互异元素输出 n! 个排列；含重复值时输出 n! / ∏count(v)! 个不同排列，复制答案需再乘 n。" }
+"algorithm.sorted_used_unique_permutation" = { kind = "algorithm", first_problem = 47, last_problem = 47, occurrences = 1, teaching_state = "introduced", difficult = true, note = "排序后以 used 标记下标使用状态，并在同层只允许最早未使用的相同值作为代表。" }
+"proof.equal_value_canonical_index_choice" = { kind = "proof", first_problem = 47, last_problem = 47, occurrences = 1, teaching_state = "introduced", difficult = true, note = "交换同层相等候选下标不会改变数值前缀，保留规范代表可去重且不影响完整性。" }
+"algorithm.transpose_then_reverse_rows" = { kind = "algorithm", first_problem = 48, last_problem = 48, occurrences = 1, teaching_state = "introduced", difficult = false, note = "先沿主对角线原地转置，再反转每一行，实现顺时针 90 度旋转。" }
+"proof.clockwise_rotation_coordinate_composition" = { kind = "proof", first_problem = 48, last_problem = 48, occurrences = 1, teaching_state = "introduced", difficult = true, note = "转置把 (r,c) 映射到 (c,r)，行反转再映射到 (c,n-1-r)，与顺时针旋转公式一致。" }
