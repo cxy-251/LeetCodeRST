@@ -1,6 +1,6 @@
 [project]
 name = "leetcode-multilang-rst"
-phase = "lessons_started"
+phase = "review_checkpoint"
 format = "rst"
 ordering = "leetcode_number_ascending"
 automation_workflow = "difficulty_budget_fixed_branch_pr"
@@ -10,29 +10,36 @@ content_language = "zh-CN"
 code_comment_language = "zh-CN"
 
 [progress]
-next_problem = 49
-completed_count = 48
-completed_ranges = ["0001-0048"]
+next_problem = 51
+completed_count = 50
+completed_ranges = ["0001-0050"]
 premium_skipped = []
 blocked = []
 needs_revision = []
 
 [last_batch]
 status = "completed"
-start = 46
-end = 48
-completed = 3
-premium_skipped = []
-summary = "完成 0046 至 0048 三题十语言 RST 教程，覆盖原地交换排列、重复排列同层去重与矩阵转置旋转。"
-
-[next_batch]
-status = "ready"
 start = 49
 end = 50
-purpose = "下一批只处理 0049 与 0050，并在完成后进入 0001-0050 全量 RST 审查检查点；禁止生成 0051。"
+completed = 2
+premium_skipped = []
+summary = "完成 0049 与 0050 两题十语言 RST 教程，覆盖异位词频次签名分组与二进制快速幂。"
+
+[next_batch]
+status = "blocked_by_review_checkpoint"
+start = 51
+end = 51
+purpose = "0050 审查检查点已生效；未由用户明确解除前禁止生成 0051。"
+
+[review]
+status = "ready"
+start = 1
+end = 50
+current = 1
+scope = "逐题核对 RST 结构、题意、主算法、证明、复杂度、十语言实现、语言边界、内存与知识账本。"
 
 [next_action]
-summary = "从 LeetCode 0049 开始；批次必须截断在 0050，完成后停止新题并进入全量 RST 审查。"
+summary = "从 0001 开始全量审查；发现确定性缺陷时创建独立 fix PR，不推进题号。"
 
 [last_update]
-summary = "LeetCode 0046 至 0048 已作为手动 6 分批次完成；小时任务继续从最新 next_problem 接续。"
+summary = "LeetCode 0049 至 0050 已完成；0001 至 0050 首轮教程结束，仓库进入全量 RST 审查阶段。"
