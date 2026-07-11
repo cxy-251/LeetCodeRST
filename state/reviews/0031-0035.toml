@@ -1,0 +1,146 @@
+[batch]
+start = 31
+end = 35
+status = "completed"
+source = "complete_rst_content"
+modify_historical_rst = false
+summary = "完整读取 0031-0035 的 RST 正文和十语言代码，提炼见证元素、主代码自洽、索引窄化、排列邻接证明、哨兵栈、二分返回语义和 C 分配失败规则。"
+
+[problems."0031"]
+status = "reviewed"
+file = "problems/0001-0100/0031-next-permutation.rst"
+positive = [
+  "最长非递增后缀、最右枢轴、最小更大后继和后缀最小化共同证明直接后继。",
+  "Rust 对无符号下标无法表示 -1 的控制流适配明确。",
+]
+observations = [
+  "后继扫描 while nums[successor] <= nums[pivot] 没有边界条件，安全性依赖枢轴定义保证后缀中必有严格更大元素；该见证存在性应在代码附近明确。",
+  "C++ 使用 vector、swap、reverse，但代码块没有直接展示必要头文件。",
+  "R 返回修改后的向量副本，不能把抽象 O(1) 工作状态直接当成该语言完整接口的 O(1) 成本。",
+  "多个实现把容器长度窄化为 int，题目重述没有列出支撑转换的精确最大长度。",
+]
+rule_ids = [
+  "witness_before_unchecked_scan",
+  "in_place_permutation_proof",
+  "constraint_backed_index_narrowing",
+  "adapter_copy_cost",
+  "explicit_import_boundary",
+]
+
+[problems."0032"]
+status = "reviewed"
+file = "problems/0001-0100/0032-longest-valid-parentheses.rst"
+positive = [
+  "-1 哨兵统一从零开始的区间长度，失效右括号作为新边界的证明完整。",
+  "压栈与弹栈次数上界直接支撑 O(n) 时间。",
+]
+observations = [
+  "C 在 malloc 后立即写 stack[0]，没有处理分配失败。",
+  "Julia 主代码对空字符串执行 0:-1 并越界；正文在代码后给出应添加的守卫，但必要修复没有并入主代码块。",
+  "C、Java、C# 的 n+1 栈容量以及下标返回范围仍需要精确长度约束支撑。",
+  "栈 pop 的安全依赖初始哨兵和每次空栈后立即补回边界，属于需要紧邻代码说明的不变量。",
+]
+rule_ids = [
+  "canonical_code_contains_mandatory_fix",
+  "allocation_before_first_write",
+  "sentinel_pop_invariant",
+  "capacity_bound_from_constraints",
+]
+
+[problems."0033"]
+status = "reviewed"
+file = "problems/0001-0100/0033-search-in-rotated-sorted-array.rst"
+positive = [
+  "闭区间不变量、局部有序半区识别、值域排除和严格缩小证明完整。",
+  "元素互不相同前提与重复值版本的歧义边界说明清楚。",
+]
+observations = [
+  "C++ 将 size_t 转为 int，Rust 将 usize 转为 i32；正文未列出最大数组长度，窄化安全性没有闭合。",
+  "二分结果是命中下标或 -1，与后续 0034/0035 的插入边界语义不同，公共模板需要强制标记返回语义。",
+]
+rule_ids = [
+  "constraint_backed_index_narrowing",
+  "binary_search_return_semantics",
+]
+
+[problems."0034"]
+status = "reviewed"
+file = "problems/0001-0100/0034-find-first-and-last-position-of-element-in-sorted-array.rst"
+positive = [
+  "lower bound 与 upper bound 的半开区间不变量、存在性验证和重复区间证明完整。",
+  "避免 target + 1 模拟上界，直接表达严格大于谓词。",
+]
+observations = [
+  "C 为答案数组 malloc 后未检查 NULL，随后立即写 answer[0] 和 answer[1]。",
+  "边界辅助函数通过 upper/strict 布尔参数切换谓词，正文有解释；后续模板应要求命名清楚，避免调用方混淆上下界。",
+  "Rust 和 C++ 最终把 usize/size_t 边界窄化到 i32/int，仍缺少精确长度上界。",
+]
+rule_ids = [
+  "allocation_before_first_write",
+  "named_monotone_predicate",
+  "constraint_backed_index_narrowing",
+  "binary_search_return_semantics",
+]
+
+[problems."0035"]
+status = "reviewed"
+file = "problems/0001-0100/0035-search-insert-position.rst"
+positive = [
+  "查找命中与插入位置统一为 lower bound，半开区间允许答案自然等于 n。",
+  "不变量直接决定比较符号和区间更新，避免机械套用二分模板。",
+]
+observations = [
+  "正文包含空数组扩展，但没有列出精确官方长度约束并区分扩展行为。",
+  "Rust 和 C++ 将容器长度或返回边界窄化为 i32/int，安全性仍依赖未写出的最大长度。",
+  "返回值可能是 n 而不是有效元素下标，调用者若把结果直接用于访问会越界；接口说明应显式区分边界坐标与元素位置。",
+]
+rule_ids = [
+  "official_contract_vs_extension",
+  "constraint_backed_index_narrowing",
+  "binary_search_return_semantics",
+]
+
+[rules."witness_before_unchecked_scan"]
+status = "promoted"
+problems = [31, 32]
+requirement = "索引无边界递减、pop 或 unwrap 前，紧邻代码证明满足条件的见证元素、哨兵或非空状态必然存在。"
+
+[rules."in_place_permutation_proof"]
+status = "promoted"
+problems = [31]
+requirement = "原地排列变换同时证明元素多重集不变、结果方向正确、变化幅度最小或最大，以及回绕分支。"
+
+[rules."canonical_code_contains_mandatory_fix"]
+status = "promoted"
+problems = [32]
+requirement = "正文发现的必要守卫、导入或错误修复必须直接并入主代码块；禁止展示已知错误代码后让读者自行补丁。"
+
+[rules."allocation_before_first_write"]
+status = "promoted"
+problems = [32, 34]
+requirement = "C 分配结果必须在首次解引用或写入前检查；返回元数据与资源所有权遵循统一失败契约。"
+
+[rules."constraint_backed_index_narrowing"]
+status = "promoted"
+problems = [31, 33, 34, 35]
+requirement = "size_t、usize、length 和边界位置转换为 int/i32 前，必须由精确最大长度证明安全，且答案 n 也包含在证明中。"
+
+[rules."sentinel_pop_invariant"]
+status = "promoted"
+problems = [32]
+requirement = "哨兵栈说明初始化、每次 pop 前非空、空后恢复以及哨兵不是合法数据下标的语义。"
+
+[rules."binary_search_return_semantics"]
+status = "promoted"
+problems = [33, 34, 35]
+requirement = "每个二分函数明确返回命中下标、首个满足谓词的插入边界、末尾外位置或失败哨兵；边界结果不得未经验证直接访问数组。"
+
+[rules."named_monotone_predicate"]
+status = "promoted"
+problems = [34, 35]
+requirement = "边界二分先写单调谓词；复用辅助函数时参数名和调用点必须清楚区分 lower/upper 语义。"
+
+[next_batch]
+start = 36
+end = 40
+purpose = "完整读取 0036-0040 的 RST，继续提炼前向规则，不修改历史题目。"
