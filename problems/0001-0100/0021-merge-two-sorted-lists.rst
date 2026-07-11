@@ -398,8 +398,8 @@ TypeScript
                tail.next = list2;
                list2 = list2.next;
            }
-           // 本轮已经保证 tail.next 非空。
-           tail = tail.next;
+           // 两个分支都把非空节点写入 tail.next；断言供严格空值检查使用。
+           tail = tail.next!;
        }
 
        tail.next = list1 !== null ? list1 : list2;
