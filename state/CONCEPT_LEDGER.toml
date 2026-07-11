@@ -1,6 +1,6 @@
 [meta]
 version = 1
-last_problem = 14
+last_problem = 17
 
 # teaching_state 可用值：
 # introduced   首次完整解释
@@ -476,3 +476,84 @@ occurrences = 1
 teaching_state = "introduced"
 difficult = true
 note = "小写英文字母约束下字节边界等于字符边界；一般 Unicode 字符串不能任意按字节切片。"
+
+[concepts."algorithm.sorted_anchor_two_pointer_sum"]
+kind = "algorithm"
+first_problem = 15
+last_problem = 16
+occurrences = 2
+teaching_state = "reinforcing"
+difficult = true
+note = "排序后固定一个锚点，在右侧用双指针完成精确三数和与最近三数和搜索。"
+
+[concepts."proof.monotone_sum_pointer_elimination"]
+kind = "proof"
+first_problem = 15
+last_problem = 16
+occurrences = 2
+teaching_state = "reinforcing"
+difficult = true
+note = "有序数组中，当前和过小时排除左端，过大时排除右端；移动前先处理当前候选。"
+
+[concepts."technique.sorted_duplicate_skipping"]
+kind = "algorithm"
+first_problem = 15
+last_problem = 15
+occurrences = 1
+teaching_state = "introduced"
+difficult = false
+note = "重复锚点直接跳过；命中后越过相同左右值，使每个数值三元组只输出一次。"
+
+[concepts."numeric.widen_three_value_sum"]
+kind = "syntax"
+first_problem = 15
+last_problem = 16
+occurrences = 2
+teaching_state = "reinforcing"
+difficult = false
+note = "固定宽度语言在三数求和和差值比较前提升到更宽类型，避免中间运算溢出。"
+
+[concepts."algorithm.closest_candidate_invariant"]
+kind = "algorithm"
+first_problem = 16
+last_problem = 16
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "best 始终保存所有已检查真实三元组中与 target 距离最小的总和。"
+
+[concepts."algorithm.backtracking_cartesian_product"]
+kind = "algorithm"
+first_problem = 17
+last_problem = 17
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "递归每层选择当前集合的一个元素，枚举电话按键字母集合的完整笛卡尔积。"
+
+[concepts."data_structure.mutable_backtracking_path"]
+kind = "data_structure"
+first_problem = 17
+last_problem = 17
+occurrences = 1
+teaching_state = "introduced"
+difficult = false
+note = "共享可变路径通过追加与撤销或固定位置覆盖，在不同递归分支间复用前缀缓冲区。"
+
+[concepts."proof.backtracking_prefix_partition"]
+kind = "proof"
+first_problem = 17
+last_problem = 17
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "每个递归前缀对应互不重叠的合法组合子集，每个完整组合沿唯一根到叶路径生成。"
+
+[concepts."complexity.output_sensitive_cartesian_product"]
+kind = "proof"
+first_problem = 17
+last_problem = 17
+occurrences = 1
+teaching_state = "introduced"
+difficult = false
+note = "若组合数为 P、字符串长度为 d，复制完整输出需要 O(P × d) 时间与输出空间。"
