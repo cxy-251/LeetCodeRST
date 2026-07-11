@@ -3,17 +3,17 @@ mode = "prospective_rules_only"
 source = "complete_rst_content"
 start = 1
 end = 50
-current = 6
-reviewed_count = 5
+current = 11
+reviewed_count = 10
 modify_historical_rst = false
 pr_metadata_is_evidence = false
 status = "in_progress"
 
 [batch]
-start = 1
-end = 5
+start = 6
+end = 10
 status = "completed"
-summary = "完整读取 0001-0005 的 RST 正文，只提炼 0051-0100 的前向规则，不修改历史题目。"
+summary = "完整读取 0006-0010 的 RST 正文和十语言代码，只提炼 0051-0100 的前向规则，不修改历史题目。"
 
 [problems."0001"]
 status = "reviewed"
@@ -70,6 +70,73 @@ rule_ids = [
   "return_copy_cost",
 ]
 
+[problems."0006"]
+status = "reviewed"
+file = "problems/0001-0100/0006-zigzag-conversion.rst"
+observations = [
+  "周期公式、首尾行和中间行的覆盖证明完整，可作为索引映射题正向样本。",
+  "Rust 按字节重排并重新构造 UTF-8 依赖精确 ASCII 约束，正文只给字符单位说明，没有列出约束来源。",
+  "Julia collect 与 R strsplit 产生 O(n) 输入规范化空间，统一 O(1) 辅助空间结论不适用于这两个实现。",
+  "C++ 代码混用 int 下标与 size_t 长度，且 C++ 与 C# 标准库依赖没有直接导入说明。",
+]
+rule_ids = [
+  "exact_character_model",
+  "language_specific_copy_cost",
+  "explicit_import_boundary",
+  "index_type_consistency",
+]
+
+[problems."0007"]
+status = "reviewed"
+file = "problems/0001-0100/0007-reverse-integer.rst"
+observations = [
+  "压入前判溢出的正负边界推导和跨语言截断除法说明完整。",
+  "同一溢出推导在题目重述、问题抽象、边界推导、易错点和自检中多次重复，后续应保留一个主推导位置。",
+  "Julia 使用 Int(-2)^31 构造 32 位边界，运算发生在宿主 Int 中，缺少先扩宽再运算的可移植性保证。",
+]
+rule_ids = ["shared_derivation_no_duplication", "widen_before_arithmetic"]
+
+[problems."0008"]
+status = "reviewed"
+file = "problems/0001-0100/0008-string-to-integer-atoi.rst"
+observations = [
+  "空格、符号、数字三阶段和停止语义解释清楚，可作为确定性扫描题正向样本。",
+  "R 先 strsplit 整个输入，实际需要 O(n) 规范化空间，正文统一写 O(1)。",
+  "Julia 的 Int64(2^31) 先以宿主 Int 求幂再转换，宽类型构造顺序不稳健。",
+  "与 0007 相同的压入前溢出推导重复展开，后续复现应解释新增差异而不是重写全部背景。",
+]
+rule_ids = [
+  "language_specific_copy_cost",
+  "widen_before_arithmetic",
+  "shared_derivation_no_duplication",
+]
+
+[problems."0009"]
+status = "reviewed"
+file = "problems/0001-0100/0009-palindrome-number.rst"
+observations = [
+  "半反转停止条件、奇数位中心消除和不溢出证明完整。",
+  "复杂度先定义十进制位数 d，随后又写等价于 O(log x)；x = 0 时 log x 无定义，数值复杂度应使用 d 或 log(|x| + 1)。",
+]
+rule_ids = ["numeric_complexity_domain"]
+
+[problems."0010"]
+status = "reviewed"
+file = "problems/0001-0100/0010-regular-expression-matching.rst"
+observations = [
+  "后缀状态、星号两分支和结构归纳证明完整，可作为记忆化搜索正向样本。",
+  "C 的记忆表分配失败直接返回 false，把资源失败与合法的不匹配结果混在一起。",
+  "C++ 使用 std::move 却没有直接包含 <utility>，不能依赖传递性头文件。",
+  "R 通过 matrix 加 <<- 更新记忆表，父绑定替换与写时复制成本没有证明为常数时间，不能直接沿用统一 O(mn) 实现结论。",
+  "记忆化递归栈为 O(m+n)，但没有把最大递归深度与题目长度约束和各语言栈限制对应起来。",
+]
+rule_ids = [
+  "failure_path_not_partial_answer",
+  "explicit_import_boundary",
+  "r_mutable_memo_cost",
+  "recursion_depth_against_constraints",
+]
+
 [rules."hash_expected_and_worst"]
 status = "promoted"
 first_problem = 1
@@ -79,14 +146,14 @@ requirement = "使用哈希表时区分期望、平均与最坏复杂度，说�
 [rules."explicit_import_boundary"]
 status = "promoted"
 first_problem = 1
-problems = [1, 3]
-requirement = "每种语言包含必要导入，或明确说明由平台预置。"
+problems = [1, 3, 6, 10]
+requirement = "每种语言直接包含所用标准 API 的必要导入，或明确说明由平台预置；禁止依赖传递性头文件。"
 
 [rules."failure_path_not_partial_answer"]
 status = "promoted"
 first_problem = 2
-problems = [2]
-requirement = "失败路径不得返回部分结果或看似合法的普通答案。"
+problems = [2, 10]
+requirement = "失败路径不得返回部分结果，也不得把资源失败伪装成 false、0、空结果等合法答案。"
 
 [rules."input_mutation_and_ownership"]
 status = "promoted"
@@ -97,13 +164,13 @@ requirement = "输入被消费、移动、排序或原地修改时必须明确�
 [rules."exact_character_model"]
 status = "promoted"
 first_problem = 3
-problems = [3, 5]
+problems = [3, 5, 6]
 requirement = "字符串题先写精确字符约束，再定义字节、代码单元、码点或字形簇模型。"
 
 [rules."language_specific_copy_cost"]
 status = "promoted"
 first_problem = 3
-problems = [3, 5]
+problems = [3, 5, 6, 8]
 requirement = "计入 []byte、collect、strsplit、切片和重新编码等语言特有复制成本。"
 
 [rules."binary_search_direction_proof"]
@@ -130,7 +197,43 @@ first_problem = 5
 problems = [5]
 requirement = "字符串或集合返回值的复制成本按目标语言真实语义说明。"
 
+[rules."index_type_consistency"]
+status = "promoted"
+first_problem = 6
+problems = [6]
+requirement = "循环下标、容器长度和差值使用一致且可证明安全的类型，避免有符号与无符号混用和下溢。"
+
+[rules."shared_derivation_no_duplication"]
+status = "promoted"
+first_problem = 7
+problems = [7, 8]
+requirement = "一个核心推导只保留一个完整主位置；后续章节和复现题只引用结论并解释新增差异，避免重复堆叠。"
+
+[rules."widen_before_arithmetic"]
+status = "promoted"
+first_problem = 7
+problems = [7, 8]
+requirement = "边界常量和危险中间表达式必须先把操作数扩宽再运算，不能在宿主窄类型完成后才转换结果。"
+
+[rules."numeric_complexity_domain"]
+status = "promoted"
+first_problem = 9
+problems = [9]
+requirement = "整数逐位算法优先以位数 d 表示复杂度；使用对数时写 O(log(|x|+1)) 或明确限定 x > 0。"
+
+[rules."r_mutable_memo_cost"]
+status = "promoted"
+first_problem = 10
+problems = [10]
+requirement = "R 的 <<- 只表示父绑定更新，不自动保证矩阵或列表单元为 O(1) 原地写入；记忆化优先使用 environment，或单独证明复制成本。"
+
+[rules."recursion_depth_against_constraints"]
+status = "promoted"
+first_problem = 10
+problems = [10]
+requirement = "递归解法必须把最坏深度与题目长度约束和目标语言栈限制对应；无法保证时改用迭代或显式栈。"
+
 [next_batch]
-start = 6
-end = 10
-purpose = "完整读取 0006-0010 的 RST，继续提炼前向规则，不修改历史题目。"
+start = 11
+end = 15
+purpose = "完整读取 0011-0015 的 RST，继续提炼前向规则，不修改历史题目。"
