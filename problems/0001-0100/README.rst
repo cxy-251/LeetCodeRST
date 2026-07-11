@@ -49,11 +49,13 @@ LeetCode 0001–0100
 #. `0041. First Missing Positive <0041-first-missing-positive.rst>`_
 #. `0042. Trapping Rain Water <0042-trapping-rain-water.rst>`_
 #. `0043. Multiply Strings <0043-multiply-strings.rst>`_
+#. `0044. Wildcard Matching <0044-wildcard-matching.rst>`_
+#. `0045. Jump Game II <0045-jump-game-ii.rst>`_
 
 下一题
 ------
 
-``0044. Wildcard Matching``
+``0046. Permutations``
 
 阅读顺序
 --------

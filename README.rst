@@ -103,8 +103,10 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
 #. `0041. First Missing Positive <problems/0001-0100/0041-first-missing-positive.rst>`_
 #. `0042. Trapping Rain Water <problems/0001-0100/0042-trapping-rain-water.rst>`_
 #. `0043. Multiply Strings <problems/0001-0100/0043-multiply-strings.rst>`_
+#. `0044. Wildcard Matching <problems/0001-0100/0044-wildcard-matching.rst>`_
+#. `0045. Jump Game II <problems/0001-0100/0045-jump-game-ii.rst>`_
 
-下一题是 ``0044. Wildcard Matching``。实际进度以 ``state/PROGRESS.toml`` 为准。
+下一题是 ``0046. Permutations``。实际进度以 ``state/PROGRESS.toml`` 为准。
 
 开始工作
 --------
@@ -130,15 +132,16 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
 当前状态
 --------
 
-0001 至 0043 已完成。当前样板已经覆盖哈希表、链表、滑动窗口、二分分割、回文
+0001 至 0045 已完成。当前样板已经覆盖哈希表、链表、滑动窗口、二分分割、回文
 中心扩展、周期索引、整数逐位反转、字符串解析、记忆化匹配、数组双指针、罗马数字、
 公共前缀、多数和降维、最近候选、回溯、链表固定间距删除、括号栈、双路稳定归并、
 合法括号前缀、最小堆 K 路归并、相邻节点交换、K 组链表反转、有序数组原地去重、
 按固定目标值稳定压缩、朴素子串匹配、无乘除整数除法、固定词长多偏移滑动窗口、
 字典序下一排列、最长合法括号区间、旋转有序数组搜索、重复值边界定位、插入位置、
 数独约束验证、位掩码回溯求解、游程编码、可重复组合枚举、同层去重组合枚举、
-原地哈希与循环置换、双指针蓄水和十进制字符串竖式乘法。下一题从 0044 开始；
-自动任务按难度预算连续精写 1 至 3 道题，并在 0050 完成后停在全量 RST 审查检查点。
+原地哈希与循环置换、双指针蓄水、十进制字符串竖式乘法、通配符最近星号回退和
+BFS 层边界跳跃。下一题从 0046 开始；自动任务按难度预算连续精写 1 至 3 道题，
+并在 0050 完成后停在全量 RST 审查检查点。
 
 定时自动任务复用唯一固定分支 ``automation/leetcode-current``，每轮只创建一个非 Draft PR，
 通过逐题质量检查和批次一致性检查后 squash merge 到 ``main``。禁止题号分支、时间戳分支
@@ -167,7 +170,7 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
        README.rst
        0001-two-sum.rst
        ...
-       0043-multiply-strings.rst
+       0045-jump-game-ii.rst
    state/
      PROGRESS.toml
      CONCEPT_LEDGER.toml
