@@ -23,11 +23,14 @@ LeetCode 0001–0100
 #. `0015. 3Sum <0015-3sum.rst>`_
 #. `0016. 3Sum Closest <0016-3sum-closest.rst>`_
 #. `0017. Letter Combinations of a Phone Number <0017-letter-combinations-of-a-phone-number.rst>`_
+#. `0018. 4Sum <0018-4sum.rst>`_
+#. `0019. Remove Nth Node From End of List <0019-remove-nth-node-from-end-of-list.rst>`_
+#. `0020. Valid Parentheses <0020-valid-parentheses.rst>`_
 
 下一题
 ------
 
-``0018. 4Sum``
+``0021. Merge Two Sorted Lists``
 
 阅读顺序
 --------
