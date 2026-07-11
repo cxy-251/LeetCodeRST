@@ -29,11 +29,14 @@ LeetCode 0001–0100
 #. `0021. Merge Two Sorted Lists <0021-merge-two-sorted-lists.rst>`_
 #. `0022. Generate Parentheses <0022-generate-parentheses.rst>`_
 #. `0023. Merge k Sorted Lists <0023-merge-k-sorted-lists.rst>`_
+#. `0024. Swap Nodes in Pairs <0024-swap-nodes-in-pairs.rst>`_
+#. `0025. Reverse Nodes in k-Group <0025-reverse-nodes-in-k-group.rst>`_
+#. `0026. Remove Duplicates from Sorted Array <0026-remove-duplicates-from-sorted-array.rst>`_
 
 下一题
 ------
 
-``0024. Swap Nodes in Pairs``
+``0027. Remove Element``
 
 阅读顺序
 --------
