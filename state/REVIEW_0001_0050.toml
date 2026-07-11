@@ -3,17 +3,17 @@ mode = "prospective_rules_only"
 source = "complete_rst_content"
 start = 1
 end = 50
-current = 11
-reviewed_count = 10
+current = 16
+reviewed_count = 15
 modify_historical_rst = false
 pr_metadata_is_evidence = false
 status = "in_progress"
 
 [batch]
-start = 6
-end = 10
+start = 11
+end = 15
 status = "completed"
-summary = "完整读取 0006-0010 的 RST 正文和十语言代码，只提炼 0051-0100 的前向规则，不修改历史题目。"
+summary = "完整读取 0011-0015 的 RST 正文和十语言代码，只提炼 0051-0100 的前向规则，不修改历史题目。"
 
 [problems."0001"]
 status = "reviewed"
@@ -137,6 +137,83 @@ rule_ids = [
   "recursion_depth_against_constraints",
 ]
 
+[problems."0011"]
+status = "reviewed"
+file = "problems/0001-0100/0011-container-with-most-water.rst"
+observations = [
+  "短板上界、移动决策和候选排除证明完整，可作为双指针贪心正向样本。",
+  "C 实现把平台常见 int 返回接口改成 long long；内部宽类型正确不代表可以改变外部签名。",
+  "数值说明使用本题常见约束，而不是列出精确高度与长度上界后证明乘积范围。",
+  "C++ 的 vector、min、max 与 C# 的 Math 缺少直接导入或平台预置说明。",
+]
+rule_ids = [
+  "platform_signature_exact",
+  "constraint_derived_numeric_width",
+  "explicit_import_boundary",
+]
+
+[problems."0012"]
+status = "reviewed"
+file = "problems/0001-0100/0012-integer-to-roman.rst"
+observations = [
+  "规范令牌表驱动编码清楚，可作为小型固定表编码的正向样本。",
+  "贪心证明以更小片段更长或不规范作为结论，缺少由规范罗马语法或交换论证证明最大可用片段必须先选。",
+  "C 固定分配 32 字节只写足够，没有推导最大规范输出长度，也没有检查 malloc 失败。",
+  "复杂度写 O(k)，但题目范围固定为 1-3999；应同时区分题目约束下 O(1) 与推广模型下 O(k)。",
+]
+rule_ids = [
+  "greedy_exchange_or_canonical_proof",
+  "fixed_capacity_bound_proof",
+  "failure_path_not_partial_answer",
+  "fixed_domain_vs_output_complexity",
+]
+
+[problems."0013"]
+status = "reviewed"
+file = "problems/0001-0100/0013-roman-to-integer.rst"
+observations = [
+  "相邻大小关系决定正负贡献的局部证明完整，可作为单向解析正向样本。",
+  "Julia collect 与 R strsplit 分配 O(n) 输入表示，统一 O(1) 额外空间不适用于这两个实现。",
+  "多个实现把未知符号映射为 0；这只在题目明确保证输入合法时成立，不能伪装成通用错误处理。",
+]
+rule_ids = [
+  "language_specific_copy_cost",
+  "valid_input_precondition_contract",
+]
+
+[problems."0014"]
+status = "reviewed"
+file = "problems/0001-0100/0014-longest-common-prefix.rst"
+observations = [
+  "首个失败位置同时证明当前前缀合法与更长前缀不可能，证明结构完整。",
+  "R 在每个列位置和每个字符串组合上重新执行 utf8ToInt，重复整串转换使实现成本可能从 O(S) 退化。",
+  "C 增加题目约束之外的空数组分支，却对该分支和正常返回的 malloc 都未检查失败。",
+  "多语言子串和切片返回会复制结果，正文只统一排除返回空间。",
+]
+rule_ids = [
+  "preprocess_once_outside_hot_loop",
+  "failure_path_not_partial_answer",
+  "return_copy_cost",
+  "valid_input_precondition_contract",
+]
+
+[problems."0015"]
+status = "reviewed"
+file = "problems/0001-0100/0015-3sum.rst"
+observations = [
+  "锚点去重、双指针单调排除和命中后去重证明完整。",
+  "C 初始分配、行分配和 realloc 都未检查；realloc 直接覆盖原指针会在失败时丢失旧内存，并可能让 result 与 columns 容量不同步。",
+  "Julia 在长度小于 3 时使用 1:(length(nums)-2)，会形成递减范围并访问无效下标。",
+  "Java 使用 List.of 依赖 Java 9，正文没有声明版本前提。",
+  "排序会修改输入，这一点已在易错点说明，可作为输入修改契约正向样本。",
+]
+rule_ids = [
+  "realloc_transactional_update",
+  "empty_range_guard",
+  "version_dependent_api",
+  "input_mutation_and_ownership",
+]
+
 [rules."hash_expected_and_worst"]
 status = "promoted"
 first_problem = 1
@@ -146,32 +223,32 @@ requirement = "使用哈希表时区分期望、平均与最坏复杂度，说�
 [rules."explicit_import_boundary"]
 status = "promoted"
 first_problem = 1
-problems = [1, 3, 6, 10]
+problems = [1, 3, 6, 10, 11]
 requirement = "每种语言直接包含所用标准 API 的必要导入，或明确说明由平台预置；禁止依赖传递性头文件。"
 
 [rules."failure_path_not_partial_answer"]
 status = "promoted"
 first_problem = 2
-problems = [2, 10]
+problems = [2, 10, 12, 14, 15]
 requirement = "失败路径不得返回部分结果，也不得把资源失败伪装成 false、0、空结果等合法答案。"
 
 [rules."input_mutation_and_ownership"]
 status = "promoted"
 first_problem = 2
-problems = [2]
+problems = [2, 15]
 requirement = "输入被消费、移动、排序或原地修改时必须明确说明。"
 
 [rules."exact_character_model"]
 status = "promoted"
 first_problem = 3
-problems = [3, 5, 6]
+problems = [3, 5, 6, 13, 14]
 requirement = "字符串题先写精确字符约束，再定义字节、代码单元、码点或字形簇模型。"
 
 [rules."language_specific_copy_cost"]
 status = "promoted"
 first_problem = 3
-problems = [3, 5, 6, 8]
-requirement = "计入 []byte、collect、strsplit、切片和重新编码等语言特有复制成本。"
+problems = [3, 5, 6, 8, 13]
+requirement = "计入 []byte、collect、strsplit、utf8ToInt、切片和重新编码等语言特有复制成本。"
 
 [rules."binary_search_direction_proof"]
 status = "promoted"
@@ -188,13 +265,13 @@ requirement = "不可达或失败路径不得返回可能合法的默认值。"
 [rules."version_dependent_api"]
 status = "promoted"
 first_problem = 4
-problems = [4]
+problems = [4, 15]
 requirement = "版本相关 API 声明最低版本，或改用兼容辅助函数。"
 
 [rules."return_copy_cost"]
 status = "promoted"
 first_problem = 5
-problems = [5]
+problems = [5, 14]
 requirement = "字符串或集合返回值的复制成本按目标语言真实语义说明。"
 
 [rules."index_type_consistency"]
@@ -212,8 +289,8 @@ requirement = "一个核心推导只保留一个完整主位置；后续章节�
 [rules."widen_before_arithmetic"]
 status = "promoted"
 first_problem = 7
-problems = [7, 8]
-requirement = "边界常量和危险中间表达式必须先把操作数扩宽再运算，不能在宿主窄类型完成后才转换结果。"
+problems = [7, 8, 11, 15]
+requirement = "边界常量和危险中间表达式必须先把操作数扩宽再运算；内部宽类型不能改变平台要求的外部返回类型。"
 
 [rules."numeric_complexity_domain"]
 status = "promoted"
@@ -233,7 +310,61 @@ first_problem = 10
 problems = [10]
 requirement = "递归解法必须把最坏深度与题目长度约束和目标语言栈限制对应；无法保证时改用迭代或显式栈。"
 
+[rules."platform_signature_exact"]
+status = "promoted"
+first_problem = 11
+problems = [11]
+requirement = "内部可使用宽类型，但公开函数名、参数、返回类型和返回结构必须与平台接口完全一致。"
+
+[rules."constraint_derived_numeric_width"]
+status = "promoted"
+first_problem = 11
+problems = [11, 15]
+requirement = "先列出精确输入上界，再证明加法、乘法、下标差和返回值需要的数值宽度；禁止使用常见约束代替证明。"
+
+[rules."greedy_exchange_or_canonical_proof"]
+status = "promoted"
+first_problem = 12
+problems = [12]
+requirement = "贪心题必须用交换论证、上界排除或规范表示语法证明局部选择，不得只声称更自然或更短。"
+
+[rules."fixed_capacity_bound_proof"]
+status = "promoted"
+first_problem = 12
+problems = [12]
+requirement = "固定缓冲区容量必须由输入约束和最大输出长度推导，并保留终止符或元数据空间。"
+
+[rules."fixed_domain_vs_output_complexity"]
+status = "promoted"
+first_problem = 12
+problems = [12]
+requirement = "输入域有固定上界时，同时说明题目约束下的常数界与推广模型下按输出长度或输入规模表示的复杂度。"
+
+[rules."valid_input_precondition_contract"]
+status = "promoted"
+first_problem = 13
+problems = [13, 14]
+requirement = "依赖非空、合法字符或有效语法等题目保证时明确写成前提；不要添加不完整的伪校验，也不要把默认值伪装成通用错误处理。"
+
+[rules."preprocess_once_outside_hot_loop"]
+status = "promoted"
+first_problem = 14
+problems = [14]
+requirement = "整串解码、字符向量转换、哈希构建和排序等 O(n) 预处理不得放进内层循环；预处理一次并计入复杂度。"
+
+[rules."realloc_transactional_update"]
+status = "promoted"
+first_problem = 15
+problems = [15]
+requirement = "C 的 realloc 使用临时指针并在全部相关扩容成功后提交；失败时保留旧指针、清理已分配资源并保持并行数组一致。"
+
+[rules."empty_range_guard"]
+status = "promoted"
+first_problem = 15
+problems = [15]
+requirement = "Julia、R 等语言中可能为空的循环范围必须先守卫或使用安全序列构造，禁止让 a:b 在 a>b 时形成意外递减序列。"
+
 [next_batch]
-start = 11
-end = 15
-purpose = "完整读取 0011-0015 的 RST，继续提炼前向规则，不修改历史题目。"
+start = 16
+end = 20
+purpose = "完整读取 0016-0020 的 RST，继续提炼前向规则，不修改历史题目。"

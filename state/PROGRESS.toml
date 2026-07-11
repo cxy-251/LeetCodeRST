@@ -37,8 +37,8 @@ mode = "prospective_rules_only"
 source = "complete_rst_content"
 start = 1
 end = 50
-current = 11
-reviewed_count = 10
+current = 16
+reviewed_count = 15
 batch_size = 5
 modify_historical_rst = false
 pr_metadata_is_evidence = false
@@ -54,7 +54,7 @@ prospective_end = 100
 prospective_policy = "完成 0001-0050 逐题规则提炼后，强化模板与质量门从 0051 起完整执行。"
 
 [next_action]
-summary = "继续完整审查 0011-0015；只更新审查记录和公共规则，不修改题目文件。"
+summary = "继续完整审查 0016-0020；只更新审查记录和公共规则，不修改题目文件。"
 
 [last_update]
-summary = "已完整读取 0006-0010 的 RST，并从正文提炼推导去重、先扩宽再运算、数值复杂度定义域、R 可变记忆状态和递归深度规则。"
+summary = "已完整读取 0011-0015 的 RST，并从正文提炼平台签名、约束推导数值宽度、固定容量证明、贪心证明、热循环预处理、realloc 事务更新和空范围守卫规则。"
