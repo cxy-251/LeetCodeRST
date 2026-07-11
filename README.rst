@@ -105,8 +105,11 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
 #. `0043. Multiply Strings <problems/0001-0100/0043-multiply-strings.rst>`_
 #. `0044. Wildcard Matching <problems/0001-0100/0044-wildcard-matching.rst>`_
 #. `0045. Jump Game II <problems/0001-0100/0045-jump-game-ii.rst>`_
+#. `0046. Permutations <problems/0001-0100/0046-permutations.rst>`_
+#. `0047. Permutations II <problems/0001-0100/0047-permutations-ii.rst>`_
+#. `0048. Rotate Image <problems/0001-0100/0048-rotate-image.rst>`_
 
-下一题是 ``0046. Permutations``。实际进度以 ``state/PROGRESS.toml`` 为准。
+下一题是 ``0049. Group Anagrams``。实际进度以 ``state/PROGRESS.toml`` 为准。
 
 开始工作
 --------
@@ -132,20 +135,26 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
 当前状态
 --------
 
-0001 至 0045 已完成。当前样板已经覆盖哈希表、链表、滑动窗口、二分分割、回文
+0001 至 0048 已完成。当前样板已经覆盖哈希表、链表、滑动窗口、二分分割、回文
 中心扩展、周期索引、整数逐位反转、字符串解析、记忆化匹配、数组双指针、罗马数字、
 公共前缀、多数和降维、最近候选、回溯、链表固定间距删除、括号栈、双路稳定归并、
 合法括号前缀、最小堆 K 路归并、相邻节点交换、K 组链表反转、有序数组原地去重、
 按固定目标值稳定压缩、朴素子串匹配、无乘除整数除法、固定词长多偏移滑动窗口、
 字典序下一排列、最长合法括号区间、旋转有序数组搜索、重复值边界定位、插入位置、
-数独约束验证、位掩码回溯求解、游程编码、可重复组合枚举、同层去重组合枚举、
-原地哈希与循环置换、双指针蓄水、十进制字符串竖式乘法、通配符最近星号回退和
-BFS 层边界跳跃。下一题从 0046 开始；自动任务按难度预算连续精写 1 至 3 道题，
-并在 0050 完成后停在全量 RST 审查检查点。
+数独约束验证、位掩码回溯求解、游程编码、组合枚举、同层去重、原地哈希与循环置换、
+双指针蓄水、十进制字符串竖式乘法、通配符受控回退、BFS 层边界跳跃、原地交换排列、
+重复排列规范代表选择与矩阵转置旋转。下一题从 0049 开始；下一批必须截断在 0050。
+完成 0050 后停止生成新题，进入 0001 至 0050 的全量 RST 审查。
 
 定时自动任务复用唯一固定分支 ``automation/leetcode-current``，每轮只创建一个非 Draft PR，
 通过逐题质量检查和批次一致性检查后 squash merge 到 ``main``。禁止题号分支、时间戳分支
 和额外 finalize PR。完整规则见 ``docs/AUTOMATION_DIRECT_MAIN_POLICY.rst``。
+
+0050 审查检查点
+---------------
+
+任何自动或手动内容批次都不得生成 0051。完成 0050 后，后续工作改为逐个审查 0001 至 0050
+的 RST、十语言实现、复杂度、边界与知识账本；只有用户明确解除检查点后才能继续新题。
 
 文件组织
 --------
@@ -170,7 +179,7 @@ BFS 层边界跳跃。下一题从 0046 开始；自动任务按难度预算连�
        README.rst
        0001-two-sum.rst
        ...
-       0045-jump-game-ii.rst
+       0048-rotate-image.rst
    state/
      PROGRESS.toml
      CONCEPT_LEDGER.toml
