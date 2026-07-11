@@ -10,29 +10,29 @@ content_language = "zh-CN"
 code_comment_language = "zh-CN"
 
 [progress]
-next_problem = 18
-completed_count = 17
-completed_ranges = ["0001-0017"]
+next_problem = 21
+completed_count = 20
+completed_ranges = ["0001-0020"]
 premium_skipped = []
 blocked = []
 needs_revision = []
 
 [last_batch]
 status = "completed"
-start = 15
-end = 17
+start = 18
+end = 20
 completed = 3
 premium_skipped = []
-summary = "完成 0015 至 0017 三题十语言 RST 教程，覆盖排序后三数和、最近候选双指针与电话按键回溯组合。"
+summary = "完成 0018 至 0020 三题十语言 RST 教程，覆盖四数和双锚点、链表固定间距删除与括号栈匹配。"
 
 [next_batch]
 status = "ready"
-start = 18
-end = 18
+start = 21
+end = 21
 purpose = "自动任务每次只精写一道题，以 RST 教学质量为首要目标。"
 
 [next_action]
-summary = "从 LeetCode 0018 开始；自动任务启动时先同步 automation/leetcode-current 到最新 main。"
+summary = "从 LeetCode 0021 开始；自动任务启动时先同步 automation/leetcode-current 到最新 main。"
 
 [last_update]
-summary = "LeetCode 0015 至 0017 已作为手动三题批次完成；下一轮自动任务从最新 next_problem 接续。"
+summary = "LeetCode 0018 至 0020 已作为第二个手动三题批次完成；下一轮自动任务从最新 next_problem 接续。"
