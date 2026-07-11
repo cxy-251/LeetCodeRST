@@ -124,12 +124,12 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
 公共前缀、多数和降维、最近候选、回溯、链表固定间距删除、括号栈、双路稳定归并、
 合法括号前缀、最小堆 K 路归并、相邻节点交换、K 组链表反转、有序数组原地去重、
 按固定目标值稳定压缩、朴素子串匹配、无乘除整数除法、固定词长多偏移滑动窗口、
-字典序下一排列与最长合法括号区间。下一题从 0033 开始；自动任务每次只精写一道题，
-并以 RST 教学质量高于题量。
+字典序下一排列与最长合法括号区间。下一题从 0033 开始；自动任务按难度预算连续精写
+1 至 3 道题，并对每道题独立执行完整质量门。
 
 定时自动任务复用唯一固定分支 ``automation/leetcode-current``，每轮只创建一个非 Draft PR，
-通过质量检查后 squash merge 到 ``main``。禁止题号分支、时间戳分支和额外 finalize PR。
-完整规则见 ``docs/AUTOMATION_DIRECT_MAIN_POLICY.rst``。
+通过逐题质量检查和批次一致性检查后 squash merge 到 ``main``。禁止题号分支、时间戳分支
+和额外 finalize PR。完整规则见 ``docs/AUTOMATION_DIRECT_MAIN_POLICY.rst``。
 
 文件组织
 --------

@@ -3,7 +3,7 @@ name = "leetcode-multilang-rst"
 phase = "lessons_started"
 format = "rst"
 ordering = "leetcode_number_ascending"
-automation_workflow = "single_problem_fixed_branch_pr"
+automation_workflow = "difficulty_budget_fixed_branch_pr"
 automation_branch = "automation/leetcode-current"
 build_required = false
 content_language = "zh-CN"
@@ -28,11 +28,11 @@ summary = "完成 0032 Longest Valid Parentheses 十语言 RST 教程，覆盖�
 [next_batch]
 status = "ready"
 start = 33
-end = 33
-purpose = "自动任务每次只精写一道题，以 RST 教学质量为首要目标。"
+end = 35
+purpose = "自动任务按难度预算连续精写 1 至 3 道题；Easy=1、Medium=2、Hard=4，目标 4 至 6 分且每题独立通过质量门。"
 
 [next_action]
-summary = "从 LeetCode 0033 开始；自动任务启动时先同步 automation/leetcode-current 到最新 main。"
+summary = "从 LeetCode 0033 开始；自动任务启动时先同步 automation/leetcode-current 到最新 main，再按难度预算计算批次。"
 
 [last_update]
-summary = "LeetCode 0032 已由小时单题任务完成；下一轮继续从最新 next_problem 接续。"
+summary = "小时任务已从固定单题调整为难度预算批次；仍保持固定分支、单提交、单 PR 与一次 squash merge。"
