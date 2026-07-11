@@ -1,6 +1,6 @@
 [project]
 name = "leetcode-multilang-rst"
-phase = "review_checkpoint"
+phase = "lessons_started"
 format = "rst"
 ordering = "leetcode_number_ascending"
 automation_workflow = "difficulty_budget_fixed_branch_pr"
@@ -26,20 +26,21 @@ premium_skipped = []
 summary = "完成 0049 与 0050 两题十语言 RST 教程，覆盖异位词频次签名分组与二进制快速幂。"
 
 [next_batch]
-status = "blocked_by_review_checkpoint"
+status = "ready"
 start = 51
 end = 51
-purpose = "0050 审查检查点已生效；未由用户明确解除前禁止生成 0051。"
+purpose = "从 0051 N-Queens 继续；0051 与 0052 均为 Hard，同一批次禁止包含两道 Hard。"
 
-[review]
-status = "ready"
-start = 1
-end = 50
-current = 1
-scope = "逐题核对 RST 结构、题意、主算法、证明、复杂度、十语言实现、语言边界、内存与知识账本。"
+[quality_scope]
+historical_start = 1
+historical_end = 50
+historical_policy = "0001-0050 视为已完成历史内容，不执行全量审查，不因公共规则升级主动回改。"
+prospective_start = 51
+prospective_end = 100
+prospective_policy = "防复发规则、强化模板与质量门从 0051 起完整执行。"
 
 [next_action]
-summary = "从 0001 开始全量审查；发现确定性缺陷时创建独立 fix PR，不推进题号。"
+summary = "从 LeetCode 0051 开始继续生成；只把 0001-0050 已发现的风险转化为后续质量门，不启动历史回改。"
 
 [last_update]
-summary = "LeetCode 0049 至 0050 已完成；0001 至 0050 首轮教程结束，仓库进入全量 RST 审查阶段。"
+summary = "取消 0050 全量审查检查点；0001-0050 冻结，项目从 0051 继续并前置执行防复发规则。"
