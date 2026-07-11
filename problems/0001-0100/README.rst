@@ -41,11 +41,13 @@ LeetCode 0001–0100
 #. `0033. Search in Rotated Sorted Array <0033-search-in-rotated-sorted-array.rst>`_
 #. `0034. Find First and Last Position of Element in Sorted Array <0034-find-first-and-last-position-of-element-in-sorted-array.rst>`_
 #. `0035. Search Insert Position <0035-search-insert-position.rst>`_
+#. `0036. Valid Sudoku <0036-valid-sudoku.rst>`_
+#. `0037. Sudoku Solver <0037-sudoku-solver.rst>`_
 
 下一题
 ------
 
-``0036. Valid Sudoku``
+``0038. Count and Say``
 
 阅读顺序
 --------
