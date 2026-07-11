@@ -37,13 +37,17 @@ mode = "prospective_rules_only"
 source = "complete_rst_content"
 start = 1
 end = 50
-current = 16
-reviewed_count = 15
+current = 21
+reviewed_count = 20
 batch_size = 5
 modify_historical_rst = false
 pr_metadata_is_evidence = false
-record = "state/REVIEW_0001_0050.toml"
-findings = "docs/REVIEW_FINDINGS_0001_0050.rst"
+index = "state/REVIEW_INDEX.toml"
+legacy_record = "state/REVIEW_0001_0050.toml"
+latest_record = "state/reviews/0016-0020.toml"
+base_findings = "docs/REVIEW_FINDINGS_0001_0050.rst"
+latest_findings = "docs/review-findings/0016-0020.rst"
+forward_rules = "docs/FORWARD_RULES_0051_0100.rst"
 
 [quality_scope]
 historical_start = 1
@@ -51,10 +55,10 @@ historical_end = 50
 historical_policy = "逐题读取正文获取优化方法，但不修改历史 RST；所有发现只转化为 0051-0100 的前向规则。"
 prospective_start = 51
 prospective_end = 100
-prospective_policy = "完成 0001-0050 逐题规则提炼后，强化模板与质量门从 0051 起完整执行。"
+prospective_policy = "完成 0001-0050 逐题规则提炼后，完整执行 FORWARD_RULES_0051_0100.rst 与自动质量门。"
 
 [next_action]
-summary = "继续完整审查 0016-0020；只更新审查记录和公共规则，不修改题目文件。"
+summary = "继续完整审查 0021-0025；只更新审查记录和公共规则，不修改题目文件。"
 
 [last_update]
-summary = "已完整读取 0011-0015 的 RST，并从正文提炼平台签名、约束推导数值宽度、固定容量证明、贪心证明、热循环预处理、realloc 事务更新和空范围守卫规则。"
+summary = "已完整读取 0016-0020 的 RST，并提炼数值表达式闭合验证、组合容量乘积、真实输出累加成本、文档与实现对齐、语言特化算法、节点所有权和前提支撑断言规则。"
