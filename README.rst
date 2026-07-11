@@ -55,7 +55,8 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
 * 单题关联通常保留 1 至 3 个，最多 5 个，没有强关联时直接省略。
 
 完整规则见 ``docs/SOLUTION_AND_TYPES_POLICY.rst``、
-``docs/RELATED_PROBLEMS_POLICY.rst`` 和 ``docs/RST_STYLE_GUIDE.rst``。
+``docs/RELATED_PROBLEMS_POLICY.rst``、``docs/RST_STYLE_GUIDE.rst`` 和
+``docs/REVIEW_AND_PREVENTION_POLICY.rst``。
 
 已完成题目
 ----------
@@ -111,7 +112,7 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
 #. `0049. Group Anagrams <problems/0001-0100/0049-group-anagrams.rst>`_
 #. `0050. Pow(x, n) <problems/0001-0100/0050-powx-n.rst>`_
 
-0001 至 0050 的首轮教程已经完成。实际审查状态以 ``state/PROGRESS.toml`` 为准。
+下一题是 ``0051. N-Queens``。实际进度以 ``state/PROGRESS.toml`` 为准。
 
 开始工作
 --------
@@ -125,6 +126,7 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
 #. ``docs/RELATED_PROBLEMS_POLICY.rst``
 #. ``docs/CONTENT_LANGUAGE_POLICY.rst``
 #. ``docs/RST_STYLE_GUIDE.rst``
+#. ``docs/REVIEW_AND_PREVENTION_POLICY.rst``
 #. ``docs/AUTOMATION_QUALITY_GATE.rst``
 #. ``docs/AUTOMATION_DIRECT_MAIN_POLICY.rst``
 #. ``state/PROGRESS.toml``
@@ -137,23 +139,24 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
 当前状态
 --------
 
-0001 至 0050 的首轮多语言 RST 已全部完成。内容已经覆盖哈希表、链表、滑动窗口、二分、
-回文、字符串解析、动态规划、数组双指针、整数边界、回溯、栈、堆、链表局部变换、
-有序数组原地压缩、固定词长窗口、排列、数独、游程编码、组合搜索、循环置换、蓄水、
-字符串竖式乘法、通配符回退、BFS 层边界、矩阵坐标变换、异位词频次签名和二进制快速幂。
+``0001`` 至 ``0050`` 的首轮多语言 RST 已完成，作为历史内容保留。不会启动逐题全量审查，
+也不会因为公共规则升级而主动回改这些文件。
 
-当前阶段为 ``0001–0050`` 全量审查。后续需要逐个核对每个 RST 的题意、主算法、正确性证明、
-复杂度、十语言编译与运行、语言边界、内存所有权、索引语义、知识账本和文件间一致性。
-在用户明确解除审查检查点前，禁止生成 0051 或更大题号。
+从 ``0051`` 开始继续按题号生成。此前暴露出的 R 作用域、Julia 递减范围、TypeScript
+位运算、C 容量与所有权、复杂度输出成本等问题，已经进入公共模板和质量门，从
+``0051`` 至 ``0100`` 前置执行。
 
-定时自动任务只在深夜运行。任务读取到 ``next_problem >= 51`` 时不得写仓库，只报告已到审查
-检查点并等待用户明确解除。
+定时自动任务只在深夜运行，与手动对话共用 GitHub ``main``、进度文件和公共规则。
+每次开始前必须读取最新状态，避免覆盖人工进度。
 
-0050 审查检查点
----------------
+前向防复发范围
+--------------
 
-审查范围固定为 ``0001`` 至 ``0050``。发现确定性缺陷时使用独立 ``fix:`` PR 修复，修复 PR
-不得新增题目或推进题号。完成逐文件审查并由用户明确确认后，才能进入 0051。
+``0001`` 至 ``0050`` 不主动审查、不批量修订。只有用户明确指定某一道历史题需要修复时，
+才处理该题。
+
+``0051`` 至 ``0100`` 必须完整执行强化后的题目模板、十语言风险检查、复杂度与证明检查，
+并严格区分运行验证、编译验证、静态验证和基准对拍。
 
 文件组织
 --------
@@ -169,6 +172,7 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
      RELATED_PROBLEMS_POLICY.rst
      CONTENT_LANGUAGE_POLICY.rst
      RST_STYLE_GUIDE.rst
+     REVIEW_AND_PREVENTION_POLICY.rst
      AUTOMATION_QUALITY_GATE.rst
      AUTOMATION_DIRECT_MAIN_POLICY.rst
      PROBLEM_TEMPLATE.rst
