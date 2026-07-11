@@ -1,0 +1,18 @@
+[meta]
+start_problem = 51
+end_problem = 100
+last_problem = 51
+
+[updates]
+"data_structure.mutable_backtracking_path" = { last_problem = 51, occurrences = 6, teaching_state = "familiar", note = "0017、0022、0039、0040、0047 使用可变路径；0051 用 placement 保存按行列选择并在叶子构造棋盘。" }
+"proof.backtracking_prefix_partition" = { last_problem = 51, occurrences = 7, teaching_state = "familiar", note = "0051 的递归前缀固定前若干行，每个合法棋盘对应唯一列选择路径。" }
+"proof.reversible_constraint_state" = { last_problem = 51, occurrences = 2, teaching_state = "reinforcing", note = "0037 撤销行列宫掩码；0051 成对标记和撤销列及两类对角线。" }
+"julia_r.zero_based_algorithm_coordinates" = { last_problem = 51, occurrences = 19, teaching_state = "reinforcing", note = "0051 将零基对角线公式映射为 Julia/R 的一基槽位。" }
+
+[concepts]
+"algorithm.n_queens_row_backtracking" = { kind = "algorithm", first_problem = 51, last_problem = 51, occurrences = 1, teaching_state = "introduced", difficult = true, note = "递归深度固定当前行，枚举不与此前皇后冲突的列。" }
+"data_structure.queen_column_diagonal_occupancy" = { kind = "data_structure", first_problem = 51, last_problem = 51, occurrences = 1, teaching_state = "introduced", difficult = true, note = "用列、row-col 对角线和 row+col 对角线三组布尔状态实现常数时间冲突检查。" }
+"proof.n_queens_column_sequence_bijection" = { kind = "proof", first_problem = 51, last_problem = 51, occurrences = 1, teaching_state = "introduced", difficult = true, note = "每个合法棋盘按行得到唯一列序列，回溯完整枚举这些序列且不会重复。" }
+"proof.diagonal_integer_identifier" = { kind = "proof", first_problem = 51, last_problem = 51, occurrences = 1, teaching_state = "introduced", difficult = false, note = "同一条反斜线满足 row-col 相等，同一条斜线满足 row+col 相等。" }
+"complexity.n_queens_output_sensitive" = { kind = "proof", first_problem = 51, last_problem = 51, occurrences = 1, teaching_state = "introduced", difficult = true, note = "以合法部分布局数 V 和答案数 S 表达 O(nV + S*n^2)，分开搜索与棋盘快照成本。" }
+"c.transactional_multilevel_board_result" = { kind = "interface", first_problem = 51, last_problem = 51, occurrences = 1, teaching_state = "introduced", difficult = true, note = "C 同步维护棋盘数组、列长度和逐行字符串；扩容与分配失败时整体清理。" }

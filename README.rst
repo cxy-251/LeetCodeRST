@@ -17,10 +17,14 @@ LeetCode 多语言 RST 学习仓库
 当前状态
 --------
 
-``0001`` 至 ``0050`` 的首轮多语言 RST 和逐题规则提炼均已完成。历史题目保持原样，稳定规则已经
-整理到 ``docs/FORWARD_RULES_0051_0100.rst``。
+``0001`` 至 ``0051`` 的首轮多语言 RST 已完成。``0001`` 至 ``0050`` 的逐题规则提炼已经完成，
+其稳定结论应用于 ``0051`` 以后的新题。
 
-下一题为 ``0051. N-Queens``。0051 与 0052 均为 Hard，下一批只处理 0051。
+当前完成题目为 ``0051. N-Queens``。下一内容批次从 ``0052`` 开始，按难度预算处理
+``0052. N-Queens II`` 与 ``0053. Maximum Subarray``。
+
+``0051`` 至 ``0100`` 全部生成完成后，将按第一次审查相同的方式逐题读取正文和十语言代码，完成
+第二轮规则提炼审查。
 
 核心入口
 --------
@@ -31,6 +35,7 @@ LeetCode 多语言 RST 学习仓库
 * ``docs/PROBLEM_TEMPLATE.rst``：单题结构骨架；
 * ``docs/SOLUTION_AND_TYPES_POLICY.rst``：解法、平台类型和语言适配器；
 * ``docs/AUTOMATION_DIRECT_MAIN_POLICY.rst``：对话驱动执行流程；
+* ``state/CONCEPT_LEDGER.toml``：知识账本分段索引；
 * ``problems/0001-0100/README.rst``：题目索引。
 
 审查资料
@@ -47,6 +52,14 @@ LeetCode 多语言 RST 学习仓库
 
 批次记录是审查证据和追溯资料，最终执行规则以 ``docs/FORWARD_RULES_0051_0100.rst`` 为准。
 
+知识账本
+--------
+
+``state/CONCEPT_LEDGER.toml`` 从 0051 起改为分段索引：
+
+* ``state/concepts/0001-0050.toml`` 保留前 50 题的完整知识记录；
+* ``state/concepts/0051-0100.toml`` 记录本阶段新增概念和对旧概念的强化更新。
+
 规则优先级
 ----------
 
@@ -57,9 +70,6 @@ LeetCode 多语言 RST 学习仓库
 #. ``docs/FORWARD_RULES_0051_0100.rst`` 决定新题质量规则；
 #. 专项策略和模板只负责各自范围；
 #. 批次记录用于追溯，不覆盖最终规则。
-
-Julia ``a:b`` 是隐式步长 ``+1`` 的 ``UnitRange``，``a>b`` 时为空；递减遍历使用显式负步长。该结论
-覆盖早期审查记录中的相反描述。
 
 执行方式
 --------
@@ -75,32 +85,7 @@ Julia ``a:b`` 是隐式步长 ``+1`` 的 ``UnitRange``，``a>b`` 时为空；递
 
 分支和 PR 只在用户明确选择评审、多人协作或隔离实验时使用。
 
-开始工作
---------
-
-新的对话工作依次读取：
-
-#. ``AGENTS.md``；
-#. 本文件；
-#. ``state/PROGRESS.toml``；
-#. ``docs/FORWARD_RULES_0051_0100.rst``；
-#. ``docs/AUTOMATION_QUALITY_GATE.rst``；
-#. ``docs/PROBLEM_TEMPLATE.rst``；
-#. ``docs/SOLUTION_AND_TYPES_POLICY.rst``；
-#. ``docs/RST_STYLE_GUIDE.rst``；
-#. ``docs/AUTOMATION_DIRECT_MAIN_POLICY.rst``；
-#. ``state/CONCEPT_LEDGER.toml``；
-#. 当前题及最近相关题目。
-
-需要追溯审查来源时，再读取 ``docs/REVIEW_CATALOG_0001_0050.rst`` 和对应批次证据。
-
 文档形式
 --------
 
 题目正文和项目说明以 RST 为主，仓库内容以直接阅读源文件为目标。
-
-仓库前身
---------
-
-本仓库原用于 ``paperToVideo`` 项目。改造前 ``main`` 的最终状态保存在
-``archive/paperToVideo-before-reset`` 分支中。
