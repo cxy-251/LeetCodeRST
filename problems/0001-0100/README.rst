@@ -20,11 +20,14 @@ LeetCode 0001–0100
 #. `0012. Integer to Roman <0012-integer-to-roman.rst>`_
 #. `0013. Roman to Integer <0013-roman-to-integer.rst>`_
 #. `0014. Longest Common Prefix <0014-longest-common-prefix.rst>`_
+#. `0015. 3Sum <0015-3sum.rst>`_
+#. `0016. 3Sum Closest <0016-3sum-closest.rst>`_
+#. `0017. Letter Combinations of a Phone Number <0017-letter-combinations-of-a-phone-number.rst>`_
 
 下一题
 ------
 
-``0015. 3Sum``
+``0018. 4Sum``
 
 阅读顺序
 --------
