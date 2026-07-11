@@ -331,7 +331,7 @@ TypeScript
 
        while (prev.next !== null && prev.next.next !== null) {
            const first = prev.next;
-           const second = first.next;
+           const second = first.next!;
 
            first.next = second.next;
            second.next = first;
