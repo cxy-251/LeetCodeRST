@@ -4,9 +4,8 @@ phase = "review_extracting_rules"
 format = "rst"
 ordering = "leetcode_number_ascending"
 execution_mode = "conversation_only"
-scheduled_tasks_enabled = false
-git_workflow = "direct_main"
-branch_policy = "no_new_branch_or_pr_unless_user_explicitly_requests"
+git_workflow = "conversation_direct_main"
+workflow_selection = "direct_main_for_conversation_work"
 build_required = false
 content_language = "zh-CN"
 code_comment_language = "zh-CN"
@@ -31,7 +30,7 @@ summary = "完成 0049 与 0050 两题十语言 RST 教程，覆盖异位词频�
 status = "blocked_by_review_extraction"
 start = 51
 end = 51
-purpose = "先逐题读取 0001-0050 的 RST 并提炼前向规则；审查完成前禁止生成 0051。"
+purpose = "完成 0001-0050 的逐题规则提炼后，从 0051 继续生成。"
 
 [review]
 status = "in_progress"
@@ -39,38 +38,36 @@ mode = "prospective_rules_only"
 source = "complete_rst_content"
 start = 1
 end = 50
-current = 36
-reviewed_count = 35
+current = 41
+reviewed_count = 40
 batch_size = 5
 modify_historical_rst = false
 pr_metadata_is_evidence = false
 index = "state/REVIEW_INDEX.toml"
 legacy_record = "state/REVIEW_0001_0050.toml"
-latest_record = "state/reviews/0031-0035.toml"
+latest_record = "state/reviews/0036-0040.toml"
 base_findings = "docs/REVIEW_FINDINGS_0001_0050.rst"
-latest_findings = "docs/review-findings/0031-0035.rst"
+latest_findings = "docs/review-findings/0036-0040.rst"
 forward_rules = "docs/FORWARD_RULES_0051_0100.rst"
 
 [quality_scope]
 historical_start = 1
 historical_end = 50
-historical_policy = "逐题读取正文获取优化方法，但不修改历史 RST；所有发现只转化为 0051-0100 的前向规则。"
+historical_policy = "逐题读取正文获取优化方法，历史 RST 保持原样；提炼结果用于 0051-0100。"
 prospective_start = 51
 prospective_end = 100
 prospective_policy = "完成 0001-0050 逐题规则提炼后，完整执行 FORWARD_RULES_0051_0100.rst 与质量门。"
 
 [execution]
 trigger = "explicit_user_message_in_active_conversation"
-background_execution = false
-scheduled_execution = false
-automatic_retry = false
+cadence = "single_reply_cycle"
 write_target = "main"
-create_branch_by_default = false
-create_pr_by_default = false
+commit_shape = "one_atomic_commit"
+collaboration_mode = "branch_or_pr_when_user_selects_review_workflow"
 policy = "docs/AUTOMATION_DIRECT_MAIN_POLICY.rst"
 
 [next_action]
-summary = "等待用户在对话中明确要求后，继续完整审查 0036-0040；只更新审查记录和公共规则，不修改题目文件。"
+summary = "等待用户在对话中明确要求后，继续完整审查 0041-0045；更新审查记录、前向规则、索引和状态。"
 
 [last_update]
-summary = "已停用 LeetCode 定时任务并切换为仅由对话触发、直接提交 main 的执行方式；审查进度保持在 0035，下一批为 0036-0040。"
+summary = "已完整读取 0036-0040 的 RST，并提炼固定域复杂度、启发式顺序、调用级状态、并存缓冲区峰值、回溯节点与输出载荷、等价分支覆盖和语言语义校验规则。"

@@ -1,0 +1,170 @@
+[batch]
+start = 36
+end = 40
+status = "completed"
+source = "complete_rst_content"
+modify_historical_rst = false
+summary = "完整读取 0036-0040 的 RST 正文和十语言代码，提炼固定域复杂度、启发式顺序证明、调用级状态重置、并存缓冲区峰值、搜索节点与输出载荷、等价分支覆盖和语言语义校验规则。"
+
+[problems."0036"]
+status = "reviewed"
+file = "problems/0001-0100/0036-valid-sudoku.rst"
+positive = [
+  "行、列、宫三组状态和扫描前缀不变量对应清楚，安全性与完备性证明完整。",
+  "正文同时给出扫描 81 个格子和固定域 O(1) 两种表达，可作为固定规模题复杂度说明样本。",
+]
+observations = [
+  "十语言实现都依赖棋盘严格为 9×9 且非空字符只来自 '1'..'9'，这些前提应作为代码索引安全契约统一呈现。",
+  "C++ 使用 vector 等标准库类型，代码块需要直接导入或明确平台预置。",
+]
+rule_ids = [
+  "fixed_domain_exact_and_generalized",
+  "precondition_consistency",
+  "explicit_import_boundary",
+]
+
+[problems."0037"]
+status = "reviewed"
+file = "problems/0001-0100/0037-sudoku-solver.rst"
+positive = [
+  "MRV 只改变空格选择顺序，候选全集保持不变；正文分别证明安全性、完备性和撤销正确性。",
+  "R 使用 environment 承载跨递归共享状态，并把 best_row 等选择变量保持为调用局部状态。",
+  "找到解后直接沿递归链返回，保留已确认棋盘而不执行撤销。",
+]
+observations = [
+  "C++、Java、C# 把行列宫掩码放在对象字段中，公共入口没有显式清零；正确性依赖每个对象只调用一次的生命周期。",
+  "C++ __builtin_popcount、Python int.bit_count 和 Rust let-else 具有编译器或版本前提，正文未统一声明。",
+  "每层 MRV 会重新扫描全部剩余格子；固定 81 格时是常数因子，推广模型中应计入启发式选择成本。",
+  "R 返回新的棋盘对象而不是平台意义上的原地修改，需要明确标记为语言适配器。",
+]
+rule_ids = [
+  "call_scoped_mutable_state",
+  "portable_bit_api",
+  "heuristic_ordering_separation",
+  "language_adapter_interface_cost",
+  "fixed_domain_exact_and_generalized",
+]
+
+[problems."0038"]
+status = "reviewed"
+file = "problems/0001-0100/0038-count-and-say.rst"
+positive = [
+  "单次游程编码证明与序列编号归纳分成两层，正确性结构清楚。",
+  "总时间使用各轮字符串长度之和，而不是把递归序列误写成 O(n)。",
+]
+observations = [
+  "C 的 current、next 和 realloc 结果在首次写入前没有形成完整失败契约，realloc 直接覆盖旧指针。",
+  "Julia 使用 2:n；当 n=1 时 2:1 会实际迭代并错误生成额外项。",
+  "R 在每个分组后使用 c(parts, ...) 扩展向量，实际时间可能高于正文给出的线性扫描总和。",
+  "空间只写 O(L_n)，但每轮同时持有 current、next、分组片段和转换临时对象；峰值应按并存对象计算。",
+  "C++ 使用 std::move，代码块需要包含直接定义该符号的头文件。",
+]
+rule_ids = [
+  "transactional_string_builder",
+  "language_semantic_claim_verification",
+  "output_space_and_append_cost",
+  "simultaneous_buffer_peak",
+  "explicit_import_boundary",
+]
+
+[problems."0039"]
+status = "reviewed"
+file = "problems/0001-0100/0039-combination-sum.rst"
+positive = [
+  "非递减路径唯一表示组合，递归传入当前 index 表达候选可复用，合法性、无重复和完整性证明完整。",
+  "正数约束同时支撑 remaining 严格下降和按排序结果提前结束循环。",
+]
+observations = [
+  "C 的结果数组、列长度、路径和答案行分配缺少整体失败契约，两个 realloc 直接覆盖旧指针。",
+  "C 路径容量使用 candidates[0]，依赖非空和正数前提；精确长度与目标上界未在题目重述中列全。",
+  "正文将时间概括为输出敏感指数级；后续应拆为排序、访问搜索节点和复制答案载荷。",
+  "R 每次选择和撤销都重建 path 向量，实际递归成本与可变数组语言不同。",
+  "多数实现会排序并修改输入，Rust 和 R 则在拥有副本或局部副本上排序；调用后语义需要按语言说明。",
+]
+rule_ids = [
+  "allocation_failure_whole_structure",
+  "realloc_transactional_update",
+  "search_nodes_and_output_payload",
+  "path_snapshot_and_copy_cost",
+  "input_mutation_and_ownership",
+  "valid_input_precondition_contract",
+]
+
+[problems."0040"]
+status = "reviewed"
+file = "problems/0001-0100/0040-combination-sum-ii.rst"
+positive = [
+  "同层跳过等值首选、深层保留后续等值下标的解释完整。",
+  "完整性使用最早可用等值下标替换，证明保留分支覆盖后续等价分支。",
+]
+observations = [
+  "C 复用了 0039 的多缓冲区分配和直接 realloc 模式，失败路径仍未闭合。",
+  "Julia 正文声称 start:length(candidates) 在 start 越过末尾时为空；实际 a:b 在 a>b 时会生成递减范围，代码可能访问越界。",
+  "同层去重条件本身不是证明；后续题必须明确等价分支的值序列与可用后缀覆盖关系。",
+  "R 正确增加 start > length(candidates) 守卫，但路径追加和撤销仍产生写时复制成本。",
+  "排序修改输入的语言差异和搜索节点加输出复制的复杂度仍需分别说明。",
+]
+rule_ids = [
+  "language_semantic_claim_verification",
+  "equivalent_branch_coverage",
+  "allocation_failure_whole_structure",
+  "realloc_transactional_update",
+  "path_snapshot_and_copy_cost",
+  "search_nodes_and_output_payload",
+  "input_mutation_and_ownership",
+]
+
+[rules."fixed_domain_exact_and_generalized"]
+status = "promoted"
+problems = [36, 37]
+requirement = "固定 9×9、81 格等题目同时给出约束内精确工作量和推广模型复杂度，说明哪些因子因题目固定而成为常数。"
+
+[rules."call_scoped_mutable_state"]
+status = "promoted"
+problems = [37, 39, 40]
+requirement = "对象字段、闭包环境和全局辅助状态在每次公共入口调用前初始化或清空；若依赖单次调用生命周期，明确平台前提。"
+
+[rules."portable_bit_api"]
+status = "promoted"
+problems = [37]
+requirement = "编译器内建、位计数 API 和版本相关语法声明编译器或最低版本，并提供可移植辅助实现作为可选方案。"
+
+[rules."heuristic_ordering_separation"]
+status = "promoted"
+problems = [37]
+requirement = "MRV 等启发式单独证明只改变搜索顺序、不删除合法候选，并把选择启发式本身的扫描成本计入复杂度。"
+
+[rules."transactional_string_builder"]
+status = "promoted"
+problems = [38]
+requirement = "C 动态字符串构造在首次写入前确认初始分配，扩容使用临时指针并检查容量增长与加法溢出，成功后再提交新缓冲区。"
+
+[rules."simultaneous_buffer_peak"]
+status = "promoted"
+problems = [38]
+requirement = "迭代构造字符串或数组时，空间峰值按同一时刻并存的旧值、新值、片段容器和转换临时对象计算。"
+
+[rules."search_nodes_and_output_payload"]
+status = "promoted"
+problems = [39, 40]
+requirement = "回溯枚举时间拆为预处理、访问搜索节点和复制输出载荷；空间拆为递归栈、当前路径和结果集合。"
+
+[rules."path_snapshot_and_copy_cost"]
+status = "promoted"
+problems = [39, 40]
+requirement = "保存答案时创建路径快照，并按语言真实语义计算追加、复制、撤销和写时复制成本。"
+
+[rules."equivalent_branch_coverage"]
+status = "promoted"
+problems = [40]
+requirement = "同层去重通过等价决策证明：说明保留分支与被跳过分支生成相同值前缀，且保留分支拥有不小于后者的可用后缀。"
+
+[rules."language_semantic_claim_verification"]
+status = "promoted"
+problems = [38, 40]
+requirement = "关于范围、切片、索引、复制和标准库行为的语言说明与实际语义一致；关键结论通过编译、运行或官方文档验证后写入正文。"
+
+[next_batch]
+start = 41
+end = 45
+purpose = "完整读取 0041-0045 的 RST，继续提炼前向规则，不修改历史题目。"
