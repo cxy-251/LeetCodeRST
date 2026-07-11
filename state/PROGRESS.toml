@@ -37,16 +37,16 @@ mode = "prospective_rules_only"
 source = "complete_rst_content"
 start = 1
 end = 50
-current = 31
-reviewed_count = 30
+current = 36
+reviewed_count = 35
 batch_size = 5
 modify_historical_rst = false
 pr_metadata_is_evidence = false
 index = "state/REVIEW_INDEX.toml"
 legacy_record = "state/REVIEW_0001_0050.toml"
-latest_record = "state/reviews/0026-0030.toml"
+latest_record = "state/reviews/0031-0035.toml"
 base_findings = "docs/REVIEW_FINDINGS_0001_0050.rst"
-latest_findings = "docs/review-findings/0026-0030.rst"
+latest_findings = "docs/review-findings/0031-0035.rst"
 forward_rules = "docs/FORWARD_RULES_0051_0100.rst"
 
 [quality_scope]
@@ -58,7 +58,7 @@ prospective_end = 100
 prospective_policy = "完成 0001-0050 逐题规则提炼后，完整执行 FORWARD_RULES_0051_0100.rst 与自动质量门。"
 
 [next_action]
-summary = "继续完整审查 0031-0035；只更新审查记录和公共规则，不修改题目文件。"
+summary = "继续完整审查 0036-0040；只更新审查记录和公共规则，不修改题目文件。"
 
 [last_update]
-summary = "已完整读取 0026-0030 的 RST，并提炼有效前缀接口、语言适配器复制成本、字符串返回坐标、短范围守卫、零值对数定义域、哈希键载荷和逻辑操作与字符工作分离规则。"
+summary = "已完整读取 0031-0035 的 RST，并提炼见证元素、主代码自洽、索引窄化覆盖 n、排列邻接证明、哨兵栈、二分返回语义和 C 首次写入前分配检查规则。"
