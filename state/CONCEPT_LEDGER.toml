@@ -1,22 +1,22 @@
 [meta]
 version = 1
-last_problem = 48
+last_problem = 50
 
 # teaching_state: introduced / reinforcing / familiar / refresh / mastered
 
 [concepts]
 "algorithm.complement_lookup" = { kind = "algorithm", first_problem = 1, last_problem = 1, occurrences = 1, teaching_state = "introduced", difficult = false, note = "把两数之和转化为查询 target - value。" }
-"data_structure.hash_map" = { kind = "data_structure", first_problem = 1, last_problem = 30, occurrences = 3, teaching_state = "reinforcing", difficult = false, note = "0001 保存数值到下标，0003 保存字符到最后位置，0030 保存单词需求与窗口频次。" }
-"c.open_addressing_hash_table" = { kind = "data_structure", first_problem = 1, last_problem = 30, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "C 无标准哈希表；0001 映射整数，0030 将固定长度单词映射为编号。" }
-"cpp.unordered_map_lookup" = { kind = "library", first_problem = 1, last_problem = 1, occurrences = 1, teaching_state = "introduced", difficult = false, note = "find 返回迭代器，end 表示未找到。" }
-"python.dict_membership" = { kind = "library", first_problem = 1, last_problem = 3, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0001 使用 in，0003 使用 get 提供默认位置。" }
-"java.hash_map_safe_lookup" = { kind = "library", first_problem = 1, last_problem = 3, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "containsKey、getOrDefault 与键缺失语义。" }
-"rust.hash_map_lookup_and_entry" = { kind = "library", first_problem = 1, last_problem = 1, occurrences = 1, teaching_state = "introduced", difficult = false, note = "get 返回 Option，entry.or_insert 保留旧位置。" }
-"go.map_comma_ok" = { kind = "syntax", first_problem = 1, last_problem = 1, occurrences = 1, teaching_state = "introduced", difficult = false, note = "逗号 ok 区分键不存在与零值。" }
-"typescript.map_optional_lookup" = { kind = "library", first_problem = 1, last_problem = 3, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "Map.get 返回 number | undefined，下标 0 不能用真假值判断。" }
-"csharp.dictionary_try_get_value" = { kind = "library", first_problem = 1, last_problem = 3, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "TryGetValue 同时返回是否存在与对应值。" }
-"julia.dict_and_one_based_index" = { kind = "syntax", first_problem = 1, last_problem = 3, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "Dict 查询及 Julia 一基索引与题目零基接口的差异。" }
-"r.environment_hash_map" = { kind = "data_structure", first_problem = 1, last_problem = 3, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "使用 environment 的哈希绑定模拟键值映射。" }
+"data_structure.hash_map" = { kind = "data_structure", first_problem = 1, last_problem = 49, occurrences = 4, teaching_state = "reinforcing", difficult = false, note = "0001 保存数值到下标，0003 保存字符位置，0030 保存词频，0049 按频次签名建立等价类分组。" }
+"c.open_addressing_hash_table" = { kind = "data_structure", first_problem = 1, last_problem = 49, occurrences = 3, teaching_state = "reinforcing", difficult = true, note = "C 无标准哈希表；0001 映射整数，0030 映射固定词，0049 映射序列化频次签名。" }
+"cpp.unordered_map_lookup" = { kind = "library", first_problem = 1, last_problem = 49, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0001 用 find 查询补数；0049 用签名键直接追加分组。" }
+"python.dict_membership" = { kind = "library", first_problem = 1, last_problem = 49, occurrences = 3, teaching_state = "familiar", difficult = false, note = "0001 使用 in，0003 使用 get，0049 使用 setdefault 建立签名分组。" }
+"java.hash_map_safe_lookup" = { kind = "library", first_problem = 1, last_problem = 49, occurrences = 3, teaching_state = "familiar", difficult = false, note = "containsKey、getOrDefault 与 computeIfAbsent 覆盖键缺失时的安全处理。" }
+"rust.hash_map_lookup_and_entry" = { kind = "library", first_problem = 1, last_problem = 49, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0001 用 get 查询，0049 用 entry.or_default 建立频次签名分组。" }
+"go.map_comma_ok" = { kind = "syntax", first_problem = 1, last_problem = 49, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0001 用逗号 ok 区分缺失；0049 直接用固定数组键追加分组。" }
+"typescript.map_optional_lookup" = { kind = "library", first_problem = 1, last_problem = 49, occurrences = 3, teaching_state = "familiar", difficult = false, note = "Map.get 返回 value | undefined；0049 显式区分缺失组与已有空值。" }
+"csharp.dictionary_try_get_value" = { kind = "library", first_problem = 1, last_problem = 49, occurrences = 3, teaching_state = "familiar", difficult = false, note = "TryGetValue 同时返回是否存在与对应值；0049 缺失时创建新组。" }
+"julia.dict_and_one_based_index" = { kind = "syntax", first_problem = 1, last_problem = 49, occurrences = 3, teaching_state = "familiar", difficult = false, note = "Dict 查询与一基索引持续复现；0049 用 NTuple 作为内容键。" }
+"r.environment_hash_map" = { kind = "data_structure", first_problem = 1, last_problem = 49, occurrences = 3, teaching_state = "familiar", difficult = false, note = "使用 environment 的哈希绑定模拟键值映射；0049 保存签名到字符串组。" }
 "data_structure.singly_linked_list" = { kind = "data_structure", first_problem = 2, last_problem = 25, occurrences = 6, teaching_state = "familiar", difficult = false, note = "0002、0019、0021、0023、0024、0025 覆盖构造、删除、归并、局部交换与分组反转。" }
 "technique.dummy_node" = { kind = "algorithm", first_problem = 2, last_problem = 25, occurrences = 6, teaching_state = "familiar", difficult = false, note = "统一结果链表追加、头节点删除、归并、相邻交换与分组反转的首节点边界。" }
 "algorithm.digit_carry_simulation" = { kind = "algorithm", first_problem = 2, last_problem = 43, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0002 由输入位和上一位进位决定结果位；0043 将每个部分乘积拆成当前位与左邻进位。" }
@@ -25,7 +25,7 @@ last_problem = 48
 "r.environment_reference_node" = { kind = "syntax", first_problem = 2, last_problem = 25, occurrences = 6, teaching_state = "familiar", difficult = false, note = "R 链表统一使用 environment 获得引用语义。" }
 "algorithm.sliding_window" = { kind = "algorithm", first_problem = 3, last_problem = 30, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "0003 维护字符窗口，0030 按词长偏移维护单词频次窗口。" }
 "algorithm.last_seen_boundary_jump" = { kind = "algorithm", first_problem = 3, last_problem = 3, occurrences = 1, teaching_state = "introduced", difficult = true, note = "字符最后位置允许 left 直接跳到重复位置之后。" }
-"string.character_iteration_units" = { kind = "syntax", first_problem = 3, last_problem = 44, occurrences = 14, teaching_state = "reinforcing", difficult = true, note = "字符串题持续区分字符、字节与代码单元；0038、0043、0044 的输入限定 ASCII，可按字节或代码单元读取。" }
+"string.character_iteration_units" = { kind = "syntax", first_problem = 3, last_problem = 49, occurrences = 15, teaching_state = "reinforcing", difficult = true, note = "字符串题持续区分字符、字节与代码单元；0049 的小写 ASCII 约束允许按字节映射 26 个槽位。" }
 "algorithm.binary_search_partition" = { kind = "algorithm", first_problem = 4, last_problem = 4, occurrences = 1, teaching_state = "introduced", difficult = true, note = "在较短数组上二分分割数量，以四个边界值确定中位数。" }
 "proof.partition_boundary_ordering" = { kind = "proof", first_problem = 4, last_problem = 4, occurrences = 1, teaching_state = "introduced", difficult = true, note = "数组内部有序时，两个交叉不等式足以保证左右分区整体有序。" }
 "technique.infinity_sentinel" = { kind = "algorithm", first_problem = 4, last_problem = 4, occurrences = 1, teaching_state = "introduced", difficult = false, note = "使用正负无穷哨兵统一处理分割位于数组两端。" }
@@ -33,7 +33,7 @@ last_problem = 48
 "algorithm.expand_around_center" = { kind = "algorithm", first_problem = 5, last_problem = 5, occurrences = 1, teaching_state = "introduced", difficult = true, note = "枚举字符中心和字符间隙中心，向两侧扩展得到最长回文。" }
 "proof.palindrome_center_symmetry" = { kind = "proof", first_problem = 5, last_problem = 9, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0005 枚举字符串回文中心；0009 比较整数十进制表示的镜像两半。" }
 "algorithm.periodic_index_mapping" = { kind = "algorithm", first_problem = 6, last_problem = 6, occurrences = 1, teaching_state = "introduced", difficult = true, note = "把 Z 字形路径模拟转化为周期长度和行内索引公式。" }
-"string.incremental_builder" = { kind = "library", first_problem = 5, last_problem = 43, occurrences = 5, teaching_state = "familiar", difficult = false, note = "0005、0006、0012、0038、0043 使用缓冲区或片段列表避免不可变字符串反复复制。" }
+"string.incremental_builder" = { kind = "library", first_problem = 5, last_problem = 49, occurrences = 6, teaching_state = "familiar", difficult = false, note = "多题使用缓冲区或片段列表；0049 序列化 26 项计数时增量构造无歧义键。" }
 "algorithm.decimal_digit_pop_push" = { kind = "algorithm", first_problem = 7, last_problem = 9, occurrences = 3, teaching_state = "familiar", difficult = false, note = "0007 完整反转整数，0008 从字符累积十进制值，0009 只反转后一半。" }
 "proof.pre_operation_overflow_guard" = { kind = "proof", first_problem = 7, last_problem = 29, occurrences = 4, teaching_state = "reinforcing", difficult = true, note = "0007、0008 在乘十前守卫，0011 先扩宽乘法，0029 在倍增前用差值判断边界。" }
 "numeric.truncating_division_and_remainder" = { kind = "syntax", first_problem = 7, last_problem = 29, occurrences = 3, teaching_state = "reinforcing", difficult = true, note = "0007 比较整数截断语义；0029 通过绝对值商与符号恢复实现向零截断。" }
@@ -99,7 +99,7 @@ last_problem = 48
 "technique.substring_candidate_start_bound" = { kind = "algorithm", first_problem = 28, last_problem = 28, occurrences = 1, teaching_state = "introduced", difficult = false, note = "模式长度为 m 时，最后合法起点为 n - m；无符号长度相减前先判断大小。" }
 "algorithm.additive_doubling_division" = { kind = "algorithm", first_problem = 29, last_problem = 29, occurrences = 1, teaching_state = "introduced", difficult = true, note = "用重复加法构建除数的二倍序列，再从大到小消去被除数。" }
 "proof.binary_quotient_greedy" = { kind = "proof", first_problem = 29, last_problem = 29, occurrences = 1, teaching_state = "introduced", difficult = true, note = "倍增值对应商的二进制位，降序选择逐位确定最大不超界整数商。" }
-"numeric.int_min_absolute_value_widening" = { kind = "syntax", first_problem = 29, last_problem = 29, occurrences = 1, teaching_state = "introduced", difficult = true, note = "先提升到 64 位再处理 INT_MIN 的绝对值，避免 32 位正向范围不足。" }
+"numeric.int_min_absolute_value_widening" = { kind = "syntax", first_problem = 29, last_problem = 50, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "0029 与 0050 都先提升到 64 位，再对最小 32 位负整数取绝对值或相反数。" }
 "proof.truncation_toward_zero_sign_restore" = { kind = "proof", first_problem = 29, last_problem = 29, occurrences = 1, teaching_state = "introduced", difficult = false, note = "先求绝对值整数商，最后只恢复符号，得到向零截断。" }
 "algorithm.fixed_word_offset_sliding_window" = { kind = "algorithm", first_problem = 30, last_problem = 30, occurrences = 1, teaching_state = "introduced", difficult = true, note = "按起点模单词长度的余数拆分扫描线，每次以完整单词块移动窗口。" }
 "data_structure.frequency_demand_window" = { kind = "data_structure", first_problem = 30, last_problem = 30, occurrences = 1, teaching_state = "introduced", difficult = true, note = "need 保存需求频次，seen 保存当前窗口频次，重复单词按数量约束。" }
@@ -143,7 +143,7 @@ last_problem = 48
 "proof.product_length_m_plus_n_bound" = { kind = "proof", first_problem = 43, last_problem = 43, occurrences = 1, teaching_state = "introduced", difficult = false, note = "长度 m 与 n 的非负十进制整数乘积小于 10^(m+n)，因此最多有 m+n 位。" }
 "technique.adjacent_decimal_carry_accumulation" = { kind = "algorithm", first_problem = 43, last_problem = 43, occurrences = 1, teaching_state = "introduced", difficult = true, note = "当前槽位保留 total % 10，total / 10 加入左邻高位并在后续迭代继续规范化。" }
 "syntax.one_based_product_slot_mapping" = { kind = "syntax", first_problem = 43, last_problem = 43, occurrences = 1, teaching_state = "introduced", difficult = true, note = "零基低位槽 i+j+1 映射到 Julia/R 一基位置 i+j，高位槽相应为 i+j-1。" }
-"interface.c_heap_owned_string_result" = { kind = "interface", first_problem = 43, last_problem = 43, occurrences = 1, teaching_state = "introduced", difficult = false, note = "C 返回动态分配的乘积字符串，调用者负责释放；临时数字数组在返回前释放。" }
+"interface.c_heap_owned_string_result" = { kind = "interface", first_problem = 43, last_problem = 49, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0043 返回堆字符串；0049 返回多层动态数组和字符串副本，调用者负责逐层释放。" }
 "algorithm.wildcard_latest_star_checkpoint" = { kind = "algorithm", first_problem = 44, last_problem = 44, occurrences = 1, teaching_state = "introduced", difficult = true, note = "先让最近星号匹配空串；固定模式失配时回到星号后并把星号覆盖长度增加一。" }
 "proof.wildcard_star_monotone_expansion" = { kind = "proof", first_problem = 44, last_problem = 44, occurrences = 1, teaching_state = "introduced", difficult = true, note = "普通字符与问号没有长度选择，当前对齐失败后任何可行匹配都要求最近星号多吞至少一个字符。" }
 "complexity.wildcard_suffix_rescan" = { kind = "proof", first_problem = 44, last_problem = 44, occurrences = 1, teaching_state = "introduced", difficult = true, note = "星号扩张后固定模式后缀可能被重复扫描，因此贪心实现最坏 O(mn)，不能无条件写成严格线性。" }
@@ -157,3 +157,10 @@ last_problem = 48
 "proof.equal_value_canonical_index_choice" = { kind = "proof", first_problem = 47, last_problem = 47, occurrences = 1, teaching_state = "introduced", difficult = true, note = "交换同层相等候选下标不会改变数值前缀，保留规范代表可去重且不影响完整性。" }
 "algorithm.transpose_then_reverse_rows" = { kind = "algorithm", first_problem = 48, last_problem = 48, occurrences = 1, teaching_state = "introduced", difficult = false, note = "先沿主对角线原地转置，再反转每一行，实现顺时针 90 度旋转。" }
 "proof.clockwise_rotation_coordinate_composition" = { kind = "proof", first_problem = 48, last_problem = 48, occurrences = 1, teaching_state = "introduced", difficult = true, note = "转置把 (r,c) 映射到 (c,r)，行反转再映射到 (c,n-1-r)，与顺时针旋转公式一致。" }
+"algorithm.frequency_vector_anagram_signature" = { kind = "algorithm", first_problem = 49, last_problem = 49, occurrences = 1, teaching_state = "introduced", difficult = false, note = "用 26 维字母频次向量作为与排列顺序无关的异位词等价类签名。" }
+"proof.anagram_signature_equivalence" = { kind = "proof", first_problem = 49, last_problem = 49, occurrences = 1, teaching_state = "introduced", difficult = true, note = "频次签名相等当且仅当每个字母出现次数相等，因此恰好刻画字母异位词关系。" }
+"technique.unambiguous_composite_key_serialization" = { kind = "algorithm", first_problem = 49, last_problem = 49, occurrences = 1, teaching_state = "introduced", difficult = false, note = "序列化多项计数时加入分隔符，避免不同字段组合形成同一文本键。" }
+"algorithm.binary_exponentiation" = { kind = "algorithm", first_problem = 50, last_problem = 50, occurrences = 1, teaching_state = "introduced", difficult = true, note = "按指数二进制位选择 x^(2^k)，每轮平方底数并把指数减半。" }
+"proof.fast_power_product_invariant" = { kind = "proof", first_problem = 50, last_problem = 50, occurrences = 1, teaching_state = "introduced", difficult = true, note = "循环保持 answer × factor^exponent = base^E，统一覆盖奇偶指数更新。" }
+"proof.negative_exponent_reciprocal_normalization" = { kind = "proof", first_problem = 50, last_problem = 50, occurrences = 1, teaching_state = "introduced", difficult = false, note = "先把负指数问题转换为 (1/x)^(-n)，再执行非负快速幂。" }
+"syntax.javascript_avoid_bitwise_2pow31" = { kind = "syntax", first_problem = 50, last_problem = 50, occurrences = 1, teaching_state = "introduced", difficult = true, note = "JavaScript 位运算强制转换为 32 位有符号整数；快速幂边界应使用取模与 Math.floor。" }
