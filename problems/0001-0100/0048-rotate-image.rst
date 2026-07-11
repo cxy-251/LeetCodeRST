@@ -388,18 +388,20 @@ Julia
 .. code-block:: julia
 
    function rotate!(matrix::Matrix{Int})::Nothing
-       size = size(matrix, 1)
+       dimension = size(matrix, 1)
 
-       for row in 1:size
-           for column in (row + 1):size
-               matrix[row, column], matrix[column, row] =
-                   matrix[column, row], matrix[row, column]
+       for row in 1:dimension
+           if row < dimension
+               for column in (row + 1):dimension
+                   matrix[row, column], matrix[column, row] =
+                       matrix[column, row], matrix[row, column]
+               end
            end
        end
 
-       for row in 1:size
+       for row in 1:dimension
            left = 1
-           right = size
+           right = dimension
            while left < right
                matrix[row, left], matrix[row, right] =
                    matrix[row, right], matrix[row, left]
@@ -411,19 +413,8 @@ Julia
        return nothing
    end
 
-当 ``row == size`` 时，范围 ``(row + 1):size`` 在 Julia 中可能形成递减序列。稳妥写法应在进入
-内层循环前判断 ``row < size``：
-
-.. code-block:: julia
-
-   if row < size
-       for column in (row + 1):size
-           matrix[row, column], matrix[column, row] =
-               matrix[column, row], matrix[row, column]
-       end
-   end
-
-完整实现应采用该判断，避免最后一行产生越界索引。
+Julia 的 ``a:b`` 在 ``a > b`` 时可能形成递减序列，因此最后一行用 ``row < dimension`` 守卫，
+避免产生越界列索引。
 
 R
 ~
@@ -431,11 +422,11 @@ R
 .. code-block:: r
 
    rotate_image <- function(matrix) {
-     size <- nrow(matrix)
+     dimension <- nrow(matrix)
 
-     if (size >= 2L) {
-       for (row in seq_len(size - 1L)) {
-         for (column in seq.int(row + 1L, size)) {
+     if (dimension >= 2L) {
+       for (row in seq_len(dimension - 1L)) {
+         for (column in seq.int(row + 1L, dimension)) {
            temp <- matrix[row, column]
            matrix[row, column] <- matrix[column, row]
            matrix[column, row] <- temp
@@ -443,9 +434,9 @@ R
        }
      }
 
-     for (row in seq_len(size)) {
+     for (row in seq_len(dimension)) {
        left <- 1L
-       right <- size
+       right <- dimension
 
        while (left < right) {
          temp <- matrix[row, left]
