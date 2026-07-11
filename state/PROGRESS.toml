@@ -10,29 +10,29 @@ content_language = "zh-CN"
 code_comment_language = "zh-CN"
 
 [progress]
-next_problem = 41
-completed_count = 40
-completed_ranges = ["0001-0040"]
+next_problem = 42
+completed_count = 41
+completed_ranges = ["0001-0041"]
 premium_skipped = []
 blocked = []
 needs_revision = []
 
 [last_batch]
 status = "completed"
-start = 38
-end = 40
-completed = 3
+start = 41
+end = 41
+completed = 1
 premium_skipped = []
-summary = "完成 0038 至 0040 三题十语言 RST 教程，覆盖游程编码、可复用候选组合回溯与一次性候选同层去重。"
+summary = "完成 0041 First Missing Positive 十语言 RST 教程，覆盖鸽巢范围、原地哈希、循环置换与重复值终止守卫。"
 
 [next_batch]
 status = "ready"
-start = 41
+start = 42
 end = 43
-purpose = "自动任务按难度预算连续精写 1 至 3 道题；Easy=1、Medium=2、Hard=4，目标 4 至 6 分且每题独立通过质量门。"
+purpose = "下一批候选为 0042 Hard 与 0043 Medium，总分 6；每题独立通过质量门后再合并。"
 
 [next_action]
-summary = "从 LeetCode 0041 开始；自动任务启动时先同步 automation/leetcode-current 到最新 main，再按难度预算计算批次。"
+summary = "从 LeetCode 0042 开始；自动任务启动时先同步 automation/leetcode-current 到最新 main，再按难度预算计算批次。"
 
 [last_update]
-summary = "LeetCode 0038 至 0040 已作为手动难度预算批次完成；总分 6，小时任务继续从最新 next_problem 接续。"
+summary = "LeetCode 0041 已作为手动 Hard 单题批次完成；小时任务继续从最新 next_problem 接续。"

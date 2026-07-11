@@ -46,11 +46,12 @@ LeetCode 0001–0100
 #. `0038. Count and Say <0038-count-and-say.rst>`_
 #. `0039. Combination Sum <0039-combination-sum.rst>`_
 #. `0040. Combination Sum II <0040-combination-sum-ii.rst>`_
+#. `0041. First Missing Positive <0041-first-missing-positive.rst>`_
 
 下一题
 ------
 
-``0041. First Missing Positive``
+``0042. Trapping Rain Water``
 
 阅读顺序
 --------

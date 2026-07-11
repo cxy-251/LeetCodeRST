@@ -1,6 +1,6 @@
 [meta]
 version = 1
-last_problem = 40
+last_problem = 41
 
 # teaching_state: introduced / reinforcing / familiar / refresh / mastered
 
@@ -29,7 +29,7 @@ last_problem = 40
 "algorithm.binary_search_partition" = { kind = "algorithm", first_problem = 4, last_problem = 4, occurrences = 1, teaching_state = "introduced", difficult = true, note = "在较短数组上二分分割数量，以四个边界值确定中位数。" }
 "proof.partition_boundary_ordering" = { kind = "proof", first_problem = 4, last_problem = 4, occurrences = 1, teaching_state = "introduced", difficult = true, note = "数组内部有序时，两个交叉不等式足以保证左右分区整体有序。" }
 "technique.infinity_sentinel" = { kind = "algorithm", first_problem = 4, last_problem = 4, occurrences = 1, teaching_state = "introduced", difficult = false, note = "使用正负无穷哨兵统一处理分割位于数组两端。" }
-"julia_r.zero_based_algorithm_coordinates" = { kind = "syntax", first_problem = 4, last_problem = 37, occurrences = 14, teaching_state = "reinforcing", difficult = false, note = "算法状态常用零基坐标；0033 至 0037 持续把 Julia/R 一基容器访问与零基搜索、插入或数独坐标相互转换。" }
+"julia_r.zero_based_algorithm_coordinates" = { kind = "syntax", first_problem = 4, last_problem = 41, occurrences = 15, teaching_state = "reinforcing", difficult = false, note = "算法状态常用零基坐标；0033 至 0037 处理搜索与数独坐标，0041 再次区分零基 value - 1 与 Julia/R 一基 value 槽位。" }
 "algorithm.expand_around_center" = { kind = "algorithm", first_problem = 5, last_problem = 5, occurrences = 1, teaching_state = "introduced", difficult = true, note = "枚举字符中心和字符间隙中心，向两侧扩展得到最长回文。" }
 "proof.palindrome_center_symmetry" = { kind = "proof", first_problem = 5, last_problem = 9, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0005 枚举字符串回文中心；0009 比较整数十进制表示的镜像两半。" }
 "algorithm.periodic_index_mapping" = { kind = "algorithm", first_problem = 6, last_problem = 6, occurrences = 1, teaching_state = "introduced", difficult = true, note = "把 Z 字形路径模拟转化为周期长度和行内索引公式。" }
@@ -131,3 +131,8 @@ last_problem = 40
 "algorithm.same_depth_duplicate_skip" = { kind = "algorithm", first_problem = 40, last_problem = 40, occurrences = 1, teaching_state = "introduced", difficult = true, note = "仅当 index > start 时跳过相邻等值候选，删除同层等价分支并保留深层重复值。" }
 "interface.one_use_per_array_index" = { kind = "interface", first_problem = 40, last_problem = 40, occurrences = 1, teaching_state = "introduced", difficult = false, note = "选择后递归从 index + 1 开始，保证每个输入下标至多使用一次。" }
 "proof.earliest_equal_index_completeness" = { kind = "proof", first_problem = 40, last_problem = 40, occurrences = 1, teaching_state = "introduced", difficult = true, note = "同层保留最早可用等值下标即可覆盖后续等值下标能形成的全部数值组合。" }
+"algorithm.in_place_value_index_placement" = { kind = "algorithm", first_problem = 41, last_problem = 41, occurrences = 1, teaching_state = "introduced", difficult = true, note = "把有效值 v 放入唯一目标槽位 v - 1，用输入数组本身编码 1..n 的出现性。" }
+"proof.first_missing_positive_pigeonhole_bound" = { kind = "proof", first_problem = 41, last_problem = 41, occurrences = 1, teaching_state = "introduced", difficult = true, note = "长度 n 的数组答案一定在 1..n+1；若 1..n 全部出现，则答案为 n+1。" }
+"proof.value_slot_presence_equivalence" = { kind = "proof", first_problem = 41, last_problem = 41, occurrences = 1, teaching_state = "introduced", difficult = true, note = "置换结束后，有效值 v 出现当且仅当目标槽位 nums[v - 1] 等于 v。" }
+"technique.duplicate_target_guard" = { kind = "algorithm", first_problem = 41, last_problem = 41, occurrences = 1, teaching_state = "introduced", difficult = true, note = "目标槽位已保存相同值时停止交换，避免重复值形成无限循环。" }
+"syntax.short_circuit_index_guard" = { kind = "syntax", first_problem = 41, last_problem = 41, occurrences = 1, teaching_state = "introduced", difficult = false, note = "先用短路条件验证值域，再把值映射为数组下标，避免越界访问。" }
