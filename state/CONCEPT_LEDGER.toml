@@ -1,6 +1,6 @@
 [meta]
 version = 1
-last_problem = 31
+last_problem = 32
 
 # teaching_state: introduced / reinforcing / familiar / refresh / mastered
 
@@ -25,11 +25,11 @@ last_problem = 31
 "r.environment_reference_node" = { kind = "syntax", first_problem = 2, last_problem = 25, occurrences = 6, teaching_state = "familiar", difficult = false, note = "R 链表统一使用 environment 获得引用语义。" }
 "algorithm.sliding_window" = { kind = "algorithm", first_problem = 3, last_problem = 30, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "0003 维护字符窗口，0030 按词长偏移维护单词频次窗口。" }
 "algorithm.last_seen_boundary_jump" = { kind = "algorithm", first_problem = 3, last_problem = 3, occurrences = 1, teaching_state = "introduced", difficult = true, note = "字符最后位置允许 left 直接跳到重复位置之后。" }
-"string.character_iteration_units" = { kind = "syntax", first_problem = 3, last_problem = 30, occurrences = 10, teaching_state = "reinforcing", difficult = true, note = "字符串题持续区分字符、字节与代码单元；0028、0030 在 ASCII 约束下返回零基位置。" }
+"string.character_iteration_units" = { kind = "syntax", first_problem = 3, last_problem = 32, occurrences = 11, teaching_state = "reinforcing", difficult = true, note = "字符串题持续区分字符、字节与代码单元；0032 在 ASCII 括号约束下按字节或代码单元保存零基位置。" }
 "algorithm.binary_search_partition" = { kind = "algorithm", first_problem = 4, last_problem = 4, occurrences = 1, teaching_state = "introduced", difficult = true, note = "在较短数组上二分分割数量，以四个边界值确定中位数。" }
 "proof.partition_boundary_ordering" = { kind = "proof", first_problem = 4, last_problem = 4, occurrences = 1, teaching_state = "introduced", difficult = true, note = "数组内部有序时，两个交叉不等式足以保证左右分区整体有序。" }
 "technique.infinity_sentinel" = { kind = "algorithm", first_problem = 4, last_problem = 4, occurrences = 1, teaching_state = "introduced", difficult = false, note = "使用正负无穷哨兵统一处理分割位于数组两端。" }
-"julia_r.zero_based_algorithm_coordinates" = { kind = "syntax", first_problem = 4, last_problem = 31, occurrences = 8, teaching_state = "reinforcing", difficult = false, note = "算法状态常用零基坐标；0028、0030 转换字符串答案，0031 区分零基与一基枢轴位置。" }
+"julia_r.zero_based_algorithm_coordinates" = { kind = "syntax", first_problem = 4, last_problem = 32, occurrences = 9, teaching_state = "reinforcing", difficult = false, note = "算法状态常用零基坐标；0032 在 Julia/R 容器一基索引中仍保存零基括号位置。" }
 "algorithm.expand_around_center" = { kind = "algorithm", first_problem = 5, last_problem = 5, occurrences = 1, teaching_state = "introduced", difficult = true, note = "枚举字符中心和字符间隙中心，向两侧扩展得到最长回文。" }
 "proof.palindrome_center_symmetry" = { kind = "proof", first_problem = 5, last_problem = 9, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0005 枚举字符串回文中心；0009 比较整数十进制表示的镜像两半。" }
 "algorithm.periodic_index_mapping" = { kind = "algorithm", first_problem = 6, last_problem = 6, occurrences = 1, teaching_state = "introduced", difficult = true, note = "把 Z 字形路径模拟转化为周期长度和行内索引公式。" }
@@ -70,13 +70,13 @@ last_problem = 31
 "technique.sorted_sum_bounds_pruning" = { kind = "algorithm", first_problem = 18, last_problem = 18, occurrences = 1, teaching_state = "introduced", difficult = true, note = "使用锚点可达到的最小和与最大和安全剪枝。" }
 "algorithm.fixed_gap_linked_list_pointers" = { kind = "algorithm", first_problem = 19, last_problem = 19, occurrences = 1, teaching_state = "introduced", difficult = true, note = "快指针领先 n 个节点后同步移动，定位倒数节点前驱。" }
 "proof.predecessor_link_deletion" = { kind = "proof", first_problem = 19, last_problem = 19, occurrences = 1, teaching_state = "introduced", difficult = false, note = "单链表删除通过改写目标前驱的 next 跳过目标。" }
-"data_structure.unclosed_bracket_stack" = { kind = "data_structure", first_problem = 20, last_problem = 20, occurrences = 1, teaching_state = "introduced", difficult = false, note = "栈保存当前前缀中尚未闭合的左括号。" }
-"proof.stack_top_bracket_matching" = { kind = "proof", first_problem = 20, last_problem = 20, occurrences = 1, teaching_state = "introduced", difficult = true, note = "右括号只能匹配最近未闭合的同类型左括号。" }
+"data_structure.unclosed_bracket_stack" = { kind = "data_structure", first_problem = 20, last_problem = 32, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0020 保存未闭合左括号；0032 扩展为未匹配左括号下标并结合失效边界计算区间长度。" }
+"proof.stack_top_bracket_matching" = { kind = "proof", first_problem = 20, last_problem = 32, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "右括号匹配最近未闭合左括号；0032 弹栈后的新栈顶决定完整合法后缀的左边界。" }
 "algorithm.stable_two_way_linked_merge" = { kind = "algorithm", first_problem = 21, last_problem = 21, occurrences = 1, teaching_state = "introduced", difficult = false, note = "比较两条有序链表当前头节点，稳定追加较小节点。" }
 "proof.sorted_head_global_minimum" = { kind = "proof", first_problem = 21, last_problem = 23, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "有序来源的最小未处理元素必在当前头部；0023 推广到 K 个来源。" }
 "technique.remaining_sorted_suffix_splice" = { kind = "algorithm", first_problem = 21, last_problem = 21, occurrences = 1, teaching_state = "introduced", difficult = false, note = "一侧耗尽后，另一侧有序后缀可整体接入。" }
 "algorithm.valid_parenthesis_prefix_backtracking" = { kind = "algorithm", first_problem = 22, last_problem = 22, occurrences = 1, teaching_state = "introduced", difficult = true, note = "只在 open < n 时加左括号，只在 close < open 时加右括号。" }
-"proof.parenthesis_prefix_invariant" = { kind = "proof", first_problem = 22, last_problem = 22, occurrences = 1, teaching_state = "introduced", difficult = true, note = "保持 0 <= close <= open <= n，长度到 2n 时得到合法序列。" }
+"proof.parenthesis_prefix_invariant" = { kind = "proof", first_problem = 22, last_problem = 32, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "0022 保持合法生成前缀；0032 用多余右括号作为永久失效边界。" }
 "complexity.catalan_output_size" = { kind = "proof", first_problem = 22, last_problem = 22, occurrences = 1, teaching_state = "introduced", difficult = true, note = "合法括号结果数为 Catalan 数，复制输出需要 O(C_n × n)。" }
 "data_structure.k_way_head_min_heap" = { kind = "data_structure", first_problem = 23, last_problem = 23, occurrences = 1, teaching_state = "introduced", difficult = true, note = "最小堆为每条未耗尽链表保存一个当前头节点。" }
 "proof.heap_top_global_minimum" = { kind = "proof", first_problem = 23, last_problem = 23, occurrences = 1, teaching_state = "introduced", difficult = true, note = "所有来源当前头节点中的堆顶是全局最小未处理节点。" }
@@ -109,3 +109,6 @@ last_problem = 31
 "algorithm.lexicographic_next_permutation" = { kind = "algorithm", first_problem = 31, last_problem = 31, occurrences = 1, teaching_state = "introduced", difficult = true, note = "寻找最右可增加枢轴，交换最小更大后继，再最小化右侧后缀。" }
 "proof.rightmost_pivot_minimal_successor" = { kind = "proof", first_problem = 31, last_problem = 31, occurrences = 1, teaching_state = "introduced", difficult = true, note = "最右枢轴保留最长前缀，最小严格更大后继保证首个变化位置的增量最小。" }
 "technique.reverse_nonincreasing_suffix" = { kind = "algorithm", first_problem = 31, last_problem = 31, occurrences = 1, teaching_state = "introduced", difficult = false, note = "最长非递增后缀在枢轴交换后可用反转得到固定前缀下的最小升序排列。" }
+"algorithm.longest_valid_parentheses_index_stack" = { kind = "algorithm", first_problem = 32, last_problem = 32, occurrences = 1, teaching_state = "introduced", difficult = true, note = "栈保存未匹配左括号下标与最近失效右括号边界，弹栈后用当前下标减新栈顶得到合法后缀长度。" }
+"technique.minus_one_boundary_sentinel" = { kind = "algorithm", first_problem = 32, last_problem = 32, occurrences = 1, teaching_state = "introduced", difficult = false, note = "初始 -1 表示字符串开头之前，使从下标 0 开始的区间长度也统一为 i - boundary。" }
+"proof.unmatched_right_parenthesis_barrier" = { kind = "proof", first_problem = 32, last_problem = 32, occurrences = 1, teaching_state = "introduced", difficult = true, note = "无法匹配的右括号不能属于任何跨越它的合法子串，因此可安全重设为新的左边界。" }

@@ -37,11 +37,12 @@ LeetCode 0001–0100
 #. `0029. Divide Two Integers <0029-divide-two-integers.rst>`_
 #. `0030. Substring with Concatenation of All Words <0030-substring-with-concatenation-of-all-words.rst>`_
 #. `0031. Next Permutation <0031-next-permutation.rst>`_
+#. `0032. Longest Valid Parentheses <0032-longest-valid-parentheses.rst>`_
 
 下一题
 ------
 
-``0032. Longest Valid Parentheses``
+``0033. Search in Rotated Sorted Array``
 
 阅读顺序
 --------
