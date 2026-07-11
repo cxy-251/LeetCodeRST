@@ -1,6 +1,6 @@
 [meta]
 version = 1
-last_problem = 35
+last_problem = 37
 
 # teaching_state: introduced / reinforcing / familiar / refresh / mastered
 
@@ -55,8 +55,7 @@ last_problem = 35
 "algorithm.local_subtractive_roman_scan" = { kind = "algorithm", first_problem = 13, last_problem = 13, occurrences = 1, teaching_state = "introduced", difficult = false, note = "当前符号小于右邻居时取负，否则取正。" }
 "proof.signed_roman_symbol_contribution" = { kind = "proof", first_problem = 13, last_problem = 13, occurrences = 1, teaching_state = "introduced", difficult = false, note = "减法对贡献为 -small + large，普通符号各贡献一次。" }
 "algorithm.vertical_common_prefix_scan" = { kind = "algorithm", first_problem = 14, last_problem = 28, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0014 固定起点逐列比较；0028 在多个候选起点重复逐位置验证。" }
-"proof.first_prefix_mismatch_boundary" = { kind = "proof", first_problem = 14, last_problem = 28, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "首个失配位置足以排除当前前缀或当前候选起点。" }
-"string.ascii_prefix_slice" = { kind = "syntax", first_problem = 14, last_problem = 30, occurrences = 3, teaching_state = "reinforcing", difficult = true, note = "ASCII 约束下字节边界等于字符边界；0028、0030 对比多种语言下标和切片单位。" }
+"proof.first_prefix_mismatch_boundary" = { kind = "proof", first_problem = 14, last_problem = 14, occurrences = 1, teaching_state = "introduced", difficult = false, note = "第一处不一致或最短字符串末尾决定最长公共前缀边界。" }
 "algorithm.sorted_anchor_two_pointer_sum" = { kind = "algorithm", first_problem = 15, last_problem = 16, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "排序后固定锚点，在右侧用双指针搜索精确或最近三数和。" }
 "proof.monotone_sum_pointer_elimination" = { kind = "proof", first_problem = 15, last_problem = 16, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "有序数组中总和过小时排除左端，过大时排除右端。" }
 "technique.sorted_duplicate_skipping" = { kind = "algorithm", first_problem = 15, last_problem = 15, occurrences = 1, teaching_state = "introduced", difficult = false, note = "跳过重复锚点和命中后的相同左右值。" }
@@ -118,3 +117,8 @@ last_problem = 35
 "algorithm.upper_bound_half_open" = { kind = "algorithm", first_problem = 34, last_problem = 34, occurrences = 1, teaching_state = "introduced", difficult = true, note = "寻找第一个严格大于目标的位置，相等元素全部归入边界左侧。" }
 "proof.binary_monotone_boundary_invariant" = { kind = "proof", first_problem = 34, last_problem = 35, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "左侧全部不满足谓词、右侧全部满足谓词，区间收敛到第一个满足位置。" }
 "interface.insertion_position_can_equal_length" = { kind = "interface", first_problem = 34, last_problem = 35, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "半开边界可返回 n，表示目标应插入数组末尾而不是有效元素下标。" }
+"data_structure.sudoku_constraint_masks" = { kind = "data_structure", first_problem = 36, last_problem = 37, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "0036 用行列宫状态验证重复；0037 将三组状态改为 9 位掩码并在搜索中增删候选。" }
+"proof.sudoku_region_uniqueness" = { kind = "proof", first_problem = 36, last_problem = 36, occurrences = 1, teaching_state = "introduced", difficult = true, note = "每个已填数字同时登记到行、列、宫；后出现的同区域同数字必被检测。" }
+"algorithm.sudoku_backtracking_mrv" = { kind = "algorithm", first_problem = 37, last_problem = 37, occurrences = 1, teaching_state = "introduced", difficult = true, note = "每层选择候选最少的空格，枚举合法数字并在失败时撤销三类约束。" }
+"technique.lowest_set_bit_iteration" = { kind = "algorithm", first_problem = 37, last_problem = 37, occurrences = 1, teaching_state = "introduced", difficult = true, note = "使用 mask & -mask 逐个提取候选集合的最低位 1。" }
+"proof.reversible_constraint_state" = { kind = "proof", first_problem = 37, last_problem = 37, occurrences = 1, teaching_state = "introduced", difficult = true, note = "一次选择只修改一个格子和三个掩码位，失败后成对撤销即可恢复父状态。" }

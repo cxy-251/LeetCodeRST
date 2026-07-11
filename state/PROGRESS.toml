@@ -10,29 +10,29 @@ content_language = "zh-CN"
 code_comment_language = "zh-CN"
 
 [progress]
-next_problem = 36
-completed_count = 35
-completed_ranges = ["0001-0035"]
+next_problem = 38
+completed_count = 37
+completed_ranges = ["0001-0037"]
 premium_skipped = []
 blocked = []
 needs_revision = []
 
 [last_batch]
 status = "completed"
-start = 33
-end = 35
-completed = 3
+start = 36
+end = 37
+completed = 2
 premium_skipped = []
-summary = "完成 0033 至 0035 三题十语言 RST 教程，覆盖旋转数组局部有序二分、重复值左右边界与 lower bound 插入位置。"
+summary = "完成 0036 至 0037 两题十语言 RST 教程，覆盖数独行列宫约束验证、位掩码回溯与最少候选优先剪枝。"
 
 [next_batch]
 status = "ready"
-start = 36
-end = 38
+start = 38
+end = 40
 purpose = "自动任务按难度预算连续精写 1 至 3 道题；Easy=1、Medium=2、Hard=4，目标 4 至 6 分且每题独立通过质量门。"
 
 [next_action]
-summary = "从 LeetCode 0036 开始；自动任务启动时先同步 automation/leetcode-current 到最新 main，再按难度预算计算批次。"
+summary = "从 LeetCode 0038 开始；自动任务启动时先同步 automation/leetcode-current 到最新 main，再按难度预算计算批次。"
 
 [last_update]
-summary = "LeetCode 0033 至 0035 已作为手动难度预算批次完成；总分 5，小时任务继续从最新 next_problem 接续。"
+summary = "LeetCode 0036 至 0037 已作为难度预算批次完成；总分 6，下一轮从 0038 接续。"
