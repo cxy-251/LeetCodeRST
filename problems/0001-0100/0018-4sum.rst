@@ -1,0 +1,859 @@
+0018. 4Sum
+===========
+
+题目信息
+--------
+
+:题号: 0018
+:难度: Medium
+:主题: 数组、排序、双指针、去重、剪枝
+:原题: `LeetCode 0018 <https://leetcode.com/problems/4sum/>`_
+:访问状态: Available
+:教学重点: 双锚点降维、单调双指针、四层去重、上下界剪枝、宽类型求和
+
+题目重述
+--------
+
+给定整数数组 ``nums`` 和目标值 ``target``，找出所有由四个不同下标组成、元素之和等于
+``target`` 的四元组。
+
+答案按数值去重：数值完全相同的四元组只能出现一次。四元组内部和结果列表的顺序不影响
+正确性。
+
+自建示例
+--------
+
+普通输入
+~~~~~~~~
+
+.. code-block:: text
+
+   输入：nums = [1, 0, -1, 0, -2, 2], target = 0
+   排序：[-2, -1, 0, 0, 1, 2]
+   输出：[[-2, -1, 1, 2], [-2, 0, 0, 2], [-1, 0, 0, 1]]
+
+重复值
+~~~~~~
+
+.. code-block:: text
+
+   输入：nums = [2, 2, 2, 2, 2], target = 8
+   输出：[[2, 2, 2, 2]]
+
+不存在答案
+~~~~~~~~~~
+
+.. code-block:: text
+
+   输入：nums = [4, 5, 6, 7], target = 3
+   输出：[]
+
+需要宽类型
+~~~~~~~~~~
+
+.. code-block:: text
+
+   输入值接近 32 位边界时，四个 int 的中间和可能溢出。
+   固定宽度语言应先提升到 64 位，再与 target 比较。
+
+问题抽象
+--------
+
+排序后固定前两个位置 ``i`` 和 ``j``，剩余问题变成在有序后缀中寻找：
+
+.. math::
+
+   nums[left] + nums[right]
+   = target - nums[i] - nums[j]
+
+因此 4Sum 可以分解为：
+
+.. code-block:: text
+
+   第一锚点 i
+       第二锚点 j
+           双指针 left / right
+
+四个位置都只向右推进，天然保证下标互不相同。排序让重复值相邻，也让当前和随指针移动具有
+单调性。
+
+解法选择
+--------
+
+.. list-table::
+   :header-rows: 1
+
+   * - 方法
+     - 时间复杂度
+     - 空间复杂度
+     - 取舍
+   * - 排序、双锚点、双指针
+     - ``O(n^3)``
+     - 取决于排序实现
+     - 主解法；降维清楚，搜索、去重和剪枝可统一处理
+   * - 枚举前三个数并用哈希表找第四数
+     - ``O(n^3)``
+     - ``O(n)``
+     - 搜索可行，但四元组规范化与跨层去重更繁琐
+   * - 四重循环
+     - ``O(n^4)``
+     - ``O(1)``
+     - 只适合作为很小输入的正确性基线
+
+主解法：双锚点与双指针
+----------------------
+
+状态含义
+~~~~~~~~
+
+算法维护：
+
+* ``i``：第一锚点；
+* ``j``：第二锚点，始终满足 ``j > i``；
+* ``left``、``right``：在 ``j`` 右侧搜索剩余两个数；
+* ``result``：已确认且按数值唯一的四元组。
+
+当前和使用宽类型计算：
+
+.. math::
+
+   sum = nums[i] + nums[j] + nums[left] + nums[right]
+
+若 ``sum < target``，移动 ``left``；若 ``sum > target``，移动 ``right``；命中后记录并跳过
+左右重复值。
+
+四层去重
+~~~~~~~~
+
+去重分为三处：
+
+* ``i > 0 && nums[i] == nums[i - 1]``：跳过重复第一锚点；
+* ``j > i + 1 && nums[j] == nums[j - 1]``：跳过当前 ``i`` 下的重复第二锚点；
+* 命中后越过与当前 ``left``、``right`` 相同的值。
+
+每一层只消除“当前决策位置的同值重复”，不会删除使用相同数值多次的合法答案。例如四个不同
+下标上的 ``2`` 仍可组成 ``[2, 2, 2, 2]``。
+
+上下界剪枝
+~~~~~~~~~~
+
+排序后可计算固定锚点下的理论最小和与最大和。
+
+对第一锚点 ``i``：
+
+.. math::
+
+   min_i = nums[i] + nums[i+1] + nums[i+2] + nums[i+3]
+
+若 ``min_i > target``，后续更大的第一锚点只会让最小和更大，可结束外层循环。
+
+.. math::
+
+   max_i = nums[i] + nums[n-1] + nums[n-2] + nums[n-3]
+
+若 ``max_i < target``，当前 ``i`` 无法达到目标，可继续下一个 ``i``。
+
+第二锚点 ``j`` 也可用同样方法计算 ``min_j`` 和 ``max_j``。这些剪枝只删除已由有序上下界
+证明不可能的区间。
+
+双指针排除
+~~~~~~~~~~
+
+固定 ``i``、``j`` 后：
+
+* ``sum < target`` 时，当前 ``right`` 已是最大可选右值；同一个 ``left`` 配任何更小右值
+  都只会更小，因此当前 ``left`` 可整体排除；
+* ``sum > target`` 时，当前 ``left`` 已是最小可选左值；同一个 ``right`` 配任何更大左值
+  都只会更大，因此当前 ``right`` 可整体排除。
+
+核心不变量
+~~~~~~~~~~
+
+每轮双指针循环开始时：
+
+* 四个下标满足 ``i < j < left < right``；
+* ``result`` 中没有重复四元组；
+* 被移出区间的左端已因总和过小、命中或重复处理完成；
+* 被移出区间的右端已因总和过大、命中或重复处理完成；
+* 尚未记录且使用当前两个锚点的合法答案，另外两个值仍位于闭区间
+  ``[left, right]`` 中。
+
+正确性依据
+~~~~~~~~~~
+
+排序不改变可选元素及其数值，只改变遍历顺序。外层依次枚举每个不同的第一锚点和第二锚点，
+所以任意合法四元组的前两个排序后数值都会被覆盖。
+
+固定两个锚点后，剩余问题是有序两数和。当前和小于目标时，最大右值仍不足，当前左值不可能
+参与解；当前和大于目标时对称地排除右值。因此双指针移动不会漏解。命中后跳过相同左右值只
+删除数值完全相同的重复四元组。
+
+锚点去重保证相同前缀数值不会重复搜索；上下界剪枝只在整个候选范围都严格小于或大于目标时
+生效。最终所有唯一合法四元组都被记录一次。
+
+复杂度
+~~~~~~
+
+设数组长度为 ``n``：
+
+* 排序为 ``O(n log n)``；
+* 两层锚点和一层线性双指针合计 ``O(n^3)``；
+* 总时间复杂度为 ``O(n^3)``；
+* 除返回结果外，额外空间取决于排序实现。
+
+核心语言实现
+------------
+
+C
+~
+
+.. code-block:: c
+
+   #include <stdlib.h>
+
+   static int compare_ints(const void* left, const void* right) {
+       int a = *(const int*)left;
+       int b = *(const int*)right;
+       return (a > b) - (a < b);
+   }
+
+   int** fourSum(
+       int* nums,
+       int numsSize,
+       int target,
+       int* returnSize,
+       int** returnColumnSizes
+   ) {
+       *returnSize = 0;
+       *returnColumnSizes = NULL;
+       if (numsSize < 4) {
+           return NULL;
+       }
+
+       qsort(nums, numsSize, sizeof(int), compare_ints);
+       int capacity = 16;
+       int** result = malloc(capacity * sizeof(int*));
+       int* columns = malloc(capacity * sizeof(int));
+
+       for (int i = 0; i < numsSize - 3; ++i) {
+           if (i > 0 && nums[i] == nums[i - 1]) {
+               continue;
+           }
+
+           long long min_i =
+               (long long)nums[i] + nums[i + 1] +
+               nums[i + 2] + nums[i + 3];
+           if (min_i > target) {
+               break;
+           }
+
+           long long max_i =
+               (long long)nums[i] + nums[numsSize - 1] +
+               nums[numsSize - 2] + nums[numsSize - 3];
+           if (max_i < target) {
+               continue;
+           }
+
+           for (int j = i + 1; j < numsSize - 2; ++j) {
+               if (j > i + 1 && nums[j] == nums[j - 1]) {
+                   continue;
+               }
+
+               int left = j + 1;
+               int right = numsSize - 1;
+
+               while (left < right) {
+                   long long sum =
+                       (long long)nums[i] + nums[j] +
+                       nums[left] + nums[right];
+
+                   if (sum < target) {
+                       ++left;
+                   } else if (sum > target) {
+                       --right;
+                   } else {
+                       if (*returnSize == capacity) {
+                           capacity *= 2;
+                           result = realloc(
+                               result,
+                               capacity * sizeof(int*)
+                           );
+                           columns = realloc(
+                               columns,
+                               capacity * sizeof(int)
+                           );
+                       }
+
+                       int* row = malloc(4 * sizeof(int));
+                       row[0] = nums[i];
+                       row[1] = nums[j];
+                       row[2] = nums[left];
+                       row[3] = nums[right];
+                       result[*returnSize] = row;
+                       columns[*returnSize] = 4;
+                       ++(*returnSize);
+
+                       int left_value = nums[left];
+                       int right_value = nums[right];
+                       while (left < right &&
+                              nums[left] == left_value) {
+                           ++left;
+                       }
+                       while (left < right &&
+                              nums[right] == right_value) {
+                           --right;
+                       }
+                   }
+               }
+           }
+       }
+
+       *returnColumnSizes = columns;
+       return result;
+   }
+
+C++
+~~~
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       vector<vector<int>> fourSum(
+           vector<int>& nums,
+           int target
+       ) {
+           sort(nums.begin(), nums.end());
+           vector<vector<int>> result;
+           const int n = static_cast<int>(nums.size());
+
+           for (int i = 0; i + 3 < n; ++i) {
+               if (i > 0 && nums[i] == nums[i - 1]) {
+                   continue;
+               }
+
+               for (int j = i + 1; j + 2 < n; ++j) {
+                   if (j > i + 1 && nums[j] == nums[j - 1]) {
+                       continue;
+                   }
+
+                   int left = j + 1;
+                   int right = n - 1;
+                   while (left < right) {
+                       long long sum =
+                           static_cast<long long>(nums[i]) +
+                           nums[j] + nums[left] + nums[right];
+
+                       if (sum < target) {
+                           ++left;
+                       } else if (sum > target) {
+                           --right;
+                       } else {
+                           result.push_back({
+                               nums[i], nums[j],
+                               nums[left], nums[right]
+                           });
+
+                           int leftValue = nums[left];
+                           int rightValue = nums[right];
+                           while (left < right &&
+                                  nums[left] == leftValue) {
+                               ++left;
+                           }
+                           while (left < right &&
+                                  nums[right] == rightValue) {
+                               --right;
+                           }
+                       }
+                   }
+               }
+           }
+
+           return result;
+       }
+   };
+
+Python
+~~~~~~
+
+.. code-block:: python
+
+   class Solution:
+       def fourSum(
+           self,
+           nums: list[int],
+           target: int,
+       ) -> list[list[int]]:
+           nums.sort()
+           result: list[list[int]] = []
+           n = len(nums)
+
+           for i in range(n - 3):
+               if i > 0 and nums[i] == nums[i - 1]:
+                   continue
+
+               min_i = nums[i] + nums[i + 1] + nums[i + 2] + nums[i + 3]
+               if min_i > target:
+                   break
+               max_i = nums[i] + nums[-1] + nums[-2] + nums[-3]
+               if max_i < target:
+                   continue
+
+               for j in range(i + 1, n - 2):
+                   if j > i + 1 and nums[j] == nums[j - 1]:
+                       continue
+
+                   left = j + 1
+                   right = n - 1
+                   while left < right:
+                       total = (
+                           nums[i] + nums[j] +
+                           nums[left] + nums[right]
+                       )
+
+                       if total < target:
+                           left += 1
+                       elif total > target:
+                           right -= 1
+                       else:
+                           result.append([
+                               nums[i], nums[j],
+                               nums[left], nums[right],
+                           ])
+
+                           left_value = nums[left]
+                           right_value = nums[right]
+                           while left < right and nums[left] == left_value:
+                               left += 1
+                           while left < right and nums[right] == right_value:
+                               right -= 1
+
+           return result
+
+Java
+~~~~
+
+.. code-block:: java
+
+   class Solution {
+       public List<List<Integer>> fourSum(int[] nums, int target) {
+           Arrays.sort(nums);
+           List<List<Integer>> result = new ArrayList<>();
+           int n = nums.length;
+
+           for (int i = 0; i + 3 < n; ++i) {
+               if (i > 0 && nums[i] == nums[i - 1]) {
+                   continue;
+               }
+
+               for (int j = i + 1; j + 2 < n; ++j) {
+                   if (j > i + 1 && nums[j] == nums[j - 1]) {
+                       continue;
+                   }
+
+                   int left = j + 1;
+                   int right = n - 1;
+                   while (left < right) {
+                       long sum =
+                           (long) nums[i] + nums[j] +
+                           nums[left] + nums[right];
+
+                       if (sum < target) {
+                           ++left;
+                       } else if (sum > target) {
+                           --right;
+                       } else {
+                           result.add(List.of(
+                               nums[i], nums[j],
+                               nums[left], nums[right]
+                           ));
+
+                           int leftValue = nums[left];
+                           int rightValue = nums[right];
+                           while (left < right &&
+                                  nums[left] == leftValue) {
+                               ++left;
+                           }
+                           while (left < right &&
+                                  nums[right] == rightValue) {
+                               --right;
+                           }
+                       }
+                   }
+               }
+           }
+
+           return result;
+       }
+   }
+
+Rust
+~~~~
+
+.. code-block:: rust
+
+   impl Solution {
+       pub fn four_sum(
+           mut nums: Vec<i32>,
+           target: i32,
+       ) -> Vec<Vec<i32>> {
+           nums.sort_unstable();
+           let mut result = Vec::new();
+           let n = nums.len();
+
+           for i in 0..n.saturating_sub(3) {
+               if i > 0 && nums[i] == nums[i - 1] {
+                   continue;
+               }
+
+               for j in i + 1..n.saturating_sub(2) {
+                   if j > i + 1 && nums[j] == nums[j - 1] {
+                       continue;
+                   }
+
+                   let mut left = j + 1;
+                   let mut right = n - 1;
+                   while left < right {
+                       let sum =
+                           nums[i] as i64 + nums[j] as i64 +
+                           nums[left] as i64 + nums[right] as i64;
+
+                       if sum < target as i64 {
+                           left += 1;
+                       } else if sum > target as i64 {
+                           right -= 1;
+                       } else {
+                           result.push(vec![
+                               nums[i], nums[j],
+                               nums[left], nums[right],
+                           ]);
+
+                           let left_value = nums[left];
+                           let right_value = nums[right];
+                           while left < right && nums[left] == left_value {
+                               left += 1;
+                           }
+                           while left < right && nums[right] == right_value {
+                               right -= 1;
+                           }
+                       }
+                   }
+               }
+           }
+
+           result
+       }
+   }
+
+Go
+~~
+
+.. code-block:: go
+
+   func fourSum(nums []int, target int) [][]int {
+       sort.Ints(nums)
+       result := make([][]int, 0)
+
+       for i := 0; i+3 < len(nums); i++ {
+           if i > 0 && nums[i] == nums[i-1] {
+               continue
+           }
+
+           for j := i + 1; j+2 < len(nums); j++ {
+               if j > i+1 && nums[j] == nums[j-1] {
+                   continue
+               }
+
+               left, right := j+1, len(nums)-1
+               for left < right {
+                   total := int64(nums[i]) + int64(nums[j]) +
+                       int64(nums[left]) + int64(nums[right])
+
+                   if total < int64(target) {
+                       left++
+                   } else if total > int64(target) {
+                       right--
+                   } else {
+                       result = append(result, []int{
+                           nums[i], nums[j], nums[left], nums[right],
+                       })
+
+                       leftValue := nums[left]
+                       rightValue := nums[right]
+                       for left < right && nums[left] == leftValue {
+                           left++
+                       }
+                       for left < right && nums[right] == rightValue {
+                           right--
+                       }
+                   }
+               }
+           }
+       }
+
+       return result
+   }
+
+TypeScript
+~~~~~~~~~~
+
+.. code-block:: typescript
+
+   function fourSum(nums: number[], target: number): number[][] {
+       nums.sort((a, b) => a - b);
+       const result: number[][] = [];
+
+       for (let i = 0; i + 3 < nums.length; i += 1) {
+           if (i > 0 && nums[i] === nums[i - 1]) {
+               continue;
+           }
+
+           for (let j = i + 1; j + 2 < nums.length; j += 1) {
+               if (j > i + 1 && nums[j] === nums[j - 1]) {
+                   continue;
+               }
+
+               let left = j + 1;
+               let right = nums.length - 1;
+               while (left < right) {
+                   const total =
+                       nums[i] + nums[j] + nums[left] + nums[right];
+
+                   if (total < target) {
+                       left += 1;
+                   } else if (total > target) {
+                       right -= 1;
+                   } else {
+                       result.push([
+                           nums[i], nums[j], nums[left], nums[right],
+                       ]);
+
+                       const leftValue = nums[left];
+                       const rightValue = nums[right];
+                       while (left < right && nums[left] === leftValue) {
+                           left += 1;
+                       }
+                       while (left < right && nums[right] === rightValue) {
+                           right -= 1;
+                       }
+                   }
+               }
+           }
+       }
+
+       return result;
+   }
+
+C#
+~~
+
+.. code-block:: csharp
+
+   public class Solution {
+       public IList<IList<int>> FourSum(int[] nums, int target) {
+           Array.Sort(nums);
+           var result = new List<IList<int>>();
+
+           for (int i = 0; i + 3 < nums.Length; ++i) {
+               if (i > 0 && nums[i] == nums[i - 1]) {
+                   continue;
+               }
+
+               for (int j = i + 1; j + 2 < nums.Length; ++j) {
+                   if (j > i + 1 && nums[j] == nums[j - 1]) {
+                       continue;
+                   }
+
+                   int left = j + 1;
+                   int right = nums.Length - 1;
+                   while (left < right) {
+                       long sum =
+                           (long) nums[i] + nums[j] +
+                           nums[left] + nums[right];
+
+                       if (sum < target) {
+                           ++left;
+                       } else if (sum > target) {
+                           --right;
+                       } else {
+                           result.Add(new List<int> {
+                               nums[i], nums[j],
+                               nums[left], nums[right]
+                           });
+
+                           int leftValue = nums[left];
+                           int rightValue = nums[right];
+                           while (left < right &&
+                                  nums[left] == leftValue) {
+                               ++left;
+                           }
+                           while (left < right &&
+                                  nums[right] == rightValue) {
+                               --right;
+                           }
+                       }
+                   }
+               }
+           }
+
+           return result;
+       }
+   }
+
+Julia
+~~~~~
+
+.. code-block:: julia
+
+   function four_sum(
+       nums::Vector{Int},
+       target::Int,
+   )::Vector{Vector{Int}}
+       sort!(nums)
+       result = Vector{Vector{Int}}()
+       n = length(nums)
+
+       for i in 1:(n - 3)
+           if i > 1 && nums[i] == nums[i - 1]
+               continue
+           end
+
+           for j in (i + 1):(n - 2)
+               if j > i + 1 && nums[j] == nums[j - 1]
+                   continue
+               end
+
+               left = j + 1
+               right = n
+               while left < right
+                   total = nums[i] + nums[j] + nums[left] + nums[right]
+
+                   if total < target
+                       left += 1
+                   elseif total > target
+                       right -= 1
+                   else
+                       push!(result, [
+                           nums[i], nums[j], nums[left], nums[right],
+                       ])
+
+                       left_value = nums[left]
+                       right_value = nums[right]
+                       while left < right && nums[left] == left_value
+                           left += 1
+                       end
+                       while left < right && nums[right] == right_value
+                           right -= 1
+                       end
+                   end
+               end
+           end
+       end
+
+       return result
+   end
+
+R
+~
+
+.. code-block:: r
+
+   fourSum <- function(nums, target) {
+       nums <- sort(as.numeric(nums))
+       result <- list()
+       n <- length(nums)
+
+       if (n < 4) {
+           return(result)
+       }
+
+       for (i in seq_len(n - 3)) {
+           if (i > 1 && nums[i] == nums[i - 1]) {
+               next
+           }
+
+           for (j in seq.int(i + 1, n - 2)) {
+               if (j > i + 1 && nums[j] == nums[j - 1]) {
+                   next
+               }
+
+               left <- j + 1
+               right <- n
+               while (left < right) {
+                   total <- nums[i] + nums[j] + nums[left] + nums[right]
+
+                   if (total < target) {
+                       left <- left + 1
+                   } else if (total > target) {
+                       right <- right - 1
+                   } else {
+                       result[[length(result) + 1]] <- c(
+                           nums[i], nums[j], nums[left], nums[right]
+                       )
+
+                       left_value <- nums[left]
+                       right_value <- nums[right]
+                       while (left < right && nums[left] == left_value) {
+                           left <- left + 1
+                       }
+                       while (left < right && nums[right] == right_value) {
+                           right <- right - 1
+                       }
+                   }
+               }
+           }
+       }
+
+       result
+   }
+
+关键边界与易错点
+----------------
+
+* 四数求和必须在固定宽度语言中使用宽类型中间值；
+* 第一锚点、第二锚点和命中后的左右指针都要分别去重；
+* 剪枝的最小和、最大和也必须使用宽类型；
+* ``break`` 与 ``continue`` 的含义不同：最小和已过大可结束当前层，最大和仍过小只跳过当前锚点；
+* 排序会修改输入数组，需要保留原顺序时先复制；
+* Julia 和 R 的一基下标会改变循环起止位置。
+
+新增与强化知识
+--------------
+
+新增
+~~~~
+
+* **双锚点降维**：固定两个数，把四数和降为有序两数和；
+* **有序上下界剪枝**：用当前候选可达到的最小和、最大和整段排除锚点；
+* **分层去重职责**：每个决策层只消除该位置的同值重复。
+
+强化
+~~~~
+
+* 0015 的固定锚点双指针推广为两个锚点；
+* 0015、0016 的单调指针排除继续成立；
+* 宽类型求和从三个加数扩展到四个加数与剪枝边界。
+
+关联题目
+--------
+
+* `0015. 3Sum <0015-3sum.rst>`_：固定一个锚点后求有序两数和；
+* `0016. 3Sum Closest <0016-3sum-closest.rst>`_：双指针目标从精确匹配变为最近候选。
+
+最小自检
+--------
+
+#. 4Sum 为什么只需要两层锚点加一层双指针？
+#. 为什么第二锚点也必须去重？
+#. ``min_i > target`` 时为什么可以 ``break``？
+#. ``max_i < target`` 时为什么只能 ``continue``？
+#. 为什么四数和与剪枝边界都要使用宽类型？
+
+答案要点
+~~~~~~~~
+
+#. 固定两个数后，剩余两个数可用有序两数和在线性时间搜索；
+#. 相同前两个数会重复枚举同一组后缀数值对；
+#. 后续第一锚点只会更大，其最小可能和也不会下降；
+#. 换到更大的第一锚点仍可能达到目标；
+#. 多次加法可能在比较前溢出，导致搜索方向与剪枝结论错误。
