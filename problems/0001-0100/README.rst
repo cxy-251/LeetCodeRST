@@ -47,11 +47,12 @@ LeetCode 0001–0100
 #. `0039. Combination Sum <0039-combination-sum.rst>`_
 #. `0040. Combination Sum II <0040-combination-sum-ii.rst>`_
 #. `0041. First Missing Positive <0041-first-missing-positive.rst>`_
+#. `0042. Trapping Rain Water <0042-trapping-rain-water.rst>`_
 
 下一题
 ------
 
-``0042. Trapping Rain Water``
+``0043. Multiply Strings``
 
 阅读顺序
 --------
