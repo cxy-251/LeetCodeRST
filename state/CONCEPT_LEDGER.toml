@@ -1,6 +1,6 @@
 [meta]
 version = 1
-last_problem = 37
+last_problem = 40
 
 # teaching_state: introduced / reinforcing / familiar / refresh / mastered
 
@@ -25,21 +25,21 @@ last_problem = 37
 "r.environment_reference_node" = { kind = "syntax", first_problem = 2, last_problem = 25, occurrences = 6, teaching_state = "familiar", difficult = false, note = "R 链表统一使用 environment 获得引用语义。" }
 "algorithm.sliding_window" = { kind = "algorithm", first_problem = 3, last_problem = 30, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "0003 维护字符窗口，0030 按词长偏移维护单词频次窗口。" }
 "algorithm.last_seen_boundary_jump" = { kind = "algorithm", first_problem = 3, last_problem = 3, occurrences = 1, teaching_state = "introduced", difficult = true, note = "字符最后位置允许 left 直接跳到重复位置之后。" }
-"string.character_iteration_units" = { kind = "syntax", first_problem = 3, last_problem = 32, occurrences = 11, teaching_state = "reinforcing", difficult = true, note = "字符串题持续区分字符、字节与代码单元；0032 在 ASCII 括号约束下按字节或代码单元保存零基位置。" }
+"string.character_iteration_units" = { kind = "syntax", first_problem = 3, last_problem = 38, occurrences = 12, teaching_state = "reinforcing", difficult = true, note = "字符串题持续区分字符、字节与代码单元；0038 的序列只含 ASCII 数字，可按字节执行连续分组。" }
 "algorithm.binary_search_partition" = { kind = "algorithm", first_problem = 4, last_problem = 4, occurrences = 1, teaching_state = "introduced", difficult = true, note = "在较短数组上二分分割数量，以四个边界值确定中位数。" }
 "proof.partition_boundary_ordering" = { kind = "proof", first_problem = 4, last_problem = 4, occurrences = 1, teaching_state = "introduced", difficult = true, note = "数组内部有序时，两个交叉不等式足以保证左右分区整体有序。" }
 "technique.infinity_sentinel" = { kind = "algorithm", first_problem = 4, last_problem = 4, occurrences = 1, teaching_state = "introduced", difficult = false, note = "使用正负无穷哨兵统一处理分割位于数组两端。" }
-"julia_r.zero_based_algorithm_coordinates" = { kind = "syntax", first_problem = 4, last_problem = 35, occurrences = 12, teaching_state = "reinforcing", difficult = false, note = "算法状态常用零基坐标；0033 至 0035 再次把 Julia/R 一基访问与零基搜索或插入结果相互转换。" }
+"julia_r.zero_based_algorithm_coordinates" = { kind = "syntax", first_problem = 4, last_problem = 37, occurrences = 14, teaching_state = "reinforcing", difficult = false, note = "算法状态常用零基坐标；0033 至 0037 持续把 Julia/R 一基容器访问与零基搜索、插入或数独坐标相互转换。" }
 "algorithm.expand_around_center" = { kind = "algorithm", first_problem = 5, last_problem = 5, occurrences = 1, teaching_state = "introduced", difficult = true, note = "枚举字符中心和字符间隙中心，向两侧扩展得到最长回文。" }
 "proof.palindrome_center_symmetry" = { kind = "proof", first_problem = 5, last_problem = 9, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0005 枚举字符串回文中心；0009 比较整数十进制表示的镜像两半。" }
 "algorithm.periodic_index_mapping" = { kind = "algorithm", first_problem = 6, last_problem = 6, occurrences = 1, teaching_state = "introduced", difficult = true, note = "把 Z 字形路径模拟转化为周期长度和行内索引公式。" }
-"string.incremental_builder" = { kind = "library", first_problem = 5, last_problem = 12, occurrences = 3, teaching_state = "familiar", difficult = false, note = "0005、0006、0012 使用缓冲区或片段列表避免反复复制字符串。" }
+"string.incremental_builder" = { kind = "library", first_problem = 5, last_problem = 38, occurrences = 4, teaching_state = "familiar", difficult = false, note = "0005、0006、0012、0038 使用缓冲区或片段列表避免不可变字符串反复复制。" }
 "algorithm.decimal_digit_pop_push" = { kind = "algorithm", first_problem = 7, last_problem = 9, occurrences = 3, teaching_state = "familiar", difficult = false, note = "0007 完整反转整数，0008 从字符累积十进制值，0009 只反转后一半。" }
 "proof.pre_operation_overflow_guard" = { kind = "proof", first_problem = 7, last_problem = 29, occurrences = 4, teaching_state = "reinforcing", difficult = true, note = "0007、0008 在乘十前守卫，0011 先扩宽乘法，0029 在倍增前用差值判断边界。" }
 "numeric.truncating_division_and_remainder" = { kind = "syntax", first_problem = 7, last_problem = 29, occurrences = 3, teaching_state = "reinforcing", difficult = true, note = "0007 比较整数截断语义；0029 通过绝对值商与符号恢复实现向零截断。" }
 "algorithm.ordered_string_parse_phases" = { kind = "algorithm", first_problem = 8, last_problem = 8, occurrences = 1, teaching_state = "introduced", difficult = false, note = "按前导空格、可选符号、连续数字三个不可回退阶段解析字符串。" }
 "proof.sign_dependent_clamp_limit" = { kind = "proof", first_problem = 8, last_problem = 8, occurrences = 1, teaching_state = "introduced", difficult = true, note = "正负结果采用不同绝对值上限，压入数字前先检查边界。" }
-"string.ascii_digit_scan" = { kind = "syntax", first_problem = 8, last_problem = 8, occurrences = 1, teaching_state = "introduced", difficult = false, note = "只接受 ASCII '0' 到 '9'，按语言选择字节、字符或代码单元。" }
+"string.ascii_digit_scan" = { kind = "syntax", first_problem = 8, last_problem = 38, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0008 扫描 ASCII 十进制数字；0038 的序列项也只由 ASCII 数字组成。" }
 "algorithm.reverse_half_digits" = { kind = "algorithm", first_problem = 9, last_problem = 9, occurrences = 1, teaching_state = "introduced", difficult = true, note = "只把右半数字逆序到 reversed_half，以两侧交叉条件停止。" }
 "proof.odd_center_digit_removal" = { kind = "proof", first_problem = 9, last_problem = 9, occurrences = 1, teaching_state = "introduced", difficult = false, note = "奇数位整数比较时删除无需配对的中间数字。" }
 "proof.overflow_avoidance_by_partial_construction" = { kind = "proof", first_problem = 9, last_problem = 9, occurrences = 1, teaching_state = "introduced", difficult = true, note = "只构造约一半位数的反转值，从结构上避免完整反转溢出。" }
@@ -58,15 +58,15 @@ last_problem = 37
 "proof.first_prefix_mismatch_boundary" = { kind = "proof", first_problem = 14, last_problem = 14, occurrences = 1, teaching_state = "introduced", difficult = false, note = "第一处不一致或最短字符串末尾决定最长公共前缀边界。" }
 "algorithm.sorted_anchor_two_pointer_sum" = { kind = "algorithm", first_problem = 15, last_problem = 16, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "排序后固定锚点，在右侧用双指针搜索精确或最近三数和。" }
 "proof.monotone_sum_pointer_elimination" = { kind = "proof", first_problem = 15, last_problem = 16, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "有序数组中总和过小时排除左端，过大时排除右端。" }
-"technique.sorted_duplicate_skipping" = { kind = "algorithm", first_problem = 15, last_problem = 15, occurrences = 1, teaching_state = "introduced", difficult = false, note = "跳过重复锚点和命中后的相同左右值。" }
+"technique.sorted_duplicate_skipping" = { kind = "algorithm", first_problem = 15, last_problem = 40, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0015 跳过重复锚点与双指针值；0040 在同一递归层跳过重复候选。" }
 "numeric.widen_three_value_sum" = { kind = "syntax", first_problem = 15, last_problem = 16, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "三数求和与差值比较前提升到更宽类型。" }
 "algorithm.closest_candidate_invariant" = { kind = "algorithm", first_problem = 16, last_problem = 16, occurrences = 1, teaching_state = "introduced", difficult = true, note = "best 始终保存已检查候选中最接近 target 的真实总和。" }
 "algorithm.backtracking_cartesian_product" = { kind = "algorithm", first_problem = 17, last_problem = 17, occurrences = 1, teaching_state = "introduced", difficult = true, note = "递归每层选择当前集合一个元素，枚举完整笛卡尔积。" }
-"data_structure.mutable_backtracking_path" = { kind = "data_structure", first_problem = 17, last_problem = 22, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0017 与 0022 复用可变路径，并在返回时撤销选择。" }
-"proof.backtracking_prefix_partition" = { kind = "proof", first_problem = 17, last_problem = 22, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "递归前缀划分互不重叠的答案子集，每个结果沿唯一根到叶路径生成。" }
+"data_structure.mutable_backtracking_path" = { kind = "data_structure", first_problem = 17, last_problem = 40, occurrences = 4, teaching_state = "familiar", difficult = false, note = "0017、0022、0039、0040 复用可变路径，并在返回时撤销选择。" }
+"proof.backtracking_prefix_partition" = { kind = "proof", first_problem = 17, last_problem = 40, occurrences = 4, teaching_state = "familiar", difficult = true, note = "递归前缀划分互不重叠的答案子树；0039、0040 通过起点和去重规则定义唯一组合路径。" }
 "complexity.output_sensitive_cartesian_product" = { kind = "proof", first_problem = 17, last_problem = 17, occurrences = 1, teaching_state = "introduced", difficult = false, note = "组合数为 P、长度为 d 时，复制输出需要 O(P × d)。" }
 "algorithm.two_anchor_four_sum" = { kind = "algorithm", first_problem = 18, last_problem = 18, occurrences = 1, teaching_state = "introduced", difficult = true, note = "排序后固定两个锚点，把四数和降为有序两数和。" }
-"technique.sorted_sum_bounds_pruning" = { kind = "algorithm", first_problem = 18, last_problem = 18, occurrences = 1, teaching_state = "introduced", difficult = true, note = "使用锚点可达到的最小和与最大和安全剪枝。" }
+"technique.sorted_sum_bounds_pruning" = { kind = "algorithm", first_problem = 18, last_problem = 40, occurrences = 3, teaching_state = "reinforcing", difficult = true, note = "0018 用最小最大和剪枝；0039、0040 排序后在候选大于 remaining 时停止本层。" }
 "algorithm.fixed_gap_linked_list_pointers" = { kind = "algorithm", first_problem = 19, last_problem = 19, occurrences = 1, teaching_state = "introduced", difficult = true, note = "快指针领先 n 个节点后同步移动，定位倒数节点前驱。" }
 "proof.predecessor_link_deletion" = { kind = "proof", first_problem = 19, last_problem = 19, occurrences = 1, teaching_state = "introduced", difficult = false, note = "单链表删除通过改写目标前驱的 next 跳过目标。" }
 "data_structure.unclosed_bracket_stack" = { kind = "data_structure", first_problem = 20, last_problem = 32, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0020 保存未闭合左括号；0032 扩展为未匹配左括号下标并结合失效边界计算区间长度。" }
@@ -122,3 +122,12 @@ last_problem = 37
 "algorithm.sudoku_backtracking_mrv" = { kind = "algorithm", first_problem = 37, last_problem = 37, occurrences = 1, teaching_state = "introduced", difficult = true, note = "每层选择候选最少的空格，枚举合法数字并在失败时撤销三类约束。" }
 "technique.lowest_set_bit_iteration" = { kind = "algorithm", first_problem = 37, last_problem = 37, occurrences = 1, teaching_state = "introduced", difficult = true, note = "使用 mask & -mask 逐个提取候选集合的最低位 1。" }
 "proof.reversible_constraint_state" = { kind = "proof", first_problem = 37, last_problem = 37, occurrences = 1, teaching_state = "introduced", difficult = true, note = "一次选择只修改一个格子和三个掩码位，失败后成对撤销即可恢复父状态。" }
+"algorithm.run_length_group_encoding" = { kind = "algorithm", first_problem = 38, last_problem = 38, occurrences = 1, teaching_state = "introduced", difficult = false, note = "把每个最大连续相同字符段编码为十进制长度与该字符。" }
+"proof.iterative_sequence_induction" = { kind = "proof", first_problem = 38, last_problem = 38, occurrences = 1, teaching_state = "introduced", difficult = true, note = "先证明单次描述变换正确，再对序列项编号归纳。" }
+"complexity.sum_of_generated_lengths" = { kind = "proof", first_problem = 38, last_problem = 38, occurrences = 1, teaching_state = "introduced", difficult = false, note = "递推字符串的总工作量应写为各轮输入与输出长度之和。" }
+"algorithm.non_decreasing_combination_path" = { kind = "algorithm", first_problem = 39, last_problem = 40, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "排序并限制递归起点，使每个组合只按非递减数值顺序生成。" }
+"algorithm.reusable_candidate_index" = { kind = "algorithm", first_problem = 39, last_problem = 39, occurrences = 1, teaching_state = "introduced", difficult = false, note = "选择后递归仍传入当前下标，表达候选可不限次数复用。" }
+"proof.combination_canonical_order" = { kind = "proof", first_problem = 39, last_problem = 39, occurrences = 1, teaching_state = "introduced", difficult = true, note = "每个多重集合拥有唯一非递减表示，单调起点消除排列重复。" }
+"algorithm.same_depth_duplicate_skip" = { kind = "algorithm", first_problem = 40, last_problem = 40, occurrences = 1, teaching_state = "introduced", difficult = true, note = "仅当 index > start 时跳过相邻等值候选，删除同层等价分支并保留深层重复值。" }
+"interface.one_use_per_array_index" = { kind = "interface", first_problem = 40, last_problem = 40, occurrences = 1, teaching_state = "introduced", difficult = false, note = "选择后递归从 index + 1 开始，保证每个输入下标至多使用一次。" }
+"proof.earliest_equal_index_completeness" = { kind = "proof", first_problem = 40, last_problem = 40, occurrences = 1, teaching_state = "introduced", difficult = true, note = "同层保留最早可用等值下标即可覆盖后续等值下标能形成的全部数值组合。" }

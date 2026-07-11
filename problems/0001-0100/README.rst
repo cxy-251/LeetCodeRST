@@ -43,11 +43,14 @@ LeetCode 0001–0100
 #. `0035. Search Insert Position <0035-search-insert-position.rst>`_
 #. `0036. Valid Sudoku <0036-valid-sudoku.rst>`_
 #. `0037. Sudoku Solver <0037-sudoku-solver.rst>`_
+#. `0038. Count and Say <0038-count-and-say.rst>`_
+#. `0039. Combination Sum <0039-combination-sum.rst>`_
+#. `0040. Combination Sum II <0040-combination-sum-ii.rst>`_
 
 下一题
 ------
 
-``0038. Count and Say``
+``0041. First Missing Positive``
 
 阅读顺序
 --------
