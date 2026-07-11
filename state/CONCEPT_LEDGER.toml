@@ -1,6 +1,6 @@
 [meta]
 version = 1
-last_problem = 17
+last_problem = 20
 
 # teaching_state 可用值：
 # introduced   首次完整解释
@@ -120,20 +120,20 @@ note = "使用 environment 的哈希绑定模拟键值映射。"
 [concepts."data_structure.singly_linked_list"]
 kind = "data_structure"
 first_problem = 2
-last_problem = 2
-occurrences = 1
-teaching_state = "introduced"
+last_problem = 19
+occurrences = 2
+teaching_state = "reinforcing"
 difficult = false
-note = "节点保存 val 与 next，后续链表题复用平台类型约定。"
+note = "0002 首次使用平台单链表；0019 通过前驱链接删除倒数节点。"
 
 [concepts."technique.dummy_node"]
 kind = "algorithm"
 first_problem = 2
-last_problem = 2
-occurrences = 1
-teaching_state = "introduced"
+last_problem = 19
+occurrences = 2
+teaching_state = "reinforcing"
 difficult = false
-note = "使用固定哑节点统一首次插入与后续追加。"
+note = "0002 统一结果链表追加；0019 统一删除头节点与普通节点。"
 
 [concepts."algorithm.digit_carry_simulation"]
 kind = "algorithm"
@@ -147,11 +147,11 @@ note = "当前结果位由两输入位和上一位 carry 决定。"
 [concepts."rust.option_box_linked_list"]
 kind = "syntax"
 first_problem = 2
-last_problem = 2
-occurrences = 1
-teaching_state = "introduced"
+last_problem = 19
+occurrences = 2
+teaching_state = "reinforcing"
 difficult = true
-note = "Option<Box<ListNode>>、take 与所有权移动。"
+note = "0002 构造链表，0019 用 take 转移被删除节点的后继所有权。"
 
 [concepts."julia.mutable_recursive_node"]
 kind = "syntax"
@@ -192,11 +192,11 @@ note = "字符最后位置允许 left 直接跳到重复位置之后。"
 [concepts."string.character_iteration_units"]
 kind = "syntax"
 first_problem = 3
-last_problem = 14
-occurrences = 7
+last_problem = 20
+occurrences = 8
 teaching_state = "reinforcing"
 difficult = true
-note = "0003、0005、0006 区分字符单位；0008、0010、0013、0014 在 ASCII 约束下按字节或代码单元扫描。"
+note = "0003、0005、0006 区分字符单位；0008、0010、0013、0014、0020 在 ASCII 约束下按字节或代码单元扫描。"
 
 [concepts."algorithm.binary_search_partition"]
 kind = "algorithm"
@@ -557,3 +557,57 @@ occurrences = 1
 teaching_state = "introduced"
 difficult = false
 note = "若组合数为 P、字符串长度为 d，复制完整输出需要 O(P × d) 时间与输出空间。"
+
+[concepts."algorithm.two_anchor_four_sum"]
+kind = "algorithm"
+first_problem = 18
+last_problem = 18
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "排序后固定两个锚点，把四数和降为有序后缀中的两数和。"
+
+[concepts."technique.sorted_sum_bounds_pruning"]
+kind = "algorithm"
+first_problem = 18
+last_problem = 18
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "使用当前锚点可达到的最小和与最大和，安全地 break 或 continue。"
+
+[concepts."algorithm.fixed_gap_linked_list_pointers"]
+kind = "algorithm"
+first_problem = 19
+last_problem = 19
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "快指针领先 n 个节点后同步移动，使慢指针最终定位倒数第 n 个节点的前驱。"
+
+[concepts."proof.predecessor_link_deletion"]
+kind = "proof"
+first_problem = 19
+last_problem = 19
+occurrences = 1
+teaching_state = "introduced"
+difficult = false
+note = "单链表删除通过改写目标前驱的 next 跳过目标，哑节点保证头节点也有前驱。"
+
+[concepts."data_structure.unclosed_bracket_stack"]
+kind = "data_structure"
+first_problem = 20
+last_problem = 20
+occurrences = 1
+teaching_state = "introduced"
+difficult = false
+note = "栈按嵌套顺序保存当前前缀中尚未闭合的左括号。"
+
+[concepts."proof.stack_top_bracket_matching"]
+kind = "proof"
+first_problem = 20
+last_problem = 20
+occurrences = 1
+teaching_state = "introduced"
+difficult = true
+note = "右括号只能匹配最近未闭合的同类型左括号；跳过栈顶会形成交叉闭合。"
