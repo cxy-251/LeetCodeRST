@@ -1,0 +1,164 @@
+[batch]
+start = 26
+end = 30
+status = "completed"
+source = "complete_rst_content"
+modify_historical_rst = false
+summary = "完整读取 0026-0030 的 RST 正文和十语言代码，提炼有效前缀接口、适配器成本、下标坐标、短范围守卫、零商复杂度、字符串键载荷和滑动窗口真实成本规则。"
+
+[problems."0026"]
+status = "reviewed"
+file = "problems/0001-0100/0026-remove-duplicates-from-sorted-array.rst"
+positive = [
+  "有效前缀、尾部未定义语义和 slow <= fast 的覆盖安全证明完整。",
+]
+observations = [
+  "Julia 只守卫空数组，却使用 2:length(nums)；单元素时 2:1 会形成递减范围并访问越界。",
+  "R 返回 k 与复制后的 nums，真实接口和空间成本不同于平台原地数组接口。",
+  "C++ 把 size_t 转为 int 的安全性依赖精确长度约束，正文没有列出具体上界。",
+]
+rule_ids = [
+  "valid_prefix_contract",
+  "language_adapter_interface_cost",
+  "short_range_guard",
+  "constraint_backed_narrowing",
+]
+
+[problems."0027"]
+status = "reviewed"
+file = "problems/0001-0100/0027-remove-element.rst"
+positive = [
+  "稳定压缩与末尾交换的优化目标区分清楚，证明覆盖无误保留、无遗漏和顺序性质。",
+]
+observations = [
+  "R 适配器返回新向量，不能把抽象常数状态直接写成该语言实现的 O(1) 额外空间。",
+  "有效前缀是返回值与原数组共同定义的接口，尾部内容不能被当作输出或额外清理。",
+  "C++ 的长度窄化仍依赖未在题目重述中明确列出的精确约束。",
+]
+rule_ids = [
+  "valid_prefix_contract",
+  "language_adapter_interface_cost",
+  "constraint_backed_narrowing",
+]
+
+[problems."0028"]
+status = "reviewed"
+file = "problems/0001-0100/0028-find-the-index-of-the-first-occurrence-in-a-string.rst"
+positive = [
+  "候选起点闭区间、第一次成功的最小性和 ASCII 字符模型说明完整。",
+]
+observations = [
+  "正文以当前约束通常保证 needle 非空描述官方契约，不能用通常代替精确约束；通用空模式扩展应与官方要求分开。",
+  "R 的 utf8ToInt 分配 O(n+m) 码点向量，统一 O(1) 额外空间不适用于该实现。",
+  "标准库 find/indexOf 在不同语言返回字节、代码单元或其他坐标，必须验证与题目返回下标单位一致。",
+]
+rule_ids = [
+  "official_contract_vs_extension",
+  "language_specific_copy_cost",
+  "return_index_coordinate",
+]
+
+[problems."0029"]
+status = "reviewed"
+file = "problems/0001-0100/0029-divide-two-integers.rst"
+positive = [
+  "先扩宽再取绝对值、唯一溢出组合、倍增边界和向零截断证明完整。",
+]
+observations = [
+  "复杂度写 O(log |q|)，当商 q=0 时对数无定义，应写 O(log(|q|+1)) 或按表长定义。",
+  "Julia 使用宿主 Int 接口和 32 位边界常量，代码可移植性依赖运行平台 Int 位宽，需要明确平台前提或固定宽类型接口。",
+  "C++ 代码使用 INT_MIN、llabs、vector 等符号，代码块没有直接展示必要头文件。",
+  "R 通过反复 c 追加倍增表；在固定 32 位域内上界为常数，推广模型下成本需要单独说明。",
+]
+rule_ids = [
+  "zero_safe_log_complexity",
+  "platform_width_assumption",
+  "explicit_import_boundary",
+  "fixed_domain_vs_generalized_cost",
+]
+
+[problems."0030"]
+status = "reviewed"
+file = "problems/0001-0100/0030-substring-with-concatenation-of-all-words.rst"
+positive = [
+  "按词长余数拆分扫描线、超量收缩、重复单词和重叠答案的证明完整。",
+]
+observations = [
+  "多数语言直接访问 words[0]，依赖 words 非空且单词长度大于零；这些前提没有在题目重述中精确列出。",
+  "word_length * word_count、哈希表容量翻倍和 C 分配尺寸需要由精确约束证明安全。",
+  "C 的 table、representative、need、answer、seen、stamp 分配均缺少统一失败契约。",
+  "空间只写 O(u)，但复制字符串键的语言还需要 O(u*w) 键载荷；输出索引数组也应单列。",
+  "哈希窗口操作是期望复杂度，切片、哈希和字符串比较产生 O(nw) 字符工作，二者不能混成一个线性结论。",
+  "R 记录答案时反复 c(answer, value)，可能使输出累加达到二次复制成本。",
+  "Go clear(seen) 与 C# GetValueOrDefault 具有版本前提，正文未声明最低版本。",
+  "只有 C 显式处理 wordsSize == 0，其余语言依赖非空前提；跨语言防御策略不一致。",
+]
+rule_ids = [
+  "precondition_consistency",
+  "capacity_expression_safety",
+  "allocation_failure_whole_structure",
+  "hash_key_payload_space",
+  "logical_vs_character_work",
+  "output_space_and_append_cost",
+  "version_dependent_api",
+]
+
+[rules."valid_prefix_contract"]
+status = "promoted"
+problems = [26, 27]
+requirement = "原地有效前缀题同时说明返回长度、允许检查的前缀、尾部未定义语义、稳定性要求和调用后容器长度。"
+
+[rules."language_adapter_interface_cost"]
+status = "promoted"
+problems = [26, 27]
+requirement = "某语言无法表达平台原地接口而返回副本或复合对象时，明确标记为适配器，并单独计算复制、返回和调用后语义。"
+
+[rules."short_range_guard"]
+status = "promoted"
+problems = [26]
+requirement = "Julia 与 R 的循环范围按实际最小长度守卫；只检查空输入不足以保证 2:n、3:n 等范围安全。"
+
+[rules."official_contract_vs_extension"]
+status = "promoted"
+problems = [28, 30]
+requirement = "精确写出官方约束；通用接口扩展单独标记，禁止用通常、常见或当前似乎保证代替契约。"
+
+[rules."return_index_coordinate"]
+status = "promoted"
+problems = [28, 30]
+requirement = "字符串题分别定义比较单位和返回下标单位，并验证字节、代码单元、码点或字符坐标与平台要求一致。"
+
+[rules."zero_safe_log_complexity"]
+status = "promoted"
+problems = [29]
+requirement = "复杂度参数可能为零时使用 log(x+1)、位数或显式表长，禁止留下 log(0) 未定义。"
+
+[rules."platform_width_assumption"]
+status = "promoted"
+problems = [29]
+requirement = "使用 Int、int、long 等平台相关宽度时声明目标平台，或改用固定宽类型承载题目边界。"
+
+[rules."precondition_consistency"]
+status = "promoted"
+problems = [30]
+requirement = "十语言对非空、正长度和合法输入采用同一官方前提；仅个别语言添加防御分支时必须标明其不属于统一主解法。"
+
+[rules."hash_key_payload_space"]
+status = "promoted"
+problems = [30]
+requirement = "哈希空间不仅统计键数量；复制字符串或字节键时按唯一键数量乘键长度计入载荷。"
+
+[rules."logical_vs_character_work"]
+status = "promoted"
+problems = [28, 30]
+requirement = "区分窗口或哈希操作次数与切片、哈希、比较实际读取的字符总量，并分别给出期望与最坏界。"
+
+[rules."output_space_and_append_cost"]
+status = "promoted"
+problems = [30]
+requirement = "返回索引或组合的输出空间单列；动态追加按语言真实摊还或复制语义计费。"
+
+[next_batch]
+start = 31
+end = 35
+purpose = "完整读取 0031-0035 的 RST，继续提炼前向规则，不修改历史题目。"
