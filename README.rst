@@ -1,27 +1,53 @@
 LeetCode 多语言 RST 学习仓库
 ============================
 
-本仓库按 LeetCode 题号顺序建设多语言算法学习资料。
+本仓库按 LeetCode 题号顺序建设多语言算法学习资料。每道可访问题目对应一个 RST 文件，
+同时学习算法、正确性证明、复杂度和多种语言实现。
 
 项目目标
 --------
 
-* 每道可访问题目对应一个 ``.rst`` 文件；
-* 按题号递增推进，让不同算法主题自然交错，形成间隔复习；
-* 同时学习算法与多种编程语言；
+* 题目内容使用原创重述，不复制平台完整题干或官方题解；
+* 按题号递增推进，让不同算法主题自然交错；
+* 每道普通算法题提供 C、C++、Python、Java、Rust、Go、TypeScript、C#、Julia、R；
 * 语法知识采用解释衰减，疑难算法采用周期性复现；
-* 题目内容使用原创重述，不复制平台完整题干与官方题解；
-* 无法访问的 Premium 题目登记后跳过，后续有合法材料时再补写。
+* 代码注释重点解释状态变化、语言边界和容易出错的位置；
+* Premium 或无法可靠确认的题目按规则登记，不猜测题意。
 
-内容语言
+已完成范围
+----------
+
+``0001`` 至 ``0050`` 的首轮多语言 RST 已完成。完整索引见
+``problems/0001-0100/README.rst``。
+
+当前阶段
 --------
 
-题目 RST 的正文、图注、提示、警告、自检答案和代码教学注释统一使用简体中文。
-LeetCode 官方英文题名、文件 slug、代码标识符、关键字、API、类型名和标准库名称
-保留英文。
+当前阶段为 ``0001–0050`` 逐题规则提炼审查。
 
-代码变量、函数和类型使用各语言惯用的英文命名，不使用中文标识符。完整规则见
-``docs/CONTENT_LANGUAGE_POLICY.rst``。
+这次审查的目标是完整读取每个 RST，从实际正文和十语言代码中提炼 ``0051–0100`` 的优化规则：
+
+* 逐题按编号读取，不通过 PR 描述或完成报告代替内容审查；
+* 记录题意、证明、复杂度、字符模型、语言接口、内存和所有权等问题；
+* 把跨题模式写入模板、质量门和语言规则；
+* 不修改 ``0001`` 至 ``0050`` 的历史题目 RST；
+* 审查完成前保留 ``next_problem = 51``，但暂不生成 0051。
+
+当前审查进度和下一题以 ``state/PROGRESS.toml`` 与
+``state/REVIEW_0001_0050.toml`` 为准。提炼结果见
+``docs/REVIEW_FINDINGS_0001_0050.rst``。
+
+审查证据边界
+------------
+
+内容质量结论必须来自：
+
+* 完整题目 RST；
+* 正文中的题意、示例、证明和复杂度；
+* 十种语言代码块；
+* 直接相关的公共规则与知识账本。
+
+PR 标题、提交信息、合并状态和自动任务报告只能证明流程发生过，不能证明题解内容质量。
 
 固定核心语言
 ------------
@@ -39,124 +65,51 @@ LeetCode 官方英文题名、文件 slug、代码标识符、关键字、API、
 * Julia；
 * R。
 
-JavaScript 运行时知识在 TypeScript 章节中教学；SQL 用于数据库题；Bash 或
-POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
+JavaScript 运行时知识在 TypeScript 中教学；SQL 用于数据库题；Bash 或 POSIX Shell 用于
+Shell 题。完整边界见 ``docs/LANGUAGE_SCOPE.rst``。
 
-解法、基础类型与关联
---------------------
+后续质量规则
+------------
 
-* 每题选择一个主解法，完整覆盖 10 种核心语言；
-* 对照解法只在复杂度、数据结构或算法思路存在实质差异时保留；
-* 标准库方案属于正式工程写法；当轮子隐藏核心算法时，同时提供教学写法；
-* ``ListNode``、``TreeNode`` 等平台类型不在每道题重复定义；
-* Julia 与 R 使用统一的仓库级可变节点约定；
-* 语法和 API 解释写在代码块内，代码行优先不超过 88 列；
-* 链表、树、图、动态规划和回溯等内容可以使用 Mermaid 表达状态变化；
-* 单题关联通常保留 1 至 3 个，最多 5 个，没有强关联时直接省略。
+从实际 RST 审查中确认的规则会约束 0051 以后，例如：
 
-完整规则见 ``docs/SOLUTION_AND_TYPES_POLICY.rst``、
-``docs/RELATED_PROBLEMS_POLICY.rst``、``docs/RST_STYLE_GUIDE.rst`` 和
-``docs/REVIEW_AND_PREVENTION_POLICY.rst``。
+* 字符串题必须把精确字符约束与字节、代码单元、码点或字形簇模型绑定；
+* 复杂度计入 ``[]byte``、``collect``、``strsplit``、切片和结果复制；
+* C 失败路径不能返回看似合法的部分结果；
+* 二分证明必须覆盖搜索方向和排除安全性；
+* 必要导入、平台预置和语言版本前提必须明确；
+* 哈希解法区分期望与最坏复杂度。
 
-已完成题目
-----------
+完整规则见：
 
-#. `0001. Two Sum <problems/0001-0100/0001-two-sum.rst>`_
-#. `0002. Add Two Numbers <problems/0001-0100/0002-add-two-numbers.rst>`_
-#. `0003. Longest Substring Without Repeating Characters <problems/0001-0100/0003-longest-substring-without-repeating-characters.rst>`_
-#. `0004. Median of Two Sorted Arrays <problems/0001-0100/0004-median-of-two-sorted-arrays.rst>`_
-#. `0005. Longest Palindromic Substring <problems/0001-0100/0005-longest-palindromic-substring.rst>`_
-#. `0006. Zigzag Conversion <problems/0001-0100/0006-zigzag-conversion.rst>`_
-#. `0007. Reverse Integer <problems/0001-0100/0007-reverse-integer.rst>`_
-#. `0008. String to Integer (atoi) <problems/0001-0100/0008-string-to-integer-atoi.rst>`_
-#. `0009. Palindrome Number <problems/0001-0100/0009-palindrome-number.rst>`_
-#. `0010. Regular Expression Matching <problems/0001-0100/0010-regular-expression-matching.rst>`_
-#. `0011. Container With Most Water <problems/0001-0100/0011-container-with-most-water.rst>`_
-#. `0012. Integer to Roman <problems/0001-0100/0012-integer-to-roman.rst>`_
-#. `0013. Roman to Integer <problems/0001-0100/0013-roman-to-integer.rst>`_
-#. `0014. Longest Common Prefix <problems/0001-0100/0014-longest-common-prefix.rst>`_
-#. `0015. 3Sum <problems/0001-0100/0015-3sum.rst>`_
-#. `0016. 3Sum Closest <problems/0001-0100/0016-3sum-closest.rst>`_
-#. `0017. Letter Combinations of a Phone Number <problems/0001-0100/0017-letter-combinations-of-a-phone-number.rst>`_
-#. `0018. 4Sum <problems/0001-0100/0018-4sum.rst>`_
-#. `0019. Remove Nth Node From End of List <problems/0001-0100/0019-remove-nth-node-from-end-of-list.rst>`_
-#. `0020. Valid Parentheses <problems/0001-0100/0020-valid-parentheses.rst>`_
-#. `0021. Merge Two Sorted Lists <problems/0001-0100/0021-merge-two-sorted-lists.rst>`_
-#. `0022. Generate Parentheses <problems/0001-0100/0022-generate-parentheses.rst>`_
-#. `0023. Merge k Sorted Lists <problems/0001-0100/0023-merge-k-sorted-lists.rst>`_
-#. `0024. Swap Nodes in Pairs <problems/0001-0100/0024-swap-nodes-in-pairs.rst>`_
-#. `0025. Reverse Nodes in k-Group <problems/0001-0100/0025-reverse-nodes-in-k-group.rst>`_
-#. `0026. Remove Duplicates from Sorted Array <problems/0001-0100/0026-remove-duplicates-from-sorted-array.rst>`_
-#. `0027. Remove Element <problems/0001-0100/0027-remove-element.rst>`_
-#. `0028. Find the Index of the First Occurrence in a String <problems/0001-0100/0028-find-the-index-of-the-first-occurrence-in-a-string.rst>`_
-#. `0029. Divide Two Integers <problems/0001-0100/0029-divide-two-integers.rst>`_
-#. `0030. Substring with Concatenation of All Words <problems/0001-0100/0030-substring-with-concatenation-of-all-words.rst>`_
-#. `0031. Next Permutation <problems/0001-0100/0031-next-permutation.rst>`_
-#. `0032. Longest Valid Parentheses <problems/0001-0100/0032-longest-valid-parentheses.rst>`_
-#. `0033. Search in Rotated Sorted Array <problems/0001-0100/0033-search-in-rotated-sorted-array.rst>`_
-#. `0034. Find First and Last Position of Element in Sorted Array <problems/0001-0100/0034-find-first-and-last-position-of-element-in-sorted-array.rst>`_
-#. `0035. Search Insert Position <problems/0001-0100/0035-search-insert-position.rst>`_
-#. `0036. Valid Sudoku <problems/0001-0100/0036-valid-sudoku.rst>`_
-#. `0037. Sudoku Solver <problems/0001-0100/0037-sudoku-solver.rst>`_
-#. `0038. Count and Say <problems/0001-0100/0038-count-and-say.rst>`_
-#. `0039. Combination Sum <problems/0001-0100/0039-combination-sum.rst>`_
-#. `0040. Combination Sum II <problems/0001-0100/0040-combination-sum-ii.rst>`_
-#. `0041. First Missing Positive <problems/0001-0100/0041-first-missing-positive.rst>`_
-#. `0042. Trapping Rain Water <problems/0001-0100/0042-trapping-rain-water.rst>`_
-#. `0043. Multiply Strings <problems/0001-0100/0043-multiply-strings.rst>`_
-#. `0044. Wildcard Matching <problems/0001-0100/0044-wildcard-matching.rst>`_
-#. `0045. Jump Game II <problems/0001-0100/0045-jump-game-ii.rst>`_
-#. `0046. Permutations <problems/0001-0100/0046-permutations.rst>`_
-#. `0047. Permutations II <problems/0001-0100/0047-permutations-ii.rst>`_
-#. `0048. Rotate Image <problems/0001-0100/0048-rotate-image.rst>`_
-#. `0049. Group Anagrams <problems/0001-0100/0049-group-anagrams.rst>`_
-#. `0050. Pow(x, n) <problems/0001-0100/0050-powx-n.rst>`_
-
-下一题是 ``0051. N-Queens``。实际进度以 ``state/PROGRESS.toml`` 为准。
+* ``docs/REVIEW_AND_PREVENTION_POLICY.rst``；
+* ``docs/REVIEW_FINDINGS_0001_0050.rst``；
+* ``docs/AUTOMATION_QUALITY_GATE.rst``；
+* ``docs/SOLUTION_AND_TYPES_POLICY.rst``；
+* ``docs/PROBLEM_TEMPLATE.rst``。
 
 开始工作
 --------
 
-任何助手或新的对话必须先阅读：
+新的对话或自动任务必须先读取：
 
-#. ``AGENTS.md``
-#. ``docs/PROJECT_VISION.rst``
-#. ``docs/LANGUAGE_SCOPE.rst``
-#. ``docs/SOLUTION_AND_TYPES_POLICY.rst``
-#. ``docs/RELATED_PROBLEMS_POLICY.rst``
-#. ``docs/CONTENT_LANGUAGE_POLICY.rst``
-#. ``docs/RST_STYLE_GUIDE.rst``
-#. ``docs/REVIEW_AND_PREVENTION_POLICY.rst``
-#. ``docs/AUTOMATION_QUALITY_GATE.rst``
-#. ``docs/AUTOMATION_DIRECT_MAIN_POLICY.rst``
-#. ``state/PROGRESS.toml``
-#. ``state/CONCEPT_LEDGER.toml``
-#. 最近至少 5 道已完成题目
+#. ``AGENTS.md``；
+#. 本文件；
+#. ``docs/PROJECT_VISION.rst``；
+#. ``docs/LANGUAGE_SCOPE.rst``；
+#. ``docs/SOLUTION_AND_TYPES_POLICY.rst``；
+#. ``docs/CONTENT_LANGUAGE_POLICY.rst``；
+#. ``docs/RST_STYLE_GUIDE.rst``；
+#. ``docs/RELATED_PROBLEMS_POLICY.rst``；
+#. ``docs/REVIEW_AND_PREVENTION_POLICY.rst``；
+#. ``docs/REVIEW_FINDINGS_0001_0050.rst``；
+#. ``docs/AUTOMATION_QUALITY_GATE.rst``；
+#. ``docs/AUTOMATION_DIRECT_MAIN_POLICY.rst``；
+#. ``state/PROGRESS.toml``；
+#. ``state/REVIEW_0001_0050.toml``；
+#. ``state/CONCEPT_LEDGER.toml``。
 
-``AGENTS.md`` 是项目的最高执行规则。仓库文件是跨对话交接依据，不能依赖上一段
-对话中的隐含记忆。
-
-当前状态
---------
-
-``0001`` 至 ``0050`` 的首轮多语言 RST 已完成，作为历史内容保留。不会启动逐题全量审查，
-也不会因为公共规则升级而主动回改这些文件。
-
-从 ``0051`` 开始继续按题号生成。此前暴露出的 R 作用域、Julia 递减范围、TypeScript
-位运算、C 容量与所有权、复杂度输出成本等问题，已经进入公共模板和质量门，从
-``0051`` 至 ``0100`` 前置执行。
-
-定时自动任务只在深夜运行，与手动对话共用 GitHub ``main``、进度文件和公共规则。
-每次开始前必须读取最新状态，避免覆盖人工进度。
-
-前向防复发范围
---------------
-
-``0001`` 至 ``0050`` 不主动审查、不批量修订。只有用户明确指定某一道历史题需要修复时，
-才处理该题。
-
-``0051`` 至 ``0100`` 必须完整执行强化后的题目模板、十语言风险检查、复杂度与证明检查，
-并严格区分运行验证、编译验证、静态验证和基准对拍。
+仓库文件是跨对话和跨执行环境的唯一共享状态。
 
 文件组织
 --------
@@ -169,15 +122,15 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
      PROJECT_VISION.rst
      LANGUAGE_SCOPE.rst
      SOLUTION_AND_TYPES_POLICY.rst
-     RELATED_PROBLEMS_POLICY.rst
      CONTENT_LANGUAGE_POLICY.rst
      RST_STYLE_GUIDE.rst
+     RELATED_PROBLEMS_POLICY.rst
      REVIEW_AND_PREVENTION_POLICY.rst
+     REVIEW_FINDINGS_0001_0050.rst
      AUTOMATION_QUALITY_GATE.rst
      AUTOMATION_DIRECT_MAIN_POLICY.rst
      PROBLEM_TEMPLATE.rst
    problems/
-     README.rst
      0001-0100/
        README.rst
        0001-two-sum.rst
@@ -185,16 +138,17 @@ POSIX Shell 用于 Shell 题。完整规则见 ``docs/LANGUAGE_SCOPE.rst``。
        0050-powx-n.rst
    state/
      PROGRESS.toml
+     REVIEW_0001_0050.toml
      CONCEPT_LEDGER.toml
 
 文档形式
 --------
 
-题目正文和项目说明以 RST 为主。仓库不建立 Sphinx、文档站点、CI 构建或发布
-系统，内容以直接阅读源文件为目标。
+题目正文和项目说明以 RST 为主。仓库不建立 Sphinx、文档站点、CI 构建或发布系统，
+内容以直接阅读源文件为目标。
 
 仓库前身
 --------
 
 本仓库原用于 ``paperToVideo`` 项目。改造前 ``main`` 的最终状态保存在
-``archive/paperToVideo-before-reset`` 分支中，原有阶段分支和 Git 历史继续保留。
+``archive/paperToVideo-before-reset`` 分支中。
