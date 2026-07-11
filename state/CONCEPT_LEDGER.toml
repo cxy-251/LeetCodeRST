@@ -1,6 +1,6 @@
 [meta]
 version = 1
-last_problem = 32
+last_problem = 35
 
 # teaching_state: introduced / reinforcing / familiar / refresh / mastered
 
@@ -29,7 +29,7 @@ last_problem = 32
 "algorithm.binary_search_partition" = { kind = "algorithm", first_problem = 4, last_problem = 4, occurrences = 1, teaching_state = "introduced", difficult = true, note = "在较短数组上二分分割数量，以四个边界值确定中位数。" }
 "proof.partition_boundary_ordering" = { kind = "proof", first_problem = 4, last_problem = 4, occurrences = 1, teaching_state = "introduced", difficult = true, note = "数组内部有序时，两个交叉不等式足以保证左右分区整体有序。" }
 "technique.infinity_sentinel" = { kind = "algorithm", first_problem = 4, last_problem = 4, occurrences = 1, teaching_state = "introduced", difficult = false, note = "使用正负无穷哨兵统一处理分割位于数组两端。" }
-"julia_r.zero_based_algorithm_coordinates" = { kind = "syntax", first_problem = 4, last_problem = 32, occurrences = 9, teaching_state = "reinforcing", difficult = false, note = "算法状态常用零基坐标；0032 在 Julia/R 容器一基索引中仍保存零基括号位置。" }
+"julia_r.zero_based_algorithm_coordinates" = { kind = "syntax", first_problem = 4, last_problem = 35, occurrences = 12, teaching_state = "reinforcing", difficult = false, note = "算法状态常用零基坐标；0033 至 0035 再次把 Julia/R 一基访问与零基搜索或插入结果相互转换。" }
 "algorithm.expand_around_center" = { kind = "algorithm", first_problem = 5, last_problem = 5, occurrences = 1, teaching_state = "introduced", difficult = true, note = "枚举字符中心和字符间隙中心，向两侧扩展得到最长回文。" }
 "proof.palindrome_center_symmetry" = { kind = "proof", first_problem = 5, last_problem = 9, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0005 枚举字符串回文中心；0009 比较整数十进制表示的镜像两半。" }
 "algorithm.periodic_index_mapping" = { kind = "algorithm", first_problem = 6, last_problem = 6, occurrences = 1, teaching_state = "introduced", difficult = true, note = "把 Z 字形路径模拟转化为周期长度和行内索引公式。" }
@@ -112,3 +112,9 @@ last_problem = 32
 "algorithm.longest_valid_parentheses_index_stack" = { kind = "algorithm", first_problem = 32, last_problem = 32, occurrences = 1, teaching_state = "introduced", difficult = true, note = "栈保存未匹配左括号下标与最近失效右括号边界，弹栈后用当前下标减新栈顶得到合法后缀长度。" }
 "technique.minus_one_boundary_sentinel" = { kind = "algorithm", first_problem = 32, last_problem = 32, occurrences = 1, teaching_state = "introduced", difficult = false, note = "初始 -1 表示字符串开头之前，使从下标 0 开始的区间长度也统一为 i - boundary。" }
 "proof.unmatched_right_parenthesis_barrier" = { kind = "proof", first_problem = 32, last_problem = 32, occurrences = 1, teaching_state = "introduced", difficult = true, note = "无法匹配的右括号不能属于任何跨越它的合法子串，因此可安全重设为新的左边界。" }
+"algorithm.rotated_sorted_half_detection" = { kind = "algorithm", first_problem = 33, last_problem = 33, occurrences = 1, teaching_state = "introduced", difficult = true, note = "旋转数组每轮至少有一半保持严格有序，通过端点与中点比较识别该半区。" }
+"proof.ordered_half_value_range_elimination" = { kind = "proof", first_problem = 33, last_problem = 33, occurrences = 1, teaching_state = "introduced", difficult = true, note = "目标是否落在有序半区值域内，决定可安全保留或排除哪一半。" }
+"algorithm.lower_bound_half_open" = { kind = "algorithm", first_problem = 34, last_problem = 35, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "在半开区间中寻找第一个大于等于目标的位置；0034 定位左边界，0035 直接作为插入位置。" }
+"algorithm.upper_bound_half_open" = { kind = "algorithm", first_problem = 34, last_problem = 34, occurrences = 1, teaching_state = "introduced", difficult = true, note = "寻找第一个严格大于目标的位置，相等元素全部归入边界左侧。" }
+"proof.binary_monotone_boundary_invariant" = { kind = "proof", first_problem = 34, last_problem = 35, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "左侧全部不满足谓词、右侧全部满足谓词，区间收敛到第一个满足位置。" }
+"interface.insertion_position_can_equal_length" = { kind = "interface", first_problem = 34, last_problem = 35, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "半开边界可返回 n，表示目标应插入数组末尾而不是有效元素下标。" }

@@ -38,11 +38,14 @@ LeetCode 0001–0100
 #. `0030. Substring with Concatenation of All Words <0030-substring-with-concatenation-of-all-words.rst>`_
 #. `0031. Next Permutation <0031-next-permutation.rst>`_
 #. `0032. Longest Valid Parentheses <0032-longest-valid-parentheses.rst>`_
+#. `0033. Search in Rotated Sorted Array <0033-search-in-rotated-sorted-array.rst>`_
+#. `0034. Find First and Last Position of Element in Sorted Array <0034-find-first-and-last-position-of-element-in-sorted-array.rst>`_
+#. `0035. Search Insert Position <0035-search-insert-position.rst>`_
 
 下一题
 ------
 
-``0033. Search in Rotated Sorted Array``
+``0036. Valid Sudoku``
 
 阅读顺序
 --------
