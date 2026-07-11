@@ -1,6 +1,6 @@
 [meta]
 version = 1
-last_problem = 43
+last_problem = 45
 
 # teaching_state: introduced / reinforcing / familiar / refresh / mastered
 
@@ -25,11 +25,11 @@ last_problem = 43
 "r.environment_reference_node" = { kind = "syntax", first_problem = 2, last_problem = 25, occurrences = 6, teaching_state = "familiar", difficult = false, note = "R 链表统一使用 environment 获得引用语义。" }
 "algorithm.sliding_window" = { kind = "algorithm", first_problem = 3, last_problem = 30, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "0003 维护字符窗口，0030 按词长偏移维护单词频次窗口。" }
 "algorithm.last_seen_boundary_jump" = { kind = "algorithm", first_problem = 3, last_problem = 3, occurrences = 1, teaching_state = "introduced", difficult = true, note = "字符最后位置允许 left 直接跳到重复位置之后。" }
-"string.character_iteration_units" = { kind = "syntax", first_problem = 3, last_problem = 43, occurrences = 13, teaching_state = "reinforcing", difficult = true, note = "字符串题持续区分字符、字节与代码单元；0038 与 0043 只含 ASCII 数字，可按字节读取。" }
+"string.character_iteration_units" = { kind = "syntax", first_problem = 3, last_problem = 44, occurrences = 14, teaching_state = "reinforcing", difficult = true, note = "字符串题持续区分字符、字节与代码单元；0038、0043、0044 的输入限定 ASCII，可按字节或代码单元读取。" }
 "algorithm.binary_search_partition" = { kind = "algorithm", first_problem = 4, last_problem = 4, occurrences = 1, teaching_state = "introduced", difficult = true, note = "在较短数组上二分分割数量，以四个边界值确定中位数。" }
 "proof.partition_boundary_ordering" = { kind = "proof", first_problem = 4, last_problem = 4, occurrences = 1, teaching_state = "introduced", difficult = true, note = "数组内部有序时，两个交叉不等式足以保证左右分区整体有序。" }
 "technique.infinity_sentinel" = { kind = "algorithm", first_problem = 4, last_problem = 4, occurrences = 1, teaching_state = "introduced", difficult = false, note = "使用正负无穷哨兵统一处理分割位于数组两端。" }
-"julia_r.zero_based_algorithm_coordinates" = { kind = "syntax", first_problem = 4, last_problem = 43, occurrences = 16, teaching_state = "reinforcing", difficult = false, note = "算法状态常用零基坐标；0041 映射 value - 1，0043 则需把零基乘积槽位重新推导为 Julia/R 一基位置。" }
+"julia_r.zero_based_algorithm_coordinates" = { kind = "syntax", first_problem = 4, last_problem = 45, occurrences = 17, teaching_state = "reinforcing", difficult = false, note = "算法状态常用零基坐标；0043 映射乘积槽位，0045 将零基层边界映射到 Julia/R 一基数组位置。" }
 "algorithm.expand_around_center" = { kind = "algorithm", first_problem = 5, last_problem = 5, occurrences = 1, teaching_state = "introduced", difficult = true, note = "枚举字符中心和字符间隙中心，向两侧扩展得到最长回文。" }
 "proof.palindrome_center_symmetry" = { kind = "proof", first_problem = 5, last_problem = 9, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0005 枚举字符串回文中心；0009 比较整数十进制表示的镜像两半。" }
 "algorithm.periodic_index_mapping" = { kind = "algorithm", first_problem = 6, last_problem = 6, occurrences = 1, teaching_state = "introduced", difficult = true, note = "把 Z 字形路径模拟转化为周期长度和行内索引公式。" }
@@ -144,3 +144,9 @@ last_problem = 43
 "technique.adjacent_decimal_carry_accumulation" = { kind = "algorithm", first_problem = 43, last_problem = 43, occurrences = 1, teaching_state = "introduced", difficult = true, note = "当前槽位保留 total % 10，total / 10 加入左邻高位并在后续迭代继续规范化。" }
 "syntax.one_based_product_slot_mapping" = { kind = "syntax", first_problem = 43, last_problem = 43, occurrences = 1, teaching_state = "introduced", difficult = true, note = "零基低位槽 i+j+1 映射到 Julia/R 一基位置 i+j，高位槽相应为 i+j-1。" }
 "interface.c_heap_owned_string_result" = { kind = "interface", first_problem = 43, last_problem = 43, occurrences = 1, teaching_state = "introduced", difficult = false, note = "C 返回动态分配的乘积字符串，调用者负责释放；临时数字数组在返回前释放。" }
+"algorithm.wildcard_latest_star_checkpoint" = { kind = "algorithm", first_problem = 44, last_problem = 44, occurrences = 1, teaching_state = "introduced", difficult = true, note = "先让最近星号匹配空串；固定模式失配时回到星号后并把星号覆盖长度增加一。" }
+"proof.wildcard_star_monotone_expansion" = { kind = "proof", first_problem = 44, last_problem = 44, occurrences = 1, teaching_state = "introduced", difficult = true, note = "普通字符与问号没有长度选择，当前对齐失败后任何可行匹配都要求最近星号多吞至少一个字符。" }
+"complexity.wildcard_suffix_rescan" = { kind = "proof", first_problem = 44, last_problem = 44, occurrences = 1, teaching_state = "introduced", difficult = true, note = "星号扩张后固定模式后缀可能被重复扫描，因此贪心实现最坏 O(mn)，不能无条件写成严格线性。" }
+"algorithm.jump_game_bfs_layer_boundary" = { kind = "algorithm", first_problem = 45, last_problem = 45, occurrences = 1, teaching_state = "introduced", difficult = true, note = "current_end 表示当前跳数可达层边界，farthest 汇总当前层再跳一次的最远边界。" }
+"proof.jump_next_frontier_union" = { kind = "proof", first_problem = 45, last_problem = 45, occurrences = 1, teaching_state = "introduced", difficult = true, note = "当前层所有连续可达区间的并集最右端等于 max(i + nums[i])，边界推进等价于 BFS 进入下一层。" }
+"technique.delay_jump_commit_at_layer_end" = { kind = "algorithm", first_problem = 45, last_problem = 45, occurrences = 1, teaching_state = "introduced", difficult = false, note = "扫描完整当前层后才增加跳数，避免提前选择尚未汇总全部候选的局部边界。" }
