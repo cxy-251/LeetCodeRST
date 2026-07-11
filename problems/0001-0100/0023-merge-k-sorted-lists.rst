@@ -264,7 +264,7 @@ C
        heap[0] = heap[--(*size)];
        int index = 0;
 
-       while (true) {
+       while (1) {
            int left = index * 2 + 1;
            int right = left + 1;
            int smallest = index;
@@ -521,6 +521,8 @@ Go
 ~~
 
 .. code-block:: go
+
+   import "container/heap"
 
    type nodeHeap []*ListNode
 
