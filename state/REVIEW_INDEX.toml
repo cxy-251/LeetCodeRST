@@ -3,11 +3,11 @@ mode = "prospective_rules_only"
 source = "complete_rst_content"
 start = 1
 end = 50
-current = 46
-reviewed_count = 45
+current = 51
+reviewed_count = 50
 modify_historical_rst = false
 pr_metadata_is_evidence = false
-status = "in_progress"
+status = "completed"
 
 [records.legacy]
 path = "state/REVIEW_0001_0050.toml"
@@ -56,10 +56,23 @@ end = 45
 status = "completed"
 findings = "docs/review-findings/0041-0045.rst"
 
-[next_batch]
+[records.batch_0046_0050]
+path = "state/reviews/0046-0050.toml"
 start = 46
 end = 50
-purpose = "完整读取 0046-0050 的 RST，完成历史范围的前向规则提炼，不修改历史题目。"
+status = "completed"
+findings = "docs/review-findings/0046-0050.rst"
+
+[corrections.julia_unitrange]
+status = "active"
+source = "https://docs.julialang.org/en/v1/base/collections/#Base.UnitRange"
+supersedes = "此前审查记录中关于 Julia a:b 在 a>b 时自动递减的描述"
+statement = "a:b 是隐式步长 +1 的 UnitRange；a>b 时为空，递减遍历需要显式负步长。"
+
+[next_generation]
+start = 51
+end = 51
+purpose = "在用户对话指令下生成 0051 N-Queens，并完整执行最终前向规则。"
 
 [rule_sources]
 base_findings = "docs/REVIEW_FINDINGS_0001_0050.rst"
@@ -71,4 +84,5 @@ batch_findings = [
   "docs/review-findings/0031-0035.rst",
   "docs/review-findings/0036-0040.rst",
   "docs/review-findings/0041-0045.rst",
+  "docs/review-findings/0046-0050.rst",
 ]
