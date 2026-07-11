@@ -10,29 +10,29 @@ content_language = "zh-CN"
 code_comment_language = "zh-CN"
 
 [progress]
-next_problem = 32
-completed_count = 31
-completed_ranges = ["0001-0031"]
+next_problem = 33
+completed_count = 32
+completed_ranges = ["0001-0032"]
 premium_skipped = []
 blocked = []
 needs_revision = []
 
 [last_batch]
 status = "completed"
-start = 29
-end = 31
-completed = 3
+start = 32
+end = 32
+completed = 1
 premium_skipped = []
-summary = "完成 0029 至 0031 三题十语言 RST 教程，覆盖无乘除整数除法、固定词长多偏移滑动窗口与字典序下一排列。"
+summary = "完成 0032 Longest Valid Parentheses 十语言 RST 教程，覆盖下标栈、失效边界哨兵与最长合法连续区间。"
 
 [next_batch]
 status = "ready"
-start = 32
-end = 32
+start = 33
+end = 33
 purpose = "自动任务每次只精写一道题，以 RST 教学质量为首要目标。"
 
 [next_action]
-summary = "从 LeetCode 0032 开始；自动任务启动时先同步 automation/leetcode-current 到最新 main。"
+summary = "从 LeetCode 0033 开始；自动任务启动时先同步 automation/leetcode-current 到最新 main。"
 
 [last_update]
-summary = "LeetCode 0029 至 0031 已作为第六个手动三题批次完成；小时任务继续从最新 next_problem 接续。"
+summary = "LeetCode 0032 已由小时单题任务完成；下一轮继续从最新 next_problem 接续。"
