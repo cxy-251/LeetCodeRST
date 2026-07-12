@@ -1,0 +1,20 @@
+[meta]
+version = 1
+range = "0074-0100"
+last_problem = 75
+inherits = "state/concepts/0051-0100.toml"
+
+[updates]
+"julia_r.zero_based_algorithm_coordinates" = "0051、0052、0054、0059、0060、0061、0062、0063、0064、0066、0067、0068、0073、0074 把零基状态映射到一基容器；累计 20 次；0074 新增扁平位置到矩阵行列的双重换算。"
+"syntax.javascript_avoid_bitwise_2pow31" = "0051、0052 的 TypeScript 位掩码被 n <= 9 严格约束；0062-0075 的整数状态继续避免无必要位运算，状态更新为 reinforced。"
+"proof.binary_search_candidate_interval" = "0033-0035、0069 与 0074 持续使用单调谓词或有序比较安全删除半区；0074 新增虚拟扁平矩阵坐标。"
+"proof.in_place_multiset_conservation" = "0026、0027、0031、0041、0048 与 0075 都只覆盖允许位置或交换已有元素；0075 通过纯交换强化元素多重集守恒。"
+
+[concepts]
+"algorithm.matrix_flattened_binary_search" = "kind=algorithm; introduced=0074; last=0074; occurrences=1; teaching_state=explained; note=把规则矩阵按行视为长度 m*n 的虚拟有序数组，用 mid/cols 与 mid%cols 读取坐标。"
+"proof.matrix_row_major_global_order" = "kind=proof; introduced=0074; last=0074; occurrences=1; teaching_state=explained; note=行内有序加下一行首元素严格大于上一行末元素，保证任意相邻扁平位置有序。"
+"numeric.matrix_flattened_index_bound" = "kind=numeric; introduced=0074; last=0074; occurrences=1; teaching_state=explained; note=m,n<=100 给出 m*n<=10000，扁平下标、乘积和坐标换算在 32 位有符号整数内安全。"
+"algorithm.dutch_national_flag_partition" = "kind=algorithm; introduced=0075; last=0075; occurrences=1; teaching_state=explained; note=维护 0 区、1 区、未知区和 2 区，一次扫描完成三值原地排序。"
+"proof.dutch_flag_region_invariant" = "kind=proof; introduced=0075; last=0075; occurrences=1; teaching_state=explained; note=[0,low) 为 0、[low,current) 为 1、[current,high] 未知、(high,n) 为 2，未知区每轮严格缩短。"
+"proof.dutch_flag_swap_recheck" = "kind=proof; introduced=0075; last=0075; occurrences=1; teaching_state=explained; note=从 high 换入 current 的值尚未分类，所以处理 2 后只移动 high；从 low 换入的是已确认的 1，可与 current 同时推进。"
+"interface.r_sort_colors_copy_return" = "kind=language_boundary; introduced=0075; last=0075; occurrences=1; teaching_state=explained; note=R 适配器返回修改后的向量；循环状态仍为常数空间，调用接口可能触发复制。"

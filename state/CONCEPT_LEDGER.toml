@@ -1,11 +1,12 @@
 [meta]
 version = 2
-last_problem = 73
+last_problem = 75
 format = "segmented"
 
 [records]
 legacy = "state/concepts/0001-0050.toml"
-current = "state/concepts/0051-0100.toml"
+previous = "state/concepts/0051-0100.toml"
+current = "state/concepts/0074-0100.toml"
 
 [resolution]
-statement = "读取全部记录；current 中同名 updates 覆盖 legacy 的 last_problem、occurrences、teaching_state 和 note。"
+statement = "按 legacy、previous、current 顺序读取；后续分段中的同名 updates 覆盖更早记录的 last_problem、occurrences、teaching_state 和 note。"
