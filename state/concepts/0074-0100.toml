@@ -1,14 +1,18 @@
 [meta]
 version = 1
 range = "0074-0100"
-last_problem = 75
+last_problem = 77
 inherits = "state/concepts/0051-0100.toml"
 
 [updates]
-"julia_r.zero_based_algorithm_coordinates" = "0051、0052、0054、0059、0060、0061、0062、0063、0064、0066、0067、0068、0073、0074 把零基状态映射到一基容器；累计 20 次；0074 新增扁平位置到矩阵行列的双重换算。"
-"syntax.javascript_avoid_bitwise_2pow31" = "0051、0052 的 TypeScript 位掩码被 n <= 9 严格约束；0062-0075 的整数状态继续避免无必要位运算，状态更新为 reinforced。"
+"julia_r.zero_based_algorithm_coordinates" = "0051、0052、0054、0059、0060、0061、0062、0063、0064、0066、0067、0068、0073、0074、0076 把零基状态映射到一基容器；累计 21 次；0076 新增 ASCII 字节值加一映射频次数组。"
+"syntax.javascript_avoid_bitwise_2pow31" = "0051、0052 的 TypeScript 位掩码被 n <= 9 严格约束；0062-0077 的整数状态继续避免无必要位运算，状态更新为 reinforced。"
 "proof.binary_search_candidate_interval" = "0033-0035、0069 与 0074 持续使用单调谓词或有序比较安全删除半区；0074 新增虚拟扁平矩阵坐标。"
 "proof.in_place_multiset_conservation" = "0026、0027、0031、0041、0048 与 0075 都只覆盖允许位置或交换已有元素；0075 通过纯交换强化元素多重集守恒。"
+"string.ascii_byte_character_equivalence" = "0058、0065、0067、0068、0071、0072、0076 都由精确 ASCII 字符域证明字节、UTF-16 代码单元和字符位置等价；累计 7 次。"
+"data_structure.mutable_backtracking_path" = "0051 与 0077 使用固定或动态路径保存递归前缀并在返回后恢复；累计 11 次，教学状态保持 internalized。"
+"proof.backtracking_prefix_partition" = "0051 与 0077 按下一项选择把答案集合划分为互斥且完备的前缀分支；累计 10 次，教学状态保持 internalized。"
+"proof.reversible_constraint_state" = "0051 使用约束掩码恢复，0077 使用 push/pop 恢复路径；累计 10 次，教学状态保持 internalized。"
 
 [concepts]
 "algorithm.matrix_flattened_binary_search" = "kind=algorithm; introduced=0074; last=0074; occurrences=1; teaching_state=explained; note=把规则矩阵按行视为长度 m*n 的虚拟有序数组，用 mid/cols 与 mid%cols 读取坐标。"
@@ -18,3 +22,12 @@ inherits = "state/concepts/0051-0100.toml"
 "proof.dutch_flag_region_invariant" = "kind=proof; introduced=0075; last=0075; occurrences=1; teaching_state=explained; note=[0,low) 为 0、[low,current) 为 1、[current,high] 未知、(high,n) 为 2，未知区每轮严格缩短。"
 "proof.dutch_flag_swap_recheck" = "kind=proof; introduced=0075; last=0075; occurrences=1; teaching_state=explained; note=从 high 换入 current 的值尚未分类，所以处理 2 后只移动 high；从 low 换入的是已确认的 1，可与 current 同时推进。"
 "interface.r_sort_colors_copy_return" = "kind=language_boundary; introduced=0075; last=0075; occurrences=1; teaching_state=explained; note=R 适配器返回修改后的向量；循环状态仍为常数空间，调用接口可能触发复制。"
+"algorithm.minimum_window_deficit_sliding_window" = "kind=algorithm; introduced=0076; last=0076; occurrences=1; teaching_state=explained; note=need 保存目标频次减窗口频次，missing 保存全部正缺口，右扩左缩寻找最短覆盖窗口。"
+"proof.minimum_window_deficit_invariant" = "kind=proof; introduced=0076; last=0076; occurrences=1; teaching_state=explained; note=字符进入和离开只更新对应差值；missing 始终等于所有 max(need[c],0) 之和。"
+"proof.minimum_window_contraction_optimality" = "kind=proof; introduced=0076; last=0076; occurrences=1; teaching_state=explained; note=固定右端下持续收缩会检查全部合法左边界，最后一个合法边界给出该右端最短窗口。"
+"numeric.minimum_window_ascii_frequency_bound" = "kind=numeric; introduced=0076; last=0076; occurrences=1; teaching_state=explained; note=字符域为 52 个 ASCII 英文字母，128 项频次数组足够；缺口绝对值不超过字符串长度 100000。"
+"algorithm.combinations_pruned_backtracking" = "kind=algorithm; introduced=0077; last=0077; occurrences=1; teaching_state=explained; note=严格递增路径从 start 选下一项，并用 n-needed+1 限制每层最大候选。"
+"proof.combination_increasing_path_bijection" = "kind=proof; introduced=0077; last=0077; occurrences=1; teaching_state=explained; note=每个 k 元集合只有一个严格递增排列，递归路径与合法组合形成一一对应。"
+"proof.combination_last_start_pruning" = "kind=proof; introduced=0077; last=0077; occurrences=1; teaching_state=explained; note=选择 value 后可用数字数量为 n-value+1；少于 needed 时不可能填满路径。"
+"complexity.combination_output_size" = "kind=complexity; introduced=0077; last=0077; occurrences=1; teaching_state=explained; note=C(n,k) 个答案各复制 k 个整数，时间和返回空间均由 Theta(C(n,k)*k) 主导。"
+"c.transactional_combination_result" = "kind=language_boundary; introduced=0077; last=0077; occurrences=1; teaching_state=explained; note=C 预先计算组合数容量，为每个叶子分配独立行；任一失败时释放全部已完成行与元数据。"

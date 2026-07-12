@@ -8,7 +8,8 @@ LeetCode 0001–0100
 
 #. `0001. Two Sum <0001-two-sum.rst>`_
 #. `0002. Add Two Numbers <0002-add-two-numbers.rst>`_
-#. `0003. Longest Substring Without Repeating Characters <0003-longest-substring-without-repeating-characters.rst>`_
+#. `0003. Longest Substring Without Repeating Characters
+   <0003-longest-substring-without-repeating-characters.rst>`_
 #. `0004. Median of Two Sorted Arrays <0004-median-of-two-sorted-arrays.rst>`_
 #. `0005. Longest Palindromic Substring <0005-longest-palindromic-substring.rst>`_
 #. `0006. Zigzag Conversion <0006-zigzag-conversion.rst>`_
@@ -33,13 +34,16 @@ LeetCode 0001–0100
 #. `0025. Reverse Nodes in k-Group <0025-reverse-nodes-in-k-group.rst>`_
 #. `0026. Remove Duplicates from Sorted Array <0026-remove-duplicates-from-sorted-array.rst>`_
 #. `0027. Remove Element <0027-remove-element.rst>`_
-#. `0028. Find the Index of the First Occurrence in a String <0028-find-the-index-of-the-first-occurrence-in-a-string.rst>`_
+#. `0028. Find the Index of the First Occurrence in a String
+   <0028-find-the-index-of-the-first-occurrence-in-a-string.rst>`_
 #. `0029. Divide Two Integers <0029-divide-two-integers.rst>`_
-#. `0030. Substring with Concatenation of All Words <0030-substring-with-concatenation-of-all-words.rst>`_
+#. `0030. Substring with Concatenation of All Words
+   <0030-substring-with-concatenation-of-all-words.rst>`_
 #. `0031. Next Permutation <0031-next-permutation.rst>`_
 #. `0032. Longest Valid Parentheses <0032-longest-valid-parentheses.rst>`_
 #. `0033. Search in Rotated Sorted Array <0033-search-in-rotated-sorted-array.rst>`_
-#. `0034. Find First and Last Position of Element in Sorted Array <0034-find-first-and-last-position-of-element-in-sorted-array.rst>`_
+#. `0034. Find First and Last Position of Element in Sorted Array
+   <0034-find-first-and-last-position-of-element-in-sorted-array.rst>`_
 #. `0035. Search Insert Position <0035-search-insert-position.rst>`_
 #. `0036. Valid Sudoku <0036-valid-sudoku.rst>`_
 #. `0037. Sudoku Solver <0037-sudoku-solver.rst>`_
@@ -81,31 +85,35 @@ LeetCode 0001–0100
 #. `0073. Set Matrix Zeroes <0073-set-matrix-zeroes.rst>`_
 #. `0074. Search a 2D Matrix <0074-search-a-2d-matrix.rst>`_
 #. `0075. Sort Colors <0075-sort-colors.rst>`_
+#. `0076. Minimum Window Substring <0076-minimum-window-substring.rst>`_
+#. `0077. Combinations <0077-combinations.rst>`_
 
 阶段状态
 --------
 
-``0001`` 至 ``0075`` 的首轮教程已经完成。``0001`` 至 ``0050`` 的审查规则正在应用于
+``0001`` 至 ``0077`` 的首轮教程已经完成。``0001`` 至 ``0050`` 的审查规则正在应用于
 ``0051`` 至 ``0100`` 的新题。
 
 下一内容批次
 ------------
 
-下一批从 ``0076`` 开始：
+下一批从 ``0078`` 开始：
 
-* ``0076. Minimum Window Substring``：Hard；
-* ``0077. Combinations``：Medium。
+* ``0078. Subsets``：Medium；
+* ``0079. Word Search``：Medium；
+* ``0080. Remove Duplicates from Sorted Array II``：Medium。
 
-两题难度总分为 6；``0078. Subsets`` 留到后续批次。
+三题难度总分为 6，符合单批预算。
 
-0074–0075 学习重点
+0076–0077 学习重点
 ------------------
 
-* 由行内有序和跨行严格边界证明矩阵按行展开后整体有序；
-* 用整数除法与取模把虚拟一维下标映射为矩阵行列坐标；
-* 使用闭区间二分保持候选区间并安全删除半区；
-* 维护零区、一区、未知区和二区四段不变量；
-* 处理 ``2`` 后复查从右端换入的未知值，处理 ``0`` 后同时推进两个左侧指针。
+* 用可正可负的频次差值表达字符缺口、刚好满足和多余副本；
+* 用总缺口 ``missing`` 在常数时间判断滑动窗口是否覆盖目标多重集；
+* 对每个右端持续收缩左端，检查该右端对应的全部最短可行候选；
+* 用严格递增路径为每个组合建立唯一表示并避免额外去重；
+* 根据剩余所需数量计算 ``last_start = n-needed+1``，剪除容量不足分支；
+* 保存组合时创建独立路径快照，并把 ``k`` 项复制计入输出复杂度。
 
 关联题目
 --------
