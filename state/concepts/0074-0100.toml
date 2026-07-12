@@ -1,18 +1,14 @@
 [meta]
 version = 1
 range = "0074-0100"
-last_problem = 80
+last_problem = 83
 inherits = "state/concepts/0051-0100.toml"
 
 [updates]
-"julia_r.zero_based_algorithm_coordinates" = "0051、0052、0054、0059、0060、0061、0062、0063、0064、0066、0067、0068、0073、0074、0076、0079、0080 把零基状态映射到一基容器；累计 23 次；0079 强化网格坐标，0080 强化有效长度到倒数第二项的位置换算。"
-"syntax.javascript_avoid_bitwise_2pow31" = "0051、0052 的 TypeScript 位掩码被 n <= 9 严格约束；0062-0080 的整数状态继续避免无必要位运算，状态更新为 reinforced。"
-"proof.binary_search_candidate_interval" = "0033-0035、0069 与 0074 持续使用单调谓词或有序比较安全删除半区；0074 新增虚拟扁平矩阵坐标。"
-"proof.in_place_multiset_conservation" = "0026、0027、0031、0041、0048、0075 与 0080 都只覆盖允许位置或交换已有元素；0080 强化保留前两个副本并保持相对顺序。"
-"string.ascii_byte_character_equivalence" = "0058、0065、0067、0068、0071、0072、0076、0079 都由精确 ASCII 字符域证明字节、UTF-16 代码单元和字符位置等价；累计 8 次。"
-"data_structure.mutable_backtracking_path" = "0051、0077 与 0078 使用固定或动态路径保存递归前缀并在返回后恢复；累计 12 次，教学状态保持 internalized。"
-"proof.backtracking_prefix_partition" = "0051、0077 与 0078 按下一项选择把答案集合划分为互斥且完备的前缀分支；累计 11 次，教学状态保持 internalized。"
-"proof.reversible_constraint_state" = "0051 使用约束掩码恢复，0077、0078 使用 push/pop，0079 使用字符哨兵恢复；累计 12 次，教学状态保持 internalized。"
+"julia_r.zero_based_algorithm_coordinates" = "0051、0052、0054、0059、0060、0061、0062、0063、0064、0066、0067、0068、0073、0074、0076、0079、0080、0081 把零基状态映射到一基容器；累计 24 次；0081 直接使用一基闭区间表达旋转数组二分。"
+"syntax.javascript_avoid_bitwise_2pow31" = "0051、0052 的 TypeScript 位掩码被 n <= 9 严格约束；0062-0083 的整数状态继续避免无必要位运算，状态更新为 reinforced。"
+"proof.binary_search_candidate_interval" = "0033-0035、0069、0074 与 0081 持续使用候选区间安全删除半区；0081 新增重复端点消歧并明确最坏线性退化。"
+"proof.in_place_multiset_conservation" = "0026、0027、0031、0041、0048、0075 与 0080 通过覆盖或交换维护目标多重集；0082、0083 改为链表节点子集语义，不计入该原地数组守恒记录。"
 
 [concepts]
 "algorithm.matrix_flattened_binary_search" = "kind=algorithm; introduced=0074; last=0074; occurrences=1; teaching_state=explained; note=把规则矩阵按行视为长度 m*n 的虚拟有序数组，用 mid/cols 与 mid%cols 读取坐标。"
@@ -41,3 +37,12 @@ inherits = "state/concepts/0051-0100.toml"
 "proof.sorted_array_second_last_witness" = "kind=proof; introduced=0080; last=0080; occurrences=1; teaching_state=explained; note=有序前缀中倒数第二项等于当前值时，末尾两项都等于当前值，当前副本必须跳过。"
 "interface.valid_prefix_result_contract" = "kind=interface; introduced=0080; last=0080; occurrences=1; teaching_state=explained; note=返回长度 k 与 nums[0:k] 共同定义结果，k 之后内容未定义且无需整理。"
 "interface.r_valid_prefix_copy_return" = "kind=language_boundary; introduced=0080; last=0080; occurrences=1; teaching_state=explained; note=R 返回 k 与修改后的向量；调用者只读取 seq_len(k) 对应的有效前缀。"
+"algorithm.rotated_array_duplicate_binary_search" = "kind=algorithm; introduced=0081; last=0081; occurrences=1; teaching_state=explained; note=三端值相等时收缩边界消歧，随后识别非递减半区并按目标值域删除另一侧。"
+"proof.rotated_array_equal_endpoints_shrink" = "kind=proof; introduced=0081; last=0081; occurrences=1; teaching_state=explained; note=中点已确认不是目标且左右端与中点同值，因此删除两个端点不会删除答案。"
+"complexity.rotated_search_duplicate_linear_degradation" = "kind=complexity; introduced=0081; last=0081; occurrences=1; teaching_state=explained; note=大量相等元素使每轮只能删除常数个边界位置，最坏时间从 O(log n) 退化为 O(n)。"
+"algorithm.sorted_list_remove_all_duplicate_runs" = "kind=algorithm; introduced=0082; last=0082; occurrences=1; teaching_state=explained; note=用哨兵前驱识别连续重复值段并让前驱直接连接到首个不同值节点。"
+"proof.sorted_list_dummy_predecessor_invariant" = "kind=proof; introduced=0082; last=0082; occurrences=1; teaching_state=explained; note=previous 始终是结果有效前缀末节点，删除重复段时保持不动，从而能绕过整个区间并统一处理头部。"
+"rust.mutable_link_slot_deletion" = "kind=language_boundary; introduced=0082; last=0082; occurrences=1; teaching_state=explained; note=Rust 用 &mut Option<Box<ListNode>> 表示当前所有权槽位，重复时以后继替换槽位并自动释放旧 Box。"
+"algorithm.sorted_list_keep_first_of_run" = "kind=algorithm; introduced=0083; last=0083; occurrences=1; teaching_state=explained; note=固定每个值段首节点，持续绕过与其同值的后继，再推进到下一值段。"
+"proof.sorted_list_run_first_node_conservation" = "kind=proof; introduced=0083; last=0083; occurrences=1; teaching_state=explained; note=只删除同值后继，首个不同值节点保持连接；结果恰好保留每段第一个原节点且顺序不变。"
+"interface.linked_list_node_reuse" = "kind=interface; introduced=0082; last=0083; occurrences=2; teaching_state=reinforced; note=0082、0083 都通过重连原节点返回结果；C/C++ 不释放移出节点，Rust 所有权自动回收，GC 语言由运行时管理。"

@@ -89,35 +89,34 @@ LeetCode 0001–0100
 #. `0077. Combinations <0077-combinations.rst>`_
 #. `0078. Subsets <0078-subsets.rst>`_
 #. `0079. Word Search <0079-word-search.rst>`_
-#. `0080. Remove Duplicates from Sorted Array II
-   <0080-remove-duplicates-from-sorted-array-ii.rst>`_
+#. `0080. Remove Duplicates from Sorted Array II <0080-remove-duplicates-from-sorted-array-ii.rst>`_
+#. `0081. Search in Rotated Sorted Array II <0081-search-in-rotated-sorted-array-ii.rst>`_
+#. `0082. Remove Duplicates from Sorted List II <0082-remove-duplicates-from-sorted-list-ii.rst>`_
+#. `0083. Remove Duplicates from Sorted List <0083-remove-duplicates-from-sorted-list.rst>`_
 
 阶段状态
 --------
 
-``0001`` 至 ``0080`` 的首轮教程已经完成。``0001`` 至 ``0050`` 的审查规则正在应用于
+``0001`` 至 ``0083`` 的首轮教程已经完成。``0001`` 至 ``0050`` 的审查规则正在应用于
 ``0051`` 至 ``0100`` 的新题。
 
 下一内容批次
 ------------
 
-下一批从 ``0081`` 开始：
+下一批从 ``0084`` 开始：
 
-* ``0081. Search in Rotated Sorted Array II``：Medium；
-* ``0082. Remove Duplicates from Sorted List II``：Medium；
-* ``0083. Remove Duplicates from Sorted List``：Easy。
+* ``0084. Largest Rectangle in Histogram``：Hard。
 
-三题难度总分为 5；``0084. Largest Rectangle in Histogram`` 为 Hard，留到后续批次。
+单题难度总分为 4；``0085. Maximal Rectangle`` 也是 Hard，留到后续批次。
 
-0078–0080 学习重点
+0081–0083 学习重点
 ------------------
 
-* 幂集回溯在每个递归节点保存答案，空路径也对应合法子集；
-* 用递增输入下标为每个子集建立唯一表示，并复制可变路径快照；
-* 网格搜索用输入字符域之外的哨兵标记当前路径，返回前统一恢复；
-* 成功分支也必须恢复矩阵，避免短路返回污染调用者输入；
-* 有序数组最多保留两次时，与有效前缀倒数第二项比较；
-* 返回长度与有效前缀共同定义原地数组题结果，后缀内容不参与判定。
+* 重复端点与中点相等时，先收缩已确认非目标的边界以恢复有序性信息；
+* 重复值可能让旋转数组二分从 ``O(log n)`` 退化到最坏 ``O(n)``；
+* 0082 使用哨兵前驱绕过整个重复值段，重复值不保留任何节点；
+* 0083 固定每个值段首节点，连续绕过相同后继，只保留一个副本；
+* 链表去重只重连原节点，结果保持原有相对顺序和节点身份。
 
 关联题目
 --------

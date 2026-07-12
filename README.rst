@@ -17,17 +17,17 @@ LeetCode 多语言 RST 学习仓库
 当前状态
 --------
 
-``0001`` 至 ``0080`` 的首轮多语言 RST 已完成。``0001`` 至 ``0050`` 的逐题规则提炼已经完成，
+``0001`` 至 ``0083`` 的首轮多语言 RST 已完成。``0001`` 至 ``0050`` 的逐题规则提炼已经完成，
 其稳定结论正在应用于 ``0051`` 至 ``0100``。
 
 当前批次完成：
 
-* ``0078. Subsets``：节点即答案、递增下标路径与幂集输出规模；
-* ``0079. Word Search``：网格路径前缀、原地访问标记与成功分支恢复；
-* ``0080. Remove Duplicates from Sorted Array II``：最多保留两次、倒数第二项见证与有效前缀。
+* ``0081. Search in Rotated Sorted Array II``：重复端点消歧、有序半区与最坏线性退化；
+* ``0082. Remove Duplicates from Sorted List II``：哨兵前驱、整段删除与头部统一处理；
+* ``0083. Remove Duplicates from Sorted List``：值段首节点保留、连续断链与节点顺序。
 
-下一内容批次从 ``0081`` 开始，按难度预算处理 ``0081. Search in Rotated Sorted Array II``、
-``0082. Remove Duplicates from Sorted List II`` 和 ``0083. Remove Duplicates from Sorted List``。
+下一内容批次从 ``0084`` 开始，处理 ``0084. Largest Rectangle in Histogram``。``0085`` 也是 Hard，
+与 ``0084`` 同批会超过难度预算，因此留到后续批次。
 
 ``0051`` 至 ``0100`` 全部生成完成后，将按第一次审查相同的方式逐题读取正文和十语言代码，完成
 第二轮规则提炼审查。
