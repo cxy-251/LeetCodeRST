@@ -11,26 +11,26 @@ content_language = "zh-CN"
 code_comment_language = "zh-CN"
 
 [progress]
-next_problem = 65
-completed_count = 64
-completed_ranges = ["0001-0064"]
+next_problem = 68
+completed_count = 67
+completed_ranges = ["0001-0067"]
 premium_skipped = []
 blocked = []
 needs_revision = []
 
 [last_batch]
 status = "completed"
-start = 62
-end = 64
+start = 65
+end = 67
 completed = 3
 premium_skipped = []
-summary = "完成 0062 Unique Paths、0063 Unique Paths II 与 0064 Minimum Path Sum 十语言 RST 教程，覆盖网格路径计数、障碍归零饱和保护和最小路径和滚动动态规划。"
+summary = "完成 0065 Valid Number、0066 Plus One 与 0067 Add Binary 十语言 RST 教程，覆盖数字语法状态扫描、十进制连续进位和二进制字符串加法。"
 
 [next_batch]
 status = "ready"
-start = 65
-end = 67
-purpose = "继续生成 0065 Valid Number、0066 Plus One 与 0067 Add Binary；Hard + Easy + Easy 的难度预算为 6。"
+start = 68
+end = 70
+purpose = "继续生成 0068 Text Justification、0069 Sqrt(x) 与 0070 Climbing Stairs；Hard + Easy + Easy 的难度预算为 6。"
 
 [review]
 status = "completed"
@@ -71,7 +71,7 @@ index = "state/CONCEPT_LEDGER.toml"
 latest_record = "state/concepts/0051-0100.toml"
 
 [next_action]
-summary = "等待用户在对话中继续后，生成 0065 Valid Number、0066 Plus One 与 0067 Add Binary。"
+summary = "等待用户在对话中继续后，生成 0068 Text Justification、0069 Sqrt(x) 与 0070 Climbing Stairs。"
 
 [last_update]
-summary = "已生成并验证 0062 Unique Paths、0063 Unique Paths II 与 0064 Minimum Path Sum，进度推进到 0065。"
+summary = "已生成并验证 0065 Valid Number、0066 Plus One 与 0067 Add Binary，并新增 Git 对象与原子提交工程笔记，进度推进到 0068。"
