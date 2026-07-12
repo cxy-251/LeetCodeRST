@@ -101,35 +101,38 @@ LeetCode 0001–0100
 #. `0089. Gray Code <0089-gray-code.rst>`_
 #. `0090. Subsets II <0090-subsets-ii.rst>`_
 #. `0091. Decode Ways <0091-decode-ways.rst>`_
+#. `0092. Reverse Linked List II <0092-reverse-linked-list-ii.rst>`_
+#. `0093. Restore IP Addresses <0093-restore-ip-addresses.rst>`_
+#. `0094. Binary Tree Inorder Traversal <0094-binary-tree-inorder-traversal.rst>`_
 
 
 阶段状态
 --------
 
-``0001`` 至 ``0091`` 的首轮教程已经完成。``0001`` 至 ``0050`` 的审查规则正在应用于
+``0001`` 至 ``0094`` 的首轮教程已经完成。``0001`` 至 ``0050`` 的审查规则正在应用于
 ``0051`` 至 ``0100`` 的新题。
 
 下一内容批次
 ------------
 
-下一批从 ``0092`` 开始：
+下一批从 ``0095`` 开始：
 
-* ``0092. Reverse Linked List II``：Medium；
-* ``0093. Restore IP Addresses``：Medium；
-* ``0094. Binary Tree Inorder Traversal``：Easy。
+* ``0095. Unique Binary Search Trees II``：Medium；
+* ``0096. Unique Binary Search Trees``：Medium；
+* ``0097. Interleaving String``：Medium。
 
-三题难度总分为 5，符合单批预算。``0095. Unique Binary Search Trees II`` 为 Medium，加入后总分
-达到 7，因此留到后续批次。
+三题难度总分为 6，符合单批预算。``0098. Validate Binary Search Tree`` 为 Medium，加入后总分
+达到 8，因此留到后续批次。
 
-0089–0091 学习重点
+0092–0094 学习重点
 ------------------
 
-* 用 ``i XOR (i >> 1)`` 直接构造循环 Gray 序列；
-* 通过末尾连续 ``1``、可逆解码和末值最高位证明相邻性、唯一性与首尾闭合；
-* 排序后只跳过同层重复候选，同时允许深层继续选择重复副本；
-* 用最靠左可用副本建立重复子集的唯一规范路径；
-* 把合法 ``0`` 视为强制 ``10`` / ``20``，将解码问题分成独立无零片段；
-* 在每个无零片段内使用两个滚动状态计数，并证明固定宽中间值安全。
+* 使用哨兵节点统一链表头部区间反转，并固定原区间首节点作为反转尾；
+* 每轮摘除 ``current.next`` 并插到区间前部，证明节点守恒和无环；
+* 用剩余字符数与剩余段数的上下界剪除不可能的 IPv4 分段；
+* 前导零和超过 255 都具有单调失败性质，可以停止继续扩展当前段；
+* 首次建立 ``TreeNode`` 的跨语言引用类型约定；
+* 用显式栈模拟中序遍历的左子树返回续点，工作空间由树高决定。
 
 关联题目
 --------

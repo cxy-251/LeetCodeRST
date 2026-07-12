@@ -1,0 +1,27 @@
+[meta]
+version = 1
+range = "0092-0100"
+last_problem = 94
+inherits = "state/concepts/0074-0100.toml"
+
+[updates]
+"julia_r.zero_based_algorithm_coordinates" = "0051-0091 已累计 31 次；0093 把零基字符位置和半开后缀换算为一基索引，累计 32 次。"
+"string.ascii_byte_character_equivalence" = "0058、0065、0067、0068、0071、0072、0087、0091、0093 都由精确 ASCII 字符域证明字节、UTF-16 代码单元和字符位置等价；累计 9 次。"
+"complexity.output_space_exclusion" = "0052、0062-0064、0070、0072、0087、0089-0091 已区分工作状态与返回载荷；0093 计入地址字符串输出，0094 区分 O(h) 栈与 Theta(n) 返回数组；累计 12 次。"
+"interface.linked_list_node_reuse" = "0082、0083、0086、0092 都通过重连原节点返回结果；0092 新增闭区间反转、固定尾节点与区间外顺序保持，累计 4 次。"
+
+[concepts]
+"algorithm.linked_list_interval_head_insertion" = "kind=algorithm; introduced=0092; last=0092; occurrences=1; teaching_state=explained; note=找到区间前驱后固定原区间首节点，每轮摘除其后继并插到区间头部，执行 right-left 次完成逆序。"
+"proof.linked_list_head_insertion_fixed_tail" = "kind=proof; introduced=0092; last=0092; occurrences=1; teaching_state=explained; note=current 始终是已反转前缀尾；第 t 轮后前 t+1 个区间节点恰好逆序，未处理后缀保持原序。"
+"proof.linked_list_interval_conservation_no_cycle" = "kind=proof; introduced=0092; last=0092; occurrences=1; teaching_state=explained; note=先让 current 越过 moved，再把 moved 接到反转前缀头；每轮只改三条边，不丢节点、不复制且不形成返回环。"
+"rust.owned_list_segment_reverse_reconnect" = "kind=language_boundary; introduced=0092; last=0092; occurrences=1; teaching_state=explained; note=Rust 从可变所有权槽位取出目标区间，逐 Box 反转，找到反转尾后接回 remaining，再把新头移回前驱槽位。"
+"algorithm.ipv4_four_segment_backtracking" = "kind=algorithm; introduced=0093; last=0093; occurrences=1; teaching_state=explained; note=递归状态由字符位置和已完成段数定义，每层枚举 1 到 3 个数字并在四段消费完全部字符时提交。"
+"proof.ipv4_remaining_length_pruning" = "kind=proof; introduced=0093; last=0093; occurrences=1; teaching_state=explained; note=剩余 k 段至少消费 k 个、最多消费 3k 个字符，超出该闭区间的状态不可能完成。"
+"proof.ipv4_monotone_segment_rejection" = "kind=proof; introduced=0093; last=0093; occurrences=1; teaching_state=explained; note=多字符前导零对所有更长段持续非法；十进制值首次超过 255 后继续附加数字也不会恢复合法。"
+"complexity.ipv4_fixed_depth_output" = "kind=complexity; introduced=0093; last=0093; occurrences=1; teaching_state=explained; note=有效长度最多 12、段数固定 4、每层最多三选，搜索节点为常数上界；地址构造成本按输出字符总量计。"
+"c.transactional_ip_string_results" = "kind=language_boundary; introduced=0093; last=0093; occurrences=1; teaching_state=explained; note=C 由四段长度各三种选择推出 81 个结果槽位上界，每个地址独立分配最多 16 字节；任一失败时释放全部已完成字符串和外层数组。"
+"interface.binary_tree_node_reference_model" = "kind=interface; introduced=0094; last=0094; occurrences=1; teaching_state=explained; note=TreeNode 保存 val、left、right 可空引用；Julia 用 mutable struct，R 用 environment，Rust 平台类型用 Rc<RefCell<TreeNode>>。"
+"algorithm.binary_tree_inorder_explicit_stack" = "kind=algorithm; introduced=0094; last=0094; occurrences=1; teaching_state=explained; note=沿左链入栈，到空位置后弹出访问根，再把 current 切到右孩子，显式模拟左根右递归控制流。"
+"proof.inorder_stack_continuation_invariant" = "kind=proof; introduced=0094; last=0094; occurrences=1; teaching_state=explained; note=栈保存左子树尚未完成返回的祖先续点；左链结束时栈顶左子树已完成，是下一个中序访问节点。"
+"complexity.tree_height_stack_space" = "kind=complexity; introduced=0094; last=0094; occurrences=1; teaching_state=explained; note=每个节点入栈出栈各一次，时间 O(n)；栈只保存一条祖先链，空间 O(h)，退化树最坏 O(n)。"
+"r.binary_tree_environment_nodes" = "kind=language_boundary; introduced=0094; last=0094; occurrences=1; teaching_state=explained; note=R 用 environment 表达树节点引用语义；显式栈保存环境引用，不复制子树，结果向量扩展可能产生累计复制。"
