@@ -11,26 +11,26 @@ content_language = "zh-CN"
 code_comment_language = "zh-CN"
 
 [progress]
-next_problem = 60
-completed_count = 59
-completed_ranges = ["0001-0059"]
+next_problem = 62
+completed_count = 61
+completed_ranges = ["0001-0061"]
 premium_skipped = []
 blocked = []
 needs_revision = []
 
 [last_batch]
 status = "completed"
-start = 57
-end = 59
-completed = 3
+start = 60
+end = 61
+completed = 2
 premium_skipped = []
-summary = "完成 0057 Insert Interval、0058 Length of Last Word 与 0059 Spiral Matrix II 十语言 RST 教程，覆盖有序区间插入、末尾单词反向扫描和螺旋矩阵构造。"
+summary = "完成 0060 Permutation Sequence 与 0061 Rotate List 十语言 RST 教程，覆盖阶乘分块选排列和链表旋转切分重连。"
 
 [next_batch]
 status = "ready"
-start = 60
-end = 61
-purpose = "继续生成 0060 Permutation Sequence 与 0061 Rotate List；Hard + Medium 的难度预算为 6。"
+start = 62
+end = 64
+purpose = "继续生成 0062 Unique Paths、0063 Unique Paths II 与 0064 Minimum Path Sum；三道 Medium 的难度预算为 6。"
 
 [review]
 status = "completed"
@@ -71,7 +71,7 @@ index = "state/CONCEPT_LEDGER.toml"
 latest_record = "state/concepts/0051-0100.toml"
 
 [next_action]
-summary = "等待用户在对话中继续后，生成 0060 Permutation Sequence 与 0061 Rotate List。"
+summary = "等待用户在对话中继续后，生成 0062 Unique Paths、0063 Unique Paths II 与 0064 Minimum Path Sum。"
 
 [last_update]
-summary = "已生成并验证 0057 Insert Interval、0058 Length of Last Word 与 0059 Spiral Matrix II，进度推进到 0060。"
+summary = "已生成并验证 0060 Permutation Sequence 与 0061 Rotate List，进度推进到 0062。"

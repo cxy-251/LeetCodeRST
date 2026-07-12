@@ -1,52 +1,72 @@
 [meta]
-start_problem = 51
-end_problem = 100
-last_problem = 59
+version = 1
+range = "0051-0100"
+last_problem = 61
+inherits = "state/concepts/0001-0050.toml"
 
 [updates]
-"data_structure.mutable_backtracking_path" = { last_problem = 51, occurrences = 6, teaching_state = "familiar", note = "0017、0022、0039、0040、0047 使用可变路径；0051 用 placement 保存按行列选择并在叶子构造棋盘。" }
-"proof.backtracking_prefix_partition" = { last_problem = 52, occurrences = 8, teaching_state = "familiar", note = "0051 与 0052 的递归前缀固定前若干行，每个合法棋盘对应唯一列选择路径；0052 只累计路径数量。" }
-"proof.reversible_constraint_state" = { last_problem = 52, occurrences = 3, teaching_state = "reinforcing", note = "0037 撤销行列宫掩码；0051 成对标记和撤销列及两类对角线；0052 用不可变参数把下一行攻击状态传入递归。" }
-"technique.lowest_set_bit_iteration" = { last_problem = 52, occurrences = 2, teaching_state = "reinforcing", note = "0037 从候选数字掩码提取最低位；0052 逐个提取当前行可用列。" }
-"julia_r.zero_based_algorithm_coordinates" = { last_problem = 59, occurrences = 22, teaching_state = "reinforcing", note = "0051 映射皇后对角线；0054/0059 将矩形零基边界改写为一基容器；0055 保持零基可达位置并用一基下标访问数组。" }
-"syntax.javascript_avoid_bitwise_2pow31" = { last_problem = 52, occurrences = 2, teaching_state = "reinforcing", note = "0050 避免 32 位位运算处理大指数；0052 因 n <= 9，可在精确小位宽约束内安全使用位掩码。" }
-"algorithm.jump_game_bfs_layer_boundary" = { last_problem = 55, occurrences = 2, teaching_state = "reinforcing", note = "0045 用 current_end 与 farthest 计算最少跳数；0055 只保留 farthest 判断可达性和断点。" }
-"algorithm.spiral_matrix_shrinking_boundaries" = { last_problem = 59, occurrences = 2, teaching_state = "reinforcing", note = "0054 沿四边界读取矩阵；0059 沿同一路径依次写入 1..n²。" }
-"proof.spiral_remaining_rectangle_invariant" = { last_problem = 59, occurrences = 2, teaching_state = "reinforcing", note = "0054 未输出元素构成剩余矩形；0059 未写入单元构成剩余矩形。" }
-"proof.spiral_degenerate_guard" = { last_problem = 59, occurrences = 2, teaching_state = "reinforcing", note = "0054 和 0059 都在收缩上边、右边后重新检查下边与左边，避免退化区域重复访问。" }
-"interface.interval_result_snapshot" = { last_problem = 57, occurrences = 2, teaching_state = "reinforcing", note = "0056 排序合并后建立结果区间快照；0057 在线性插入过程中同样返回独立二元区间。" }
-"c.transactional_interval_matrix_result" = { last_problem = 57, occurrences = 2, teaching_state = "reinforcing", note = "0056 和 0057 的 C 返回外层指针、列长度和每个二元素区间；任一分配失败时清理全部已完成结果。" }
+"data_structure.mutable_backtracking_path" = "0051 N-Queens 再次使用固定长度路径和深度覆盖；累计 10 次，教学状态更新为 internalized。"
+"proof.backtracking_prefix_partition" = "0051 按首行选择把全部皇后布局划分为互斥且完备的分支；累计 9 次，教学状态更新为 internalized。"
+"proof.reversible_constraint_state" = "0051 用列、主对角线和副对角线位掩码同步加入并由不可变参数自然恢复；累计 9 次，教学状态更新为 internalized。"
+"technique.lowest_set_bit_iteration" = "0051、0052 连续使用 x & -x 提取最低位可选列；累计 7 次，教学状态更新为 internalized。"
+"julia_r.zero_based_algorithm_coordinates" = "0051、0052、0054、0059、0060、0061 把零基位索引和边界转换到一基容器；累计 12 次；0061 额外强化一基链表步数与空范围保护。"
+"syntax.javascript_avoid_bitwise_2pow31" = "0051、0052 的 TypeScript 位掩码被 n <= 9 严格约束，状态更新为 reinforced。"
+"algorithm.jump_game_bfs_layer_boundary" = "0055 用 current_end 与 farthest 把最少跳跃层边界压缩为线性扫描；累计 2 次，状态更新为 reinforced。"
+"algorithm.spiral_matrix_shrinking_boundaries" = "0054、0059 分别用于读取和写入螺旋矩阵；累计 2 次，状态更新为 reinforced。"
+"proof.spiral_remaining_rectangle_invariant" = "0054、0059 都证明四条边处理后剩余区域仍是未访问矩形；累计 2 次，状态更新为 reinforced。"
+"proof.spiral_degenerate_guard" = "0054、0059 都用边界交叉条件防止单行或单列重复处理；累计 2 次，状态更新为 reinforced。"
+"interface.interval_result_snapshot" = "0056、0057 的 C 二级指针结果都为每行建立独立快照；累计 2 次，状态更新为 reinforced。"
+"c.transactional_interval_matrix_result" = "0056、0057 连续使用容量证明、事务式扩容与失败路径清理；累计 2 次，状态更新为 reinforced。"
+"algorithm.factorial_block_permutation_selection" = "0060 新增阶乘分块直选第 k 个字典序排列，不枚举前驱排列。"
+"proof.factorial_block_partition_rank" = "0060 新增按首位划分等大互斥块并递归更新块内秩的证明。"
+"numeric.permutation_factorial_bound_nine" = "0060 新增 n <= 9 对阶乘、秩、下标与单字符编码的完整宽度证明。"
+"complexity.ordered_candidate_deletion" = "0060 新增候选顺序表中间删除导致 O(n^2) 总移动成本的语言容器分析。"
+"algorithm.rotate_list_cycle_cut" = "0061 新增取模、临时成环、定位新尾并断环的链表旋转模型。"
+"proof.rotate_list_cut_position" = "0061 新增右旋 shift 后新尾位于 length-shift-1 的切点证明。"
+"proof.rotate_list_cycle_break_node_conservation" = "0061 新增临时环只增一边、最终断开唯一切点边的节点守恒与无环证明。"
+"rust.linear_split_append_rotation" = "0061 新增 Rust 用 take 线性拆分后缀并拼接旧前缀，等价替代不可表达的 Box 引用环。"
 
 [concepts]
-"algorithm.n_queens_row_backtracking" = { kind = "algorithm", first_problem = 51, last_problem = 52, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "递归深度固定当前行；0051 生成棋盘，0052 只统计完整列选择路径。" }
-"data_structure.queen_column_diagonal_occupancy" = { kind = "data_structure", first_problem = 51, last_problem = 52, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "0051 使用绝对列和对角线布尔槽，0052 使用当前行列攻击位掩码。" }
-"proof.n_queens_column_sequence_bijection" = { kind = "proof", first_problem = 51, last_problem = 52, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "每个合法棋盘按行得到唯一列序列；生成与计数搜索都完整且不重复地覆盖这些序列。" }
-"proof.diagonal_integer_identifier" = { kind = "proof", first_problem = 51, last_problem = 51, occurrences = 1, teaching_state = "introduced", difficult = false, note = "同一条反斜线满足 row-col 相等，同一条斜线满足 row+col 相等。" }
-"complexity.n_queens_output_sensitive" = { kind = "proof", first_problem = 51, last_problem = 51, occurrences = 1, teaching_state = "introduced", difficult = true, note = "以合法部分布局数 V 和答案数 S 表达 O(nV + S*n^2)，分开搜索与棋盘快照成本。" }
-"c.transactional_multilevel_board_result" = { kind = "interface", first_problem = 51, last_problem = 51, occurrences = 1, teaching_state = "introduced", difficult = true, note = "C 同步维护棋盘数组、列长度和逐行字符串；扩容与分配失败时整体清理。" }
-"algorithm.n_queens_current_row_bitmasks" = { kind = "algorithm", first_problem = 52, last_problem = 52, occurrences = 1, teaching_state = "introduced", difficult = true, note = "用 columns、diag_down、diag_up 三个位掩码直接表示当前行不可用列。" }
-"proof.diagonal_attack_shift" = { kind = "proof", first_problem = 52, last_problem = 52, occurrences = 1, teaching_state = "introduced", difficult = true, note = "进入下一行时，反斜线攻击列左移一位，斜线攻击列右移一位。" }
-"complexity.counting_search_without_output" = { kind = "proof", first_problem = 52, last_problem = 52, occurrences = 1, teaching_state = "introduced", difficult = false, note = "只计数的回溯在叶子返回 1，不产生棋盘快照和 O(S*n^2) 输出空间。" }
-"algorithm.kadane_maximum_subarray" = { kind = "algorithm", first_problem = 53, last_problem = 53, occurrences = 1, teaching_state = "introduced", difficult = true, note = "滚动维护以当前位置结尾的最大子数组和与全局最大值。" }
-"dp.maximum_subarray_ending_here" = { kind = "algorithm", first_problem = 53, last_problem = 53, occurrences = 1, teaching_state = "introduced", difficult = true, note = "ending_here 只比较从当前元素重新开始与连接此前最优后缀两种完整候选。" }
-"proof.negative_prefix_elimination" = { kind = "proof", first_problem = 53, last_problem = 53, occurrences = 1, teaching_state = "introduced", difficult = false, note = "负和前缀连接到任何当前元素都会降低总和，因此可以安全丢弃。" }
-"proof.subarray_unique_right_endpoint" = { kind = "proof", first_problem = 53, last_problem = 53, occurrences = 1, teaching_state = "introduced", difficult = true, note = "每个非空连续子数组有唯一右端点，全局答案是所有 ending_here 的最大值。" }
-"numeric.maximum_subarray_sum_bound" = { kind = "proof", first_problem = 53, last_problem = 53, occurrences = 1, teaching_state = "introduced", difficult = false, note = "由长度 100000 与单项绝对值 10000 推导任意子数组和绝对值不超过 10^9。" }
-"python.iterator_avoids_slice_copy" = { kind = "syntax", first_problem = 53, last_problem = 53, occurrences = 1, teaching_state = "introduced", difficult = false, note = "使用 iter 和 next 扫描首元素后的序列，避免 nums[1:] 的 O(n) 列表复制。" }
-"algorithm.spiral_matrix_shrinking_boundaries" = { kind = "algorithm", first_problem = 54, last_problem = 59, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "0054 读取剩余矩形外圈；0059 沿同一边界路径递增写入输出矩阵。" }
-"proof.spiral_remaining_rectangle_invariant" = { kind = "proof", first_problem = 54, last_problem = 59, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "每轮开始时尚未处理的位置恰好构成边界矩形，边界外位置已按螺旋顺序完成。" }
-"proof.spiral_degenerate_guard" = { kind = "proof", first_problem = 54, last_problem = 59, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "上边和右边收缩后重新检查行列边界，防止单行、单列或中心点重复访问。" }
-"algorithm.jump_game_reachable_prefix" = { kind = "algorithm", first_problem = 55, last_problem = 55, occurrences = 1, teaching_state = "introduced", difficult = true, note = "维护所有已扫描可达位置能够覆盖的最远右边界，得到连续可达前缀。" }
-"proof.jump_game_gap_failure" = { kind = "proof", first_problem = 55, last_problem = 55, occurrences = 1, teaching_state = "introduced", difficult = false, note = "若 index > farthest，全部更早可达位置都无法覆盖该断点，后续位置也没有可达入口。" }
-"proof.jump_game_prefix_closure" = { kind = "proof", first_problem = 55, last_problem = 55, occurrences = 1, teaching_state = "introduced", difficult = true, note = "每个位置允许任意不超过最大步数的短跳，因此可达位置的出边并集保持连续前缀。" }
-"algorithm.interval_sort_and_merge" = { kind = "algorithm", first_problem = 56, last_problem = 56, occurrences = 1, teaching_state = "introduced", difficult = true, note = "按起点和终点排序，线性维护最后一个尚未提交的合并区间。" }
-"proof.interval_permanent_commit" = { kind = "proof", first_problem = 56, last_problem = 56, occurrences = 1, teaching_state = "introduced", difficult = true, note = "当 next_start > current_end 时，排序保证所有未来起点更大，当前合并组可以永久提交。" }
-"interface.interval_result_snapshot" = { kind = "interface", first_problem = 56, last_problem = 57, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0056 与 0057 都建立独立结果区间，避免共享输入行被后续端点修改污染。" }
-c.transactional_interval_matrix_result" = { kind = "interface", first_problem = 56, last_problem = 57, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "C 返回外层指针、列长度和每个二元素区间；任一行分配失败时清理全部已完成结果。" }
-"algorithm.interval_three_phase_insertion" = { kind = "algorithm", first_problem = 57, last_problem = 57, occurrences = 1, teaching_state = "introduced", difficult = true, note = "利用已有有序不重叠前提，依次复制左侧区间、吸收链式重叠、复制右侧区间。" }
-"proof.interval_connected_merge_span" = { kind = "proof", first_problem = 57, last_problem = 57, occurrences = 1, teaching_state = "introduced", difficult = true, note = "新区间与连续重叠组的并集没有内部断点，最小起点和最大终点精确描述其闭区间并集。" }
-"algorithm.last_word_reverse_scan" = { kind = "algorithm", first_problem = 58, last_problem = 58, occurrences = 1, teaching_state = "introduced", difficult = false, note = "从末尾先跳过普通空格，再计数连续非空格字符，直接定位最后一个单词。" }
-"proof.last_word_maximal_suffix" = { kind = "proof", first_problem = 58, last_problem = 58, occurrences = 1, teaching_state = "introduced", difficult = false, note = "尾部空格删除后，直到分隔空格或字符串开头的最大非空后缀恰好是最后一个单词。" }
-"complexity.r_ascii_raw_copy" = { kind = "syntax", first_problem = 58, last_problem = 58, occurrences = 1, teaching_state = "introduced", difficult = false, note = "R 的 charToRaw 建立 O(n) ASCII 字节副本，不能沿用其他语言 O(1) 扫描空间结论。" }
-"proof.spiral_value_position_bijection" = { kind = "proof", first_problem = 59, last_problem = 59, occurrences = 1, teaching_state = "introduced", difficult = true, note = "螺旋路径无重复且无遗漏，value 每写一个单元递增一次，因此位置与 1..n² 一一对应。" }
-"c.transactional_square_matrix_result" = { kind = "interface", first_problem = 59, last_problem = 59, occurrences = 1, teaching_state = "introduced", difficult = true, note = "C 生成方阵时同步管理行指针、列长度和每行数据；任一分配失败时整体清理。" }
+"algorithm.backtracking_n_queens" = "kind=algorithm; introduced=0051; last=0051; occurrences=1; teaching_state=explained; note=逐行选择列并维护列与两类对角线约束。"
+"algorithm.n_queens_bitmask_available_positions" = "kind=algorithm; introduced=0051; last=0052; occurrences=2; teaching_state=reinforced; note=0051 用位掩码生成候选并构造棋盘；0052 继续复用同一候选状态，只累计方案数。"
+"proof.n_queens_constraint_invariant" = "kind=proof; introduced=0051; last=0052; occurrences=2; teaching_state=reinforced; note=0051 证明三个掩码恰好描述前缀攻击范围；0052 在纯计数递归中再次用三掩码不变量证明每个合法布局恰好计数一次。"
+"numeric.n_queens_signed_shift_bounds" = "kind=numeric; introduced=0051; last=0052; occurrences=2; teaching_state=reinforced; note=0051、0052 都由 n<=9 证明有符号整数左移与负数最低位提取安全。"
+"c.transactional_board_result" = "kind=language_boundary; introduced=0051; last=0051; occurrences=1; teaching_state=explained; note=C 多层棋盘结果使用临时指针扩容、分层清理和所有权说明。"
+"rust.bitmask_unsigned_boundary" = "kind=language_boundary; introduced=0051; last=0052; occurrences=2; teaching_state=reinforced; note=位掩码保持 u32，仅在受约束列索引处转换。"
+"typescript.bitwise_32bit_proof" = "kind=language_boundary; introduced=0051; last=0052; occurrences=2; teaching_state=reinforced; note=TypeScript 位运算只在 n<=9 的低位掩码上使用，所有中间量远低于符号位。"
+"algorithm.count_without_materializing_solutions" = "kind=algorithm; introduced=0052; last=0052; occurrences=1; teaching_state=explained; note=只维护约束状态和整数计数，不构造棋盘或保存方案集合。"
+"proof.solution_count_bijection" = "kind=proof; introduced=0052; last=0052; occurrences=1; teaching_state=explained; note=证明递归叶子与合法布局一一对应，从而叶子数等于答案。"
+"complexity.output_space_exclusion" = "kind=complexity; introduced=0052; last=0052; occurrences=1; teaching_state=explained; note=计数题无结果集合，额外空间只含递归栈；与枚举题分开报告输出成本。"
+"c.counter_context_pointer" = "kind=language_boundary; introduced=0052; last=0052; occurrences=1; teaching_state=explained; note=C 递归通过 int* 累加共享计数，不使用文件级可变状态。"
+"r.return_value_recursion_count" = "kind=language_boundary; introduced=0052; last=0052; occurrences=1; teaching_state=explained; note=R 递归返回子树计数并在父层求和，避免 <<- 作用域副作用。"
+"algorithm.kadane_prefix_minimum" = "kind=algorithm; introduced=0053; last=0053; occurrences=1; teaching_state=explained; note=维护当前位置结尾最优值，负历史前缀被新起点支配。"
+"proof.kadane_dominance" = "kind=proof; introduced=0053; last=0053; occurrences=1; teaching_state=explained; note=旧后缀和小于零时继续携带只会降低所有未来扩展，因此可以安全丢弃。"
+"numeric.maximum_subarray_sum_bound" = "kind=numeric; introduced=0053; last=0053; occurrences=1; teaching_state=explained; note=由 n<=1e5、abs(nums[i])<=1e4 推导答案和中间和绝对值至多 1e9。"
+"language.julia_type_preserving_max" = "kind=language_boundary; introduced=0053; last=0053; occurrences=1; teaching_state=explained; note=Julia 使用同类型首元素初始化，避免 typemin 与参数化整数类型混合。"
+"language.r_numeric_exact_integer_range" = "kind=language_boundary; introduced=0053; last=0053; occurrences=1; teaching_state=explained; note=R numeric 对本题至多 1e9 的整数和保持精确表示。"
+"algorithm.spiral_matrix_boundary_simulation" = "kind=algorithm; introduced=0054; last=0059; occurrences=2; teaching_state=reinforced; note=0054 缩小四边界读取矩阵；0059 用同一边界状态顺序写入 1..n^2。"
+"proof.spiral_matrix_layer_invariant" = "kind=proof; introduced=0054; last=0059; occurrences=2; teaching_state=reinforced; note=每轮开始时边界内恰好是全部未处理格子；0054 证明无遗漏读取，0059 证明每格恰好写一次。"
+"algorithm.jump_game_farthest_reach" = "kind=algorithm; introduced=0055; last=0055; occurrences=1; teaching_state=explained; note=扫描已确认可达前缀并维护其中一步可达的最远下标。"
+"proof.jump_game_reachable_prefix" = "kind=proof; introduced=0055; last=0055; occurrences=1; teaching_state=explained; note=在 i<=farthest 前提下处理位置 i，更新后的 farthest 覆盖全部已处理起点的一步扩展。"
+"numeric.index_plus_jump_bound" = "kind=numeric; introduced=0055; last=0055; occurrences=1; teaching_state=explained; note=由 n<=1e4、nums[i]<=1e5 推导 i+nums[i]<=109998，32 位有符号整数安全。"
+"algorithm.merge_sorted_intervals_scan" = "kind=algorithm; introduced=0056; last=0057; occurrences=2; teaching_state=reinforced; note=0056 先排序后线性归并；0057 输入已排序，按左侧、重叠、右侧三阶段直接归并新对象。"
+"proof.merged_interval_finalization" = "kind=proof; introduced=0056; last=0057; occurrences=2; teaching_state=reinforced; note=0056 已提交区间的终点小于未来起点；0057 左侧区间终点严格小于新区间起点，因此提交后不会再相交。"
+"algorithm.insert_interval_three_phase_scan" = "kind=algorithm; introduced=0057; last=0057; occurrences=1; teaching_state=explained; note=依次复制严格在左侧的区间、吸收全部相交区间、再复制严格在右侧的区间。"
+"proof.insert_interval_phase_partition" = "kind=proof; introduced=0057; last=0057; occurrences=1; teaching_state=explained; note=按 end<start、与合并区间相交、start>end 三类证明输入区间被完整且无重复处理。"
+"interface.insert_interval_input_immutability" = "kind=interface; introduced=0057; last=0057; occurrences=1; teaching_state=explained; note=十语言实现都把输入区间视为借用，结果区间独立于 intervals 与 newInterval。"
+"string.backward_last_word_scan" = "kind=algorithm; introduced=0058; last=0058; occurrences=1; teaching_state=explained; note=从末尾先跳过 ASCII 空格，再连续统计最后一个单词。"
+"proof.last_word_two_phase_boundary" = "kind=proof; introduced=0058; last=0058; occurrences=1; teaching_state=explained; note=第一阶段定位最后一个非空格字符，第二阶段覆盖且只覆盖最后单词。"
+"string.ascii_byte_character_equivalence" = "kind=language_boundary; introduced=0058; last=0058; occurrences=1; teaching_state=explained; note=题目字符集限制为英文字母和空格，因此 UTF-8 字节、UTF-16 code unit 与字符计数一致。"
+"language.r_no_split_string_scan" = "kind=language_boundary; introduced=0058; last=0058; occurrences=1; teaching_state=explained; note=R 用 regexpr 匹配末尾单词，避免 strsplit 生成完整字符向量。"
+"algorithm.spiral_matrix_sequential_fill" = "kind=algorithm; introduced=0059; last=0059; occurrences=1; teaching_state=explained; note=沿缩小边界按螺旋顺序把 next_value 从 1 写到 n^2。"
+"proof.spiral_matrix_exactly_once_write" = "kind=proof; introduced=0059; last=0059; occurrences=1; teaching_state=explained; note=四段边界互不重叠，退化保护阻止单行单列重复写，写入次数恰为 n^2。"
+"numeric.square_dimension_capacity" = "kind=numeric; introduced=0059; last=0059; occurrences=1; teaching_state=explained; note=由 n<=20 推导 n^2<=400，并检查行指针与连续数据容量乘积。"
+"c.contiguous_matrix_with_row_views" = "kind=language_boundary; introduced=0059; last=0059; occurrences=1; teaching_state=explained; note=C 用一个连续数据块和 n 个行指针构造 int**，失败时分层释放。"
+"algorithm.factorial_block_permutation_selection" = "kind=algorithm; introduced=0060; last=0060; occurrences=1; teaching_state=explained; note=把剩余排列按下一位候选划分为 (remaining-1)! 大小的连续块，直接选择目标块。"
+"proof.factorial_block_partition_rank" = "kind=proof; introduced=0060; last=0060; occurrences=1; teaching_state=explained; note=证明各候选首位块互斥、等大且完备，并用商定位块、余数更新块内零基秩。"
+"numeric.permutation_factorial_bound_nine" = "kind=numeric; introduced=0060; last=0060; occurrences=1; teaching_state=explained; note=n<=9 给出 9!=362880，完整覆盖阶乘、k-1、块下标和结果字符宽度。"
+"complexity.ordered_candidate_deletion" = "kind=complexity; introduced=0060; last=0060; occurrences=1; teaching_state=explained; note=顺序候选容器中间删除会移动后缀，n 次选择累计 O(n^2)，不能隐藏为 O(n)。"
+"algorithm.rotate_list_cycle_cut" = "kind=algorithm; introduced=0061; last=0061; occurrences=1; teaching_state=explained; note=先把 k 取模，再令旧尾连接旧头成环，于新尾处断环得到右旋结果。"
+"proof.rotate_list_cut_position" = "kind=proof; introduced=0061; last=0061; occurrences=1; teaching_state=explained; note=右旋 shift 后原前 length-shift 个节点移到后段，因此新尾零基下标为 length-shift-1。"
+"proof.rotate_list_cycle_break_node_conservation" = "kind=proof; introduced=0061; last=0061; occurrences=1; teaching_state=explained; note=临时成环只增加旧尾到旧头一边，最终删除新尾到新头一边，节点集合、身份与内部相对顺序不变且最终无环。"
+"rust.linear_split_append_rotation" = "kind=language_boundary; introduced=0061; last=0061; occurrences=1; teaching_state=explained; note=安全 Rust 用 take 断开新后缀，再把旧前缀所有权拼到新尾，等价于成环断环结果。"
