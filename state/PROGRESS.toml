@@ -11,26 +11,26 @@ content_language = "zh-CN"
 code_comment_language = "zh-CN"
 
 [progress]
-next_problem = 85
-completed_count = 84
-completed_ranges = ["0001-0084"]
+next_problem = 87
+completed_count = 86
+completed_ranges = ["0001-0086"]
 premium_skipped = []
 blocked = []
 needs_revision = []
 
 [last_batch]
 status = "completed"
-start = 84
-end = 84
-completed = 1
+start = 85
+end = 86
+completed = 2
 premium_skipped = []
-summary = "完成 0084 Largest Rectangle in Histogram 十语言 RST 教程，覆盖递增下标栈、弹栈边界结算和尾部虚拟哨兵。"
+summary = "完成 0085 Maximal Rectangle 与 0086 Partition List 十语言 RST 教程，覆盖按行柱高压缩、柱状图复用、稳定双链分区和节点守恒。"
 
 [next_batch]
 status = "ready"
-start = 85
-end = 86
-purpose = "继续生成 0085 Maximal Rectangle 与 0086 Partition List；一道 Hard 加一道 Medium 的难度预算为 6。"
+start = 87
+end = 88
+purpose = "继续生成 0087 Scramble String 与 0088 Merge Sorted Array；一道 Hard 加一道 Easy 的难度预算为 5，0089 Medium 留到后续批次。"
 
 [review]
 status = "completed"
@@ -71,7 +71,7 @@ index = "state/CONCEPT_LEDGER.toml"
 latest_record = "state/concepts/0074-0100.toml"
 
 [next_action]
-summary = "等待用户在对话中继续后，生成 0085 Maximal Rectangle 与 0086 Partition List。"
+summary = "等待用户在对话中继续后，生成 0087 Scramble String 与 0088 Merge Sorted Array。"
 
 [last_update]
-summary = "已生成并验证 0084 Largest Rectangle in Histogram，进度推进到 0085。"
+summary = "已生成并验证 0085 Maximal Rectangle 与 0086 Partition List，进度推进到 0087。"

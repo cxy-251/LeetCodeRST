@@ -94,32 +94,34 @@ LeetCode 0001–0100
 #. `0082. Remove Duplicates from Sorted List II <0082-remove-duplicates-from-sorted-list-ii.rst>`_
 #. `0083. Remove Duplicates from Sorted List <0083-remove-duplicates-from-sorted-list.rst>`_
 #. `0084. Largest Rectangle in Histogram <0084-largest-rectangle-in-histogram.rst>`_
+#. `0085. Maximal Rectangle <0085-maximal-rectangle.rst>`_
+#. `0086. Partition List <0086-partition-list.rst>`_
 
 阶段状态
 --------
 
-``0001`` 至 ``0084`` 的首轮教程已经完成。``0001`` 至 ``0050`` 的审查规则正在应用于
+``0001`` 至 ``0086`` 的首轮教程已经完成。``0001`` 至 ``0050`` 的审查规则正在应用于
 ``0051`` 至 ``0100`` 的新题。
 
 下一内容批次
 ------------
 
-下一批从 ``0085`` 开始：
+下一批从 ``0087`` 开始：
 
-* ``0085. Maximal Rectangle``：Hard；
-* ``0086. Partition List``：Medium。
+* ``0087. Scramble String``：Hard；
+* ``0088. Merge Sorted Array``：Easy。
 
-两题难度总分为 6，符合单批预算。
+两题难度总分为 5；``0089. Gray Code`` 为 Medium，加入后会超过单批预算。
 
-0084 学习重点
----------------
+0085–0086 学习重点
+------------------
 
-* 用非递减下标栈保存尚未遇到右侧更矮柱的候选；
-* 当前柱更矮时，弹栈柱子的右边界首次确定；
-* 弹栈后的新栈顶给出左侧第一个严格更矮柱；
-* 用局部零高度哨兵统一结算非递减后缀，不修改输入；
-* 通过每个下标最多入栈、出栈各一次证明摊还 ``O(n)``；
-* 根据约束推导面积上界，并在固定宽度语言中使用 64 位中间乘法。
+* 把每行视为矩形底边，维护每列向上的连续 ``'1'`` 高度；
+* 每行复用柱状图单调栈，使总时间与矩阵单元格数量线性；
+* 通过唯一底边行证明所有合法矩形都会被覆盖；
+* 链表分区使用两条尾插链，分别收集 ``< x`` 和 ``>= x`` 节点；
+* 每个节点追加前先断开旧后继，避免旧拓扑形成错误跨链或环；
+* 两条链只尾插，因此分区内部相对顺序保持不变。
 
 关联题目
 --------

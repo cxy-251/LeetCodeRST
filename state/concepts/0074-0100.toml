@@ -1,14 +1,14 @@
 [meta]
 version = 1
 range = "0074-0100"
-last_problem = 84
+last_problem = 86
 inherits = "state/concepts/0051-0100.toml"
 
 [updates]
-"julia_r.zero_based_algorithm_coordinates" = "0051、0052、0054、0059、0060、0061、0062、0063、0064、0066、0067、0068、0073、0074、0076、0079、0080、0081、0084 把零基状态映射到一基容器；累计 25 次；0084 直接以一基柱子下标和 n+1 虚拟右边界表达宽度。"
-"syntax.javascript_avoid_bitwise_2pow31" = "0051、0052 的 TypeScript 位掩码被 n <= 9 严格约束；0062-0084 的整数状态继续避免无必要位运算，状态更新为 reinforced。"
+"julia_r.zero_based_algorithm_coordinates" = "0051、0052、0054、0059、0060、0061、0062、0063、0064、0066、0067、0068、0073、0074、0076、0079、0080、0081、0084、0085 把零基状态映射到一基容器；累计 26 次；0085 以一基列下标和 columns+1 虚拟右边界表达每行柱状图。"
+"syntax.javascript_avoid_bitwise_2pow31" = "0051、0052 的 TypeScript 位掩码被 n <= 9 严格约束；0062-0086 的整数状态继续避免无必要位运算，状态更新为 reinforced。"
 "proof.binary_search_candidate_interval" = "0033-0035、0069、0074 与 0081 持续使用候选区间安全删除半区；0081 新增重复端点消歧并明确最坏线性退化。"
-"proof.in_place_multiset_conservation" = "0026、0027、0031、0041、0048、0075 与 0080 通过覆盖或交换维护目标多重集；0082、0083 改为链表节点子集语义，不计入该原地数组守恒记录。"
+"proof.in_place_multiset_conservation" = "0026、0027、0031、0041、0048、0075 与 0080 通过覆盖或交换维护目标多重集；0082、0083、0086 使用链表节点子集或重排语义，不计入该原地数组守恒记录。"
 
 [concepts]
 "algorithm.matrix_flattened_binary_search" = "kind=algorithm; introduced=0074; last=0074; occurrences=1; teaching_state=explained; note=把规则矩阵按行视为长度 m*n 的虚拟有序数组，用 mid/cols 与 mid%cols 读取坐标。"
@@ -45,10 +45,19 @@ inherits = "state/concepts/0051-0100.toml"
 "rust.mutable_link_slot_deletion" = "kind=language_boundary; introduced=0082; last=0082; occurrences=1; teaching_state=explained; note=Rust 用 &mut Option<Box<ListNode>> 表示当前所有权槽位，重复时以后继替换槽位并自动释放旧 Box。"
 "algorithm.sorted_list_keep_first_of_run" = "kind=algorithm; introduced=0083; last=0083; occurrences=1; teaching_state=explained; note=固定每个值段首节点，持续绕过与其同值的后继，再推进到下一值段。"
 "proof.sorted_list_run_first_node_conservation" = "kind=proof; introduced=0083; last=0083; occurrences=1; teaching_state=explained; note=只删除同值后继，首个不同值节点保持连接；结果恰好保留每段第一个原节点且顺序不变。"
-"interface.linked_list_node_reuse" = "kind=interface; introduced=0082; last=0083; occurrences=2; teaching_state=reinforced; note=0082、0083 都通过重连原节点返回结果；C/C++ 不释放移出节点，Rust 所有权自动回收，GC 语言由运行时管理。"
-"algorithm.histogram_monotonic_index_stack" = "kind=algorithm; introduced=0084; last=0084; occurrences=1; teaching_state=explained; note=保存高度非递减的柱子下标；遇到更矮柱时弹栈并结算以被弹柱高为限制的最大矩形。"
-"proof.histogram_pop_boundaries" = "kind=proof; introduced=0084; last=0084; occurrences=1; teaching_state=explained; note=当前 right 是弹出柱右侧首个严格更矮位置，弹栈后的新栈顶是左侧首个严格更矮位置。"
-"proof.histogram_optimal_rectangle_coverage" = "kind=proof; introduced=0084; last=0084; occurrences=1; teaching_state=explained; note=任意最优矩形选择区间最矮柱，算法为该柱计算的最大可扩展区间至少覆盖该矩形。"
-"complexity.histogram_stack_amortized_linear" = "kind=complexity; introduced=0084; last=0084; occurrences=1; teaching_state=explained; note=每个真实下标只入栈一次且最多出栈一次，总栈操作和扫描时间为 O(n)。"
-"pattern.virtual_sentinel_flush" = "kind=pattern; introduced=0084; last=0084; occurrences=1; teaching_state=explained; note=循环在 n 位置使用局部零高度，统一清空非递减后缀而不修改输入数组。"
+"interface.linked_list_node_reuse" = "kind=interface; introduced=0082; last=0086; occurrences=3; teaching_state=reinforced; note=0082、0083、0086 都通过重连原节点返回结果；0086 强化稳定分区、逐节点断开和无环拼接。"
+"algorithm.histogram_monotonic_index_stack" = "kind=algorithm; introduced=0084; last=0085; occurrences=2; teaching_state=reinforced; note=0084 处理单柱状图；0085 在每行动态柱高上复用同一弹栈边界逻辑。"
+"proof.histogram_pop_boundaries" = "kind=proof; introduced=0084; last=0085; occurrences=2; teaching_state=reinforced; note=当前更矮位置确定右边界，弹栈后的新栈顶确定左边界；0085 对每一行重复成立。"
+"proof.histogram_optimal_rectangle_coverage" = "kind=proof; introduced=0084; last=0085; occurrences=2; teaching_state=reinforced; note=0084 由区间最矮柱覆盖最优柱状图矩形；0085 把该证明嵌入每个底边行。"
+"complexity.histogram_stack_amortized_linear" = "kind=complexity; introduced=0084; last=0085; occurrences=2; teaching_state=reinforced; note=单行每列最多入栈、出栈各一次；全部 rows 行总时间 O(rows*columns)。"
+"pattern.virtual_sentinel_flush" = "kind=pattern; introduced=0084; last=0085; occurrences=2; teaching_state=reinforced; note=在虚拟右边界使用局部零高度统一结算后缀，不写入柱高数组或矩阵。"
 "numeric.histogram_area_bound" = "kind=numeric; introduced=0084; last=0084; occurrences=1; teaching_state=explained; note=n<=100000 且 height<=10000，最大面积<=10^9；固定宽度语言仍使用 64 位中间乘法。"
+"algorithm.maximal_rectangle_row_histograms" = "kind=algorithm; introduced=0085; last=0085; occurrences=1; teaching_state=explained; note=逐行维护每列向上的连续 1 高度，把每个底边行转换为柱状图最大矩形。"
+"proof.maximal_rectangle_bottom_row_reduction" = "kind=proof; introduced=0085; last=0085; occurrences=1; teaching_state=explained; note=每个合法全一矩形有唯一底边行，并在该行对应一个连续柱区间，因此会被柱状图算法覆盖。"
+"complexity.maximal_rectangle_linear_cells" = "kind=complexity; introduced=0085; last=0085; occurrences=1; teaching_state=explained; note=柱高更新和每行摊还线性栈操作合计 O(rows*columns)，工作空间 O(columns)。"
+"numeric.maximal_rectangle_area_bound" = "kind=numeric; introduced=0085; last=0085; occurrences=1; teaching_state=explained; note=rows,columns<=200，最大面积<=40000，适合 32 位有符号返回值。"
+"algorithm.partition_list_two_stable_chains" = "kind=algorithm; introduced=0086; last=0086; occurrences=1; teaching_state=explained; note=按原扫描顺序把节点尾插到 <x 与 >=x 两条链，最后把前链尾连接到后链头。"
+"proof.partition_list_stable_order" = "kind=proof; introduced=0086; last=0086; occurrences=1; teaching_state=explained; note=两条分区链都只尾插，同一分区内先扫描到的节点始终位于后扫描节点之前。"
+"proof.partition_list_node_conservation" = "kind=proof; introduced=0086; last=0086; occurrences=1; teaching_state=explained; note=每个原节点被取出一次并加入且只加入一条链；结果不复制、不遗漏且不重复节点。"
+"pattern.linked_list_detach_before_append" = "kind=pattern; introduced=0086; last=0086; occurrences=1; teaching_state=explained; note=追加前先保存后继并把 current.next 置空，消除旧拓扑跨分区边并保证最终无环。"
+"rust.partition_list_owned_tail_slots" = "kind=language_boundary; introduced=0086; last=0086; occurrences=1; teaching_state=explained; note=Rust 用两个 Option<Box<ListNode>> 所有权链和可变尾槽位稳定追加节点，最后把 after 所有权移入 before 尾槽位。"
