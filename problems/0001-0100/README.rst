@@ -93,30 +93,33 @@ LeetCode 0001–0100
 #. `0081. Search in Rotated Sorted Array II <0081-search-in-rotated-sorted-array-ii.rst>`_
 #. `0082. Remove Duplicates from Sorted List II <0082-remove-duplicates-from-sorted-list-ii.rst>`_
 #. `0083. Remove Duplicates from Sorted List <0083-remove-duplicates-from-sorted-list.rst>`_
+#. `0084. Largest Rectangle in Histogram <0084-largest-rectangle-in-histogram.rst>`_
 
 阶段状态
 --------
 
-``0001`` 至 ``0083`` 的首轮教程已经完成。``0001`` 至 ``0050`` 的审查规则正在应用于
+``0001`` 至 ``0084`` 的首轮教程已经完成。``0001`` 至 ``0050`` 的审查规则正在应用于
 ``0051`` 至 ``0100`` 的新题。
 
 下一内容批次
 ------------
 
-下一批从 ``0084`` 开始：
+下一批从 ``0085`` 开始：
 
-* ``0084. Largest Rectangle in Histogram``：Hard。
+* ``0085. Maximal Rectangle``：Hard；
+* ``0086. Partition List``：Medium。
 
-单题难度总分为 4；``0085. Maximal Rectangle`` 也是 Hard，留到后续批次。
+两题难度总分为 6，符合单批预算。
 
-0081–0083 学习重点
-------------------
+0084 学习重点
+---------------
 
-* 重复端点与中点相等时，先收缩已确认非目标的边界以恢复有序性信息；
-* 重复值可能让旋转数组二分从 ``O(log n)`` 退化到最坏 ``O(n)``；
-* 0082 使用哨兵前驱绕过整个重复值段，重复值不保留任何节点；
-* 0083 固定每个值段首节点，连续绕过相同后继，只保留一个副本；
-* 链表去重只重连原节点，结果保持原有相对顺序和节点身份。
+* 用非递减下标栈保存尚未遇到右侧更矮柱的候选；
+* 当前柱更矮时，弹栈柱子的右边界首次确定；
+* 弹栈后的新栈顶给出左侧第一个严格更矮柱；
+* 用局部零高度哨兵统一结算非递减后缀，不修改输入；
+* 通过每个下标最多入栈、出栈各一次证明摊还 ``O(n)``；
+* 根据约束推导面积上界，并在固定宽度语言中使用 64 位中间乘法。
 
 关联题目
 --------

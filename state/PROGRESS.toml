@@ -11,26 +11,26 @@ content_language = "zh-CN"
 code_comment_language = "zh-CN"
 
 [progress]
-next_problem = 84
-completed_count = 83
-completed_ranges = ["0001-0083"]
+next_problem = 85
+completed_count = 84
+completed_ranges = ["0001-0084"]
 premium_skipped = []
 blocked = []
 needs_revision = []
 
 [last_batch]
 status = "completed"
-start = 81
-end = 83
-completed = 3
+start = 84
+end = 84
+completed = 1
 premium_skipped = []
-summary = "完成 0081 Search in Rotated Sorted Array II、0082 Remove Duplicates from Sorted List II 与 0083 Remove Duplicates from Sorted List 十语言 RST 教程，覆盖重复端点消歧、整段删除和每值保留一个节点。"
+summary = "完成 0084 Largest Rectangle in Histogram 十语言 RST 教程，覆盖递增下标栈、弹栈边界结算和尾部虚拟哨兵。"
 
 [next_batch]
 status = "ready"
-start = 84
-end = 84
-purpose = "继续生成 0084 Largest Rectangle in Histogram；单道 Hard 的难度预算为 4，0085 Hard 留到后续批次。"
+start = 85
+end = 86
+purpose = "继续生成 0085 Maximal Rectangle 与 0086 Partition List；一道 Hard 加一道 Medium 的难度预算为 6。"
 
 [review]
 status = "completed"
@@ -71,7 +71,7 @@ index = "state/CONCEPT_LEDGER.toml"
 latest_record = "state/concepts/0074-0100.toml"
 
 [next_action]
-summary = "等待用户在对话中继续后，生成 0084 Largest Rectangle in Histogram。"
+summary = "等待用户在对话中继续后，生成 0085 Maximal Rectangle 与 0086 Partition List。"
 
 [last_update]
-summary = "已生成并验证 0081 Search in Rotated Sorted Array II、0082 Remove Duplicates from Sorted List II 与 0083 Remove Duplicates from Sorted List，进度推进到 0084。"
+summary = "已生成并验证 0084 Largest Rectangle in Histogram，进度推进到 0085。"

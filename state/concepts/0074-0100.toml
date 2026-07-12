@@ -1,12 +1,12 @@
 [meta]
 version = 1
 range = "0074-0100"
-last_problem = 83
+last_problem = 84
 inherits = "state/concepts/0051-0100.toml"
 
 [updates]
-"julia_r.zero_based_algorithm_coordinates" = "0051、0052、0054、0059、0060、0061、0062、0063、0064、0066、0067、0068、0073、0074、0076、0079、0080、0081 把零基状态映射到一基容器；累计 24 次；0081 直接使用一基闭区间表达旋转数组二分。"
-"syntax.javascript_avoid_bitwise_2pow31" = "0051、0052 的 TypeScript 位掩码被 n <= 9 严格约束；0062-0083 的整数状态继续避免无必要位运算，状态更新为 reinforced。"
+"julia_r.zero_based_algorithm_coordinates" = "0051、0052、0054、0059、0060、0061、0062、0063、0064、0066、0067、0068、0073、0074、0076、0079、0080、0081、0084 把零基状态映射到一基容器；累计 25 次；0084 直接以一基柱子下标和 n+1 虚拟右边界表达宽度。"
+"syntax.javascript_avoid_bitwise_2pow31" = "0051、0052 的 TypeScript 位掩码被 n <= 9 严格约束；0062-0084 的整数状态继续避免无必要位运算，状态更新为 reinforced。"
 "proof.binary_search_candidate_interval" = "0033-0035、0069、0074 与 0081 持续使用候选区间安全删除半区；0081 新增重复端点消歧并明确最坏线性退化。"
 "proof.in_place_multiset_conservation" = "0026、0027、0031、0041、0048、0075 与 0080 通过覆盖或交换维护目标多重集；0082、0083 改为链表节点子集语义，不计入该原地数组守恒记录。"
 
@@ -46,3 +46,9 @@ inherits = "state/concepts/0051-0100.toml"
 "algorithm.sorted_list_keep_first_of_run" = "kind=algorithm; introduced=0083; last=0083; occurrences=1; teaching_state=explained; note=固定每个值段首节点，持续绕过与其同值的后继，再推进到下一值段。"
 "proof.sorted_list_run_first_node_conservation" = "kind=proof; introduced=0083; last=0083; occurrences=1; teaching_state=explained; note=只删除同值后继，首个不同值节点保持连接；结果恰好保留每段第一个原节点且顺序不变。"
 "interface.linked_list_node_reuse" = "kind=interface; introduced=0082; last=0083; occurrences=2; teaching_state=reinforced; note=0082、0083 都通过重连原节点返回结果；C/C++ 不释放移出节点，Rust 所有权自动回收，GC 语言由运行时管理。"
+"algorithm.histogram_monotonic_index_stack" = "kind=algorithm; introduced=0084; last=0084; occurrences=1; teaching_state=explained; note=保存高度非递减的柱子下标；遇到更矮柱时弹栈并结算以被弹柱高为限制的最大矩形。"
+"proof.histogram_pop_boundaries" = "kind=proof; introduced=0084; last=0084; occurrences=1; teaching_state=explained; note=当前 right 是弹出柱右侧首个严格更矮位置，弹栈后的新栈顶是左侧首个严格更矮位置。"
+"proof.histogram_optimal_rectangle_coverage" = "kind=proof; introduced=0084; last=0084; occurrences=1; teaching_state=explained; note=任意最优矩形选择区间最矮柱，算法为该柱计算的最大可扩展区间至少覆盖该矩形。"
+"complexity.histogram_stack_amortized_linear" = "kind=complexity; introduced=0084; last=0084; occurrences=1; teaching_state=explained; note=每个真实下标只入栈一次且最多出栈一次，总栈操作和扫描时间为 O(n)。"
+"pattern.virtual_sentinel_flush" = "kind=pattern; introduced=0084; last=0084; occurrences=1; teaching_state=explained; note=循环在 n 位置使用局部零高度，统一清空非递减后缀而不修改输入数组。"
+"numeric.histogram_area_bound" = "kind=numeric; introduced=0084; last=0084; occurrences=1; teaching_state=explained; note=n<=100000 且 height<=10000，最大面积<=10^9；固定宽度语言仍使用 64 位中间乘法。"
