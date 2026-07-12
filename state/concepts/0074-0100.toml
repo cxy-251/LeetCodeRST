@@ -1,18 +1,18 @@
 [meta]
 version = 1
 range = "0074-0100"
-last_problem = 77
+last_problem = 80
 inherits = "state/concepts/0051-0100.toml"
 
 [updates]
-"julia_r.zero_based_algorithm_coordinates" = "0051、0052、0054、0059、0060、0061、0062、0063、0064、0066、0067、0068、0073、0074、0076 把零基状态映射到一基容器；累计 21 次；0076 新增 ASCII 字节值加一映射频次数组。"
-"syntax.javascript_avoid_bitwise_2pow31" = "0051、0052 的 TypeScript 位掩码被 n <= 9 严格约束；0062-0077 的整数状态继续避免无必要位运算，状态更新为 reinforced。"
+"julia_r.zero_based_algorithm_coordinates" = "0051、0052、0054、0059、0060、0061、0062、0063、0064、0066、0067、0068、0073、0074、0076、0079、0080 把零基状态映射到一基容器；累计 23 次；0079 强化网格坐标，0080 强化有效长度到倒数第二项的位置换算。"
+"syntax.javascript_avoid_bitwise_2pow31" = "0051、0052 的 TypeScript 位掩码被 n <= 9 严格约束；0062-0080 的整数状态继续避免无必要位运算，状态更新为 reinforced。"
 "proof.binary_search_candidate_interval" = "0033-0035、0069 与 0074 持续使用单调谓词或有序比较安全删除半区；0074 新增虚拟扁平矩阵坐标。"
-"proof.in_place_multiset_conservation" = "0026、0027、0031、0041、0048 与 0075 都只覆盖允许位置或交换已有元素；0075 通过纯交换强化元素多重集守恒。"
-"string.ascii_byte_character_equivalence" = "0058、0065、0067、0068、0071、0072、0076 都由精确 ASCII 字符域证明字节、UTF-16 代码单元和字符位置等价；累计 7 次。"
-"data_structure.mutable_backtracking_path" = "0051 与 0077 使用固定或动态路径保存递归前缀并在返回后恢复；累计 11 次，教学状态保持 internalized。"
-"proof.backtracking_prefix_partition" = "0051 与 0077 按下一项选择把答案集合划分为互斥且完备的前缀分支；累计 10 次，教学状态保持 internalized。"
-"proof.reversible_constraint_state" = "0051 使用约束掩码恢复，0077 使用 push/pop 恢复路径；累计 10 次，教学状态保持 internalized。"
+"proof.in_place_multiset_conservation" = "0026、0027、0031、0041、0048、0075 与 0080 都只覆盖允许位置或交换已有元素；0080 强化保留前两个副本并保持相对顺序。"
+"string.ascii_byte_character_equivalence" = "0058、0065、0067、0068、0071、0072、0076、0079 都由精确 ASCII 字符域证明字节、UTF-16 代码单元和字符位置等价；累计 8 次。"
+"data_structure.mutable_backtracking_path" = "0051、0077 与 0078 使用固定或动态路径保存递归前缀并在返回后恢复；累计 12 次，教学状态保持 internalized。"
+"proof.backtracking_prefix_partition" = "0051、0077 与 0078 按下一项选择把答案集合划分为互斥且完备的前缀分支；累计 11 次，教学状态保持 internalized。"
+"proof.reversible_constraint_state" = "0051 使用约束掩码恢复，0077、0078 使用 push/pop，0079 使用字符哨兵恢复；累计 12 次，教学状态保持 internalized。"
 
 [concepts]
 "algorithm.matrix_flattened_binary_search" = "kind=algorithm; introduced=0074; last=0074; occurrences=1; teaching_state=explained; note=把规则矩阵按行视为长度 m*n 的虚拟有序数组，用 mid/cols 与 mid%cols 读取坐标。"
@@ -31,3 +31,13 @@ inherits = "state/concepts/0051-0100.toml"
 "proof.combination_last_start_pruning" = "kind=proof; introduced=0077; last=0077; occurrences=1; teaching_state=explained; note=选择 value 后可用数字数量为 n-value+1；少于 needed 时不可能填满路径。"
 "complexity.combination_output_size" = "kind=complexity; introduced=0077; last=0077; occurrences=1; teaching_state=explained; note=C(n,k) 个答案各复制 k 个整数，时间和返回空间均由 Theta(C(n,k)*k) 主导。"
 "c.transactional_combination_result" = "kind=language_boundary; introduced=0077; last=0077; occurrences=1; teaching_state=explained; note=C 预先计算组合数容量，为每个叶子分配独立行；任一失败时释放全部已完成行与元数据。"
+"algorithm.subsets_node_snapshot_backtracking" = "kind=algorithm; introduced=0078; last=0078; occurrences=1; teaching_state=explained; note=任意长度路径都是合法子集，每个递归节点先复制路径，再枚举更大输入下标扩展。"
+"proof.subset_increasing_index_bijection" = "kind=proof; introduced=0078; last=0078; occurrences=1; teaching_state=explained; note=每个子集与唯一严格递增输入下标序列一一对应，保证完整且无重复。"
+"complexity.subset_total_payload" = "kind=complexity; introduced=0078; last=0078; occurrences=1; teaching_state=explained; note=2^n 个子集中每个元素出现一半，全部结果复制 n*2^(n-1) 个整数。"
+"algorithm.word_search_in_place_marking" = "kind=algorithm; introduced=0079; last=0079; occurrences=1; teaching_state=explained; note=匹配当前格后写入输入域外哨兵，搜索四邻并恢复字符，以常数标记空间禁止同一路径复用格子。"
+"proof.word_search_restore_on_success" = "kind=proof; introduced=0079; last=0079; occurrences=1; teaching_state=explained; note=四方向结果先汇总到 found，再统一恢复原字符，短路成功也不污染矩阵。"
+"complexity.word_search_three_way_branch_bound" = "kind=complexity; introduced=0079; last=0079; occurrences=1; teaching_state=explained; note=每个起点首步最多四向，后续不能返回已标记前一格，最坏上界写为 O(mn*3^L)。"
+"algorithm.sorted_array_keep_at_most_two" = "kind=algorithm; introduced=0080; last=0080; occurrences=1; teaching_state=explained; note=write<2 时保留，否则仅在当前值不同于有效前缀倒数第二项时写入。"
+"proof.sorted_array_second_last_witness" = "kind=proof; introduced=0080; last=0080; occurrences=1; teaching_state=explained; note=有序前缀中倒数第二项等于当前值时，末尾两项都等于当前值，当前副本必须跳过。"
+"interface.valid_prefix_result_contract" = "kind=interface; introduced=0080; last=0080; occurrences=1; teaching_state=explained; note=返回长度 k 与 nums[0:k] 共同定义结果，k 之后内容未定义且无需整理。"
+"interface.r_valid_prefix_copy_return" = "kind=language_boundary; introduced=0080; last=0080; occurrences=1; teaching_state=explained; note=R 返回 k 与修改后的向量；调用者只读取 seq_len(k) 对应的有效前缀。"

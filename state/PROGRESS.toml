@@ -11,26 +11,26 @@ content_language = "zh-CN"
 code_comment_language = "zh-CN"
 
 [progress]
-next_problem = 78
-completed_count = 77
-completed_ranges = ["0001-0077"]
+next_problem = 81
+completed_count = 80
+completed_ranges = ["0001-0080"]
 premium_skipped = []
 blocked = []
 needs_revision = []
 
 [last_batch]
 status = "completed"
-start = 76
-end = 77
-completed = 2
+start = 78
+end = 80
+completed = 3
 premium_skipped = []
-summary = "完成 0076 Minimum Window Substring 与 0077 Combinations 十语言 RST 教程，覆盖缺口计数滑动窗口和严格递增组合回溯。"
+summary = "完成 0078 Subsets、0079 Word Search 与 0080 Remove Duplicates from Sorted Array II 十语言 RST 教程，覆盖节点提交子集、网格原地回溯和最多保留两次的有效前缀压缩。"
 
 [next_batch]
 status = "ready"
-start = 78
-end = 80
-purpose = "继续生成 0078 Subsets、0079 Word Search 与 0080 Remove Duplicates from Sorted Array II；三道 Medium 的难度预算为 6。"
+start = 81
+end = 83
+purpose = "继续生成 0081 Search in Rotated Sorted Array II、0082 Remove Duplicates from Sorted List II 与 0083 Remove Duplicates from Sorted List；两道 Medium 加一道 Easy 的难度预算为 5。"
 
 [review]
 status = "completed"
@@ -71,7 +71,7 @@ index = "state/CONCEPT_LEDGER.toml"
 latest_record = "state/concepts/0074-0100.toml"
 
 [next_action]
-summary = "等待用户在对话中继续后，生成 0078 Subsets、0079 Word Search 与 0080 Remove Duplicates from Sorted Array II。"
+summary = "等待用户在对话中继续后，生成 0081 Search in Rotated Sorted Array II、0082 Remove Duplicates from Sorted List II 与 0083 Remove Duplicates from Sorted List。"
 
 [last_update]
-summary = "已生成并验证 0076 Minimum Window Substring 与 0077 Combinations，进度推进到 0078。"
+summary = "已生成并验证 0078 Subsets、0079 Word Search 与 0080 Remove Duplicates from Sorted Array II，进度推进到 0081。"

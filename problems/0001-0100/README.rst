@@ -87,33 +87,37 @@ LeetCode 0001–0100
 #. `0075. Sort Colors <0075-sort-colors.rst>`_
 #. `0076. Minimum Window Substring <0076-minimum-window-substring.rst>`_
 #. `0077. Combinations <0077-combinations.rst>`_
+#. `0078. Subsets <0078-subsets.rst>`_
+#. `0079. Word Search <0079-word-search.rst>`_
+#. `0080. Remove Duplicates from Sorted Array II
+   <0080-remove-duplicates-from-sorted-array-ii.rst>`_
 
 阶段状态
 --------
 
-``0001`` 至 ``0077`` 的首轮教程已经完成。``0001`` 至 ``0050`` 的审查规则正在应用于
+``0001`` 至 ``0080`` 的首轮教程已经完成。``0001`` 至 ``0050`` 的审查规则正在应用于
 ``0051`` 至 ``0100`` 的新题。
 
 下一内容批次
 ------------
 
-下一批从 ``0078`` 开始：
+下一批从 ``0081`` 开始：
 
-* ``0078. Subsets``：Medium；
-* ``0079. Word Search``：Medium；
-* ``0080. Remove Duplicates from Sorted Array II``：Medium。
+* ``0081. Search in Rotated Sorted Array II``：Medium；
+* ``0082. Remove Duplicates from Sorted List II``：Medium；
+* ``0083. Remove Duplicates from Sorted List``：Easy。
 
-三题难度总分为 6，符合单批预算。
+三题难度总分为 5；``0084. Largest Rectangle in Histogram`` 为 Hard，留到后续批次。
 
-0076–0077 学习重点
+0078–0080 学习重点
 ------------------
 
-* 用可正可负的频次差值表达字符缺口、刚好满足和多余副本；
-* 用总缺口 ``missing`` 在常数时间判断滑动窗口是否覆盖目标多重集；
-* 对每个右端持续收缩左端，检查该右端对应的全部最短可行候选；
-* 用严格递增路径为每个组合建立唯一表示并避免额外去重；
-* 根据剩余所需数量计算 ``last_start = n-needed+1``，剪除容量不足分支；
-* 保存组合时创建独立路径快照，并把 ``k`` 项复制计入输出复杂度。
+* 幂集回溯在每个递归节点保存答案，空路径也对应合法子集；
+* 用递增输入下标为每个子集建立唯一表示，并复制可变路径快照；
+* 网格搜索用输入字符域之外的哨兵标记当前路径，返回前统一恢复；
+* 成功分支也必须恢复矩阵，避免短路返回污染调用者输入；
+* 有序数组最多保留两次时，与有效前缀倒数第二项比较；
+* 返回长度与有效前缀共同定义原地数组题结果，后缀内容不参与判定。
 
 关联题目
 --------
