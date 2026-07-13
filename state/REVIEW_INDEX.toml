@@ -11,16 +11,14 @@ pr_metadata_is_evidence = false
 status = "completed"
 
 [canonical]
-legacy_catalog = "docs/REVIEW_CATALOG_0001_0050.rst"
-current_catalog = "docs/REVIEW_CATALOG_0051_0100.rst"
-legacy_forward_rules = "docs/FORWARD_RULES_0051_0100.rst"
 consolidated_forward_rules = "docs/FORWARD_RULES_0101_0150.rst"
-consolidation_record = "state/RULE_CONSOLIDATION_0051_0100.toml"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
 review_policy = "docs/REVIEW_AND_PREVENTION_POLICY.rst"
+artifact_lifecycle = "docs/ARTIFACT_LIFECYCLE_POLICY.rst"
 solution_policy = "docs/SOLUTION_AND_TYPES_POLICY.rst"
 problem_template = "docs/PROBLEM_TEMPLATE.rst"
 conversation_workflow = "docs/AUTOMATION_DIRECT_MAIN_POLICY.rst"
+archive_index = "archive/README.rst"
 
 [precedence]
 order = [
@@ -28,145 +26,24 @@ order = [
   "state/REVIEW_INDEX.toml corrections",
   "completed forward-rule documents",
   "specialized policies and template",
-  "batch review records and findings",
+  "archive review evidence",
   "commit, PR, and conversation summaries",
 ]
 statement = "Higher-priority sources supersede lower-priority sources when wording conflicts."
 
-[records.legacy]
-path = "state/REVIEW_0001_0050.toml"
-covered_ranges = ["0001-0015"]
-status = "complete_for_range"
-findings = "docs/REVIEW_FINDINGS_0001_0050.rst"
-
-[records.batch_0016_0020]
-path = "state/reviews/0016-0020.toml"
-start = 16
-end = 20
-status = "completed"
-findings = "docs/review-findings/0016-0020.rst"
-
-[records.batch_0021_0025]
-path = "state/reviews/0021-0025.toml"
-start = 21
-end = 25
-status = "completed"
-findings = "docs/review-findings/0021-0025.rst"
-
-[records.batch_0026_0030]
-path = "state/reviews/0026-0030.toml"
-start = 26
-end = 30
-status = "completed"
-findings = "docs/review-findings/0026-0030.rst"
-
-[records.batch_0031_0035]
-path = "state/reviews/0031-0035.toml"
-start = 31
-end = 35
-status = "completed"
-findings = "docs/review-findings/0031-0035.rst"
-
-[records.batch_0036_0040]
-path = "state/reviews/0036-0040.toml"
-start = 36
-end = 40
-status = "completed"
-findings = "docs/review-findings/0036-0040.rst"
-
-[records.batch_0041_0045]
-path = "state/reviews/0041-0045.toml"
-start = 41
-end = 45
-status = "completed"
-findings = "docs/review-findings/0041-0045.rst"
-
-[records.batch_0046_0050]
-path = "state/reviews/0046-0050.toml"
-start = 46
+[archives.first_round]
+start = 1
 end = 50
-status = "completed"
-findings = "docs/review-findings/0046-0050.rst"
+status = "archived"
+manifest = "archive/reviews/0001-0050/MANIFEST.rst"
+historical_forward_rules = "archive/reviews/0001-0050/FORWARD_RULES_0051_0100.rst"
 
-[records.batch_0051_0055]
-path = "state/reviews/0051-0055.toml"
-round = 2
+[archives.second_round]
 start = 51
-end = 55
-status = "completed"
-findings = "docs/review-findings/0051-0055.rst"
-
-[records.batch_0056_0060]
-path = "state/reviews/0056-0060.toml"
-round = 2
-start = 56
-end = 60
-status = "completed"
-findings = "docs/review-findings/0056-0060.rst"
-
-[records.batch_0061_0065]
-path = "state/reviews/0061-0065.toml"
-round = 2
-start = 61
-end = 65
-status = "completed"
-findings = "docs/review-findings/0061-0065.rst"
-
-[records.batch_0066_0070]
-path = "state/reviews/0066-0070.toml"
-round = 2
-start = 66
-end = 70
-status = "completed"
-findings = "docs/review-findings/0066-0070.rst"
-
-[records.batch_0071_0075]
-path = "state/reviews/0071-0075.toml"
-round = 2
-start = 71
-end = 75
-status = "completed"
-findings = "docs/review-findings/0071-0075.rst"
-
-[records.batch_0076_0080]
-path = "state/reviews/0076-0080.toml"
-round = 2
-start = 76
-end = 80
-status = "completed"
-findings = "docs/review-findings/0076-0080.rst"
-
-[records.batch_0081_0085]
-path = "state/reviews/0081-0085.toml"
-round = 2
-start = 81
-end = 85
-status = "completed"
-findings = "docs/review-findings/0081-0085.rst"
-
-[records.batch_0086_0090]
-path = "state/reviews/0086-0090.toml"
-round = 2
-start = 86
-end = 90
-status = "completed"
-findings = "docs/review-findings/0086-0090.rst"
-
-[records.batch_0091_0095]
-path = "state/reviews/0091-0095.toml"
-round = 2
-start = 91
-end = 95
-status = "completed"
-findings = "docs/review-findings/0091-0095.rst"
-
-[records.batch_0096_0100]
-path = "state/reviews/0096-0100.toml"
-round = 2
-start = 96
 end = 100
-status = "completed"
-findings = "docs/review-findings/0096-0100.rst"
+status = "archived"
+manifest = "archive/reviews/0051-0100/MANIFEST.rst"
+consolidation_record = "archive/reviews/0051-0100/RULE_CONSOLIDATION.toml"
 
 [rule_consolidation]
 status = "completed"
@@ -175,7 +52,7 @@ source_end = 100
 source_batch_count = 10
 absorbed_promoted_rule_count = 81
 active_correction_count = 14
-record = "state/RULE_CONSOLIDATION_0051_0100.toml"
+record = "archive/reviews/0051-0100/RULE_CONSOLIDATION.toml"
 output = "docs/FORWARD_RULES_0101_0150.rst"
 
 [corrections.julia_unitrange]
@@ -192,7 +69,7 @@ statement = "Review findings are applied prospectively. A historical problem is 
 [corrections.execution_workflow]
 status = "active"
 supersedes = "Earlier scheduled automation, fixed automation branches, and default pull-request workflow."
-statement = "Generation, review, and repair are triggered by an explicit user message and normally enter main as one atomic commit. Branches and pull requests are used when the user selects that collaboration workflow."
+statement = "Generation, review, repair, consolidation, and archival are triggered by an explicit user message and enter main as one atomic commit. Temporary connector branches are implementation details."
 
 [corrections.r_recursive_closure_subassignment]
 status = "active"
@@ -271,31 +148,10 @@ kind = "problem_generation"
 status = "ready"
 start = 101
 end = 105
-purpose = "Generate problems 0101-0105 using docs/FORWARD_RULES_0101_0150.rst before any implementation begins."
+purpose = "Generate problems 0101-0105 using docs/FORWARD_RULES_0101_0150.rst without creating disposable intermediate reports."
 
-[rule_sources]
-base_findings = "docs/REVIEW_FINDINGS_0001_0050.rst"
-legacy_forward_rules = "docs/FORWARD_RULES_0051_0100.rst"
-consolidation_record = "state/RULE_CONSOLIDATION_0051_0100.toml"
-consolidated_forward_rules = "docs/FORWARD_RULES_0101_0150.rst"
-second_round_findings = [
-  "docs/review-findings/0051-0055.rst",
-  "docs/review-findings/0056-0060.rst",
-  "docs/review-findings/0061-0065.rst",
-  "docs/review-findings/0066-0070.rst",
-  "docs/review-findings/0071-0075.rst",
-  "docs/review-findings/0076-0080.rst",
-  "docs/review-findings/0081-0085.rst",
-  "docs/review-findings/0086-0090.rst",
-  "docs/review-findings/0091-0095.rst",
-  "docs/review-findings/0096-0100.rst",
-]
-legacy_batch_findings = [
-  "docs/review-findings/0016-0020.rst",
-  "docs/review-findings/0021-0025.rst",
-  "docs/review-findings/0026-0030.rst",
-  "docs/review-findings/0031-0035.rst",
-  "docs/review-findings/0036-0040.rst",
-  "docs/review-findings/0041-0045.rst",
-  "docs/review-findings/0046-0050.rst",
-]
+[artifact_lifecycle]
+policy = "docs/ARTIFACT_LIFECYCLE_POLICY.rst"
+active_review_batch_files = 0
+active_review_finding_files = 0
+archived_review_ranges = ["0001-0050", "0051-0100"]
