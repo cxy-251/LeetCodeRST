@@ -21,17 +21,17 @@ needs_revision = []
 [last_batch]
 status = "completed"
 kind = "second_round_review"
-start = 81
-end = 85
+start = 86
+end = 90
 completed = 5
-summary = "完成 0081-0085 第二轮逐题审查；五题核心算法正确，未发现新的确定性问题。"
+summary = "完成 0086-0090 第二轮逐题审查；五题官方输入域内算法正确，登记 Julia 修改可见性与 Gray Code n=0 扩展两项事实更正。"
 
 [next_batch]
 status = "review_ready"
 kind = "second_round_review"
-start = 86
-end = 90
-purpose = "继续读取 0086 Partition List、0087 Scramble String、0088 Merge Sorted Array、0089 Gray Code 与 0090 Subsets II 的完整正文和十语言代码。"
+start = 91
+end = 95
+purpose = "继续读取 0091 Decode Ways、0092 Reverse Linked List II、0093 Restore IP Addresses、0094 Binary Tree Inorder Traversal 与 0095 Unique Binary Search Trees II 的完整正文和十语言代码。"
 
 [review]
 status = "in_progress"
@@ -39,16 +39,16 @@ mode = "second_round_content_review"
 source = "complete_rst_content"
 start = 51
 end = 100
-current = 86
-reviewed_count = 35
+current = 91
+reviewed_count = 40
 batch_size = 5
 modify_historical_rst = false
 pr_metadata_is_evidence = false
 index = "state/REVIEW_INDEX.toml"
 legacy_catalog = "docs/REVIEW_CATALOG_0001_0050.rst"
 current_catalog = "docs/REVIEW_CATALOG_0051_0100.rst"
-latest_record = "state/reviews/0081-0085.toml"
-latest_findings = "docs/review-findings/0081-0085.rst"
+latest_record = "state/reviews/0086-0090.toml"
+latest_findings = "docs/review-findings/0086-0090.rst"
 legacy_forward_rules = "docs/FORWARD_RULES_0051_0100.rst"
 
 [quality_scope]
@@ -72,7 +72,7 @@ index = "state/CONCEPT_LEDGER.toml"
 latest_record = "state/concepts/0092-0100.toml"
 
 [next_action]
-summary = "等待用户继续后，审查 0086 Partition List 至 0090 Subsets II。"
+summary = "等待用户继续后，审查 0091 Decode Ways 至 0095 Unique Binary Search Trees II。"
 
 [last_update]
-summary = "0081-0085 第二轮审查完成；进度推进到 0086，历史题正文未修改。"
+summary = "0086-0090 第二轮审查完成；进度推进到 0091，历史题正文未修改。"

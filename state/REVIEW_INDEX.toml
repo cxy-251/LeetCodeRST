@@ -3,8 +3,8 @@ mode = "second_round_content_review"
 source = "complete_rst_content"
 start = 51
 end = 100
-current = 86
-reviewed_count = 35
+current = 91
+reviewed_count = 40
 batch_size = 5
 modify_historical_rst = false
 pr_metadata_is_evidence = false
@@ -142,6 +142,14 @@ end = 85
 status = "completed"
 findings = "docs/review-findings/0081-0085.rst"
 
+[records.batch_0086_0090]
+path = "state/reviews/0086-0090.toml"
+round = 2
+start = 86
+end = 90
+status = "completed"
+findings = "docs/review-findings/0086-0090.rst"
+
 [corrections.julia_unitrange]
 status = "active"
 source = "https://docs.julialang.org/en/v1/base/collections/#Base.UnitRange"
@@ -206,10 +214,24 @@ source = "https://stat.ethz.ch/R-manual/R-devel/library/base/html/rawConversion.
 supersedes = "0076 complexity text presenting the fixed 128-entry frequency table as the complete extra-space bound for the R adapter."
 statement = "The R adapter materializes charToRaw results for both s and t and then integer vectors. Its sliding-window state is O(1), while adapter extra and peak space are O(|s|+|t|), excluding the returned answer."
 
+[corrections.julia_merge_sorted_mutation_visibility]
+status = "active"
+sources = [
+  "https://docs.julialang.org/en/v1/manual/functions/#Argument-Passing-Behavior",
+  "https://cran.r-project.org/doc/manuals/r-release/R-lang.html#Argument-evaluation",
+]
+supersedes = "0088 text grouping Julia and R together as adapters that return the modified vector because the call boundary may have copy semantics."
+statement = "Julia arguments use pass-by-sharing: mutating a Vector inside merge_sorted! is visible to the caller, and returning nums1 is an API convenience. R supplied arguments behave as local call-by-value bindings, so returning the updated vector is the portable adapter contract."
+
+[corrections.gray_code_zero_dimension_extension]
+status = "active"
+supersedes = "0089 text claiming n=0 naturally satisfies the same cyclic Gray-code contract by returning [0]."
+statement = "The official domain is n>=1. The formula returns [0] for n=0, but first XOR last is 0 rather than a one-bit mask. Supporting n=0 requires an explicit zero-dimensional degenerate convention instead of claiming the literal cyclic adjacency condition unchanged."
+
 [next_review]
-start = 86
-end = 90
-purpose = "Review 0086 Partition List through 0090 Subsets II from complete RST content."
+start = 91
+end = 95
+purpose = "Review 0091 Decode Ways through 0095 Unique Binary Search Trees II from complete RST content."
 
 [rule_sources]
 base_findings = "docs/REVIEW_FINDINGS_0001_0050.rst"
@@ -222,6 +244,7 @@ second_round_findings = [
   "docs/review-findings/0071-0075.rst",
   "docs/review-findings/0076-0080.rst",
   "docs/review-findings/0081-0085.rst",
+  "docs/review-findings/0086-0090.rst",
 ]
 legacy_batch_findings = [
   "docs/review-findings/0016-0020.rst",

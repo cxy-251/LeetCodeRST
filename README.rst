@@ -18,22 +18,23 @@ LeetCode 多语言 RST 学习仓库
 --------
 
 ``0001`` 至 ``0100`` 的首轮多语言 RST 已完成。``0001`` 至 ``0050`` 的第一次逐题规则提炼已经完成；
-``0051`` 至 ``0100`` 的第二轮逐题审查正在进行，当前已完成 ``0051`` 至 ``0085``。
+``0051`` 至 ``0100`` 的第二轮逐题审查正在进行，当前已完成 ``0051`` 至 ``0090``。
 
 本批完整审查：
 
-* ``0081. Search in Rotated Sorted Array II``；
-* ``0082. Remove Duplicates from Sorted List II``；
-* ``0083. Remove Duplicates from Sorted List``；
-* ``0084. Largest Rectangle in Histogram``；
-* ``0085. Maximal Rectangle``。
+* ``0086. Partition List``；
+* ``0087. Scramble String``；
+* ``0088. Merge Sorted Array``；
+* ``0089. Gray Code``；
+* ``0090. Subsets II``。
 
-本批五题核心算法和十语言控制流均正确，没有新增确定性问题；历史题目正文保持原样。
+本批五题在官方输入域内的核心算法和十语言控制流均正确。审查登记了 ``0088`` 的 Julia 修改可见性与
+``0089`` 的 ``n = 0`` 退化扩展两项事实更正；历史题目正文保持原样。
 
-本批提升了比较信息退化、链表断链与资源责任、连续值段契约、单调栈边界证书、虚拟哨兵安全和
-二维降维映射规则。
+本批提升了稳定分区与拓扑隔离、完整记忆化键与失败缓存、逆向写入前沿、语言修改可见性、闭式构造证书、
+退化扩展契约、同层规范代表和输出载荷规则。
 
-下一审查批次为 ``0086`` 至 ``0090``。
+下一审查批次为 ``0091`` 至 ``0095``。
 
 核心入口
 --------
@@ -78,13 +79,15 @@ LeetCode 多语言 RST 学习仓库
 * ``state/reviews/0071-0075.toml``；
 * ``state/reviews/0076-0080.toml``；
 * ``state/reviews/0081-0085.toml``；
+* ``state/reviews/0086-0090.toml``；
 * ``docs/review-findings/0051-0055.rst``；
 * ``docs/review-findings/0056-0060.rst``；
 * ``docs/review-findings/0061-0065.rst``；
 * ``docs/review-findings/0066-0070.rst``；
 * ``docs/review-findings/0071-0075.rst``；
 * ``docs/review-findings/0076-0080.rst``；
-* ``docs/review-findings/0081-0085.rst``。
+* ``docs/review-findings/0081-0085.rst``；
+* ``docs/review-findings/0086-0090.rst``。
 
 批次记录属于证据和追溯资料。事实冲突先读取 ``state/REVIEW_INDEX.toml`` 的更正。
 
