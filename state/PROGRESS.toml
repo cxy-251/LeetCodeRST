@@ -1,6 +1,6 @@
 [project]
 name = "leetcode-multilang-rst"
-phase = "second_review_in_progress"
+phase = "second_review_completed"
 format = "rst"
 ordering = "leetcode_number_ascending"
 execution_mode = "conversation_only"
@@ -21,35 +21,41 @@ needs_revision = []
 [last_batch]
 status = "completed"
 kind = "second_round_review"
-start = 91
-end = 95
-completed = 5
-summary = "完成 0091-0095 第二轮逐题审查；0091-0094 未发现确定性问题，0095 R 适配器存在 tree_node 与 new_tree_node 构造器命名冲突。"
-
-[next_batch]
-status = "review_ready"
-kind = "second_round_review"
 start = 96
 end = 100
-purpose = "继续读取 0096 Unique Binary Search Trees、0097 Interleaving String、0098 Validate Binary Search Tree、0099 Recover Binary Search Tree 与 0100 Same Tree 的完整正文和十语言代码。"
+completed = 5
+summary = "完成 0096-0100 第二轮逐题审查；五题核心算法正确，登记 0097 C++、Julia 与 R 适配器物化空间未计入统一 O(min(m,n)) 结论。"
+
+[next_batch]
+status = "consolidation_ready"
+kind = "review_rule_consolidation"
+start = 51
+end = 100
+purpose = "归并 0051-0100 第二轮审查中的稳定规则、事实更正和验证限制，形成下一阶段完整前向执行规则。"
 
 [review]
-status = "in_progress"
+status = "completed"
 mode = "second_round_content_review"
 source = "complete_rst_content"
 start = 51
 end = 100
-current = 96
-reviewed_count = 45
+current = 101
+reviewed_count = 50
 batch_size = 5
 modify_historical_rst = false
 pr_metadata_is_evidence = false
 index = "state/REVIEW_INDEX.toml"
 legacy_catalog = "docs/REVIEW_CATALOG_0001_0050.rst"
 current_catalog = "docs/REVIEW_CATALOG_0051_0100.rst"
-latest_record = "state/reviews/0091-0095.toml"
-latest_findings = "docs/review-findings/0091-0095.rst"
+latest_record = "state/reviews/0096-0100.toml"
+latest_findings = "docs/review-findings/0096-0100.rst"
 legacy_forward_rules = "docs/FORWARD_RULES_0051_0100.rst"
+
+[rule_consolidation]
+status = "ready"
+source_start = 51
+source_end = 100
+requires_completion_before_problem = 101
 
 [quality_scope]
 historical_start = 1
@@ -57,7 +63,7 @@ historical_end = 50
 historical_policy = "第一次逐题规则提炼已完成，历史 RST 保持原样。"
 second_review_start = 51
 second_review_end = 100
-second_review_policy = "逐题读取完整正文和十语言代码，记录证据与事实更正；默认不修改历史 RST。"
+second_review_policy = "第二轮逐题审查已完成；事实更正按索引生效，历史 RST 默认不修改。"
 
 [execution]
 trigger = "explicit_user_message_in_active_conversation"
@@ -72,7 +78,7 @@ index = "state/CONCEPT_LEDGER.toml"
 latest_record = "state/concepts/0092-0100.toml"
 
 [next_action]
-summary = "等待用户继续后，审查 0096 Unique Binary Search Trees 至 0100 Same Tree。"
+summary = "等待用户继续后，归并 0051-0100 第二轮审查规则；归并完成前不启动 0101。"
 
 [last_update]
-summary = "0091-0095 第二轮审查完成；进度推进到 0096，历史题正文未修改。"
+summary = "0096-0100 第二轮审查完成；0051-0100 共 50 题审查全部结束，历史题正文未修改。"
