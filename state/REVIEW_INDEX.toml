@@ -3,8 +3,8 @@ mode = "second_round_content_review"
 source = "complete_rst_content"
 start = 51
 end = 100
-current = 76
-reviewed_count = 25
+current = 81
+reviewed_count = 30
 batch_size = 5
 modify_historical_rst = false
 pr_metadata_is_evidence = false
@@ -126,6 +126,14 @@ end = 75
 status = "completed"
 findings = "docs/review-findings/0071-0075.rst"
 
+[records.batch_0076_0080]
+path = "state/reviews/0076-0080.toml"
+round = 2
+start = 76
+end = 80
+status = "completed"
+findings = "docs/review-findings/0076-0080.rst"
+
 [corrections.julia_unitrange]
 status = "active"
 source = "https://docs.julialang.org/en/v1/base/collections/#Base.UnitRange"
@@ -178,10 +186,22 @@ sources = [
 supersedes = "0072 complexity text presenting O(min(m,n)) as the complete auxiliary-space bound for all ten adapters."
 statement = "O(min(m,n)) describes the rolling DP array. C++ copies both by-value strings, Julia collect(codeunits(...)) materializes two byte arrays, and R utf8ToInt materializes two integer vectors; these adapters have O(m+n) extra and peak space."
 
+[corrections.go_min_window_substring_storage]
+status = "active"
+source = "https://pkg.go.dev/strings#Clone"
+supersedes = "0076 text stating that every adapter copies answer_length characters and returns a separately allocated substring."
+statement = "The Go expression s[start:end] may share the original string's backing storage and retain the full source. strings.Clone, available since Go 1.18, is the API that guarantees a fresh allocation when that contract is required."
+
+[corrections.r_min_window_input_materialization]
+status = "active"
+source = "https://stat.ethz.ch/R-manual/R-devel/library/base/html/rawConversion.html"
+supersedes = "0076 complexity text presenting the fixed 128-entry frequency table as the complete extra-space bound for the R adapter."
+statement = "The R adapter materializes charToRaw results for both s and t and then integer vectors. Its sliding-window state is O(1), while adapter extra and peak space are O(|s|+|t|), excluding the returned answer."
+
 [next_review]
-start = 76
-end = 80
-purpose = "Review 0076 Minimum Window Substring through 0080 Remove Duplicates from Sorted Array II from complete RST content."
+start = 81
+end = 85
+purpose = "Review 0081 Search in Rotated Sorted Array II through 0085 Maximal Rectangle from complete RST content."
 
 [rule_sources]
 base_findings = "docs/REVIEW_FINDINGS_0001_0050.rst"
@@ -192,6 +212,7 @@ second_round_findings = [
   "docs/review-findings/0061-0065.rst",
   "docs/review-findings/0066-0070.rst",
   "docs/review-findings/0071-0075.rst",
+  "docs/review-findings/0076-0080.rst",
 ]
 legacy_batch_findings = [
   "docs/review-findings/0016-0020.rst",

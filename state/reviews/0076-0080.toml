@@ -1,0 +1,144 @@
+[batch]
+round = 2
+start = 76
+end = 80
+status = "completed"
+source = "complete_rst_content"
+modify_historical_rst = false
+summary = "完整读取 0076-0080 的 RST 正文、证明、复杂度和十语言代码；五题核心算法正确，确认 0076 Go 子串存储和 R 输入物化偏差。"
+
+[problems."0076"]
+status = "reviewed"
+file = "problems/0001-0100/0076-minimum-window-substring.rst"
+positive = [
+  "need 差值和 missing 总缺口完整处理目标字符的重复次数。",
+  "固定右端下持续收缩检查全部合法左边界，不遗漏全局最短窗口。",
+  "ASCII 字符域正确支撑固定 128 项频次数组和字节索引。",
+]
+observations = [
+  "Go 直接返回 s[start:end]，该子串可以共享原字符串底层存储；正文统一写成复制 O(answer_length) 并要求独立存储并不适用于该实现。",
+  "R 对 s 与 t 调用 charToRaw 并转换为整数向量，适配器额外和峰值空间为 O(|s|+|t|)，不能只写固定 need 数组的 O(1)。",
+  "返回子串的复制、共享与大输入保留必须按目标语言 API 分别说明。",
+]
+rule_ids = [
+  "substring_view_vs_fresh_copy",
+  "fixed_state_vs_input_materialization",
+  "multiplicity_deficit_window_invariant",
+]
+
+[problems."0077"]
+status = "reviewed"
+file = "problems/0001-0100/0077-combinations.rst"
+positive = [
+  "严格递增路径使每个组合拥有唯一表示。",
+  "last_start = n-needed+1 的容量剪枝由剩余候选数量严格推出。",
+  "C 预分配精确组合容量并在失败路径释放全部已完成行。",
+]
+observations = [
+  "R 通过 <<- 修改 combine 词法环境中的固定 path 与 result，递归共享语义正确，不属于普通局部复杂赋值问题。",
+  "R 叶子快照的独立性依赖复制或后续重绑定语义，需要用结果独立性测试验证。",
+  "组合数预分配除最终容量外，还要证明乘除中间值安全。",
+]
+rule_ids = [
+  "recursive_shared_state_binding_audit",
+  "snapshot_independence_by_mutation_model",
+  "combinatorial_capacity_intermediate_bound",
+]
+
+[problems."0078"]
+status = "reviewed"
+file = "problems/0001-0100/0078-subsets.rst"
+positive = [
+  "每个递归节点提交路径，完整覆盖空集和全部非叶子子集。",
+  "严格递增输入下标与子集形成双射，结果数量恰好为 2^n。",
+  "全部结果复制 n*2^(n-1) 个整数，输出主导复杂度证明精确。",
+]
+observations = [
+  "R 保存 path 后通过 c 和负下标建立新路径对象并重绑定，因此历史结果不会被后续路径修改。",
+  "R 路径重建成本仍应计入适配器时间与累计分配，不能按可变栈常数 push/pop 描述。",
+  "1 << n 预分配依赖精确输入上界、位宽和符号安全。",
+]
+rule_ids = [
+  "rebinding_snapshot_semantics",
+  "exponential_output_cost_accounting",
+  "shift_capacity_domain",
+]
+
+[problems."0079"]
+status = "reviewed"
+file = "problems/0001-0100/0079-word-search.rst"
+positive = [
+  "哨兵位于输入字符域之外，能够阻止同一路径重复使用格子。",
+  "短路结果先汇总再统一恢复，成功和失败路径都不会污染可变矩阵。",
+  "Rust 按值拥有矩阵，其他语言显式恢复调用者可观察状态。",
+]
+observations = [
+  "R environment 使递归层共享同一矩阵绑定，解决普通调用帧局部赋值不可见问题。",
+  "环境本身是引用对象，但 state$board[row,col] 仍是矩阵复杂赋值；载荷是否复制需要目标运行时测量。",
+  "核心 O(L) 递归状态不能自动覆盖 R 矩阵载荷的潜在物化成本。",
+]
+rule_ids = [
+  "environment_shared_state_vs_payload_copy",
+  "restore_before_short_circuit_return",
+  "sentinel_domain_exclusion",
+  "ownership_copy_changes_restore_contract",
+]
+
+[problems."0080"]
+status = "reviewed"
+file = "problems/0001-0100/0080-remove-duplicates-from-sorted-array-ii.rst"
+positive = [
+  "倒数第二项判断利用有序性精确删除第三个及后续副本。",
+  "write 不领先读取位置，覆盖前保存当前值，稳定写回不会破坏未读后缀。",
+  "有效前缀、长度和尾部未定义契约说明完整。",
+]
+observations = [
+  "range 或 foreach 遍历中覆盖安全依赖不改变长度、写位置不领先读取和当前值先复制。",
+  "R 返回完整 nums 向量，算法工作状态为 O(1)，接口返回载荷仍为 O(n)。",
+  "该模式可推广到每个值最多保留 q 次，比较位置相应改为 write-q。",
+]
+rule_ids = [
+  "read_ahead_write_behind_iteration",
+  "valid_prefix_contract",
+  "algorithm_workspace_vs_return_payload",
+]
+
+[rules."substring_view_vs_fresh_copy"]
+status = "promoted"
+problems = [76]
+requirement = "返回子串时区分共享底层存储、不可变别名与新分配副本；接口要求新存储或需释放大输入时使用显式克隆 API，并计入答案长度复制成本。"
+
+[rules."fixed_state_vs_input_materialization"]
+status = "promoted"
+problems = [76, 79, 80]
+requirement = "固定频次数组、常数指针或 O(L) 递归栈只描述核心算法状态；字符转换、矩阵载荷复制和返回完整容器分别报告额外与峰值空间。"
+
+[rules."recursive_shared_state_binding_audit"]
+status = "promoted"
+problems = [77, 78, 79]
+requirement = "递归共享状态逐项确认绑定在当前调用帧、词法外层、superassignment 目标或显式环境；不能从相似赋值语法推断可见范围。"
+
+[rules."snapshot_independence_by_mutation_model"]
+status = "promoted"
+problems = [77, 78]
+requirement = "保存回溯结果后，证明后续操作是显式复制、原对象安全不变或绑定到新对象；使用独立性测试检查历史结果不会随路径撤销而变化。"
+
+[rules."restore_before_short_circuit_return"]
+status = "promoted"
+problems = [79]
+requirement = "临时哨兵、访问标记或拓扑修改必须让成功、失败和短路分支经过统一恢复点；哨兵还需证明不属于合法输入域。"
+
+[rules."read_ahead_write_behind_iteration"]
+status = "promoted"
+problems = [80]
+requirement = "遍历容器同时覆盖元素时，证明写位置不领先尚未读取位置、当前值在覆盖前保存且容器长度不变；结构性修改需要独立迭代器安全证明。"
+
+[rules."combinatorial_capacity_intermediate_bound"]
+status = "promoted"
+problems = [77, 78]
+requirement = "组合数或位移预分配不仅证明最终容量可表示，还要证明乘法、移位和终点下标等中间运算在目标类型中安全。"
+
+[next_review]
+start = 81
+end = 85
+purpose = "Review 0081 Search in Rotated Sorted Array II through 0085 Maximal Rectangle from complete RST content."
