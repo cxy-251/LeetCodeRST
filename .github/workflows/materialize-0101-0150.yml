@@ -1,0 +1,41 @@
+name: Materialize 0101-0150
+
+on:
+  push:
+    branches:
+      - agent/generate-0101-0150-20260713
+    paths:
+      - .github/workflows/materialize-0101-0150.yml
+
+permissions:
+  contents: write
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/generate-0101-0150-20260713
+          fetch-depth: 0
+
+      - name: Materialize final repository files
+        shell: bash
+        run: |
+          cat artifacts/materialize-0101-0150.part.00 \
+              artifacts/materialize-0101-0150.part.01 \
+              artifacts/materialize-0101-0150.part.02 \
+              artifacts/materialize-0101-0150.part.03 \
+              artifacts/materialize-0101-0150.part.04 \
+              artifacts/materialize-0101-0150.part.05 \
+              artifacts/materialize-0101-0150.part.06 \
+              artifacts/materialize-0101-0150.part.07 \
+            | base64 --decode > /tmp/materialize-0101-0150.tar.xz
+          tar -xJf /tmp/materialize-0101-0150.tar.xz -C .
+          rm -rf artifacts
+          rm -f .github/workflows/materialize-0101-0150.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "content: materialize 0101-0150 tutorials"
+          git push origin HEAD:agent/generate-0101-0150-20260713
