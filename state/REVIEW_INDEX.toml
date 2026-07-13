@@ -3,8 +3,8 @@ mode = "second_round_content_review"
 source = "complete_rst_content"
 start = 51
 end = 100
-current = 91
-reviewed_count = 40
+current = 96
+reviewed_count = 45
 batch_size = 5
 modify_historical_rst = false
 pr_metadata_is_evidence = false
@@ -150,6 +150,14 @@ end = 90
 status = "completed"
 findings = "docs/review-findings/0086-0090.rst"
 
+[records.batch_0091_0095]
+path = "state/reviews/0091-0095.toml"
+round = 2
+start = 91
+end = 95
+status = "completed"
+findings = "docs/review-findings/0091-0095.rst"
+
 [corrections.julia_unitrange]
 status = "active"
 source = "https://docs.julialang.org/en/v1/base/collections/#Base.UnitRange"
@@ -228,10 +236,15 @@ status = "active"
 supersedes = "0089 text claiming n=0 naturally satisfies the same cyclic Gray-code contract by returning [0]."
 statement = "The official domain is n>=1. The formula returns [0] for n=0, but first XOR last is 0 rather than a one-bit mask. Supporting n=0 requires an explicit zero-dimensional degenerate convention instead of claiming the literal cyclic adjacency condition unchanged."
 
+[corrections.r_unique_bst_constructor_name]
+status = "active"
+supersedes = "0095 R adapter calling tree_node(...) while claiming reuse of the 0094 R tree-node model."
+statement = "0094 defines the R constructor as new_tree_node(val, left, right), while 0095 calls tree_node(...) and defines no such alias. The adapter fails with an unresolved function unless an undeclared external helper exists; use new_tree_node or define the exact constructor locally."
+
 [next_review]
-start = 91
-end = 95
-purpose = "Review 0091 Decode Ways through 0095 Unique Binary Search Trees II from complete RST content."
+start = 96
+end = 100
+purpose = "Review 0096 Unique Binary Search Trees through 0100 Same Tree from complete RST content."
 
 [rule_sources]
 base_findings = "docs/REVIEW_FINDINGS_0001_0050.rst"
@@ -245,6 +258,7 @@ second_round_findings = [
   "docs/review-findings/0076-0080.rst",
   "docs/review-findings/0081-0085.rst",
   "docs/review-findings/0086-0090.rst",
+  "docs/review-findings/0091-0095.rst",
 ]
 legacy_batch_findings = [
   "docs/review-findings/0016-0020.rst",

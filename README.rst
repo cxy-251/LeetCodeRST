@@ -18,23 +18,24 @@ LeetCode 多语言 RST 学习仓库
 --------
 
 ``0001`` 至 ``0100`` 的首轮多语言 RST 已完成。``0001`` 至 ``0050`` 的第一次逐题规则提炼已经完成；
-``0051`` 至 ``0100`` 的第二轮逐题审查正在进行，当前已完成 ``0051`` 至 ``0090``。
+``0051`` 至 ``0100`` 的第二轮逐题审查正在进行，当前已完成 ``0051`` 至 ``0095``。
 
 本批完整审查：
 
-* ``0086. Partition List``；
-* ``0087. Scramble String``；
-* ``0088. Merge Sorted Array``；
-* ``0089. Gray Code``；
-* ``0090. Subsets II``。
+* ``0091. Decode Ways``；
+* ``0092. Reverse Linked List II``；
+* ``0093. Restore IP Addresses``；
+* ``0094. Binary Tree Inorder Traversal``；
+* ``0095. Unique Binary Search Trees II``。
 
-本批五题在官方输入域内的核心算法和十语言控制流均正确。审查登记了 ``0088`` 的 Julia 修改可见性与
-``0089`` 的 ``n = 0`` 退化扩展两项事实更正；历史题目正文保持原样。
+``0091`` 至 ``0094`` 的核心算法和十语言控制流未发现新的确定性问题。``0095`` 的根值分治、空树占位、
+笛卡尔积与深复制算法正确，但 R 适配器调用未定义的 ``tree_node``，与 ``0094`` 的
+``new_tree_node`` 构造器不一致；更正已登记，历史题目正文保持原样。
 
-本批提升了稳定分区与拓扑隔离、完整记忆化键与失败缓存、逆向写入前沿、语言修改可见性、闭式构造证书、
-退化扩展契约、同层规范代表和输出载荷规则。
+本批提升了强制边界分段与中间值支配、链表区间边证书、所有权替代算法、固定段长度剪枝、显式递归续点、
+树结构前提、空结构组合单位元、深复制结果独立性和跨文件 helper 一致性规则。
 
-下一审查批次为 ``0091`` 至 ``0095``。
+下一审查批次为 ``0096`` 至 ``0100``。
 
 核心入口
 --------
@@ -80,6 +81,7 @@ LeetCode 多语言 RST 学习仓库
 * ``state/reviews/0076-0080.toml``；
 * ``state/reviews/0081-0085.toml``；
 * ``state/reviews/0086-0090.toml``；
+* ``state/reviews/0091-0095.toml``；
 * ``docs/review-findings/0051-0055.rst``；
 * ``docs/review-findings/0056-0060.rst``；
 * ``docs/review-findings/0061-0065.rst``；
@@ -87,7 +89,8 @@ LeetCode 多语言 RST 学习仓库
 * ``docs/review-findings/0071-0075.rst``；
 * ``docs/review-findings/0076-0080.rst``；
 * ``docs/review-findings/0081-0085.rst``；
-* ``docs/review-findings/0086-0090.rst``。
+* ``docs/review-findings/0086-0090.rst``；
+* ``docs/review-findings/0091-0095.rst``。
 
 批次记录属于证据和追溯资料。事实冲突先读取 ``state/REVIEW_INDEX.toml`` 的更正。
 
