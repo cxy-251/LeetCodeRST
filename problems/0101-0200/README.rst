@@ -1,7 +1,7 @@
 LeetCode 0101–0200
 ==================
 
-本目录按题号顺序保存 0101 至 0200 的题目教程。当前已完成 0101 至 0104。
+本目录按题号顺序保存 0101 至 0200 的题目教程。当前已完成 0101 至 0107。
 
 已完成
 ------
@@ -11,19 +11,24 @@ LeetCode 0101–0200
 #. `0103. Binary Tree Zigzag Level Order Traversal
    <0103-binary-tree-zigzag-level-order-traversal.rst>`_
 #. `0104. Maximum Depth of Binary Tree <0104-maximum-depth-of-binary-tree.rst>`_
+#. `0105. Construct Binary Tree from Preorder and Inorder Traversal
+   <0105-construct-binary-tree-from-preorder-and-inorder-traversal.rst>`_
+#. `0106. Construct Binary Tree from Inorder and Postorder Traversal
+   <0106-construct-binary-tree-from-inorder-and-postorder-traversal.rst>`_
+#. `0107. Binary Tree Level Order Traversal II
+   <0107-binary-tree-level-order-traversal-ii.rst>`_
 
 本批次
 ------
 
-``0101`` 至 ``0104`` 的难度预算为：
+``0105`` 至 ``0107`` 均为 Medium：
 
-* ``0101`` Easy = 1；
-* ``0102`` Medium = 2；
-* ``0103`` Medium = 2；
-* ``0104`` Easy = 1；
+* ``0105`` Medium = 2；
+* ``0106`` Medium = 2；
+* ``0107`` Medium = 2；
 * 总分为 6，达到单批上限。
 
-``0105`` 为 Medium，加入后总分会变成 8，因此不属于本批次。
+``0108`` 为 Easy，加入后总分会变成 7，因此不属于本批次。
 
 执行规则
 --------
@@ -35,5 +40,5 @@ RST 写作规范。每题独立完成精确契约、问题抽象、解法取舍�
 下一动作
 --------
 
-下一题为 ``0105``。按 Easy=1、Medium=2、Hard=4 的难度预算，下一批为 ``0105–0107``：三道 Medium
-合计 6 分；``0108`` 为 Easy，加入后会超过批次上限。
+下一题为 ``0108``。按 Easy=1、Medium=2、Hard=4 的难度预算，下一批为 ``0108–0112``：
+Easy、Medium、Easy、Easy、Easy 合计 6 分；``0113`` 为 Medium，加入后会超过批次上限。
