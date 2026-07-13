@@ -23,11 +23,13 @@
 * ``0071–0075``：``state/reviews/0071-0075.toml`` 与
   ``docs/review-findings/0071-0075.rst``；
 * ``0076–0080``：``state/reviews/0076-0080.toml`` 与
-  ``docs/review-findings/0076-0080.rst``。
+  ``docs/review-findings/0076-0080.rst``；
+* ``0081–0085``：``state/reviews/0081-0085.toml`` 与
+  ``docs/review-findings/0081-0085.rst``。
 
 下一批：
 
-* ``0081–0085``。
+* ``0086–0090``。
 
 覆盖状态和事实更正以 ``state/REVIEW_INDEX.toml`` 为准。
 
@@ -45,7 +47,8 @@
 
 ``state/reviews/0051-0055.toml``、``state/reviews/0056-0060.toml``、
 ``state/reviews/0061-0065.toml``、``state/reviews/0066-0070.toml``、
-``state/reviews/0071-0075.toml``、``state/reviews/0076-0080.toml`` 及后续五题批次保存：
+``state/reviews/0071-0075.toml``、``state/reviews/0076-0080.toml``、
+``state/reviews/0081-0085.toml`` 及后续五题批次保存：
 
 * 每题正向样本；
 * 确定性问题与验证缺口；
@@ -57,8 +60,8 @@
 
 ``docs/review-findings/0051-0055.rst``、``docs/review-findings/0056-0060.rst``、
 ``docs/review-findings/0061-0065.rst``、``docs/review-findings/0066-0070.rst``、
-``docs/review-findings/0071-0075.rst``、``docs/review-findings/0076-0080.rst`` 及后续批次保存完整
-文字分析、代码语义依据和跨题归纳。
+``docs/review-findings/0071-0075.rst``、``docs/review-findings/0076-0080.rst``、
+``docs/review-findings/0081-0085.rst`` 及后续批次保存完整文字分析、代码语义依据和跨题归纳。
 
 规则归并
 ~~~~~~~~
@@ -115,12 +118,13 @@ R 路径栈累计复制
 本批稳定模式
 ------------
 
-* 子串返回区分共享视图、新分配和大输入保留；
-* 回溯共享状态明确绑定环境，结果快照证明后续修改不污染；
-* 递归临时标记覆盖成功、失败和短路恢复路径；
-* 遍历中覆盖仅在写位置不领先读取且不改变长度时安全；
-* 核心工作状态、输入物化和返回载荷分别报告；
-* 组合容量和位移预分配同时证明最终值与中间运算安全。
+* 重复值降低比较信息时区分通常和最坏复杂度；
+* 链表断链、所有权转移和节点回收责任分别说明；
+* 连续值段先定义保留数量，再设计前驱推进；
+* 单调栈弹栈提供左右阻断边界证书；
+* 虚拟哨兵只触发结算，不越界访问或修改输入；
+* 高维降维证明编码不变量、完整覆盖和反向合法性；
+* 峰值工作空间与每轮重新分配分别报告。
 
 规则优先级
 ----------

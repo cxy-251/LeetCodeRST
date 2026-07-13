@@ -1,0 +1,143 @@
+[batch]
+round = 2
+start = 81
+end = 85
+status = "completed"
+source = "complete_rst_content"
+modify_historical_rst = false
+summary = "完整读取 0081-0085 的 RST 正文、证明、复杂度和十语言代码；五题核心算法正确，未发现新的确定性问题。"
+
+[problems."0081"]
+status = "reviewed"
+file = "problems/0001-0100/0081-search-in-rotated-sorted-array-ii.rst"
+positive = [
+  "三端相等且中点未命中时同步收缩边界，消歧安全。",
+  "消歧后按非递减半区和值域排除候选，闭区间不变量完整。",
+  "明确重复值导致最坏 O(n) 退化，Rust 下标下溢保护完整。",
+]
+observations = [
+  "比较信息量被重复值削弱时，通常 O(log n) 不能替代最坏 O(n) 保证。",
+  "删除歧义边界必须先证明其不可能等于目标。",
+  "无符号 mid-1 保护必须与闭区间终止规则一起审查。",
+]
+rule_ids = [
+  "comparison_information_degradation",
+  "ambiguity_shrink_requires_exclusion_proof",
+  "binary_search_unsigned_interval_safety",
+]
+
+[problems."0082"]
+status = "reviewed"
+file = "problems/0001-0100/0082-remove-duplicates-from-sorted-list-ii.rst"
+positive = [
+  "哨兵和前驱链接统一删除头部、中间和尾部完整重复段。",
+  "previous 在重复段前保持不动，结果中不留下任何重复值副本。",
+  "Rust 可变所有权槽位连续替换链接并自动释放被移出的 Box。",
+]
+observations = [
+  "C 与 C++ 断开数据节点但不负责释放，Rust 自动析构，托管语言等待垃圾回收。",
+  "不可达、立即释放和最终回收是不同资源结论。",
+  "测试需要检查保留节点身份、节点数量和无环性。",
+]
+rule_ids = [
+  "linked_list_unlink_vs_reclaim",
+  "delete_entire_run_predecessor_anchor",
+  "linked_list_identity_and_cycle_validation",
+]
+
+[problems."0083"]
+status = "reviewed"
+file = "problems/0001-0100/0083-remove-duplicates-from-sorted-list.rst"
+positive = [
+  "每个有序值段保留首节点，内层循环连续绕过全部相同后继。",
+  "删除一个副本后重新检查新后继，不会留下第三个及后续副本。",
+  "结果复用原节点并保持稳定顺序。",
+]
+observations = [
+  "本题每段保留一个节点，0082 删除整个重复段，骨架相近但契约不同。",
+  "断链节点的回收责任仍由目标语言所有权模型决定。",
+  "相邻比较只在有序输入中充分。",
+]
+rule_ids = [
+  "sorted_run_retention_contract",
+  "recheck_successor_after_unlink",
+  "sorted_adjacency_sufficiency",
+]
+
+[problems."0084"]
+status = "reviewed"
+file = "problems/0001-0100/0084-largest-rectangle-in-histogram.rst"
+positive = [
+  "非递减下标栈在右侧首个更矮位置出现时结算候选。",
+  "弹栈后新栈顶给出左侧首个更矮位置，宽度公式 right-left 正确。",
+  "局部零高度哨兵清空后缀，不修改输入；64 位中间面积边界稳健。",
+]
+observations = [
+  "摊还入栈出栈次数不足以证明面积正确，还需完整左右边界证书。",
+  "严格大于弹栈允许等高柱共存，正确性依赖最左同高柱获得最大宽度。",
+  "虚拟下标若入栈，必须证明之后不会访问 heights[sentinel]。",
+]
+rule_ids = [
+  "monotonic_stack_boundary_certificate",
+  "equal_value_stack_policy",
+  "virtual_sentinel_index_safety",
+]
+
+[problems."0085"]
+status = "reviewed"
+file = "problems/0001-0100/0085-maximal-rectangle.rst"
+positive = [
+  "逐行柱高精确编码以当前行为底的连续一数量。",
+  "每个二维矩形通过唯一底边映射到柱状图区间，反向候选也合法。",
+  "每行复用 0084 单调栈，总时间 O(rows*columns)，峰值空间 O(columns)。",
+]
+observations = [
+  "二维降为一维必须证明编码不变量、完整性和反向合法性。",
+  "部分语言每行新建栈，部分语言复用容量；峰值同阶但分配行为不同。",
+  "按首行列数处理全部行依赖规则矩阵前提。",
+]
+rule_ids = [
+  "dimension_reduction_bijection",
+  "workspace_peak_vs_repeated_allocation",
+  "rectangular_shape_precondition",
+]
+
+[rules."comparison_information_degradation"]
+status = "promoted"
+problems = [81]
+requirement = "重复值、碰撞或等价类降低比较区分能力时，分别给出通常与最坏复杂度；消歧步骤只能删除已经证明不可能为答案的对象。"
+
+[rules."linked_list_unlink_vs_reclaim"]
+status = "promoted"
+problems = [82, 83]
+requirement = "链表删除分别说明节点断链、所有权转移、立即析构、调用者释放责任和垃圾回收；不可达不能自动写成已释放。"
+
+[rules."sorted_run_retention_contract"]
+status = "promoted"
+problems = [82, 83]
+requirement = "有序连续段处理先定义每段保留零个、一个或至多 q 个节点，再设计前驱推进、段提交和测试身份规则。"
+
+[rules."monotonic_stack_boundary_certificate"]
+status = "promoted"
+problems = [84, 85]
+requirement = "单调栈弹栈时同时证明当前位置是右侧首个阻断位置、弹栈后栈顶是左侧最近阻断位置、区间内部满足约束，并单独证明每个元素入栈出栈次数。"
+
+[rules."virtual_sentinel_index_safety"]
+status = "promoted"
+problems = [84, 85]
+requirement = "虚拟哨兵只触发结算，不写入只读输入；若哨兵下标进入栈，证明循环结束前不会把它用于真实数组访问。"
+
+[rules."dimension_reduction_bijection"]
+status = "promoted"
+problems = [85]
+requirement = "高维问题压缩为逐层低维状态时，证明编码不变量、每个原对象在某层被完整覆盖，以及低维候选反向映射后仍合法。"
+
+[rules."workspace_peak_vs_repeated_allocation"]
+status = "promoted"
+problems = [85]
+requirement = "分别报告峰值工作空间、每轮重新分配和容量复用；同为 O(k) 峰值不代表总分配行为相同。"
+
+[next_review]
+start = 86
+end = 90
+purpose = "Review 0086 Partition List through 0090 Subsets II from complete RST content."
