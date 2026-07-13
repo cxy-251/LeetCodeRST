@@ -18,39 +18,33 @@ LeetCode 多语言 RST 学习仓库
 --------
 
 ``0001`` 至 ``0100`` 的首轮多语言 RST 已完成。``0001`` 至 ``0050`` 的第一次逐题规则提炼已经完成；
-``0051`` 至 ``0100`` 的第二轮逐题审查也已全部完成，共覆盖 50 道题。
+``0051`` 至 ``0100`` 的第二轮逐题审查也已完成，共覆盖 50 道题。
 
-最后一批完整审查：
+第二轮产生的分散经验现已完成归并：
 
-* ``0096. Unique Binary Search Trees``；
-* ``0097. Interleaving String``；
-* ``0098. Validate Binary Search Tree``；
-* ``0099. Recover Binary Search Tree``；
-* ``0100. Same Tree``。
+* 十个批次中的 81 条 promoted rules 已去重并重新组织；
+* ``state/REVIEW_INDEX.toml`` 中 14 项 active corrections 已纳入前向规则；
+* 旧的 ``0051–0100`` 前向规则与第二轮新增经验已经合并为一份自包含文档；
+* 历史题目正文保持原样，事实更正只在用户明确选择修复时回写。
 
-五题核心算法和十语言控制流均正确。``0097`` 的一行 DP 核心工作数组确为 ``O(min(m,n))``，但 C++
-按值复制三个字符串，Julia 物化两个来源字节数组，R 物化三个整数向量；完整适配器空间更正已登记，
-历史题目正文保持原样。
-
-本批提升了计数状态等价类、宽中间值、压缩 DP 更新方向、适配器物化分层、可选状态哨兵、相邻顺序见证、
-两值交换端点、延迟写入以及成对结构递归规则。
-
-下一动作是归并 ``0051`` 至 ``0100`` 第二轮审查中的稳定规则、事实更正和验证限制。规则归并完成前，
-不启动 ``0101`` 之后的题目生成。
+``0101`` 至 ``0150`` 的生成必须直接执行 ``docs/FORWARD_RULES_0101_0150.rst``。下一批可开始
+``0101`` 至 ``0105``。
 
 核心入口
 --------
 
 * ``state/PROGRESS.toml``：当前阶段、覆盖范围和下一步；
 * ``state/REVIEW_INDEX.toml``：审查记录、规则来源和事实更正；
+* ``state/RULE_CONSOLIDATION_0051_0100.toml``：81 条原始规则的吸收与分组追溯；
+* ``docs/FORWARD_RULES_0101_0150.rst``：``0101–0150`` 的完整前向执行规则；
 * ``docs/REVIEW_CATALOG_0051_0100.rst``：第二轮审查资料目录；
-* ``docs/FORWARD_RULES_0051_0100.rst``：首轮审查后用于 0051–0100 的完整执行规则；
+* ``docs/FORWARD_RULES_0051_0100.rst``：首轮审查后用于 ``0051–0100`` 的历史执行规则；
 * ``docs/AUTOMATION_QUALITY_GATE.rst``：当前对话批次的验收步骤；
 * ``docs/PROBLEM_TEMPLATE.rst``：单题结构骨架；
 * ``docs/SOLUTION_AND_TYPES_POLICY.rst``：解法、平台类型和语言适配器；
 * ``docs/AUTOMATION_DIRECT_MAIN_POLICY.rst``：对话驱动执行流程；
 * ``state/CONCEPT_LEDGER.toml``：知识账本分段索引；
-* ``problems/0001-0100/README.rst``：题目索引。
+* ``problems/0001-0100/README.rst``：已完成题目索引。
 
 工程笔记
 --------
@@ -93,9 +87,12 @@ LeetCode 多语言 RST 学习仓库
 * ``docs/review-findings/0081-0085.rst``；
 * ``docs/review-findings/0086-0090.rst``；
 * ``docs/review-findings/0091-0095.rst``；
-* ``docs/review-findings/0096-0100.rst``。
+* ``docs/review-findings/0096-0100.rst``；
+* ``state/RULE_CONSOLIDATION_0051_0100.toml``；
+* ``docs/FORWARD_RULES_0101_0150.rst``。
 
-批次记录属于证据和追溯资料。事实冲突先读取 ``state/REVIEW_INDEX.toml`` 的更正。
+批次记录属于证据和追溯资料。事实冲突先读取 ``state/REVIEW_INDEX.toml`` 的更正，生成新题直接执行已归并的
+完整前向规则。
 
 知识账本
 --------
@@ -116,7 +113,7 @@ LeetCode 多语言 RST 学习仓库
 
 #. ``state/PROGRESS.toml`` 决定当前阶段和下一步；
 #. ``state/REVIEW_INDEX.toml`` 的事实更正；
-#. 已完成归并的前向规则；
+#. ``docs/FORWARD_RULES_0101_0150.rst`` 等已完成归并的前向规则；
 #. 专项策略和模板；
 #. 批次记录与详细发现；
 #. 提交说明、PR 描述和对话报告。
@@ -126,7 +123,7 @@ LeetCode 多语言 RST 学习仓库
 
 所有生成、审查和修复由当前对话中的明确指令触发：
 
-#. 读取最新 ``main``、状态和相关规则；
+#. 读取最新 ``main``、状态和当前阶段完整规则；
 #. 确定本轮唯一范围；
 #. 完成内容与质量检查；
 #. 将本轮文件作为一个原子提交写入 ``main``；

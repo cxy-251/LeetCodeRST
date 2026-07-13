@@ -1,0 +1,274 @@
+[consolidation]
+status = "completed"
+source_round = 2
+source_start = 51
+source_end = 100
+source_batch_count = 10
+source_problem_count = 50
+absorbed_promoted_rule_count = 81
+legacy_forward_rules = "docs/FORWARD_RULES_0051_0100.rst"
+output_forward_rules = "docs/FORWARD_RULES_0101_0150.rst"
+review_index = "state/REVIEW_INDEX.toml"
+review_policy = "docs/REVIEW_AND_PREVENTION_POLICY.rst"
+historical_rst_modified = false
+summary = "将 0051-0100 十个第二轮批次的 81 条 promoted rules、active corrections、验证限制与旧前向规则去重归并，形成 0101-0150 自包含执行规则。"
+
+[source_batches]
+records = [
+  "state/reviews/0051-0055.toml",
+  "state/reviews/0056-0060.toml",
+  "state/reviews/0061-0065.toml",
+  "state/reviews/0066-0070.toml",
+  "state/reviews/0071-0075.toml",
+  "state/reviews/0076-0080.toml",
+  "state/reviews/0081-0085.toml",
+  "state/reviews/0086-0090.toml",
+  "state/reviews/0091-0095.toml",
+  "state/reviews/0096-0100.toml",
+]
+findings = [
+  "docs/review-findings/0051-0055.rst",
+  "docs/review-findings/0056-0060.rst",
+  "docs/review-findings/0061-0065.rst",
+  "docs/review-findings/0066-0070.rst",
+  "docs/review-findings/0071-0075.rst",
+  "docs/review-findings/0076-0080.rst",
+  "docs/review-findings/0081-0085.rst",
+  "docs/review-findings/0086-0090.rst",
+  "docs/review-findings/0091-0095.rst",
+  "docs/review-findings/0096-0100.rst",
+]
+
+[coverage]
+absorbed_rule_ids = [
+  "r_recursive_state_binding",
+  "runtime_validation_for_language_semantics",
+  "language_specific_mutation_cost",
+  "bitmask_coordinate_frame_and_width",
+  "nonempty_optimization_initialization",
+  "intermediate_candidate_numeric_bound",
+  "range_constructor_direction_precondition",
+  "interval_prefix_closure_contract",
+  "abstract_endpoint_not_array_index",
+  "standard_sort_contract_per_language",
+  "precondition_driven_algorithm_reduction",
+  "logical_scan_vs_runtime_traversal",
+  "character_unit_and_conversion_cost",
+  "shape_coupled_boundary_guards",
+  "range_object_empty_semantics",
+  "combinatorial_rank_block_contract",
+  "sequence_deletion_and_token_encoding",
+  "temporary_topology_restoration",
+  "identity_based_mutation_validation",
+  "final_bound_requires_state_embedding",
+  "saturating_dp_exactness_contract",
+  "path_length_numeric_bound",
+  "view_vs_materialized_conversion",
+  "syntax_witness_state_completion",
+  "caller_observable_input_semantics",
+  "result_buffer_adopt_vs_copy",
+  "language_version_gated_api",
+  "output_sensitive_lower_bound",
+  "overflow_avoiding_transform_domain",
+  "monotone_recurrence_state_bound",
+  "repeated_copying_container_growth",
+  "algorithm_workspace_vs_adapter_materialization",
+  "witness_preserving_mutation_phases",
+  "virtual_view_preconditions_and_capacity",
+  "finite_domain_catch_all_branch",
+  "problem_specific_tail_sections",
+  "substring_view_vs_fresh_copy",
+  "fixed_state_vs_input_materialization",
+  "recursive_shared_state_binding_audit",
+  "snapshot_independence_by_mutation_model",
+  "restore_before_short_circuit_return",
+  "read_ahead_write_behind_iteration",
+  "combinatorial_capacity_intermediate_bound",
+  "comparison_information_degradation",
+  "linked_list_unlink_vs_reclaim",
+  "sorted_run_retention_contract",
+  "monotonic_stack_boundary_certificate",
+  "virtual_sentinel_index_safety",
+  "dimension_reduction_bijection",
+  "workspace_peak_vs_repeated_allocation",
+  "stable_partition_identity_and_order",
+  "linked_list_topology_isolation",
+  "memo_key_covers_semantic_state",
+  "cache_negative_results",
+  "reverse_write_frontier_certificate",
+  "mutation_visibility_by_language",
+  "constructive_bijection_and_cycle_certificate",
+  "extension_contract_defines_degenerate_case",
+  "same_level_canonical_representative",
+  "output_snapshot_and_metadata_cost",
+  "forced_boundary_factorization",
+  "intermediate_bound_from_monotone_factors",
+  "linked_interval_rewire_certificate",
+  "alternate_ownership_algorithm_equivalence",
+  "fixed_partition_remaining_length_bounds",
+  "monotone_candidate_rejection",
+  "explicit_stack_continuation_state",
+  "tree_structure_precondition_for_unique_visit",
+  "empty_structure_cartesian_identity",
+  "deep_clone_result_isolation",
+  "cross_file_helper_symbol_consistency",
+  "count_state_quotients_irrelevant_labels",
+  "wide_intermediate_before_narrow_return",
+  "compressed_dp_dependency_direction",
+  "adapter_materialization_separate_from_core",
+  "optional_state_not_data_sentinel",
+  "global_order_from_adjacent_witnesses",
+  "swapped_order_endpoint_detection",
+  "defer_mutation_until_witness_complete",
+  "paired_structural_recursion",
+  "null_position_is_structural_data",
+]
+
+[groups.contract_and_state]
+rule_ids = [
+  "precondition_driven_algorithm_reduction",
+  "interval_prefix_closure_contract",
+  "abstract_endpoint_not_array_index",
+  "finite_domain_catch_all_branch",
+  "extension_contract_defines_degenerate_case",
+  "problem_specific_tail_sections",
+  "count_state_quotients_irrelevant_labels",
+  "optional_state_not_data_sentinel",
+  "syntax_witness_state_completion",
+  "nonempty_optimization_initialization",
+]
+output_sections = ["一、题目契约与输入域", "二、状态、转移与证明"]
+
+[groups.dp_count_and_numeric]
+rule_ids = [
+  "intermediate_candidate_numeric_bound",
+  "final_bound_requires_state_embedding",
+  "saturating_dp_exactness_contract",
+  "monotone_recurrence_state_bound",
+  "intermediate_bound_from_monotone_factors",
+  "wide_intermediate_before_narrow_return",
+  "compressed_dp_dependency_direction",
+  "memo_key_covers_semantic_state",
+  "cache_negative_results",
+  "combinatorial_rank_block_contract",
+  "combinatorial_capacity_intermediate_bound",
+  "forced_boundary_factorization",
+  "fixed_partition_remaining_length_bounds",
+  "monotone_candidate_rejection",
+  "empty_structure_cartesian_identity",
+  "path_length_numeric_bound",
+  "overflow_avoiding_transform_domain",
+]
+output_sections = ["二、状态、转移与证明", "七、数值、容量与失败语义"]
+
+[groups.search_order_and_stack]
+rule_ids = [
+  "comparison_information_degradation",
+  "monotonic_stack_boundary_certificate",
+  "virtual_sentinel_index_safety",
+  "global_order_from_adjacent_witnesses",
+  "swapped_order_endpoint_detection",
+  "bitmask_coordinate_frame_and_width",
+]
+output_sections = ["三、搜索、顺序与边界证书"]
+
+[groups.backtracking_and_output]
+rule_ids = [
+  "recursive_shared_state_binding_audit",
+  "snapshot_independence_by_mutation_model",
+  "same_level_canonical_representative",
+  "constructive_bijection_and_cycle_certificate",
+  "output_snapshot_and_metadata_cost",
+  "deep_clone_result_isolation",
+]
+output_sections = ["四、回溯、枚举与构造"]
+
+[groups.mutation_topology_and_ownership]
+rule_ids = [
+  "temporary_topology_restoration",
+  "identity_based_mutation_validation",
+  "witness_preserving_mutation_phases",
+  "restore_before_short_circuit_return",
+  "read_ahead_write_behind_iteration",
+  "reverse_write_frontier_certificate",
+  "stable_partition_identity_and_order",
+  "linked_list_topology_isolation",
+  "linked_interval_rewire_certificate",
+  "linked_list_unlink_vs_reclaim",
+  "sorted_run_retention_contract",
+  "alternate_ownership_algorithm_equivalence",
+  "defer_mutation_until_witness_complete",
+  "caller_observable_input_semantics",
+  "mutation_visibility_by_language",
+]
+output_sections = ["五、原地修改、拓扑与所有权"]
+
+[groups.trees_views_and_dimensions]
+rule_ids = [
+  "virtual_view_preconditions_and_capacity",
+  "dimension_reduction_bijection",
+  "shape_coupled_boundary_guards",
+  "explicit_stack_continuation_state",
+  "tree_structure_precondition_for_unique_visit",
+  "paired_structural_recursion",
+  "null_position_is_structural_data",
+]
+output_sections = ["六、树、图、矩阵与虚拟视图"]
+
+[groups.resource_and_adapter_cost]
+rule_ids = [
+  "standard_sort_contract_per_language",
+  "logical_scan_vs_runtime_traversal",
+  "character_unit_and_conversion_cost",
+  "sequence_deletion_and_token_encoding",
+  "result_buffer_adopt_vs_copy",
+  "output_sensitive_lower_bound",
+  "repeated_copying_container_growth",
+  "algorithm_workspace_vs_adapter_materialization",
+  "substring_view_vs_fresh_copy",
+  "fixed_state_vs_input_materialization",
+  "workspace_peak_vs_repeated_allocation",
+  "adapter_materialization_separate_from_core",
+  "view_vs_materialized_conversion",
+]
+output_sections = ["七、数值、容量与失败语义", "八、字符串、标准库与适配器物化"]
+
+[groups.language_and_validation]
+rule_ids = [
+  "r_recursive_state_binding",
+  "runtime_validation_for_language_semantics",
+  "language_specific_mutation_cost",
+  "range_constructor_direction_precondition",
+  "range_object_empty_semantics",
+  "language_version_gated_api",
+  "cross_file_helper_symbol_consistency",
+]
+output_sections = ["九、十语言必须单独检查的事项", "十、验证与完成门槛"]
+
+[active_corrections]
+ids = [
+  "julia_unitrange",
+  "historical_fix_scope",
+  "execution_workflow",
+  "r_recursive_closure_subassignment",
+  "r_seq_int_direction",
+  "julia_codeunits_wrapper",
+  "r_simplify_path_repeated_vector_rebuild",
+  "edit_distance_adapter_materialization",
+  "go_min_window_substring_storage",
+  "r_min_window_input_materialization",
+  "julia_merge_sorted_mutation_visibility",
+  "gray_code_zero_dimension_extension",
+  "r_unique_bst_constructor_name",
+  "interleaving_string_adapter_materialization",
+]
+source = "state/REVIEW_INDEX.toml"
+precedence = "Active corrections override batch snapshots and consolidated prose when a wording conflict exists."
+
+[next_stage]
+status = "ready"
+start = 101
+end = 150
+next_batch_start = 101
+next_batch_end = 105
+required_rules = "docs/FORWARD_RULES_0101_0150.rst"
