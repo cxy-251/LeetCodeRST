@@ -104,35 +104,36 @@ LeetCode 0001–0100
 #. `0092. Reverse Linked List II <0092-reverse-linked-list-ii.rst>`_
 #. `0093. Restore IP Addresses <0093-restore-ip-addresses.rst>`_
 #. `0094. Binary Tree Inorder Traversal <0094-binary-tree-inorder-traversal.rst>`_
-
+#. `0095. Unique Binary Search Trees II <0095-unique-binary-search-trees-ii.rst>`_
+#. `0096. Unique Binary Search Trees <0096-unique-binary-search-trees.rst>`_
+#. `0097. Interleaving String <0097-interleaving-string.rst>`_
 
 阶段状态
 --------
 
-``0001`` 至 ``0094`` 的首轮教程已经完成。``0001`` 至 ``0050`` 的审查规则正在应用于
+``0001`` 至 ``0097`` 的首轮教程已经完成。``0001`` 至 ``0050`` 的审查规则正在应用于
 ``0051`` 至 ``0100`` 的新题。
 
 下一内容批次
 ------------
 
-下一批从 ``0095`` 开始：
+下一批完成本范围最后三题：
 
-* ``0095. Unique Binary Search Trees II``：Medium；
-* ``0096. Unique Binary Search Trees``：Medium；
-* ``0097. Interleaving String``：Medium。
+* ``0098. Validate Binary Search Tree``：Medium；
+* ``0099. Recover Binary Search Tree``：Medium；
+* ``0100. Same Tree``：Easy。
 
-三题难度总分为 6，符合单批预算。``0098. Validate Binary Search Tree`` 为 Medium，加入后总分
-达到 8，因此留到后续批次。
+三题难度总分为 5。完成后启动 ``0051`` 至 ``0100`` 的逐题规则提炼审查。
 
-0092–0094 学习重点
+0095–0097 学习重点
 ------------------
 
-* 使用哨兵节点统一链表头部区间反转，并固定原区间首节点作为反转尾；
-* 每轮摘除 ``current.next`` 并插到区间前部，证明节点守恒和无环；
-* 用剩余字符数与剩余段数的上下界剪除不可能的 IPv4 分段；
-* 前导零和超过 255 都具有单调失败性质，可以停止继续扩展当前段；
-* 首次建立 ``TreeNode`` 的跨语言引用类型约定；
-* 用显式栈模拟中序遍历的左子树返回续点，工作空间由树高决定。
+* 按根值拆分连续值域，并对左右树列表执行笛卡尔积；
+* 深复制每个组合的子树，保证返回树之间没有共享可变节点；
+* 用 Catalan 递推只统计相同 BST 结构集合；
+* 用 64 位中间计数闭合 ``n <= 19`` 的数值安全；
+* 用双前缀状态判断交错字符串，并按左到右顺序压缩为一行；
+* 把较短来源字符串作为列，将工作空间降为 ``O(min(m,n))``。
 
 关联题目
 --------

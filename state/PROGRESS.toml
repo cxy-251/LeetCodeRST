@@ -11,26 +11,26 @@ content_language = "zh-CN"
 code_comment_language = "zh-CN"
 
 [progress]
-next_problem = 95
-completed_count = 94
-completed_ranges = ["0001-0094"]
+next_problem = 98
+completed_count = 97
+completed_ranges = ["0001-0097"]
 premium_skipped = []
 blocked = []
 needs_revision = []
 
 [last_batch]
 status = "completed"
-start = 92
-end = 94
+start = 95
+end = 97
 completed = 3
 premium_skipped = []
-summary = "完成 0092 Reverse Linked List II、0093 Restore IP Addresses 与 0094 Binary Tree Inorder Traversal 十语言 RST 教程，覆盖区间头插、四段剪枝和显式栈中序遍历。"
+summary = "完成 0095 Unique Binary Search Trees II、0096 Unique Binary Search Trees 与 0097 Interleaving String 十语言 RST 教程，覆盖独立树生成、Catalan 计数和一行交错 DP。"
 
 [next_batch]
 status = "ready"
-start = 95
-end = 97
-purpose = "继续生成 0095 Unique Binary Search Trees II、0096 Unique Binary Search Trees 与 0097 Interleaving String；三道 Medium 的难度预算为 6。"
+start = 98
+end = 100
+purpose = "完成 0098 Validate Binary Search Tree、0099 Recover Binary Search Tree 与 0100 Same Tree；两道 Medium 加一道 Easy 的难度预算为 5。"
 
 [review]
 status = "completed"
@@ -71,7 +71,7 @@ index = "state/CONCEPT_LEDGER.toml"
 latest_record = "state/concepts/0092-0100.toml"
 
 [next_action]
-summary = "等待用户在对话中继续后，生成 0095 Unique Binary Search Trees II、0096 Unique Binary Search Trees 与 0097 Interleaving String。"
+summary = "等待用户在对话中继续后，完成 0098 Validate Binary Search Tree、0099 Recover Binary Search Tree 与 0100 Same Tree。"
 
 [last_update]
-summary = "已生成并验证 0092 Reverse Linked List II、0093 Restore IP Addresses 与 0094 Binary Tree Inorder Traversal，进度推进到 0095。"
+summary = "已生成并验证 0095 Unique Binary Search Trees II、0096 Unique Binary Search Trees 与 0097 Interleaving String，进度推进到 0098。"

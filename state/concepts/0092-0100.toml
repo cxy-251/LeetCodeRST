@@ -1,14 +1,15 @@
 [meta]
 version = 1
 range = "0092-0100"
-last_problem = 94
+last_problem = 97
 inherits = "state/concepts/0074-0100.toml"
 
 [updates]
-"julia_r.zero_based_algorithm_coordinates" = "0051-0091 已累计 31 次；0093 把零基字符位置和半开后缀换算为一基索引，累计 32 次。"
-"string.ascii_byte_character_equivalence" = "0058、0065、0067、0068、0071、0072、0087、0091、0093 都由精确 ASCII 字符域证明字节、UTF-16 代码单元和字符位置等价；累计 9 次。"
-"complexity.output_space_exclusion" = "0052、0062-0064、0070、0072、0087、0089-0091 已区分工作状态与返回载荷；0093 计入地址字符串输出，0094 区分 O(h) 栈与 Theta(n) 返回数组；累计 12 次。"
+"julia_r.zero_based_algorithm_coordinates" = "0051-0091 已累计 31 次；0093、0096、0097 继续把零基字符位置、节点数状态和 DP 坐标换算为一基槽位，累计 34 次。"
+"string.ascii_byte_character_equivalence" = "0058、0065、0067、0068、0071、0072、0087、0091、0093、0097 都由精确 ASCII 字符域证明字节、UTF-16 代码单元和字符位置等价；累计 10 次。"
+"complexity.output_space_exclusion" = "0052、0062-0064、0070、0072、0087、0089-0094 已区分工作状态与返回载荷；0095 明确 n*C_n 节点输出，0097 区分 O(min(m,n)) 工作数组；累计 14 次。"
 "interface.linked_list_node_reuse" = "0082、0083、0086、0092 都通过重连原节点返回结果；0092 新增闭区间反转、固定尾节点与区间外顺序保持，累计 4 次。"
+"interface.binary_tree_node_reference_model" = "0094 建立跨语言 TreeNode 引用模型；0095 在同一模型上生成结果并要求不同树之间不共享非空节点，累计 2 次。"
 
 [concepts]
 "algorithm.linked_list_interval_head_insertion" = "kind=algorithm; introduced=0092; last=0092; occurrences=1; teaching_state=explained; note=找到区间前驱后固定原区间首节点，每轮摘除其后继并插到区间头部，执行 right-left 次完成逆序。"
@@ -20,8 +21,19 @@ inherits = "state/concepts/0074-0100.toml"
 "proof.ipv4_monotone_segment_rejection" = "kind=proof; introduced=0093; last=0093; occurrences=1; teaching_state=explained; note=多字符前导零对所有更长段持续非法；十进制值首次超过 255 后继续附加数字也不会恢复合法。"
 "complexity.ipv4_fixed_depth_output" = "kind=complexity; introduced=0093; last=0093; occurrences=1; teaching_state=explained; note=有效长度最多 12、段数固定 4、每层最多三选，搜索节点为常数上界；地址构造成本按输出字符总量计。"
 "c.transactional_ip_string_results" = "kind=language_boundary; introduced=0093; last=0093; occurrences=1; teaching_state=explained; note=C 由四段长度各三种选择推出 81 个结果槽位上界，每个地址独立分配最多 16 字节；任一失败时释放全部已完成字符串和外层数组。"
-"interface.binary_tree_node_reference_model" = "kind=interface; introduced=0094; last=0094; occurrences=1; teaching_state=explained; note=TreeNode 保存 val、left、right 可空引用；Julia 用 mutable struct，R 用 environment，Rust 平台类型用 Rc<RefCell<TreeNode>>。"
 "algorithm.binary_tree_inorder_explicit_stack" = "kind=algorithm; introduced=0094; last=0094; occurrences=1; teaching_state=explained; note=沿左链入栈，到空位置后弹出访问根，再把 current 切到右孩子，显式模拟左根右递归控制流。"
 "proof.inorder_stack_continuation_invariant" = "kind=proof; introduced=0094; last=0094; occurrences=1; teaching_state=explained; note=栈保存左子树尚未完成返回的祖先续点；左链结束时栈顶左子树已完成，是下一个中序访问节点。"
 "complexity.tree_height_stack_space" = "kind=complexity; introduced=0094; last=0094; occurrences=1; teaching_state=explained; note=每个节点入栈出栈各一次，时间 O(n)；栈只保存一条祖先链，空间 O(h)，退化树最坏 O(n)。"
 "r.binary_tree_environment_nodes" = "kind=language_boundary; introduced=0094; last=0094; occurrences=1; teaching_state=explained; note=R 用 environment 表达树节点引用语义；显式栈保存环境引用，不复制子树，结果向量扩展可能产生累计复制。"
+"algorithm.unique_bst_interval_cartesian_product" = "kind=algorithm; introduced=0095; last=0095; occurrences=1; teaching_state=explained; note=对连续值域枚举根值，递归生成左右区间全部树，再对左右列表执行笛卡尔积。"
+"proof.unique_bst_root_partition_bijection" = "kind=proof; introduced=0095; last=0095; occurrences=1; teaching_state=explained; note=每棵 BST 由唯一根值和唯一左右结构对确定；不同根或不同子树对产生不同整树。"
+"interface.unique_bst_independent_tree_clones" = "kind=interface; introduced=0095; last=0095; occurrences=1; teaching_state=explained; note=每个组合深复制左右模板，保证不同返回树不共享可变节点；空区间用单个 null 作为组合单位元。"
+"complexity.unique_bst_catalan_output" = "kind=complexity; introduced=0095; last=0095; occurrences=1; teaching_state=explained; note=结果有 C_n 棵树、每棵 n 个独立节点，时间和返回空间下界均为 Theta(n*C_n)。"
+"c.transactional_tree_forest_construction" = "kind=language_boundary; introduced=0095; last=0095; occurrences=1; teaching_state=explained; note=C 预计算 Catalan 容量，深复制失败时释放当前根、左右模板森林和全部已完成结果。"
+"algorithm.unique_bst_catalan_dp" = "kind=algorithm; introduced=0096; last=0096; occurrences=1; teaching_state=explained; note=counts[nodes] 对全部左节点数求 counts[left]*counts[nodes-1-left]，只保留结构数量。"
+"proof.unique_bst_count_root_product_sum" = "kind=proof; introduced=0096; last=0096; occurrences=1; teaching_state=explained; note=固定根位置后左右结构独立相乘，不同根位置对应互斥结构集合再求和；counts[0]=1 是空树单位元。"
+"numeric.catalan_19_int64_intermediate" = "kind=numeric; introduced=0096; last=0096; occurrences=1; teaching_state=explained; note=C_19=1767263190 适合 32 位返回值，固定宽语言仍使用 64 位 DP 或中间乘法。"
+"algorithm.interleaving_string_one_row_dp" = "kind=algorithm; introduced=0097; last=0097; occurrences=1; teaching_state=explained; note=dp[j] 表示两个来源前缀能否形成目标前缀；旧同列表示取 s1，当前左邻表示取 s2。"
+"proof.interleaving_left_to_right_overwrite" = "kind=proof; introduced=0097; last=0097; occurrences=1; teaching_state=explained; note=左到右更新时 dp[j] 尚为上一行同列、dp[j-1] 已为当前行左邻，恰好满足二维转移依赖。"
+"complexity.interleaving_shorter_column_space" = "kind=complexity; introduced=0097; last=0097; occurrences=1; teaching_state=explained; note=交换两个对称来源使短串作为列，时间 O(mn)，工作空间 O(min(m,n))。"
+"c.boolean_allocation_failure_contract" = "kind=language_boundary; introduced=0097; last=0097; occurrences=1; teaching_state=explained; note=C 平台接口只返回 bool，无法区分合法 false 与极端 calloc 失败，适配器在失败时返回 false 并在正文明确。"
