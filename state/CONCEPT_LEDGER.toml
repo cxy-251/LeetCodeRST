@@ -1,14 +1,13 @@
 [meta]
-version = 4
-last_problem = 150
+version = 3
+last_problem = 100
 format = "segmented"
 
 [records]
 legacy = "state/concepts/0001-0050.toml"
 previous = "state/concepts/0051-0100.toml"
 current = "state/concepts/0074-0100.toml"
-recent = "state/concepts/0092-0100.toml"
-latest = "state/concepts/0101-0150.toml"
+latest = "state/concepts/0092-0100.toml"
 
 [resolution]
-statement = "按 legacy、previous、current、recent、latest 顺序读取；后续分段中的同名 updates 覆盖更早记录，problems 条目登记新题的算法主线和教学重点。"
+statement = "按 legacy、previous、current、latest 顺序读取；后续分段中的同名 updates 覆盖更早记录的 last_problem、occurrences、teaching_state 和 note。"
