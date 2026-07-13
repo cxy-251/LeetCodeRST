@@ -1,0 +1,39 @@
+name: Unpack 0105-0107 quality batch
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+jobs:
+  unpack:
+    if: github.head_ref == 'agent/generate-0105-0107-quality'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Materialize formal files
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! -d .batch-upload-0105-0107 ]]; then
+            exit 0
+          fi
+          cat .batch-upload-0105-0107/part_* | base64 --decode > /tmp/batch0105_0107.tar.gz
+          printf '%s  %s\n' \
+            '8180e35dcfd51bf15c336ed2eecaf8e18e04e026703d6caf9549259b1af7a8ee' \
+            /tmp/batch0105_0107.tar.gz | sha256sum -c -
+          tar -xzf /tmp/batch0105_0107.tar.gz
+          rm -rf .batch-upload-0105-0107
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "content: materialize 0105-0107 quality batch"
+            git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
+          fi
