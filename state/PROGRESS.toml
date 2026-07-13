@@ -1,11 +1,10 @@
 [project]
 name = "leetcode-multilang-rst"
-phase = "forward_rules_ready"
+phase = "generation_ready"
 format = "rst"
 ordering = "leetcode_number_ascending"
 execution_mode = "conversation_only"
 git_workflow = "conversation_direct_main"
-workflow_selection = "direct_main_for_conversation_work"
 build_required = false
 content_language = "zh-CN"
 code_comment_language = "zh-CN"
@@ -20,11 +19,11 @@ needs_revision = []
 
 [last_batch]
 status = "completed"
-kind = "review_rule_consolidation"
-start = 51
+kind = "artifact_archive_cleanup"
+start = 1
 end = 100
-completed = 81
-summary = "完成 0051-0100 第二轮审查规则归并；81 条 promoted rules、14 项 active corrections 与旧前向规则已整理为 0101-0150 自包含执行规则。"
+archived_file_count = 40
+summary = "将两轮审查已消费的批次状态、findings、目录、旧前向规则和归并记录移入 archive，并清理活动入口。"
 
 [next_batch]
 status = "generation_ready"
@@ -39,17 +38,11 @@ mode = "second_round_content_review"
 source = "complete_rst_content"
 start = 51
 end = 100
-current = 101
 reviewed_count = 50
-batch_size = 5
 modify_historical_rst = false
-pr_metadata_is_evidence = false
 index = "state/REVIEW_INDEX.toml"
-legacy_catalog = "docs/REVIEW_CATALOG_0001_0050.rst"
-current_catalog = "docs/REVIEW_CATALOG_0051_0100.rst"
-latest_record = "state/reviews/0096-0100.toml"
-latest_findings = "docs/review-findings/0096-0100.rst"
-legacy_forward_rules = "docs/FORWARD_RULES_0051_0100.rst"
+first_round_archive = "archive/reviews/0001-0050/MANIFEST.rst"
+second_round_archive = "archive/reviews/0051-0100/MANIFEST.rst"
 
 [rule_consolidation]
 status = "completed"
@@ -58,9 +51,16 @@ source_end = 100
 source_batch_count = 10
 absorbed_promoted_rule_count = 81
 active_correction_count = 14
-record = "state/RULE_CONSOLIDATION_0051_0100.toml"
+record = "archive/reviews/0051-0100/RULE_CONSOLIDATION.toml"
 output = "docs/FORWARD_RULES_0101_0150.rst"
-requires_completion_before_problem = 101
+
+[artifact_lifecycle]
+policy = "docs/ARTIFACT_LIFECYCLE_POLICY.rst"
+archive_index = "archive/README.rst"
+active_review_batch_files = 0
+active_review_finding_files = 0
+last_archive = "archive/reviews/0051-0100/MANIFEST.rst"
+temporary_marker_present = false
 
 [quality_scope]
 historical_start = 1
@@ -83,7 +83,7 @@ index = "state/CONCEPT_LEDGER.toml"
 latest_record = "state/concepts/0092-0100.toml"
 
 [next_action]
-summary = "等待用户继续后，按照完整前向规则生成 0101-0105。"
+summary = "按照完整前向规则生成 0101-0105；普通生成不创建一次性中间报告。"
 
 [last_update]
-summary = "0051-0100 第二轮经验已完成去重归并；0101-0150 前向规则已就绪，历史题正文未修改。"
+summary = "两轮审查产物已统一归档，活动目录只保留当前规则、状态、模板和长期策略。"

@@ -13,24 +13,24 @@ Premium 或信息不足的题目登记到状态文件，材料完整后继续。
 
 ## 2. 当前状态
 
-`0001–0050` 的首轮题解与逐题审查均已完成。当前阶段由 `state/PROGRESS.toml` 决定，下一题为
-`0051. N-Queens`。
+`0001–0100` 的多语言教程已经完成；`0051–0100` 的第二轮逐题审查和规则归并也已完成。
+当前阶段由 `state/PROGRESS.toml` 决定，下一批是 `0101–0105`。
 
-审查证据目录见 `docs/REVIEW_CATALOG_0001_0050.rst`。新题完整规则见
-`docs/FORWARD_RULES_0051_0100.rst`。
+当前完整执行规则是 `docs/FORWARD_RULES_0101_0150.rst`。两轮审查证据已移入 `archive/reviews/`，
+只在追溯规则来源或修复历史题时读取。
 
 ## 3. 规则优先级
 
 出现重复或冲突时按以下顺序解释：
 
 1. `state/PROGRESS.toml`：当前阶段、完成范围和下一步；
-2. `state/REVIEW_INDEX.toml`：审查覆盖和事实更正；
-3. `docs/FORWARD_RULES_0051_0100.rst`：新题完整执行规则；
-4. 专项文件：质量门、模板、解法类型、RST 风格和执行流程；
-5. 批次审查记录：证据来源和历史快照；
+2. `state/REVIEW_INDEX.toml`：active corrections 与归档索引；
+3. 当前阶段完整前向规则；
+4. 专项策略、模板和质量门；
+5. `archive/` 中的批次证据与历史快照；
 6. 提交说明、PR 描述和对话报告。
 
-高优先级文件覆盖低优先级文件。批次审查记录不覆盖已经整理后的最终规则。
+高优先级文件覆盖低优先级历史快照。
 
 ## 4. 新对话接手
 
@@ -39,32 +39,33 @@ Premium 或信息不足的题目登记到状态文件，材料完整后继续。
 1. `AGENTS.md`；
 2. `README.rst`；
 3. `state/PROGRESS.toml`；
-4. `docs/FORWARD_RULES_0051_0100.rst`；
-5. `docs/AUTOMATION_QUALITY_GATE.rst`；
-6. `docs/PROBLEM_TEMPLATE.rst`；
-7. `docs/SOLUTION_AND_TYPES_POLICY.rst`；
-8. `docs/RST_STYLE_GUIDE.rst`；
-9. `docs/AUTOMATION_DIRECT_MAIN_POLICY.rst`；
-10. `state/CONCEPT_LEDGER.toml`；
-11. 本轮当前题与最近相关题目。
+4. `state/REVIEW_INDEX.toml`；
+5. `docs/FORWARD_RULES_0101_0150.rst`；
+6. `docs/AUTOMATION_QUALITY_GATE.rst`；
+7. `docs/PROBLEM_TEMPLATE.rst`；
+8. `docs/SOLUTION_AND_TYPES_POLICY.rst`；
+9. `docs/RST_STYLE_GUIDE.rst`；
+10. `docs/AUTOMATION_DIRECT_MAIN_POLICY.rst`；
+11. `docs/ARTIFACT_LIFECYCLE_POLICY.rst`；
+12. `state/CONCEPT_LEDGER.toml`；
+13. 本轮当前题与最近相关题目。
 
-需要追溯某项规则来源时，再读取 `docs/REVIEW_CATALOG_0001_0050.rst` 和对应批次证据。
+需要追溯某条历史规则时，再读取 `archive/README.rst` 和对应范围 manifest，不逐份扫描整个 archive。
 
 ## 5. 对话驱动工作流
 
-所有审查、生成和修复从用户在当前对话中的明确指令开始。
+所有审查、生成、修复和归档从用户在当前对话中的明确指令开始。每轮完成：
 
-每轮按以下顺序完成：
+1. 读取最新状态和当前规则；
+2. 确定唯一连续范围；
+3. 一次性准备正文、代码、索引和状态更新；
+4. 执行当前质量门；
+5. 清除未使用的 marker、草稿和阶段性中间文件；
+6. 将完整结果形成一个原子提交进入 `main`；
+7. 重新读取 `main` 验证；
+8. 报告实际结果和下一步。
 
-1. 读取最新状态和相关内容；
-2. 根据用户指令与状态确定本轮范围；
-3. 一次性准备正文、代码、记录、索引和状态更新；
-4. 按当前质量规则完成检查；
-5. 将完整结果形成一个原子提交写入 `main`；
-6. 重新读取 `main` 验证结果；
-7. 在当前对话中报告完成内容、主要发现和下一步。
-
-详细流程见 `docs/AUTOMATION_DIRECT_MAIN_POLICY.rst`。该文件名为历史兼容路径，内容是对话驱动执行流程。
+详细流程见 `docs/AUTOMATION_DIRECT_MAIN_POLICY.rst`。
 
 ## 6. 新题生成
 
@@ -73,91 +74,74 @@ Premium 或信息不足的题目登记到状态文件，材料完整后继续。
 1. 按题号递增确定连续范围；
 2. 使用 Easy=1、Medium=2、Hard=4 的难度预算控制单批工作量；
 3. 每道题完成原创重述、自建示例、问题抽象、解法选择、正确性证明、复杂度、边界和十语言实现；
-4. 应用 `docs/FORWARD_RULES_0051_0100.rst` 与质量门；
-5. 同步题目 RST、两个 README、`PROGRESS.toml` 和 `CONCEPT_LEDGER.toml`；
-6. 复查完成范围和新的 `next_problem`。
+4. 应用当前阶段前向规则与质量门；
+5. 同步题目 RST、范围 README、根 README、`PROGRESS.toml` 和知识账本；
+6. 不为普通生成任务保留一次性分析报告或中间计划文件；
+7. 复查完成范围和新的 `next_problem`。
 
 ## 7. 历史题修复
 
-`0001–0050` 的审查发现默认只用于前向规则。用户明确指定某一道历史题需要修改时：
+用户明确指定某一道历史题需要修改时：
 
-1. 重新读取该题完整 RST 与相关规则；
-2. 明确缺陷类别；
-3. 修改该题和确实受影响的公共文件；
-4. 使用针对性验证；
-5. 形成独立原子提交；
-6. 保持题号进度不变。
+1. 读取该题完整 RST、active correction 和当前规则；
+2. 按 archive manifest 定位对应审查证据；
+3. 明确缺陷类别；
+4. 只修改该题和确实受影响的公共文件；
+5. 使用针对性验证；
+6. 形成独立原子提交；
+7. 保持题号进度不变。
 
 ## 8. 内容结构
 
-每道题根据教学需要组织：
-
-1. 标题与题目信息；
-2. 原创题目重述；
-3. 自建示例；
-4. 问题抽象；
-5. 解法选择与取舍；
-6. 主解法状态或不变量；
-7. 正确性依据；
-8. 时间与空间复杂度；
-9. 十语言实现；
-10. 关键边界与易错点；
-11. 新增与强化知识；
-12. 关联题目；
-13. 最小自检与答案要点。
+每道题根据教学需要组织：标题与题目信息、原创重述、自建示例、问题抽象、解法选择、状态或不变量、
+正确性依据、复杂度、十语言实现、关键边界、知识更新、关联题目和最小自检。
 
 简单题保持紧凑，复杂题提供足够推导。章节服务于理解，不为模板数量扩写内容。
 
 ## 9. 固定核心语言
 
-普通算法题默认提供：C、C++、Python、Java、Rust、Go、TypeScript、C#、Julia、R。
-
-数据库题使用 SQL；Shell 题使用 Bash 或 POSIX Shell。语言接口、平台类型和适配器见
-`docs/LANGUAGE_SCOPE.rst` 与 `docs/SOLUTION_AND_TYPES_POLICY.rst`。
+普通算法题默认提供 C、C++、Python、Java、Rust、Go、TypeScript、C#、Julia 和 R。数据库题使用 SQL；
+Shell 题使用 Bash 或 POSIX Shell。语言接口与平台类型见 `docs/LANGUAGE_SCOPE.rst` 和
+`docs/SOLUTION_AND_TYPES_POLICY.rst`。
 
 ## 10. 解法与代码原则
 
-主解法在正确性、复杂度、可读性和跨语言可实现性之间取得平衡。十语言保持同一问题语义。
-
-对照解法只用于实质差异，例如复杂度、状态设计、算法演进或语言特化。标准库容器和算法优先使用，
-并说明语义、复杂度、前提和版本。当标准库隐藏题目核心时，同时提供工程写法与教学写法。
+主解法在正确性、复杂度、可读性和跨语言可实现性之间取得平衡。十语言保持同一问题语义。标准库容器和
+算法优先使用，同时说明语义、复杂度、前提和版本。
 
 `ListNode`、`TreeNode`、`Node` 等平台类型首次出现时解释结构，后续复用。Julia 使用 `mutable struct`
 表达可变节点，R 使用 `environment` 表达引用语义。
 
 ## 11. 教学模型
 
-语言语法和常用库按 `introduced`、`reinforcing`、`familiar`、`refresh`、`mastered` 推进。
-
-疑难算法周期复现，每次聚焦当前题的新状态和新边界。代码注释靠近对应语句，优先控制在 88 个显示列
-以内，硬上限为 100。
+语言语法和常用库按 `introduced`、`reinforcing`、`familiar`、`refresh`、`mastered` 推进。疑难算法周期
+复现，每次聚焦当前题的新状态和新边界。代码注释靠近对应语句，优先控制在 88 个显示列以内，硬上限 100。
 
 ## 12. 文档与验证
 
-RST 是主要格式。Mermaid 用于链表改向、树图结构、状态转移和回溯等文字难以表达的过程。
+每轮检查 RST 层级、代码块标记、Mermaid、相对链接、题号、文件名、状态、代码、证明和复杂度一致性。
+验证报告准确区分运行、编译、静态检查和基准对拍。
 
-每轮检查：
+## 13. 产物生命周期
 
-- RST 标题层级与指令缩进；
-- 代码块语言标记；
-- Mermaid 语法和相对链接；
-- 题号、文件名和状态一致；
-- 代码、证明、复杂度与讲解一致；
-- 验证报告准确区分运行、编译、静态检查和基准对拍。
+活动目录只保留当前执行文件。审查批次和 findings 在审查轮次进行时可以存在；完成规则归并后必须移入
+`archive/`。构建缓存、日志、临时 marker、未引用草稿和可由正式产物完全推导的一次性文件不得进入
+`main`。完整规则见 `docs/ARTIFACT_LIFECYCLE_POLICY.rst`。
 
-## 13. Git 工作方式
+## 14. Git 工作方式
 
-日常对话采用直接 `main` 工作流：写入前读取最新状态，一轮准备全部目标文件，形成一个原子提交，
-提交后重新读取验证。
+日常对话采用直接 `main` 的原子提交语义。连接器需要临时分支组装多文件时，最终通过 squash 只留下一个
+主分支提交；临时分支和 marker 不属于仓库正式产物。
 
 用户明确选择代码评审、多人协作或隔离实验时，采用用户指定的分支和 PR 流程。
 
-## 14. 交接结果
+## 15. 交接结果
 
 每轮结束时确认：
 
 - `PROGRESS.toml` 指向准确阶段和下一步；
 - README、题目索引和知识账本同步；
+- 活动目录没有已消费的中间文件；
+- archive manifest 覆盖本轮需要长期保留的证据；
 - 最近提交独立说明本轮范围；
-- 对话报告与 `main` 实际状态一致；
-- 下一轮从用户新的明确指令开始。
+- 对话报告与 `main` 实际状态一致。
