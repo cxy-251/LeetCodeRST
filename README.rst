@@ -18,29 +18,30 @@ LeetCode 多语言 RST 学习仓库
 --------
 
 ``0001`` 至 ``0100`` 的首轮多语言 RST 已完成。``0001`` 至 ``0050`` 的第一次逐题规则提炼已经完成；
-``0051`` 至 ``0100`` 的第二轮逐题审查正在进行，当前已完成 ``0051`` 至 ``0095``。
+``0051`` 至 ``0100`` 的第二轮逐题审查也已全部完成，共覆盖 50 道题。
 
-本批完整审查：
+最后一批完整审查：
 
-* ``0091. Decode Ways``；
-* ``0092. Reverse Linked List II``；
-* ``0093. Restore IP Addresses``；
-* ``0094. Binary Tree Inorder Traversal``；
-* ``0095. Unique Binary Search Trees II``。
+* ``0096. Unique Binary Search Trees``；
+* ``0097. Interleaving String``；
+* ``0098. Validate Binary Search Tree``；
+* ``0099. Recover Binary Search Tree``；
+* ``0100. Same Tree``。
 
-``0091`` 至 ``0094`` 的核心算法和十语言控制流未发现新的确定性问题。``0095`` 的根值分治、空树占位、
-笛卡尔积与深复制算法正确，但 R 适配器调用未定义的 ``tree_node``，与 ``0094`` 的
-``new_tree_node`` 构造器不一致；更正已登记，历史题目正文保持原样。
+五题核心算法和十语言控制流均正确。``0097`` 的一行 DP 核心工作数组确为 ``O(min(m,n))``，但 C++
+按值复制三个字符串，Julia 物化两个来源字节数组，R 物化三个整数向量；完整适配器空间更正已登记，
+历史题目正文保持原样。
 
-本批提升了强制边界分段与中间值支配、链表区间边证书、所有权替代算法、固定段长度剪枝、显式递归续点、
-树结构前提、空结构组合单位元、深复制结果独立性和跨文件 helper 一致性规则。
+本批提升了计数状态等价类、宽中间值、压缩 DP 更新方向、适配器物化分层、可选状态哨兵、相邻顺序见证、
+两值交换端点、延迟写入以及成对结构递归规则。
 
-下一审查批次为 ``0096`` 至 ``0100``。
+下一动作是归并 ``0051`` 至 ``0100`` 第二轮审查中的稳定规则、事实更正和验证限制。规则归并完成前，
+不启动 ``0101`` 之后的题目生成。
 
 核心入口
 --------
 
-* ``state/PROGRESS.toml``：当前阶段、覆盖范围和下一批；
+* ``state/PROGRESS.toml``：当前阶段、覆盖范围和下一步；
 * ``state/REVIEW_INDEX.toml``：审查记录、规则来源和事实更正；
 * ``docs/REVIEW_CATALOG_0051_0100.rst``：第二轮审查资料目录；
 * ``docs/FORWARD_RULES_0051_0100.rst``：首轮审查后用于 0051–0100 的完整执行规则；
@@ -82,6 +83,7 @@ LeetCode 多语言 RST 学习仓库
 * ``state/reviews/0081-0085.toml``；
 * ``state/reviews/0086-0090.toml``；
 * ``state/reviews/0091-0095.toml``；
+* ``state/reviews/0096-0100.toml``；
 * ``docs/review-findings/0051-0055.rst``；
 * ``docs/review-findings/0056-0060.rst``；
 * ``docs/review-findings/0061-0065.rst``；
@@ -90,7 +92,8 @@ LeetCode 多语言 RST 学习仓库
 * ``docs/review-findings/0076-0080.rst``；
 * ``docs/review-findings/0081-0085.rst``；
 * ``docs/review-findings/0086-0090.rst``；
-* ``docs/review-findings/0091-0095.rst``。
+* ``docs/review-findings/0091-0095.rst``；
+* ``docs/review-findings/0096-0100.rst``。
 
 批次记录属于证据和追溯资料。事实冲突先读取 ``state/REVIEW_INDEX.toml`` 的更正。
 
