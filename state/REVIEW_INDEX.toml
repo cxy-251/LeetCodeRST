@@ -14,6 +14,8 @@ status = "completed"
 legacy_catalog = "docs/REVIEW_CATALOG_0001_0050.rst"
 current_catalog = "docs/REVIEW_CATALOG_0051_0100.rst"
 legacy_forward_rules = "docs/FORWARD_RULES_0051_0100.rst"
+consolidated_forward_rules = "docs/FORWARD_RULES_0101_0150.rst"
+consolidation_record = "state/RULE_CONSOLIDATION_0051_0100.toml"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
 review_policy = "docs/REVIEW_AND_PREVENTION_POLICY.rst"
 solution_policy = "docs/SOLUTION_AND_TYPES_POLICY.rst"
@@ -166,6 +168,16 @@ end = 100
 status = "completed"
 findings = "docs/review-findings/0096-0100.rst"
 
+[rule_consolidation]
+status = "completed"
+source_start = 51
+source_end = 100
+source_batch_count = 10
+absorbed_promoted_rule_count = 81
+active_correction_count = 14
+record = "state/RULE_CONSOLIDATION_0051_0100.toml"
+output = "docs/FORWARD_RULES_0101_0150.rst"
+
 [corrections.julia_unitrange]
 status = "active"
 source = "https://docs.julialang.org/en/v1/base/collections/#Base.UnitRange"
@@ -255,15 +267,17 @@ supersedes = "0097 complexity text presenting O(min(m,n)) as the complete auxili
 statement = "O(min(m,n)) describes only the rolling Boolean DP array. The C++ signature copies s1, s2, and s3 by value for O(m+n+|s3|) extra and peak space; Julia materializes O(m+n) source byte arrays with collect(codeunits(...)); R materializes O(m+n+|s3|) integer vectors with utf8ToInt."
 
 [next_action]
-kind = "review_rule_consolidation"
+kind = "problem_generation"
 status = "ready"
-start = 51
-end = 100
-purpose = "Consolidate stable second-round rules and active corrections before starting problem 0101."
+start = 101
+end = 105
+purpose = "Generate problems 0101-0105 using docs/FORWARD_RULES_0101_0150.rst before any implementation begins."
 
 [rule_sources]
 base_findings = "docs/REVIEW_FINDINGS_0001_0050.rst"
 legacy_forward_rules = "docs/FORWARD_RULES_0051_0100.rst"
+consolidation_record = "state/RULE_CONSOLIDATION_0051_0100.toml"
+consolidated_forward_rules = "docs/FORWARD_RULES_0101_0150.rst"
 second_round_findings = [
   "docs/review-findings/0051-0055.rst",
   "docs/review-findings/0056-0060.rst",
