@@ -148,6 +148,8 @@ rule_ids = [
   "intermediate_bound_from_monotone_factors",
   "wide_intermediate_before_narrow_return",
   "compressed_dp_dependency_direction",
+  "memo_key_covers_semantic_state",
+  "cache_negative_results",
   "combinatorial_rank_block_contract",
   "combinatorial_capacity_intermediate_bound",
   "forced_boundary_factorization",
