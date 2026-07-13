@@ -107,33 +107,37 @@ LeetCode 0001–0100
 #. `0095. Unique Binary Search Trees II <0095-unique-binary-search-trees-ii.rst>`_
 #. `0096. Unique Binary Search Trees <0096-unique-binary-search-trees.rst>`_
 #. `0097. Interleaving String <0097-interleaving-string.rst>`_
+#. `0098. Validate Binary Search Tree <0098-validate-binary-search-tree.rst>`_
+#. `0099. Recover Binary Search Tree <0099-recover-binary-search-tree.rst>`_
+#. `0100. Same Tree <0100-same-tree.rst>`_
 
 阶段状态
 --------
 
-``0001`` 至 ``0097`` 的首轮教程已经完成。``0001`` 至 ``0050`` 的审查规则正在应用于
-``0051`` 至 ``0100`` 的新题。
+``0001`` 至 ``0100`` 的首轮教程已经完成。``0001`` 至 ``0050`` 的第一次逐题审查已经完成；现在进入
+``0051`` 至 ``0100`` 的第二轮逐题规则提炼审查。
 
-下一内容批次
+下一审查批次
 ------------
 
-下一批完成本范围最后三题：
+首批审查范围为：
 
-* ``0098. Validate Binary Search Tree``：Medium；
-* ``0099. Recover Binary Search Tree``：Medium；
-* ``0100. Same Tree``：Easy。
+* ``0051. N-Queens``；
+* ``0052. N-Queens II``；
+* ``0053. Maximum Subarray``；
+* ``0054. Spiral Matrix``；
+* ``0055. Jump Game``。
 
-三题难度总分为 5。完成后启动 ``0051`` 至 ``0100`` 的逐题规则提炼审查。
+审查读取每题完整正文和十语言代码，输出结构化证据与后续规则；默认不修改历史 RST 正文。
 
-0095–0097 学习重点
+0098–0100 学习重点
 ------------------
 
-* 按根值拆分连续值域，并对左右树列表执行笛卡尔积；
-* 深复制每个组合的子树，保证返回树之间没有共享可变节点；
-* 用 Catalan 递推只统计相同 BST 结构集合；
-* 用 64 位中间计数闭合 ``n <= 19`` 的数值安全；
-* 用双前缀状态判断交错字符串，并按左到右顺序压缩为一行；
-* 把较短来源字符串作为列，将工作空间降为 ``O(min(m,n))``。
+* 用中序严格递增充要刻画 BST，并用独立存在标志避免整数哨兵碰撞；
+* 从一次或两次中序下降中定位被交换的两个节点值；
+* 只交换值以保持树结构和节点身份；
+* 用成对递归与空节点对称基例判断两棵树结构和值完全一致；
+* 区分树高辅助空间与布尔返回值。
 
 关联题目
 --------
