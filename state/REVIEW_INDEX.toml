@@ -3,8 +3,8 @@ mode = "second_round_content_review"
 source = "complete_rst_content"
 start = 51
 end = 100
-current = 56
-reviewed_count = 5
+current = 61
+reviewed_count = 10
 batch_size = 5
 modify_historical_rst = false
 pr_metadata_is_evidence = false
@@ -94,6 +94,14 @@ end = 55
 status = "completed"
 findings = "docs/review-findings/0051-0055.rst"
 
+[records.batch_0056_0060]
+path = "state/reviews/0056-0060.toml"
+round = 2
+start = 56
+end = 60
+status = "completed"
+findings = "docs/review-findings/0056-0060.rst"
+
 [corrections.julia_unitrange]
 status = "active"
 source = "https://docs.julialang.org/en/v1/base/collections/#Base.UnitRange"
@@ -123,15 +131,16 @@ supersedes = "0054 static-review claim that its R reverse ranges are safe for al
 statement = "R seq.int(from,to,by) errors when to-from and by have opposite signs. Before constructing a descending sequence, code must prove from>=to; C-style loop conditions cannot be assumed to produce an empty R sequence."
 
 [next_review]
-start = 56
-end = 60
-purpose = "Review 0056 Merge Intervals through 0060 Permutation Sequence from complete RST content."
+start = 61
+end = 65
+purpose = "Review 0061 Rotate List through 0065 Valid Number from complete RST content."
 
 [rule_sources]
 base_findings = "docs/REVIEW_FINDINGS_0001_0050.rst"
 legacy_forward_rules = "docs/FORWARD_RULES_0051_0100.rst"
 second_round_findings = [
   "docs/review-findings/0051-0055.rst",
+  "docs/review-findings/0056-0060.rst",
 ]
 legacy_batch_findings = [
   "docs/review-findings/0016-0020.rst",
