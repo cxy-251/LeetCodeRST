@@ -17,25 +17,30 @@ LeetCode 多语言 RST 学习仓库
 当前状态
 --------
 
-``0001`` 至 ``0100`` 的首轮多语言 RST 已完成。``0001`` 至 ``0050`` 的第一次逐题规则提炼已经完成，
-当前准备对 ``0051`` 至 ``0100`` 执行第二轮逐题审查。
+``0001`` 至 ``0100`` 的首轮多语言 RST 已完成。``0001`` 至 ``0050`` 的第一次逐题规则提炼已经完成；
+``0051`` 至 ``0100`` 的第二轮逐题审查正在进行，当前已完成 ``0051`` 至 ``0055``。
 
-当前批次完成：
+本批完整审查：
 
-* ``0098. Validate Binary Search Tree``：中序严格递增、可选前驱与全局 BST 约束；
-* ``0099. Recover Binary Search Tree``：一次或两次下降、错误端点定位与原地值交换；
-* ``0100. Same Tree``：成对递归、空节点结构检查与树高归纳。
+* ``0051. N-Queens``；
+* ``0052. N-Queens II``；
+* ``0053. Maximum Subarray``；
+* ``0054. Spiral Matrix``；
+* ``0055. Jump Game``。
 
-``0001`` 至 ``0100`` 首轮生成已经闭环。下一阶段从 ``0051`` 开始，逐题读取完整正文和十语言代码，
-执行第二轮规则提炼审查；首个审查批次为 ``0051`` 至 ``0055``。
+本批确认两项确定性 R 语言问题：``0051`` 的普通闭包子赋值无法把父层回溯状态传入递归子调用；
+``0054`` 的反向 ``seq.int`` 在单行或单列退化边界中可能因方向冲突报错。历史题目正文按审查策略保持
+原样，事实更正已登记到 ``state/REVIEW_INDEX.toml``。
 
-第二轮审查只提炼前瞻规则和结构化证据，默认不修改已经完成的历史题目正文。
+下一审查批次为 ``0056`` 至 ``0060``。
 
 核心入口
 --------
 
-* ``state/PROGRESS.toml``：当前阶段、完成范围和下一题；
-* ``docs/FORWARD_RULES_0051_0100.rst``：0051–0100 唯一的完整执行规则；
+* ``state/PROGRESS.toml``：当前阶段、覆盖范围和下一批；
+* ``state/REVIEW_INDEX.toml``：审查记录、规则来源和事实更正；
+* ``docs/REVIEW_CATALOG_0051_0100.rst``：第二轮审查资料目录；
+* ``docs/FORWARD_RULES_0051_0100.rst``：首轮审查后用于 0051–0100 的完整执行规则；
 * ``docs/AUTOMATION_QUALITY_GATE.rst``：当前对话批次的验收步骤；
 * ``docs/PROBLEM_TEMPLATE.rst``：单题结构骨架；
 * ``docs/SOLUTION_AND_TYPES_POLICY.rst``：解法、平台类型和语言适配器；
@@ -55,26 +60,30 @@ LeetCode 多语言 RST 学习仓库
 审查资料
 --------
 
-``0001`` 至 ``0050`` 的所有审查信息已经落入仓库：
+第一次审查：
 
-* ``docs/REVIEW_CATALOG_0001_0050.rst``：资料目录、文件职责和规则优先级；
-* ``state/REVIEW_INDEX.toml``：覆盖范围、批次索引和事实更正；
-* ``state/REVIEW_0001_0050.toml``：0001–0015 结构化记录；
-* ``state/reviews/``：0016–0050 分批结构化记录；
-* ``docs/REVIEW_FINDINGS_0001_0050.rst``：0001–0015 详细证据；
-* ``docs/review-findings/``：0016–0050 分批详细证据。
+* ``docs/REVIEW_CATALOG_0001_0050.rst``；
+* ``state/REVIEW_0001_0050.toml`` 与 ``state/reviews/0016-0050``；
+* ``docs/REVIEW_FINDINGS_0001_0050.rst`` 与 ``docs/review-findings/0016-0050``；
+* ``docs/FORWARD_RULES_0051_0100.rst``。
 
-批次记录是审查证据和追溯资料，最终执行规则以 ``docs/FORWARD_RULES_0051_0100.rst`` 为准。
+第二轮审查：
+
+* ``docs/REVIEW_CATALOG_0051_0100.rst``；
+* ``state/reviews/0051-0055.toml``；
+* ``docs/review-findings/0051-0055.rst``。
+
+批次记录属于证据和追溯资料。事实冲突先读取 ``state/REVIEW_INDEX.toml`` 的更正。
 
 知识账本
 --------
 
 ``state/CONCEPT_LEDGER.toml`` 使用分段记录：
 
-* ``state/concepts/0001-0050.toml`` 保留前 50 题的完整知识记录；
-* ``state/concepts/0051-0100.toml`` 保留 0051–0073 的新增概念和强化记录；
-* ``state/concepts/0074-0100.toml`` 从 0074 起继续记录本阶段知识；
-* ``state/concepts/0092-0100.toml`` 保存 0092–0100 的最终阶段记录。
+* ``state/concepts/0001-0050.toml``；
+* ``state/concepts/0051-0100.toml``；
+* ``state/concepts/0074-0100.toml``；
+* ``state/concepts/0092-0100.toml``。
 
 后续分段中的同名 ``updates`` 覆盖更早记录的最新题号、出现次数、教学状态和说明。
 
@@ -84,10 +93,11 @@ LeetCode 多语言 RST 学习仓库
 出现重复或冲突时：
 
 #. ``state/PROGRESS.toml`` 决定当前阶段和下一步；
-#. ``state/REVIEW_INDEX.toml`` 的更正覆盖旧审查观察；
-#. ``docs/FORWARD_RULES_0051_0100.rst`` 决定新题质量规则；
-#. 专项策略和模板只负责各自范围；
-#. 批次记录用于追溯，不覆盖最终规则。
+#. ``state/REVIEW_INDEX.toml`` 的事实更正；
+#. 已完成归并的前向规则；
+#. 专项策略和模板；
+#. 批次记录与详细发现；
+#. 提交说明、PR 描述和对话报告。
 
 执行方式
 --------
