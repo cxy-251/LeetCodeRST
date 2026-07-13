@@ -3,8 +3,8 @@ mode = "second_round_content_review"
 source = "complete_rst_content"
 start = 51
 end = 100
-current = 66
-reviewed_count = 15
+current = 71
+reviewed_count = 20
 batch_size = 5
 modify_historical_rst = false
 pr_metadata_is_evidence = false
@@ -110,6 +110,14 @@ end = 65
 status = "completed"
 findings = "docs/review-findings/0061-0065.rst"
 
+[records.batch_0066_0070]
+path = "state/reviews/0066-0070.toml"
+round = 2
+start = 66
+end = 70
+status = "completed"
+findings = "docs/review-findings/0066-0070.rst"
+
 [corrections.julia_unitrange]
 status = "active"
 source = "https://docs.julialang.org/en/v1/base/collections/#Base.UnitRange"
@@ -145,9 +153,9 @@ supersedes = "0065 complexity text grouping Julia codeunits with R utf8ToInt as 
 statement = "Julia codeunits(s) returns a CodeUnits wrapper over the string's code units rather than materializing an O(n) copy. The Julia adapter uses O(1) auxiliary wrapper and scan state; R utf8ToInt(s) still materializes an O(n) integer vector."
 
 [next_review]
-start = 66
-end = 70
-purpose = "Review 0066 Plus One through 0070 Climbing Stairs from complete RST content."
+start = 71
+end = 75
+purpose = "Review 0071 Simplify Path through 0075 Sort Colors from complete RST content."
 
 [rule_sources]
 base_findings = "docs/REVIEW_FINDINGS_0001_0050.rst"
@@ -156,6 +164,7 @@ second_round_findings = [
   "docs/review-findings/0051-0055.rst",
   "docs/review-findings/0056-0060.rst",
   "docs/review-findings/0061-0065.rst",
+  "docs/review-findings/0066-0070.rst",
 ]
 legacy_batch_findings = [
   "docs/review-findings/0016-0020.rst",

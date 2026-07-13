@@ -1,0 +1,137 @@
+[batch]
+round = 2
+start = 66
+end = 70
+status = "completed"
+source = "complete_rst_content"
+modify_historical_rst = false
+summary = "完整读取 0066-0070 的 RST 正文、证明、复杂度和十语言代码；未发现确定性算法或代码错误，提升所有权输入复用、输出构造峰值、版本门槛、代数防溢出定义域与单调状态上界规则。"
+
+[problems."0066"]
+status = "reviewed"
+file = "problems/0001-0100/0066-plus-one.rst"
+positive = [
+  "连续 9 后缀、首个非 9 吸收进位和全 9 扩位形成完整的十进制加一不变量。",
+  "C 的 n+1 容量、失败返回和返回所有权明确；其他语言也保持调用者可见输入不变。",
+  "前插、扩容和返回快照成本均被纳入 O(n) 最坏复杂度。",
+]
+observations = [
+  "Rust 按值消费 Vec 后仍 clone 一份结果，正确但让输入与结果在函数内同时存活；调用者已失去输入所有权时，可以直接复用缓冲区而不违反可观察的输入不变性。",
+  "跨语言统一契约应按借用、共享和独占消费分别实现，不能把每种语言都机械翻译为先复制。",
+  "返回载荷、算法工作状态和输入/结果峰值并存需要分别报告。",
+]
+rule_ids = [
+  "caller_observable_input_semantics",
+  "owned_input_buffer_reuse",
+  "output_payload_and_peak_coexistence",
+]
+
+[problems."0067"]
+status = "reviewed"
+file = "problems/0001-0100/0067-add-binary.rst"
+positive = [
+  "低位对齐、缺失位补零、total<=3 和最终进位形成闭合二进制竖式证明。",
+  "max(m,n)+1 的结果位上界同时用于预分配、末端写入和 C 终止符容量。",
+  "R 预分配结果缓冲，Rust 与 Julia 使用字节视图，避免循环内平方级前置构造。",
+]
+observations = [
+  "各语言渐进空间都是 O(k)，但缓冲区被结果采用还是在冻结、join、toString 时复制，会改变峰值对象数量。",
+  "Go 使用 1.21 的预声明 max，版本限定 API 必须与教程最低版本和验证环境一致。",
+  "Julia codeunits 是视图，R utf8ToInt 会物化输入向量；相同字节扫描逻辑不代表相同适配器空间。",
+]
+rule_ids = [
+  "result_buffer_adopt_vs_copy",
+  "language_version_gated_api",
+  "capacity_includes_payload_and_terminator",
+]
+
+[problems."0068"]
+status = "reviewed"
+file = "problems/0001-0100/0068-text-justification.rst"
+positive = [
+  "最大装行由题目要求唯一确定，商余空格分配和左侧优先证明完整。",
+  "末行与单词独占行统一左对齐，避免普通行 gaps=0 的除零。",
+  "C 对外层结果和已完成行执行事务式失败清理，输出行均为独立快照。",
+]
+observations = [
+  "每行必须输出 maxWidth 个字符，时间下界本身就是 Omega(L*maxWidth)，不能把补空格当作常数。",
+  "Python、TypeScript 的行切片会建立引用数组；R 会建立片段向量，这些临时容器仍应计入峰值空间。",
+  "C 多次调用 strlen 仍为 O(S)，依赖每个单词只被常数次重新扫描；长度 API 成本不能默认 O(1)。",
+]
+rule_ids = [
+  "output_sensitive_lower_bound",
+  "substring_length_query_real_cost",
+  "temporary_reference_slice_space",
+  "transactional_multivalue_cleanup",
+]
+
+[problems."0069"]
+status = "reviewed"
+file = "problems/0001-0100/0069-sqrtx.rst"
+positive = [
+  "寻找最后可行值的闭区间二分、answer 保存和左右排除规则一致。",
+  "mid 使用差值计算，平方比较改写为除法，完整避开 32 位乘法溢出。",
+  "x<2 提前返回保证通用搜索中的 mid 始终为正。",
+]
+observations = [
+  "mid<=x/mid 与 mid*mid<=x 的等价性依赖 mid>0、x>=0 和整数除法舍入方向；不能脱离定义域复用。",
+  "防溢出证明需要覆盖边界移动和中点表达式，而不仅是被替换的平方。",
+]
+rule_ids = [
+  "overflow_avoiding_transform_domain",
+  "binary_search_predicate_semantic_alignment",
+]
+
+[problems."0070"]
+status = "reviewed"
+file = "problems/0001-0100/0070-climbing-stairs.rst"
+positive = [
+  "最后一步分类互斥且完备，两变量滚动和基础状态证明完整。",
+  "n<=45 给出精确 32 位上界，R 整数加法和其他固定宽语言均安全。",
+  "组合数公式提供独立验证基准，不需要枚举指数级走法集合。",
+]
+observations = [
+  "最终答案能约束中间状态，依赖正基础状态与非负加法使 ways(step) 单调非减；该结论不能迁移到含障碍或抵消的递推。",
+  "滚动状态的更新顺序属于正确性条件，必须先计算 current 或使用真正的并行赋值。",
+  "组合数基准的中间乘法仍需独立宽度证明。",
+]
+rule_ids = [
+  "monotone_recurrence_state_bound",
+  "rolling_state_update_order",
+  "count_scalar_vs_enumeration_space",
+]
+
+[rules."caller_observable_input_semantics"]
+status = "promoted"
+problems = [66]
+requirement = "描述输入不变性时按调用者可观察语义区分借用、共享和独占消费；所有权已经转移的容器可直接复用为结果，除非接口明确要求函数内部保留原值。"
+
+[rules."result_buffer_adopt_vs_copy"]
+status = "promoted"
+problems = [67]
+requirement = "字符串或数组输出除渐进空间外，还要记录临时缓冲是否被最终结果采用，或在 reverse、join、toString、冻结时产生第二份载荷；据此说明峰值并存。"
+
+[rules."language_version_gated_api"]
+status = "promoted"
+problems = [67]
+requirement = "使用特定语言版本新增的预声明函数或标准库 API 时，代码说明、最低版本和实际验证环境必须一致；算法正确不能替代可编译性验证。"
+
+[rules."output_sensitive_lower_bound"]
+status = "promoted"
+problems = [68]
+requirement = "必须物化固定宽度、多行或大型集合输出时，把输出载荷写入时间和空间复杂度，并指出任何实现都无法低于写出该载荷的下界。"
+
+[rules."overflow_avoiding_transform_domain"]
+status = "promoted"
+problems = [69]
+requirement = "用除法、重排或等价比较替代可能溢出的乘法前，证明变量符号、非零分母和目标语言的除法舍入方向；变换只在已证明定义域内使用。"
+
+[rules."monotone_recurrence_state_bound"]
+status = "promoted"
+problems = [70]
+requirement = "使用最终递推值作为全部中间状态的整数上界时，证明状态序列单调非减或给出其他支配关系；含障碍、抵消、删除或死路的递推必须单独分析。"
+
+[next_review]
+start = 71
+end = 75
+purpose = "Review 0071 Simplify Path through 0075 Sort Colors from complete RST content."
