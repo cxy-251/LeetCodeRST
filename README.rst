@@ -18,23 +18,23 @@ LeetCode 多语言 RST 学习仓库
 --------
 
 ``0001`` 至 ``0100`` 的首轮多语言 RST 已完成。``0001`` 至 ``0050`` 的第一次逐题规则提炼已经完成；
-``0051`` 至 ``0100`` 的第二轮逐题审查正在进行，当前已完成 ``0051`` 至 ``0070``。
+``0051`` 至 ``0100`` 的第二轮逐题审查正在进行，当前已完成 ``0051`` 至 ``0075``。
 
 本批完整审查：
 
-* ``0066. Plus One``；
-* ``0067. Add Binary``；
-* ``0068. Text Justification``；
-* ``0069. Sqrt(x)``；
-* ``0070. Climbing Stairs``。
+* ``0071. Simplify Path``；
+* ``0072. Edit Distance``；
+* ``0073. Set Matrix Zeroes``；
+* ``0074. Search a 2D Matrix``；
+* ``0075. Sort Colors``。
 
-本批未发现确定性算法或代码错误。主要提升了所有权输入复用、输出构造峰值、语言版本门槛、
-输出敏感复杂度、代数防溢出定义域和单调递推状态上界规则。
+本批五题算法实现均正确。审查确认 ``0071`` 的 R 动态字符栈最坏会发生平方级累计复制，并确认
+``0072`` 的 C++、Julia 与 R 适配器会物化或复制输入，峰值空间不是单纯的 ``O(min(m,n))``。
+事实更正已登记到 ``state/REVIEW_INDEX.toml``，历史题目正文保持原样。
 
-已有 ``0051``、``0054`` 和 ``0065`` 事实更正继续由 ``state/REVIEW_INDEX.toml`` 提供高优先级说明。
-历史题目正文保持原样。
+本批同时提升了原始见证保护、虚拟视图前提、有限输入域兜底分支，以及题目专用边界说明规则。
 
-下一审查批次为 ``0071`` 至 ``0075``。
+下一审查批次为 ``0076`` 至 ``0080``。
 
 核心入口
 --------
@@ -76,10 +76,12 @@ LeetCode 多语言 RST 学习仓库
 * ``state/reviews/0056-0060.toml``；
 * ``state/reviews/0061-0065.toml``；
 * ``state/reviews/0066-0070.toml``；
+* ``state/reviews/0071-0075.toml``；
 * ``docs/review-findings/0051-0055.rst``；
 * ``docs/review-findings/0056-0060.rst``；
 * ``docs/review-findings/0061-0065.rst``；
-* ``docs/review-findings/0066-0070.rst``。
+* ``docs/review-findings/0066-0070.rst``；
+* ``docs/review-findings/0071-0075.rst``。
 
 批次记录属于证据和追溯资料。事实冲突先读取 ``state/REVIEW_INDEX.toml`` 的更正。
 

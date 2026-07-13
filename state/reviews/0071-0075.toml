@@ -1,0 +1,136 @@
+[batch]
+round = 2
+start = 71
+end = 75
+status = "completed"
+source = "complete_rst_content"
+modify_historical_rst = false
+summary = "完整读取 0071-0075 的 RST 正文、证明、复杂度和十语言代码；五题核心算法正确，确认 0071 R 动态栈平方级累计复制和 0072 部分适配器 O(m+n) 物化空间。"
+
+[problems."0071"]
+status = "reviewed"
+file = "problems/0001-0100/0071-simplify-path.rst"
+positive = [
+  "组件栈精确区分空组件、点、双点和普通名称，根目录上的双点不会越界。",
+  "C 使用结果写入位置栈回滚组件，不为每个组件单独分配字符串。",
+  "特殊语义只匹配完整组件，不误处理三点、隐藏文件或名称后缀。",
+]
+observations = [
+  "R 反复使用 c 追加字符向量并用负下标删除，每轮重建当前栈；大量短组件时累计复制最坏 Theta(k^2)，与通用 O(n) 时间结论冲突。",
+  "split、join 和组件容器属于独立的物化对象，峰值空间应分层说明。",
+  "题目尾部保留了矩阵和滚动数组等通用模板句，未完全专用化。",
+]
+rule_ids = [
+  "repeated_copying_container_growth",
+  "component_marker_exact_match",
+  "problem_specific_tail_sections",
+]
+
+[problems."0072"]
+status = "reviewed"
+file = "problems/0001-0100/0072-edit-distance.rst"
+positive = [
+  "前缀状态和插入、删除、替换三类最后操作互斥完备。",
+  "一行 DP 正确保留上方、左侧和 diagonal 左上旧值。",
+  "较短字符串作为列使核心 DP 工作数组为 O(min(m,n))。",
+]
+observations = [
+  "C++ 按值复制两个输入字符串，Julia collect(codeunits(...)) 与 R utf8ToInt 物化两个输入数组；这些适配器峰值空间为 O(m+n)，不能只写核心 DP 的 O(min(m,n))。",
+  "对称交换只改变 DP 列宽，不能消除函数入口或字符转换阶段已经发生的复制。",
+  "ASCII 字符域支撑字节索引，但零拷贝与否仍由具体适配器决定。",
+]
+rule_ids = [
+  "algorithm_workspace_vs_adapter_materialization",
+  "compressed_dp_overwrite_dependencies",
+  "ascii_index_unit_vs_copy_semantics",
+]
+
+[problems."0073"]
+status = "reviewed"
+file = "problems/0001-0100/0073-set-matrix-zeroes.rst"
+positive = [
+  "首行首列标记和两个布尔值完整保存行列原始零见证。",
+  "保存边界、收集标记、应用内部、处理边界的四阶段顺序避免新增零继续传播。",
+  "单行单列时内部区域安全为空，R 显式守卫范围。",
+]
+observations = [
+  "R 返回修改后矩阵，核心标记状态仍为 O(1)，但接口复制可能为 O(mn)。",
+  "复用输入值作为标记时，正确性依赖原始见证与算法新增标记的严格阶段隔离。",
+]
+rule_ids = [
+  "witness_preserving_mutation_phases",
+  "algorithm_workspace_vs_interface_copy",
+  "empty_internal_region_range_guard",
+]
+
+[problems."0074"]
+status = "reviewed"
+file = "problems/0001-0100/0074-search-a-2d-matrix.rst"
+positive = [
+  "行内有序和跨行严格边界正确合成全局有序虚拟序列。",
+  "扁平下标与矩阵坐标一一映射，不复制矩阵。",
+  "Rust 半开 lower-bound 避免 usize 下溢，其他语言闭区间移动完整。",
+]
+observations = [
+  "虚拟二分依赖非空规则矩阵、跨行全局顺序和 rows*cols 容量安全，三项前提缺一不可。",
+  "一般化到更大矩阵时，元素总数乘积和终点下标需要独立溢出证明。",
+]
+rule_ids = [
+  "virtual_view_preconditions_and_capacity",
+  "global_order_from_block_boundaries",
+  "binary_search_interval_scheme_consistency",
+]
+
+[problems."0075"]
+status = "reviewed"
+file = "problems/0001-0100/0075-sort-colors.rst"
+positive = [
+  "零区、一区、未知区和二区四段不变量完整。",
+  "右端交换后不推进 current，确保换入的未知值被重新分类。",
+  "未知区长度严格缩短，交换保持长度和多重集。",
+]
+observations = [
+  "else 或 Rust 通配分支把所有非 0、非 1 值当作 2，正确性完全依赖输入只含三个值。",
+  "若输入域扩大，默认分支会静默吞掉非法值，应改为显式第三值或失败路径。",
+  "R 返回修改向量而非修改调用者绑定，接口副作用应与原地语言分开描述。",
+]
+rule_ids = [
+  "finite_domain_catch_all_branch",
+  "unknown_region_variant",
+  "in_place_vs_value_semantics",
+]
+
+[rules."repeated_copying_container_growth"]
+status = "promoted"
+problems = [71]
+requirement = "对复制型或不可变容器反复拼接、删除或切片重建时，按每轮当前容器长度累计复制成本；峰值可为线性而总时间和累计分配仍为平方级。"
+
+[rules."algorithm_workspace_vs_adapter_materialization"]
+status = "promoted"
+problems = [72, 73]
+requirement = "分别报告算法核心工作状态、参数按值复制、字符或字节物化、返回副本和峰值并存；状态压缩不能覆盖语言适配器产生的线性副本。"
+
+[rules."witness_preserving_mutation_phases"]
+status = "promoted"
+problems = [73]
+requirement = "原地复用输入区域作为标记前，先保存会被覆盖的原始见证；标记收集、内部应用和边界处理分阶段完成，禁止新增标记反向影响见证集合。"
+
+[rules."virtual_view_preconditions_and_capacity"]
+status = "promoted"
+problems = [74]
+requirement = "虚拟扁平、窗口或索引视图必须证明底层布局和全局顺序、映射双射、元素总数乘积及坐标换算容量安全。"
+
+[rules."finite_domain_catch_all_branch"]
+status = "promoted"
+problems = [75]
+requirement = "else、默认或通配分支代表唯一剩余值时，必须由题意、类型或运行检查锁定完整有限输入域；输入域扩大后改为显式分支或失败路径。"
+
+[rules."problem_specific_tail_sections"]
+status = "promoted"
+problems = [71, 72, 73]
+requirement = "模板实例化后逐项检查关键边界、易错点、自检和答案；每条都必须指向当前题目的具体状态、接口或语言边界，不保留其他题型占位文字。"
+
+[next_review]
+start = 76
+end = 80
+purpose = "Review 0076 Minimum Window Substring through 0080 Remove Duplicates from Sorted Array II from complete RST content."

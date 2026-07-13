@@ -21,17 +21,17 @@ needs_revision = []
 [last_batch]
 status = "completed"
 kind = "second_round_review"
-start = 66
-end = 70
+start = 71
+end = 75
 completed = 5
-summary = "完成 0066-0070 第二轮逐题审查，新增结构化记录与详细证据；未发现确定性算法或代码错误，提升所有权复用、输出峰值、版本门槛、代数变换与单调状态上界规则。"
+summary = "完成 0071-0075 第二轮逐题审查；确认 0071 R 栈累计复制和 0072 适配器物化空间偏差，五题核心算法正确。"
 
 [next_batch]
 status = "review_ready"
 kind = "second_round_review"
-start = 71
-end = 75
-purpose = "继续读取 0071 Simplify Path、0072 Edit Distance、0073 Set Matrix Zeroes、0074 Search a 2D Matrix 与 0075 Sort Colors 的完整正文和十语言代码。"
+start = 76
+end = 80
+purpose = "继续读取 0076 Minimum Window Substring、0077 Combinations、0078 Subsets、0079 Word Search 与 0080 Remove Duplicates from Sorted Array II 的完整正文和十语言代码。"
 
 [review]
 status = "in_progress"
@@ -39,16 +39,16 @@ mode = "second_round_content_review"
 source = "complete_rst_content"
 start = 51
 end = 100
-current = 71
-reviewed_count = 20
+current = 76
+reviewed_count = 25
 batch_size = 5
 modify_historical_rst = false
 pr_metadata_is_evidence = false
 index = "state/REVIEW_INDEX.toml"
 legacy_catalog = "docs/REVIEW_CATALOG_0001_0050.rst"
 current_catalog = "docs/REVIEW_CATALOG_0051_0100.rst"
-latest_record = "state/reviews/0066-0070.toml"
-latest_findings = "docs/review-findings/0066-0070.rst"
+latest_record = "state/reviews/0071-0075.toml"
+latest_findings = "docs/review-findings/0071-0075.rst"
 legacy_forward_rules = "docs/FORWARD_RULES_0051_0100.rst"
 
 [quality_scope]
@@ -72,7 +72,7 @@ index = "state/CONCEPT_LEDGER.toml"
 latest_record = "state/concepts/0092-0100.toml"
 
 [next_action]
-summary = "等待用户继续后，审查 0071 Simplify Path 至 0075 Sort Colors。"
+summary = "等待用户继续后，审查 0076 Minimum Window Substring 至 0080 Remove Duplicates from Sorted Array II。"
 
 [last_update]
-summary = "0066-0070 第二轮审查完成；进度推进到 0071，历史题正文未修改。"
+summary = "0071-0075 第二轮审查完成；进度推进到 0076，历史题正文未修改。"

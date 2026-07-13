@@ -3,8 +3,8 @@ mode = "second_round_content_review"
 source = "complete_rst_content"
 start = 51
 end = 100
-current = 71
-reviewed_count = 20
+current = 76
+reviewed_count = 25
 batch_size = 5
 modify_historical_rst = false
 pr_metadata_is_evidence = false
@@ -118,6 +118,14 @@ end = 70
 status = "completed"
 findings = "docs/review-findings/0066-0070.rst"
 
+[records.batch_0071_0075]
+path = "state/reviews/0071-0075.toml"
+round = 2
+start = 71
+end = 75
+status = "completed"
+findings = "docs/review-findings/0071-0075.rst"
+
 [corrections.julia_unitrange]
 status = "active"
 source = "https://docs.julialang.org/en/v1/base/collections/#Base.UnitRange"
@@ -152,10 +160,28 @@ source = "https://docs.julialang.org/en/v1/base/strings/#Base.codeunits"
 supersedes = "0065 complexity text grouping Julia codeunits with R utf8ToInt as O(n) auxiliary materialization."
 statement = "Julia codeunits(s) returns a CodeUnits wrapper over the string's code units rather than materializing an O(n) copy. The Julia adapter uses O(1) auxiliary wrapper and scan state; R utf8ToInt(s) still materializes an O(n) integer vector."
 
+[corrections.r_simplify_path_repeated_vector_rebuild]
+status = "active"
+sources = [
+  "https://stat.ethz.ch/R-manual/R-devel/library/base/html/c.html",
+  "https://stat.ethz.ch/R-manual/R-devel/library/base/html/Extract.html",
+]
+supersedes = "0071 complexity text applying the generic O(n) component-stack time bound to the R adapter."
+statement = "The R adapter repeatedly rebuilds the character stack with c(stack, segment) and negative subsetting. With many short components, cumulative copied vector elements are Theta(k^2), so its worst-case time and cumulative allocation are quadratic even though peak stack size is linear."
+
+[corrections.edit_distance_adapter_materialization]
+status = "active"
+sources = [
+  "https://docs.julialang.org/en/v1/base/collections/#Base.collect",
+  "https://stat.ethz.ch/R-manual/R-devel/library/base/html/utf8Conversion.html",
+]
+supersedes = "0072 complexity text presenting O(min(m,n)) as the complete auxiliary-space bound for all ten adapters."
+statement = "O(min(m,n)) describes the rolling DP array. C++ copies both by-value strings, Julia collect(codeunits(...)) materializes two byte arrays, and R utf8ToInt materializes two integer vectors; these adapters have O(m+n) extra and peak space."
+
 [next_review]
-start = 71
-end = 75
-purpose = "Review 0071 Simplify Path through 0075 Sort Colors from complete RST content."
+start = 76
+end = 80
+purpose = "Review 0076 Minimum Window Substring through 0080 Remove Duplicates from Sorted Array II from complete RST content."
 
 [rule_sources]
 base_findings = "docs/REVIEW_FINDINGS_0001_0050.rst"
@@ -165,6 +191,7 @@ second_round_findings = [
   "docs/review-findings/0056-0060.rst",
   "docs/review-findings/0061-0065.rst",
   "docs/review-findings/0066-0070.rst",
+  "docs/review-findings/0071-0075.rst",
 ]
 legacy_batch_findings = [
   "docs/review-findings/0016-0020.rst",
