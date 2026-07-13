@@ -3,12 +3,12 @@ mode = "second_round_content_review"
 source = "complete_rst_content"
 start = 51
 end = 100
-current = 96
-reviewed_count = 45
+current = 101
+reviewed_count = 50
 batch_size = 5
 modify_historical_rst = false
 pr_metadata_is_evidence = false
-status = "in_progress"
+status = "completed"
 
 [canonical]
 legacy_catalog = "docs/REVIEW_CATALOG_0001_0050.rst"
@@ -158,6 +158,14 @@ end = 95
 status = "completed"
 findings = "docs/review-findings/0091-0095.rst"
 
+[records.batch_0096_0100]
+path = "state/reviews/0096-0100.toml"
+round = 2
+start = 96
+end = 100
+status = "completed"
+findings = "docs/review-findings/0096-0100.rst"
+
 [corrections.julia_unitrange]
 status = "active"
 source = "https://docs.julialang.org/en/v1/base/collections/#Base.UnitRange"
@@ -241,10 +249,17 @@ status = "active"
 supersedes = "0095 R adapter calling tree_node(...) while claiming reuse of the 0094 R tree-node model."
 statement = "0094 defines the R constructor as new_tree_node(val, left, right), while 0095 calls tree_node(...) and defines no such alias. The adapter fails with an unresolved function unless an undeclared external helper exists; use new_tree_node or define the exact constructor locally."
 
-[next_review]
-start = 96
+[corrections.interleaving_string_adapter_materialization]
+status = "active"
+supersedes = "0097 complexity text presenting O(min(m,n)) as the complete auxiliary-space bound for every language implementation."
+statement = "O(min(m,n)) describes only the rolling Boolean DP array. The C++ signature copies s1, s2, and s3 by value for O(m+n+|s3|) extra and peak space; Julia materializes O(m+n) source byte arrays with collect(codeunits(...)); R materializes O(m+n+|s3|) integer vectors with utf8ToInt."
+
+[next_action]
+kind = "review_rule_consolidation"
+status = "ready"
+start = 51
 end = 100
-purpose = "Review 0096 Unique Binary Search Trees through 0100 Same Tree from complete RST content."
+purpose = "Consolidate stable second-round rules and active corrections before starting problem 0101."
 
 [rule_sources]
 base_findings = "docs/REVIEW_FINDINGS_0001_0050.rst"
@@ -259,6 +274,7 @@ second_round_findings = [
   "docs/review-findings/0081-0085.rst",
   "docs/review-findings/0086-0090.rst",
   "docs/review-findings/0091-0095.rst",
+  "docs/review-findings/0096-0100.rst",
 ]
 legacy_batch_findings = [
   "docs/review-findings/0016-0020.rst",
