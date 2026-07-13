@@ -1,17 +1,18 @@
 [review]
-mode = "second_round_content_review"
+mode = "stage_content_review"
 source = "complete_rst_content"
-start = 51
-end = 100
+start = 101
+end = 150
 current = 101
-reviewed_count = 50
+reviewed_count = 0
 batch_size = 5
 modify_historical_rst = false
 pr_metadata_is_evidence = false
-status = "completed"
+status = "ready"
 
 [canonical]
-consolidated_forward_rules = "docs/FORWARD_RULES_0101_0150.rst"
+generated_range = "problems/0101-0200"
+generation_rules = "docs/FORWARD_RULES_0101_0150.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
 review_policy = "docs/REVIEW_AND_PREVENTION_POLICY.rst"
 artifact_lifecycle = "docs/ARTIFACT_LIFECYCLE_POLICY.rst"
@@ -26,6 +27,7 @@ order = [
   "state/REVIEW_INDEX.toml corrections",
   "completed forward-rule documents",
   "specialized policies and template",
+  "active review evidence",
   "archive review evidence",
   "commit, PR, and conversation summaries",
 ]
@@ -44,6 +46,15 @@ end = 100
 status = "archived"
 manifest = "archive/reviews/0051-0100/MANIFEST.rst"
 consolidation_record = "archive/reviews/0051-0100/RULE_CONSOLIDATION.toml"
+
+[generated_range]
+start = 101
+end = 150
+status = "awaiting_stage_review"
+problem_count = 50
+problem_directory = "problems/0101-0200"
+concept_record = "state/concepts/0101-0150.toml"
+generation_rules = "docs/FORWARD_RULES_0101_0150.rst"
 
 [rule_consolidation]
 status = "completed"
@@ -144,11 +155,11 @@ supersedes = "0097 complexity text presenting O(min(m,n)) as the complete auxili
 statement = "O(min(m,n)) describes only the rolling Boolean DP array. The C++ signature copies s1, s2, and s3 by value for O(m+n+|s3|) extra and peak space; Julia materializes O(m+n) source byte arrays with collect(codeunits(...)); R materializes O(m+n+|s3|) integer vectors with utf8ToInt."
 
 [next_action]
-kind = "problem_generation"
+kind = "stage_content_review"
 status = "ready"
 start = 101
 end = 105
-purpose = "Generate problems 0101-0105 using docs/FORWARD_RULES_0101_0150.rst without creating disposable intermediate reports."
+purpose = "Review complete 0101-0105 RST content and ten-language implementations before deriving 0151-0200 rules."
 
 [artifact_lifecycle]
 policy = "docs/ARTIFACT_LIFECYCLE_POLICY.rst"
