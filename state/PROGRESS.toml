@@ -21,17 +21,17 @@ needs_revision = []
 [last_batch]
 status = "completed"
 kind = "second_round_review"
-start = 86
-end = 90
+start = 91
+end = 95
 completed = 5
-summary = "完成 0086-0090 第二轮逐题审查；五题官方输入域内算法正确，登记 Julia 修改可见性与 Gray Code n=0 扩展两项事实更正。"
+summary = "完成 0091-0095 第二轮逐题审查；0091-0094 未发现确定性问题，0095 R 适配器存在 tree_node 与 new_tree_node 构造器命名冲突。"
 
 [next_batch]
 status = "review_ready"
 kind = "second_round_review"
-start = 91
-end = 95
-purpose = "继续读取 0091 Decode Ways、0092 Reverse Linked List II、0093 Restore IP Addresses、0094 Binary Tree Inorder Traversal 与 0095 Unique Binary Search Trees II 的完整正文和十语言代码。"
+start = 96
+end = 100
+purpose = "继续读取 0096 Unique Binary Search Trees、0097 Interleaving String、0098 Validate Binary Search Tree、0099 Recover Binary Search Tree 与 0100 Same Tree 的完整正文和十语言代码。"
 
 [review]
 status = "in_progress"
@@ -39,16 +39,16 @@ mode = "second_round_content_review"
 source = "complete_rst_content"
 start = 51
 end = 100
-current = 91
-reviewed_count = 40
+current = 96
+reviewed_count = 45
 batch_size = 5
 modify_historical_rst = false
 pr_metadata_is_evidence = false
 index = "state/REVIEW_INDEX.toml"
 legacy_catalog = "docs/REVIEW_CATALOG_0001_0050.rst"
 current_catalog = "docs/REVIEW_CATALOG_0051_0100.rst"
-latest_record = "state/reviews/0086-0090.toml"
-latest_findings = "docs/review-findings/0086-0090.rst"
+latest_record = "state/reviews/0091-0095.toml"
+latest_findings = "docs/review-findings/0091-0095.rst"
 legacy_forward_rules = "docs/FORWARD_RULES_0051_0100.rst"
 
 [quality_scope]
@@ -72,7 +72,7 @@ index = "state/CONCEPT_LEDGER.toml"
 latest_record = "state/concepts/0092-0100.toml"
 
 [next_action]
-summary = "等待用户继续后，审查 0091 Decode Ways 至 0095 Unique Binary Search Trees II。"
+summary = "等待用户继续后，审查 0096 Unique Binary Search Trees 至 0100 Same Tree。"
 
 [last_update]
-summary = "0086-0090 第二轮审查完成；进度推进到 0091，历史题正文未修改。"
+summary = "0091-0095 第二轮审查完成；进度推进到 0096，历史题正文未修改。"
