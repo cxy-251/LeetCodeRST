@@ -3,8 +3,8 @@ mode = "second_round_content_review"
 source = "complete_rst_content"
 start = 51
 end = 100
-current = 61
-reviewed_count = 10
+current = 66
+reviewed_count = 15
 batch_size = 5
 modify_historical_rst = false
 pr_metadata_is_evidence = false
@@ -102,6 +102,14 @@ end = 60
 status = "completed"
 findings = "docs/review-findings/0056-0060.rst"
 
+[records.batch_0061_0065]
+path = "state/reviews/0061-0065.toml"
+round = 2
+start = 61
+end = 65
+status = "completed"
+findings = "docs/review-findings/0061-0065.rst"
+
 [corrections.julia_unitrange]
 status = "active"
 source = "https://docs.julialang.org/en/v1/base/collections/#Base.UnitRange"
@@ -130,10 +138,16 @@ source = "https://stat.ethz.ch/R-manual/R-devel/library/base/html/seq.html"
 supersedes = "0054 static-review claim that its R reverse ranges are safe for all single-row and single-column boundaries."
 statement = "R seq.int(from,to,by) errors when to-from and by have opposite signs. Before constructing a descending sequence, code must prove from>=to; C-style loop conditions cannot be assumed to produce an empty R sequence."
 
+[corrections.julia_codeunits_wrapper]
+status = "active"
+source = "https://docs.julialang.org/en/v1/base/strings/#Base.codeunits"
+supersedes = "0065 complexity text grouping Julia codeunits with R utf8ToInt as O(n) auxiliary materialization."
+statement = "Julia codeunits(s) returns a CodeUnits wrapper over the string's code units rather than materializing an O(n) copy. The Julia adapter uses O(1) auxiliary wrapper and scan state; R utf8ToInt(s) still materializes an O(n) integer vector."
+
 [next_review]
-start = 61
-end = 65
-purpose = "Review 0061 Rotate List through 0065 Valid Number from complete RST content."
+start = 66
+end = 70
+purpose = "Review 0066 Plus One through 0070 Climbing Stairs from complete RST content."
 
 [rule_sources]
 base_findings = "docs/REVIEW_FINDINGS_0001_0050.rst"
@@ -141,6 +155,7 @@ legacy_forward_rules = "docs/FORWARD_RULES_0051_0100.rst"
 second_round_findings = [
   "docs/review-findings/0051-0055.rst",
   "docs/review-findings/0056-0060.rst",
+  "docs/review-findings/0061-0065.rst",
 ]
 legacy_batch_findings = [
   "docs/review-findings/0016-0020.rst",

@@ -1,0 +1,143 @@
+[batch]
+round = 2
+start = 61
+end = 65
+status = "completed"
+source = "complete_rst_content"
+modify_historical_rst = false
+summary = "完整读取 0061-0065 的 RST 正文、证明、复杂度和十语言代码；算法实现未发现确定性错误，确认 0065 Julia codeunits 空间表述前后矛盾，并提升临时拓扑恢复、中间状态上界、饱和 DP 与视图成本规则。"
+
+[problems."0061"]
+status = "reviewed"
+file = "problems/0001-0100/0061-rotate-list.rst"
+positive = [
+  "先以 k mod n 消除整圈旋转，再通过临时成环和目标断点重连，切分位置、节点守恒与最终无环证明完整。",
+  "验证计划要求比较节点身份、节点集合和最终无环，不会被相同节点值掩盖拓扑错误。",
+  "Rust 不强行构造 Box 引用环，而是用 take 分离后缀并移动旧前缀，得到等价线性所有权变换。",
+]
+observations = [
+  "临时成环使中间结构短暂违反输入无环不变量；所有成环后的控制流必须唯一汇聚到断环，新增提前返回时需要重新审计。",
+  "跨语言算法不必逐语句同构；当所有权模型不允许环时，应证明线性断开拼接与环断开在节点身份和最终顺序上等价。",
+  "仅比较值序列不足以验证原地链表算法；重复值情况下必须检查节点身份、节点数和环状态。",
+]
+rule_ids = [
+  "temporary_topology_restoration",
+  "ownership_equivalent_topology_transform",
+  "identity_based_mutation_validation",
+]
+
+[problems."0062"]
+status = "reviewed"
+file = "problems/0001-0100/0062-unique-paths.rst"
+positive = [
+  "最后一步来自上方或左方的分类互斥且完备，一维数组左到右覆盖顺序证明闭合。",
+  "dp[0]=1 的统一初始化自然覆盖单格、单行和单列网格。",
+  "C 分配失败使用 0，而合法答案最小为 1，失败哨兵与输出域可区分。",
+]
+observations = [
+  "最终答案上界能够约束本题所有前缀状态，需要补充单调性见证：任意前缀路径都可继续向右、向下扩展到终点，因此前缀路径集合可注入完整终点路径集合。",
+  "空间 O(n) 中的 n 明确表示列数；若希望写 O(min(m,n))，必须交换行列角色并同步调整循环和状态解释。",
+  "组合数对照解法的最终结果适合 32 位，不自动保证逐项乘法中间值适合 32 位。",
+]
+rule_ids = [
+  "final_bound_requires_state_embedding",
+  "rolling_dimension_symbol_contract",
+  "combinatorial_intermediate_width",
+]
+
+[problems."0063"]
+status = "reviewed"
+file = "problems/0001-0100/0063-unique-paths-ii.rst"
+positive = [
+  "障碍位置把旧上方状态归零，既阻断向右传播也阻断下一行向下传播，吸收状态语义清楚。",
+  "dp[0]=1 配合统一扫描同时处理开放起点和障碍起点，无需重复初始化分支。",
+  "使用 limit=2000000001 的饱和状态和 64 位暂存，证明最终保证范围内的答案仍保持精确。",
+]
+observations = [
+  "与 0062 不同，障碍可能让巨大前缀计数最终全部失效，因此最终答案上界不能直接约束中间状态。",
+  "饱和运算必须证明与加法转移同态，并证明最终真实答案严格低于饱和阈值；只写 clamp 而没有这两项证明不充分。",
+  "合法答案包含 0，C 分配失败不能再使用 0；输出域哨兵必须按题目重新选择。",
+]
+rule_ids = [
+  "intermediate_state_may_exceed_final",
+  "saturating_dp_exactness_contract",
+  "failure_sentinel_output_domain",
+]
+
+[problems."0064"]
+status = "reviewed"
+file = "problems/0001-0100/0064-minimum-path-sum.rst"
+positive = [
+  "第一行和第一列分别用唯一前驱初始化，内部状态再从上方与左方最优值转移，边界和内部规则没有混写。",
+  "非负权值与精确尺寸推出 79800 的完整路径和上界，固定宽整数选择有直接依据。",
+  "只读一维工作数组与原地改写网格的对照清楚区分工作空间和调用后输入状态。",
+]
+observations = [
+  "最终数值上界来自每条路径最多经过 m+n-1 个位置，而不是来自单元格总数 mn；路径长度模型必须与允许移动方向一致。",
+  "零是合法代价，不能作为未初始化、不可达或无穷大哨兵；边界应通过显式初始化表达。",
+  "原地 DP 的 O(1) 工作空间以允许破坏输入为前提；调用者若需要原网格，复制成本会重新变为 O(mn)。",
+]
+rule_ids = [
+  "path_length_numeric_bound",
+  "valid_zero_not_sentinel",
+  "in_place_space_requires_mutation_contract",
+]
+
+[problems."0065"]
+status = "reviewed_with_correction"
+file = "problems/0001-0100/0065-valid-number.rst"
+positive = [
+  "四个布尔状态直接表达底数数字、小数点、指数和指数后数字见证，局部字符条件足以覆盖完整语法。",
+  "符号、小数点和指数标记的位置约束完整，结束条件同时排除无底数数字和未完成指数。",
+  "拒绝使用通用浮点解析 API，避免 NaN、Infinity、空白和语言特定后缀扩大题目语法。",
+]
+observations = [
+  "复杂度段把 Julia codeunits 与 R utf8ToInt 一并写成 O(n) 辅助存储，但 Julia 官方文档说明 codeunits 默认返回 CodeUnits wrapper；题目后文也明确称其为视图，前后矛盾。",
+  "R 的 utf8ToInt(s) 会物化码点向量，峰值辅助空间为 O(n)；Julia CodeUnits wrapper 只保存视图状态，扫描工作空间为 O(1)。",
+  "R 实现循环内重复 utf8ToInt 单字符常量仍保持 O(n) 总时间，但隐藏了不必要的常量转换与短生命周期分配，前向实现应预先缓存字符码。",
+]
+rule_ids = [
+  "view_vs_materialized_conversion",
+  "syntax_witness_state_completion",
+  "constant_classification_precompute",
+]
+
+[rules."temporary_topology_restoration"]
+status = "promoted"
+problems = [61]
+requirement = "算法临时构造环、线索、哨兵链接或其他违反最终结构约束的拓扑时，列出进入点、唯一恢复点和全部退出路径；任何新增提前返回都必须证明发生在临时修改之前或先完成恢复。"
+
+[rules."identity_based_mutation_validation"]
+status = "promoted"
+problems = [61]
+requirement = "原地链表或树变换的随机验证不能只比较值序列；至少检查节点身份集合、节点数量、相对顺序、无环性以及未要求修改的字段。"
+
+[rules."final_bound_requires_state_embedding"]
+status = "promoted"
+problems = [62, 63]
+requirement = "用最终答案上界证明中间状态宽度前，必须给出每个中间对象到最终对象的单射、单调扩展或其他支配关系；存在障碍、删除、抵消或死路时，最终上界通常不能约束中间状态。"
+
+[rules."saturating_dp_exactness_contract"]
+status = "promoted"
+problems = [63]
+requirement = "使用饱和或截断 DP 防止中间溢出时，证明截断算子与所有转移兼容，并证明题目保证的最终真实答案严格位于阈值以内；中间加法仍使用足够宽的暂存类型。"
+
+[rules."path_length_numeric_bound"]
+status = "promoted"
+problems = [64]
+requirement = "路径和上界按单条合法路径实际访问的元素数计算，而不是按状态空间总元素数计算；同时覆盖起点、终点、最大路径长度和单元素最大值。"
+
+[rules."view_vs_materialized_conversion"]
+status = "promoted"
+problems = [58, 65]
+requirement = "字符串或数组适配器必须区分零拷贝视图、轻量 wrapper、延迟迭代器和物化副本；不能因 API 返回可索引对象就统一计为 O(n) 空间，也不能因名称含 view 就跳过官方语义核对。"
+
+[rules."syntax_witness_state_completion"]
+status = "promoted"
+problems = [65]
+requirement = "语法扫描中凡是某标记触发后续必需成分，使用独立待满足见证，并在触发时重置、在合法成分出现时恢复、在扫描结束时检查；历史 seen 标志不能替代局部完成状态。"
+
+[next_review]
+start = 66
+end = 70
+purpose = "Review 0066 Plus One through 0070 Climbing Stairs from complete RST content."

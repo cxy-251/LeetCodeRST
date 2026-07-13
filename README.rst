@@ -18,23 +18,23 @@ LeetCode 多语言 RST 学习仓库
 --------
 
 ``0001`` 至 ``0100`` 的首轮多语言 RST 已完成。``0001`` 至 ``0050`` 的第一次逐题规则提炼已经完成；
-``0051`` 至 ``0100`` 的第二轮逐题审查正在进行，当前已完成 ``0051`` 至 ``0060``。
+``0051`` 至 ``0100`` 的第二轮逐题审查正在进行，当前已完成 ``0051`` 至 ``0065``。
 
 本批完整审查：
 
-* ``0056. Merge Intervals``；
-* ``0057. Insert Interval``；
-* ``0058. Length of Last Word``；
-* ``0059. Spiral Matrix II``；
-* ``0060. Permutation Sequence``。
+* ``0061. Rotate List``；
+* ``0062. Unique Paths``；
+* ``0063. Unique Paths II``；
+* ``0064. Minimum Path Sum``；
+* ``0065. Valid Number``。
 
-本批未发现新的确定性代码错误。主要提升了标准排序真实辅助空间、强输入前提带来的算法降阶、
-字符串逻辑扫描与实际转换成本、方阵边界守卫耦合，以及阶乘秩选择和顺序容器删除成本。
+本批算法实现未发现确定性错误。``0065`` 的复杂度段把 Julia ``codeunits`` 误写成 ``O(n)`` 物化存储，
+与后文“视图”说明矛盾；事实更正已登记到 ``state/REVIEW_INDEX.toml``，历史正文保持原样。
 
-前一批确认的 ``0051`` R 递归闭包状态和 ``0054`` R ``seq.int`` 方向问题仍由
-``state/REVIEW_INDEX.toml`` 的事实更正提供高优先级说明。历史题目正文保持原样。
+本批同时提升了临时拓扑恢复、节点身份验证、中间状态数值上界、饱和动态规划、路径长度上界，以及
+视图和物化转换成本规则。
 
-下一审查批次为 ``0061`` 至 ``0065``。
+下一审查批次为 ``0066`` 至 ``0070``。
 
 核心入口
 --------
@@ -74,8 +74,10 @@ LeetCode 多语言 RST 学习仓库
 * ``docs/REVIEW_CATALOG_0051_0100.rst``；
 * ``state/reviews/0051-0055.toml``；
 * ``state/reviews/0056-0060.toml``；
+* ``state/reviews/0061-0065.toml``；
 * ``docs/review-findings/0051-0055.rst``；
-* ``docs/review-findings/0056-0060.rst``。
+* ``docs/review-findings/0056-0060.rst``；
+* ``docs/review-findings/0061-0065.rst``。
 
 批次记录属于证据和追溯资料。事实冲突先读取 ``state/REVIEW_INDEX.toml`` 的更正。
 
