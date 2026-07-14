@@ -1,7 +1,7 @@
 LeetCode 0101–0200
 ==================
 
-本目录按题号顺序保存 0101 至 0200 的题目教程。当前已完成 0101 至 0114。
+本目录按题号顺序保存 0101 至 0200 的题目教程。当前已完成 0101 至 0116。
 
 已完成
 ------
@@ -27,17 +27,20 @@ LeetCode 0101–0200
 #. `0113. Path Sum II <0113-path-sum-ii.rst>`_
 #. `0114. Flatten Binary Tree to Linked List
    <0114-flatten-binary-tree-to-linked-list.rst>`_
+#. `0115. Distinct Subsequences <0115-distinct-subsequences.rst>`_
+#. `0116. Populating Next Right Pointers in Each Node
+   <0116-populating-next-right-pointers-in-each-node.rst>`_
 
 本批次
 ------
 
-``0113`` 和 ``0114`` 均为 Medium：
+``0115`` 至 ``0116`` 的难度预算为：
 
-* ``0113`` Medium = 2；
-* ``0114`` Medium = 2；
-* 总分为 4，达到普通批次目标下限。
+* ``0115`` Hard = 4；
+* ``0116`` Medium = 2；
+* 总分为 6，达到单批上限。
 
-``0115`` 为 Hard，加入后总分会变成 8，因此不属于本批次。
+``0117`` 为 Medium，加入后总分会变成 8，因此不属于本批次。
 
 执行规则
 --------
@@ -49,5 +52,5 @@ RST 写作规范。每题独立完成精确契约、问题抽象、解法取舍�
 下一动作
 --------
 
-下一题为 ``0115``。按 Easy=1、Medium=2、Hard=4 的难度预算，下一批为 ``0115–0116``：
-Hard、Medium 合计 6 分；``0117`` 为 Medium，加入后会超过批次上限。
+下一题为 ``0117``。按 Easy=1、Medium=2、Hard=4 的难度预算，下一批为 ``0117–0120``：
+Medium、Easy、Easy、Medium 合计 6 分；``0121`` 为 Easy，加入后会超过批次上限。
