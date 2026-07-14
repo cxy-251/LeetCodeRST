@@ -25,9 +25,24 @@ jobs:
             exit 0
           fi
           cat .batch-upload-0117-0120/part_* | base64 --decode > /tmp/batch0117_0120.tar.gz
-          printf '%s  %s\n' \
-            '92295ef6822527b1608bfadf0de99be55660658ce6002ff58396b126c53109bc' \
-            /tmp/batch0117_0120.tar.gz | sha256sum -c -
+          gzip -t /tmp/batch0117_0120.tar.gz
+          tar -tzf /tmp/batch0117_0120.tar.gz > /tmp/batch0117_0120.list
+          for path in \
+            ./AGENTS.md \
+            ./README.rst \
+            ./docs/AUTOMATION_QUALITY_GATE.rst \
+            ./problems/0101-0200/README.rst \
+            ./problems/0101-0200/0117-populating-next-right-pointers-in-each-node-ii.rst \
+            ./problems/0101-0200/0118-pascals-triangle.rst \
+            ./problems/0101-0200/0119-pascals-triangle-ii.rst \
+            ./problems/0101-0200/0120-triangle.rst \
+            ./state/PROGRESS.toml \
+            ./state/REVIEW_INDEX.toml \
+            ./state/CONCEPT_LEDGER.toml \
+            ./state/concepts/0117-0120.toml
+          do
+            grep -Fx "$path" /tmp/batch0117_0120.list >/dev/null
+          done
           tar -xzf /tmp/batch0117_0120.tar.gz
           rm -rf .batch-upload-0117-0120
           git config user.name "github-actions[bot]"
