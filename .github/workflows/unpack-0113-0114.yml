@@ -1,0 +1,39 @@
+name: Unpack 0113-0114 quality batch
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+jobs:
+  unpack:
+    if: github.head_ref == 'agent/generate-0113-0114-quality'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Materialize formal files
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! -d .batch-upload-0113-0114 ]]; then
+            exit 0
+          fi
+          cat .batch-upload-0113-0114/part_* | base64 --decode > /tmp/batch0113_0114.tar.gz
+          printf '%s  %s\n' \
+            '8702f3ce310d40d4878a381eb99b75e61dd1541a60a24510cc33f579d2ad6bd1' \
+            /tmp/batch0113_0114.tar.gz | sha256sum -c -
+          tar -xzf /tmp/batch0113_0114.tar.gz
+          rm -rf .batch-upload-0113-0114
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "content: materialize 0113-0114 quality batch"
+            git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
+          fi
