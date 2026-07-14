@@ -1,0 +1,14 @@
+[meta]
+version = 1
+range = "0140"
+last_problem = 140
+inherits = "state/concepts/0139.toml"
+
+[updates]
+"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0140 继续执行，累计强化 7 次。"
+"complexity.dictionary_character_budget" = "0139 以 C 表达布尔切分的匹配成本；0140 在 O(nC) 之外新增所有后缀答案字符总量 T。"
+
+[concepts]
+"algorithm.word_break_suffix_sentence_dp" = "kind=algorithm; introduced=0140; last=0140; occurrences=1; teaching_state=explained; note=sentences[i] 保存后缀 s[i:] 的全部句子，从右向左把匹配首词与 end 状态中的尾句组合。"
+"proof.empty_sentence_composition_identity" = "kind=proof; introduced=0140; last=0140; occurrences=1; teaching_state=explained; note=终点状态使用单个空字符串作为组合单位元，使最后一个单词直接形成句子，同时公开无解仍返回空列表。"
+"complexity.output_sensitive_suffix_materialization" = "kind=complexity; introduced=0140; last=0140; occurrences=1; teaching_state=explained; note=T 定义为所有后缀状态中物化的句子字符总量，时间 O(nC+T)、空间 O(n+T)，不能只按最终结果数量计费。"

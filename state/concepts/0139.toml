@@ -1,0 +1,13 @@
+[meta]
+version = 1
+range = "0139"
+last_problem = 139
+inherits = "state/concepts/0136-0138.toml"
+
+[updates]
+"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0139 继续执行，累计强化 6 次。"
+
+[concepts]
+"algorithm.word_break_reachable_prefix" = "kind=algorithm; introduced=0139; last=0139; occurrences=1; teaching_state=explained; note=reachable[i] 表示长度为 i 的前缀可由字典词组成，只从可达起点向匹配单词的终点传播。"
+"proof.word_break_last_token_completeness" = "kind=proof; introduced=0139; last=0139; occurrences=1; teaching_state=explained; note=任意合法切分的最后一个单词之前也是合法前缀，因此对应传播必然发生；所有传播又只连接真实字典词。"
+"complexity.dictionary_character_budget" = "kind=complexity; introduced=0139; last=0139; occurrences=1; teaching_state=explained; note=以字典总字符数 C 表达逐起点扫描全部单词的成本，时间 O(nC)，并单独记录切片或输入复制。"
