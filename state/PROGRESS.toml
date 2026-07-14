@@ -10,9 +10,9 @@ content_language = "zh-CN"
 code_comment_language = "zh-CN"
 
 [progress]
-next_problem = 121
-completed_count = 120
-completed_ranges = ["0001-0120"]
+next_problem = 123
+completed_count = 122
+completed_ranges = ["0001-0122"]
 premium_skipped = []
 blocked = []
 needs_revision = []
@@ -20,19 +20,19 @@ needs_revision = []
 [last_batch]
 status = "completed"
 kind = "problem_generation"
-start = 117
-end = 120
-completed = 4
-difficulty_budget = 6
-summary = "按 Easy=1、Medium=2、Hard=4 的预算完成 0117-0120；四题均具备完整教学正文、十语言实现与分语言验证证据。"
+start = 121
+end = 122
+completed = 2
+difficulty_budget = 3
+summary = "按 Easy=1、Medium=2、Hard=4 的预算完成 0121-0122；两题均具备完整教学正文、十语言实现与分语言验证证据。"
 
 [next_batch]
 status = "generation_ready"
 kind = "problem_generation"
-start = 121
-end = 122
-difficulty_budget = 3
-purpose = "继续执行 docs/FORWARD_RULES_0101_0150.rst；0121 为 Easy、0122 为 Medium，合计 3 分；0123 为 Hard，加入后会超过单批上限。"
+start = 123
+end = 123
+difficulty_budget = 4
+purpose = "继续执行 docs/FORWARD_RULES_0101_0150.rst；0123 为 Hard，单题 4 分；0124 同样是 Hard，同一轮不安排两道 Hard。"
 
 [review]
 status = "completed"
@@ -57,40 +57,28 @@ record = "archive/reviews/0051-0100/RULE_CONSOLIDATION.toml"
 output = "docs/FORWARD_RULES_0101_0150.rst"
 
 [validation]
-rst_problem_files = 4
-language_code_blocks = 40
+rst_problem_files = 2
+language_code_blocks = 20
 line_width_hard_limit = 100
 line_width_violations = 0
 rst_parse_warnings = 0
-python_ast_passed = 4
-python_random_tree_cases = 3000
-python_pascal_domain_checks = 64
-python_random_triangle_cases = 3000
-c_strict_compile_passed = 4
-c_random_tree_cases = 500
-c_pascal_domain_checks = 64
-c_random_triangle_cases = 500
-cpp_strict_compile_passed = 4
-cpp_random_tree_cases = 500
-cpp_pascal_domain_checks = 64
-cpp_random_triangle_cases = 500
-c_cpp_sanitizer_runs_passed = 8
-java_compile_and_run_passed = 4
-java_random_tree_cases = 500
-java_pascal_domain_checks = 64
-java_random_triangle_cases = 500
-go_compile_and_run_passed = 4
-go_random_tree_cases = 500
-go_pascal_domain_checks = 64
-go_random_triangle_cases = 500
-typescript_strict_and_run_passed = 4
-typescript_random_tree_cases = 500
-typescript_pascal_domain_checks = 64
-typescript_random_triangle_cases = 500
-rust_static_checked = 4
-csharp_static_checked = 4
-julia_static_checked = 4
-r_static_checked = 4
+python_ast_passed = 2
+python_random_stock_cases_per_problem = 3000
+c_strict_compile_passed = 2
+c_random_stock_cases_per_problem = 500
+cpp_strict_compile_passed = 2
+cpp_random_stock_cases_per_problem = 500
+c_cpp_sanitizer_runs_passed = 4
+java_compile_and_run_passed = 2
+java_random_stock_cases_per_problem = 500
+go_compile_and_run_passed = 2
+go_random_stock_cases_per_problem = 500
+typescript_strict_and_run_passed = 2
+typescript_random_stock_cases_per_problem = 500
+rust_static_checked = 2
+csharp_static_checked = 2
+julia_static_checked = 2
+r_static_checked = 2
 runtime_test_claimed_for_static_only_languages = false
 
 [artifact_lifecycle]
@@ -104,11 +92,11 @@ disposable_generation_reports_committed = false
 
 [quality_scope]
 historical_start = 1
-historical_end = 120
+historical_end = 122
 historical_policy = "已完成题目默认保持原样；事实更正前向生效，只有用户明确指定时才修复历史 RST。"
-forward_rule_start = 121
+forward_rule_start = 123
 forward_rule_end = 150
-forward_rule_policy = "0121-0150 继续读取已归并的完整前向规则和 active corrections。"
+forward_rule_policy = "0123-0150 继续读取已归并的完整前向规则和 active corrections。"
 
 [execution]
 trigger = "explicit_user_message_in_active_conversation"
@@ -120,10 +108,10 @@ policy = "docs/AUTOMATION_DIRECT_MAIN_POLICY.rst"
 
 [concept_ledger]
 index = "state/CONCEPT_LEDGER.toml"
-latest_record = "state/concepts/0117-0120.toml"
+latest_record = "state/concepts/0121-0122.toml"
 
 [next_action]
-summary = "按照连续难度预算生成 0121-0122；Easy、Medium 合计 3 分，0123 Hard 加入后会超过 6。"
+summary = "按照连续难度预算生成 0123；Hard 单题 4 分，0124 也是 Hard，不与其同批。"
 
 [last_update]
-summary = "0117-0120 已按逐题闭合方式完成；稀疏层 next 链、帕斯卡二维与单行递推、三角形后缀最优 DP 均通过分语言验证。"
+summary = "0121-0122 已按逐题闭合方式完成；单次交易前缀最低价与无限交易正相邻涨幅贪心均通过分语言验证。"
