@@ -10,9 +10,9 @@ content_language = "zh-CN"
 code_comment_language = "zh-CN"
 
 [progress]
-next_problem = 129
-completed_count = 128
-completed_ranges = ["0001-0128"]
+next_problem = 132
+completed_count = 131
+completed_ranges = ["0001-0131"]
 premium_skipped = []
 blocked = []
 needs_revision = []
@@ -20,19 +20,19 @@ needs_revision = []
 [last_batch]
 status = "completed"
 kind = "problem_generation"
-start = 127
-end = 128
-completed = 2
+start = 129
+end = 131
+completed = 3
 difficulty_budget = 6
-summary = "按 Easy=1、Medium=2、Hard=4 的预算完成 0127-0128；两题均具备完整教学正文、十语言实现与分语言验证证据。"
+summary = "完成 0129-0131；三道 Medium 均具备紧凑教学正文、十语言实现和必要验证。"
 
 [next_batch]
 status = "generation_ready"
 kind = "problem_generation"
-start = 129
-end = 131
+start = 132
+end = 133
 difficulty_budget = 6
-purpose = "继续执行 docs/FORWARD_RULES_0101_0150.rst；0129、0130、0131 均为 Medium，合计 6 分；0132 为 Hard，加入后超过预算。"
+purpose = "0132 为 Hard、0133 为 Medium，合计 6 分；0134 为 Medium，加入后超过预算。"
 
 [review]
 status = "completed"
@@ -57,35 +57,19 @@ record = "archive/reviews/0051-0100/RULE_CONSOLIDATION.toml"
 output = "docs/FORWARD_RULES_0101_0150.rst"
 
 [validation]
-rst_problem_files = 2
-language_code_blocks = 20
+policy = "lightweight_problem_tutorial_validation"
+rst_problem_files = 3
+language_code_blocks = 30
 line_width_hard_limit = 100
 line_width_violations = 0
-rst_parse_warnings = 0
-python_ast_passed = 2
-python_random_word_ladder_cases = 3000
-python_exhaustive_longest_consecutive_cases = 97656
-python_random_longest_consecutive_cases = 5000
-c_strict_compile_passed = 2
-c_random_word_ladder_cases = 500
-c_random_longest_consecutive_cases = 1000
-cpp_strict_compile_passed = 2
-cpp_random_word_ladder_cases = 500
-cpp_random_longest_consecutive_cases = 1000
-c_cpp_sanitizer_runs_passed = 4
-java_compile_and_run_passed = 2
-java_random_word_ladder_cases = 500
-java_random_longest_consecutive_cases = 1000
-go_compile_and_run_passed = 2
-go_random_word_ladder_cases = 500
-go_random_longest_consecutive_cases = 1000
-typescript_strict_and_run_passed = 2
-typescript_random_word_ladder_cases = 500
-typescript_random_longest_consecutive_cases = 1000
-rust_static_checked = 2
-csharp_static_checked = 2
-julia_static_checked = 2
-r_static_checked = 2
+rst_structure_checked = 3
+python_ast_passed = 3
+python_random_tree_cases = 2800
+python_random_surrounded_region_cases = 7200
+python_exhaustive_palindrome_partition_cases = 1022
+c_strict_compile_passed = 3
+cpp_strict_compile_passed = 3
+other_language_static_checked = 24
 runtime_test_claimed_for_static_only_languages = false
 
 [artifact_lifecycle]
@@ -99,11 +83,11 @@ disposable_generation_reports_committed = false
 
 [quality_scope]
 historical_start = 1
-historical_end = 128
-historical_policy = "已完成题目默认保持原样；事实更正前向生效，只有用户明确指定时才修复历史 RST。"
-forward_rule_start = 129
+historical_end = 131
+historical_policy = "已完成题目默认保持原样；只有用户明确指定时才修复历史 RST。"
+forward_rule_start = 132
 forward_rule_end = 150
-forward_rule_policy = "0129-0150 继续读取已归并的完整前向规则和 active corrections。"
+forward_rule_policy = "0132-0150 继续执行完整前向规则和 active corrections。"
 
 [execution]
 trigger = "explicit_user_message_in_active_conversation"
@@ -122,10 +106,10 @@ ref_update = "non_force_fast_forward"
 
 [concept_ledger]
 index = "state/CONCEPT_LEDGER.toml"
-latest_record = "state/concepts/0127-0128.toml"
+latest_record = "state/concepts/0129-0131.toml"
 
 [next_action]
-summary = "按照连续难度预算生成 0129-0131；三道 Medium 合计 6 分，0132 Hard 不再加入。"
+summary = "生成 0132-0133；Hard 与 Medium 合计 6 分，0134 Medium 不再加入。"
 
 [last_update]
-summary = "0127-0128 已按逐题闭合方式完成；按层 BFS 入队即删除和连续段唯一起点扫描均通过分语言验证；仓库执行规则已改为只允许直接更新 main。"
+summary = "0129-0131 已完成；树路径前缀、边界连通补集和回文区间 DP 均通过轻量验证。"

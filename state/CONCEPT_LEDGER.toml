@@ -1,6 +1,6 @@
 [meta]
-version = 13
-last_problem = 128
+version = 14
+last_problem = 131
 format = "segmented"
 
 [records]
@@ -16,7 +16,8 @@ latest_before_previous = "state/concepts/0121-0122.toml"
 latest_previous_batch = "state/concepts/0123.toml"
 latest_before_current = "state/concepts/0124-0125.toml"
 latest_previous_single = "state/concepts/0126.toml"
-latest = "state/concepts/0127-0128.toml"
+latest_before_new = "state/concepts/0127-0128.toml"
+latest = "state/concepts/0129-0131.toml"
 
 [resolution]
-statement = "按 legacy、previous、current、recent、prior、penultimate、latest_previous、prior_latest、latest_before_previous、latest_previous_batch、latest_before_current、latest_previous_single、latest 顺序读取；后续分段中的同名 updates 覆盖更早记录的 last_problem、occurrences、teaching_state 和 note。"
+statement = "按 records 声明顺序读取；后续分段中的同名 updates 覆盖更早记录。"
