@@ -1,7 +1,7 @@
 LeetCode 0101–0200
 ==================
 
-本目录按题号顺序保存 0101 至 0200 的题目教程。当前已完成 0101 至 0112。
+本目录按题号顺序保存 0101 至 0200 的题目教程。当前已完成 0101 至 0114。
 
 已完成
 ------
@@ -24,20 +24,20 @@ LeetCode 0101–0200
 #. `0110. Balanced Binary Tree <0110-balanced-binary-tree.rst>`_
 #. `0111. Minimum Depth of Binary Tree <0111-minimum-depth-of-binary-tree.rst>`_
 #. `0112. Path Sum <0112-path-sum.rst>`_
+#. `0113. Path Sum II <0113-path-sum-ii.rst>`_
+#. `0114. Flatten Binary Tree to Linked List
+   <0114-flatten-binary-tree-to-linked-list.rst>`_
 
 本批次
 ------
 
-``0108`` 至 ``0112`` 的难度预算为：
+``0113`` 和 ``0114`` 均为 Medium：
 
-* ``0108`` Easy = 1；
-* ``0109`` Medium = 2；
-* ``0110`` Easy = 1；
-* ``0111`` Easy = 1；
-* ``0112`` Easy = 1；
-* 总分为 6，达到单批上限。
+* ``0113`` Medium = 2；
+* ``0114`` Medium = 2；
+* 总分为 4，达到普通批次目标下限。
 
-``0113`` 为 Medium，加入后总分会变成 8，因此不属于本批次。
+``0115`` 为 Hard，加入后总分会变成 8，因此不属于本批次。
 
 执行规则
 --------
@@ -49,5 +49,5 @@ RST 写作规范。每题独立完成精确契约、问题抽象、解法取舍�
 下一动作
 --------
 
-下一题为 ``0113``。按 Easy=1、Medium=2、Hard=4 的难度预算，下一批为 ``0113–0114``：
-两道 Medium 合计 4 分；``0115`` 为 Hard，加入后会达到 8 分并超过单批上限。
+下一题为 ``0115``。按 Easy=1、Medium=2、Hard=4 的难度预算，下一批为 ``0115–0116``：
+Hard、Medium 合计 6 分；``0117`` 为 Medium，加入后会超过批次上限。

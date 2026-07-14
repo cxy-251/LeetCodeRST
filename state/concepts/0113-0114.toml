@@ -1,0 +1,25 @@
+[meta]
+version = 1
+range = "0113-0114"
+last_problem = 114
+inherits = "state/concepts/0108-0112.toml"
+
+[updates]
+"interface.binary_tree_node_reference_model" = "0094 建立跨语言 TreeNode 引用模型；0101-0112 已累计 17 次，0113、0114 继续覆盖路径快照和原地拓扑重连，累计 19 次。"
+"complexity.tree_height_stack_space" = "0094 首次解释按树高计费；0100-0112 已累计 10 次，0113 继续区分 O(h) 工作路径、递归栈与输出载荷，累计 11 次；0114 主解法改为 O(1) 额外空间。"
+"complexity.output_space_exclusion" = "此前 24 次已区分工作状态与返回载荷；0113 以所有结果元素总数 L 表达输出载荷并与 O(h) 工作路径分开计费，累计 25 次。"
+"boundary.leaf_requires_two_null_children" = "0111 引入、0112 强化；0113 继续要求只有左右孩子同时为空时才能提交路径，累计 3 次。"
+"algorithm.path_sum_remaining_target" = "0112 引入；0113 在枚举全部路径时继续携带进入当前节点前的剩余目标，累计 2 次。"
+"numeric.path_sum_widen_before_subtract" = "0112 引入；0113 的固定宽语言继续在扣除节点值前扩宽到 64 位，累计 2 次。"
+
+[concepts]
+"algorithm.path_sum_backtracking_snapshot" = "kind=algorithm; introduced=0113; last=0113; occurrences=1; teaching_state=explained; note=DFS 共享当前根到节点路径，进入时追加、离开时恢复，只在叶节点且剩余目标为零时复制有效前缀。"
+"proof.path_sum_snapshot_independence" = "kind=proof; introduced=0113; last=0113; occurrences=1; teaching_state=explained; note=每个答案行由当前工作路径显式复制，后续 push、pop 或兄弟分支覆盖不会修改历史结果。"
+"complexity.output_sensitive_path_total" = "kind=complexity; introduced=0113; last=0113; occurrences=1; teaching_state=explained; note=基础遍历 O(n)，复制答案需要 Theta(L)，总时间 O(n+L)，其中 L 是所有返回路径的元素总数。"
+"c.transactional_path_matrix_result" = "kind=language_boundary; introduced=0113; last=0113; occurrences=1; teaching_state=explained; note=C 同步维护外层行指针、列长度、工作路径和失败状态；任一扩容或行复制失败时整体清理已保存结果。"
+"r.environment_shared_path_buffer" = "kind=language_boundary; introduced=0113; last=0113; occurrences=1; teaching_state=explained; note=R 用显式 environment 保存工作路径与答案，depth 指定有效前缀，避免依赖递归父调用帧的普通局部重绑定。"
+"algorithm.flatten_preorder_right_splice" = "kind=algorithm; introduced=0114; last=0114; occurrences=1; teaching_state=explained; note=若 current 有左子树，把原右子树接到左子树沿 right 的最右节点，再把左子树搬到 current.right 并清空 left。"
+"proof.flatten_node_identity_topology" = "kind=proof; introduced=0114; last=0114; occurrences=1; teaching_state=explained; note=局部重连只迁移现有边，保持全部节点可达、身份唯一且无环，最终右链等于原树前序。"
+"proof.flatten_right_edge_amortization" = "kind=proof; introduced=0114; last=0114; occurrences=1; teaching_state=explained; note=每个节点成为一次 current，左子树右边界搜索中的右边不会再次属于后续同类搜索，总扫描 O(n)。"
+"interface.in_place_tree_topology_mutation" = "kind=interface; introduced=0114; last=0114; occurrences=1; teaching_state=explained; note=公共接口不返回新根，复用原节点并改变调用者可观察的左右链接；外部节点引用仍有效但拓扑已变化。"
+"rust.refcell_short_borrow_rewire" = "kind=language_boundary; introduced=0114; last=0114; occurrences=1; teaching_state=explained; note=Rust 用短作用域结束 RefCell 借用，take 转移左右子引用，Rc clone 只增加引用计数而不复制树节点。"
