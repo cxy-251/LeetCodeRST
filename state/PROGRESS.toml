@@ -28,11 +28,11 @@ summary = "完成 0148-0149；稳定链表归并排序与最大公约数规范�
 
 [next_batch]
 status = "generation_ready"
-kind = "rule_transition_and_problem_generation"
+kind = "problem_generation"
 start = 150
 end = 152
 difficulty_budget = 6
-purpose = "0150、0151、0152 均为 Medium，合计 6 分；0150 使用现有规则，0151 前建立下一阶段前向规则。"
+purpose = "0150、0151、0152 均为 Medium，合计 6 分；0150 使用阶段规则，0151 起使用长期前向规则。"
 
 [review_history]
 status = "completed"
@@ -51,19 +51,32 @@ policy = "docs/REVIEW_AND_PREVENTION_POLICY.rst"
 [rule_consolidation]
 status = "completed"
 source_start = 51
-source_end = 100
-source_batch_count = 10
+source_end = 150
+source_batch_count = 11
 absorbed_promoted_rule_count = 81
 active_correction_count = 14
-record = "archive/reviews/0051-0100/RULE_CONSOLIDATION.toml"
-output = "docs/FORWARD_RULES_0101_0150.rst"
+historical_record = "archive/reviews/0051-0100/RULE_CONSOLIDATION.toml"
+historical_output = "docs/FORWARD_RULES_0101_0150.rst"
+persistent_output = "docs/FORWARD_RULES_0151_ONWARD.rst"
+
+[persistent_forward_rules]
+status = "active"
+first_problem = 151
+last_problem = 0
+scope = "0151_onward_without_fixed_end"
+path = "docs/FORWARD_RULES_0151_ONWARD.rst"
+maintenance = "update_in_place"
+segmented_successors_allowed = false
+source_rules = "docs/FORWARD_RULES_0101_0150.rst"
+active_corrections = "state/REVIEW_INDEX.toml"
 
 [rule_transition]
-status = "required_before_0151"
+status = "completed"
 current_rules = "docs/FORWARD_RULES_0101_0150.rst"
 current_rule_last_problem = 150
-next_rules = "docs/FORWARD_RULES_0151_0200.rst"
+next_rules = "docs/FORWARD_RULES_0151_ONWARD.rst"
 next_rule_first_problem = 151
+next_rule_last_problem = 0
 
 [validation]
 policy = "official_examples_and_targeted_boundaries"
@@ -95,9 +108,11 @@ disposable_generation_reports_committed = false
 historical_start = 1
 historical_end = 149
 historical_policy = "已完成题目默认保持原样；只有用户明确指定时才修复历史 RST。"
-forward_rule_start = 150
-forward_rule_end = 150
-forward_rule_policy = "0150 继续执行现有完整前向规则；0151 前必须建立并启用下一阶段规则。"
+transitional_rule_problem = 150
+transitional_rule = "docs/FORWARD_RULES_0101_0150.rst"
+persistent_rule_start = 151
+persistent_rule = "docs/FORWARD_RULES_0151_ONWARD.rst"
+forward_rule_policy = "0150 使用阶段规则；0151 起全部后续题目持续执行并原位维护长期前向规则。"
 
 [execution]
 trigger = "explicit_user_message_in_active_conversation"
@@ -119,7 +134,7 @@ index = "state/CONCEPT_LEDGER.toml"
 latest_record = "state/concepts/0148-0149.toml"
 
 [next_action]
-summary = "先建立 0151-0200 前向规则，再生成 0150-0152；三道 Medium 合计 6 分。"
+summary = "生成 0150-0152；三道 Medium 合计 6 分。0150 使用阶段规则，0151-0152 使用长期前向规则。"
 
 [last_update]
-summary = "0148-0149 已完成；修正原状态对 0149、0150 难度的错误登记，并对 0149 执行 200 组随机对拍。"
+summary = "建立 0151 起永久生效的长期前向规则；后续不再创建分段规则文件，通用问题直接原位维护。"
