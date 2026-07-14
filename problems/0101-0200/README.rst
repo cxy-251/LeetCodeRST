@@ -1,7 +1,7 @@
 LeetCode 0101–0200
 ==================
 
-本目录按题号顺序保存 0101 至 0200 的题目教程。当前已完成 0101 至 0120。
+本目录按题号顺序保存 0101 至 0200 的题目教程。当前已完成 0101 至 0122。
 
 已完成
 ------
@@ -35,17 +35,20 @@ LeetCode 0101–0200
 #. `0118. Pascal's Triangle <0118-pascals-triangle.rst>`_
 #. `0119. Pascal's Triangle II <0119-pascals-triangle-ii.rst>`_
 #. `0120. Triangle <0120-triangle.rst>`_
+#. `0121. Best Time to Buy and Sell Stock
+   <0121-best-time-to-buy-and-sell-stock.rst>`_
+#. `0122. Best Time to Buy and Sell Stock II
+   <0122-best-time-to-buy-and-sell-stock-ii.rst>`_
 
 本批次
 ------
 
-``0117–0120`` 的难度预算为：
+``0121–0122`` 的难度预算为：
 
-* ``0117`` Medium = 2；
-* ``0118`` Easy = 1；
-* ``0119`` Easy = 1；
-* ``0120`` Medium = 2；
-* 总分为 6，达到单批上限。
+* ``0121`` Easy = 1；
+* ``0122`` Medium = 2；
+* 总分为 3；
+* ``0123`` 为 Hard，加入当前批次会超过 6，因此在连续范围边界按 3 分结束。
 
 执行规则
 --------
@@ -57,5 +60,5 @@ RST 写作规范。每题独立完成精确契约、问题抽象、解法取舍�
 下一动作
 --------
 
-下一题为 ``0121``。按 Easy=1、Medium=2、Hard=4 的难度预算，下一批为 ``0121–0122``：
-Easy、Medium 合计 3 分；``0123`` 为 Hard，加入后会超过单批上限，因此在连续范围边界按 3 分结束。
+下一题为 ``0123``，Hard = 4。``0124`` 同样是 Hard，同一轮不安排两道 Hard，
+所以下一批只处理 ``0123``。
