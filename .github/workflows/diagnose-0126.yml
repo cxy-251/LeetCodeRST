@@ -1,0 +1,72 @@
+name: Diagnose 0126 materialization
+
+on:
+  pull_request:
+    types: [synchronize, reopened]
+
+permissions:
+  contents: write
+
+jobs:
+  diagnose:
+    if: github.head_ref == 'agent/generate-0126-quality'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Record diagnostics
+        shell: bash
+        run: |
+          set -u
+          if [[ -f .diagnose-0126.txt ]]; then
+            exit 0
+          fi
+          {
+            cat \
+              .batch-upload-0126/part_00 \
+              .batch-upload-0126/part_01_00 \
+              .batch-upload-0126/part_01_01 \
+              .batch-upload-0126/part_01_02 \
+              .batch-upload-0126/part_01_03 \
+              .batch-upload-0126/part_02 \
+              .batch-upload-0126/part_03 \
+              .batch-upload-0126/part_04 \
+              > /tmp/0126.b64
+            base64 --decode /tmp/0126.b64 > /tmp/0126.rst.gz
+            echo "sha=$(sha256sum /tmp/0126.rst.gz | cut -d' ' -f1)"
+            echo "gzip_status=$(gzip -t /tmp/0126.rst.gz >/dev/null 2>&1; echo $?)"
+            gzip -dc /tmp/0126.rst.gz > /tmp/0126.rst
+            python3 - <<'PY'
+          from pathlib import Path
+          import re
+          checks = {
+              "agents": ("AGENTS.md", "下一批是 `0126`。"),
+              "root_readme": ("README.rst", "下一批是单题 ``0126``"),
+              "quality_gate": ("docs/AUTOMATION_QUALITY_GATE.rst", "下一批从\n``0126`` 开始"),
+              "range_index": ("problems/0101-0200/README.rst", "0125. Valid Palindrome"),
+              "review_index": ("state/REVIEW_INDEX.toml", "start = 126\nend = 126"),
+          }
+          for name, (path, anchor) in checks.items():
+              print(f"anchor_{name}={int(anchor in Path(path).read_text())}")
+          article = Path("/tmp/0126.rst").read_text()
+          print(f"article_lines={len(article.splitlines())}")
+          print(f"max_line={max(map(len, article.splitlines()))}")
+          print(f"title={int('0126. Word Ladder II' in article)}")
+          for language in [
+              "c", "cpp", "python", "java", "rust",
+              "go", "typescript", "csharp", "julia", "r",
+          ]:
+              count = len(re.findall(
+                  rf"^\.\. code-block:: {language}$", article, re.M
+              ))
+              print(f"code_{language}={count}")
+          PY
+          } > .diagnose-0126.txt 2>&1
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .diagnose-0126.txt
+          git commit -m "chore: record 0126 materialization diagnostics"
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
