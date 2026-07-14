@@ -1,0 +1,12 @@
+[meta]
+version = 1
+range = "0148-0149"
+last_problem = 149
+format = "composite"
+
+[records]
+first = "state/concepts/0148.toml"
+latest = "state/concepts/0149.toml"
+
+[resolution]
+statement = "按 first、latest 顺序读取；后续文件中的 updates 覆盖更早记录。"

@@ -1,0 +1,14 @@
+[meta]
+version = 1
+range = "0148"
+last_problem = 148
+inherits = "state/concepts/0147.toml"
+
+[updates]
+"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0148 继续执行，累计强化 15 次。"
+
+[concepts]
+"algorithm.linked_list_top_down_merge_sort" = "kind=algorithm; introduced=0148; last=0148; occurrences=1; teaching_state=explained; note=快慢指针断开链表，递归排序两半，再顺序合并，实现 O(n log n) 链表排序。"
+"invariant.stable_merge_left_on_equal" = "kind=invariant; introduced=0148; last=0148; occurrences=1; teaching_state=explained; note=合并相等值时优先取左链节点，保持输入中相等节点的相对次序。"
+"ownership.relink_existing_list_nodes" = "kind=ownership; introduced=0148; last=0148; occurrences=1; teaching_state=reinforcing; note=排序不复制节点，只重写 next 拓扑；旧节点引用仍指向原对象，但链表连接关系发生变化。"
+"adapter.rust_box_list_split_merge" = "kind=language_adapter; introduced=0148; last=0148; occurrences=1; teaching_state=explained; note=Rust 通过 take 断开 Box 链，并以可变尾引用迭代合并，避免递归合并产生 O(n) 调用栈。"

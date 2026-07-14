@@ -1,0 +1,15 @@
+[meta]
+version = 1
+range = "0149"
+last_problem = 149
+inherits = "state/concepts/0148.toml"
+
+[updates]
+"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0149 继续执行，累计强化 16 次。"
+"workflow.risk_triggered_sampling" = "0138 建立风险触发抽查；0149 因几何方向规范化执行 200 组小规模随机对拍。"
+
+[concepts]
+"algorithm.anchor_normalized_direction_count" = "kind=algorithm; introduced=0149; last=0149; occurrences=1; teaching_state=explained; note=逐点作为锚点，以约分后的方向向量哈希计数经过锚点的各条直线。"
+"invariant.gcd_sign_canonical_direction" = "kind=invariant; introduced=0149; last=0149; occurrences=1; teaching_state=explained; note=方向先除以 gcd，再统一 dx 的符号，使正反向、水平和竖直向量各自只有一个键。"
+"proof.anchor_line_global_coverage" = "kind=proof; introduced=0149; last=0149; occurrences=1; teaching_state=explained; note=任意最优直线都包含某个被枚举锚点，其余同线点会落入同一规范方向键，因此全局最大值不会遗漏。"
+"adapter.c_open_addressing_slope_table" = "kind=language_adapter; introduced=0149; last=0149; occurrences=1; teaching_state=explained; note=C 为每个锚点清空固定容量开放寻址表，低负载率下实现期望 O(1) 方向计数。"
