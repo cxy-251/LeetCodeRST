@@ -1,6 +1,6 @@
 [meta]
-version = 15
-last_problem = 133
+version = 16
+last_problem = 135
 format = "segmented"
 
 [records]
@@ -18,7 +18,8 @@ latest_before_current = "state/concepts/0124-0125.toml"
 latest_previous_single = "state/concepts/0126.toml"
 latest_before_new = "state/concepts/0127-0128.toml"
 latest_prior = "state/concepts/0129-0131.toml"
-latest = "state/concepts/0132-0133.toml"
+latest_before_latest = "state/concepts/0132-0133.toml"
+latest = "state/concepts/0134-0135.toml"
 
 [resolution]
 statement = "按 records 声明顺序读取；后续分段中的同名 updates 覆盖更早记录。"

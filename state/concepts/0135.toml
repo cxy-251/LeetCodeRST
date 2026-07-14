@@ -1,0 +1,12 @@
+[meta]
+version = 1
+range = "0135"
+last_problem = 135
+inherits = "state/concepts/0134.toml"
+
+[updates]
+"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0135 继续执行，累计强化 2 次。"
+
+[concepts]
+"algorithm.candy_two_directional_constraints" = "kind=algorithm; introduced=0135; last=0135; occurrences=1; teaching_state=explained; note=左扫满足左邻约束，右扫满足右邻约束，并对同一孩子取两个下界的最大值。"
+"proof.candy_minimum_by_max_lower_bounds" = "kind=proof; introduced=0135; last=0135; occurrences=1; teaching_state=explained; note=每个位置的最少糖果数等于来自左右相邻关系的两个必要下界的最大值，逐点取最大后总和最小。"
