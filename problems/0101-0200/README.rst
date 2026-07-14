@@ -1,28 +1,35 @@
 LeetCode 0101–0200
 ==================
 
-本目录按题号顺序保存 0101 至 0200 的题目教程。当前已完成 0101 至 0149。
+本目录按题号顺序保存 0101 至 0200 的题目教程。当前已完成 0101 至 0152。
 
 已完成
 ------
 
 #. `0101. Symmetric Tree <0101-symmetric-tree.rst>`_
 #. `0102. Binary Tree Level Order Traversal <0102-binary-tree-level-order-traversal.rst>`_
-#. `0103. Binary Tree Zigzag Level Order Traversal <0103-binary-tree-zigzag-level-order-traversal.rst>`_
+#. `0103. Binary Tree Zigzag Level Order Traversal
+   <0103-binary-tree-zigzag-level-order-traversal.rst>`_
 #. `0104. Maximum Depth of Binary Tree <0104-maximum-depth-of-binary-tree.rst>`_
-#. `0105. Construct Binary Tree from Preorder and Inorder Traversal <0105-construct-binary-tree-from-preorder-and-inorder-traversal.rst>`_
-#. `0106. Construct Binary Tree from Inorder and Postorder Traversal <0106-construct-binary-tree-from-inorder-and-postorder-traversal.rst>`_
+#. `0105. Construct Binary Tree from Preorder and Inorder Traversal
+   <0105-construct-binary-tree-from-preorder-and-inorder-traversal.rst>`_
+#. `0106. Construct Binary Tree from Inorder and Postorder Traversal
+   <0106-construct-binary-tree-from-inorder-and-postorder-traversal.rst>`_
 #. `0107. Binary Tree Level Order Traversal II <0107-binary-tree-level-order-traversal-ii.rst>`_
-#. `0108. Convert Sorted Array to Binary Search Tree <0108-convert-sorted-array-to-binary-search-tree.rst>`_
-#. `0109. Convert Sorted List to Binary Search Tree <0109-convert-sorted-list-to-binary-search-tree.rst>`_
+#. `0108. Convert Sorted Array to Binary Search Tree
+   <0108-convert-sorted-array-to-binary-search-tree.rst>`_
+#. `0109. Convert Sorted List to Binary Search Tree
+   <0109-convert-sorted-list-to-binary-search-tree.rst>`_
 #. `0110. Balanced Binary Tree <0110-balanced-binary-tree.rst>`_
 #. `0111. Minimum Depth of Binary Tree <0111-minimum-depth-of-binary-tree.rst>`_
 #. `0112. Path Sum <0112-path-sum.rst>`_
 #. `0113. Path Sum II <0113-path-sum-ii.rst>`_
 #. `0114. Flatten Binary Tree to Linked List <0114-flatten-binary-tree-to-linked-list.rst>`_
 #. `0115. Distinct Subsequences <0115-distinct-subsequences.rst>`_
-#. `0116. Populating Next Right Pointers in Each Node <0116-populating-next-right-pointers-in-each-node.rst>`_
-#. `0117. Populating Next Right Pointers in Each Node II <0117-populating-next-right-pointers-in-each-node-ii.rst>`_
+#. `0116. Populating Next Right Pointers in Each Node
+   <0116-populating-next-right-pointers-in-each-node.rst>`_
+#. `0117. Populating Next Right Pointers in Each Node II
+   <0117-populating-next-right-pointers-in-each-node-ii.rst>`_
 #. `0118. Pascal's Triangle <0118-pascals-triangle.rst>`_
 #. `0119. Pascal's Triangle II <0119-pascals-triangle-ii.rst>`_
 #. `0120. Triangle <0120-triangle.rst>`_
@@ -55,25 +62,29 @@ LeetCode 0101–0200
 #. `0147. Insertion Sort List <0147-insertion-sort-list.rst>`_
 #. `0148. Sort List <0148-sort-list.rst>`_
 #. `0149. Max Points on a Line <0149-max-points-on-a-line.rst>`_
+#. `0150. Evaluate Reverse Polish Notation <0150-evaluate-reverse-polish-notation.rst>`_
+#. `0151. Reverse Words in a String <0151-reverse-words-in-a-string.rst>`_
+#. `0152. Maximum Product Subarray <0152-maximum-product-subarray.rst>`_
 
 本批次
 ------
 
-``0148–0149`` 的难度预算为：
+``0150–0152`` 的难度预算为：
 
-* ``0148`` Medium = 2；
-* ``0149`` Hard = 4；
+* ``0150`` Medium = 2；
+* ``0151`` Medium = 2；
+* ``0152`` Medium = 2；
 * 总分为 6；
-* ``0150`` 为 Medium，加入后会超过本批预算。
+* ``0153`` 为 Medium，加入后会超过本批预算。
 
 执行规则
 --------
 
-``0150`` 执行 ``../../docs/FORWARD_RULES_0101_0150.rst``。从 ``0151`` 起，当前目录及后续题号统一执行
-``../../docs/FORWARD_RULES_0151_ONWARD.rst``；以后发现通用问题时直接维护该文件，不再建立新的分段规则。
+``0150`` 已按 ``../../docs/FORWARD_RULES_0101_0150.rst`` 完成。从 ``0151`` 起，当前目录及后续题号统一执行
+``../../docs/FORWARD_RULES_0151_ONWARD.rst``；发现通用问题时直接维护该文件，不再建立新的分段规则。
 
 每题保持精确契约、算法状态、正确性、复杂度、十语言实现和关键边界。常规验证运行官方示例和少量关键
-边界；高风险几何键、数值宽度、所有权和状态压缩按长期规则增加针对性验证。
+边界；高风险数值、所有权、状态压缩和字符串索引按长期规则增加针对性验证。
 
 固定每 50 题的全量审核已取消，后续只做批次自检与风险触发抽查。所有生产、抽查、规则维护和修复只允许
 直接在 ``main`` 形成一个原子提交。
@@ -81,5 +92,4 @@ LeetCode 0101–0200
 下一动作
 --------
 
-下一批为 ``0150–0152``：三道 Medium，合计 6。``0150`` 使用阶段规则，``0151–0152`` 使用已经建立的
-长期前向规则。
+下一批为 ``0153–0154``：Medium + Hard = 6。``0155`` 为 Medium，不再加入。

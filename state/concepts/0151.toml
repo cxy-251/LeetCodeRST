@@ -1,0 +1,13 @@
+[meta]
+version = 1
+range = "0151"
+last_problem = 151
+inherits = "state/concepts/0150.toml"
+
+[updates]
+"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0151 继续执行，累计强化 18 次。"
+
+[concepts]
+"algorithm.reverse_word_scan_from_right" = "kind=algorithm; introduced=0151; last=0151; occurrences=1; teaching_state=explained; note=从右向左交替跳过空格和定位单词，按发现顺序输出即可得到逆序单词。"
+"invariant.single_separator_output" = "kind=invariant; introduced=0151; last=0151; occurrences=1; teaching_state=explained; note=结果缓冲中已写出的单词顺序正确，相邻单词之间始终恰有一个空格。"
+"cost.string_slice_and_join_materialization" = "kind=complexity; introduced=0151; last=0151; occurrences=1; teaching_state=explained; note=区分原串扫描、单词片段容器、切片复制、join 输出和返回载荷。"
