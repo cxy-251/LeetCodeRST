@@ -1,4 +1,4 @@
-name: Diagnose 0124-0125 payload
+name: Diagnose 0124-0125 synchronization
 
 on:
   pull_request:
@@ -17,23 +17,86 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
 
-      - name: Record payload diagnostics
+      - name: Check synchronization anchors
         shell: bash
         run: |
           set -euo pipefail
           cat .batch-upload-0124-0125/part_* > /tmp/batch0124-0125.b64
           base64 --decode /tmp/batch0124-0125.b64 > /tmp/batch0124-0125.tar.gz
-          {
-            echo "payload_sha=$(sha256sum /tmp/batch0124-0125.tar.gz | awk '{print $1}')"
-            echo "payload_size=$(wc -c < /tmp/batch0124-0125.tar.gz)"
-            for file in .batch-upload-0124-0125/part_*; do
-              echo "$(basename "$file")_blob=$(git hash-object "$file")"
-            done
-            echo "tar_entries:"
-            tar -tzf /tmp/batch0124-0125.tar.gz
-          } > .batch-upload-0124-0125/status.txt
+          rm -rf /tmp/articles && mkdir -p /tmp/articles
+          tar -xzf /tmp/batch0124-0125.tar.gz -C /tmp/articles
+          python3 - <<'PY' > .batch-upload-0124-0125/status.txt
+          from pathlib import Path
+          import re
+
+          checks = {}
+          agents = Path('AGENTS.md').read_text()
+          root = Path('README.rst').read_text()
+          quality = Path('docs/AUTOMATION_QUALITY_GATE.rst').read_text()
+          index = Path('problems/0101-0200/README.rst').read_text()
+          review = Path('state/REVIEW_INDEX.toml').read_text()
+
+          checks['agents_anchor'] = (
+              '`0001–0123` 的多语言教程已经完成；`0051–0100` 的第二轮逐题审查和规则归并也已完成。\n'
+              '当前阶段由 `state/PROGRESS.toml` 决定，下一批是 `0124–0125`。'
+          ) in agents
+          checks['root_anchor'] = (
+              '``0001`` 至 ``0123`` 的多语言教程已经完成。``0051`` 至 ``0100`` 的第二轮逐题审查、81 条规则归并和\n'
+              '14 项事实更正也已完成。\n\n'
+              '``0123`` 按难度预算 4 分完成：Hard。下一批是 ``0124–0125``，由 Hard、Easy 组成，\n'
+              '合计 5 分；``0126`` 为 Hard，加入后会违反单批只安排一道 Hard 的规则。新题继续直接执行\n'
+              '``docs/FORWARD_RULES_0101_0150.rst``。'
+          ) in root
+          checks['quality_anchor'] = (
+              '当前 ``state/PROGRESS.toml`` 的阶段为 ``generation_ready``，``0101`` 至 ``0123`` 已完成，下一批从\n'
+              '``0124`` 开始。历史审查资料已经归档，不属于新题生成时的默认读取清单。'
+          ) in quality
+          checks['index_anchor'] = (
+              '#. `0123. Best Time to Buy and Sell Stock III\n'
+              '   <0123-best-time-to-buy-and-sell-stock-iii.rst>`_\n'
+          ) in index
+          checks['batch_regex'] = bool(re.search(
+              r'本批次\n------\n.*?\n执行规则\n--------', index, re.S
+          ))
+          checks['next_regex'] = bool(re.search(
+              r'下一动作\n--------\n.*\Z', index, re.S
+          ))
+          checks['review_regex'] = bool(re.search(
+              r'\[next_action\]\nkind = "problem_generation"\nstatus = "ready"\n'
+              r'start = 124\nend = 125\npurpose = .*?\n\n\[artifact_lifecycle\]',
+              review,
+              re.S,
+          ))
+
+          for name in [
+              '0124-binary-tree-maximum-path-sum.rst',
+              '0125-valid-palindrome.rst',
+          ]:
+              path = Path('/tmp/articles') / name
+              text = path.read_text()
+              checks[f'{name}_exists'] = path.exists()
+              checks[f'{name}_max_line'] = max(map(len, text.splitlines()))
+              checks[f'{name}_blocks'] = sum(
+                  len(re.findall(rf'^\.\. code-block:: {language}$', text, re.M))
+                  for language in [
+                      'c', 'cpp', 'python', 'java', 'rust',
+                      'go', 'typescript', 'csharp', 'julia', 'r',
+                  ]
+              )
+              links = re.findall(r'<([^>]+\.rst)>`_', text)
+              checks[f'{name}_links'] = ','.join(links)
+              checks[f'{name}_links_exist'] = all(
+                  (Path('problems/0101-0200') / target).resolve().exists()
+                  for target in links
+              )
+
+          for key, value in checks.items():
+              print(f'{key}={value}')
+          PY
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add .batch-upload-0124-0125/status.txt
-          git commit -m "chore: record 0124-0125 payload diagnostics"
-          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: record 0124-0125 synchronization diagnostics"
+            git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
+          fi
