@@ -1,0 +1,15 @@
+[meta]
+version = 1
+range = "0126"
+last_problem = 126
+inherits = "state/concepts/0124-0125.toml"
+
+[updates]
+"complexity.output_space_exclusion" = "此前 32 次区分工作状态与返回载荷；0126 将 BFS 距离、前驱 DAG、回溯路径与全部序列字符串载荷分别计费，累计 33 次。"
+
+[concepts]
+"algorithm.shortest_path_predecessor_dag" = "kind=algorithm; introduced=0126; last=0126; occurrences=1; teaching_state=explained; note=BFS 只保存最短距离与同层多前驱，把全部最短序列压缩为前驱 DAG，再按输出规模回溯物化。"
+"boundary.bfs_finish_target_parent_layer" = "kind=boundary; introduced=0126; last=0126; occurrences=1; teaching_state=explained; note=首次发现终点后仍处理目标上一层全部节点，收齐其他最短前驱；队首进入目标层时停止，避免探索更深路径。"
+"proof.distance_strictly_decreases_in_backtracking" = "kind=proof; introduced=0126; last=0126; occurrences=1; teaching_state=explained; note=每条前驱边都使 BFS 距离减一，因此回溯天然无环、终止，并且只生成最短序列。"
+"complexity.enumeration_output_payload" = "kind=complexity; introduced=0126; last=0126; occurrences=1; teaching_state=explained; note=设答案数 P、每条含 D 个长度 L 的单词，完整枚举存在 Theta(PDL) 时间与返回载荷下界，不能只报告图搜索成本。"
+"boundary.word_ladder_same_level_multiple_parents" = "kind=boundary; introduced=0126; last=0126; occurrences=1; teaching_state=explained; note=候选首次发现时入队并记录首个前驱；同一最短层再次发现时追加前驱，较深层到达则忽略。"
