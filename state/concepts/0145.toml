@@ -1,0 +1,13 @@
+[meta]
+version = 1
+range = "0145"
+last_problem = 145
+inherits = "state/concepts/0144.toml"
+
+[updates]
+"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0145 继续执行，累计强化 12 次。"
+
+[concepts]
+"algorithm.postorder_reverse_root_right_left" = "kind=algorithm; introduced=0145; last=0145; occurrences=1; teaching_state=explained; note=迭代生成根右左序列后整体反转，得到左、右、根的后序遍历。"
+"proof.postorder_global_reverse_local_order" = "kind=proof; introduced=0145; last=0145; occurrences=1; teaching_state=explained; note=每个子树记录均为根右左，反转后所有局部顺序同步变为左右根。"
+"adapter.r_repeated_vector_append" = "kind=language_adapter; introduced=0145; last=0145; occurrences=1; teaching_state=explained; note=R 以 c 反复扩展结果向量时累计复制最坏为 O(n^2)，不能沿用其他语言的摊还线性追加成本。"

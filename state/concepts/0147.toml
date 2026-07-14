@@ -1,0 +1,13 @@
+[meta]
+version = 1
+range = "0147"
+last_problem = 147
+inherits = "state/concepts/0146.toml"
+
+[updates]
+"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0147 继续执行，累计强化 14 次。"
+
+[concepts]
+"algorithm.linked_list_insertion_sorted_prefix" = "kind=algorithm; introduced=0147; last=0147; occurrences=1; teaching_state=explained; note=维护已排序前缀尾节点；失序节点从原处摘下，再插入前缀中第一个更大值之前。"
+"invariant.stable_insertion_after_equals" = "kind=invariant; introduced=0147; last=0147; occurrences=1; teaching_state=explained; note=插入位置搜索跨过所有小于等于当前值的节点，使重复值保持原相对顺序。"
+"adapter.rust_ownership_returning_list_insert" = "kind=language_adapter; introduced=0147; last=0147; occurrences=1; teaching_state=explained; note=Rust 逐个 take 原 Box 节点，并通过返回新链头的插入辅助函数重建有序链，避免别名可变借用。"

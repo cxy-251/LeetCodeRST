@@ -1,7 +1,7 @@
 LeetCode 0101–0200
 ==================
 
-本目录按题号顺序保存 0101 至 0200 的题目教程。当前已完成 0101 至 0144。
+本目录按题号顺序保存 0101 至 0200 的题目教程。当前已完成 0101 至 0147。
 
 已完成
 ------
@@ -50,18 +50,20 @@ LeetCode 0101–0200
 #. `0142. Linked List Cycle II <0142-linked-list-cycle-ii.rst>`_
 #. `0143. Reorder List <0143-reorder-list.rst>`_
 #. `0144. Binary Tree Preorder Traversal <0144-binary-tree-preorder-traversal.rst>`_
+#. `0145. Binary Tree Postorder Traversal <0145-binary-tree-postorder-traversal.rst>`_
+#. `0146. LRU Cache <0146-lru-cache.rst>`_
+#. `0147. Insertion Sort List <0147-insertion-sort-list.rst>`_
 
 本批次
 ------
 
-``0141–0144`` 的难度预算为：
+``0145–0147`` 的难度预算为：
 
-* ``0141`` Easy = 1；
-* ``0142`` Medium = 2；
-* ``0143`` Medium = 2；
-* ``0144`` Easy = 1；
-* 总分为 6；
-* ``0145`` 为 Easy，加入后会超过本批预算。
+* ``0145`` Easy = 1；
+* ``0146`` Medium = 2；
+* ``0147`` Medium = 2；
+* 总分为 5；
+* ``0148`` 为 Medium，加入后会超过本批预算。
 
 执行规则
 --------
@@ -77,4 +79,4 @@ RST 写作规范。每题保持精确契约、算法状态、正确性、复杂�
 下一动作
 --------
 
-下一批为 ``0145–0147``：Easy + Medium + Medium = 5。``0148`` 为 Medium，不再加入。
+下一批为 ``0148–0150``：Medium + Easy + Easy = 4。完成 ``0150`` 后切换下一阶段前向规则。

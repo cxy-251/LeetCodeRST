@@ -10,9 +10,9 @@ content_language = "zh-CN"
 code_comment_language = "zh-CN"
 
 [progress]
-next_problem = 145
-completed_count = 144
-completed_ranges = ["0001-0144"]
+next_problem = 148
+completed_count = 147
+completed_ranges = ["0001-0147"]
 premium_skipped = []
 blocked = []
 needs_revision = []
@@ -20,19 +20,19 @@ needs_revision = []
 [last_batch]
 status = "completed"
 kind = "problem_generation"
-start = 141
-end = 144
-completed = 4
-difficulty_budget = 6
-summary = "完成 0141-0144；判环、环入口恢复、原地重排和迭代前序遍历均已闭合。"
+start = 145
+end = 147
+completed = 3
+difficulty_budget = 5
+summary = "完成 0145-0147；逆序构造后序遍历、哈希链表 LRU 与稳定链表插入排序均已闭合。"
 
 [next_batch]
 status = "generation_ready"
 kind = "problem_generation"
-start = 145
-end = 147
+start = 148
+end = 150
 difficulty_budget = 5
-purpose = "0145 为 Easy，0146、0147 为 Medium，合计 5 分；0148 Medium 加入后超过预算。"
+purpose = "0148 为 Medium，0149、0150 为 Easy，合计 4 分；0151 Medium 加入后超过预算且进入下一规则范围。"
 
 [review_history]
 status = "completed"
@@ -60,14 +60,15 @@ output = "docs/FORWARD_RULES_0101_0150.rst"
 
 [validation]
 policy = "official_examples_and_targeted_boundaries"
-rst_problem_files = 4
-language_code_blocks = 40
-rst_structure_checked = 4
-python_official_examples_passed = 8
+rst_problem_files = 3
+language_code_blocks = 30
+rst_structure_checked = 3
+python_official_examples_passed = 7
 python_key_boundary_cases_passed = 13
-cpp_strict_compile_passed = 4
-c_strict_compile_passed = 4
-other_language_static_checked = 32
+cpp_strict_compile_passed = 3
+c_strict_compile_passed = 3
+rust_compile_passed = 3
+other_language_static_checked = 21
 random_differential_cases = 0
 exhaustive_cases = 0
 bulk_random_testing_required = false
@@ -84,11 +85,11 @@ disposable_generation_reports_committed = false
 
 [quality_scope]
 historical_start = 1
-historical_end = 144
+historical_end = 147
 historical_policy = "已完成题目默认保持原样；只有用户明确指定时才修复历史 RST。"
-forward_rule_start = 145
+forward_rule_start = 148
 forward_rule_end = 150
-forward_rule_policy = "0145-0150 继续执行完整前向规则、active corrections 和针对性验证质量门。"
+forward_rule_policy = "0148-0150 继续执行完整前向规则、active corrections 和针对性验证质量门。"
 
 [execution]
 trigger = "explicit_user_message_in_active_conversation"
@@ -107,10 +108,10 @@ ref_update = "non_force_fast_forward"
 
 [concept_ledger]
 index = "state/CONCEPT_LEDGER.toml"
-latest_record = "state/concepts/0141-0144.toml"
+latest_record = "state/concepts/0145-0147.toml"
 
 [next_action]
-summary = "生成 0145-0147；Easy、Medium、Medium 合计 5 分，0148 Medium 不再加入。"
+summary = "生成 0148-0150；Medium、Easy、Easy 合计 4 分，并在完成 0150 后切换下一阶段前向规则。"
 
 [last_update]
-summary = "0141-0144 已完成；全程未创建分支，使用 Git 对象原子提交并 fast-forward 更新 main。"
+summary = "0145-0147 已完成；未创建分支或 PR，只使用 Git 对象原子提交并 fast-forward 更新 main。"
