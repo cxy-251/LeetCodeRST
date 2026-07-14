@@ -1,0 +1,13 @@
+[meta]
+version = 1
+range = "0153-0154"
+last_problem = 154
+inherits = "state/concepts/0154.toml"
+
+[batch]
+completed = 2
+difficulty_budget = 6
+summary = "完成互异旋转数组的右端比较二分，以及重复值版本的等值右端消歧。"
+
+[updates]
+"workflow.targeted_example_validation" = "0153-0154 继续执行官方示例、关键边界、随机对拍与受控穷举，累计强化 21 次。"

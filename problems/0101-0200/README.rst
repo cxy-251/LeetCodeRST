@@ -1,7 +1,7 @@
 LeetCode 0101–0200
 ==================
 
-本目录按题号顺序保存 0101 至 0200 的题目教程。当前已完成 0101 至 0152。
+本目录按题号顺序保存 0101 至 0200 的题目教程。当前已完成 0101 至 0154。
 
 已完成
 ------
@@ -65,26 +65,29 @@ LeetCode 0101–0200
 #. `0150. Evaluate Reverse Polish Notation <0150-evaluate-reverse-polish-notation.rst>`_
 #. `0151. Reverse Words in a String <0151-reverse-words-in-a-string.rst>`_
 #. `0152. Maximum Product Subarray <0152-maximum-product-subarray.rst>`_
+#. `0153. Find Minimum in Rotated Sorted Array
+   <0153-find-minimum-in-rotated-sorted-array.rst>`_
+#. `0154. Find Minimum in Rotated Sorted Array II
+   <0154-find-minimum-in-rotated-sorted-array-ii.rst>`_
 
 本批次
 ------
 
-``0150–0152`` 的难度预算为：
+``0153–0154`` 的难度预算为：
 
-* ``0150`` Medium = 2；
-* ``0151`` Medium = 2；
-* ``0152`` Medium = 2；
+* ``0153`` Medium = 2；
+* ``0154`` Hard = 4；
 * 总分为 6；
-* ``0153`` 为 Medium，加入后会超过本批预算。
+* ``0155`` 为 Medium，加入后会超过本批预算。
 
 执行规则
 --------
 
-``0150`` 已按 ``../../docs/FORWARD_RULES_0101_0150.rst`` 完成。从 ``0151`` 起，当前目录及后续题号统一执行
-``../../docs/FORWARD_RULES_0151_ONWARD.rst``；发现通用问题时直接维护该文件，不再建立新的分段规则。
+``0153–0154`` 统一执行 ``../../docs/FORWARD_RULES_0151_ONWARD.rst``。发现通用问题时直接维护该文件，
+不再建立新的分段规则。
 
-每题保持精确契约、算法状态、正确性、复杂度、十语言实现和关键边界。常规验证运行官方示例和少量关键
-边界；高风险数值、所有权、状态压缩和字符串索引按长期规则增加针对性验证。
+每题保持精确契约、算法状态、正确性、复杂度、十语言实现和关键边界。``0154`` 的重复值消歧会降低二分
+区分能力，因此额外执行穷举对拍，并准确区分通常与最坏复杂度。
 
 固定每 50 题的全量审核已取消，后续只做批次自检与风险触发抽查。所有生产、抽查、规则维护和修复只允许
 直接在 ``main`` 形成一个原子提交。
@@ -92,4 +95,5 @@ LeetCode 0101–0200
 下一动作
 --------
 
-下一批为 ``0153–0154``：Medium + Hard = 6。``0155`` 为 Medium，不再加入。
+下一批从 ``0155`` 开始。按 Premium 跳过规则继续寻找可访问题目，当前计划完成 ``0155``、``0160`` 和
+``0162``，合计 5 分。

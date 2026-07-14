@@ -10,9 +10,9 @@ content_language = "zh-CN"
 code_comment_language = "zh-CN"
 
 [progress]
-next_problem = 153
-completed_count = 152
-completed_ranges = ["0001-0152"]
+next_problem = 155
+completed_count = 154
+completed_ranges = ["0001-0154"]
 premium_skipped = []
 blocked = []
 needs_revision = []
@@ -20,19 +20,19 @@ needs_revision = []
 [last_batch]
 status = "completed"
 kind = "problem_generation"
-start = 150
-end = 152
-completed = 3
+start = 153
+end = 154
+completed = 2
 difficulty_budget = 6
-summary = "完成 0150-0152；逆波兰栈求值、逆序单词扫描与最大最小乘积滚动 DP 均已闭合。"
+summary = "完成 0153-0154；互异旋转数组二分与重复值右端消歧均已闭合。"
 
 [next_batch]
 status = "generation_ready"
-kind = "problem_generation"
-start = 153
-end = 154
-difficulty_budget = 6
-purpose = "0153 为 Medium，0154 为 Hard，合计 6 分；0155 Medium 加入后超过预算。"
+kind = "problem_generation_with_premium_skips"
+start = 155
+end = 162
+difficulty_budget = 5
+purpose = "计划完成 0155 Medium、0160 Easy、0162 Medium，合计 5 分；0156-0159 与 0161 按 Premium 规则登记后跳过。"
 
 [review_history]
 status = "completed"
@@ -80,22 +80,22 @@ current_rule_last_problem = 0
 
 [validation]
 policy = "official_examples_and_targeted_boundaries"
-rst_problem_files = 3
-language_code_blocks = 30
-rst_structure_checked = 3
-python_official_examples_passed = 8
-python_key_boundary_cases_passed = 14
-cpp_strict_compile_passed = 3
-cpp_runtime_passed = 3
-c_strict_compile_passed = 3
-c_runtime_passed = 3
-go_runtime_passed = 3
-java_runtime_passed = 3
-typescript_strict_compile_passed = 3
-typescript_runtime_passed = 3
-other_language_static_checked = 12
+rst_problem_files = 2
+language_code_blocks = 20
+rst_structure_checked = 2
+python_official_examples_passed = 5
+python_key_boundary_cases_passed = 8
+cpp_strict_compile_passed = 2
+cpp_runtime_passed = 2
+c_strict_compile_passed = 2
+c_runtime_passed = 2
+go_runtime_passed = 2
+java_runtime_passed = 2
+typescript_strict_compile_passed = 2
+typescript_runtime_passed = 2
+other_language_static_checked = 8
 random_differential_cases = 500
-exhaustive_cases = 0
+exhaustive_cases = 3168
 bulk_random_testing_required = false
 runtime_test_claimed_for_static_only_languages = false
 
@@ -110,7 +110,7 @@ disposable_generation_reports_committed = false
 
 [quality_scope]
 historical_start = 1
-historical_end = 152
+historical_end = 154
 historical_policy = "已完成题目默认保持原样；只有用户明确指定时才修复历史 RST。"
 persistent_rule_start = 151
 persistent_rule = "docs/FORWARD_RULES_0151_ONWARD.rst"
@@ -133,10 +133,10 @@ ref_update = "non_force_fast_forward"
 
 [concept_ledger]
 index = "state/CONCEPT_LEDGER.toml"
-latest_record = "state/concepts/0150-0152.toml"
+latest_record = "state/concepts/0153-0154.toml"
 
 [next_action]
-summary = "生成 0153-0154；Medium、Hard 合计 6 分，统一使用长期前向规则。"
+summary = "从 0155 开始；登记并跳过 Premium 后完成 0155、0160、0162，合计 5 分。"
 
 [last_update]
-summary = "0150-0152 已完成；0151 起长期规则已正式进入持续执行状态，全程未创建分支或 PR。"
+summary = "0153-0154 已完成；0154 通过 3168 个穷举旋转数组验证，全程未创建分支或 PR。"

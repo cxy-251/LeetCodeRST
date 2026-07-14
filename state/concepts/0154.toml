@@ -1,0 +1,14 @@
+[meta]
+version = 1
+range = "0154"
+last_problem = 154
+inherits = "state/concepts/0153.toml"
+
+[updates]
+"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0154 继续执行，累计强化 21 次。"
+
+[concepts]
+"algorithm.rotated_array_minimum_right_boundary" = "kind=algorithm; introduced=0153; last=0154; occurrences=2; teaching_state=reinforcing; note=重复值版本沿用右端比较；不等时保持二分排除，等值时只删除无信息右端。"
+"invariant.minimum_value_witness_interval" = "kind=invariant; introduced=0154; last=0154; occurrences=1; teaching_state=explained; note=候选区间始终保留至少一个等于全局最小值的见证，不要求保留某个固定最小值下标。"
+"technique.equal_right_endpoint_disambiguation" = "kind=technique; introduced=0154; last=0154; occurrences=1; teaching_state=explained; note=nums[mid]==nums[right] 时删除右端；若右端是最小值，中点提供相同值见证。"
+"complexity.duplicate_binary_search_linear_worst_case" = "kind=complexity; introduced=0154; last=0154; occurrences=1; teaching_state=explained; note=重复值可能使每轮只能缩短一个端点，通常接近对数而最坏退化为线性。"
