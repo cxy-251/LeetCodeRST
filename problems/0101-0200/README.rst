@@ -1,7 +1,7 @@
 LeetCode 0101–0200
 ==================
 
-本目录按题号顺序保存 0101 至 0200 的题目教程。当前已完成 0101 至 0123。
+本目录按题号顺序保存 0101 至 0200 的题目教程。当前已完成 0101 至 0125。
 
 已完成
 ------
@@ -41,11 +41,19 @@ LeetCode 0101–0200
    <0122-best-time-to-buy-and-sell-stock-ii.rst>`_
 #. `0123. Best Time to Buy and Sell Stock III
    <0123-best-time-to-buy-and-sell-stock-iii.rst>`_
+#. `0124. Binary Tree Maximum Path Sum
+   <0124-binary-tree-maximum-path-sum.rst>`_
+#. `0125. Valid Palindrome <0125-valid-palindrome.rst>`_
 
 本批次
 ------
 
-``0123`` Hard = 4，作为单题批次完成。``0124`` 同样是 Hard，不能与 ``0123`` 同批。
+``0124–0125`` 的难度预算为：
+
+* ``0124`` Hard = 4；
+* ``0125`` Easy = 1；
+* 总分为 5；
+* ``0126`` 为 Hard，加入后会违反单批只安排一道 Hard 的规则。
 
 执行规则
 --------
@@ -57,4 +65,4 @@ RST 写作规范。每题独立完成精确契约、问题抽象、解法取舍�
 下一动作
 --------
 
-下一批为 ``0124–0125``：Hard + Easy = 5。``0126`` 为 Hard，加入后会违反单批只安排一道 Hard 的规则。
+下一批只处理 ``0126``，Hard = 4。``0127`` 同样是 Hard，不能与其同批。
