@@ -1,0 +1,13 @@
+[meta]
+version = 1
+range = "0141"
+last_problem = 141
+inherits = "state/concepts/0139-0140.toml"
+
+[updates]
+"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0141 继续执行，累计强化 8 次。"
+
+[concepts]
+"algorithm.floyd_cycle_detection" = "kind=algorithm; introduced=0141; last=0141; occurrences=1; teaching_state=explained; note=慢指针每轮一步、快指针每轮两步；无环时快指针到空，有环时相对速度一使两者在环内相遇。"
+"proof.relative_speed_cycle_meeting" = "kind=proof; introduced=0141; last=0141; occurrences=1; teaching_state=explained; note=进入长度 c 的环后，两指针位置差每轮加一并对 c 取模，至多 c 轮变为零。"
+"language.node_identity_comparison" = "kind=language_semantics; introduced=0133; last=0141; occurrences=3; teaching_state=reinforced; note=图和链表结构算法必须比较对象身份；Rust 使用 Rc::ptr_eq，R 使用 identical。"

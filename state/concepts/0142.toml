@@ -1,0 +1,13 @@
+[meta]
+version = 1
+range = "0142"
+last_problem = 142
+inherits = "state/concepts/0141.toml"
+
+[updates]
+"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0142 继续执行，累计强化 9 次。"
+"language.node_identity_comparison" = "0141 强化链表身份比较；0142 返回原链表入口节点，累计强化 4 次。"
+
+[concepts]
+"algorithm.floyd_cycle_entry_recovery" = "kind=algorithm; introduced=0142; last=0142; occurrences=1; teaching_state=explained; note=环内相遇后，一个指针回到头节点，两个指针同步一步移动，首次相遇位置即环入口。"
+"proof.cycle_distance_congruence" = "kind=proof; introduced=0142; last=0142; occurrences=1; teaching_state=explained; note=由 2(a+b)=a+b+kc 得 a=kc-b，头到入口距离与相遇点继续到入口距离模环长相同。"

@@ -1,0 +1,13 @@
+[meta]
+version = 1
+range = "0143"
+last_problem = 143
+inherits = "state/concepts/0142.toml"
+
+[updates]
+"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0143 继续执行，累计强化 10 次。"
+
+[concepts]
+"algorithm.reorder_list_split_reverse_merge" = "kind=algorithm; introduced=0143; last=0143; occurrences=1; teaching_state=explained; note=快慢指针切分链表，原地反转后半段，再交替合并两段得到首尾交错顺序。"
+"proof.reorder_node_partition_preservation" = "kind=proof; introduced=0143; last=0143; occurrences=1; teaching_state=explained; note=切分形成不重叠节点分区，反转只改边，合并每轮消费两段各一个节点，因此节点集合不丢失不重复。"
+"ownership.in_place_link_rewiring" = "kind=ownership; introduced=0114; last=0143; occurrences=2; teaching_state=reinforced; note=修改 next 前先保存后继，切分时清除旧边，保证原地改向不会丢失剩余链或形成意外环。"
