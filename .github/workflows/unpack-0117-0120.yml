@@ -21,10 +21,13 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          if [[ ! -d .batch-upload-0117-0120 ]]; then
+          if [[ ! -d .batch-upload-0117-0120-v2 ]]; then
             exit 0
           fi
-          cat .batch-upload-0117-0120/part_* | base64 --decode > /tmp/batch0117_0120.tar.gz
+          cat .batch-upload-0117-0120-v2/part_* | base64 --decode > /tmp/batch0117_0120.tar.gz
+          printf '%s  %s\n' \
+            '92295ef6822527b1608bfadf0de99be55660658ce6002ff58396b126c53109bc' \
+            /tmp/batch0117_0120.tar.gz | sha256sum -c -
           gzip -t /tmp/batch0117_0120.tar.gz
           tar -tzf /tmp/batch0117_0120.tar.gz > /tmp/batch0117_0120.list
           for path in \
@@ -44,7 +47,7 @@ jobs:
             grep -Fx "$path" /tmp/batch0117_0120.list >/dev/null
           done
           tar -xzf /tmp/batch0117_0120.tar.gz
-          rm -rf .batch-upload-0117-0120
+          rm -rf .batch-upload-0117-0120 .batch-upload-0117-0120-v2
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
