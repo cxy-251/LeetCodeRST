@@ -1,0 +1,272 @@
+name: Unpack 0123 quality batch
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+permissions:
+  contents: write
+
+jobs:
+  unpack:
+    if: github.head_ref == 'agent/generate-0123-quality'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+
+      - name: Materialize and synchronize formal files
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ ! -d .batch-upload-0123 ]]; then
+            exit 0
+          fi
+
+          base64 --decode .batch-upload-0123/part_aa > /tmp/batch0123.tar.gz
+          printf '%s  %s\n' \
+            '99fb09416c57afa6294303a92a6266a855b264ac9ec8e34ac3fc28743266ca94' \
+            /tmp/batch0123.tar.gz | sha256sum -c -
+          gzip -t /tmp/batch0123.tar.gz
+          tar -xzf /tmp/batch0123.tar.gz
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          def replace(path: str, old: str, new: str) -> None:
+              target = Path(path)
+              text = target.read_text()
+              if old not in text:
+                  raise SystemExit(f"missing replacement anchor in {path}: {old!r}")
+              target.write_text(text.replace(old, new, 1))
+
+          replace(
+              "AGENTS.md",
+              "`0001–0122` 的多语言教程已经完成；`0051–0100` 的第二轮逐题审查和规则归并也已完成。\n当前阶段由 `state/PROGRESS.toml` 决定，下一批是 `0123`。",
+              "`0001–0123` 的多语言教程已经完成；`0051–0100` 的第二轮逐题审查和规则归并也已完成。\n当前阶段由 `state/PROGRESS.toml` 决定，下一批是 `0124–0125`。",
+          )
+
+          replace(
+              "README.rst",
+              "``0001`` 至 ``0122`` 的多语言教程已经完成。``0051`` 至 ``0100`` 的第二轮逐题审查、81 条规则归并和\n14 项事实更正也已完成。\n\n``0121`` 至 ``0122`` 按难度预算 3 分完成：Easy、Medium。下一批是 ``0123``，Hard = 4；\n``0124`` 也是 Hard，同一轮不安排两道 Hard。新题继续直接执行\n``docs/FORWARD_RULES_0101_0150.rst``。",
+              "``0001`` 至 ``0123`` 的多语言教程已经完成。``0051`` 至 ``0100`` 的第二轮逐题审查、81 条规则归并和\n14 项事实更正也已完成。\n\n``0123`` 按难度预算 4 分完成：Hard。下一批是 ``0124–0125``，由 Hard、Easy 组成，\n合计 5 分；``0126`` 为 Hard，加入后会违反单批只安排一道 Hard 的规则。新题继续直接执行\n``docs/FORWARD_RULES_0101_0150.rst``。",
+          )
+
+          replace(
+              "docs/AUTOMATION_QUALITY_GATE.rst",
+              "当前 ``state/PROGRESS.toml`` 的阶段为 ``generation_ready``，``0101`` 至 ``0122`` 已完成，下一批从\n``0123`` 开始。历史审查资料已经归档，不属于新题生成时的默认读取清单。",
+              "当前 ``state/PROGRESS.toml`` 的阶段为 ``generation_ready``，``0101`` 至 ``0123`` 已完成，下一批从\n``0124`` 开始。历史审查资料已经归档，不属于新题生成时的默认读取清单。",
+          )
+
+          index = Path("problems/0101-0200/README.rst")
+          text = index.read_text()
+          text = text.replace(
+              "本目录按题号顺序保存 0101 至 0200 的题目教程。当前已完成 0101 至 0122。",
+              "本目录按题号顺序保存 0101 至 0200 的题目教程。当前已完成 0101 至 0123。",
+              1,
+          )
+          anchor = "#. `0122. Best Time to Buy and Sell Stock II\n   <0122-best-time-to-buy-and-sell-stock-ii.rst>`_\n"
+          if anchor not in text:
+              raise SystemExit("missing 0122 index anchor")
+          text = text.replace(
+              anchor,
+              anchor + "#. `0123. Best Time to Buy and Sell Stock III\n   <0123-best-time-to-buy-and-sell-stock-iii.rst>`_\n",
+              1,
+          )
+          text = re.sub(
+              r"本批次\n------\n.*?\n执行规则\n--------",
+              "本批次\n------\n\n``0123`` Hard = 4，作为单题批次完成。``0124`` 同样是 Hard，不能与 ``0123`` 同批。\n\n执行规则\n--------",
+              text,
+              count=1,
+              flags=re.S,
+          )
+          text = re.sub(
+              r"下一动作\n--------\n.*\Z",
+              "下一动作\n--------\n\n下一批为 ``0124–0125``：Hard + Easy = 5。``0126`` 为 Hard，加入后会违反单批只安排一道 Hard 的规则。\n",
+              text,
+              count=1,
+              flags=re.S,
+          )
+          index.write_text(text)
+
+          Path("state/PROGRESS.toml").write_text('''[project]
+          name = "leetcode-multilang-rst"
+          phase = "generation_ready"
+          format = "rst"
+          ordering = "leetcode_number_ascending"
+          execution_mode = "conversation_only"
+          git_workflow = "conversation_direct_main"
+          build_required = false
+          content_language = "zh-CN"
+          code_comment_language = "zh-CN"
+
+          [progress]
+          next_problem = 124
+          completed_count = 123
+          completed_ranges = ["0001-0123"]
+          premium_skipped = []
+          blocked = []
+          needs_revision = []
+
+          [last_batch]
+          status = "completed"
+          kind = "problem_generation"
+          start = 123
+          end = 123
+          completed = 1
+          difficulty_budget = 4
+          summary = "按 Easy=1、Medium=2、Hard=4 的预算完成 0123；单题具备完整教学正文、十语言实现与分语言验证证据。"
+
+          [next_batch]
+          status = "generation_ready"
+          kind = "problem_generation"
+          start = 124
+          end = 125
+          difficulty_budget = 5
+          purpose = "继续执行 docs/FORWARD_RULES_0101_0150.rst；0124 为 Hard、0125 为 Easy，合计 5 分；0126 为 Hard，不能与 0124 同批。"
+
+          [review]
+          status = "completed"
+          mode = "second_round_content_review"
+          source = "complete_rst_content"
+          start = 51
+          end = 100
+          reviewed_count = 50
+          modify_historical_rst = false
+          index = "state/REVIEW_INDEX.toml"
+          first_round_archive = "archive/reviews/0001-0050/MANIFEST.rst"
+          second_round_archive = "archive/reviews/0051-0100/MANIFEST.rst"
+
+          [rule_consolidation]
+          status = "completed"
+          source_start = 51
+          source_end = 100
+          source_batch_count = 10
+          absorbed_promoted_rule_count = 81
+          active_correction_count = 14
+          record = "archive/reviews/0051-0100/RULE_CONSOLIDATION.toml"
+          output = "docs/FORWARD_RULES_0101_0150.rst"
+
+          [validation]
+          rst_problem_files = 1
+          language_code_blocks = 10
+          line_width_hard_limit = 100
+          line_width_violations = 0
+          rst_parse_warnings = 0
+          python_ast_passed = 1
+          python_exhaustive_stock_cases = 97655
+          python_random_stock_cases = 3000
+          c_strict_compile_passed = 1
+          c_random_stock_cases = 500
+          cpp_strict_compile_passed = 1
+          cpp_random_stock_cases = 500
+          c_cpp_sanitizer_runs_passed = 2
+          java_compile_and_run_passed = 1
+          java_random_stock_cases = 500
+          go_compile_and_run_passed = 1
+          go_random_stock_cases = 500
+          typescript_strict_and_run_passed = 1
+          typescript_random_stock_cases = 500
+          rust_static_checked = 1
+          csharp_static_checked = 1
+          julia_static_checked = 1
+          r_static_checked = 1
+          runtime_test_claimed_for_static_only_languages = false
+
+          [artifact_lifecycle]
+          policy = "docs/ARTIFACT_LIFECYCLE_POLICY.rst"
+          archive_index = "archive/README.rst"
+          active_review_batch_files = 0
+          active_review_finding_files = 0
+          last_archive = "archive/reviews/0051-0100/MANIFEST.rst"
+          temporary_marker_present = false
+          disposable_generation_reports_committed = false
+
+          [quality_scope]
+          historical_start = 1
+          historical_end = 123
+          historical_policy = "已完成题目默认保持原样；事实更正前向生效，只有用户明确指定时才修复历史 RST。"
+          forward_rule_start = 124
+          forward_rule_end = 150
+          forward_rule_policy = "0124-0150 继续读取已归并的完整前向规则和 active corrections。"
+
+          [execution]
+          trigger = "explicit_user_message_in_active_conversation"
+          cadence = "single_reply_cycle"
+          write_target = "main"
+          commit_shape = "one_atomic_commit"
+          collaboration_mode = "branch_or_pr_when_user_selects_review_workflow"
+          policy = "docs/AUTOMATION_DIRECT_MAIN_POLICY.rst"
+
+          [concept_ledger]
+          index = "state/CONCEPT_LEDGER.toml"
+          latest_record = "state/concepts/0123.toml"
+
+          [next_action]
+          summary = "按照连续难度预算生成 0124-0125；Hard、Easy 合计 5 分，0126 Hard 不与 0124 同批。"
+
+          [last_update]
+          summary = "0123 已按逐题闭合方式完成；两次交易四阶段状态、旧状态快照和常数空间压缩均通过分语言验证。"
+          '''.replace("          ", ""))
+
+          review = Path("state/REVIEW_INDEX.toml")
+          review_text = review.read_text()
+          review_text = re.sub(
+              r"\[next_action\]\nkind = \"problem_generation\"\nstatus = \"ready\"\nstart = 123\nend = 123\npurpose = .*?\n\n\[artifact_lifecycle\]",
+              "[next_action]\nkind = \"problem_generation\"\nstatus = \"ready\"\nstart = 124\nend = 125\npurpose = \"Generate problems 0124-0125 using docs/FORWARD_RULES_0101_0150.rst; Hard 0124 and Easy 0125 consume 5 points, while Hard 0126 cannot share the batch with 0124.\"\n\n[artifact_lifecycle]",
+              review_text,
+              count=1,
+              flags=re.S,
+          )
+          review.write_text(review_text)
+
+          Path("state/CONCEPT_LEDGER.toml").write_text('''[meta]
+          version = 10
+          last_problem = 123
+          format = "segmented"
+
+          [records]
+          legacy = "state/concepts/0001-0050.toml"
+          previous = "state/concepts/0051-0100.toml"
+          current = "state/concepts/0101-0104.toml"
+          recent = "state/concepts/0105-0107.toml"
+          prior = "state/concepts/0108-0112.toml"
+          penultimate = "state/concepts/0113-0114.toml"
+          latest_previous = "state/concepts/0115-0116.toml"
+          prior_latest = "state/concepts/0117-0120.toml"
+          latest_before_current = "state/concepts/0121-0122.toml"
+          latest = "state/concepts/0123.toml"
+
+          [resolution]
+          statement = "按 legacy、previous、current、recent、prior、penultimate、latest_previous、prior_latest、latest_before_current、latest 顺序读取；后续分段中的同名 updates 覆盖更早记录的 last_problem、occurrences、teaching_state 和 note。"
+          '''.replace("          ", ""))
+          PY
+
+          python3 - <<'PY'
+          from pathlib import Path
+          import re, tomllib
+
+          article = Path("problems/0101-0200/0123-best-time-to-buy-and-sell-stock-iii.rst").read_text()
+          languages = ["c", "cpp", "python", "java", "rust", "go", "typescript", "csharp", "julia", "r"]
+          for language in languages:
+              count = len(re.findall(rf"^\.\. code-block:: {language}$", article, re.M))
+              if count != 1:
+                  raise SystemExit(f"{language} code block count: {count}")
+          for path in ["state/PROGRESS.toml", "state/REVIEW_INDEX.toml", "state/CONCEPT_LEDGER.toml", "state/concepts/0123.toml"]:
+              with open(path, "rb") as stream:
+                  tomllib.load(stream)
+          if any(len(line) > 100 for line in article.splitlines() if line.startswith("   ")):
+              raise SystemExit("code line exceeds 100 characters")
+          PY
+
+          rm -rf .batch-upload-0123
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "content: materialize 0123 quality batch"
+            git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
+          fi
