@@ -27,7 +27,7 @@ order = [
   "completed forward-rule documents",
   "specialized policies and template",
   "archive review evidence",
-  "commit, PR, and conversation summaries",
+  "main commit and conversation summaries",
 ]
 statement = "Higher-priority sources supersede lower-priority sources when wording conflicts."
 
@@ -68,8 +68,8 @@ statement = "Review findings are applied prospectively. A historical problem is 
 
 [corrections.execution_workflow]
 status = "active"
-supersedes = "Earlier scheduled automation, fixed automation branches, and default pull-request workflow."
-statement = "Generation, review, repair, consolidation, and archival are triggered by an explicit user message and enter main as one atomic commit. Temporary connector branches are implementation details."
+supersedes = "Earlier scheduled automation, fixed automation branches, temporary connector branches, and default pull-request workflow."
+statement = "Generation, review, repair, consolidation, and archival are triggered by an explicit user message and enter main as one atomic commit. Branches, pull requests, upload branches, and temporary materialization workflows are forbidden."
 
 [corrections.r_recursive_closure_subassignment]
 status = "active"
@@ -146,9 +146,9 @@ statement = "O(min(m,n)) describes only the rolling Boolean DP array. The C++ si
 [next_action]
 kind = "problem_generation"
 status = "ready"
-start = 127
-end = 128
-purpose = "Generate problems 0127-0128 using docs/FORWARD_RULES_0101_0150.rst; Hard 0127 and Medium 0128 consume 6 points, while Medium 0129 would exceed the batch budget."
+start = 129
+end = 131
+purpose = "Generate problems 0129-0131 using docs/FORWARD_RULES_0101_0150.rst; three Medium problems consume 6 points, while Hard 0132 would exceed the batch budget."
 
 [artifact_lifecycle]
 policy = "docs/ARTIFACT_LIFECYCLE_POLICY.rst"

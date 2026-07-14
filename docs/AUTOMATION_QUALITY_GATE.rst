@@ -5,13 +5,14 @@
 --------
 
 本文件用于当前对话驱动批次的验收。完整技术规则位于 ``docs/FORWARD_RULES_0101_0150.rst``，阶段产物
-清理规则位于 ``docs/ARTIFACT_LIFECYCLE_POLICY.rst``。
+清理规则位于 ``docs/ARTIFACT_LIFECYCLE_POLICY.rst``，直接主分支规则位于
+``docs/AUTOMATION_DIRECT_MAIN_POLICY.rst``。
 
 适用阶段
 --------
 
-当前 ``state/PROGRESS.toml`` 的阶段为 ``generation_ready``，``0101`` 至 ``0126`` 已完成，下一批从
-``0127`` 开始。历史审查资料已经归档，不属于新题生成时的默认读取清单。
+当前 ``state/PROGRESS.toml`` 的阶段为 ``generation_ready``，``0101`` 至 ``0128`` 已完成，下一批从
+``0129`` 开始。历史审查资料已经归档，不属于新题生成时的默认读取清单。
 
 开始前
 ------
@@ -26,6 +27,7 @@
 #. ``docs/PROBLEM_TEMPLATE.rst``；
 #. ``docs/SOLUTION_AND_TYPES_POLICY.rst``；
 #. ``docs/RST_STYLE_GUIDE.rst``；
+#. ``docs/AUTOMATION_DIRECT_MAIN_POLICY.rst``；
 #. ``docs/ARTIFACT_LIFECYCLE_POLICY.rst``；
 #. ``state/CONCEPT_LEDGER.toml``；
 #. 当前题及最近相关题目。
@@ -107,7 +109,8 @@
 #. 审查批次文件只在当前审查轮次未归并时保留在活动目录；
 #. 已消费且有证据价值的阶段文件已经移动到 ``archive`` 并登记 manifest；
 #. 被移动路径在 ``AGENTS``、README、``PROGRESS``、``REVIEW_INDEX`` 和策略中同步更新；
-#. 活动目录不存在指向已删除路径的引用。
+#. 活动目录不存在指向已删除路径的引用；
+#. 仓库没有为本轮创建任何分支、PR、上传分片或临时组装工作流。
 
 批次同步
 --------
@@ -125,13 +128,15 @@
 提交与复查
 ----------
 
-一次性准备本轮全部文件，形成一个原子提交进入 ``main``，随后重新读取目标文件，确认：
+一次性准备本轮全部文件，基于最新 ``main`` 树通过 Git blob、tree、commit 和 ref 操作形成一个原子提交，
+禁止使用分支或 PR。随后重新读取目标文件，确认：
 
 #. 完成范围连续；
 #. ``next_problem`` 正确推进；
 #. README、题目索引和知识账本同步；
 #. 提交差异不包含半成品或无关文件；
 #. 活动目录没有已消费中间产物；
+#. 本轮只产生一个新的 ``main`` 提交；
 #. 对话报告与 ``main`` 实际状态一致。
 
 单题完成判定

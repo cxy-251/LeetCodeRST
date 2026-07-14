@@ -4,15 +4,15 @@ phase = "generation_ready"
 format = "rst"
 ordering = "leetcode_number_ascending"
 execution_mode = "conversation_only"
-git_workflow = "conversation_direct_main"
+git_workflow = "direct_main_only"
 build_required = false
 content_language = "zh-CN"
 code_comment_language = "zh-CN"
 
 [progress]
-next_problem = 127
-completed_count = 126
-completed_ranges = ["0001-0126"]
+next_problem = 129
+completed_count = 128
+completed_ranges = ["0001-0128"]
 premium_skipped = []
 blocked = []
 needs_revision = []
@@ -20,19 +20,19 @@ needs_revision = []
 [last_batch]
 status = "completed"
 kind = "problem_generation"
-start = 126
-end = 126
-completed = 1
-difficulty_budget = 4
-summary = "按 Easy=1、Medium=2、Hard=4 的预算完成 0126；单题具备完整教学正文、十语言实现与分语言验证证据。"
+start = 127
+end = 128
+completed = 2
+difficulty_budget = 6
+summary = "按 Easy=1、Medium=2、Hard=4 的预算完成 0127-0128；两题均具备完整教学正文、十语言实现与分语言验证证据。"
 
 [next_batch]
 status = "generation_ready"
 kind = "problem_generation"
-start = 127
-end = 128
+start = 129
+end = 131
 difficulty_budget = 6
-purpose = "继续执行 docs/FORWARD_RULES_0101_0150.rst；0127 为 Hard、0128 为 Medium，合计 6 分；0129 为 Medium，加入后超过预算。"
+purpose = "继续执行 docs/FORWARD_RULES_0101_0150.rst；0129、0130、0131 均为 Medium，合计 6 分；0132 为 Hard，加入后超过预算。"
 
 [review]
 status = "completed"
@@ -57,28 +57,35 @@ record = "archive/reviews/0051-0100/RULE_CONSOLIDATION.toml"
 output = "docs/FORWARD_RULES_0101_0150.rst"
 
 [validation]
-rst_problem_files = 1
-language_code_blocks = 10
+rst_problem_files = 2
+language_code_blocks = 20
 line_width_hard_limit = 100
 line_width_violations = 0
 rst_parse_warnings = 0
-python_ast_passed = 1
+python_ast_passed = 2
 python_random_word_ladder_cases = 3000
-c_strict_compile_passed = 1
+python_exhaustive_longest_consecutive_cases = 97656
+python_random_longest_consecutive_cases = 5000
+c_strict_compile_passed = 2
 c_random_word_ladder_cases = 500
-cpp_strict_compile_passed = 1
+c_random_longest_consecutive_cases = 1000
+cpp_strict_compile_passed = 2
 cpp_random_word_ladder_cases = 500
-c_cpp_sanitizer_runs_passed = 2
-java_compile_and_run_passed = 1
+cpp_random_longest_consecutive_cases = 1000
+c_cpp_sanitizer_runs_passed = 4
+java_compile_and_run_passed = 2
 java_random_word_ladder_cases = 500
-go_compile_and_run_passed = 1
+java_random_longest_consecutive_cases = 1000
+go_compile_and_run_passed = 2
 go_random_word_ladder_cases = 500
-typescript_strict_and_run_passed = 1
+go_random_longest_consecutive_cases = 1000
+typescript_strict_and_run_passed = 2
 typescript_random_word_ladder_cases = 500
-rust_static_checked = 1
-csharp_static_checked = 1
-julia_static_checked = 1
-r_static_checked = 1
+typescript_random_longest_consecutive_cases = 1000
+rust_static_checked = 2
+csharp_static_checked = 2
+julia_static_checked = 2
+r_static_checked = 2
 runtime_test_claimed_for_static_only_languages = false
 
 [artifact_lifecycle]
@@ -92,26 +99,33 @@ disposable_generation_reports_committed = false
 
 [quality_scope]
 historical_start = 1
-historical_end = 126
+historical_end = 128
 historical_policy = "已完成题目默认保持原样；事实更正前向生效，只有用户明确指定时才修复历史 RST。"
-forward_rule_start = 127
+forward_rule_start = 129
 forward_rule_end = 150
-forward_rule_policy = "0127-0150 继续读取已归并的完整前向规则和 active corrections。"
+forward_rule_policy = "0129-0150 继续读取已归并的完整前向规则和 active corrections。"
 
 [execution]
 trigger = "explicit_user_message_in_active_conversation"
 cadence = "single_reply_cycle"
 write_target = "main"
 commit_shape = "one_atomic_commit"
-collaboration_mode = "branch_or_pr_when_user_selects_review_workflow"
+collaboration_mode = "direct_main_only_no_branches_or_prs"
 policy = "docs/AUTOMATION_DIRECT_MAIN_POLICY.rst"
+
+[git_policy]
+branches_allowed = false
+pull_requests_allowed = false
+temporary_workflows_allowed = false
+write_method = "git_blob_tree_commit_ref"
+ref_update = "non_force_fast_forward"
 
 [concept_ledger]
 index = "state/CONCEPT_LEDGER.toml"
-latest_record = "state/concepts/0126.toml"
+latest_record = "state/concepts/0127-0128.toml"
 
 [next_action]
-summary = "按照连续难度预算生成 0127-0128；Hard、Medium 合计 6 分，0129 Medium 不再加入。"
+summary = "按照连续难度预算生成 0129-0131；三道 Medium 合计 6 分，0132 Hard 不再加入。"
 
 [last_update]
-summary = "0126 已按逐题闭合方式完成；最短层 BFS、多前驱 DAG、目标层收尾和输出敏感复杂度均通过分语言验证。"
+summary = "0127-0128 已按逐题闭合方式完成；按层 BFS 入队即删除和连续段唯一起点扫描均通过分语言验证；仓库执行规则已改为只允许直接更新 main。"
