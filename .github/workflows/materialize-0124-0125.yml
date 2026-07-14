@@ -1,4 +1,4 @@
-name: Diagnose 0124-0125 synchronization
+name: Materialize 0124-0125 quality batch
 
 on:
   pull_request:
@@ -8,7 +8,7 @@ permissions:
   contents: write
 
 jobs:
-  diagnose:
+  materialize:
     if: github.head_ref == 'agent/generate-0124-0125-quality'
     runs-on: ubuntu-latest
     steps:
@@ -17,86 +17,263 @@ jobs:
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
 
-      - name: Check synchronization anchors
+      - name: Write formal batch files
         shell: bash
         run: |
           set -euo pipefail
           cat .batch-upload-0124-0125/part_* > /tmp/batch0124-0125.b64
           base64 --decode /tmp/batch0124-0125.b64 > /tmp/batch0124-0125.tar.gz
-          rm -rf /tmp/articles && mkdir -p /tmp/articles
-          tar -xzf /tmp/batch0124-0125.tar.gz -C /tmp/articles
-          python3 - <<'PY' > .batch-upload-0124-0125/status.txt
+          tar -xzf /tmp/batch0124-0125.tar.gz -C problems/0101-0200
+
+          python3 - <<'PY'
           from pathlib import Path
           import re
 
-          checks = {}
-          agents = Path('AGENTS.md').read_text()
-          root = Path('README.rst').read_text()
-          quality = Path('docs/AUTOMATION_QUALITY_GATE.rst').read_text()
-          index = Path('problems/0101-0200/README.rst').read_text()
-          review = Path('state/REVIEW_INDEX.toml').read_text()
+          path = Path('AGENTS.md')
+          text = path.read_text()
+          text = text.replace('`0001–0123` 的多语言教程已经完成', '`0001–0125` 的多语言教程已经完成')
+          text = text.replace('下一批是 `0124–0125`。', '下一批是 `0126`。')
+          path.write_text(text)
 
-          checks['agents_anchor'] = (
-              '`0001–0123` 的多语言教程已经完成；`0051–0100` 的第二轮逐题审查和规则归并也已完成。\n'
-              '当前阶段由 `state/PROGRESS.toml` 决定，下一批是 `0124–0125`。'
-          ) in agents
-          checks['root_anchor'] = (
-              '``0001`` 至 ``0123`` 的多语言教程已经完成。``0051`` 至 ``0100`` 的第二轮逐题审查、81 条规则归并和\n'
+          path = Path('README.rst')
+          text = path.read_text()
+          text = re.sub(
+              r'``0001`` 至 ``0123`` 的多语言教程已经完成。.*?``docs/FORWARD_RULES_0101_0150.rst``。',
+              '``0001`` 至 ``0125`` 的多语言教程已经完成。``0051`` 至 ``0100`` 的第二轮逐题审查、81 条规则归并和\n'
               '14 项事实更正也已完成。\n\n'
-              '``0123`` 按难度预算 4 分完成：Hard。下一批是 ``0124–0125``，由 Hard、Easy 组成，\n'
-              '合计 5 分；``0126`` 为 Hard，加入后会违反单批只安排一道 Hard 的规则。新题继续直接执行\n'
-              '``docs/FORWARD_RULES_0101_0150.rst``。'
-          ) in root
-          checks['quality_anchor'] = (
-              '当前 ``state/PROGRESS.toml`` 的阶段为 ``generation_ready``，``0101`` 至 ``0123`` 已完成，下一批从\n'
-              '``0124`` 开始。历史审查资料已经归档，不属于新题生成时的默认读取清单。'
-          ) in quality
-          checks['index_anchor'] = (
-              '#. `0123. Best Time to Buy and Sell Stock III\n'
-              '   <0123-best-time-to-buy-and-sell-stock-iii.rst>`_\n'
-          ) in index
-          checks['batch_regex'] = bool(re.search(
-              r'本批次\n------\n.*?\n执行规则\n--------', index, re.S
-          ))
-          checks['next_regex'] = bool(re.search(
-              r'下一动作\n--------\n.*\Z', index, re.S
-          ))
-          checks['review_regex'] = bool(re.search(
-              r'\[next_action\]\nkind = "problem_generation"\nstatus = "ready"\n'
-              r'start = 124\nend = 125\npurpose = .*?\n\n\[artifact_lifecycle\]',
-              review,
-              re.S,
-          ))
+              '``0124`` 至 ``0125`` 按难度预算 5 分完成：Hard、Easy。下一批是单题 ``0126``，Hard = 4；\n'
+              '``0127`` 同样是 Hard，同一轮不安排两道 Hard。新题继续直接执行\n'
+              '``docs/FORWARD_RULES_0101_0150.rst``。',
+              text,
+              count=1,
+              flags=re.S,
+          )
+          path.write_text(text)
 
-          for name in [
-              '0124-binary-tree-maximum-path-sum.rst',
-              '0125-valid-palindrome.rst',
-          ]:
-              path = Path('/tmp/articles') / name
-              text = path.read_text()
-              checks[f'{name}_exists'] = path.exists()
-              checks[f'{name}_max_line'] = max(map(len, text.splitlines()))
-              checks[f'{name}_blocks'] = sum(
-                  len(re.findall(rf'^\.\. code-block:: {language}$', text, re.M))
-                  for language in [
-                      'c', 'cpp', 'python', 'java', 'rust',
-                      'go', 'typescript', 'csharp', 'julia', 'r',
-                  ]
-              )
-              links = re.findall(r'<([^>]+\.rst)>`_', text)
-              checks[f'{name}_links'] = ','.join(links)
-              checks[f'{name}_links_exist'] = all(
-                  (Path('problems/0101-0200') / target).resolve().exists()
-                  for target in links
-              )
+          path = Path('docs/AUTOMATION_QUALITY_GATE.rst')
+          text = path.read_text()
+          text = text.replace('``0101`` 至 ``0123`` 已完成', '``0101`` 至 ``0125`` 已完成')
+          text = text.replace('下一批从\n``0124`` 开始', '下一批从\n``0126`` 开始')
+          path.write_text(text)
 
-          for key, value in checks.items():
-              print(f'{key}={value}')
+          path = Path('problems/0101-0200/README.rst')
+          text = path.read_text()
+          text = text.replace('当前已完成 0101 至 0123。', '当前已完成 0101 至 0125。')
+          anchor = '#. `0123. Best Time to Buy and Sell Stock III\n   <0123-best-time-to-buy-and-sell-stock-iii.rst>`_\n'
+          text = text.replace(
+              anchor,
+              anchor
+              + '#. `0124. Binary Tree Maximum Path Sum\n'
+              + '   <0124-binary-tree-maximum-path-sum.rst>`_\n'
+              + '#. `0125. Valid Palindrome <0125-valid-palindrome.rst>`_\n',
+              1,
+          )
+          text = re.sub(
+              r'本批次\n------\n.*?\n执行规则\n--------',
+              '本批次\n------\n\n``0124–0125`` 的难度预算为：\n\n'
+              '* ``0124`` Hard = 4；\n'
+              '* ``0125`` Easy = 1；\n'
+              '* 总分为 5；\n'
+              '* ``0126`` 为 Hard，加入后会违反单批只安排一道 Hard 的规则。\n\n'
+              '执行规则\n--------',
+              text,
+              count=1,
+              flags=re.S,
+          )
+          text = re.sub(
+              r'下一动作\n--------\n.*\Z',
+              '下一动作\n--------\n\n下一批只处理 ``0126``，Hard = 4。``0127`` 同样是 Hard，不能与其同批。\n',
+              text,
+              count=1,
+              flags=re.S,
+          )
+          path.write_text(text)
+
+          Path('state/PROGRESS.toml').write_text('''[project]
+          name = "leetcode-multilang-rst"
+          phase = "generation_ready"
+          format = "rst"
+          ordering = "leetcode_number_ascending"
+          execution_mode = "conversation_only"
+          git_workflow = "conversation_direct_main"
+          build_required = false
+          content_language = "zh-CN"
+          code_comment_language = "zh-CN"
+
+          [progress]
+          next_problem = 126
+          completed_count = 125
+          completed_ranges = ["0001-0125"]
+          premium_skipped = []
+          blocked = []
+          needs_revision = []
+
+          [last_batch]
+          status = "completed"
+          kind = "problem_generation"
+          start = 124
+          end = 125
+          completed = 2
+          difficulty_budget = 5
+          summary = "按 Easy=1、Medium=2、Hard=4 的预算完成 0124-0125；两题均具备完整教学正文、十语言实现与分语言验证证据。"
+
+          [next_batch]
+          status = "generation_ready"
+          kind = "problem_generation"
+          start = 126
+          end = 126
+          difficulty_budget = 4
+          purpose = "继续执行 docs/FORWARD_RULES_0101_0150.rst；0126 为 Hard，单题 4 分；0127 同样是 Hard，同一轮不安排两道 Hard。"
+
+          [review]
+          status = "completed"
+          mode = "second_round_content_review"
+          source = "complete_rst_content"
+          start = 51
+          end = 100
+          reviewed_count = 50
+          modify_historical_rst = false
+          index = "state/REVIEW_INDEX.toml"
+          first_round_archive = "archive/reviews/0001-0050/MANIFEST.rst"
+          second_round_archive = "archive/reviews/0051-0100/MANIFEST.rst"
+
+          [rule_consolidation]
+          status = "completed"
+          source_start = 51
+          source_end = 100
+          source_batch_count = 10
+          absorbed_promoted_rule_count = 81
+          active_correction_count = 14
+          record = "archive/reviews/0051-0100/RULE_CONSOLIDATION.toml"
+          output = "docs/FORWARD_RULES_0101_0150.rst"
+
+          [validation]
+          rst_problem_files = 2
+          language_code_blocks = 20
+          line_width_hard_limit = 100
+          line_width_violations = 0
+          rst_parse_warnings = 0
+          python_ast_passed = 2
+          python_random_tree_cases = 3000
+          python_exhaustive_palindrome_cases = 3906
+          python_random_palindrome_cases = 5000
+          c_strict_compile_passed = 2
+          c_random_tree_cases = 500
+          c_random_palindrome_cases = 1000
+          cpp_strict_compile_passed = 2
+          cpp_random_tree_cases = 500
+          cpp_random_palindrome_cases = 1000
+          c_cpp_sanitizer_runs_passed = 4
+          java_compile_and_run_passed = 2
+          java_random_tree_cases = 500
+          java_random_palindrome_cases = 1000
+          go_compile_and_run_passed = 2
+          go_random_tree_cases = 500
+          go_random_palindrome_cases = 1000
+          typescript_strict_and_run_passed = 2
+          typescript_random_tree_cases = 500
+          typescript_random_palindrome_cases = 1000
+          rust_static_checked = 2
+          csharp_static_checked = 2
+          julia_static_checked = 2
+          r_static_checked = 2
+          runtime_test_claimed_for_static_only_languages = false
+
+          [artifact_lifecycle]
+          policy = "docs/ARTIFACT_LIFECYCLE_POLICY.rst"
+          archive_index = "archive/README.rst"
+          active_review_batch_files = 0
+          active_review_finding_files = 0
+          last_archive = "archive/reviews/0051-0100/MANIFEST.rst"
+          temporary_marker_present = false
+          disposable_generation_reports_committed = false
+
+          [quality_scope]
+          historical_start = 1
+          historical_end = 125
+          historical_policy = "已完成题目默认保持原样；事实更正前向生效，只有用户明确指定时才修复历史 RST。"
+          forward_rule_start = 126
+          forward_rule_end = 150
+          forward_rule_policy = "0126-0150 继续读取已归并的完整前向规则和 active corrections。"
+
+          [execution]
+          trigger = "explicit_user_message_in_active_conversation"
+          cadence = "single_reply_cycle"
+          write_target = "main"
+          commit_shape = "one_atomic_commit"
+          collaboration_mode = "branch_or_pr_when_user_selects_review_workflow"
+          policy = "docs/AUTOMATION_DIRECT_MAIN_POLICY.rst"
+
+          [concept_ledger]
+          index = "state/CONCEPT_LEDGER.toml"
+          latest_record = "state/concepts/0124-0125.toml"
+
+          [next_action]
+          summary = "按照连续难度预算生成 0126；Hard 单题 4 分，0127 也是 Hard，不与其同批。"
+
+          [last_update]
+          summary = "0124-0125 已按逐题闭合方式完成；树形最大路径双状态与 ASCII 过滤双指针均通过分语言验证。"
+          '''.replace('          ', ''))
+
+          path = Path('state/REVIEW_INDEX.toml')
+          text = path.read_text()
+          text = re.sub(
+              r'\[next_action\]\nkind = "problem_generation"\nstatus = "ready"\nstart = 124\nend = 125\npurpose = .*?\n\n\[artifact_lifecycle\]',
+              '[next_action]\nkind = "problem_generation"\nstatus = "ready"\nstart = 126\nend = 126\n'
+              'purpose = "Generate problem 0126 using docs/FORWARD_RULES_0101_0150.rst; Hard 0126 consumes 4 points, while Hard 0127 cannot share the same batch."\n\n'
+              '[artifact_lifecycle]',
+              text,
+              count=1,
+              flags=re.S,
+          )
+          path.write_text(text)
+
+          Path('state/CONCEPT_LEDGER.toml').write_text('''[meta]
+          version = 11
+          last_problem = 125
+          format = "segmented"
+
+          [records]
+          legacy = "state/concepts/0001-0050.toml"
+          previous = "state/concepts/0051-0100.toml"
+          current = "state/concepts/0101-0104.toml"
+          recent = "state/concepts/0105-0107.toml"
+          prior = "state/concepts/0108-0112.toml"
+          penultimate = "state/concepts/0113-0114.toml"
+          latest_previous = "state/concepts/0115-0116.toml"
+          prior_latest = "state/concepts/0117-0120.toml"
+          latest_before_previous = "state/concepts/0121-0122.toml"
+          latest_previous_batch = "state/concepts/0123.toml"
+          latest = "state/concepts/0124-0125.toml"
+
+          [resolution]
+          statement = "按 legacy、previous、current、recent、prior、penultimate、latest_previous、prior_latest、latest_before_previous、latest_previous_batch、latest 顺序读取；后续分段中的同名 updates 覆盖更早记录的 last_problem、occurrences、teaching_state 和 note。"
+          '''.replace('          ', ''))
+
+          Path('state/concepts/0124-0125.toml').write_text('''[meta]
+          version = 1
+          range = "0124-0125"
+          last_problem = 125
+          inherits = "state/concepts/0123.toml"
+
+          [updates]
+          "complexity.output_space_exclusion" = "此前 30 次区分工作状态与返回载荷；0124 只返回标量并计入 O(h) 递归栈，0125 只返回布尔值并区分 R 的输入物化，累计 32 次。"
+
+          [concepts]
+          "algorithm.tree_max_path_dual_state" = "kind=algorithm; introduced=0124; last=0124; occurrences=1; teaching_state=explained; note=后序遍历向父节点返回单分支最大收益，同时用左右非负收益在当前节点闭合任意端点完整路径。"
+          "proof.tree_path_unique_highest_node" = "kind=proof; introduced=0124; last=0124; occurrences=1; teaching_state=explained; note=任意树上简单路径存在唯一最高节点；路径要么位于单个子树，要么由该节点连接左右各一条向下链。"
+          "boundary.nonempty_negative_answer_initialization" = "kind=boundary; introduced=0124; last=0124; occurrences=1; teaching_state=explained; note=孩子负收益可按零截断，但最终路径必须非空；全局最佳值必须从负无穷或真实节点初始化，不能发布空路径零。"
+          "proof.tree_return_chain_no_branch" = "kind=proof; introduced=0124; last=0124; occurrences=1; teaching_state=explained; note=返回父节点的状态只能选择左右一侧以保持链形；双分支只能在当前节点形成闭合候选，否则继续向上会产生分叉。"
+          "algorithm.ascii_filtered_two_pointer" = "kind=algorithm; introduced=0125; last=0125; occurrences=1; teaching_state=explained; note=左右指针在原字符串上跳过非 ASCII 字母数字字符，比较归一化端点，不构造完整清洗字符串。"
+          "boundary.ascii_character_contract" = "kind=boundary; introduced=0125; last=0125; occurrences=1; teaching_state=explained; note=显式限定 0-9、A-Z、a-z，避免各语言 Unicode 字符分类和区域设置造成语义漂移。"
+          "language.r_ascii_raw_materialization" = "kind=language_boundary; introduced=0125; last=0125; occurrences=1; teaching_state=explained; note=R charToRaw 与整数转换物化 O(n) 字节向量；双指针核心状态为 O(1)，完整适配器额外和峰值空间仍为 O(n)。"
+          '''.replace('          ', ''))
           PY
+
+          rm -rf .batch-upload-0124-0125
+          rm -f .github/workflows/materialize-0124-0125.yml
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add .batch-upload-0124-0125/status.txt
-          if ! git diff --cached --quiet; then
-            git commit -m "chore: record 0124-0125 synchronization diagnostics"
-            git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
-          fi
+          git add -A
+          git commit -m "content: materialize 0124-0125 quality batch"
+          git push origin "HEAD:${{ github.event.pull_request.head.ref }}"
