@@ -1,7 +1,7 @@
 LeetCode 0101–0200
 ==================
 
-本目录按题号顺序保存 0101 至 0200 的题目教程。当前已完成 0101 至 0116。
+本目录按题号顺序保存 0101 至 0200 的题目教程。当前已完成 0101 至 0120。
 
 已完成
 ------
@@ -30,17 +30,22 @@ LeetCode 0101–0200
 #. `0115. Distinct Subsequences <0115-distinct-subsequences.rst>`_
 #. `0116. Populating Next Right Pointers in Each Node
    <0116-populating-next-right-pointers-in-each-node.rst>`_
+#. `0117. Populating Next Right Pointers in Each Node II
+   <0117-populating-next-right-pointers-in-each-node-ii.rst>`_
+#. `0118. Pascal's Triangle <0118-pascals-triangle.rst>`_
+#. `0119. Pascal's Triangle II <0119-pascals-triangle-ii.rst>`_
+#. `0120. Triangle <0120-triangle.rst>`_
 
 本批次
 ------
 
-``0115`` 至 ``0116`` 的难度预算为：
+``0117–0120`` 的难度预算为：
 
-* ``0115`` Hard = 4；
-* ``0116`` Medium = 2；
+* ``0117`` Medium = 2；
+* ``0118`` Easy = 1；
+* ``0119`` Easy = 1；
+* ``0120`` Medium = 2；
 * 总分为 6，达到单批上限。
-
-``0117`` 为 Medium，加入后总分会变成 8，因此不属于本批次。
 
 执行规则
 --------
@@ -52,5 +57,5 @@ RST 写作规范。每题独立完成精确契约、问题抽象、解法取舍�
 下一动作
 --------
 
-下一题为 ``0117``。按 Easy=1、Medium=2、Hard=4 的难度预算，下一批为 ``0117–0120``：
-Medium、Easy、Easy、Medium 合计 6 分；``0121`` 为 Easy，加入后会超过批次上限。
+下一题为 ``0121``。按 Easy=1、Medium=2、Hard=4 的难度预算，下一批为 ``0121–0122``：
+Easy、Medium 合计 3 分；``0123`` 为 Hard，加入后会超过单批上限，因此在连续范围边界按 3 分结束。
