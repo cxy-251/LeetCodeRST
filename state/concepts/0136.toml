@@ -1,0 +1,12 @@
+[meta]
+version = 1
+range = "0136"
+last_problem = 136
+inherits = "state/concepts/0135.toml"
+
+[updates]
+"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0136 继续执行，累计强化 3 次。"
+
+[concepts]
+"algorithm.xor_pair_cancellation" = "kind=algorithm; introduced=0136; last=0136; occurrences=1; teaching_state=explained; note=异或满足交换律与结合律，成对相同元素归零，全部元素异或后只留下唯一元素。"
+"proof.xor_prefix_invariant" = "kind=proof; introduced=0136; last=0136; occurrences=1; teaching_state=explained; note=扫描任意前缀后累加器等于该前缀全部元素的异或值，结束时由成对抵消得到唯一元素。"

@@ -17,23 +17,27 @@ LeetCode 多语言 RST 学习仓库
 当前状态
 --------
 
-``0001`` 至 ``0135`` 的多语言教程已经完成。``0051`` 至 ``0100`` 的第二轮逐题审查、81 条规则归并和
+``0001`` 至 ``0138`` 的多语言教程已经完成。``0001`` 至 ``0100`` 的两轮历史逐题审查、81 条规则归并和
 14 项事实更正也已完成。
 
-``0134`` 至 ``0135`` 按难度预算 6 分完成：Medium、Hard。下一批是 ``0136–0138``，
-由 Easy、Medium、Medium 组成，合计 5 分；``0139`` 为 Medium，加入后会超过单批预算。新题继续直接执行
+``0136`` 至 ``0138`` 按难度预算 5 分完成：Easy、Medium、Medium。下一批是 ``0139–0140``，
+由 Medium、Hard 组成，合计 6 分；``0141`` 为 Easy，加入后会超过单批预算。新题继续直接执行
 ``docs/FORWARD_RULES_0101_0150.rst``。
+
+固定“每 50 题一次”的全量审核已经取消。普通批次执行自身质量门；只有出现高风险语义、验证异常、
+规则冲突，或用户明确要求时，才进行针对性抽查。
 
 核心入口
 --------
 
 * ``AGENTS.md``：新对话接手顺序和工作约束；
 * ``state/PROGRESS.toml``：当前阶段、覆盖范围和下一步；
-* ``state/REVIEW_INDEX.toml``：active corrections 与归档索引；
+* ``state/REVIEW_INDEX.toml``：active corrections、审查策略与归档索引；
 * ``docs/FORWARD_RULES_0101_0150.rst``：``0101–0150`` 完整前向规则；
 * ``docs/AUTOMATION_QUALITY_GATE.rst``：当前批次验收步骤；
 * ``docs/PROBLEM_TEMPLATE.rst``：单题结构骨架；
 * ``docs/SOLUTION_AND_TYPES_POLICY.rst``：解法、平台类型和语言适配器；
+* ``docs/REVIEW_AND_PREVENTION_POLICY.rst``：风险触发抽查和历史题边界；
 * ``docs/AUTOMATION_DIRECT_MAIN_POLICY.rst``：只允许直接更新 ``main`` 的执行流程；
 * ``docs/ARTIFACT_LIFECYCLE_POLICY.rst``：中间文件清理和归档规则；
 * ``state/CONCEPT_LEDGER.toml``：知识账本分段索引；
@@ -43,7 +47,7 @@ LeetCode 多语言 RST 学习仓库
 历史产物归档
 ------------
 
-已经被正式规则吸收的审查批次、findings、旧目录和归并记录不再散落在 ``docs/`` 与 ``state/``：
+已经被正式规则吸收的审查批次、findings、旧目录和归并记录统一保存在：
 
 * ``archive/reviews/0001-0050/MANIFEST.rst``：第一次逐题审查产物；
 * ``archive/reviews/0051-0100/MANIFEST.rst``：第二轮逐题审查与归并产物；
@@ -64,7 +68,7 @@ LeetCode 多语言 RST 学习仓库
 出现重复或冲突时：
 
 #. ``state/PROGRESS.toml``；
-#. ``state/REVIEW_INDEX.toml`` 的 active corrections；
+#. ``state/REVIEW_INDEX.toml`` 的 active corrections 与 review policy；
 #. 当前阶段完整前向规则；
 #. 专项策略、模板和质量门；
 #. ``archive/`` 中的历史证据；
@@ -73,13 +77,13 @@ LeetCode 多语言 RST 学习仓库
 执行方式
 --------
 
-所有生成、审查、修复和归档由当前对话中的明确指令触发：
+所有生成、抽查、修复和归档由当前对话中的明确指令触发：
 
 #. 读取最新 ``main``、状态和当前阶段规则；
 #. 按 Easy=1、Medium=2、Hard=4 确定唯一连续范围；
 #. 逐题完成内容与必要质量检查；
 #. 普通题只运行官方示例和关键边界，不默认执行大规模随机对拍；
-#. 删除无用中间文件，将有追溯价值的阶段产物归档；
+#. 删除无用中间文件，将有追溯价值的专项产物归档；
 #. 基于最新树将完整结果作为一个原子提交直接写入 ``main``；
 #. 复查提交差异、状态、活动目录和下一步；
 #. 在对话中报告结果。

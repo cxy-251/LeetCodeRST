@@ -10,9 +10,9 @@ content_language = "zh-CN"
 code_comment_language = "zh-CN"
 
 [progress]
-next_problem = 136
-completed_count = 135
-completed_ranges = ["0001-0135"]
+next_problem = 139
+completed_count = 138
+completed_ranges = ["0001-0138"]
 premium_skipped = []
 blocked = []
 needs_revision = []
@@ -20,31 +20,33 @@ needs_revision = []
 [last_batch]
 status = "completed"
 kind = "problem_generation"
-start = 134
-end = 135
-completed = 2
-difficulty_budget = 6
-summary = "完成 0134-0135；Medium 与 Hard 均具备紧凑教学正文、十语言实现和针对性样例验证。"
+start = 136
+end = 138
+completed = 3
+difficulty_budget = 5
+summary = "完成 0136-0138；异或抵消、按位模三状态机和随机指针链表深拷贝均已闭合。"
 
 [next_batch]
 status = "generation_ready"
 kind = "problem_generation"
-start = 136
-end = 138
-difficulty_budget = 5
-purpose = "0136 为 Easy，0137、0138 为 Medium，合计 5 分；0139 为 Medium，加入后超过预算。"
+start = 139
+end = 140
+difficulty_budget = 6
+purpose = "0139 为 Medium、0140 为 Hard，合计 6 分；0141 为 Easy，加入后超过预算。"
 
-[review]
+[review_history]
 status = "completed"
-mode = "second_round_content_review"
-source = "complete_rst_content"
-start = 51
-end = 100
-reviewed_count = 50
-modify_historical_rst = false
-index = "state/REVIEW_INDEX.toml"
+reviewed_ranges = ["0001-0050", "0051-0100"]
+reviewed_count = 100
 first_round_archive = "archive/reviews/0001-0050/MANIFEST.rst"
 second_round_archive = "archive/reviews/0051-0100/MANIFEST.rst"
+
+[review_policy]
+periodic_full_review = false
+mode = "risk_triggered_sampling"
+trigger = "explicit_user_request_or_quality_risk"
+historical_rst_default = "unchanged"
+policy = "docs/REVIEW_AND_PREVENTION_POLICY.rst"
 
 [rule_consolidation]
 status = "completed"
@@ -58,13 +60,14 @@ output = "docs/FORWARD_RULES_0101_0150.rst"
 
 [validation]
 policy = "official_examples_and_targeted_boundaries"
-rst_problem_files = 2
-language_code_blocks = 20
-rst_structure_checked = 2
-python_official_examples_passed = 4
-python_key_boundary_cases_passed = 5
-cpp_strict_compile_passed = 2
-other_language_static_checked = 16
+rst_problem_files = 3
+language_code_blocks = 30
+rst_structure_checked = 3
+python_official_examples_passed = 5
+python_key_boundary_cases_passed = 8
+cpp_strict_compile_passed = 3
+c_strict_compile_passed = 1
+other_language_static_checked = 24
 random_differential_cases = 0
 exhaustive_cases = 0
 bulk_random_testing_required = false
@@ -81,11 +84,11 @@ disposable_generation_reports_committed = false
 
 [quality_scope]
 historical_start = 1
-historical_end = 135
+historical_end = 138
 historical_policy = "已完成题目默认保持原样；只有用户明确指定时才修复历史 RST。"
-forward_rule_start = 136
+forward_rule_start = 139
 forward_rule_end = 150
-forward_rule_policy = "0136-0150 继续执行完整前向规则、active corrections 和针对性验证质量门。"
+forward_rule_policy = "0139-0150 继续执行完整前向规则、active corrections 和针对性验证质量门。"
 
 [execution]
 trigger = "explicit_user_message_in_active_conversation"
@@ -104,10 +107,10 @@ ref_update = "non_force_fast_forward"
 
 [concept_ledger]
 index = "state/CONCEPT_LEDGER.toml"
-latest_record = "state/concepts/0134-0135.toml"
+latest_record = "state/concepts/0136-0138.toml"
 
 [next_action]
-summary = "生成 0136-0138；Easy、Medium、Medium 合计 5 分，0139 Medium 不再加入。"
+summary = "生成 0139-0140；Medium 与 Hard 合计 6 分，0141 Easy 不再加入。"
 
 [last_update]
-summary = "0134-0135 已完成；失败前缀排除与双向局部约束合并通过官方示例和关键边界验证，不执行大规模随机对拍。"
+summary = "0136-0138 已完成；取消固定每 50 题全量审核，改为批次自检和风险触发抽查。"

@@ -1,14 +1,17 @@
-[review]
-mode = "second_round_content_review"
-source = "complete_rst_content"
-start = 51
-end = 100
-current = 101
-reviewed_count = 50
-batch_size = 5
+[review_history]
+status = "completed"
+reviewed_ranges = ["0001-0050", "0051-0100"]
+reviewed_count = 100
 modify_historical_rst = false
 pr_metadata_is_evidence = false
-status = "completed"
+
+[review_policy]
+periodic_full_review = false
+mode = "risk_triggered_sampling"
+trigger = "explicit_user_request_or_quality_risk"
+batch_self_check_required = true
+historical_rst_default = "unchanged"
+statement = "不再按固定 50 题启动全量逐题审查；只在高风险语义、验证异常、规则冲突或用户明确要求时抽查。"
 
 [canonical]
 consolidated_forward_rules = "docs/FORWARD_RULES_0101_0150.rst"
@@ -23,7 +26,7 @@ archive_index = "archive/README.rst"
 [precedence]
 order = [
   "state/PROGRESS.toml",
-  "state/REVIEW_INDEX.toml corrections",
+  "state/REVIEW_INDEX.toml corrections and review policy",
   "completed forward-rule documents",
   "specialized policies and template",
   "archive review evidence",
@@ -146,9 +149,9 @@ statement = "O(min(m,n)) describes only the rolling Boolean DP array. The C++ si
 [next_action]
 kind = "problem_generation"
 status = "ready"
-start = 134
-end = 135
-purpose = "Generate problems 0134-0135; Medium 0134 and Hard 0135 consume 6 points, while Easy 0136 would exceed the batch budget."
+start = 139
+end = 140
+purpose = "Generate problems 0139-0140; Medium 0139 and Hard 0140 consume 6 points, while Easy 0141 would exceed the batch budget."
 
 [artifact_lifecycle]
 policy = "docs/ARTIFACT_LIFECYCLE_POLICY.rst"
