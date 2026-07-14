@@ -146,9 +146,9 @@ statement = "O(min(m,n)) describes only the rolling Boolean DP array. The C++ si
 [next_action]
 kind = "problem_generation"
 status = "ready"
-start = 121
-end = 122
-purpose = "Generate problems 0121-0122 using docs/FORWARD_RULES_0101_0150.rst; Easy 0121 and Medium 0122 consume 3 points, while adding Hard 0123 would exceed 6."
+start = 123
+end = 123
+purpose = "Generate problem 0123 using docs/FORWARD_RULES_0101_0150.rst; Hard 0123 consumes 4 points, while adding Hard 0124 would violate the one-Hard-per-batch rule."
 
 [artifact_lifecycle]
 policy = "docs/ARTIFACT_LIFECYCLE_POLICY.rst"
