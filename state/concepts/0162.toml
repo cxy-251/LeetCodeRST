@@ -1,0 +1,13 @@
+[meta]
+version = 1
+range = "0162"
+last_problem = 162
+inherits = "state/concepts/0160.toml"
+
+[updates]
+"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0162 继续执行，累计强化 24 次。"
+
+[concepts]
+"algorithm.binary_search_adjacent_slope" = "kind=algorithm; introduced=0162; last=0162; occurrences=1; teaching_state=explained; note=比较中点与右邻的斜率方向，每轮保留至少含一个局部峰值的半区。"
+"invariant.peak_exists_in_candidate_interval" = "kind=invariant; introduced=0162; last=0162; occurrences=1; teaching_state=explained; note=闭区间始终非空且至少包含一个峰值，收缩到单点时该位置必然合法。"
+"contract.virtual_negative_infinity_boundaries" = "kind=contract; introduced=0162; last=0162; occurrences=1; teaching_state=explained; note=数组外侧视为负无穷，使单元素、全升和全降数组同样拥有峰值。"

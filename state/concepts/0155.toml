@@ -1,0 +1,13 @@
+[meta]
+version = 1
+range = "0155"
+last_problem = 155
+inherits = "state/concepts/0153-0154.toml"
+
+[updates]
+"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0155 继续执行，累计强化 22 次。"
+
+[concepts]
+"data_structure.augmented_stack" = "kind=data_structure; introduced=0155; last=0155; occurrences=1; teaching_state=explained; note=每个栈层同时保存元素值与该前缀最小值，使查询不需要重新扫描。"
+"invariant.prefix_minimum_per_entry" = "kind=invariant; introduced=0155; last=0155; occurrences=1; teaching_state=explained; note=第 k 层 minimum 等于前 k 个元素的最小值，压栈以旧最小值递推，弹栈自然恢复。"
+"complexity.amortized_dynamic_array_push" = "kind=complexity; introduced=0155; last=0155; occurrences=1; teaching_state=explained; note=动态数组扩容会让个别 push 线性复制，但连续操作的摊还时间为常数。"

@@ -1,7 +1,8 @@
 LeetCode 0101–0200
 ==================
 
-本目录按题号顺序保存 0101 至 0200 的题目教程。当前已完成 0101 至 0154。
+本目录按题号顺序保存 0101 至 0200 的题目教程。当前已完成 0101 至 0155、0160 和 0162；
+0156 至 0159、0161 已登记为 Premium 跳过。
 
 已完成
 ------
@@ -69,31 +70,41 @@ LeetCode 0101–0200
    <0153-find-minimum-in-rotated-sorted-array.rst>`_
 #. `0154. Find Minimum in Rotated Sorted Array II
    <0154-find-minimum-in-rotated-sorted-array-ii.rst>`_
+#. `0155. Min Stack <0155-min-stack.rst>`_
+#. `0160. Intersection of Two Linked Lists <0160-intersection-of-two-linked-lists.rst>`_
+#. `0162. Find Peak Element <0162-find-peak-element.rst>`_
+
+Premium 跳过
+------------
+
+* ``0156`` Binary Tree Upside Down；
+* ``0157`` Read N Characters Given Read4；
+* ``0158`` Read N Characters Given Read4 II - Call Multiple Times；
+* ``0159`` Longest Substring with At Most Two Distinct Characters；
+* ``0161`` One Edit Distance。
 
 本批次
 ------
 
-``0153–0154`` 的难度预算为：
+``0155–0162`` 的可执行题目难度预算为：
 
-* ``0153`` Medium = 2；
-* ``0154`` Hard = 4；
-* 总分为 6；
-* ``0155`` 为 Medium，加入后会超过本批预算。
+* ``0155`` Medium = 2；
+* ``0160`` Easy = 1；
+* ``0162`` Medium = 2；
+* 可执行题总分为 5；
+* ``0156–0159`` 与 ``0161`` 登记为 Premium，不计入难度预算。
 
 执行规则
 --------
 
-``0153–0154`` 统一执行 ``../../docs/FORWARD_RULES_0151_ONWARD.rst``。发现通用问题时直接维护该文件，
-不再建立新的分段规则。
+本批统一执行 ``../../docs/FORWARD_RULES_0151_ONWARD.rst``。Premium 或题面不可可靠确认的题目只登记状态，
+不生成猜测性正文；可访问题目继续保持精确契约、算法状态、正确性、复杂度、十语言实现和关键边界。
 
-每题保持精确契约、算法状态、正确性、复杂度、十语言实现和关键边界。``0154`` 的重复值消歧会降低二分
-区分能力，因此额外执行穷举对拍，并准确区分通常与最坏复杂度。
-
-固定每 50 题的全量审核已取消，后续只做批次自检与风险触发抽查。所有生产、抽查、规则维护和修复只允许
-直接在 ``main`` 形成一个原子提交。
+``0155`` 的数据结构操作执行随机状态机对拍；``0160`` 检查节点身份与共享尾链；``0162`` 对小值域数组执行
+受控穷举。所有生产、抽查、规则维护和修复只允许直接在 ``main`` 形成一个原子提交。
 
 下一动作
 --------
 
-下一批从 ``0155`` 开始。按 Premium 跳过规则继续寻找可访问题目，当前计划完成 ``0155``、``0160`` 和
-``0162``，合计 5 分。
+下一批从 ``0163`` 开始。登记并跳过 Premium ``0163``，完成 ``0164`` Maximum Gap（Hard）与 ``0165``
+Compare Version Numbers（Medium），合计 6 分。

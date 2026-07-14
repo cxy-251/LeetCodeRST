@@ -1,0 +1,13 @@
+[meta]
+version = 1
+range = "0160"
+last_problem = 160
+inherits = "state/concepts/0155.toml"
+
+[updates]
+"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0160 继续执行，累计强化 23 次。"
+
+[concepts]
+"technique.two_head_pointer_switching" = "kind=technique; introduced=0160; last=0160; occurrences=1; teaching_state=explained; note=两个指针分别走 A+B 与 B+A，以相同总路程自动消除独有前缀长度差。"
+"contract.linked_list_node_identity" = "kind=contract; introduced=0160; last=0160; occurrences=1; teaching_state=explained; note=链表相交按节点对象身份判断，值相同的独立节点不构成交点。"
+"adapter.rust_shared_tail_rc" = "kind=adapter; introduced=0160; last=0160; occurrences=1; teaching_state=explained; note=Box 不能被两个头共同拥有，Rust 适配器用 Rc 表达共享尾链并以 ptr_eq 比较身份。"

@@ -1,0 +1,15 @@
+[meta]
+version = 1
+range = "0155-0162"
+last_problem = 162
+inherits = "state/concepts/0162.toml"
+
+[batch]
+completed = 3
+premium_skipped = [156, 157, 158, 159, 161]
+difficulty_budget = 5
+summary = "完成带前缀最小值的栈、链表指针换头与相邻斜率峰值二分；登记五道 Premium。"
+
+[updates]
+"workflow.targeted_example_validation" = "0155、0160、0162 继续执行官方示例、关键边界、随机对拍与受控穷举，累计强化 24 次。"
+"workflow.premium_skip_progression" = "0156-0159 与 0161 题面不可公开可靠确认，登记 Premium 后保持题号推进。"
