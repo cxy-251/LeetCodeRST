@@ -1,0 +1,13 @@
+[meta]
+version = 1
+range = "0164"
+last_problem = 164
+inherits = "state/concepts/0155-0162.toml"
+
+[updates]
+"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0164 继续执行，累计强化 25 次。"
+
+[concepts]
+"algorithm.pigeonhole_gap_buckets" = "kind=algorithm; introduced=0164; last=0164; occurrences=1; teaching_state=explained; note=以最大相邻间距的鸽巢下界作为桶宽，只扫描相邻非空桶边界。"
+"invariant.bucket_internal_gap_bound" = "kind=invariant; introduced=0164; last=0164; occurrences=1; teaching_state=explained; note=同一整数桶内任意差值严格小于桶宽，因此全局最大相邻间距必跨越非空桶。"
+"numeric.widened_bucket_arithmetic" = "kind=numeric; introduced=0164; last=0164; occurrences=1; teaching_state=explained; note=值域、上取整分子和桶下标在减法或加法前提升到宽整数。"

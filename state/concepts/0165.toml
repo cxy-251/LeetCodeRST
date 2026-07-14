@@ -1,0 +1,13 @@
+[meta]
+version = 1
+range = "0165"
+last_problem = 165
+inherits = "state/concepts/0164.toml"
+
+[updates]
+"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0165 继续执行，累计强化 26 次。"
+
+[concepts]
+"algorithm.version_significant_span_compare" = "kind=algorithm; introduced=0165; last=0165; occurrences=1; teaching_state=explained; note=逐段跳过前导零，先比较有效位数，再比较等长十进制字符。"
+"invariant.missing_revision_equals_zero" = "kind=invariant; introduced=0165; last=0165; occurrences=1; teaching_state=explained; note=版本结束后的缺失修订号与全零修订号统一表示为有效长度零。"
+"string.ascii_segment_scanning" = "kind=string; introduced=0165; last=0165; occurrences=1; teaching_state=explained; note=数字与点号的 ASCII 契约允许字节级扫描；R 适配器显式物化整数向量。"

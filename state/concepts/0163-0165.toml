@@ -1,0 +1,15 @@
+[meta]
+version = 1
+range = "0163-0165"
+last_problem = 165
+inherits = "state/concepts/0165.toml"
+
+[batch]
+completed = 2
+premium_skipped = [163]
+difficulty_budget = 6
+summary = "登记 Premium 0163；完成最大间距鸽巢桶与版本号有效数字段比较。"
+
+[updates]
+"workflow.targeted_example_validation" = "0164-0165 继续执行官方示例、关键边界与随机对拍，累计强化 26 次。"
+"workflow.premium_skip_progression" = "0156-0159、0161 与 0163 题面不可公开可靠确认，登记 Premium 后保持题号推进。"
