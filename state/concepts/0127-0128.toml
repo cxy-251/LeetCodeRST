@@ -13,4 +13,7 @@ inherits = "state/concepts/0126.toml"
 "algorithm.consecutive_sequence_start_filter" = "kind=algorithm; introduced=0128; last=0128; occurrences=1; teaching_state=explained; note=仅当 value-1 缺失时扫描连续段，使每个连续段只被完整遍历一次。"
 "proof.unique_minimum_represents_run" = "kind=proof; introduced=0128; last=0128; occurrences=1; teaching_state=explained; note=任意非空连续整数段有唯一最小值，且只有它缺少集合内前驱，因此起点与连续段一一对应。"
 "complexity.hash_expected_linear" = "kind=complexity; introduced=0128; last=0128; occurrences=1; teaching_state=explained; note=哈希成员查询通常是期望 O(1)；完整算法期望 O(n)，对抗性碰撞下最坏界需要单独说明。"
-"workflow.direct_main_only_atomic_commit" = "kind=workflow; introduced=0128; last=0128; occurrences=1; teaching_state=canonical; note=所有生产、审查、修复、归并和归档直接基于最新 main 树，通过 blob、tree、commit、ref 构造一个原子提交；禁止分支、PR 和临时组装工作流。"
+"workflow.direct_main_only_atomic_commit" = """kind=workflow; introduced=0128; last=0128; \
+occurrences=1; teaching_state=canonical; \
+note=所有生产、审查、修复、归并和归档直接基于最新 main；Codex 显式 git add 本轮文件，\
+使用单个标准 git commit 并非强制 push origin main；禁止分支、PR、git add .、force push 和临时组装工作流。"""

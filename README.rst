@@ -61,6 +61,7 @@ LeetCode 多语言 RST 学习仓库
 * ``docs/AUTOMATION_QUALITY_GATE.rst``：内容、样本隔离、静态审查、漂移和提交质量门；
 * ``docs/SOLUTION_AND_TYPES_POLICY.rst``：解法、平台类型和语言适配器；
 * ``docs/AUTOMATION_DIRECT_MAIN_POLICY.rst``：直接更新 ``main`` 的原子提交流程；
+* ``docs/CODEX_GIT_WORKFLOW.rst``：Codex 使用标准 ``git add``、``commit``、``push`` 的安全流程；
 * ``state/CONCEPT_LEDGER.toml``：知识账本分段索引；
 * ``problems/0101-0200/README.rst``：当前范围题目索引、Premium 与返工状态。
 
@@ -87,7 +88,7 @@ LeetCode 多语言 RST 学习仓库
 #. 逐题完成内容、十语言代码与必要静态审查；
 #. 执行内容质量门和漂移回归；
 #. 同步索引、进度、知识账本和下一批合同；
-#. 基于最新树构造一个原子提交直接写入 ``main``；
-#. 复查提交差异、状态和下一步。
+#. 显式暂存本轮文件，使用标准 ``git commit`` 形成一个原子提交并非强制推送到 ``origin/main``；
+#. 复查本地与远端 ``main``、提交差异、状态和下一步。
 
 仓库任务禁止创建分支、PR、上传分片分支或临时组装工作流。

@@ -165,8 +165,13 @@ policy = "docs/AUTOMATION_DIRECT_MAIN_POLICY.rst"
 branches_allowed = false
 pull_requests_allowed = false
 temporary_workflows_allowed = false
-write_method = "git_blob_tree_commit_ref"
-ref_update = "non_force_fast_forward"
+write_method = "standard_git_add_commit_push"
+staging = "explicit_paths_only"
+commit_count_per_turn = 1
+remote = "origin"
+push_target = "main"
+force_push_allowed = false
+concurrency_policy = "fetch_and_compare_before_commit; stop_on_remote_change_or_rejected_push"
 
 [concept_ledger]
 index = "state/CONCEPT_LEDGER.toml"
@@ -176,4 +181,4 @@ latest_record = "state/concepts/0163-0165.toml"
 summary = "按 BATCH_CONTRACT 返工 0135-0136；高风险叠加时允许只提交完整连续前缀；完成剩余 25 道前不生成 0166。"
 
 [last_update]
-summary = "统一题解生产为静态审查策略；禁止运行、编译或测试题解代码，保留仓库结构与状态一致性检查。"
+summary = "题解统一静态审查；Codex 使用标准 git add、commit、push 形成单个原子 main 提交。"
