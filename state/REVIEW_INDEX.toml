@@ -11,7 +11,7 @@ mode = "risk_triggered_sampling"
 trigger = "explicit_user_request_or_quality_risk"
 batch_self_check_required = true
 historical_rst_default = "unchanged"
-statement = "不再按固定 50 题启动全量逐题审查；只在高风险语义、验证异常、规则冲突或用户明确要求时抽查。"
+statement = "不再按固定 50 题启动全量逐题审查；只在高风险语义、静态审查异常、规则冲突或用户明确要求时抽查。"
 
 [canonical]
 consolidated_forward_rules = "docs/FORWARD_RULES_0101_0150.rst"
@@ -149,9 +149,9 @@ statement = "O(min(m,n)) describes only the rolling Boolean DP array. The C++ si
 [next_action]
 kind = "quality_repair"
 status = "ready"
-start = 137
-end = 138
-purpose = "返工 0137 Single Number II 与 0138 Copy List with Random Pointer；完成剩余质量返工前暂停生成 0166。"
+start = 139
+end = 140
+purpose = "返工 0139 Word Break 与 0140 Word Break II；完成剩余质量返工前暂停生成 0166。"
 
 [artifact_lifecycle]
 policy = "docs/ARTIFACT_LIFECYCLE_POLICY.rst"

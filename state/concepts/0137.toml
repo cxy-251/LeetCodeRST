@@ -1,5 +1,5 @@
 [meta]
-version = 1
+version = 2
 range = "0137"
 last_problem = 137
 inherits = "state/concepts/0136.toml"
@@ -8,5 +8,6 @@ inherits = "state/concepts/0136.toml"
 "workflow.targeted_static_review" = "0134 引入人工示例推演与逐语言静态审查；0137 继续执行，累计强化 4 次。"
 
 [concepts]
-"algorithm.bitwise_mod_three_fsm" = "kind=algorithm; introduced=0137; last=0137; occurrences=1; teaching_state=explained; note=ones 与 twos 在所有二进制位上并行编码出现次数模三的 00、01、10 状态。"
-"proof.independent_bit_state_transition" = "kind=proof; introduced=0137; last=0137; occurrences=1; teaching_state=explained; note=位运算逐位独立，每次输入位为一时状态按 0、1、2、0 循环，三次出现归零，一次出现保留在 ones。"
+"algorithm.bitwise_mod_three_fsm" = "kind=algorithm; introduced=0137; last=0137; occurrences=1; teaching_state=explained; note=ones 与 twos 的对应位并行编码计数模三；按 (twos,ones) 记号，合法状态为 00、01、10，输入位为一时依次循环。"
+"proof.independent_bit_state_transition" = "kind=proof; introduced=0137; last=0137; occurrences=1; teaching_state=explained; note=六行真值表穷尽合法状态与输入位；前缀归纳证明每位余数正确，结束时三次元素逐位归零，唯一元素完整位模式保留在 ones。"
+"adapter.r_full_int32_bit_count" = "kind=language_adapter; introduced=0137; last=0137; occurrences=1; teaching_state=explained; note=R 普通 integer 无法无损覆盖官方 -2^31 端点；用精确 double 映射 32 位无符号模式并以 32 个模三计数器保持 O(n) 时间、O(1) 空间。"

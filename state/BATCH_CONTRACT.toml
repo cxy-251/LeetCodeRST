@@ -1,10 +1,10 @@
 [contract]
 schema_version = 2
-batch_id = "quality-repair-0137-0138"
+batch_id = "quality-repair-0139-0140"
 status = "ready"
 phase = "quality_repair"
 kind = "quality_repair"
-scope = [137, 138]
+scope = [139, 140]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
@@ -22,20 +22,19 @@ repository_structure_state_and_git_checks = "allowed"
 reporting = "只声明实际完成的静态审查；明确未运行、未编译、未测试和剩余风险。"
 
 [budget]
-algorithm_score = 4
+algorithm_score = 6
 target_min = 4
 target_max = 6
 proof_risk = "high"
 language_semantics_risk = "high"
-platform_type_risk = "high"
+platform_type_risk = "low"
 output_volume_risk = "high"
 scope_may_shrink = true
-shrink_rule = "若高风险叠加导致后题只能压缩，提交已完整达标的连续前缀，并把未完成题写入下一份合同。"
+shrink_rule = "若 0140 的指数输出、十语言资源管理或证明义务无法完整承载，只提交已完整达标的连续前缀 0139，并把 0140 保留到下一合同。"
 
 [references]
 style_baselines = [
-  "problems/0001-0100/0050-powx-n.rst",
-  "problems/0001-0100/0100-same-tree.rst",
+  "problems/0001-0100/0076-minimum-window-substring.rst",
   "problems/0101-0200/0128-longest-consecutive-sequence.rst",
 ]
 fact_sources = [
@@ -43,12 +42,13 @@ fact_sources = [
   "state/REVIEW_INDEX.toml",
   "state/CONCEPT_LEDGER.toml",
   "problems/0101-0200/README.rst",
-  "problems/0101-0200/0133-clone-graph.rst",
-  "problems/0101-0200/0136-single-number.rst",
+  "problems/0101-0200/0131-palindrome-partitioning.rst",
+  "problems/0101-0200/0132-palindrome-partitioning-ii.rst",
+  "problems/0101-0200/0138-copy-list-with-random-pointer.rst",
 ]
 fact_sources_may_provide = [
   "术语和知识衰减连续性",
-  "平台节点、整数位宽和接口连续性",
+  "字符串接口、答案快照和输出载荷连续性",
   "关联题目和范围状态",
 ]
 fact_sources_must_not_provide = [
@@ -59,57 +59,57 @@ fact_sources_must_not_provide = [
   "文件组织形式",
 ]
 
-[problems."0137"]
-title = "Single Number II"
+[problems."0139"]
+title = "Word Break"
 difficulty = "Medium"
 primary_risks = [
-  "ones 与 twos 必须逐位编码出现次数模三，不能只给更新公式而不解释状态",
-  "顺序更新公式的第二行读取新 ones，正确性证明必须与实际代码顺序一致",
-  "唯一元素为负数时需要覆盖符号位与各语言补码或位宽语义",
-  "Python 无限符号扩展、TypeScript/R 32 位、Go/Julia 宿主位宽需要分别说明",
+  "reachable[i] 的字符坐标、合法范围和传播方向必须与十语言实现逐项一致",
+  "正确性需要同时证明每次传播不会产生假阳性，以及任意合法切分的最后一个单词不会遗漏",
+  "字符串比较、切片物化和字典总字符预算会使各语言真实成本不同",
+  "官方小写英文字母前提使字节、UTF-16 码元和字符边界重合，不能把实现无条件推广到任意 Unicode",
 ]
 minimum_static_review = [
-  "人工推演题目页面示例与单元素、唯一值为零、唯一值为负数、重复负数边界",
-  "逐位列出输入位为零和一时的 00、01、10 状态转移，并映射到更新顺序",
-  "逐语言静态核对按位非、按位与、按位异或、返回类型和固定宽度契约",
-  "无法静态确认的宿主位宽或平台模板风险明确记录，不执行题解代码",
+  "人工推演题目页面示例与整串命中、重复使用单词、只有前缀可达、多个可达前缀和无解边界",
+  "逐项核对 reachable 初值、只从可达起点传播、end 边界和最终状态",
+  "静态检查 C 分配与长度乘加、C++ 按值输入、Rust/Go 字节坐标、TypeScript/C# UTF-16 和 Julia/R 一基适配",
+  "核对字符串匹配 API 是否物化切片，并把无法静态确认的库成本记录为剩余风险",
 ]
 
-[problems."0138"]
-title = "Copy List with Random Pointer"
-difficulty = "Medium"
+[problems."0140"]
+title = "Word Break II"
+difficulty = "Hard"
 primary_risks = [
-  "映射键必须是节点身份而不是节点值，重复值不能合并节点",
-  "正确性必须分别证明节点双射、next/random 边保持和新旧对象完全隔离",
-  "C 的指针表、容量与失败清理以及 Rust Rc/RefCell 借用容易出现实现级错误",
-  "十语言平台 Node 字段名、可空类型、身份映射 API 与返回空间需要独立说明",
-  "R 基础适配器的身份查找若为线性扫描，真实时间必须记录为 O(n^2)",
+  "sentences[i] 必须精确表示后缀全部句子，终点的单个空字符串只能作为组合单位元",
+  "正确性需要证明生成结果合法、任意合法句子完整、字典互异条件下无重复，并证明计算终止",
+  "答案可能指数级，复杂度必须区分匹配成本、全部后缀物化量、最终输出和语言累计复制",
+  "C 动态字符串列表的容量溢出、部分失败清理和返回所有权风险高",
+  "Rust 借用与结果快照、R 列表增长/扁平化、托管语言字符串拼接成本不能机械统一",
 ]
 minimum_static_review = [
-  "人工推演空链表、单节点、random 为空、自指、前向、后向和重复节点值",
-  "逐项核对第一遍创建双射、第二遍连接两类边、所有副本引用只指向新节点",
-  "静态检查 C 分配失败清理与指针表边界、Rust 借用时序、Julia IdDict 和 R identical 身份语义",
-  "逐语言核对平台 Node 定义是题目环境提供还是仓库适配器自建，并准确记录复杂度",
-  "无法静态确认的对象身份或平台类型风险明确记录，不执行题解代码",
+  "人工推演题目页面示例与单解、多解、重复使用单词、共享后缀、整串命中和无解边界",
+  "逐后缀核对空串单位元、首词匹配、尾句组合、答案完整性与无重复证明",
+  "静态审查 C 容量乘加、realloc 失败、所有后缀清理和返回数组所有权",
+  "逐语言核对字符串坐标、结果快照、容器别名、输出顺序与真实输出敏感复杂度",
+  "输出规模或平台分配无法静态确认时明确记录剩余风险，不执行题解代码",
 ]
 
 must_preserve = [
-  "精确契约与自建反例",
-  "问题抽象和真实解法选择",
-  "状态到代码变量或对象映射的逐项对应",
-  "完整正确性证明与深拷贝隔离证明",
-  "真实复杂度、返回载荷和语言语义成本",
-  "十语言完整实现",
+  "精确契约、自建例子和能区分错误状态的反例",
+  "问题抽象和布尔判定与完整枚举之间的真实解法差异",
+  "前缀可达或后缀句子状态到代码的逐项映射",
+  "合法性、完整性、无重复和终止性的完整证明",
+  "字典字符预算、字符串物化、全部后缀状态和最终输出载荷",
+  "十语言完整实现与字符单位、所有权、失败路径差异",
   "准确静态审查证据",
   "边界、易错点、学习链和带答案自检",
 ]
 
 forbidden = [
-  "参考 0136 或其他最近题目的章节结构",
-  "为保持两题一批而压缩任一题",
-  "只罗列位运算公式或只声称映射完成深拷贝",
-  "把十语言实现当作无差别机械翻译",
-  "按节点值建立副本映射",
+  "参考 0138 或其他最近题目的章节结构",
+  "为维持两题范围而压缩 0140 的输出敏感证明、C 资源管理或语言差异",
+  "只说动态规划遍历全部状态所以正确",
+  "把最终答案数量当成全部后缀状态的完整成本",
+  "把十语言字符串索引和切片成本当作完全相同",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试或 sanitizer 题解代码",
   "把静态审查写成测试、编译或运行通过",
@@ -119,6 +119,6 @@ completion_checks = [
   "每题逐项对照合同选定黄金题",
   "命中 DRIFT_LOG 的回归检查均通过",
   "每题只有一个自包含 RST",
-  "PROGRESS、README、范围索引和知识账本同步",
+  "PROGRESS、README、AGENTS 当前状态、范围索引和知识账本同步",
   "原子提交后 BATCH_CONTRACT 被替换为下一批合同",
 ]
