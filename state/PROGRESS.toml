@@ -17,7 +17,7 @@ completed_ranges = ["0001-0155", "0160", "0162", "0164-0165"]
 premium_skipped = [156, 157, 158, 159, 161, 163]
 blocked = []
 needs_revision = [
-  141, 142, 143, 144, 145, 146, 147, 148, 149, 150,
+  143, 144, 145, 146, 147, 148, 149, 150,
   151, 152, 153, 154, 155, 160, 162, 164, 165,
 ]
 
@@ -25,8 +25,8 @@ needs_revision = [
 status = "in_progress"
 reason = "0127 起部分题解退化为算法摘要与代码集合，未达到冻结教学质量基线。"
 original_scope = [127, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 160, 162, 164, 165]
-repaired = [127, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140]
-remaining_count = 19
+repaired = [127, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142]
+remaining_count = 17
 baseline = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 batch_contract = "state/BATCH_CONTRACT.toml"
 drift_log = "state/DRIFT_LOG.toml"
@@ -60,22 +60,22 @@ quality_over_batch_score = true
 [last_batch]
 status = "completed"
 kind = "quality_repair"
-start = 139
-end = 140
+start = 141
+end = 142
 repaired_problem_count = 2
-repaired_problem_ids = [139, 140]
-reference_problems = [76, 128]
-difficulty_budget = 6
-summary = "重写 0139、0140，补齐位置图可达性、后缀全部句子、完整枚举证明、输出物化成本和 C 资源所有权。"
+repaired_problem_ids = [141, 142]
+reference_problems = [50, 100]
+difficulty_budget = 3
+summary = "重写 0141、0142，补齐步数判环证明、入口同余推导、原节点身份返回和循环对象适配边界。"
 
 [next_batch]
 status = "quality_repair_ready"
 kind = "quality_repair"
-start = 141
-end = 142
-difficulty_budget = 3
+start = 143
+end = 143
+difficulty_budget = 2
 contract = "state/BATCH_CONTRACT.toml"
-purpose = "返工 0141 Linked List Cycle 与 0142 Linked List Cycle II；新题 0166 继续暂停。"
+purpose = "单独返工 0143 Reorder List；新题 0166 继续暂停。"
 
 [review_history]
 status = "completed"
@@ -177,7 +177,7 @@ index = "state/CONCEPT_LEDGER.toml"
 latest_record = "state/concepts/0163-0165.toml"
 
 [next_action]
-summary = "按 BATCH_CONTRACT 返工 0141-0142；高风险叠加时允许只提交完整连续前缀；完成剩余 19 道前不生成 0166。"
+summary = "按 BATCH_CONTRACT 单独返工 0143；完成剩余 17 道前不生成 0166。"
 
 [last_update]
-summary = "0139-0140 已按冻结基线完成返工；当前统一静态审查，下一批为 0141-0142。"
+summary = "0141-0142 已按冻结基线完成返工；当前统一静态审查，下一批单独处理 0143。"

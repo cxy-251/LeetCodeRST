@@ -1,10 +1,10 @@
 [contract]
 schema_version = 2
-batch_id = "quality-repair-0141-0142"
+batch_id = "quality-repair-0143"
 status = "ready"
 phase = "quality_repair"
 kind = "quality_repair"
-scope = [141, 142]
+scope = [143]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
@@ -22,19 +22,19 @@ repository_structure_state_and_git_checks = "allowed"
 reporting = "只声明实际完成的静态审查；明确未运行、未编译、未测试和剩余风险。"
 
 [budget]
-algorithm_score = 3
-target_min = 3
-target_max = 5
+algorithm_score = 2
+target_min = 2
+target_max = 4
 proof_risk = "high"
 language_semantics_risk = "high"
 platform_type_risk = "high"
 output_volume_risk = "low"
-scope_may_shrink = true
-shrink_rule = "若 0142 的入口同余证明、原节点身份返回或十语言循环链表适配无法完整承载，只提交已完整达标的连续前缀 0141，并把 0142 保留到下一合同。"
+scope_may_shrink = false
+scope_reason = "0143 同时承担切分、反转、合并、节点守恒、无环性和 Rust 独占所有权适配；单题完整返工优先于 4–6 分目标。"
 
 [references]
 style_baselines = [
-  "problems/0001-0100/0050-powx-n.rst",
+  "problems/0001-0100/0076-minimum-window-substring.rst",
   "problems/0001-0100/0100-same-tree.rst",
 ]
 fact_sources = [
@@ -42,14 +42,15 @@ fact_sources = [
   "state/REVIEW_INDEX.toml",
   "state/CONCEPT_LEDGER.toml",
   "problems/0101-0200/README.rst",
-  "problems/0101-0200/0138-copy-list-with-random-pointer.rst",
-  "state/concepts/0141.toml",
-  "state/concepts/0142.toml",
+  "problems/0101-0200/0114-flatten-binary-tree-to-linked-list.rst",
+  "problems/0101-0200/0141-linked-list-cycle.rst",
+  "problems/0101-0200/0142-linked-list-cycle-ii.rst",
+  "state/concepts/0143.toml",
 ]
 fact_sources_may_provide = [
-  "链表节点身份、平台类型和所有权连续性",
-  "Floyd 术语、关联题目和既有知识记录",
-  "当前范围、进度与下一步事实",
+  "链表节点身份、平台字段和拓扑修改术语",
+  "快慢指针、只读与原地接口的知识连续性",
+  "当前范围、进度和既有概念记录",
 ]
 fact_sources_must_not_provide = [
   "章节结构",
@@ -59,66 +60,52 @@ fact_sources_must_not_provide = [
   "文件组织形式",
 ]
 
-[problems."0141"]
-title = "Linked List Cycle"
-difficulty = "Easy"
-primary_risks = [
-  "题面 pos 只描述尾节点连接位置，不属于函数参数；公开接口只接收 head，不能依赖外部索引",
-  "Floyd 第一阶段必须分别证明无环时安全到达 null、有环时相对位移最终归零，并且比较节点身份而不是 val",
-  "空链表、单节点无环、单节点自环、长尾入环和重复节点值会区分身份算法与错误值比较",
-  "Rust 常见 Box 链表不能安全表达环，Rc<RefCell> 或等价适配必须明确偏离平台模板、所有权成本和身份比较",
-  "Julia mutable struct 与 R environment 需要复用仓库节点身份模型，不能以结构相等代替同一对象",
-]
-minimum_static_review = [
-  "人工推演题目页面示例与空链表、单节点无环、单节点自环、两节点环、长尾入环和重复值边界",
-  "逐轮核对 fast 的空引用守卫、slow 一步、fast 两步、相遇判定和无输入修改",
-  "逐语言静态检查平台签名、节点身份 API、短路求值、可空类型、借用/引用计数和循环结构表达能力",
-  "区分算法 O(1) 指针状态与适配器引用克隆或节点表示成本，并记录未运行未编译事实",
-]
-
-[problems."0142"]
-title = "Linked List Cycle II"
+[problems."0143"]
+title = "Reorder List"
 difficulty = "Medium"
 primary_risks = [
-  "第一阶段只提供环内相遇点；第二阶段必须从 t 与环长的同余关系推出头到入口距离等于相遇点到入口距离模环长",
-  "证明不能默认慢指针相遇前只绕环零圈，也不能把入口偏移、总路程和环长倍数混为同一个变量",
-  "第二阶段返回的必须是原链表入口对象；节点值相同、新建替代节点或结构相等都不满足身份契约",
-  "无环、入口就是 head、长尾、自环与两节点环需要覆盖第一阶段退出和第二阶段零步/多步相遇",
-  "Rust/R/Julia 循环对象适配、临时克隆和返回引用必须保持原节点身份且不修改 next",
+  "契约要求按 L0,Ln,L1,Ln-1 顺序重连原节点，不能改 val、创建替代节点或把 void 接口误写成返回新链",
+  "快指针从 head.next 出发时，偶数长度两段等长、奇数长度第一段多一；切分点和 slow.next 断开必须逐长度证明",
+  "第二阶段反转前必须保存后继，第三阶段交替合并前必须同时保存两段后继；更新顺序错误会丢链或成环",
+  "证明需要分别覆盖三阶段产物、节点集合守恒、目标顺序、尾节点终止、无重复和无意外环",
+  "Rust 本题输入是无环独占链，应使用 Option<Box<ListNode>> 或等价所有权安全实现，不能机械沿用 0141–0142 的 Rc 循环适配器",
+  "R environment 与 Julia 可变节点能原地改边；R 返回 invisible(head) 只是适配器便利，必须说明调用者通过原环境观察修改",
 ]
 minimum_static_review = [
-  "人工推演题目页面示例与无环、入口为 head、单节点自环、长尾入环、重复值和最短环边界",
-  "以 mu、lambda、t 和相遇偏移逐项复核 t≡0(mod lambda)、mu+offset≡0(mod lambda) 及同步前进结论",
-  "静态检查第一阶段空指针守卫、第二阶段身份比较、原节点返回、不修改输入和有限终止",
-  "逐语言核对可空返回类型、Rc::ptr_eq、ReferenceEquals、TypeScript/Julia 的 === 与 R identical 等身份语义",
-  "无法由静态资料确认具体平台循环链表模板时明确写成适配器剩余风险，不运行题解代码",
+  "人工推演题目页面示例与 n=1、n=2、奇数 n=5、偶数 n=4、重复值和节点身份保留边界",
+  "逐阶段画出切分前后边、反转不变量和合并每轮 first/second 后继快照，核对最终尾节点 next 为空",
+  "静态证明每个原节点恰好归属一段、反转不改变节点集合、合并每轮只消费现有节点且不形成回边",
+  "逐语言检查 void/Unit 返回、字段名、可空守卫、引用身份、输入修改可见性和无额外节点分配",
+  "专项审查 Rust Box 的 take/移动/尾槽位借用，禁止以伪代码、unsafe 或 Rc 替代未解决的所有权路径",
+  "专项审查 R environment 原地可见性、Julia 共享可变节点，以及 C/C++ 不释放平台节点",
 ]
 
 must_preserve = [
-  "精确契约、自建例子和重复值反例",
-  "位置、路程、环长、相遇偏移和代码指针的逐项映射",
-  "0141 的有环必相遇与无环安全退出证明",
-  "0142 不省略整圈次数的入口同余证明和入口前不可能提前相遇论证",
-  "十语言完整实现与节点身份、可空类型、所有权和循环表示差异",
-  "Rust/R/Julia 非普通线性链表模板适配的诚实说明",
+  "精确契约、自建奇偶示例和重复值反例",
+  "三阶段解法取舍与每阶段状态到代码变量的映射",
+  "切分长度、反转边、交替合并和最终尾部终止的完整证明",
+  "节点身份与数量守恒、目标区间外不存在和最终无环性",
+  "O(n) 时间、O(1) 核心空间与语言所有权/返回适配成本",
+  "十语言完整实现，Rust 使用真实可借用检查的独占链实现",
   "准确静态审查证据、边界、学习链和带答案自检",
 ]
 
 forbidden = [
-  "参考 0138、0140 或其他最近题目的章节结构",
-  "把节点值相等写成节点相遇",
-  "把 pos 写进公开函数签名或依赖 pos 求入口",
-  "用 2(a+b)=a+b+kλ 而不交代慢指针可能已完成的整圈",
-  "声称普通 Box 独占链表可以直接构造安全循环而不提供适配器",
+  "参考 0141、0142 或其他最近题目的章节结构",
+  "通过交换 val 模拟重排",
+  "未断开两段就反转或合并",
+  "只声称三个阶段都是线性而不证明阶段接口和节点守恒",
+  "Rust 使用 Rc<RefCell<ListNode>> 逃避本题 Option<Box<ListNode>> 独占所有权重连",
+  "用 unsafe、裸指针或无法通过借用检查的 Rust 伪代码",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试或 sanitizer 题解代码",
   "把静态审查写成测试、编译或运行通过",
 ]
 
 completion_checks = [
-  "每题逐项对照合同选定黄金题",
+  "当前题逐项对照合同选定的 0076 与 0100 黄金题",
   "命中 DRIFT_LOG 的回归检查均通过",
-  "每题只有一个自包含 RST",
+  "0143 只有一个自包含 RST，十语言代码全部内联",
   "PROGRESS、README、AGENTS 当前状态、范围索引和知识账本同步",
   "原子提交后 BATCH_CONTRACT 被替换为下一批合同",
 ]
