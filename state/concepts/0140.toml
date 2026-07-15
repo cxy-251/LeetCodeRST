@@ -1,5 +1,5 @@
 [meta]
-version = 1
+version = 2
 range = "0140"
 last_problem = 140
 inherits = "state/concepts/0139.toml"
@@ -9,6 +9,8 @@ inherits = "state/concepts/0139.toml"
 "complexity.dictionary_character_budget" = "0139 以 C 表达布尔切分的匹配成本；0140 在 O(nC) 之外新增所有后缀答案字符总量 T。"
 
 [concepts]
-"algorithm.word_break_suffix_sentence_dp" = "kind=algorithm; introduced=0140; last=0140; occurrences=1; teaching_state=explained; note=sentences[i] 保存后缀 s[i:] 的全部句子，从右向左把匹配首词与 end 状态中的尾句组合。"
-"proof.empty_sentence_composition_identity" = "kind=proof; introduced=0140; last=0140; occurrences=1; teaching_state=explained; note=终点状态使用单个空字符串作为组合单位元，使最后一个单词直接形成句子，同时公开无解仍返回空列表。"
-"complexity.output_sensitive_suffix_materialization" = "kind=complexity; introduced=0140; last=0140; occurrences=1; teaching_state=explained; note=T 定义为所有后缀状态中物化的句子字符总量，时间 O(nC+T)、空间 O(n+T)，不能只按最终结果数量计费。"
+"algorithm.word_break_suffix_sentence_dp" = "kind=algorithm; introduced=0140; last=0140; occurrences=1; teaching_state=explained; note=sentences[i] 精确保存后缀 s[i:] 的全部句子；从右向左把匹配首词与已完成 end 状态中的每个尾句组合成独立快照。"
+"proof.empty_sentence_composition_identity" = "kind=proof; introduced=0140; last=0140; occurrences=1; teaching_state=explained; note=终点状态的单个空字符串只表示不再选择词的组合单位元，使最后一个词直接形成句子；公开无解状态仍是空列表。"
+"complexity.output_sensitive_suffix_materialization" = "kind=complexity; introduced=0140; last=0140; occurrences=1; teaching_state=explained; note=T 是所有后缀状态的句子字符总量，可能大于最终输出 T0；时间 O(nC+T)、空间 O(n+T)，辅助空间还要区分 T-T0。"
+"proof.word_break_sentence_uniqueness" = "kind=proof; introduced=0140; last=0140; occurrences=1; teaching_state=explained; note=小写词与空格分隔使输出 token 序列唯一；字典互异保证首词只枚举一次，尾状态归纳无重复，因此每条路径只生成一次。"
+"resource.c_suffix_sentence_ownership" = "kind=resource; introduced=0140; last=0140; occurrences=1; teaching_state=explained; note=C 对容量倍增、句长加法、realloc 失败和部分状态清理逐项设防；成功时只转交状态 0 的 char** 与各句子，释放其余后缀。"
