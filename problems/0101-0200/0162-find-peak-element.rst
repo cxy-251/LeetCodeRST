@@ -45,15 +45,214 @@
 核心语言实现
 ------------
 
-.. include:: 0162-find-peak-element-code-1.inc
+C
+~
 
-.. include:: 0162-find-peak-element-code-2.inc
+.. code-block:: c
 
-.. include:: 0162-find-peak-element-code-3.inc
+   int findPeakElement(int *nums, int numsSize) {
+       int left = 0;
+       int right = numsSize - 1;
 
-.. include:: 0162-find-peak-element-code-4.inc
+       while (left < right) {
+           int mid = left + (right - left) / 2;
+           if (nums[mid] < nums[mid + 1]) {
+               left = mid + 1;
+           } else {
+               right = mid;
+           }
+       }
+       return left;
+   }
 
-.. include:: 0162-find-peak-element-code-5.inc
+C++
+~~~
+
+.. code-block:: cpp
+
+   #include <vector>
+
+   class Solution {
+   public:
+       int findPeakElement(std::vector<int>& nums) {
+           int left = 0;
+           int right = static_cast<int>(nums.size()) - 1;
+
+           while (left < right) {
+               int mid = left + (right - left) / 2;
+               if (nums[mid] < nums[mid + 1]) {
+                   left = mid + 1;
+               } else {
+                   right = mid;
+               }
+           }
+           return left;
+       }
+   };
+
+Python
+~~~~~~
+
+.. code-block:: python
+
+   class Solution:
+       def findPeakElement(self, nums: list[int]) -> int:
+           left = 0
+           right = len(nums) - 1
+
+           while left < right:
+               mid = left + (right - left) // 2
+               if nums[mid] < nums[mid + 1]:
+                   left = mid + 1
+               else:
+                   right = mid
+           return left
+
+Java
+~~~~
+
+.. code-block:: java
+
+   class Solution {
+       public int findPeakElement(int[] nums) {
+           int left = 0;
+           int right = nums.length - 1;
+
+           while (left < right) {
+               int mid = left + (right - left) / 2;
+               if (nums[mid] < nums[mid + 1]) {
+                   left = mid + 1;
+               } else {
+                   right = mid;
+               }
+           }
+           return left;
+       }
+   }
+
+Rust
+~~~~
+
+.. code-block:: rust
+
+   impl Solution {
+       pub fn find_peak_element(nums: Vec<i32>) -> i32 {
+           let mut left = 0usize;
+           let mut right = nums.len() - 1;
+
+           while left < right {
+               let mid = left + (right - left) / 2;
+               if nums[mid] < nums[mid + 1] {
+                   left = mid + 1;
+               } else {
+                   right = mid;
+               }
+           }
+           left as i32
+       }
+   }
+
+Go
+~~
+
+.. code-block:: go
+
+   func findPeakElement(nums []int) int {
+       left := 0
+       right := len(nums) - 1
+
+       for left < right {
+           mid := left + (right-left)/2
+           if nums[mid] < nums[mid+1] {
+               left = mid + 1
+           } else {
+               right = mid
+           }
+       }
+       return left
+   }
+
+TypeScript
+~~~~~~~~~~
+
+.. code-block:: typescript
+
+   function findPeakElement(nums: number[]): number {
+       let left = 0;
+       let right = nums.length - 1;
+
+       while (left < right) {
+           const mid = left + Math.floor((right - left) / 2);
+           if (nums[mid] < nums[mid + 1]) {
+               left = mid + 1;
+           } else {
+               right = mid;
+           }
+       }
+       return left;
+   }
+
+C#
+~~
+
+.. code-block:: csharp
+
+   public class Solution {
+       public int FindPeakElement(int[] nums) {
+           int left = 0;
+           int right = nums.Length - 1;
+
+           while (left < right) {
+               int mid = left + (right - left) / 2;
+               if (nums[mid] < nums[mid + 1]) {
+                   left = mid + 1;
+               } else {
+                   right = mid;
+               }
+           }
+           return left;
+       }
+   }
+
+Julia
+~~~~~
+
+.. code-block:: julia
+
+   function find_peak_element(nums::Vector{Int})::Int
+       left = 1
+       right = length(nums)
+
+       while left < right
+           mid = left + (right - left) ÷ 2
+           if nums[mid] < nums[mid + 1]
+               left = mid + 1
+           else
+               right = mid
+           end
+       end
+       return left - 1
+   end
+
+R
+~
+
+.. code-block:: r
+
+   find_peak_element <- function(nums) {
+     left <- 1L
+     right <- length(nums)
+
+     while (left < right) {
+       mid <- left + (right - left) %/% 2L
+       if (nums[mid] < nums[mid + 1L]) {
+         left <- mid + 1L
+       } else {
+         right <- mid
+       }
+     }
+     left - 1L
+   }
 
 关键边界
 --------

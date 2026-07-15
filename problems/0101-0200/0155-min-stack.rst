@@ -44,15 +44,376 @@ R 适配器使用环境节点构成链式栈，避免反复增长向量带来的
 核心语言实现
 ------------
 
-.. include:: 0155-min-stack-code-1.inc
+C
+~
 
-.. include:: 0155-min-stack-code-2.inc
+.. code-block:: c
 
-.. include:: 0155-min-stack-code-3.inc
+   #include <limits.h>
+   #include <stdlib.h>
 
-.. include:: 0155-min-stack-code-4.inc
+   struct MinEntry {
+       int value;
+       int minimum;
+   };
 
-.. include:: 0155-min-stack-code-5.inc
+   typedef struct {
+       struct MinEntry *entries;
+       int size;
+       int capacity;
+   } MinStack;
+
+   MinStack *minStackCreate(void) {
+       MinStack *stack = malloc(sizeof(*stack));
+       if (stack == NULL) {
+           return NULL;
+       }
+
+       stack->capacity = 16;
+       stack->size = 0;
+       stack->entries = malloc(
+           (size_t)stack->capacity * sizeof(*stack->entries)
+       );
+       if (stack->entries == NULL) {
+           free(stack);
+           return NULL;
+       }
+       return stack;
+   }
+
+   void minStackPush(MinStack *stack, int value) {
+       if (stack->size == stack->capacity) {
+           int new_capacity = stack->capacity * 2;
+           struct MinEntry *resized = realloc(
+               stack->entries,
+               (size_t)new_capacity * sizeof(*resized)
+           );
+           if (resized == NULL) {
+               return;
+           }
+           stack->entries = resized;
+           stack->capacity = new_capacity;
+       }
+
+       int minimum = value;
+       if (stack->size > 0 &&
+           stack->entries[stack->size - 1].minimum < minimum) {
+           minimum = stack->entries[stack->size - 1].minimum;
+       }
+       stack->entries[stack->size++] =
+           (struct MinEntry){value, minimum};
+   }
+
+   void minStackPop(MinStack *stack) {
+       --stack->size;
+   }
+
+   int minStackTop(MinStack *stack) {
+       return stack->entries[stack->size - 1].value;
+   }
+
+   int minStackGetMin(MinStack *stack) {
+       return stack->entries[stack->size - 1].minimum;
+   }
+
+   void minStackFree(MinStack *stack) {
+       if (stack != NULL) {
+           free(stack->entries);
+           free(stack);
+       }
+   }
+
+C++
+~~~
+
+.. code-block:: cpp
+
+   #include <algorithm>
+   #include <utility>
+   #include <vector>
+
+   class MinStack {
+   public:
+       void push(int value) {
+           int minimum = entries_.empty()
+               ? value
+               : std::min(value, entries_.back().second);
+           entries_.push_back({value, minimum});
+       }
+
+       void pop() {
+           entries_.pop_back();
+       }
+
+       int top() const {
+           return entries_.back().first;
+       }
+
+       int getMin() const {
+           return entries_.back().second;
+       }
+
+   private:
+       std::vector<std::pair<int, int>> entries_;
+   };
+
+Python
+~~~~~~
+
+.. code-block:: python
+
+   class MinStack:
+       def __init__(self) -> None:
+           self.entries: list[tuple[int, int]] = []
+
+       def push(self, value: int) -> None:
+           minimum = value
+           if self.entries:
+               minimum = min(minimum, self.entries[-1][1])
+           self.entries.append((value, minimum))
+
+       def pop(self) -> None:
+           self.entries.pop()
+
+       def top(self) -> int:
+           return self.entries[-1][0]
+
+       def getMin(self) -> int:
+           return self.entries[-1][1]
+
+Java
+~~~~
+
+.. code-block:: java
+
+   import java.util.Arrays;
+
+   class MinStack {
+       private int[] values = new int[16];
+       private int[] minimums = new int[16];
+       private int size = 0;
+
+       public void push(int value) {
+           ensureCapacity();
+           values[size] = value;
+           minimums[size] = size == 0
+               ? value
+               : Math.min(value, minimums[size - 1]);
+           size++;
+       }
+
+       public void pop() {
+           size--;
+       }
+
+       public int top() {
+           return values[size - 1];
+       }
+
+       public int getMin() {
+           return minimums[size - 1];
+       }
+
+       private void ensureCapacity() {
+           if (size < values.length) {
+               return;
+           }
+           int capacity = values.length * 2;
+           values = Arrays.copyOf(values, capacity);
+           minimums = Arrays.copyOf(minimums, capacity);
+       }
+   }
+
+Rust
+~~~~
+
+.. code-block:: rust
+
+   struct MinStack {
+       entries: Vec<(i32, i32)>,
+   }
+
+   impl MinStack {
+       fn new() -> Self {
+           Self { entries: Vec::new() }
+       }
+
+       fn push(&mut self, value: i32) {
+           let minimum = self.entries.last()
+               .map_or(value, |entry| value.min(entry.1));
+           self.entries.push((value, minimum));
+       }
+
+       fn pop(&mut self) {
+           self.entries.pop();
+       }
+
+       fn top(&self) -> i32 {
+           self.entries.last().unwrap().0
+       }
+
+       fn get_min(&self) -> i32 {
+           self.entries.last().unwrap().1
+       }
+   }
+
+Go
+~~
+
+.. code-block:: go
+
+   type MinStack struct {
+       entries [][2]int
+   }
+
+   func Constructor() MinStack {
+       return MinStack{entries: make([][2]int, 0)}
+   }
+
+   func (stack *MinStack) Push(value int) {
+       minimum := value
+       if len(stack.entries) > 0 {
+           previous := stack.entries[len(stack.entries)-1][1]
+           if previous < minimum {
+               minimum = previous
+           }
+       }
+       stack.entries = append(stack.entries, [2]int{value, minimum})
+   }
+
+   func (stack *MinStack) Pop() {
+       stack.entries = stack.entries[:len(stack.entries)-1]
+   }
+
+   func (stack *MinStack) Top() int {
+       return stack.entries[len(stack.entries)-1][0]
+   }
+
+   func (stack *MinStack) GetMin() int {
+       return stack.entries[len(stack.entries)-1][1]
+   }
+
+TypeScript
+~~~~~~~~~~
+
+.. code-block:: typescript
+
+   class MinStack {
+       private readonly entries: Array<[number, number]> = [];
+
+       push(value: number): void {
+           const previous = this.entries.length === 0
+               ? value
+               : this.entries[this.entries.length - 1][1];
+           this.entries.push([value, Math.min(value, previous)]);
+       }
+
+       pop(): void {
+           this.entries.pop();
+       }
+
+       top(): number {
+           return this.entries[this.entries.length - 1][0];
+       }
+
+       getMin(): number {
+           return this.entries[this.entries.length - 1][1];
+       }
+   }
+
+C#
+~~
+
+.. code-block:: csharp
+
+   using System;
+   using System.Collections.Generic;
+
+   public class MinStack {
+       private readonly List<(int Value, int Minimum)> entries = new();
+
+       public void Push(int value) {
+           int minimum = entries.Count == 0
+               ? value
+               : Math.Min(value, entries[^1].Minimum);
+           entries.Add((value, minimum));
+       }
+
+       public void Pop() {
+           entries.RemoveAt(entries.Count - 1);
+       }
+
+       public int Top() {
+           return entries[^1].Value;
+       }
+
+       public int GetMin() {
+           return entries[^1].Minimum;
+       }
+   }
+
+Julia
+~~~~~
+
+.. code-block:: julia
+
+   mutable struct MinStack
+       entries::Vector{Tuple{Int, Int}}
+   end
+
+   MinStack() = MinStack(Tuple{Int, Int}[])
+
+   function push_value!(stack::MinStack, value::Int)::Nothing
+       minimum = isempty(stack.entries) ? value :
+           min(value, stack.entries[end][2])
+       push!(stack.entries, (value, minimum))
+       return nothing
+   end
+
+   function pop_value!(stack::MinStack)::Nothing
+       pop!(stack.entries)
+       return nothing
+   end
+
+   top_value(stack::MinStack)::Int = stack.entries[end][1]
+   get_min(stack::MinStack)::Int = stack.entries[end][2]
+
+R
+~
+
+.. code-block:: r
+
+   new_min_stack <- function() {
+     stack <- new.env(parent = emptyenv())
+     stack$head <- NULL
+     stack
+   }
+
+   push_value <- function(stack, value) {
+     node <- new.env(parent = emptyenv())
+     node$value <- value
+     node$minimum <- if (is.null(stack$head)) {
+       value
+     } else {
+       min(value, stack$head$minimum)
+     }
+     node$next_node <- stack$head
+     stack$head <- node
+     invisible(NULL)
+   }
+
+   pop_value <- function(stack) {
+     stack$head <- stack$head$next_node
+     invisible(NULL)
+   }
+
+   top_value <- function(stack) {
+     stack$head$value
+   }
+
+   get_min <- function(stack) {
+     stack$head$minimum
+   }
 
 关键边界
 --------

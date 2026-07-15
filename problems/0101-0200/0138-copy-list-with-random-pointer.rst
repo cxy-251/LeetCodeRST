@@ -50,15 +50,405 @@ R 基础适配器用 ``identical`` 在线性表中定位对象身份，时间 ``
 核心语言实现
 ------------
 
-.. include:: 0138-copy-list-with-random-pointer-code-1.inc
+C
+~
 
-.. include:: 0138-copy-list-with-random-pointer-code-2.inc
+.. code-block:: c
 
-.. include:: 0138-copy-list-with-random-pointer-code-3.inc
+   #include <stdint.h>
+   #include <stdlib.h>
 
-.. include:: 0138-copy-list-with-random-pointer-code-4.inc
+   struct PointerEntry {
+       const struct Node *key;
+       int index;
+   };
 
-.. include:: 0138-copy-list-with-random-pointer-code-5.inc
+   static size_t pointer_hash(const struct Node *node, size_t mask) {
+       uintptr_t value = (uintptr_t)node;
+       value ^= value >> 17;
+       value ^= value >> 9;
+       return (size_t)value & mask;
+   }
+
+   static void insert_pointer(
+       struct PointerEntry *table,
+       size_t mask,
+       const struct Node *key,
+       int index
+   ) {
+       size_t slot = pointer_hash(key, mask);
+       while (table[slot].key != NULL) {
+           slot = (slot + 1U) & mask;
+       }
+       table[slot].key = key;
+       table[slot].index = index;
+   }
+
+   static int find_pointer(
+       const struct PointerEntry *table,
+       size_t mask,
+       const struct Node *key
+   ) {
+       size_t slot = pointer_hash(key, mask);
+       while (table[slot].key != key) {
+           slot = (slot + 1U) & mask;
+       }
+       return table[slot].index;
+   }
+
+   static void free_copies(struct Node **copies, int count) {
+       for (int i = 0; i < count; ++i) {
+           free(copies[i]);
+       }
+   }
+
+   struct Node *copyRandomList(struct Node *head) {
+       if (head == NULL) {
+           return NULL;
+       }
+
+       int count = 0;
+       for (struct Node *node = head; node != NULL; node = node->next) {
+           ++count;
+       }
+
+       struct Node **originals =
+           malloc((size_t)count * sizeof(*originals));
+       struct Node **copies = malloc((size_t)count * sizeof(*copies));
+       size_t capacity = 1U;
+       while (capacity < (size_t)count * 2U) {
+           capacity <<= 1U;
+       }
+       struct PointerEntry *table =
+           calloc(capacity, sizeof(*table));
+
+       if (originals == NULL || copies == NULL || table == NULL) {
+           free(originals);
+           free(copies);
+           free(table);
+           return NULL;
+       }
+
+       int index = 0;
+       for (struct Node *node = head; node != NULL; node = node->next) {
+           originals[index] = node;
+           copies[index] = malloc(sizeof(*copies[index]));
+           if (copies[index] == NULL) {
+               free_copies(copies, index);
+               free(originals);
+               free(copies);
+               free(table);
+               return NULL;
+           }
+           copies[index]->val = node->val;
+           copies[index]->next = NULL;
+           copies[index]->random = NULL;
+           insert_pointer(table, capacity - 1U, node, index);
+           ++index;
+       }
+
+       for (int i = 0; i < count; ++i) {
+           copies[i]->next = i + 1 < count ? copies[i + 1] : NULL;
+           if (originals[i]->random != NULL) {
+               int random_index = find_pointer(
+                   table,
+                   capacity - 1U,
+                   originals[i]->random
+               );
+               copies[i]->random = copies[random_index];
+           }
+       }
+
+       struct Node *answer = copies[0];
+       free(originals);
+       free(copies);
+       free(table);
+       return answer;
+   }
+
+C++
+~~~
+
+.. code-block:: cpp
+
+   #include <unordered_map>
+
+   class Solution {
+   public:
+       Node* copyRandomList(Node* head) {
+           if (head == nullptr) return nullptr;
+
+           std::unordered_map<Node*, Node*> copies;
+           for (Node* node = head; node != nullptr; node = node->next) {
+               copies[node] = new Node(node->val);
+           }
+           for (Node* node = head; node != nullptr; node = node->next) {
+               Node* copy = copies[node];
+               copy->next =
+                   node->next == nullptr ? nullptr : copies[node->next];
+               copy->random =
+                   node->random == nullptr ? nullptr : copies[node->random];
+           }
+           return copies[head];
+       }
+   };
+
+Python
+~~~~~~
+
+.. code-block:: python
+
+   class Solution:
+       def copyRandomList(self, head: "Node | None") -> "Node | None":
+           if head is None:
+               return None
+
+           copies: dict[Node, Node] = {}
+           node = head
+           while node is not None:
+               copies[node] = Node(node.val)
+               node = node.next
+
+           node = head
+           while node is not None:
+               copy = copies[node]
+               copy.next = copies.get(node.next)
+               copy.random = copies.get(node.random)
+               node = node.next
+
+           return copies[head]
+
+Java
+~~~~
+
+.. code-block:: java
+
+   import java.util.IdentityHashMap;
+   import java.util.Map;
+
+   class Solution {
+       public Node copyRandomList(Node head) {
+           if (head == null) return null;
+
+           Map<Node, Node> copies = new IdentityHashMap<>();
+           for (Node node = head; node != null; node = node.next) {
+               copies.put(node, new Node(node.val));
+           }
+           for (Node node = head; node != null; node = node.next) {
+               Node copy = copies.get(node);
+               copy.next = copies.get(node.next);
+               copy.random = copies.get(node.random);
+           }
+           return copies.get(head);
+       }
+   }
+
+Rust
+~~~~
+
+.. code-block:: rust
+
+   use std::cell::RefCell;
+   use std::collections::HashMap;
+   use std::rc::Rc;
+
+   impl Solution {
+       pub fn copy_random_list(
+           head: Option<Rc<RefCell<Node>>>,
+       ) -> Option<Rc<RefCell<Node>>> {
+           let mut copies: HashMap<
+               *const RefCell<Node>,
+               Rc<RefCell<Node>>,
+           > = HashMap::new();
+
+           let mut current = head.clone();
+           while let Some(node) = current {
+               let key = Rc::as_ptr(&node);
+               let value = node.borrow().val;
+               copies.insert(
+                   key,
+                   Rc::new(RefCell::new(Node {
+                       val: value,
+                       next: None,
+                       random: None,
+                   })),
+               );
+               current = node.borrow().next.clone();
+           }
+
+           current = head.clone();
+           while let Some(node) = current {
+               let key = Rc::as_ptr(&node);
+               let copy = copies.get(&key).unwrap().clone();
+               let next = node.borrow().next.clone();
+               let random = node.borrow().random.clone();
+
+               copy.borrow_mut().next = next.as_ref().map(|target| {
+                   copies.get(&Rc::as_ptr(target)).unwrap().clone()
+               });
+               copy.borrow_mut().random = random.as_ref().map(|target| {
+                   copies.get(&Rc::as_ptr(target)).unwrap().clone()
+               });
+               current = next;
+           }
+
+           head.as_ref().map(|node| {
+               copies.get(&Rc::as_ptr(node)).unwrap().clone()
+           })
+       }
+   }
+
+Go
+~~
+
+.. code-block:: go
+
+   func copyRandomList(head *Node) *Node {
+       if head == nil {
+           return nil
+       }
+
+       copies := make(map[*Node]*Node)
+       for node := head; node != nil; node = node.Next {
+           copies[node] = &Node{Val: node.Val}
+       }
+       for node := head; node != nil; node = node.Next {
+           copy := copies[node]
+           copy.Next = copies[node.Next]
+           copy.Random = copies[node.Random]
+       }
+       return copies[head]
+   }
+
+TypeScript
+~~~~~~~~~~
+
+.. code-block:: typescript
+
+   function copyRandomList(head: Node | null): Node | null {
+       if (head === null) return null;
+
+       const copies = new Map<Node, Node>();
+       for (let node: Node | null = head; node !== null; node = node.next) {
+           copies.set(node, new Node(node.val));
+       }
+       for (let node: Node | null = head; node !== null; node = node.next) {
+           const copy = copies.get(node) as Node;
+           copy.next = node.next === null
+               ? null
+               : copies.get(node.next) as Node;
+           copy.random = node.random === null
+               ? null
+               : copies.get(node.random) as Node;
+       }
+       return copies.get(head) as Node;
+   }
+
+C#
+~~
+
+.. code-block:: csharp
+
+   using System.Collections.Generic;
+
+   public class Solution {
+       public Node CopyRandomList(Node head) {
+           if (head == null) return null;
+
+           var copies = new Dictionary<Node, Node>();
+           for (Node node = head; node != null; node = node.next) {
+               copies[node] = new Node(node.val);
+           }
+           for (Node node = head; node != null; node = node.next) {
+               Node copy = copies[node];
+               copy.next = node.next == null ? null : copies[node.next];
+               copy.random =
+                   node.random == null ? null : copies[node.random];
+           }
+           return copies[head];
+       }
+   }
+
+Julia
+~~~~~
+
+.. code-block:: julia
+
+   mutable struct RandomNode
+       val::Int
+       next::Union{Nothing,RandomNode}
+       random::Union{Nothing,RandomNode}
+   end
+
+   RandomNode(val::Int) = RandomNode(val, nothing, nothing)
+
+   function copy_random_list(
+       head::Union{Nothing,RandomNode},
+   )::Union{Nothing,RandomNode}
+       head === nothing && return nothing
+
+       copies = IdDict{RandomNode,RandomNode}()
+       node = head
+       while node !== nothing
+           copies[node] = RandomNode(node.val)
+           node = node.next
+       end
+
+       node = head
+       while node !== nothing
+           copy = copies[node]
+           copy.next = node.next === nothing ? nothing : copies[node.next]
+           copy.random =
+               node.random === nothing ? nothing : copies[node.random]
+           node = node.next
+       end
+       return copies[head]
+   end
+
+R
+~
+
+.. code-block:: r
+
+   new_random_node <- function(val) {
+     node <- new.env(parent = emptyenv())
+     node$val <- val
+     node$next <- NULL
+     node$random <- NULL
+     node
+   }
+
+   copy_random_list <- function(head) {
+     if (is.null(head)) return(NULL)
+
+     originals <- list()
+     copies <- list()
+     node <- head
+     while (!is.null(node)) {
+       originals[[length(originals) + 1L]] <- node
+       copies[[length(copies) + 1L]] <- new_random_node(node$val)
+       node <- node$next
+     }
+
+     find_index <- function(target) {
+       if (is.null(target)) return(NA_integer_)
+       for (index in seq_along(originals)) {
+         if (identical(originals[[index]], target)) return(index)
+       }
+       stop("random must reference a node in the input list")
+     }
+
+     for (index in seq_along(originals)) {
+       if (index < length(copies)) {
+         copies[[index]]$next <- copies[[index + 1L]]
+       }
+       random_index <- find_index(originals[[index]]$random)
+       if (!is.na(random_index)) {
+         copies[[index]]$random <- copies[[random_index]]
+       }
+     }
+     copies[[1L]]
+   }
 
 关键边界
 --------

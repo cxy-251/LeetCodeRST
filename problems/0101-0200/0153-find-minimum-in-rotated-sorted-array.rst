@@ -47,15 +47,224 @@
 核心语言实现
 ------------
 
-.. include:: 0153-find-minimum-in-rotated-sorted-array-code-1.inc
+C
+~
 
-.. include:: 0153-find-minimum-in-rotated-sorted-array-code-2.inc
+.. code-block:: c
 
-.. include:: 0153-find-minimum-in-rotated-sorted-array-code-3.inc
+   int findMin(int *nums, int numsSize) {
+       int left = 0;
+       int right = numsSize - 1;
 
-.. include:: 0153-find-minimum-in-rotated-sorted-array-code-4.inc
+       while (left < right) {
+           int mid = left + (right - left) / 2;
+           if (nums[mid] > nums[right]) {
+               left = mid + 1;
+           } else {
+               right = mid;
+           }
+       }
 
-.. include:: 0153-find-minimum-in-rotated-sorted-array-code-5.inc
+       return nums[left];
+   }
+
+C++
+~~~
+
+.. code-block:: cpp
+
+   #include <vector>
+
+   class Solution {
+   public:
+       int findMin(std::vector<int>& nums) {
+           int left = 0;
+           int right = static_cast<int>(nums.size()) - 1;
+
+           while (left < right) {
+               int mid = left + (right - left) / 2;
+               if (nums[mid] > nums[right]) {
+                   left = mid + 1;
+               } else {
+                   right = mid;
+               }
+           }
+
+           return nums[left];
+       }
+   };
+
+Python
+~~~~~~
+
+.. code-block:: python
+
+   class Solution:
+       def findMin(self, nums: list[int]) -> int:
+           left = 0
+           right = len(nums) - 1
+
+           while left < right:
+               mid = left + (right - left) // 2
+               if nums[mid] > nums[right]:
+                   left = mid + 1
+               else:
+                   right = mid
+
+           return nums[left]
+
+Java
+~~~~
+
+.. code-block:: java
+
+   class Solution {
+       public int findMin(int[] nums) {
+           int left = 0;
+           int right = nums.length - 1;
+
+           while (left < right) {
+               int mid = left + (right - left) / 2;
+               if (nums[mid] > nums[right]) {
+                   left = mid + 1;
+               } else {
+                   right = mid;
+               }
+           }
+
+           return nums[left];
+       }
+   }
+
+Rust
+~~~~
+
+.. code-block:: rust
+
+   impl Solution {
+       pub fn find_min(nums: Vec<i32>) -> i32 {
+           let mut left = 0usize;
+           let mut right = nums.len() - 1;
+
+           while left < right {
+               let mid = left + (right - left) / 2;
+               if nums[mid] > nums[right] {
+                   left = mid + 1;
+               } else {
+                   right = mid;
+               }
+           }
+
+           nums[left]
+       }
+   }
+
+Go
+~~
+
+.. code-block:: go
+
+   func findMin(nums []int) int {
+       left := 0
+       right := len(nums) - 1
+
+       for left < right {
+           mid := left + (right-left)/2
+           if nums[mid] > nums[right] {
+               left = mid + 1
+           } else {
+               right = mid
+           }
+       }
+
+       return nums[left]
+   }
+
+TypeScript
+~~~~~~~~~~
+
+.. code-block:: typescript
+
+   function findMin(nums: number[]): number {
+       let left = 0;
+       let right = nums.length - 1;
+
+       while (left < right) {
+           const mid = left + Math.floor((right - left) / 2);
+           if (nums[mid] > nums[right]) {
+               left = mid + 1;
+           } else {
+               right = mid;
+           }
+       }
+
+       return nums[left];
+   }
+
+C#
+~~
+
+.. code-block:: csharp
+
+   public class Solution {
+       public int FindMin(int[] nums) {
+           int left = 0;
+           int right = nums.Length - 1;
+
+           while (left < right) {
+               int mid = left + (right - left) / 2;
+               if (nums[mid] > nums[right]) {
+                   left = mid + 1;
+               } else {
+                   right = mid;
+               }
+           }
+
+           return nums[left];
+       }
+   }
+
+Julia
+~~~~~
+
+.. code-block:: julia
+
+   function find_min(nums::Vector{Int})::Int
+       left = 1
+       right = length(nums)
+
+       while left < right
+           mid = left + (right - left) ÷ 2
+           if nums[mid] > nums[right]
+               left = mid + 1
+           else
+               right = mid
+           end
+       end
+
+       return nums[left]
+   end
+
+R
+~
+
+.. code-block:: r
+
+   find_min <- function(nums) {
+     left <- 1L
+     right <- length(nums)
+
+     while (left < right) {
+       mid <- left + (right - left) %/% 2L
+       if (nums[mid] > nums[right]) {
+         left <- mid + 1L
+       } else {
+         right <- mid
+       }
+     }
+
+     nums[left]
+   }
 
 关键边界
 --------

@@ -46,17 +46,317 @@
 核心语言实现
 ------------
 
-.. include:: 0133-clone-graph-code-1.inc
+C
+~
 
-.. include:: 0133-clone-graph-code-2.inc
+.. code-block:: c
 
-.. include:: 0133-clone-graph-code-3.inc
+   #include <stdlib.h>
 
-.. include:: 0133-clone-graph-code-4.inc
+   struct Node {
+       int val;
+       int numNeighbors;
+       struct Node **neighbors;
+   };
 
-.. include:: 0133-clone-graph-code-5.inc
+   static struct Node *clone_node(
+       struct Node *node,
+       struct Node *copies[101]
+   ) {
+       if (node == NULL) return NULL;
+       if (copies[node->val] != NULL) return copies[node->val];
 
-.. include:: 0133-clone-graph-code-6.inc
+       struct Node *copy = malloc(sizeof(*copy));
+       copy->val = node->val;
+       copy->numNeighbors = node->numNeighbors;
+       copy->neighbors = node->numNeighbors == 0
+           ? NULL
+           : malloc(
+               (size_t)node->numNeighbors * sizeof(*copy->neighbors)
+           );
+       copies[node->val] = copy;
+
+       for (int i = 0; i < node->numNeighbors; ++i) {
+           copy->neighbors[i] =
+               clone_node(node->neighbors[i], copies);
+       }
+       return copy;
+   }
+
+   struct Node *cloneGraph(struct Node *node) {
+       struct Node *copies[101] = {0};
+       return clone_node(node, copies);
+   }
+
+C++
+~~~
+
+.. code-block:: cpp
+
+   #include <unordered_map>
+
+   class Solution {
+       std::unordered_map<Node*, Node*> seen;
+
+       Node* clone(Node* node) {
+           if (node == nullptr) return nullptr;
+           auto known = seen.find(node);
+           if (known != seen.end()) return known->second;
+
+           Node* copy = new Node(node->val);
+           seen[node] = copy;
+           for (Node* neighbor : node->neighbors) {
+               copy->neighbors.push_back(clone(neighbor));
+           }
+           return copy;
+       }
+
+   public:
+       Node* cloneGraph(Node* node) {
+           return clone(node);
+       }
+   };
+
+Python
+~~~~~~
+
+.. code-block:: python
+
+   class Solution:
+       def cloneGraph(self, node: "Node | None") -> "Node | None":
+           seen: dict[Node, Node] = {}
+
+           def clone(current: Node | None) -> Node | None:
+               if current is None:
+                   return None
+               if current in seen:
+                   return seen[current]
+
+               copy = Node(current.val)
+               seen[current] = copy
+               copy.neighbors = [
+                   clone(neighbor)
+                   for neighbor in current.neighbors
+               ]
+               return copy
+
+           return clone(node)
+
+Java
+~~~~
+
+.. code-block:: java
+
+   import java.util.IdentityHashMap;
+   import java.util.Map;
+
+   class Solution {
+       private final Map<Node, Node> seen =
+           new IdentityHashMap<>();
+
+       public Node cloneGraph(Node node) {
+           if (node == null) return null;
+           if (seen.containsKey(node)) return seen.get(node);
+
+           Node copy = new Node(node.val);
+           seen.put(node, copy);
+           for (Node neighbor : node.neighbors) {
+               copy.neighbors.add(cloneGraph(neighbor));
+           }
+           return copy;
+       }
+   }
+
+Rust
+~~~~
+
+.. code-block:: rust
+
+   use std::cell::RefCell;
+   use std::collections::HashMap;
+   use std::rc::Rc;
+
+   impl Solution {
+       pub fn clone_graph(
+           node: Option<Rc<RefCell<Node>>>,
+       ) -> Option<Rc<RefCell<Node>>> {
+           fn clone_node(
+               node: &Rc<RefCell<Node>>,
+               seen: &mut HashMap<
+                   *const RefCell<Node>,
+                   Rc<RefCell<Node>>,
+               >,
+           ) -> Rc<RefCell<Node>> {
+               let key = Rc::as_ptr(node);
+               if let Some(copy) = seen.get(&key) {
+                   return copy.clone();
+               }
+
+               let value = node.borrow().val;
+               let copy = Rc::new(RefCell::new(Node {
+                   val: value,
+                   neighbors: Vec::new(),
+               }));
+               seen.insert(key, copy.clone());
+
+               let neighbors = node.borrow().neighbors.clone();
+               for neighbor in neighbors {
+                   let next = clone_node(&neighbor, seen);
+                   copy.borrow_mut().neighbors.push(next);
+               }
+               copy
+           }
+
+           node.map(|root| {
+               clone_node(&root, &mut HashMap::new())
+           })
+       }
+   }
+
+Go
+~~
+
+.. code-block:: go
+
+   func cloneGraph(node *Node) *Node {
+       seen := make(map[*Node]*Node)
+
+       var clone func(*Node) *Node
+       clone = func(current *Node) *Node {
+           if current == nil {
+               return nil
+           }
+           if copy, ok := seen[current]; ok {
+               return copy
+           }
+
+           copy := &Node{Val: current.Val}
+           seen[current] = copy
+           for _, neighbor := range current.Neighbors {
+               copy.Neighbors = append(
+                   copy.Neighbors,
+                   clone(neighbor),
+               )
+           }
+           return copy
+       }
+
+       return clone(node)
+   }
+
+TypeScript
+~~~~~~~~~~
+
+.. code-block:: typescript
+
+   function cloneGraph(node: Node | null): Node | null {
+       const seen = new Map<Node, Node>();
+
+       const clone = (current: Node | null): Node | null => {
+           if (current === null) return null;
+           const known = seen.get(current);
+           if (known !== undefined) return known;
+
+           const copy = new Node(current.val);
+           seen.set(current, copy);
+           copy.neighbors = current.neighbors.map(
+               (neighbor) => clone(neighbor) as Node,
+           );
+           return copy;
+       };
+
+       return clone(node);
+   }
+
+C#
+~~
+
+.. code-block:: csharp
+
+   using System.Collections.Generic;
+
+   public class Solution {
+       private readonly Dictionary<Node, Node> seen = new();
+
+       public Node CloneGraph(Node node) {
+           if (node == null) return null;
+           if (seen.TryGetValue(node, out Node known)) {
+               return known;
+           }
+
+           Node copy = new Node(node.val);
+           seen[node] = copy;
+           foreach (Node neighbor in node.neighbors) {
+               copy.neighbors.Add(CloneGraph(neighbor));
+           }
+           return copy;
+       }
+   }
+
+Julia
+~~~~~
+
+.. code-block:: julia
+
+   mutable struct GraphNode
+       val::Int
+       neighbors::Vector{GraphNode}
+   end
+
+   GraphNode(val::Int) = GraphNode(val, GraphNode[])
+
+   function clone_graph(
+       node::Union{Nothing,GraphNode},
+   )::Union{Nothing,GraphNode}
+       seen = IdDict{GraphNode,GraphNode}()
+
+       function clone(
+           current::Union{Nothing,GraphNode},
+       )::Union{Nothing,GraphNode}
+           current === nothing && return nothing
+           haskey(seen, current) && return seen[current]
+
+           copy = GraphNode(current.val)
+           seen[current] = copy
+           for neighbor in current.neighbors
+               push!(copy.neighbors, clone(neighbor))
+           end
+           return copy
+       end
+
+       return clone(node)
+   end
+
+R
+~
+
+.. code-block:: r
+
+   new_graph_node <- function(val) {
+     node <- new.env(parent = emptyenv())
+     node$val <- val
+     node$neighbors <- list()
+     node
+   }
+
+   clone_graph <- function(node) {
+     seen <- new.env(hash = TRUE, parent = emptyenv())
+
+     clone <- function(current) {
+       if (is.null(current)) return(NULL)
+       key <- as.character(current$val)
+       if (exists(key, envir = seen, inherits = FALSE)) {
+         return(get(key, envir = seen, inherits = FALSE))
+       }
+
+       copy <- new_graph_node(current$val)
+       assign(key, copy, envir = seen)
+       copy$neighbors <- lapply(current$neighbors, clone)
+       copy
+     }
+
+     clone(node)
+   }
 
 关键边界
 --------

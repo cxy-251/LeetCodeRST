@@ -45,15 +45,288 @@
 核心语言实现
 ------------
 
-.. include:: 0152-maximum-product-subarray-code-1.inc
+C
+~
 
-.. include:: 0152-maximum-product-subarray-code-2.inc
+.. code-block:: c
 
-.. include:: 0152-maximum-product-subarray-code-3.inc
+   #include <stdint.h>
 
-.. include:: 0152-maximum-product-subarray-code-4.inc
+   static int64_t max_i64(int64_t first, int64_t second) {
+       return first > second ? first : second;
+   }
 
-.. include:: 0152-maximum-product-subarray-code-5.inc
+   static int64_t min_i64(int64_t first, int64_t second) {
+       return first < second ? first : second;
+   }
+
+   int maxProduct(int *nums, int numsSize) {
+       int64_t current_max = nums[0];
+       int64_t current_min = nums[0];
+       int64_t answer = nums[0];
+
+       for (int index = 1; index < numsSize; ++index) {
+           int64_t value = nums[index];
+           if (value < 0) {
+               int64_t temporary = current_max;
+               current_max = current_min;
+               current_min = temporary;
+           }
+
+           current_max = max_i64(value, current_max * value);
+           current_min = min_i64(value, current_min * value);
+           answer = max_i64(answer, current_max);
+       }
+
+       return (int)answer;
+   }
+
+C++
+~~~
+
+.. code-block:: cpp
+
+   #include <algorithm>
+   #include <cstdint>
+   #include <vector>
+
+   class Solution {
+   public:
+       int maxProduct(std::vector<int>& nums) {
+           std::int64_t current_max = nums[0];
+           std::int64_t current_min = nums[0];
+           std::int64_t answer = nums[0];
+
+           for (std::size_t index = 1; index < nums.size(); ++index) {
+               std::int64_t value = nums[index];
+               if (value < 0) {
+                   std::swap(current_max, current_min);
+               }
+
+               current_max = std::max(value, current_max * value);
+               current_min = std::min(value, current_min * value);
+               answer = std::max(answer, current_max);
+           }
+
+           return static_cast<int>(answer);
+       }
+   };
+
+Python
+~~~~~~
+
+.. code-block:: python
+
+   class Solution:
+       def maxProduct(self, nums: list[int]) -> int:
+           current_max = nums[0]
+           current_min = nums[0]
+           answer = nums[0]
+
+           for index in range(1, len(nums)):
+               value = nums[index]
+               if value < 0:
+                   current_max, current_min = current_min, current_max
+
+               current_max = max(value, current_max * value)
+               current_min = min(value, current_min * value)
+               answer = max(answer, current_max)
+
+           return answer
+
+Java
+~~~~
+
+.. code-block:: java
+
+   class Solution {
+       public int maxProduct(int[] nums) {
+           long currentMax = nums[0];
+           long currentMin = nums[0];
+           long answer = nums[0];
+
+           for (int index = 1; index < nums.length; index++) {
+               long value = nums[index];
+               if (value < 0) {
+                   long temporary = currentMax;
+                   currentMax = currentMin;
+                   currentMin = temporary;
+               }
+
+               currentMax = Math.max(value, currentMax * value);
+               currentMin = Math.min(value, currentMin * value);
+               answer = Math.max(answer, currentMax);
+           }
+
+           return (int) answer;
+       }
+   }
+
+Rust
+~~~~
+
+.. code-block:: rust
+
+   impl Solution {
+       pub fn max_product(nums: Vec<i32>) -> i32 {
+           let mut current_max = i64::from(nums[0]);
+           let mut current_min = i64::from(nums[0]);
+           let mut answer = i64::from(nums[0]);
+
+           for &number in nums.iter().skip(1) {
+               let value = i64::from(number);
+               if value < 0 {
+                   std::mem::swap(&mut current_max, &mut current_min);
+               }
+
+               current_max = value.max(current_max * value);
+               current_min = value.min(current_min * value);
+               answer = answer.max(current_max);
+           }
+
+           answer as i32
+       }
+   }
+
+Go
+~~
+
+.. code-block:: go
+
+   func maxProduct(nums []int) int {
+       currentMax := int64(nums[0])
+       currentMin := int64(nums[0])
+       answer := int64(nums[0])
+
+       for _, number := range nums[1:] {
+           value := int64(number)
+           if value < 0 {
+               currentMax, currentMin = currentMin, currentMax
+           }
+
+           currentMax = max64(value, currentMax*value)
+           currentMin = min64(value, currentMin*value)
+           answer = max64(answer, currentMax)
+       }
+
+       return int(answer)
+   }
+
+   func max64(first int64, second int64) int64 {
+       if first > second {
+           return first
+       }
+       return second
+   }
+
+   func min64(first int64, second int64) int64 {
+       if first < second {
+           return first
+       }
+       return second
+   }
+
+TypeScript
+~~~~~~~~~~
+
+.. code-block:: typescript
+
+   function maxProduct(nums: number[]): number {
+       let currentMax = nums[0];
+       let currentMin = nums[0];
+       let answer = nums[0];
+
+       for (let index = 1; index < nums.length; index++) {
+           const value = nums[index];
+           if (value < 0) {
+               [currentMax, currentMin] = [currentMin, currentMax];
+           }
+
+           currentMax = Math.max(value, currentMax * value);
+           currentMin = Math.min(value, currentMin * value);
+           answer = Math.max(answer, currentMax);
+       }
+
+       return answer;
+   }
+
+C#
+~~
+
+.. code-block:: csharp
+
+   public class Solution {
+       public int MaxProduct(int[] nums) {
+           long currentMax = nums[0];
+           long currentMin = nums[0];
+           long answer = nums[0];
+
+           for (int index = 1; index < nums.Length; index++) {
+               long value = nums[index];
+               if (value < 0) {
+                   (currentMax, currentMin) = (currentMin, currentMax);
+               }
+
+               currentMax = System.Math.Max(value, currentMax * value);
+               currentMin = System.Math.Min(value, currentMin * value);
+               answer = System.Math.Max(answer, currentMax);
+           }
+
+           return (int)answer;
+       }
+   }
+
+Julia
+~~~~~
+
+.. code-block:: julia
+
+   function max_product(nums::Vector{Int})::Int
+       current_max = nums[1]
+       current_min = nums[1]
+       answer = nums[1]
+
+       for index in 2:length(nums)
+           value = nums[index]
+           if value < 0
+               current_max, current_min = current_min, current_max
+           end
+
+           current_max = max(value, current_max * value)
+           current_min = min(value, current_min * value)
+           answer = max(answer, current_max)
+       end
+
+       return answer
+   end
+
+R
+~
+
+.. code-block:: r
+
+   max_product <- function(nums) {
+     current_max <- nums[1L]
+     current_min <- nums[1L]
+     answer <- nums[1L]
+
+     if (length(nums) >= 2L) {
+       for (index in 2L:length(nums)) {
+         value <- nums[index]
+         if (value < 0) {
+           temporary <- current_max
+           current_max <- current_min
+           current_min <- temporary
+         }
+
+         current_max <- max(value, current_max * value)
+         current_min <- min(value, current_min * value)
+         answer <- max(answer, current_max)
+       }
+     }
+
+     answer
+   }
 
 关键边界
 --------

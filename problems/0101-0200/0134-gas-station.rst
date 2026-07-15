@@ -20,6 +20,7 @@
 
 算法
 -----
+
 扫描每个站点，令 ``difference = gas[i] - cost[i]``：
 
 * ``total`` 累计全局净油量；
@@ -49,17 +50,255 @@
 核心语言实现
 ------------
 
-.. include:: 0134-gas-station-code-1.inc
+C
+~
 
-.. include:: 0134-gas-station-code-2.inc
+.. code-block:: c
 
-.. include:: 0134-gas-station-code-3.inc
+   int canCompleteCircuit(
+       int *gas,
+       int gasSize,
+       int *cost,
+       int costSize
+   ) {
+       (void)costSize;
+       long long total = 0;
+       long long tank = 0;
+       int start = 0;
 
-.. include:: 0134-gas-station-code-4.inc
+       for (int i = 0; i < gasSize; ++i) {
+           long long diff = (long long)gas[i] - cost[i];
+           total += diff;
+           tank += diff;
+           if (tank < 0) {
+               start = i + 1;
+               tank = 0;
+           }
+       }
+       return total >= 0 ? start : -1;
+   }
 
-.. include:: 0134-gas-station-code-5.inc
+C++
+~~~
 
-.. include:: 0134-gas-station-code-6.inc
+.. code-block:: cpp
+
+   #include <vector>
+
+   class Solution {
+   public:
+       int canCompleteCircuit(
+           std::vector<int>& gas,
+           std::vector<int>& cost
+       ) {
+           long long total = 0;
+           long long tank = 0;
+           int start = 0;
+
+           for (int i = 0; i < static_cast<int>(gas.size()); ++i) {
+               long long diff =
+                   static_cast<long long>(gas[i]) - cost[i];
+               total += diff;
+               tank += diff;
+               if (tank < 0) {
+                   start = i + 1;
+                   tank = 0;
+               }
+           }
+           return total >= 0 ? start : -1;
+       }
+   };
+
+Python
+~~~~~~
+
+.. code-block:: python
+
+   class Solution:
+       def canCompleteCircuit(
+           self,
+           gas: list[int],
+           cost: list[int],
+       ) -> int:
+           total = 0
+           tank = 0
+           start = 0
+
+           for index, (gain, spend) in enumerate(zip(gas, cost)):
+               difference = gain - spend
+               total += difference
+               tank += difference
+               if tank < 0:
+                   start = index + 1
+                   tank = 0
+
+           return start if total >= 0 else -1
+
+Java
+~~~~
+
+.. code-block:: java
+
+   class Solution {
+       public int canCompleteCircuit(int[] gas, int[] cost) {
+           long total = 0;
+           long tank = 0;
+           int start = 0;
+           for (int i = 0; i < gas.length; ++i) {
+               long difference = (long) gas[i] - cost[i];
+               total += difference;
+               tank += difference;
+               if (tank < 0) {
+                   start = i + 1;
+                   tank = 0;
+               }
+           }
+           return total >= 0 ? start : -1;
+       }
+   }
+
+Rust
+~~~~
+
+.. code-block:: rust
+
+   impl Solution {
+       pub fn can_complete_circuit(
+           gas: Vec<i32>,
+           cost: Vec<i32>,
+       ) -> i32 {
+           let mut total = 0_i64;
+           let mut tank = 0_i64;
+           let mut start = 0_usize;
+           for index in 0..gas.len() {
+               let difference =
+                   i64::from(gas[index]) - i64::from(cost[index]);
+               total += difference;
+               tank += difference;
+               if tank < 0 {
+                   start = index + 1;
+                   tank = 0;
+               }
+           }
+           if total >= 0 { start as i32 } else { -1 }
+       }
+   }
+
+Go
+~~
+
+.. code-block:: go
+
+   func canCompleteCircuit(gas []int, cost []int) int {
+       total := 0
+       tank := 0
+       start := 0
+       for index := range gas {
+           difference := gas[index] - cost[index]
+           total += difference
+           tank += difference
+           if tank < 0 {
+               start = index + 1
+               tank = 0
+           }
+       }
+       if total >= 0 {
+           return start
+       }
+       return -1
+   }
+
+TypeScript
+~~~~~~~~~~
+
+.. code-block:: typescript
+
+   function canCompleteCircuit(
+       gas: number[],
+       cost: number[],
+   ): number {
+       let total = 0;
+       let tank = 0;
+       let start = 0;
+       for (let index = 0; index < gas.length; index++) {
+           const difference = gas[index] - cost[index];
+           total += difference;
+           tank += difference;
+           if (tank < 0) {
+               start = index + 1;
+               tank = 0;
+           }
+       }
+       return total >= 0 ? start : -1;
+   }
+
+C#
+~~
+
+.. code-block:: csharp
+
+   public class Solution {
+       public int CanCompleteCircuit(int[] gas, int[] cost) {
+           long total = 0;
+           long tank = 0;
+           int start = 0;
+           for (int index = 0; index < gas.Length; ++index) {
+               long difference = (long)gas[index] - cost[index];
+               total += difference;
+               tank += difference;
+               if (tank < 0) {
+                   start = index + 1;
+                   tank = 0;
+               }
+           }
+           return total >= 0 ? start : -1;
+       }
+   }
+
+Julia
+~~~~~
+
+.. code-block:: julia
+
+   function can_complete_circuit(
+       gas::Vector{Int},
+       cost::Vector{Int},
+   )::Int
+       total = 0
+       tank = 0
+       start = 1
+       for index in eachindex(gas)
+           difference = gas[index] - cost[index]
+           total += difference
+           tank += difference
+           if tank < 0
+               start = index + 1
+               tank = 0
+           end
+       end
+       return total >= 0 ? start - 1 : -1
+   end
+
+R
+~
+
+.. code-block:: r
+
+   can_complete_circuit <- function(gas, cost) {
+     total <- 0
+     tank <- 0
+     start <- 1L
+     for (index in seq_along(gas)) {
+       difference <- gas[[index]] - cost[[index]]
+       total <- total + difference
+       tank <- tank + difference
+       if (tank < 0) {
+         start <- index + 1L
+         tank <- 0
+       }
+     }
+     if (total >= 0) start - 1L else -1L
+   }
 
 关键边界
 --------

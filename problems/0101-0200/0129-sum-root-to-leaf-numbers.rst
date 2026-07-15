@@ -45,19 +45,238 @@
 核心语言实现
 ------------
 
-.. include:: 0129-sum-root-to-leaf-numbers-code-1.inc
+C
+~
 
-.. include:: 0129-sum-root-to-leaf-numbers-code-2.inc
+.. code-block:: c
 
-.. include:: 0129-sum-root-to-leaf-numbers-code-3.inc
+   struct TreeNode {
+       int val;
+       struct TreeNode *left;
+       struct TreeNode *right;
+   };
 
-.. include:: 0129-sum-root-to-leaf-numbers-code-4.inc
+   static int dfs_sum(struct TreeNode *node, int prefix) {
+       if (node == 0) {
+           return 0;
+       }
+       int current = prefix * 10 + node->val;
+       if (node->left == 0 && node->right == 0) {
+           return current;
+       }
+       return dfs_sum(node->left, current) +
+              dfs_sum(node->right, current);
+   }
 
-.. include:: 0129-sum-root-to-leaf-numbers-code-5.inc
+   int sumNumbers(struct TreeNode *root) {
+       return dfs_sum(root, 0);
+   }
 
-.. include:: 0129-sum-root-to-leaf-numbers-code-6.inc
+C++
+~~~
 
-.. include:: 0129-sum-root-to-leaf-numbers-code-7.inc
+.. code-block:: cpp
+
+   class Solution {
+       int dfs(TreeNode* node, int prefix) {
+           if (node == nullptr) {
+               return 0;
+           }
+           int current = prefix * 10 + node->val;
+           if (node->left == nullptr && node->right == nullptr) {
+               return current;
+           }
+           return dfs(node->left, current) +
+                  dfs(node->right, current);
+       }
+
+   public:
+       int sumNumbers(TreeNode* root) {
+           return dfs(root, 0);
+       }
+   };
+
+Python
+~~~~~~
+
+.. code-block:: python
+
+   class Solution:
+       def sumNumbers(self, root: TreeNode | None) -> int:
+           def dfs(node: TreeNode | None, prefix: int) -> int:
+               if node is None:
+                   return 0
+               current = prefix * 10 + node.val
+               if node.left is None and node.right is None:
+                   return current
+               return dfs(node.left, current) + dfs(node.right, current)
+
+           return dfs(root, 0)
+
+Java
+~~~~
+
+.. code-block:: java
+
+   class Solution {
+       private int dfs(TreeNode node, int prefix) {
+           if (node == null) {
+               return 0;
+           }
+           int current = prefix * 10 + node.val;
+           if (node.left == null && node.right == null) {
+               return current;
+           }
+           return dfs(node.left, current) +
+                  dfs(node.right, current);
+       }
+
+       public int sumNumbers(TreeNode root) {
+           return dfs(root, 0);
+       }
+   }
+
+Rust
+~~~~
+
+.. code-block:: rust
+
+   use std::cell::RefCell;
+   use std::rc::Rc;
+
+   impl Solution {
+       fn dfs(
+           node: &Option<Rc<RefCell<TreeNode>>>,
+           prefix: i32,
+       ) -> i32 {
+           match node {
+               None => 0,
+               Some(handle) => {
+                   let node = handle.borrow();
+                   let current = prefix * 10 + node.val;
+                   if node.left.is_none() && node.right.is_none() {
+                       current
+                   } else {
+                       Self::dfs(&node.left, current) +
+                           Self::dfs(&node.right, current)
+                   }
+               }
+           }
+       }
+
+       pub fn sum_numbers(
+           root: Option<Rc<RefCell<TreeNode>>>,
+       ) -> i32 {
+           Self::dfs(&root, 0)
+       }
+   }
+
+Go
+~~
+
+.. code-block:: go
+
+   func sumNumbers(root *TreeNode) int {
+       var dfs func(*TreeNode, int) int
+       dfs = func(node *TreeNode, prefix int) int {
+           if node == nil {
+               return 0
+           }
+           current := prefix*10 + node.Val
+           if node.Left == nil && node.Right == nil {
+               return current
+           }
+           return dfs(node.Left, current) +
+               dfs(node.Right, current)
+       }
+       return dfs(root, 0)
+   }
+
+TypeScript
+~~~~~~~~~~
+
+.. code-block:: typescript
+
+   function sumNumbers(root: TreeNode | null): number {
+       const dfs = (
+           node: TreeNode | null,
+           prefix: number,
+       ): number => {
+           if (node === null) return 0;
+           const current = prefix * 10 + node.val;
+           if (node.left === null && node.right === null) {
+               return current;
+           }
+           return dfs(node.left, current) +
+               dfs(node.right, current);
+       };
+       return dfs(root, 0);
+   }
+
+C#
+~~
+
+.. code-block:: csharp
+
+   public class Solution {
+       private int Dfs(TreeNode node, int prefix) {
+           if (node == null) return 0;
+           int current = prefix * 10 + node.val;
+           if (node.left == null && node.right == null) {
+               return current;
+           }
+           return Dfs(node.left, current) +
+                  Dfs(node.right, current);
+       }
+
+       public int SumNumbers(TreeNode root) {
+           return Dfs(root, 0);
+       }
+   }
+
+Julia
+~~~~~
+
+.. code-block:: julia
+
+   mutable struct TreeNode
+       val::Int
+       left::Union{Nothing,TreeNode}
+       right::Union{Nothing,TreeNode}
+   end
+
+   function sum_numbers(root::Union{Nothing,TreeNode})::Int
+       function dfs(
+           node::Union{Nothing,TreeNode},
+           prefix::Int,
+       )::Int
+           node === nothing && return 0
+           current = prefix * 10 + node.val
+           if node.left === nothing && node.right === nothing
+               return current
+           end
+           return dfs(node.left, current) +
+                  dfs(node.right, current)
+       end
+       return dfs(root, 0)
+   end
+
+R
+~
+
+.. code-block:: r
+
+   sum_numbers <- function(root) {
+     dfs <- function(node, prefix) {
+       if (is.null(node)) return(0)
+       current <- prefix * 10 + node$val
+       if (is.null(node$left) && is.null(node$right)) {
+         return(current)
+       }
+       dfs(node$left, current) + dfs(node$right, current)
+     }
+     dfs(root, 0)
+   }
 
 关键边界
 --------

@@ -1,5 +1,5 @@
 0145. Binary Tree Postorder Traversal
-======================================
+=====================================
 
 题目信息
 --------
@@ -43,15 +43,333 @@
 核心语言实现
 ------------
 
-.. include:: 0145-binary-tree-postorder-traversal-code-1.inc
+C
+~
 
-.. include:: 0145-binary-tree-postorder-traversal-code-2.inc
+.. code-block:: c
 
-.. include:: 0145-binary-tree-postorder-traversal-code-3.inc
+   #include <stddef.h>
+   #include <stdlib.h>
 
-.. include:: 0145-binary-tree-postorder-traversal-code-4.inc
+   int *postorderTraversal(
+       struct TreeNode *root,
+       int *returnSize
+   ) {
+       *returnSize = 0;
+       if (root == NULL) {
+           return NULL;
+       }
 
-.. include:: 0145-binary-tree-postorder-traversal-code-5.inc
+       size_t stack_capacity = 16;
+       size_t stack_size = 0;
+       struct TreeNode **stack = malloc(
+           stack_capacity * sizeof(*stack)
+       );
+       size_t values_capacity = 16;
+       int *values = malloc(values_capacity * sizeof(*values));
+       if (stack == NULL || values == NULL) {
+           free(stack);
+           free(values);
+           return NULL;
+       }
+
+       stack[stack_size++] = root;
+       while (stack_size > 0) {
+           struct TreeNode *node = stack[--stack_size];
+           if ((size_t)*returnSize == values_capacity) {
+               values_capacity *= 2;
+               int *grown = realloc(
+                   values,
+                   values_capacity * sizeof(*values)
+               );
+               if (grown == NULL) {
+                   free(stack);
+                   free(values);
+                   *returnSize = 0;
+                   return NULL;
+               }
+               values = grown;
+           }
+           values[(*returnSize)++] = node->val;
+
+           if (node->left != NULL) {
+               if (stack_size == stack_capacity) {
+                   stack_capacity *= 2;
+                   struct TreeNode **grown = realloc(
+                       stack,
+                       stack_capacity * sizeof(*stack)
+                   );
+                   if (grown == NULL) {
+                       free(stack);
+                       free(values);
+                       *returnSize = 0;
+                       return NULL;
+                   }
+                   stack = grown;
+               }
+               stack[stack_size++] = node->left;
+           }
+           if (node->right != NULL) {
+               if (stack_size == stack_capacity) {
+                   stack_capacity *= 2;
+                   struct TreeNode **grown = realloc(
+                       stack,
+                       stack_capacity * sizeof(*stack)
+                   );
+                   if (grown == NULL) {
+                       free(stack);
+                       free(values);
+                       *returnSize = 0;
+                       return NULL;
+                   }
+                   stack = grown;
+               }
+               stack[stack_size++] = node->right;
+           }
+       }
+       free(stack);
+
+       for (int left = 0, right = *returnSize - 1;
+            left < right;
+            ++left, --right) {
+           int temporary = values[left];
+           values[left] = values[right];
+           values[right] = temporary;
+       }
+       return values;
+   }
+
+C++
+~~~
+
+.. code-block:: cpp
+
+   #include <algorithm>
+   #include <vector>
+
+   class Solution {
+   public:
+       std::vector<int> postorderTraversal(TreeNode *root) {
+           if (root == nullptr) return {};
+
+           std::vector<TreeNode *> stack{root};
+           std::vector<int> values;
+           while (!stack.empty()) {
+               TreeNode *node = stack.back();
+               stack.pop_back();
+               values.push_back(node->val);
+               if (node->left != nullptr) stack.push_back(node->left);
+               if (node->right != nullptr) stack.push_back(node->right);
+           }
+           std::reverse(values.begin(), values.end());
+           return values;
+       }
+   };
+
+Python
+~~~~~~
+
+.. code-block:: python
+
+   class Solution:
+       def postorderTraversal(
+           self,
+           root: Optional[TreeNode],
+       ) -> list[int]:
+           if root is None:
+               return []
+
+           stack = [root]
+           values: list[int] = []
+           while stack:
+               node = stack.pop()
+               values.append(node.val)
+               if node.left is not None:
+                   stack.append(node.left)
+               if node.right is not None:
+                   stack.append(node.right)
+           values.reverse()
+           return values
+
+Java
+~~~~
+
+.. code-block:: java
+
+   import java.util.ArrayDeque;
+   import java.util.ArrayList;
+   import java.util.Collections;
+   import java.util.Deque;
+   import java.util.List;
+
+   class Solution {
+       public List<Integer> postorderTraversal(TreeNode root) {
+           List<Integer> values = new ArrayList<>();
+           if (root == null) return values;
+
+           Deque<TreeNode> stack = new ArrayDeque<>();
+           stack.push(root);
+           while (!stack.isEmpty()) {
+               TreeNode node = stack.pop();
+               values.add(node.val);
+               if (node.left != null) stack.push(node.left);
+               if (node.right != null) stack.push(node.right);
+           }
+           Collections.reverse(values);
+           return values;
+       }
+   }
+
+Rust
+~~~~
+
+.. code-block:: rust
+
+   use std::cell::RefCell;
+   use std::rc::Rc;
+
+   impl Solution {
+       pub fn postorder_traversal(
+           root: Option<Rc<RefCell<TreeNode>>>,
+       ) -> Vec<i32> {
+           let Some(root) = root else {
+               return Vec::new();
+           };
+
+           let mut stack = vec![root];
+           let mut values = Vec::new();
+           while let Some(node) = stack.pop() {
+               let borrowed = node.borrow();
+               values.push(borrowed.val);
+               if let Some(left) = borrowed.left.clone() {
+                   stack.push(left);
+               }
+               if let Some(right) = borrowed.right.clone() {
+                   stack.push(right);
+               }
+           }
+           values.reverse();
+           values
+       }
+   }
+
+Go
+~~
+
+.. code-block:: go
+
+   func postorderTraversal(root *TreeNode) []int {
+       if root == nil {
+           return []int{}
+       }
+
+       stack := []*TreeNode{root}
+       values := make([]int, 0)
+       for len(stack) > 0 {
+           last := len(stack) - 1
+           node := stack[last]
+           stack = stack[:last]
+           values = append(values, node.Val)
+           if node.Left != nil {
+               stack = append(stack, node.Left)
+           }
+           if node.Right != nil {
+               stack = append(stack, node.Right)
+           }
+       }
+       for left, right := 0, len(values)-1; left < right; left, right = left+1, right-1 {
+           values[left], values[right] = values[right], values[left]
+       }
+       return values
+   }
+
+TypeScript
+~~~~~~~~~~
+
+.. code-block:: typescript
+
+   function postorderTraversal(root: TreeNode | null): number[] {
+       if (root === null) return [];
+
+       const stack: TreeNode[] = [root];
+       const values: number[] = [];
+       while (stack.length > 0) {
+           const node = stack.pop()!;
+           values.push(node.val);
+           if (node.left !== null) stack.push(node.left);
+           if (node.right !== null) stack.push(node.right);
+       }
+       values.reverse();
+       return values;
+   }
+
+C#
+~~
+
+.. code-block:: csharp
+
+   using System.Collections.Generic;
+
+   public class Solution {
+       public IList<int> PostorderTraversal(TreeNode root) {
+           List<int> values = new();
+           if (root == null) return values;
+
+           Stack<TreeNode> stack = new();
+           stack.Push(root);
+           while (stack.Count > 0) {
+               TreeNode node = stack.Pop();
+               values.Add(node.val);
+               if (node.left != null) stack.Push(node.left);
+               if (node.right != null) stack.Push(node.right);
+           }
+           values.Reverse();
+           return values;
+       }
+   }
+
+Julia
+~~~~~
+
+.. code-block:: julia
+
+   function postorder_traversal(
+       root::Union{Nothing,TreeNode},
+   )::Vector{Int}
+       root === nothing && return Int[]
+
+       stack = TreeNode[root]
+       values = Int[]
+       while !isempty(stack)
+           node = pop!(stack)
+           push!(values, node.val)
+           node.left !== nothing && push!(stack, node.left)
+           node.right !== nothing && push!(stack, node.right)
+       end
+       reverse!(values)
+       return values
+   end
+
+R
+~
+
+.. code-block:: r
+
+   postorder_traversal <- function(root) {
+     if (is.null(root)) return(integer())
+
+     stack <- list(root)
+     values <- integer()
+     while (length(stack) > 0L) {
+       last <- length(stack)
+       node <- stack[[last]]
+       stack[[last]] <- NULL
+       values <- c(values, node$val)
+       if (!is.null(node$left)) stack[[length(stack) + 1L]] <- node$left
+       if (!is.null(node$right)) stack[[length(stack) + 1L]] <- node$right
+     }
+     rev(values)
+   }
 
 关键边界
 --------

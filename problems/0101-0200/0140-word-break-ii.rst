@@ -58,15 +58,495 @@ C++ 平台签名按值接收 ``s``，另有 ``O(n)`` 输入副本。R 适配器�
 核心语言实现
 ------------
 
-.. include:: 0140-word-break-ii-code-1.inc
+C
+~
 
-.. include:: 0140-word-break-ii-code-2.inc
+.. code-block:: c
 
-.. include:: 0140-word-break-ii-code-3.inc
+   #include <stdbool.h>
+   #include <stddef.h>
+   #include <stdlib.h>
+   #include <string.h>
 
-.. include:: 0140-word-break-ii-code-4.inc
+   typedef struct {
+       char **items;
+       int size;
+       int capacity;
+   } StringList;
 
-.. include:: 0140-word-break-ii-code-5.inc
+   static void free_list(StringList *list) {
+       for (int index = 0; index < list->size; ++index) {
+           free(list->items[index]);
+       }
+       free(list->items);
+       list->items = NULL;
+       list->size = 0;
+       list->capacity = 0;
+   }
+
+   static bool reserve_one(StringList *list) {
+       if (list->size < list->capacity) {
+           return true;
+       }
+       int next_capacity = list->capacity == 0
+           ? 4
+           : list->capacity * 2;
+       char **next = realloc(
+           list->items,
+           (size_t)next_capacity * sizeof(*next)
+       );
+       if (next == NULL) {
+           return false;
+       }
+       list->items = next;
+       list->capacity = next_capacity;
+       return true;
+   }
+
+   static bool append_sentence(
+       StringList *list,
+       const char *word,
+       size_t word_length,
+       const char *tail
+   ) {
+       if (!reserve_one(list)) {
+           return false;
+       }
+
+       size_t tail_length = strlen(tail);
+       size_t sentence_length = word_length +
+           (tail_length == 0 ? 0 : 1 + tail_length);
+       char *sentence = malloc(sentence_length + 1);
+       if (sentence == NULL) {
+           return false;
+       }
+
+       memcpy(sentence, word, word_length);
+       size_t cursor = word_length;
+       if (tail_length != 0) {
+           sentence[cursor++] = ' ';
+           memcpy(sentence + cursor, tail, tail_length);
+           cursor += tail_length;
+       }
+       sentence[cursor] = '\0';
+       list->items[list->size++] = sentence;
+       return true;
+   }
+
+   char **wordBreak(
+       char *s,
+       char **wordDict,
+       int wordDictSize,
+       int *returnSize
+   ) {
+       *returnSize = 0;
+       size_t n = strlen(s);
+       StringList *sentences = calloc(
+           n + 1,
+           sizeof(*sentences)
+       );
+       size_t *lengths = malloc(
+           (size_t)wordDictSize * sizeof(*lengths)
+       );
+       if (sentences == NULL || lengths == NULL) {
+           free(sentences);
+           free(lengths);
+           return NULL;
+       }
+
+       for (int index = 0; index < wordDictSize; ++index) {
+           lengths[index] = strlen(wordDict[index]);
+       }
+       if (!append_sentence(&sentences[n], "", 0, "")) {
+           for (size_t pos = 0; pos <= n; ++pos) {
+               free_list(&sentences[pos]);
+           }
+           free(lengths);
+           free(sentences);
+           return NULL;
+       }
+
+       for (size_t start = n; start-- > 0;) {
+           for (int index = 0; index < wordDictSize; ++index) {
+               size_t word_length = lengths[index];
+               size_t end = start + word_length;
+               if (end > n ||
+                   memcmp(
+                       s + start,
+                       wordDict[index],
+                       word_length
+                   ) != 0) {
+                   continue;
+               }
+
+               for (int tail_index = 0;
+                    tail_index < sentences[end].size;
+                    ++tail_index) {
+                   if (!append_sentence(
+                           &sentences[start],
+                           wordDict[index],
+                           word_length,
+                           sentences[end].items[tail_index]
+                       )) {
+                       for (size_t pos = 0; pos <= n; ++pos) {
+                           free_list(&sentences[pos]);
+                       }
+                       free(lengths);
+                       free(sentences);
+                       return NULL;
+                   }
+               }
+           }
+       }
+
+       char **answer = sentences[0].items;
+       *returnSize = sentences[0].size;
+       sentences[0].items = NULL;
+       sentences[0].size = 0;
+       sentences[0].capacity = 0;
+
+       for (size_t pos = 0; pos <= n; ++pos) {
+           free_list(&sentences[pos]);
+       }
+       free(lengths);
+       free(sentences);
+       return answer;
+   }
+
+C++
+~~~
+
+.. code-block:: cpp
+
+   #include <string>
+   #include <vector>
+
+   class Solution {
+   public:
+       std::vector<std::string> wordBreak(
+           std::string s,
+           std::vector<std::string>& wordDict
+       ) {
+           std::vector<std::vector<std::string>> sentences(
+               s.size() + 1
+           );
+           sentences[s.size()].push_back("");
+
+           for (std::size_t start = s.size(); start-- > 0;) {
+               for (const std::string& word : wordDict) {
+                   std::size_t end = start + word.size();
+                   if (end > s.size() ||
+                       s.compare(start, word.size(), word) != 0) {
+                       continue;
+                   }
+                   for (const std::string& tail : sentences[end]) {
+                       sentences[start].push_back(
+                           tail.empty()
+                               ? word
+                               : word + " " + tail
+                       );
+                   }
+               }
+           }
+           return sentences[0];
+       }
+   };
+
+Python
+~~~~~~
+
+.. code-block:: python
+
+   class Solution:
+       def wordBreak(
+           self,
+           s: str,
+           wordDict: list[str],
+       ) -> list[str]:
+           sentences: list[list[str]] = [
+               [] for _ in range(len(s) + 1)
+           ]
+           sentences[len(s)] = [""]
+
+           for start in range(len(s) - 1, -1, -1):
+               for word in wordDict:
+                   end = start + len(word)
+                   if end > len(s) or not s.startswith(word, start):
+                       continue
+                   for tail in sentences[end]:
+                       sentences[start].append(
+                           word if tail == "" else f"{word} {tail}"
+                       )
+
+           return sentences[0]
+
+Java
+~~~~
+
+.. code-block:: java
+
+   import java.util.ArrayList;
+   import java.util.List;
+
+   class Solution {
+       public List<String> wordBreak(
+           String s,
+           List<String> wordDict
+       ) {
+           List<List<String>> sentences = new ArrayList<>();
+           for (int index = 0; index <= s.length(); ++index) {
+               sentences.add(new ArrayList<>());
+           }
+           sentences.get(s.length()).add("");
+
+           for (int start = s.length() - 1; start >= 0; --start) {
+               for (String word : wordDict) {
+                   int end = start + word.length();
+                   if (end > s.length() ||
+                       !s.startsWith(word, start)) {
+                       continue;
+                   }
+                   for (String tail : sentences.get(end)) {
+                       sentences.get(start).add(
+                           tail.isEmpty()
+                               ? word
+                               : word + " " + tail
+                       );
+                   }
+               }
+           }
+           return sentences.get(0);
+       }
+   }
+
+Rust
+~~~~
+
+.. code-block:: rust
+
+   impl Solution {
+       pub fn word_break(
+           s: String,
+           word_dict: Vec<String>,
+       ) -> Vec<String> {
+           let source = s.as_bytes();
+           let mut sentences = vec![Vec::<String>::new(); source.len() + 1];
+           sentences[source.len()].push(String::new());
+
+           for start in (0..source.len()).rev() {
+               let mut current = Vec::<String>::new();
+               for word in &word_dict {
+                   let word_bytes = word.as_bytes();
+                   let end = start + word_bytes.len();
+                   if end > source.len()
+                       || &source[start..end] != word_bytes
+                   {
+                       continue;
+                   }
+
+                   for tail in &sentences[end] {
+                       if tail.is_empty() {
+                           current.push(word.clone());
+                       } else {
+                           current.push(format!("{} {}", word, tail));
+                       }
+                   }
+               }
+               sentences[start] = current;
+           }
+           sentences.remove(0)
+       }
+   }
+
+Go
+~~
+
+.. code-block:: go
+
+   import "strings"
+
+   func wordBreak(s string, wordDict []string) []string {
+       sentences := make([][]string, len(s)+1)
+       sentences[len(s)] = []string{""}
+
+       for start := len(s) - 1; start >= 0; start-- {
+           current := make([]string, 0)
+           for _, word := range wordDict {
+               end := start + len(word)
+               if end > len(s) ||
+                   !strings.HasPrefix(s[start:], word) {
+                   continue
+               }
+               for _, tail := range sentences[end] {
+                   if tail == "" {
+                       current = append(current, word)
+                   } else {
+                       current = append(
+                           current,
+                           word+" "+tail,
+                       )
+                   }
+               }
+           }
+           sentences[start] = current
+       }
+       return sentences[0]
+   }
+
+TypeScript
+~~~~~~~~~~
+
+.. code-block:: typescript
+
+   function wordBreak(s: string, wordDict: string[]): string[] {
+       const sentences: string[][] = Array.from(
+           { length: s.length + 1 },
+           () => [],
+       );
+       sentences[s.length].push("");
+
+       for (let start = s.length - 1; start >= 0; start -= 1) {
+           for (const word of wordDict) {
+               const end = start + word.length;
+               if (end > s.length || !s.startsWith(word, start)) {
+                   continue;
+               }
+               for (const tail of sentences[end]) {
+                   sentences[start].push(
+                       tail === "" ? word : `${word} ${tail}`,
+                   );
+               }
+           }
+       }
+       return sentences[0];
+   }
+
+C#
+~~
+
+.. code-block:: csharp
+
+   using System;
+   using System.Collections.Generic;
+
+   public class Solution {
+       public IList<string> WordBreak(
+           string s,
+           IList<string> wordDict
+       ) {
+           List<string>[] sentences =
+               new List<string>[s.Length + 1];
+           for (int index = 0; index <= s.Length; ++index) {
+               sentences[index] = new List<string>();
+           }
+           sentences[s.Length].Add("");
+
+           for (int start = s.Length - 1; start >= 0; --start) {
+               foreach (string word in wordDict) {
+                   int end = start + word.Length;
+                   if (end > s.Length ||
+                       string.CompareOrdinal(
+                           s, start, word, 0, word.Length
+                       ) != 0) {
+                       continue;
+                   }
+                   foreach (string tail in sentences[end]) {
+                       sentences[start].Add(
+                           tail.Length == 0
+                               ? word
+                               : word + " " + tail
+                       );
+                   }
+               }
+           }
+           return sentences[0];
+       }
+   }
+
+Julia
+~~~~~
+
+.. code-block:: julia
+
+   function word_break_ii(
+       s::String,
+       word_dict::Vector{String},
+   )::Vector{String}
+       source = codeunits(s)
+       words = [(word, codeunits(word)) for word in word_dict]
+       n = length(source)
+       sentences = [String[] for _ in 1:(n + 1)]
+       push!(sentences[n + 1], "")
+
+       for start0 in (n - 1):-1:0
+           current = String[]
+           for (word, bytes) in words
+               end0 = start0 + length(bytes)
+               end0 <= n || continue
+
+               same = true
+               for offset in 1:length(bytes)
+                   if source[start0 + offset] != bytes[offset]
+                       same = false
+                       break
+                   end
+               end
+               same || continue
+
+               for tail in sentences[end0 + 1]
+                   push!(
+                       current,
+                       isempty(tail)
+                           ? word
+                           : string(word, " ", tail),
+                   )
+               end
+           end
+           sentences[start0 + 1] = current
+       end
+       return sentences[1]
+   end
+
+R
+~
+
+.. code-block:: r
+
+   word_break_ii <- function(s, word_dict) {
+     n <- nchar(s, type = "bytes")
+     sentences <- vector("list", n + 1L)
+     for (index in seq_len(n + 1L)) {
+       sentences[[index]] <- character(0)
+     }
+     sentences[[n + 1L]] <- ""
+
+     for (start0 in seq.int(n - 1L, 0L, by = -1L)) {
+       current <- list()
+       count <- 0L
+       for (word in word_dict) {
+         word_length <- nchar(word, type = "bytes")
+         end0 <- start0 + word_length
+         if (end0 > n ||
+             substr(s, start0 + 1L, end0) != word) {
+           next
+         }
+         for (tail in sentences[[end0 + 1L]]) {
+           count <- count + 1L
+           current[[count]] <- if (tail == "") {
+             word
+           } else {
+             paste(word, tail)
+           }
+         }
+       }
+       sentences[[start0 + 1L]] <- if (count == 0L) {
+         character(0)
+       } else {
+         unlist(current, use.names = FALSE)
+       }
+     }
+     sentences[[1L]]
+   }
 
 关键边界
 --------

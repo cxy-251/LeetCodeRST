@@ -47,15 +47,269 @@
 核心语言实现
 ------------
 
-.. include:: 0135-candy-code-1.inc
+C
+~
 
-.. include:: 0135-candy-code-2.inc
+.. code-block:: c
 
-.. include:: 0135-candy-code-3.inc
+   #include <stdlib.h>
 
-.. include:: 0135-candy-code-4.inc
+   int candy(int *ratings, int ratingsSize) {
+       int *candies = malloc((size_t)ratingsSize * sizeof(*candies));
+       if (candies == NULL) {
+           return 0;
+       }
+       for (int i = 0; i < ratingsSize; ++i) {
+           candies[i] = 1;
+       }
+       for (int i = 1; i < ratingsSize; ++i) {
+           if (ratings[i] > ratings[i - 1]) {
+               candies[i] = candies[i - 1] + 1;
+           }
+       }
+       for (int i = ratingsSize - 2; i >= 0; --i) {
+           if (ratings[i] > ratings[i + 1] &&
+               candies[i] <= candies[i + 1]) {
+               candies[i] = candies[i + 1] + 1;
+           }
+       }
+       int total = 0;
+       for (int i = 0; i < ratingsSize; ++i) {
+           total += candies[i];
+       }
+       free(candies);
+       return total;
+   }
 
-.. include:: 0135-candy-code-5.inc
+C++
+~~~
+
+.. code-block:: cpp
+
+   #include <algorithm>
+   #include <numeric>
+   #include <vector>
+
+   class Solution {
+   public:
+       int candy(std::vector<int>& ratings) {
+           int n = static_cast<int>(ratings.size());
+           std::vector<int> candies(n, 1);
+           for (int i = 1; i < n; ++i) {
+               if (ratings[i] > ratings[i - 1]) {
+                   candies[i] = candies[i - 1] + 1;
+               }
+           }
+           for (int i = n - 2; i >= 0; --i) {
+               if (ratings[i] > ratings[i + 1]) {
+                   candies[i] = std::max(
+                       candies[i], candies[i + 1] + 1
+                   );
+               }
+           }
+           return std::accumulate(candies.begin(), candies.end(), 0);
+       }
+   };
+
+Python
+~~~~~~
+
+.. code-block:: python
+
+   class Solution:
+       def candy(self, ratings: list[int]) -> int:
+           candies = [1] * len(ratings)
+           for index in range(1, len(ratings)):
+               if ratings[index] > ratings[index - 1]:
+                   candies[index] = candies[index - 1] + 1
+           for index in range(len(ratings) - 2, -1, -1):
+               if ratings[index] > ratings[index + 1]:
+                   candies[index] = max(
+                       candies[index],
+                       candies[index + 1] + 1,
+                   )
+           return sum(candies)
+
+Java
+~~~~
+
+.. code-block:: java
+
+   import java.util.Arrays;
+
+   class Solution {
+       public int candy(int[] ratings) {
+           int[] candies = new int[ratings.length];
+           Arrays.fill(candies, 1);
+           for (int i = 1; i < ratings.length; ++i) {
+               if (ratings[i] > ratings[i - 1]) {
+                   candies[i] = candies[i - 1] + 1;
+               }
+           }
+           for (int i = ratings.length - 2; i >= 0; --i) {
+               if (ratings[i] > ratings[i + 1]) {
+                   candies[i] = Math.max(
+                       candies[i], candies[i + 1] + 1
+                   );
+               }
+           }
+           int total = 0;
+           for (int value : candies) total += value;
+           return total;
+       }
+   }
+
+Rust
+~~~~
+
+.. code-block:: rust
+
+   impl Solution {
+       pub fn candy(ratings: Vec<i32>) -> i32 {
+           let n = ratings.len();
+           let mut candies = vec![1_i32; n];
+           for index in 1..n {
+               if ratings[index] > ratings[index - 1] {
+                   candies[index] = candies[index - 1] + 1;
+               }
+           }
+           for index in (0..n - 1).rev() {
+               if ratings[index] > ratings[index + 1] {
+                   candies[index] = candies[index].max(
+                       candies[index + 1] + 1,
+                   );
+               }
+           }
+           candies.into_iter().sum()
+       }
+   }
+
+Go
+~~
+
+.. code-block:: go
+
+   func candy(ratings []int) int {
+       candies := make([]int, len(ratings))
+       for index := range candies {
+           candies[index] = 1
+       }
+       for index := 1; index < len(ratings); index++ {
+           if ratings[index] > ratings[index-1] {
+               candies[index] = candies[index-1] + 1
+           }
+       }
+       for index := len(ratings) - 2; index >= 0; index-- {
+           if ratings[index] > ratings[index+1] &&
+               candies[index] <= candies[index+1] {
+               candies[index] = candies[index+1] + 1
+           }
+       }
+       total := 0
+       for _, value := range candies {
+           total += value
+       }
+       return total
+   }
+
+TypeScript
+~~~~~~~~~~
+
+.. code-block:: typescript
+
+   function candy(ratings: number[]): number {
+       const candies = Array<number>(ratings.length).fill(1);
+       for (let index = 1; index < ratings.length; index++) {
+           if (ratings[index] > ratings[index - 1]) {
+               candies[index] = candies[index - 1] + 1;
+           }
+       }
+       for (let index = ratings.length - 2; index >= 0; index--) {
+           if (ratings[index] > ratings[index + 1]) {
+               candies[index] = Math.max(
+                   candies[index],
+                   candies[index + 1] + 1,
+               );
+           }
+       }
+       return candies.reduce((sum, value) => sum + value, 0);
+   }
+
+C#
+~~
+
+.. code-block:: csharp
+
+   public class Solution {
+       public int Candy(int[] ratings) {
+           int[] candies = new int[ratings.Length];
+           Array.Fill(candies, 1);
+           for (int index = 1; index < ratings.Length; ++index) {
+               if (ratings[index] > ratings[index - 1]) {
+                   candies[index] = candies[index - 1] + 1;
+               }
+           }
+           for (int index = ratings.Length - 2; index >= 0; --index) {
+               if (ratings[index] > ratings[index + 1]) {
+                   candies[index] = Math.Max(
+                       candies[index], candies[index + 1] + 1
+                   );
+               }
+           }
+           int total = 0;
+           foreach (int value in candies) total += value;
+           return total;
+       }
+   }
+
+Julia
+~~~~~
+
+.. code-block:: julia
+
+   function candy(ratings::Vector{Int})::Int
+       candies = ones(Int, length(ratings))
+       for index in 2:length(ratings)
+           if ratings[index] > ratings[index - 1]
+               candies[index] = candies[index - 1] + 1
+           end
+       end
+       for index in length(ratings)-1:-1:1
+           if ratings[index] > ratings[index + 1]
+               candies[index] = max(
+                   candies[index],
+                   candies[index + 1] + 1,
+               )
+           end
+       end
+       return sum(candies)
+   end
+
+R
+~
+
+.. code-block:: r
+
+   candy <- function(ratings) {
+     n <- length(ratings)
+     candies <- rep.int(1L, n)
+     if (n >= 2L) {
+       for (index in 2L:n) {
+         if (ratings[[index]] > ratings[[index - 1L]]) {
+           candies[[index]] <- candies[[index - 1L]] + 1L
+         }
+       }
+       for (index in seq.int(n - 1L, 1L, by = -1L)) {
+         if (ratings[[index]] > ratings[[index + 1L]]) {
+           candies[[index]] <- max(
+             candies[[index]],
+             candies[[index + 1L]] + 1L
+           )
+         }
+       }
+     }
+     sum(candies)
+   }
 
 关键边界
 --------

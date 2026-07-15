@@ -42,15 +42,366 @@ R 适配器使用哈希环境保存栈和输出槽位，最后物化整数向量
 核心语言实现
 ------------
 
-.. include:: 0144-binary-tree-preorder-traversal-code-1.inc
+C
+~
 
-.. include:: 0144-binary-tree-preorder-traversal-code-2.inc
+.. code-block:: c
 
-.. include:: 0144-binary-tree-preorder-traversal-code-3.inc
+   #include <stddef.h>
+   #include <stdlib.h>
 
-.. include:: 0144-binary-tree-preorder-traversal-code-4.inc
+   static int grow_buffer(
+       void **buffer,
+       size_t *capacity,
+       size_t element_size
+   ) {
+       size_t next_capacity = *capacity == 0 ? 16 : *capacity * 2;
+       void *next = realloc(
+           *buffer,
+           next_capacity * element_size
+       );
+       if (next == NULL) {
+           return 0;
+       }
+       *buffer = next;
+       *capacity = next_capacity;
+       return 1;
+   }
 
-.. include:: 0144-binary-tree-preorder-traversal-code-5.inc
+   int *preorderTraversal(
+       struct TreeNode *root,
+       int *returnSize
+   ) {
+       *returnSize = 0;
+       if (root == NULL) {
+           return NULL;
+       }
+
+       struct TreeNode **stack = NULL;
+       size_t stack_size = 0;
+       size_t stack_capacity = 0;
+       int *values = NULL;
+       size_t values_capacity = 0;
+
+       if (!grow_buffer(
+               (void **)&stack,
+               &stack_capacity,
+               sizeof(*stack)
+           )) {
+           return NULL;
+       }
+       stack[stack_size++] = root;
+
+       while (stack_size > 0) {
+           struct TreeNode *node = stack[--stack_size];
+
+           if ((size_t)*returnSize == values_capacity &&
+               !grow_buffer(
+                   (void **)&values,
+                   &values_capacity,
+                   sizeof(*values)
+               )) {
+               free(stack);
+               free(values);
+               *returnSize = 0;
+               return NULL;
+           }
+           values[(*returnSize)++] = node->val;
+
+           if (node->right != NULL) {
+               if (stack_size == stack_capacity &&
+                   !grow_buffer(
+                       (void **)&stack,
+                       &stack_capacity,
+                       sizeof(*stack)
+                   )) {
+                   free(stack);
+                   free(values);
+                   *returnSize = 0;
+                   return NULL;
+               }
+               stack[stack_size++] = node->right;
+           }
+           if (node->left != NULL) {
+               if (stack_size == stack_capacity &&
+                   !grow_buffer(
+                       (void **)&stack,
+                       &stack_capacity,
+                       sizeof(*stack)
+                   )) {
+                   free(stack);
+                   free(values);
+                   *returnSize = 0;
+                   return NULL;
+               }
+               stack[stack_size++] = node->left;
+           }
+       }
+
+       free(stack);
+       return values;
+   }
+
+C++
+~~~
+
+.. code-block:: cpp
+
+   #include <vector>
+
+   class Solution {
+   public:
+       std::vector<int> preorderTraversal(TreeNode *root) {
+           std::vector<int> values;
+           if (root == nullptr) {
+               return values;
+           }
+
+           std::vector<TreeNode *> stack{root};
+           while (!stack.empty()) {
+               TreeNode *node = stack.back();
+               stack.pop_back();
+               values.push_back(node->val);
+
+               if (node->right != nullptr) {
+                   stack.push_back(node->right);
+               }
+               if (node->left != nullptr) {
+                   stack.push_back(node->left);
+               }
+           }
+           return values;
+       }
+   };
+
+Python
+~~~~~~
+
+.. code-block:: python
+
+   class Solution:
+       def preorderTraversal(
+           self,
+           root: Optional[TreeNode],
+       ) -> list[int]:
+           if root is None:
+               return []
+
+           values: list[int] = []
+           stack = [root]
+           while stack:
+               node = stack.pop()
+               values.append(node.val)
+
+               if node.right is not None:
+                   stack.append(node.right)
+               if node.left is not None:
+                   stack.append(node.left)
+
+           return values
+
+Java
+~~~~
+
+.. code-block:: java
+
+   import java.util.ArrayDeque;
+   import java.util.ArrayList;
+   import java.util.Deque;
+   import java.util.List;
+
+   class Solution {
+       public List<Integer> preorderTraversal(TreeNode root) {
+           List<Integer> values = new ArrayList<>();
+           if (root == null) return values;
+
+           Deque<TreeNode> stack = new ArrayDeque<>();
+           stack.push(root);
+
+           while (!stack.isEmpty()) {
+               TreeNode node = stack.pop();
+               values.add(node.val);
+
+               if (node.right != null) stack.push(node.right);
+               if (node.left != null) stack.push(node.left);
+           }
+           return values;
+       }
+   }
+
+Rust
+~~~~
+
+.. code-block:: rust
+
+   use std::cell::RefCell;
+   use std::rc::Rc;
+
+   impl Solution {
+       pub fn preorder_traversal(
+           root: Option<Rc<RefCell<TreeNode>>>,
+       ) -> Vec<i32> {
+           let mut values = Vec::new();
+           let Some(root_node) = root else {
+               return values;
+           };
+
+           let mut stack = vec![root_node];
+           while let Some(node) = stack.pop() {
+               let borrowed = node.borrow();
+               values.push(borrowed.val);
+
+               if let Some(right) = borrowed.right.clone() {
+                   stack.push(right);
+               }
+               if let Some(left) = borrowed.left.clone() {
+                   stack.push(left);
+               }
+           }
+           values
+       }
+   }
+
+Go
+~~
+
+.. code-block:: go
+
+   func preorderTraversal(root *TreeNode) []int {
+       if root == nil {
+           return []int{}
+       }
+
+       values := make([]int, 0)
+       stack := []*TreeNode{root}
+
+       for len(stack) > 0 {
+           last := len(stack) - 1
+           node := stack[last]
+           stack = stack[:last]
+           values = append(values, node.Val)
+
+           if node.Right != nil {
+               stack = append(stack, node.Right)
+           }
+           if node.Left != nil {
+               stack = append(stack, node.Left)
+           }
+       }
+       return values
+   }
+
+TypeScript
+~~~~~~~~~~
+
+.. code-block:: typescript
+
+   function preorderTraversal(root: TreeNode | null): number[] {
+       if (root === null) return [];
+
+       const values: number[] = [];
+       const stack: TreeNode[] = [root];
+
+       while (stack.length > 0) {
+           const node = stack.pop()!;
+           values.push(node.val);
+
+           if (node.right !== null) stack.push(node.right);
+           if (node.left !== null) stack.push(node.left);
+       }
+       return values;
+   }
+
+C#
+~~
+
+.. code-block:: csharp
+
+   using System.Collections.Generic;
+
+   public class Solution {
+       public IList<int> PreorderTraversal(TreeNode root) {
+           List<int> values = new();
+           if (root == null) return values;
+
+           Stack<TreeNode> stack = new();
+           stack.Push(root);
+
+           while (stack.Count > 0) {
+               TreeNode node = stack.Pop();
+               values.Add(node.val);
+
+               if (node.right != null) stack.Push(node.right);
+               if (node.left != null) stack.Push(node.left);
+           }
+           return values;
+       }
+   }
+
+Julia
+~~~~~
+
+.. code-block:: julia
+
+   function preorder_traversal(
+       root::Union{Nothing,TreeNode},
+   )::Vector{Int}
+       root === nothing && return Int[]
+
+       values = Int[]
+       stack = TreeNode[root]
+
+       while !isempty(stack)
+           node = pop!(stack)
+           push!(values, node.val)
+
+           node.right !== nothing && push!(stack, node.right)
+           node.left !== nothing && push!(stack, node.left)
+       end
+       return values
+   end
+
+R
+~
+
+.. code-block:: r
+
+   preorder_traversal <- function(root) {
+     if (is.null(root)) return(integer())
+
+     stack <- new.env(hash = TRUE, parent = emptyenv())
+     values <- new.env(hash = TRUE, parent = emptyenv())
+     top <- 1L
+     count <- 0L
+     assign("1", root, envir = stack)
+
+     while (top > 0L) {
+       key <- as.character(top)
+       node <- get(key, envir = stack, inherits = FALSE)
+       rm(list = key, envir = stack)
+       top <- top - 1L
+
+       count <- count + 1L
+       assign(as.character(count), node$val, envir = values)
+
+       if (!is.null(node$right)) {
+         top <- top + 1L
+         assign(as.character(top), node$right, envir = stack)
+       }
+       if (!is.null(node$left)) {
+         top <- top + 1L
+         assign(as.character(top), node$left, envir = stack)
+       }
+     }
+
+     vapply(
+       seq_len(count),
+       function(index) {
+         get(as.character(index), envir = values, inherits = FALSE)
+       },
+       integer(1L)
+     )
+   }
 
 关键边界
 --------

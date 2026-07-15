@@ -50,15 +50,300 @@ R 的 ``substr`` 会物化比较片段，累计分配量可能达到 ``O(nC)``�
 核心语言实现
 ------------
 
-.. include:: 0139-word-break-code-1.inc
+C
+~
 
-.. include:: 0139-word-break-code-2.inc
+.. code-block:: c
 
-.. include:: 0139-word-break-code-3.inc
+   #include <stdbool.h>
+   #include <stddef.h>
+   #include <stdlib.h>
+   #include <string.h>
 
-.. include:: 0139-word-break-code-4.inc
+   bool wordBreak(char *s, char **wordDict, int wordDictSize) {
+       size_t n = strlen(s);
+       bool *reachable = calloc(n + 1, sizeof(*reachable));
+       size_t *lengths = malloc(
+           (size_t)wordDictSize * sizeof(*lengths)
+       );
+       if (reachable == NULL || lengths == NULL) {
+           free(reachable);
+           free(lengths);
+           return false;
+       }
 
-.. include:: 0139-word-break-code-5.inc
+       for (int index = 0; index < wordDictSize; ++index) {
+           lengths[index] = strlen(wordDict[index]);
+       }
+
+       reachable[0] = true;
+       for (size_t start = 0; start < n; ++start) {
+           if (!reachable[start]) {
+               continue;
+           }
+           for (int index = 0; index < wordDictSize; ++index) {
+               size_t length = lengths[index];
+               size_t end = start + length;
+               if (end <= n &&
+                   memcmp(s + start, wordDict[index], length) == 0) {
+                   reachable[end] = true;
+               }
+           }
+       }
+
+       bool answer = reachable[n];
+       free(lengths);
+       free(reachable);
+       return answer;
+   }
+
+C++
+~~~
+
+.. code-block:: cpp
+
+   #include <string>
+   #include <vector>
+
+   class Solution {
+   public:
+       bool wordBreak(
+           std::string s,
+           std::vector<std::string>& wordDict
+       ) {
+           std::vector<char> reachable(s.size() + 1, false);
+           reachable[0] = true;
+
+           for (std::size_t start = 0; start < s.size(); ++start) {
+               if (!reachable[start]) {
+                   continue;
+               }
+               for (const std::string& word : wordDict) {
+                   std::size_t end = start + word.size();
+                   if (end <= s.size() &&
+                       s.compare(start, word.size(), word) == 0) {
+                       reachable[end] = true;
+                   }
+               }
+           }
+           return reachable[s.size()];
+       }
+   };
+
+Python
+~~~~~~
+
+.. code-block:: python
+
+   class Solution:
+       def wordBreak(self, s: str, wordDict: list[str]) -> bool:
+           reachable = [False] * (len(s) + 1)
+           reachable[0] = True
+
+           for start in range(len(s)):
+               if not reachable[start]:
+                   continue
+               for word in wordDict:
+                   end = start + len(word)
+                   if end <= len(s) and s.startswith(word, start):
+                       reachable[end] = True
+
+           return reachable[len(s)]
+
+Java
+~~~~
+
+.. code-block:: java
+
+   import java.util.List;
+
+   class Solution {
+       public boolean wordBreak(String s, List<String> wordDict) {
+           boolean[] reachable = new boolean[s.length() + 1];
+           reachable[0] = true;
+
+           for (int start = 0; start < s.length(); ++start) {
+               if (!reachable[start]) continue;
+               for (String word : wordDict) {
+                   int end = start + word.length();
+                   if (end <= s.length() && s.startsWith(word, start)) {
+                       reachable[end] = true;
+                   }
+               }
+           }
+           return reachable[s.length()];
+       }
+   }
+
+Rust
+~~~~
+
+.. code-block:: rust
+
+   impl Solution {
+       pub fn word_break(
+           s: String,
+           word_dict: Vec<String>,
+       ) -> bool {
+           let source = s.as_bytes();
+           let words: Vec<&[u8]> = word_dict
+               .iter()
+               .map(|word| word.as_bytes())
+               .collect();
+           let mut reachable = vec![false; source.len() + 1];
+           reachable[0] = true;
+
+           for start in 0..source.len() {
+               if !reachable[start] {
+                   continue;
+               }
+               for word in &words {
+                   let end = start + word.len();
+                   if end <= source.len()
+                       && &source[start..end] == *word
+                   {
+                       reachable[end] = true;
+                   }
+               }
+           }
+           reachable[source.len()]
+       }
+   }
+
+Go
+~~
+
+.. code-block:: go
+
+   import "strings"
+
+   func wordBreak(s string, wordDict []string) bool {
+       reachable := make([]bool, len(s)+1)
+       reachable[0] = true
+
+       for start := 0; start < len(s); start++ {
+           if !reachable[start] {
+               continue
+           }
+           for _, word := range wordDict {
+               end := start + len(word)
+               if end <= len(s) &&
+                   strings.HasPrefix(s[start:], word) {
+                   reachable[end] = true
+               }
+           }
+       }
+       return reachable[len(s)]
+   }
+
+TypeScript
+~~~~~~~~~~
+
+.. code-block:: typescript
+
+   function wordBreak(s: string, wordDict: string[]): boolean {
+       const reachable = new Array<boolean>(s.length + 1).fill(false);
+       reachable[0] = true;
+
+       for (let start = 0; start < s.length; start += 1) {
+           if (!reachable[start]) continue;
+           for (const word of wordDict) {
+               const end = start + word.length;
+               if (end <= s.length && s.startsWith(word, start)) {
+                   reachable[end] = true;
+               }
+           }
+       }
+       return reachable[s.length];
+   }
+
+C#
+~~
+
+.. code-block:: csharp
+
+   using System;
+   using System.Collections.Generic;
+
+   public class Solution {
+       public bool WordBreak(string s, IList<string> wordDict) {
+           bool[] reachable = new bool[s.Length + 1];
+           reachable[0] = true;
+
+           for (int start = 0; start < s.Length; ++start) {
+               if (!reachable[start]) continue;
+               foreach (string word in wordDict) {
+                   int end = start + word.Length;
+                   if (end <= s.Length &&
+                       string.CompareOrdinal(
+                           s, start, word, 0, word.Length
+                       ) == 0) {
+                       reachable[end] = true;
+                   }
+               }
+           }
+           return reachable[s.Length];
+       }
+   }
+
+Julia
+~~~~~
+
+.. code-block:: julia
+
+   function word_break(
+       s::String,
+       word_dict::Vector{String},
+   )::Bool
+       source = codeunits(s)
+       words = [codeunits(word) for word in word_dict]
+       n = length(source)
+       reachable = falses(n + 1)
+       reachable[1] = true
+
+       for start0 in 0:(n - 1)
+           reachable[start0 + 1] || continue
+           for word in words
+               length_word = length(word)
+               end0 = start0 + length_word
+               end0 <= n || continue
+
+               same = true
+               for offset in 1:length_word
+                   if source[start0 + offset] != word[offset]
+                       same = false
+                       break
+                   end
+               end
+               same && (reachable[end0 + 1] = true)
+           end
+       end
+       return reachable[n + 1]
+   end
+
+R
+~
+
+.. code-block:: r
+
+   word_break <- function(s, word_dict) {
+     n <- nchar(s, type = "bytes")
+     reachable <- rep(FALSE, n + 1L)
+     reachable[1L] <- TRUE
+
+     for (start0 in seq.int(0L, n - 1L)) {
+       if (!reachable[start0 + 1L]) next
+       for (word in word_dict) {
+         word_length <- nchar(word, type = "bytes")
+         end0 <- start0 + word_length
+         if (end0 <= n &&
+             substr(s, start0 + 1L, end0) == word) {
+           reachable[end0 + 1L] <- TRUE
+         }
+       }
+     }
+     reachable[n + 1L]
+   }
 
 关键边界
 --------

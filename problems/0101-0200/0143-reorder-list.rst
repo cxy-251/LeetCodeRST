@@ -48,15 +48,426 @@ Julia 和 R 的节点为引用对象，修改对调用者可见。
 核心语言实现
 ------------
 
-.. include:: 0143-reorder-list-code-1.inc
+C
+~
 
-.. include:: 0143-reorder-list-code-2.inc
+.. code-block:: c
 
-.. include:: 0143-reorder-list-code-3.inc
+   void reorderList(struct ListNode *head) {
+       if (head == NULL || head->next == NULL) {
+           return;
+       }
 
-.. include:: 0143-reorder-list-code-4.inc
+       struct ListNode *slow = head;
+       struct ListNode *fast = head->next;
+       while (fast != NULL && fast->next != NULL) {
+           slow = slow->next;
+           fast = fast->next->next;
+       }
 
-.. include:: 0143-reorder-list-code-5.inc
+       struct ListNode *second = slow->next;
+       slow->next = NULL;
+
+       struct ListNode *previous = NULL;
+       while (second != NULL) {
+           struct ListNode *next = second->next;
+           second->next = previous;
+           previous = second;
+           second = next;
+       }
+
+       struct ListNode *first = head;
+       second = previous;
+       while (second != NULL) {
+           struct ListNode *first_next = first->next;
+           struct ListNode *second_next = second->next;
+           first->next = second;
+           second->next = first_next;
+           first = first_next;
+           second = second_next;
+       }
+   }
+
+C++
+~~~
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       void reorderList(ListNode *head) {
+           if (head == nullptr || head->next == nullptr) {
+               return;
+           }
+
+           ListNode *slow = head;
+           ListNode *fast = head->next;
+           while (fast != nullptr && fast->next != nullptr) {
+               slow = slow->next;
+               fast = fast->next->next;
+           }
+
+           ListNode *second = slow->next;
+           slow->next = nullptr;
+
+           ListNode *previous = nullptr;
+           while (second != nullptr) {
+               ListNode *next = second->next;
+               second->next = previous;
+               previous = second;
+               second = next;
+           }
+
+           ListNode *first = head;
+           second = previous;
+           while (second != nullptr) {
+               ListNode *firstNext = first->next;
+               ListNode *secondNext = second->next;
+               first->next = second;
+               second->next = firstNext;
+               first = firstNext;
+               second = secondNext;
+           }
+       }
+   };
+
+Python
+~~~~~~
+
+.. code-block:: python
+
+   class Solution:
+       def reorderList(self, head: Optional[ListNode]) -> None:
+           if head is None or head.next is None:
+               return
+
+           slow = head
+           fast = head.next
+           while fast is not None and fast.next is not None:
+               slow = slow.next
+               fast = fast.next.next
+
+           second = slow.next
+           slow.next = None
+
+           previous = None
+           while second is not None:
+               following = second.next
+               second.next = previous
+               previous = second
+               second = following
+
+           first = head
+           second = previous
+           while second is not None:
+               first_next = first.next
+               second_next = second.next
+               first.next = second
+               second.next = first_next
+               first = first_next
+               second = second_next
+
+Java
+~~~~
+
+.. code-block:: java
+
+   class Solution {
+       public void reorderList(ListNode head) {
+           if (head == null || head.next == null) return;
+
+           ListNode slow = head;
+           ListNode fast = head.next;
+           while (fast != null && fast.next != null) {
+               slow = slow.next;
+               fast = fast.next.next;
+           }
+
+           ListNode second = slow.next;
+           slow.next = null;
+
+           ListNode previous = null;
+           while (second != null) {
+               ListNode next = second.next;
+               second.next = previous;
+               previous = second;
+               second = next;
+           }
+
+           ListNode first = head;
+           second = previous;
+           while (second != null) {
+               ListNode firstNext = first.next;
+               ListNode secondNext = second.next;
+               first.next = second;
+               second.next = firstNext;
+               first = firstNext;
+               second = secondNext;
+           }
+       }
+   }
+
+Rust
+~~~~
+
+.. code-block:: rust
+
+   use std::cell::RefCell;
+   use std::rc::Rc;
+
+   impl Solution {
+       pub fn reorder_list(
+           head: &mut Option<Rc<RefCell<ListNode>>>,
+       ) {
+           fn next(
+               node: &Option<Rc<RefCell<ListNode>>>,
+           ) -> Option<Rc<RefCell<ListNode>>> {
+               node.as_ref()
+                   .and_then(|current| current.borrow().next.clone())
+           }
+
+           if next(head).is_none() {
+               return;
+           }
+
+           let mut slow = head.clone();
+           let mut fast = next(head);
+           while fast.is_some() {
+               let fast_once = next(&fast);
+               if fast_once.is_none() {
+                   break;
+               }
+               slow = next(&slow);
+               fast = next(&fast_once);
+           }
+
+           let mut second = slow
+               .as_ref()
+               .and_then(|node| node.borrow_mut().next.take());
+           let mut previous = None;
+           while let Some(node) = second {
+               let following = node.borrow_mut().next.take();
+               node.borrow_mut().next = previous;
+               previous = Some(node);
+               second = following;
+           }
+
+           let mut first = head.clone();
+           second = previous;
+           while let Some(second_node) = second {
+               let first_node = first.expect(
+                   "the first half is never shorter",
+               );
+               let first_next = first_node.borrow_mut().next.take();
+               let second_next = second_node.borrow_mut().next.take();
+
+               first_node.borrow_mut().next =
+                   Some(second_node.clone());
+               second_node.borrow_mut().next = first_next.clone();
+
+               first = first_next;
+               second = second_next;
+           }
+       }
+   }
+
+Go
+~~
+
+.. code-block:: go
+
+   func reorderList(head *ListNode) {
+       if head == nil || head.Next == nil {
+           return
+       }
+
+       slow := head
+       fast := head.Next
+       for fast != nil && fast.Next != nil {
+           slow = slow.Next
+           fast = fast.Next.Next
+       }
+
+       second := slow.Next
+       slow.Next = nil
+
+       var previous *ListNode
+       for second != nil {
+           next := second.Next
+           second.Next = previous
+           previous = second
+           second = next
+       }
+
+       first := head
+       second = previous
+       for second != nil {
+           firstNext := first.Next
+           secondNext := second.Next
+           first.Next = second
+           second.Next = firstNext
+           first = firstNext
+           second = secondNext
+       }
+   }
+
+TypeScript
+~~~~~~~~~~
+
+.. code-block:: typescript
+
+   function reorderList(head: ListNode | null): void {
+       if (head === null || head.next === null) return;
+
+       let slow: ListNode = head;
+       let fast: ListNode | null = head.next;
+       while (fast !== null && fast.next !== null) {
+           slow = slow.next!;
+           fast = fast.next.next;
+       }
+
+       let second = slow.next;
+       slow.next = null;
+
+       let previous: ListNode | null = null;
+       while (second !== null) {
+           const following = second.next;
+           second.next = previous;
+           previous = second;
+           second = following;
+       }
+
+       let first: ListNode | null = head;
+       second = previous;
+       while (second !== null) {
+           const firstNext = first!.next;
+           const secondNext = second.next;
+           first!.next = second;
+           second.next = firstNext;
+           first = firstNext;
+           second = secondNext;
+       }
+   }
+
+C#
+~~
+
+.. code-block:: csharp
+
+   public class Solution {
+       public void ReorderList(ListNode head) {
+           if (head == null || head.next == null) return;
+
+           ListNode slow = head;
+           ListNode fast = head.next;
+           while (fast != null && fast.next != null) {
+               slow = slow.next;
+               fast = fast.next.next;
+           }
+
+           ListNode second = slow.next;
+           slow.next = null;
+
+           ListNode previous = null;
+           while (second != null) {
+               ListNode following = second.next;
+               second.next = previous;
+               previous = second;
+               second = following;
+           }
+
+           ListNode first = head;
+           second = previous;
+           while (second != null) {
+               ListNode firstNext = first.next;
+               ListNode secondNext = second.next;
+               first.next = second;
+               second.next = firstNext;
+               first = firstNext;
+               second = secondNext;
+           }
+       }
+   }
+
+Julia
+~~~~~
+
+.. code-block:: julia
+
+   function reorder_list!(head::Union{Nothing,ListNode})::Nothing
+       if head === nothing || head.next === nothing
+           return nothing
+       end
+
+       slow = head
+       fast = head.next
+       while fast !== nothing && fast.next !== nothing
+           slow = slow.next
+           fast = fast.next.next
+       end
+
+       second = slow.next
+       slow.next = nothing
+
+       previous = nothing
+       while second !== nothing
+           following = second.next
+           second.next = previous
+           previous = second
+           second = following
+       end
+
+       first = head
+       second = previous
+       while second !== nothing
+           first_next = first.next
+           second_next = second.next
+           first.next = second
+           second.next = first_next
+           first = first_next
+           second = second_next
+       end
+       return nothing
+   end
+
+R
+~
+
+.. code-block:: r
+
+   reorder_list <- function(head) {
+     if (is.null(head) || is.null(head$next)) return(invisible(head))
+
+     slow <- head
+     fast <- head$next
+     while (!is.null(fast) && !is.null(fast$next)) {
+       slow <- slow$next
+       fast <- fast$next$next
+     }
+
+     second <- slow$next
+     slow$next <- NULL
+
+     previous <- NULL
+     while (!is.null(second)) {
+       following <- second$next
+       second$next <- previous
+       previous <- second
+       second <- following
+     }
+
+     first <- head
+     second <- previous
+     while (!is.null(second)) {
+       first_next <- first$next
+       second_next <- second$next
+       first$next <- second
+       second$next <- first_next
+       first <- first_next
+       second <- second_next
+     }
+     invisible(head)
+   }
 
 关键边界
 --------

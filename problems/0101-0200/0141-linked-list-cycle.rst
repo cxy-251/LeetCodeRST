@@ -45,15 +45,224 @@ Rust 适配器使用 ``Rc::ptr_eq``，R 使用 ``identical``，都比较节点�
 核心语言实现
 ------------
 
-.. include:: 0141-linked-list-cycle-code-1.inc
+C
+~
 
-.. include:: 0141-linked-list-cycle-code-2.inc
+.. code-block:: c
 
-.. include:: 0141-linked-list-cycle-code-3.inc
+   #include <stdbool.h>
 
-.. include:: 0141-linked-list-cycle-code-4.inc
+   bool hasCycle(struct ListNode *head) {
+       struct ListNode *slow = head;
+       struct ListNode *fast = head;
 
-.. include:: 0141-linked-list-cycle-code-5.inc
+       while (fast != NULL && fast->next != NULL) {
+           slow = slow->next;
+           fast = fast->next->next;
+           if (slow == fast) {
+               return true;
+           }
+       }
+       return false;
+   }
+
+C++
+~~~
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       bool hasCycle(ListNode *head) {
+           ListNode *slow = head;
+           ListNode *fast = head;
+
+           while (fast != nullptr && fast->next != nullptr) {
+               slow = slow->next;
+               fast = fast->next->next;
+               if (slow == fast) {
+                   return true;
+               }
+           }
+           return false;
+       }
+   };
+
+Python
+~~~~~~
+
+.. code-block:: python
+
+   class Solution:
+       def hasCycle(self, head: Optional[ListNode]) -> bool:
+           slow = head
+           fast = head
+
+           while fast is not None and fast.next is not None:
+               slow = slow.next
+               fast = fast.next.next
+               if slow is fast:
+                   return True
+           return False
+
+Java
+~~~~
+
+.. code-block:: java
+
+   public class Solution {
+       public boolean hasCycle(ListNode head) {
+           ListNode slow = head;
+           ListNode fast = head;
+
+           while (fast != null && fast.next != null) {
+               slow = slow.next;
+               fast = fast.next.next;
+               if (slow == fast) {
+                   return true;
+               }
+           }
+           return false;
+       }
+   }
+
+Rust
+~~~~
+
+.. code-block:: rust
+
+   use std::cell::RefCell;
+   use std::rc::Rc;
+
+   impl Solution {
+       pub fn has_cycle(
+           head: Option<Rc<RefCell<ListNode>>>,
+       ) -> bool {
+           fn next(
+               node: &Option<Rc<RefCell<ListNode>>>,
+           ) -> Option<Rc<RefCell<ListNode>>> {
+               node.as_ref()
+                   .and_then(|current| current.borrow().next.clone())
+           }
+
+           let mut slow = head.clone();
+           let mut fast = head;
+
+           loop {
+               let fast_once = next(&fast);
+               if fast_once.is_none() {
+                   return false;
+               }
+               slow = next(&slow);
+               fast = next(&fast_once);
+
+               if let (Some(slow_node), Some(fast_node)) =
+                   (&slow, &fast)
+               {
+                   if Rc::ptr_eq(slow_node, fast_node) {
+                       return true;
+                   }
+               } else {
+                   return false;
+               }
+           }
+       }
+   }
+
+Go
+~~
+
+.. code-block:: go
+
+   func hasCycle(head *ListNode) bool {
+       slow := head
+       fast := head
+
+       for fast != nil && fast.Next != nil {
+           slow = slow.Next
+           fast = fast.Next.Next
+           if slow == fast {
+               return true
+           }
+       }
+       return false
+   }
+
+TypeScript
+~~~~~~~~~~
+
+.. code-block:: typescript
+
+   function hasCycle(head: ListNode | null): boolean {
+       let slow = head;
+       let fast = head;
+
+       while (fast !== null && fast.next !== null) {
+           slow = slow!.next;
+           fast = fast.next.next;
+           if (slow === fast) {
+               return true;
+           }
+       }
+       return false;
+   }
+
+C#
+~~
+
+.. code-block:: csharp
+
+   public class Solution {
+       public bool HasCycle(ListNode head) {
+           ListNode slow = head;
+           ListNode fast = head;
+
+           while (fast != null && fast.next != null) {
+               slow = slow.next;
+               fast = fast.next.next;
+               if (object.ReferenceEquals(slow, fast)) {
+                   return true;
+               }
+           }
+           return false;
+       }
+   }
+
+Julia
+~~~~~
+
+.. code-block:: julia
+
+   function has_cycle(
+       head::Union{Nothing,ListNode},
+   )::Bool
+       slow = head
+       fast = head
+
+       while fast !== nothing && fast.next !== nothing
+           slow = slow.next
+           fast = fast.next.next
+           slow === fast && return true
+       end
+       return false
+   end
+
+R
+~
+
+.. code-block:: r
+
+   has_cycle <- function(head) {
+     slow <- head
+     fast <- head
+
+     while (!is.null(fast) && !is.null(fast$next)) {
+       slow <- slow$next
+       fast <- fast$next$next
+       if (identical(slow, fast)) return(TRUE)
+     }
+     FALSE
+   }
 
 关键边界
 --------

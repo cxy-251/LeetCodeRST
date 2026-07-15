@@ -44,15 +44,225 @@ Rust 的 ``Box`` 不能表达两个头共同拥有同一后缀，因此适配器
 核心语言实现
 ------------
 
-.. include:: 0160-intersection-of-two-linked-lists-code-1.inc
+C
+~
 
-.. include:: 0160-intersection-of-two-linked-lists-code-2.inc
+.. code-block:: c
 
-.. include:: 0160-intersection-of-two-linked-lists-code-3.inc
+   #include <stddef.h>
 
-.. include:: 0160-intersection-of-two-linked-lists-code-4.inc
+   struct ListNode *getIntersectionNode(
+       struct ListNode *headA,
+       struct ListNode *headB
+   ) {
+       struct ListNode *first = headA;
+       struct ListNode *second = headB;
 
-.. include:: 0160-intersection-of-two-linked-lists-code-5.inc
+       while (first != second) {
+           first = first == NULL ? headB : first->next;
+           second = second == NULL ? headA : second->next;
+       }
+       return first;
+   }
+
+C++
+~~~
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       ListNode *getIntersectionNode(ListNode *headA, ListNode *headB) {
+           ListNode *first = headA;
+           ListNode *second = headB;
+
+           while (first != second) {
+               first = first == nullptr ? headB : first->next;
+               second = second == nullptr ? headA : second->next;
+           }
+           return first;
+       }
+   };
+
+Python
+~~~~~~
+
+.. code-block:: python
+
+   from typing import Optional
+
+   class Solution:
+       def getIntersectionNode(
+           self,
+           headA: Optional[ListNode],
+           headB: Optional[ListNode],
+       ) -> Optional[ListNode]:
+           first = headA
+           second = headB
+
+           while first is not second:
+               first = headB if first is None else first.next
+               second = headA if second is None else second.next
+           return first
+
+Java
+~~~~
+
+.. code-block:: java
+
+   public class Solution {
+       public ListNode getIntersectionNode(ListNode headA, ListNode headB) {
+           ListNode first = headA;
+           ListNode second = headB;
+
+           while (first != second) {
+               first = first == null ? headB : first.next;
+               second = second == null ? headA : second.next;
+           }
+           return first;
+       }
+   }
+
+Rust
+~~~~
+
+.. code-block:: rust
+
+   use std::rc::Rc;
+
+   #[derive(Debug)]
+   struct ListNode {
+       val: i32,
+       next: Option<Rc<ListNode>>,
+   }
+
+   fn same_node(
+       first: &Option<Rc<ListNode>>,
+       second: &Option<Rc<ListNode>>,
+   ) -> bool {
+       match (first, second) {
+           (Some(a), Some(b)) => Rc::ptr_eq(a, b),
+           (None, None) => true,
+           _ => false,
+       }
+   }
+
+   fn get_intersection_node(
+       head_a: Option<Rc<ListNode>>,
+       head_b: Option<Rc<ListNode>>,
+   ) -> Option<Rc<ListNode>> {
+       let mut first = head_a.clone();
+       let mut second = head_b.clone();
+
+       while !same_node(&first, &second) {
+           first = match first {
+               Some(node) => node.next.clone(),
+               None => head_b.clone(),
+           };
+           second = match second {
+               Some(node) => node.next.clone(),
+               None => head_a.clone(),
+           };
+       }
+       first
+   }
+
+Go
+~~
+
+.. code-block:: go
+
+   func getIntersectionNode(headA, headB *ListNode) *ListNode {
+       first := headA
+       second := headB
+
+       for first != second {
+           if first == nil {
+               first = headB
+           } else {
+               first = first.Next
+           }
+
+           if second == nil {
+               second = headA
+           } else {
+               second = second.Next
+           }
+       }
+       return first
+   }
+
+TypeScript
+~~~~~~~~~~
+
+.. code-block:: typescript
+
+   function getIntersectionNode(
+       headA: ListNode | null,
+       headB: ListNode | null,
+   ): ListNode | null {
+       let first = headA;
+       let second = headB;
+
+       while (first !== second) {
+           first = first === null ? headB : first.next;
+           second = second === null ? headA : second.next;
+       }
+       return first;
+   }
+
+C#
+~~
+
+.. code-block:: csharp
+
+   public class Solution {
+       public ListNode GetIntersectionNode(ListNode headA, ListNode headB) {
+           ListNode first = headA;
+           ListNode second = headB;
+
+           while (!ReferenceEquals(first, second)) {
+               first = first == null ? headB : first.next;
+               second = second == null ? headA : second.next;
+           }
+           return first;
+       }
+   }
+
+Julia
+~~~~~
+
+.. code-block:: julia
+
+   function get_intersection_node(
+       head_a::Union{Nothing, ListNode},
+       head_b::Union{Nothing, ListNode},
+   )::Union{Nothing, ListNode}
+       first = head_a
+       second = head_b
+
+       while first !== second
+           first = first === nothing ? head_b : first.next
+           second = second === nothing ? head_a : second.next
+       end
+       return first
+   end
+
+R
+~
+
+.. code-block:: r
+
+   get_intersection_node <- function(head_a, head_b) {
+     first <- head_a
+     second <- head_b
+
+     while (!identical(first, second)) {
+       first <- if (is.null(first)) head_b else first$next_node
+       second <- if (is.null(second)) head_a else second$next_node
+     }
+     first
+   }
 
 关键边界
 --------

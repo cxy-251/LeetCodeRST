@@ -8,6 +8,7 @@ git_workflow = "direct_main_only"
 build_required = false
 content_language = "zh-CN"
 code_comment_language = "zh-CN"
+problem_artifact_shape = "one_self_contained_rst_per_public_problem"
 
 [progress]
 next_problem = 166
@@ -19,13 +20,14 @@ needs_revision = []
 
 [last_batch]
 status = "completed"
-kind = "problem_generation_with_premium_skips"
-start = 163
+kind = "structural_repair"
+start = 129
 end = 165
-completed = 2
-premium_skipped = 1
-difficulty_budget = 6
-summary = "登记并跳过 Premium 0163；完成 0164 Maximum Gap 与 0165 Compare Version Numbers。"
+completed_problem_count_unchanged = 159
+repaired_problem_rst = 31
+removed_inc_files = 169
+difficulty_budget = 0
+summary = "返工 0129-0165 的文件结构；31 道可访问题恢复为每题唯一自包含 RST，删除 169 个代码分片。"
 
 [next_batch]
 status = "generation_ready"
@@ -70,6 +72,9 @@ maintenance = "update_in_place"
 segmented_successors_allowed = false
 source_rules = "docs/FORWARD_RULES_0101_0150.rst"
 active_corrections = "state/REVIEW_INDEX.toml"
+single_problem_artifact = "exactly_one_self_contained_rst"
+include_directives_allowed = false
+problem_inc_files_allowed = false
 
 [rule_transition]
 status = "completed"
@@ -80,24 +85,15 @@ current_rule_first_problem = 151
 current_rule_last_problem = 0
 
 [validation]
-policy = "official_examples_and_targeted_boundaries"
-rst_problem_files = 2
-language_code_blocks = 20
-rst_structure_checked = 2
-python_official_examples_passed = 5
-python_key_boundary_cases_passed = 12
-cpp_strict_compile_passed = 2
-cpp_runtime_passed = 2
-c_strict_compile_passed = 2
-c_runtime_passed = 2
-go_runtime_passed = 2
-java_runtime_passed = 2
-typescript_strict_compile_passed = 2
-typescript_runtime_passed = 2
-other_language_static_checked = 8
-random_differential_cases = 3000
-exhaustive_cases = 0
-bulk_random_testing_required = false
+policy = "structural_content_preservation"
+repaired_problem_rst = 31
+expected_language_code_blocks = 310
+problem_rst_single_file_checked = 31
+include_directives_remaining_in_repaired_rst = 0
+inc_files_removed = 169
+algorithm_semantics_changed = false
+algorithm_runtime_tests_rerun = false
+validation_statement = "本轮只修复文件组织；正文与代码按原顺序内联，未重新声明算法运行验证。"
 runtime_test_claimed_for_static_only_languages = false
 
 [artifact_lifecycle]
@@ -108,6 +104,7 @@ active_review_finding_files = 0
 last_archive = "archive/reviews/0051-0100/MANIFEST.rst"
 temporary_marker_present = false
 disposable_generation_reports_committed = false
+problem_code_fragments_present = false
 
 [quality_scope]
 historical_start = 1
@@ -116,6 +113,7 @@ historical_policy = "已完成题目默认保持原样；只有用户明确指�
 persistent_rule_start = 151
 persistent_rule = "docs/FORWARD_RULES_0151_ONWARD.rst"
 forward_rule_policy = "0151 起全部后续题目持续执行并原位维护长期前向规则。"
+single_rst_policy = "每道公开可访问题目只有一个自包含 RST，全部语言代码直接内联。"
 
 [execution]
 trigger = "explicit_user_message_in_active_conversation"
@@ -137,7 +135,7 @@ index = "state/CONCEPT_LEDGER.toml"
 latest_record = "state/concepts/0163-0165.toml"
 
 [next_action]
-summary = "生成 0166-0169；Medium、Medium、Easy、Easy 合计 6 分。"
+summary = "生成 0166-0169；Medium、Medium、Easy、Easy 合计 6 分；每题只创建一个自包含 RST。"
 
 [last_update]
-summary = "0163 已登记 Premium 跳过；0164-0165 已完成，全程未创建分支或 PR。"
+summary = "0129-0165 结构返工完成；31 道可访问题恢复单 RST，169 个 .inc 已删除，全程未创建分支或 PR。"

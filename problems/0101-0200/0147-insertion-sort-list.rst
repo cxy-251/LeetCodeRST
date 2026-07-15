@@ -45,15 +45,310 @@
 核心语言实现
 ------------
 
-.. include:: 0147-insertion-sort-list-code-1.inc
+C
+~
 
-.. include:: 0147-insertion-sort-list-code-2.inc
+.. code-block:: c
 
-.. include:: 0147-insertion-sort-list-code-3.inc
+   struct ListNode *insertionSortList(struct ListNode *head) {
+       struct ListNode dummy = {0, head};
+       struct ListNode *last_sorted = head;
+       if (head == NULL) return NULL;
 
-.. include:: 0147-insertion-sort-list-code-4.inc
+       while (last_sorted->next != NULL) {
+           struct ListNode *current = last_sorted->next;
+           if (last_sorted->val <= current->val) {
+               last_sorted = current;
+               continue;
+           }
 
-.. include:: 0147-insertion-sort-list-code-5.inc
+           struct ListNode *position = &dummy;
+           while (position->next->val <= current->val) {
+               position = position->next;
+           }
+           last_sorted->next = current->next;
+           current->next = position->next;
+           position->next = current;
+       }
+       return dummy.next;
+   }
+
+C++
+~~~
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       ListNode *insertionSortList(ListNode *head) {
+           if (head == nullptr) return nullptr;
+           ListNode dummy(0, head);
+           ListNode *last_sorted = head;
+
+           while (last_sorted->next != nullptr) {
+               ListNode *current = last_sorted->next;
+               if (last_sorted->val <= current->val) {
+                   last_sorted = current;
+                   continue;
+               }
+
+               ListNode *position = &dummy;
+               while (position->next->val <= current->val) {
+                   position = position->next;
+               }
+               last_sorted->next = current->next;
+               current->next = position->next;
+               position->next = current;
+           }
+           return dummy.next;
+       }
+   };
+
+Python
+~~~~~~
+
+.. code-block:: python
+
+   class Solution:
+       def insertionSortList(
+           self,
+           head: Optional[ListNode],
+       ) -> Optional[ListNode]:
+           if head is None:
+               return None
+
+           dummy = ListNode(0, head)
+           last_sorted = head
+           while last_sorted.next is not None:
+               current = last_sorted.next
+               if last_sorted.val <= current.val:
+                   last_sorted = current
+                   continue
+
+               position = dummy
+               while position.next.val <= current.val:
+                   position = position.next
+               last_sorted.next = current.next
+               current.next = position.next
+               position.next = current
+           return dummy.next
+
+Java
+~~~~
+
+.. code-block:: java
+
+   class Solution {
+       public ListNode insertionSortList(ListNode head) {
+           if (head == null) return null;
+           ListNode dummy = new ListNode(0, head);
+           ListNode lastSorted = head;
+
+           while (lastSorted.next != null) {
+               ListNode current = lastSorted.next;
+               if (lastSorted.val <= current.val) {
+                   lastSorted = current;
+                   continue;
+               }
+
+               ListNode position = dummy;
+               while (position.next.val <= current.val) {
+                   position = position.next;
+               }
+               lastSorted.next = current.next;
+               current.next = position.next;
+               position.next = current;
+           }
+           return dummy.next;
+       }
+   }
+
+Rust
+~~~~
+
+.. code-block:: rust
+
+   impl Solution {
+       pub fn insertion_sort_list(
+           mut head: Option<Box<ListNode>>,
+       ) -> Option<Box<ListNode>> {
+           fn insert(
+               sorted: Option<Box<ListNode>>,
+               mut node: Box<ListNode>,
+           ) -> Option<Box<ListNode>> {
+               if sorted.as_ref().map_or(true, |head| head.val > node.val) {
+                   node.next = sorted;
+                   return Some(node);
+               }
+
+               let mut sorted = sorted;
+               let mut cursor = sorted.as_mut().unwrap();
+               while cursor
+                   .next
+                   .as_ref()
+                   .map_or(false, |next| next.val <= node.val)
+               {
+                   cursor = cursor.next.as_mut().unwrap();
+               }
+               node.next = cursor.next.take();
+               cursor.next = Some(node);
+               sorted
+           }
+
+           let mut sorted = None;
+           while let Some(mut node) = head {
+               head = node.next.take();
+               sorted = insert(sorted, node);
+           }
+           sorted
+       }
+   }
+
+Go
+~~
+
+.. code-block:: go
+
+   func insertionSortList(head *ListNode) *ListNode {
+       if head == nil {
+           return nil
+       }
+       dummy := &ListNode{Next: head}
+       lastSorted := head
+
+       for lastSorted.Next != nil {
+           current := lastSorted.Next
+           if lastSorted.Val <= current.Val {
+               lastSorted = current
+               continue
+           }
+
+           position := dummy
+           for position.Next.Val <= current.Val {
+               position = position.Next
+           }
+           lastSorted.Next = current.Next
+           current.Next = position.Next
+           position.Next = current
+       }
+       return dummy.Next
+   }
+
+TypeScript
+~~~~~~~~~~
+
+.. code-block:: typescript
+
+   function insertionSortList(head: ListNode | null): ListNode | null {
+       if (head === null) return null;
+       const dummy = new ListNode(0, head);
+       let lastSorted = head;
+
+       while (lastSorted.next !== null) {
+           const current = lastSorted.next;
+           if (lastSorted.val <= current.val) {
+               lastSorted = current;
+               continue;
+           }
+
+           let position = dummy;
+           while (position.next!.val <= current.val) {
+               position = position.next!;
+           }
+           lastSorted.next = current.next;
+           current.next = position.next;
+           position.next = current;
+       }
+       return dummy.next;
+   }
+
+C#
+~~
+
+.. code-block:: csharp
+
+   public class Solution {
+       public ListNode InsertionSortList(ListNode head) {
+           if (head == null) return null;
+           ListNode dummy = new(0, head);
+           ListNode lastSorted = head;
+
+           while (lastSorted.next != null) {
+               ListNode current = lastSorted.next;
+               if (lastSorted.val <= current.val) {
+                   lastSorted = current;
+                   continue;
+               }
+
+               ListNode position = dummy;
+               while (position.next.val <= current.val) {
+                   position = position.next;
+               }
+               lastSorted.next = current.next;
+               current.next = position.next;
+               position.next = current;
+           }
+           return dummy.next;
+       }
+   }
+
+Julia
+~~~~~
+
+.. code-block:: julia
+
+   function insertion_sort_list!(
+       head::Union{Nothing,ListNode},
+   )::Union{Nothing,ListNode}
+       head === nothing && return nothing
+       dummy = ListNode(0, head)
+       last_sorted = head
+
+       while last_sorted.next !== nothing
+           current = last_sorted.next
+           if last_sorted.val <= current.val
+               last_sorted = current
+               continue
+           end
+
+           position = dummy
+           while position.next.val <= current.val
+               position = position.next
+           end
+           last_sorted.next = current.next
+           current.next = position.next
+           position.next = current
+       end
+       return dummy.next
+   end
+
+R
+~
+
+.. code-block:: r
+
+   insertion_sort_list <- function(head) {
+     if (is.null(head)) return(NULL)
+     dummy <- new_list_node(0L, head)
+     last_sorted <- head
+
+     while (!is.null(last_sorted$next)) {
+       current <- last_sorted$next
+       if (last_sorted$val <= current$val) {
+         last_sorted <- current
+         next
+       }
+
+       position <- dummy
+       while (position$next$val <= current$val) {
+         position <- position$next
+       }
+       last_sorted$next <- current$next
+       current$next <- position$next
+       position$next <- current
+     }
+     dummy$next
+   }
 
 关键边界
 --------

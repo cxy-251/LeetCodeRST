@@ -54,15 +54,305 @@ Julia 使用 ``codeunits`` 只创建轻量包装；R 会物化字符向量，但
 核心语言实现
 ------------
 
-.. include:: 0132-palindrome-partitioning-ii-code-1.inc
+C
+~
 
-.. include:: 0132-palindrome-partitioning-ii-code-2.inc
+.. code-block:: c
 
-.. include:: 0132-palindrome-partitioning-ii-code-3.inc
+   #include <stdbool.h>
+   #include <stdlib.h>
+   #include <string.h>
 
-.. include:: 0132-palindrome-partitioning-ii-code-4.inc
+   int minCut(char *s) {
+       int n = (int)strlen(s);
+       bool *pal = calloc((size_t)n * (size_t)n, sizeof(*pal));
+       int *cuts = malloc((size_t)n * sizeof(*cuts));
+       if (pal == NULL || cuts == NULL) {
+           free(pal);
+           free(cuts);
+           return 0;
+       }
 
-.. include:: 0132-palindrome-partitioning-ii-code-5.inc
+       for (int end = 0; end < n; ++end) {
+           cuts[end] = end;
+           for (int start = end; start >= 0; --start) {
+               bool inner = end - start <= 1 ||
+                   pal[(size_t)(start + 1) * (size_t)n + end - 1];
+               if (s[start] == s[end] && inner) {
+                   pal[(size_t)start * (size_t)n + end] = true;
+                   int candidate = start == 0 ? 0 : cuts[start - 1] + 1;
+                   if (candidate < cuts[end]) cuts[end] = candidate;
+               }
+           }
+       }
+
+       int answer = cuts[n - 1];
+       free(pal);
+       free(cuts);
+       return answer;
+   }
+
+C++
+~~~
+
+.. code-block:: cpp
+
+   #include <algorithm>
+   #include <string>
+   #include <vector>
+
+   class Solution {
+   public:
+       int minCut(std::string s) {
+           int n = static_cast<int>(s.size());
+           std::vector<std::vector<char>> pal(
+               n, std::vector<char>(n, false)
+           );
+           std::vector<int> cuts(n);
+
+           for (int end = 0; end < n; ++end) {
+               cuts[end] = end;
+               for (int start = end; start >= 0; --start) {
+                   bool inner = end - start <= 1 ||
+                       pal[start + 1][end - 1];
+                   if (s[start] == s[end] && inner) {
+                       pal[start][end] = true;
+                       int candidate =
+                           start == 0 ? 0 : cuts[start - 1] + 1;
+                       cuts[end] = std::min(cuts[end], candidate);
+                   }
+               }
+           }
+           return cuts[n - 1];
+       }
+   };
+
+Python
+~~~~~~
+
+.. code-block:: python
+
+   class Solution:
+       def minCut(self, s: str) -> int:
+           n = len(s)
+           pal = [[False] * n for _ in range(n)]
+           cuts = list(range(n))
+
+           for end in range(n):
+               for start in range(end, -1, -1):
+                   inner = (
+                       end - start <= 1
+                       or pal[start + 1][end - 1]
+                   )
+                   if s[start] == s[end] and inner:
+                       pal[start][end] = True
+                       candidate = (
+                           0 if start == 0 else cuts[start - 1] + 1
+                       )
+                       cuts[end] = min(cuts[end], candidate)
+           return cuts[-1]
+
+Java
+~~~~
+
+.. code-block:: java
+
+   class Solution {
+       public int minCut(String s) {
+           int n = s.length();
+           boolean[][] pal = new boolean[n][n];
+           int[] cuts = new int[n];
+
+           for (int end = 0; end < n; ++end) {
+               cuts[end] = end;
+               for (int start = end; start >= 0; --start) {
+                   boolean inner = end - start <= 1 ||
+                       pal[start + 1][end - 1];
+                   if (s.charAt(start) == s.charAt(end) && inner) {
+                       pal[start][end] = true;
+                       int candidate =
+                           start == 0 ? 0 : cuts[start - 1] + 1;
+                       cuts[end] = Math.min(cuts[end], candidate);
+                   }
+               }
+           }
+           return cuts[n - 1];
+       }
+   }
+
+Rust
+~~~~
+
+.. code-block:: rust
+
+   impl Solution {
+       pub fn min_cut(s: String) -> i32 {
+           let bytes = s.as_bytes();
+           let n = bytes.len();
+           let mut pal = vec![vec![false; n]; n];
+           let mut cuts: Vec<usize> = (0..n).collect();
+
+           for end in 0..n {
+               for start in (0..=end).rev() {
+                   let inner = end - start <= 1 ||
+                       pal[start + 1][end - 1];
+                   if bytes[start] == bytes[end] && inner {
+                       pal[start][end] = true;
+                       let candidate = if start == 0 {
+                           0
+                       } else {
+                           cuts[start - 1] + 1
+                       };
+                       cuts[end] = cuts[end].min(candidate);
+                   }
+               }
+           }
+           cuts[n - 1] as i32
+       }
+   }
+
+Go
+~~
+
+.. code-block:: go
+
+   func minCut(s string) int {
+       n := len(s)
+       pal := make([][]bool, n)
+       cuts := make([]int, n)
+       for i := range pal {
+           pal[i] = make([]bool, n)
+       }
+
+       for end := 0; end < n; end++ {
+           cuts[end] = end
+           for start := end; start >= 0; start-- {
+               inner := end-start <= 1 ||
+                   pal[start+1][end-1]
+               if s[start] == s[end] && inner {
+                   pal[start][end] = true
+                   candidate := 0
+                   if start > 0 {
+                       candidate = cuts[start-1] + 1
+                   }
+                   if candidate < cuts[end] {
+                       cuts[end] = candidate
+                   }
+               }
+           }
+       }
+       return cuts[n-1]
+   }
+
+TypeScript
+~~~~~~~~~~
+
+.. code-block:: typescript
+
+   function minCut(s: string): number {
+       const n = s.length;
+       const pal = Array.from(
+           { length: n },
+           () => Array<boolean>(n).fill(false),
+       );
+       const cuts = Array.from({ length: n }, (_, i) => i);
+
+       for (let end = 0; end < n; end++) {
+           for (let start = end; start >= 0; start--) {
+               const inner =
+                   end - start <= 1 || pal[start + 1][end - 1];
+               if (s[start] === s[end] && inner) {
+                   pal[start][end] = true;
+                   const candidate =
+                       start === 0 ? 0 : cuts[start - 1] + 1;
+                   cuts[end] = Math.min(cuts[end], candidate);
+               }
+           }
+       }
+       return cuts[n - 1];
+   }
+
+C#
+~~
+
+.. code-block:: csharp
+
+   public class Solution {
+       public int MinCut(string s) {
+           int n = s.Length;
+           bool[,] pal = new bool[n, n];
+           int[] cuts = new int[n];
+
+           for (int end = 0; end < n; ++end) {
+               cuts[end] = end;
+               for (int start = end; start >= 0; --start) {
+                   bool inner = end - start <= 1 ||
+                       pal[start + 1, end - 1];
+                   if (s[start] == s[end] && inner) {
+                       pal[start, end] = true;
+                       int candidate =
+                           start == 0 ? 0 : cuts[start - 1] + 1;
+                       cuts[end] = Math.Min(cuts[end], candidate);
+                   }
+               }
+           }
+           return cuts[n - 1];
+       }
+   }
+
+Julia
+~~~~~
+
+.. code-block:: julia
+
+   function min_cut(s::String)::Int
+       bytes = codeunits(s)
+       n = length(bytes)
+       pal = falses(n, n)
+       cuts = collect(0:n-1)
+
+       for last in 1:n
+           for first in last:-1:1
+               inner = last - first <= 1 ||
+                       pal[first + 1, last - 1]
+               if bytes[first] == bytes[last] && inner
+                   pal[first, last] = true
+                   candidate = first == 1 ? 0 : cuts[first - 1] + 1
+                   cuts[last] = min(cuts[last], candidate)
+               end
+           end
+       end
+       return cuts[n]
+   end
+
+R
+~
+
+.. code-block:: r
+
+   min_cut <- function(s) {
+     chars <- strsplit(s, "", fixed = TRUE)[[1L]]
+     n <- length(chars)
+     pal <- matrix(FALSE, nrow = n, ncol = n)
+     cuts <- seq.int(0L, n - 1L)
+
+     for (last in seq_len(n)) {
+       for (first in seq.int(last, 1L, by = -1L)) {
+         inner <- last - first <= 1L ||
+           pal[first + 1L, last - 1L]
+         if (chars[[first]] == chars[[last]] && inner) {
+           pal[first, last] <- TRUE
+           candidate <- if (first == 1L) {
+             0L
+           } else {
+             cuts[[first - 1L]] + 1L
+           }
+           cuts[[last]] <- min(cuts[[last]], candidate)
+         }
+       }
+     }
+     cuts[[n]]
+   }
 
 关键边界
 --------

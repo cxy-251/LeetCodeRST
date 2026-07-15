@@ -45,15 +45,327 @@ C++ 的按值参数、Python 切片、Julia/R 字符物化会产生对应语言�
 核心语言实现
 ------------
 
-.. include:: 0151-reverse-words-in-a-string-code-1.inc
+C
+~
 
-.. include:: 0151-reverse-words-in-a-string-code-2.inc
+.. code-block:: c
 
-.. include:: 0151-reverse-words-in-a-string-code-3.inc
+   #include <stddef.h>
+   #include <stdlib.h>
+   #include <string.h>
 
-.. include:: 0151-reverse-words-in-a-string-code-4.inc
+   char *reverseWords(char *s) {
+       size_t length = strlen(s);
+       char *result = malloc(length + 1U);
+       if (result == NULL) {
+           return NULL;
+       }
 
-.. include:: 0151-reverse-words-in-a-string-code-5.inc
+       size_t write = 0U;
+       ptrdiff_t end = (ptrdiff_t)length - 1;
+       while (end >= 0) {
+           while (end >= 0 && s[end] == ' ') {
+               --end;
+           }
+           if (end < 0) {
+               break;
+           }
+
+           ptrdiff_t start = end;
+           while (start >= 0 && s[start] != ' ') {
+               --start;
+           }
+
+           if (write > 0U) {
+               result[write++] = ' ';
+           }
+           size_t word_length = (size_t)(end - start);
+           memcpy(result + write, s + start + 1, word_length);
+           write += word_length;
+           end = start - 1;
+       }
+
+       result[write] = '\0';
+       return result;
+   }
+
+C++
+~~~
+
+.. code-block:: cpp
+
+   #include <string>
+
+   class Solution {
+   public:
+       std::string reverseWords(std::string s) {
+           std::string result;
+           result.reserve(s.size());
+
+           int end = static_cast<int>(s.size()) - 1;
+           while (end >= 0) {
+               while (end >= 0 && s[end] == ' ') {
+                   --end;
+               }
+               if (end < 0) {
+                   break;
+               }
+
+               int start = end;
+               while (start >= 0 && s[start] != ' ') {
+                   --start;
+               }
+
+               if (!result.empty()) {
+                   result.push_back(' ');
+               }
+               result.append(
+                   s,
+                   static_cast<std::size_t>(start + 1),
+                   static_cast<std::size_t>(end - start)
+               );
+               end = start - 1;
+           }
+
+           return result;
+       }
+   };
+
+Python
+~~~~~~
+
+.. code-block:: python
+
+   class Solution:
+       def reverseWords(self, s: str) -> str:
+           words: list[str] = []
+           end = len(s) - 1
+
+           while end >= 0:
+               while end >= 0 and s[end] == " ":
+                   end -= 1
+               if end < 0:
+                   break
+
+               start = end
+               while start >= 0 and s[start] != " ":
+                   start -= 1
+               words.append(s[start + 1 : end + 1])
+               end = start - 1
+
+           return " ".join(words)
+
+Java
+~~~~
+
+.. code-block:: java
+
+   class Solution {
+       public String reverseWords(String s) {
+           StringBuilder result = new StringBuilder(s.length());
+           int end = s.length() - 1;
+
+           while (end >= 0) {
+               while (end >= 0 && s.charAt(end) == ' ') {
+                   end--;
+               }
+               if (end < 0) {
+                   break;
+               }
+
+               int start = end;
+               while (start >= 0 && s.charAt(start) != ' ') {
+                   start--;
+               }
+               if (result.length() > 0) {
+                   result.append(' ');
+               }
+               result.append(s, start + 1, end + 1);
+               end = start - 1;
+           }
+
+           return result.toString();
+       }
+   }
+
+Rust
+~~~~
+
+.. code-block:: rust
+
+   impl Solution {
+       pub fn reverse_words(s: String) -> String {
+           let bytes = s.as_bytes();
+           let mut words: Vec<&str> = Vec::new();
+           let mut end = bytes.len();
+
+           while end > 0 {
+               while end > 0 && bytes[end - 1] == b' ' {
+                   end -= 1;
+               }
+               if end == 0 {
+                   break;
+               }
+
+               let mut start = end;
+               while start > 0 && bytes[start - 1] != b' ' {
+                   start -= 1;
+               }
+               words.push(&s[start..end]);
+               end = start;
+           }
+
+           words.join(" ")
+       }
+   }
+
+Go
+~~
+
+.. code-block:: go
+
+   import "strings"
+
+   func reverseWords(s string) string {
+       words := make([]string, 0)
+       end := len(s)
+
+       for end > 0 {
+           for end > 0 && s[end-1] == ' ' {
+               end--
+           }
+           if end == 0 {
+               break
+           }
+
+           start := end
+           for start > 0 && s[start-1] != ' ' {
+               start--
+           }
+           words = append(words, s[start:end])
+           end = start
+       }
+
+       return strings.Join(words, " ")
+   }
+
+TypeScript
+~~~~~~~~~~
+
+.. code-block:: typescript
+
+   function reverseWords(s: string): string {
+       const words: string[] = [];
+       let end = s.length - 1;
+
+       while (end >= 0) {
+           while (end >= 0 && s[end] === " ") {
+               end--;
+           }
+           if (end < 0) {
+               break;
+           }
+
+           let start = end;
+           while (start >= 0 && s[start] !== " ") {
+               start--;
+           }
+           words.push(s.slice(start + 1, end + 1));
+           end = start - 1;
+       }
+
+       return words.join(" ");
+   }
+
+C#
+~~
+
+.. code-block:: csharp
+
+   using System.Collections.Generic;
+
+   public class Solution {
+       public string ReverseWords(string s) {
+           var words = new List<string>();
+           int end = s.Length - 1;
+
+           while (end >= 0) {
+               while (end >= 0 && s[end] == ' ') {
+                   end--;
+               }
+               if (end < 0) {
+                   break;
+               }
+
+               int start = end;
+               while (start >= 0 && s[start] != ' ') {
+                   start--;
+               }
+               words.Add(s.Substring(start + 1, end - start));
+               end = start - 1;
+           }
+
+           return string.Join(" ", words);
+       }
+   }
+
+Julia
+~~~~~
+
+.. code-block:: julia
+
+   function reverse_words(s::String)::String
+       bytes = codeunits(s)
+       words = String[]
+       stop = length(bytes)
+
+       while stop > 0
+           while stop > 0 && bytes[stop] == UInt8(' ')
+               stop -= 1
+           end
+           stop == 0 && break
+
+           start = stop
+           while start > 1 && bytes[start - 1] != UInt8(' ')
+               start -= 1
+           end
+           push!(words, String(Vector{UInt8}(bytes[start:stop])))
+           stop = start - 1
+       end
+
+       return join(words, " ")
+   end
+
+R
+~
+
+.. code-block:: r
+
+   reverse_words <- function(s) {
+     chars <- strsplit(s, "", fixed = TRUE)[[1L]]
+     words <- vector("list", length(chars))
+     count <- 0L
+     stop <- length(chars)
+
+     while (stop > 0L) {
+       while (stop > 0L && chars[stop] == " ") {
+         stop <- stop - 1L
+       }
+       if (stop == 0L) {
+         break
+       }
+
+       start <- stop
+       while (start > 1L && chars[start - 1L] != " ") {
+         start <- start - 1L
+       }
+       count <- count + 1L
+       words[[count]] <- paste0(chars[start:stop], collapse = "")
+       stop <- start - 1L
+     }
+
+     if (count == 0L) "" else paste(unlist(words[seq_len(count)]), collapse = " ")
+   }
 
 关键边界
 --------

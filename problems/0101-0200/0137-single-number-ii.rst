@@ -51,15 +51,165 @@
 核心语言实现
 ------------
 
-.. include:: 0137-single-number-ii-code-1.inc
+C
+~
 
-.. include:: 0137-single-number-ii-code-2.inc
+.. code-block:: c
 
-.. include:: 0137-single-number-ii-code-3.inc
+   int singleNumber(int *nums, int numsSize) {
+       int ones = 0;
+       int twos = 0;
+       for (int i = 0; i < numsSize; ++i) {
+           ones = (ones ^ nums[i]) & ~twos;
+           twos = (twos ^ nums[i]) & ~ones;
+       }
+       return ones;
+   }
 
-.. include:: 0137-single-number-ii-code-4.inc
+C++
+~~~
 
-.. include:: 0137-single-number-ii-code-5.inc
+.. code-block:: cpp
+
+   #include <vector>
+
+   class Solution {
+   public:
+       int singleNumber(std::vector<int>& nums) {
+           int ones = 0;
+           int twos = 0;
+           for (int value : nums) {
+               ones = (ones ^ value) & ~twos;
+               twos = (twos ^ value) & ~ones;
+           }
+           return ones;
+       }
+   };
+
+Python
+~~~~~~
+
+.. code-block:: python
+
+   class Solution:
+       def singleNumber(self, nums: list[int]) -> int:
+           ones = 0
+           twos = 0
+           for value in nums:
+               ones = (ones ^ value) & ~twos
+               twos = (twos ^ value) & ~ones
+           return ones
+
+Java
+~~~~
+
+.. code-block:: java
+
+   class Solution {
+       public int singleNumber(int[] nums) {
+           int ones = 0;
+           int twos = 0;
+           for (int value : nums) {
+               ones = (ones ^ value) & ~twos;
+               twos = (twos ^ value) & ~ones;
+           }
+           return ones;
+       }
+   }
+
+Rust
+~~~~
+
+.. code-block:: rust
+
+   impl Solution {
+       pub fn single_number(nums: Vec<i32>) -> i32 {
+           let mut ones = 0_i32;
+           let mut twos = 0_i32;
+           for value in nums {
+               ones = (ones ^ value) & !twos;
+               twos = (twos ^ value) & !ones;
+           }
+           ones
+       }
+   }
+
+Go
+~~
+
+.. code-block:: go
+
+   func singleNumber(nums []int) int {
+       ones, twos := 0, 0
+       for _, value := range nums {
+           ones = (ones ^ value) & ^twos
+           twos = (twos ^ value) & ^ones
+       }
+       return ones
+   }
+
+TypeScript
+~~~~~~~~~~
+
+.. code-block:: typescript
+
+   function singleNumber(nums: number[]): number {
+       let ones = 0;
+       let twos = 0;
+       for (const value of nums) {
+           ones = (ones ^ value) & ~twos;
+           twos = (twos ^ value) & ~ones;
+       }
+       return ones;
+   }
+
+C#
+~~
+
+.. code-block:: csharp
+
+   public class Solution {
+       public int SingleNumber(int[] nums) {
+           int ones = 0;
+           int twos = 0;
+           foreach (int value in nums) {
+               ones = (ones ^ value) & ~twos;
+               twos = (twos ^ value) & ~ones;
+           }
+           return ones;
+       }
+   }
+
+Julia
+~~~~~
+
+.. code-block:: julia
+
+   function single_number(nums::Vector{Int})::Int
+       ones = 0
+       twos = 0
+       for value in nums
+           ones = xor(ones, value) & ~twos
+           twos = xor(twos, value) & ~ones
+       end
+       return ones
+   end
+
+R
+~
+
+.. code-block:: r
+
+   single_number <- function(nums) {
+     ones <- 0L
+     twos <- 0L
+     for (value in nums) {
+       value <- as.integer(value)
+       ones <- bitwAnd(bitwXor(ones, value), bitwNot(twos))
+       twos <- bitwAnd(bitwXor(twos, value), bitwNot(ones))
+     }
+     ones
+   }
 
 关键边界
 --------

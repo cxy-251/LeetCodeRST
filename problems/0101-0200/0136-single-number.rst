@@ -39,15 +39,141 @@
 核心语言实现
 ------------
 
-.. include:: 0136-single-number-code-1.inc
+C
+~
 
-.. include:: 0136-single-number-code-2.inc
+.. code-block:: c
 
-.. include:: 0136-single-number-code-3.inc
+   int singleNumber(int *nums, int numsSize) {
+       int answer = 0;
+       for (int i = 0; i < numsSize; ++i) {
+           answer ^= nums[i];
+       }
+       return answer;
+   }
 
-.. include:: 0136-single-number-code-4.inc
+C++
+~~~
 
-.. include:: 0136-single-number-code-5.inc
+.. code-block:: cpp
+
+   #include <vector>
+
+   class Solution {
+   public:
+       int singleNumber(std::vector<int>& nums) {
+           int answer = 0;
+           for (int value : nums) {
+               answer ^= value;
+           }
+           return answer;
+       }
+   };
+
+Python
+~~~~~~
+
+.. code-block:: python
+
+   class Solution:
+       def singleNumber(self, nums: list[int]) -> int:
+           answer = 0
+           for value in nums:
+               answer ^= value
+           return answer
+
+Java
+~~~~
+
+.. code-block:: java
+
+   class Solution {
+       public int singleNumber(int[] nums) {
+           int answer = 0;
+           for (int value : nums) {
+               answer ^= value;
+           }
+           return answer;
+       }
+   }
+
+Rust
+~~~~
+
+.. code-block:: rust
+
+   impl Solution {
+       pub fn single_number(nums: Vec<i32>) -> i32 {
+           nums.into_iter().fold(0, |answer, value| answer ^ value)
+       }
+   }
+
+Go
+~~
+
+.. code-block:: go
+
+   func singleNumber(nums []int) int {
+       answer := 0
+       for _, value := range nums {
+           answer ^= value
+       }
+       return answer
+   }
+
+TypeScript
+~~~~~~~~~~
+
+.. code-block:: typescript
+
+   function singleNumber(nums: number[]): number {
+       let answer = 0;
+       for (const value of nums) {
+           answer ^= value;
+       }
+       return answer;
+   }
+
+C#
+~~
+
+.. code-block:: csharp
+
+   public class Solution {
+       public int SingleNumber(int[] nums) {
+           int answer = 0;
+           foreach (int value in nums) {
+               answer ^= value;
+           }
+           return answer;
+       }
+   }
+
+Julia
+~~~~~
+
+.. code-block:: julia
+
+   function single_number(nums::Vector{Int})::Int
+       answer = 0
+       for value in nums
+           answer = xor(answer, value)
+       end
+       return answer
+   end
+
+R
+~
+
+.. code-block:: r
+
+   single_number <- function(nums) {
+     answer <- 0L
+     for (value in nums) {
+       answer <- bitwXor(answer, as.integer(value))
+     }
+     answer
+   }
 
 关键边界
 --------

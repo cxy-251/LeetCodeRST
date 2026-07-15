@@ -54,15 +54,302 @@
 核心语言实现
 ------------
 
-.. include:: 0142-linked-list-cycle-ii-code-1.inc
+C
+~
 
-.. include:: 0142-linked-list-cycle-ii-code-2.inc
+.. code-block:: c
 
-.. include:: 0142-linked-list-cycle-ii-code-3.inc
+   struct ListNode *detectCycle(struct ListNode *head) {
+       struct ListNode *slow = head;
+       struct ListNode *fast = head;
 
-.. include:: 0142-linked-list-cycle-ii-code-4.inc
+       do {
+           if (fast == NULL || fast->next == NULL) {
+               return NULL;
+           }
+           slow = slow->next;
+           fast = fast->next->next;
+       } while (slow != fast);
 
-.. include:: 0142-linked-list-cycle-ii-code-5.inc
+       struct ListNode *seeker = head;
+       while (seeker != slow) {
+           seeker = seeker->next;
+           slow = slow->next;
+       }
+       return seeker;
+   }
+
+C++
+~~~
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       ListNode *detectCycle(ListNode *head) {
+           ListNode *slow = head;
+           ListNode *fast = head;
+
+           do {
+               if (fast == nullptr || fast->next == nullptr) {
+                   return nullptr;
+               }
+               slow = slow->next;
+               fast = fast->next->next;
+           } while (slow != fast);
+
+           ListNode *seeker = head;
+           while (seeker != slow) {
+               seeker = seeker->next;
+               slow = slow->next;
+           }
+           return seeker;
+       }
+   };
+
+Python
+~~~~~~
+
+.. code-block:: python
+
+   class Solution:
+       def detectCycle(
+           self,
+           head: Optional[ListNode],
+       ) -> Optional[ListNode]:
+           slow = head
+           fast = head
+
+           while True:
+               if fast is None or fast.next is None:
+                   return None
+               slow = slow.next
+               fast = fast.next.next
+               if slow is fast:
+                   break
+
+           seeker = head
+           while seeker is not slow:
+               seeker = seeker.next
+               slow = slow.next
+           return seeker
+
+Java
+~~~~
+
+.. code-block:: java
+
+   public class Solution {
+       public ListNode detectCycle(ListNode head) {
+           ListNode slow = head;
+           ListNode fast = head;
+
+           do {
+               if (fast == null || fast.next == null) {
+                   return null;
+               }
+               slow = slow.next;
+               fast = fast.next.next;
+           } while (slow != fast);
+
+           ListNode seeker = head;
+           while (seeker != slow) {
+               seeker = seeker.next;
+               slow = slow.next;
+           }
+           return seeker;
+       }
+   }
+
+Rust
+~~~~
+
+.. code-block:: rust
+
+   use std::cell::RefCell;
+   use std::rc::Rc;
+
+   impl Solution {
+       pub fn detect_cycle(
+           head: Option<Rc<RefCell<ListNode>>>,
+       ) -> Option<Rc<RefCell<ListNode>>> {
+           fn next(
+               node: &Option<Rc<RefCell<ListNode>>>,
+           ) -> Option<Rc<RefCell<ListNode>>> {
+               node.as_ref()
+                   .and_then(|current| current.borrow().next.clone())
+           }
+
+           let mut slow = head.clone();
+           let mut fast = head.clone();
+
+           loop {
+               let fast_once = next(&fast);
+               if fast_once.is_none() {
+                   return None;
+               }
+               slow = next(&slow);
+               fast = next(&fast_once);
+
+               match (&slow, &fast) {
+                   (Some(slow_node), Some(fast_node))
+                       if Rc::ptr_eq(slow_node, fast_node) =>
+                   {
+                       break;
+                   }
+                   (_, None) => return None,
+                   _ => {}
+               }
+           }
+
+           let mut seeker = head;
+           while let (Some(seeker_node), Some(slow_node)) =
+               (&seeker, &slow)
+           {
+               if Rc::ptr_eq(seeker_node, slow_node) {
+                   return seeker;
+               }
+               seeker = next(&seeker);
+               slow = next(&slow);
+           }
+           None
+       }
+   }
+
+Go
+~~
+
+.. code-block:: go
+
+   func detectCycle(head *ListNode) *ListNode {
+       slow := head
+       fast := head
+
+       for {
+           if fast == nil || fast.Next == nil {
+               return nil
+           }
+           slow = slow.Next
+           fast = fast.Next.Next
+           if slow == fast {
+               break
+           }
+       }
+
+       seeker := head
+       for seeker != slow {
+           seeker = seeker.Next
+           slow = slow.Next
+       }
+       return seeker
+   }
+
+TypeScript
+~~~~~~~~~~
+
+.. code-block:: typescript
+
+   function detectCycle(head: ListNode | null): ListNode | null {
+       let slow = head;
+       let fast = head;
+
+       while (true) {
+           if (fast === null || fast.next === null) {
+               return null;
+           }
+           slow = slow!.next;
+           fast = fast.next.next;
+           if (slow === fast) {
+               break;
+           }
+       }
+
+       let seeker = head;
+       while (seeker !== slow) {
+           seeker = seeker!.next;
+           slow = slow!.next;
+       }
+       return seeker;
+   }
+
+C#
+~~
+
+.. code-block:: csharp
+
+   public class Solution {
+       public ListNode DetectCycle(ListNode head) {
+           ListNode slow = head;
+           ListNode fast = head;
+
+           do {
+               if (fast == null || fast.next == null) {
+                   return null;
+               }
+               slow = slow.next;
+               fast = fast.next.next;
+           } while (!object.ReferenceEquals(slow, fast));
+
+           ListNode seeker = head;
+           while (!object.ReferenceEquals(seeker, slow)) {
+               seeker = seeker.next;
+               slow = slow.next;
+           }
+           return seeker;
+       }
+   }
+
+Julia
+~~~~~
+
+.. code-block:: julia
+
+   function detect_cycle(
+       head::Union{Nothing,ListNode},
+   )::Union{Nothing,ListNode}
+       slow = head
+       fast = head
+
+       while true
+           if fast === nothing || fast.next === nothing
+               return nothing
+           end
+           slow = slow.next
+           fast = fast.next.next
+           slow === fast && break
+       end
+
+       seeker = head
+       while seeker !== slow
+           seeker = seeker.next
+           slow = slow.next
+       end
+       return seeker
+   end
+
+R
+~
+
+.. code-block:: r
+
+   detect_cycle <- function(head) {
+     slow <- head
+     fast <- head
+
+     repeat {
+       if (is.null(fast) || is.null(fast$next)) return(NULL)
+       slow <- slow$next
+       fast <- fast$next$next
+       if (identical(slow, fast)) break
+     }
+
+     seeker <- head
+     while (!identical(seeker, slow)) {
+       seeker <- seeker$next
+       slow <- slow$next
+     }
+     seeker
+   }
 
 关键边界
 --------
