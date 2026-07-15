@@ -1,6 +1,6 @@
 [project]
 name = "leetcode-multilang-rst"
-phase = "generation_ready"
+phase = "quality_repair"
 format = "rst"
 ordering = "leetcode_number_ascending"
 execution_mode = "conversation_only"
@@ -16,26 +16,54 @@ completed_count = 159
 completed_ranges = ["0001-0155", "0160", "0162", "0164-0165"]
 premium_skipped = [156, 157, 158, 159, 161, 163]
 blocked = []
-needs_revision = []
+needs_revision = [
+  131, 132, 133, 134, 135, 136, 137, 138, 139, 140,
+  141, 142, 143, 144, 145, 146, 147, 148, 149, 150,
+  151, 152, 153, 154, 155, 160, 162, 164, 165,
+]
+
+[quality_repair]
+status = "in_progress"
+reason = "0127 起部分题解退化为算法摘要与代码集合，未达到 0001-0100 和 0128 的教学质量基线。"
+original_scope = [127, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 160, 162, 164, 165]
+repaired = [127, 129, 130]
+remaining_count = 29
+baseline = ["0001-0100", "0128"]
+new_problem_generation_paused = true
+completion_count_unchanged = true
+required_sections = [
+  "precise_contract",
+  "self_built_examples",
+  "problem_abstraction",
+  "solution_selection",
+  "state_and_invariant",
+  "complete_correctness_proof",
+  "real_complexity_and_language_costs",
+  "ten_language_implementations",
+  "validation_evidence",
+  "critical_edges_and_failure_modes",
+  "knowledge_updates_and_related_problems",
+  "check_questions_with_answers",
+]
 
 [last_batch]
 status = "completed"
-kind = "structural_repair"
-start = 129
-end = 165
-completed_problem_count_unchanged = 159
-repaired_problem_rst = 31
-removed_inc_files = 169
-difficulty_budget = 0
-summary = "返工 0129-0165 的文件结构；31 道可访问题恢复为每题唯一自包含 RST，删除 169 个代码分片。"
+kind = "quality_repair"
+start = 127
+end = 130
+repaired_problem_count = 3
+repaired_problem_ids = [127, 129, 130]
+reference_problem = 128
+difficulty_budget = 8
+summary = "重写 0127、0129、0130，恢复前 100 题的教学结构，并修复平台类型、语言特化和版本依赖问题。"
 
 [next_batch]
-status = "generation_ready"
-kind = "problem_generation"
-start = 166
-end = 169
+status = "quality_repair_ready"
+kind = "quality_repair"
+start = 131
+end = 132
 difficulty_budget = 6
-purpose = "完成 0166 Medium、0167 Medium、0168 Easy 与 0169 Easy，合计 6 分。"
+purpose = "返工 0131 Medium 与 0132 Hard；新题 0166 继续暂停。"
 
 [review_history]
 status = "completed"
@@ -75,26 +103,21 @@ active_corrections = "state/REVIEW_INDEX.toml"
 single_problem_artifact = "exactly_one_self_contained_rst"
 include_directives_allowed = false
 problem_inc_files_allowed = false
-
-[rule_transition]
-status = "completed"
-historical_rules = "docs/FORWARD_RULES_0101_0150.rst"
-historical_rule_last_problem = 150
-current_rules = "docs/FORWARD_RULES_0151_ONWARD.rst"
-current_rule_first_problem = 151
-current_rule_last_problem = 0
+content_quality_baseline = "0001-0100_and_0128"
+summary_only_tutorials_allowed = false
 
 [validation]
-policy = "structural_content_preservation"
-repaired_problem_rst = 31
-expected_language_code_blocks = 310
-problem_rst_single_file_checked = 31
+policy = "content_quality_repair"
+repaired_problem_rst = 3
+problem_rst_single_file_checked = 3
+required_language_code_blocks = 30
 include_directives_remaining_in_repaired_rst = 0
-inc_files_removed = 169
-algorithm_semantics_changed = false
-algorithm_runtime_tests_rerun = false
-validation_statement = "本轮只修复文件组织；正文与代码按原顺序内联，未重新声明算法运行验证。"
-runtime_test_claimed_for_static_only_languages = false
+platform_node_redefinitions_removed = true
+cpp17_compatibility_checked = true
+python_fixed_cases_run = true
+cpp17_strict_compile_run = true
+all_languages_runtime_claimed = false
+validation_statement = "0127、0129、0130 完成内容重写；Python 运行固定案例，C++17 严格编译代表实现，其余语言按实际范围静态检查。"
 
 [artifact_lifecycle]
 policy = "docs/ARTIFACT_LIFECYCLE_POLICY.rst"
@@ -109,11 +132,12 @@ problem_code_fragments_present = false
 [quality_scope]
 historical_start = 1
 historical_end = 165
-historical_policy = "已完成题目默认保持原样；只有用户明确指定时才修复历史 RST。"
+historical_policy = "用户已明确要求返工 0127 起的低质量题解；按 needs_revision 连续处理。"
 persistent_rule_start = 151
 persistent_rule = "docs/FORWARD_RULES_0151_ONWARD.rst"
 forward_rule_policy = "0151 起全部后续题目持续执行并原位维护长期前向规则。"
 single_rst_policy = "每道公开可访问题目只有一个自包含 RST，全部语言代码直接内联。"
+content_quality_policy = "单文件只是结构门；缺少教学推导、完整证明和验证证据的题解不得计入质量完成。"
 
 [execution]
 trigger = "explicit_user_message_in_active_conversation"
@@ -135,7 +159,7 @@ index = "state/CONCEPT_LEDGER.toml"
 latest_record = "state/concepts/0163-0165.toml"
 
 [next_action]
-summary = "生成 0166-0169；Medium、Medium、Easy、Easy 合计 6 分；每题只创建一个自包含 RST。"
+summary = "继续返工 0131-0132；完成全部 29 道剩余题目前不生成 0166。"
 
 [last_update]
-summary = "0129-0165 结构返工完成；31 道可访问题恢复单 RST，169 个 .inc 已删除，全程未创建分支或 PR。"
+summary = "质量返工启动；0127、0129、0130 已按前 100 题基线重写，剩余 29 道。"
