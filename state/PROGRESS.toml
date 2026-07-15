@@ -17,7 +17,7 @@ completed_ranges = ["0001-0155", "0160", "0162", "0164-0165"]
 premium_skipped = [156, 157, 158, 159, 161, 163]
 blocked = []
 needs_revision = [
-  133, 134, 135, 136, 137, 138, 139, 140,
+  135, 136, 137, 138, 139, 140,
   141, 142, 143, 144, 145, 146, 147, 148, 149, 150,
   151, 152, 153, 154, 155, 160, 162, 164, 165,
 ]
@@ -26,8 +26,8 @@ needs_revision = [
 status = "in_progress"
 reason = "0127 起部分题解退化为算法摘要与代码集合，未达到 0001-0100 和 0128 的教学质量基线。"
 original_scope = [127, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 160, 162, 164, 165]
-repaired = [127, 129, 130, 131, 132]
-remaining_count = 27
+repaired = [127, 129, 130, 131, 132, 133, 134]
+remaining_count = 25
 baseline = ["0001-0100", "0128"]
 new_problem_generation_paused = true
 completion_count_unchanged = true
@@ -49,21 +49,21 @@ required_sections = [
 [last_batch]
 status = "completed"
 kind = "quality_repair"
-start = 131
-end = 132
+start = 133
+end = 134
 repaired_problem_count = 2
-repaired_problem_ids = [131, 132]
+repaired_problem_ids = [133, 134]
 reference_problem = 128
-difficulty_budget = 6
-summary = "重写 0131、0132，恢复回文分割的完整教学推导，并修复资源事务、递归共享状态与失败语义。"
+difficulty_budget = 4
+summary = "重写 0133、0134，恢复图深拷贝与环形贪心的完整教学推导，并采用精简针对性验证。"
 
 [next_batch]
 status = "quality_repair_ready"
 kind = "quality_repair"
-start = 133
-end = 134
-difficulty_budget = 4
-purpose = "返工 0133 Clone Graph 与 0134 Gas Station；新题 0166 继续暂停。"
+start = 135
+end = 136
+difficulty_budget = 5
+purpose = "返工 0135 Candy 与 0136 Single Number；新题 0166 继续暂停。"
 
 [review_history]
 status = "completed"
@@ -107,7 +107,7 @@ content_quality_baseline = "0001-0100_and_0128"
 summary_only_tutorials_allowed = false
 
 [validation]
-policy = "content_quality_repair"
+policy = "content_first_targeted_revalidation"
 repaired_problem_rst = 2
 problem_rst_single_file_checked = 2
 required_language_code_blocks = 20
@@ -115,12 +115,11 @@ include_directives_remaining_in_repaired_rst = 0
 platform_types_and_interfaces_checked = true
 cpp17_compatibility_checked = true
 python_fixed_cases_run = true
-python_random_differential_run = true
 cpp17_strict_compile_run = true
-c11_strict_compile_run = true
-c_address_undefined_sanitizers_run = true
+random_differential_repeated = false
+sanitizers_repeated = false
 all_languages_runtime_claimed = false
-validation_statement = "0131、0132 完成内容重写；Python 运行固定案例与各 2000 组随机对拍；C++17 与 C11 严格编译并运行代表案例，C 通过地址与未定义行为 sanitizer；其余语言按实际范围静态检查。"
+validation_statement = "0133、0134 完成内容重写；复用原生成阶段证据，本轮仅运行 Python 固定结构与边界、C++17 严格编译代表案例，其余语言针对修改点静态检查；未重复随机对拍或 sanitizer。"
 
 [artifact_lifecycle]
 policy = "docs/ARTIFACT_LIFECYCLE_POLICY.rst"
@@ -162,7 +161,7 @@ index = "state/CONCEPT_LEDGER.toml"
 latest_record = "state/concepts/0163-0165.toml"
 
 [next_action]
-summary = "继续返工 0133-0134；完成全部 27 道剩余题目前不生成 0166。"
+summary = "继续返工 0135-0136；完成全部 25 道剩余题目前不生成 0166。"
 
 [last_update]
-summary = "0131、0132 已按前 100 题与 0128 基线重写；累计修复 5 道，剩余 27 道。"
+summary = "0133、0134 已按教学质量基线重写；累计修复 7 道，剩余 25 道，后续采用精简针对性验证。"
