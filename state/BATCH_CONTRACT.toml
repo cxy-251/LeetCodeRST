@@ -1,10 +1,10 @@
 [contract]
 schema_version = 2
-batch_id = "quality-repair-0143"
+batch_id = "quality-repair-0144-0145"
 status = "ready"
 phase = "quality_repair"
 kind = "quality_repair"
-scope = [143]
+scope = [144, 145]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
@@ -25,12 +25,12 @@ reporting = "只声明实际完成的静态审查；明确未运行、未编译�
 algorithm_score = 2
 target_min = 2
 target_max = 4
-proof_risk = "high"
+proof_risk = "medium"
 language_semantics_risk = "high"
 platform_type_risk = "high"
-output_volume_risk = "low"
-scope_may_shrink = false
-scope_reason = "0143 同时承担切分、反转、合并、节点守恒、无环性和 Rust 独占所有权适配；单题完整返工优先于 4–6 分目标。"
+output_volume_risk = "medium"
+scope_may_shrink = true
+shrink_rule = "若 0145 的全局反转证明、C 资源失败路径或 R 输出物化成本无法完整承载，只提交已完整达标的连续前缀 0144，并把 0145 保留到下一合同。"
 
 [references]
 style_baselines = [
@@ -42,14 +42,14 @@ fact_sources = [
   "state/REVIEW_INDEX.toml",
   "state/CONCEPT_LEDGER.toml",
   "problems/0101-0200/README.rst",
+  "problems/0101-0200/0102-binary-tree-level-order-traversal.rst",
   "problems/0101-0200/0114-flatten-binary-tree-to-linked-list.rst",
-  "problems/0101-0200/0141-linked-list-cycle.rst",
-  "problems/0101-0200/0142-linked-list-cycle-ii.rst",
-  "state/concepts/0143.toml",
+  "state/concepts/0144.toml",
+  "state/concepts/0145.toml",
 ]
 fact_sources_may_provide = [
-  "链表节点身份、平台字段和拓扑修改术语",
-  "快慢指针、只读与原地接口的知识连续性",
+  "二叉树平台字段、空树、树高和节点只读术语",
+  "显式栈、返回容器、Rust Rc<RefCell<TreeNode>> 与 R environment 的事实连续性",
   "当前范围、进度和既有概念记录",
 ]
 fact_sources_must_not_provide = [
@@ -60,52 +60,67 @@ fact_sources_must_not_provide = [
   "文件组织形式",
 ]
 
-[problems."0143"]
-title = "Reorder List"
-difficulty = "Medium"
+[problems."0144"]
+title = "Binary Tree Preorder Traversal"
+difficulty = "Easy"
 primary_risks = [
-  "契约要求按 L0,Ln,L1,Ln-1 顺序重连原节点，不能改 val、创建替代节点或把 void 接口误写成返回新链",
-  "快指针从 head.next 出发时，偶数长度两段等长、奇数长度第一段多一；切分点和 slow.next 断开必须逐长度证明",
-  "第二阶段反转前必须保存后继，第三阶段交替合并前必须同时保存两段后继；更新顺序错误会丢链或成环",
-  "证明需要分别覆盖三阶段产物、节点集合守恒、目标顺序、尾节点终止、无重复和无意外环",
-  "Rust 本题输入是无环独占链，应使用 Option<Box<ListNode>> 或等价所有权安全实现，不能机械沿用 0141–0142 的 Rc 循环适配器",
-  "R environment 与 Julia 可变节点能原地改边；R 返回 invisible(head) 只是适配器便利，必须说明调用者通过原环境观察修改",
+  "契约要求返回根、左、右值序列，空树返回空容器且整棵输入树只读；不能把结果顺序或节点引用集合混为一谈",
+  "迭代栈必须先压右孩子再压左孩子；证明要说明栈表示尚未访问子树的有序前沿，而不只是声称后进先出",
+  "需要证明根和每个非根节点恰好入栈一次、左子树完整先于右子树，以及循环有限终止",
+  "显式栈峰值按树高 O(h) 分析，返回序列 O(n) 是输出载荷；C 分配缓冲和 R 容器物化必须计入语言成本",
+  "Rust 克隆 Rc 只增加临时句柄计数，不复制树节点；RefCell 借用范围必须在访问字段后安全结束且不修改树",
 ]
 minimum_static_review = [
-  "人工推演题目页面示例与 n=1、n=2、奇数 n=5、偶数 n=4、重复值和节点身份保留边界",
-  "逐阶段画出切分前后边、反转不变量和合并每轮 first/second 后继快照，核对最终尾节点 next 为空",
-  "静态证明每个原节点恰好归属一段、反转不改变节点集合、合并每轮只消费现有节点且不形成回边",
-  "逐语言检查 void/Unit 返回、字段名、可空守卫、引用身份、输入修改可见性和无额外节点分配",
-  "专项审查 Rust Box 的 take/移动/尾槽位借用，禁止以伪代码、unsafe 或 Rc 替代未解决的所有权路径",
-  "专项审查 R environment 原地可见性、Julia 共享可变节点，以及 C/C++ 不释放平台节点",
+  "人工推演空树、单节点、只有左链、只有右链、不平衡树和带重复值树的栈内容与输出",
+  "逐轮核对弹出当前节点、记录值、先压右再压左以及每个非空节点唯一入栈来源",
+  "逐语言检查平台签名、空容器、树节点字段、栈操作、返回类型、输入只读和输出物化成本",
+  "专项审查 C 容量增长、realloc 临时指针、失败清理、returnSize 与返回缓冲所有权",
+  "专项审查 Rust Rc 克隆与 RefCell 借用、Julia/R 引用树节点和 R 栈/结果容器语义",
+]
+
+[problems."0145"]
+title = "Binary Tree Postorder Traversal"
+difficulty = "Easy"
+primary_risks = [
+  "契约要求左、右、根的值序列，空树返回空容器且不修改树；不能把节点值反转误写成树结构反转",
+  "单栈方案先压左再压右生成根、右、左序列，最后整体反转；压栈顺序与 0144 相反，机械复用会得到错误结果",
+  "证明必须以子树递归分解说明 reverse(root + RR + RL) 等于 post(left) + post(right) + root，不能只说反过来就是后序",
+  "结果反转在输出容器内原地完成，显式栈为 O(h)、返回载荷为 O(n)；若 R 反复 c 追加导致累计 O(n^2)，必须修正实现或如实计入",
+  "C 的栈与结果双缓冲在任一扩容失败时都要保持可释放指针、清零 returnSize 并避免泄漏或 double free",
+]
+minimum_static_review = [
+  "人工推演空树、单节点、根带双子树、不平衡树和重复值树的根右左记录及反转结果",
+  "用子树字符串分解核对全局反转证明，并静态证明每个节点恰好记录一次且输入树无修改",
+  "逐语言核对先压左再压右、结果原地反转 API、空容器、整数返回和输出/工作空间边界",
+  "专项审查 C 双缓冲扩容和失败清理、Rust 克隆借用、TypeScript 非空断言、Julia reverse! 与 R 容器复制成本",
 ]
 
 must_preserve = [
-  "精确契约、自建奇偶示例和重复值反例",
-  "三阶段解法取舍与每阶段状态到代码变量的映射",
-  "切分长度、反转边、交替合并和最终尾部终止的完整证明",
-  "节点身份与数量守恒、目标区间外不存在和最终无环性",
-  "O(n) 时间、O(1) 核心空间与语言所有权/返回适配成本",
-  "十语言完整实现，Rust 使用真实可借用检查的独占链实现",
-  "准确静态审查证据、边界、学习链和带答案自检",
+  "两题的精确契约、自建结构化树例子和重复值身份边界",
+  "前序有序栈前沿不变量与先右后左的完整证明",
+  "后序根右左构造、子树分解和整体反转的完整证明",
+  "每个节点唯一入栈、输出覆盖、终止性和输入树只读证明",
+  "O(n) 时间、O(h) 栈工作空间、O(n) 输出载荷及语言真实物化成本",
+  "十语言完整实现与 C 分配失败、Rust Rc/RefCell、Julia/R 引用对象适配",
+  "准确静态审查证据、边界、失败方式、学习链和带答案自检",
 ]
 
 forbidden = [
-  "参考 0141、0142 或其他最近题目的章节结构",
-  "通过交换 val 模拟重排",
-  "未断开两段就反转或合并",
-  "只声称三个阶段都是线性而不证明阶段接口和节点守恒",
-  "Rust 使用 Rc<RefCell<ListNode>> 逃避本题 Option<Box<ListNode>> 独占所有权重连",
-  "用 unsafe、裸指针或无法通过借用检查的 Rust 伪代码",
+  "参考 0143、0146 或其他最近题目的章节结构",
+  "只用一句后进先出或反转即正确代替栈前沿与子树分解证明",
+  "把平衡树常见栈深度写成所有树都为 O(log n)",
+  "把 O(n) 返回数组藏进 O(h) 工作空间声明",
+  "C realloc 直接覆盖唯一旧指针而丢失失败清理入口",
+  "R 反复 c 追加却仍宣称总时间 O(n)",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试或 sanitizer 题解代码",
   "把静态审查写成测试、编译或运行通过",
 ]
 
 completion_checks = [
-  "当前题逐项对照合同选定的 0076 与 0100 黄金题",
+  "每题逐项对照合同选定的 0076 与 0100 黄金题",
   "命中 DRIFT_LOG 的回归检查均通过",
-  "0143 只有一个自包含 RST，十语言代码全部内联",
+  "0144、0145 各只有一个自包含 RST，十语言代码全部内联",
   "PROGRESS、README、AGENTS 当前状态、范围索引和知识账本同步",
   "原子提交后 BATCH_CONTRACT 被替换为下一批合同",
 ]
