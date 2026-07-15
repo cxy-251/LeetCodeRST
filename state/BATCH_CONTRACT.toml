@@ -1,5 +1,5 @@
 [contract]
-schema_version = 1
+schema_version = 2
 batch_id = "quality-repair-0135-0136"
 status = "ready"
 phase = "quality_repair"
@@ -11,6 +11,15 @@ quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
 drift_log = "state/DRIFT_LOG.toml"
 new_problem_generation_paused = true
 completion_count_must_remain_unchanged = true
+
+[static_review]
+solution_code_execution = "forbidden"
+solution_code_compilation = "forbidden"
+differential_exhaustive_property_and_sanitizer = "forbidden"
+example_hand_tracing = "required"
+language_semantics_review = "required"
+repository_structure_state_and_git_checks = "allowed"
+reporting = "只声明实际完成的静态审查；明确未运行、未编译、未测试和剩余风险。"
 
 [budget]
 algorithm_score = 5
@@ -45,7 +54,7 @@ fact_sources_must_not_provide = [
   "章节结构",
   "证明深度",
   "代码注释密度",
-  "验证标准",
+  "静态审查标准",
   "文件组织形式",
 ]
 
@@ -57,11 +66,11 @@ primary_risks = [
   "正确性需要证明左右局部约束合并后满足全局条件",
   "最优性不能只用贪心直觉，必须给出逐位置下界与达到下界的论证",
 ]
-minimum_validation = [
-  "官方示例与单元素、严格递增、严格递减、平台、峰谷边界",
-  "Python 主实现运行",
-  "C++17 严格警告编译并运行代表案例",
-  "代码变化或证明疑点时，与小规模独立穷举或约束基准对拍",
+minimum_static_review = [
+  "人工推演官方示例与单元素、严格递增、严格递减、平台、峰谷边界",
+  "逐项核对两次扫描状态、下界合并证明和十语言代码映射",
+  "静态检查 C/C++ 分配与整数上界、Rust 空区间、Julia/R 递减范围",
+  "证明或语言语义无法静态确认时记录剩余风险，不执行题解代码",
 ]
 
 [problems."0136"]
@@ -73,11 +82,11 @@ primary_risks = [
   "TypeScript 位运算会转换为 32 位有符号整数",
   "Go、Rust、Julia、R 的整数宽度或按位 API 需要与平台契约一致",
 ]
-minimum_validation = [
-  "官方示例、唯一值为负数、成对值含负数和边界位模式",
-  "Python 主实现运行",
-  "C++17 严格警告编译并运行代表案例",
-  "逐语言静态检查位宽、补码和返回类型",
+minimum_static_review = [
+  "人工推演官方示例、唯一值为负数、成对值含负数和边界位模式",
+  "逐语言静态检查位宽、补码、按位 API 和返回类型",
+  "核对循环不变量、异或代数证明和代码更新完全一致",
+  "无法静态确认的宿主整数语义记录为剩余风险，不执行题解代码",
 ]
 
 must_preserve = [
@@ -87,7 +96,7 @@ must_preserve = [
   "完整正确性与最优性证明",
   "真实复杂度和语言语义成本",
   "十语言完整实现",
-  "准确验证证据",
+  "准确静态审查证据",
   "边界、易错点、学习链和带答案自检",
 ]
 
@@ -97,7 +106,8 @@ forbidden = [
   "摘要式正确性证明",
   "把十语言实现当作无差别机械翻译",
   "拆分为 inc 或 include",
-  "虚报未执行的随机测试、编译或全语言运行",
+  "运行、编译、对拍、穷举、属性测试或 sanitizer 题解代码",
+  "把静态审查写成测试、编译或运行通过",
 ]
 
 completion_checks = [

@@ -67,7 +67,7 @@ repaired_problem_count = 2
 repaired_problem_ids = [133, 134]
 reference_problem = 128
 difficulty_budget = 4
-summary = "重写 0133、0134，恢复图深拷贝与环形贪心的完整教学推导，并采用精简针对性验证。"
+summary = "重写 0133、0134，恢复图深拷贝与环形贪心的完整教学推导。"
 
 [next_batch]
 status = "quality_repair_ready"
@@ -122,19 +122,16 @@ problem_inc_files_allowed = false
 summary_only_tutorials_allowed = false
 
 [validation]
-policy = "content_first_targeted_revalidation"
-repaired_problem_rst = 2
-problem_rst_single_file_checked = 2
-required_language_code_blocks = 20
-include_directives_remaining_in_repaired_rst = 0
-platform_types_and_interfaces_checked = true
-cpp17_compatibility_checked = true
-python_fixed_cases_run = true
-cpp17_strict_compile_run = true
-random_differential_repeated = false
-sanitizers_repeated = false
-all_languages_runtime_claimed = false
-validation_statement = "0133、0134 完成内容重写；复用原生成阶段证据，本轮仅运行 Python 固定结构与边界、C++17 严格编译代表案例，其余语言针对修改点静态检查；未重复随机对拍或 sanitizer。"
+policy = "static_review_only"
+solution_code_execution_allowed = false
+solution_code_compilation_allowed = false
+differential_or_property_testing_allowed = false
+sanitizer_allowed = false
+manual_example_tracing_required = true
+language_semantics_static_review_required = true
+repository_structure_checks_allowed = true
+state_and_git_consistency_checks_allowed = true
+statement = "题解代码不运行、不编译、不对拍；只做人工示例推演、逐语言静态语义审查和仓库一致性检查，并明确剩余风险。"
 
 [artifact_lifecycle]
 policy = "docs/ARTIFACT_LIFECYCLE_POLICY.rst"
@@ -179,4 +176,4 @@ latest_record = "state/concepts/0163-0165.toml"
 summary = "按 BATCH_CONTRACT 返工 0135-0136；高风险叠加时允许只提交完整连续前缀；完成剩余 25 道前不生成 0166。"
 
 [last_update]
-summary = "新增冻结质量基线、风险批次合同和漂移日志；最近题目不再具有格式示范权。"
+summary = "统一题解生产为静态审查策略；禁止运行、编译或测试题解代码，保留仓库结构与状态一致性检查。"
