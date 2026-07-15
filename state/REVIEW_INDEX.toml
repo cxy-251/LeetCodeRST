@@ -149,9 +149,9 @@ statement = "O(min(m,n)) describes only the rolling Boolean DP array. The C++ si
 [next_action]
 kind = "quality_repair"
 status = "ready"
-start = 144
-end = 145
-purpose = "返工 0144 Binary Tree Preorder Traversal 与 0145 Binary Tree Postorder Traversal；完成剩余质量返工前暂停生成 0166。"
+start = 146
+end = 146
+purpose = "单独返工 0146 LRU Cache；完成剩余质量返工前暂停生成 0166。"
 
 [artifact_lifecycle]
 policy = "docs/ARTIFACT_LIFECYCLE_POLICY.rst"

@@ -1,5 +1,5 @@
 [meta]
-version = 1
+version = 2
 range = "0145"
 last_problem = 145
 inherits = "state/concepts/0144.toml"
@@ -8,6 +8,7 @@ inherits = "state/concepts/0144.toml"
 "workflow.targeted_static_review" = "0134 引入人工示例推演与逐语言静态审查；0145 继续执行，累计强化 12 次。"
 
 [concepts]
-"algorithm.postorder_reverse_root_right_left" = "kind=algorithm; introduced=0145; last=0145; occurrences=1; teaching_state=explained; note=迭代生成根右左序列后整体反转，得到左、右、根的后序遍历。"
-"proof.postorder_global_reverse_local_order" = "kind=proof; introduced=0145; last=0145; occurrences=1; teaching_state=explained; note=每个子树记录均为根右左，反转后所有局部顺序同步变为左右根。"
-"adapter.r_repeated_vector_append" = "kind=language_adapter; introduced=0145; last=0145; occurrences=1; teaching_state=explained; note=R 以 c 反复扩展结果向量时累计复制最坏为 O(n^2)，不能沿用其他语言的摊还线性追加成本。"
+"algorithm.postorder_reverse_root_right_left" = "kind=algorithm; introduced=0145; last=0145; occurrences=1; teaching_state=explained; note=显式栈先压左、后压右，生成 Mirror(u)=[u]+Mirror(right)+Mirror(left)，再在返回值容器中整体反转。"
+"proof.postorder_global_reverse_local_order" = "kind=proof; introduced=0145; last=0145; occurrences=1; teaching_state=explained; note=reverse([u]+Mirror(R)+Mirror(L))=reverse(Mirror(L))+reverse(Mirror(R))+[u]；对子树结构归纳后等于 Post(L)+Post(R)+[u]。"
+"proof.postorder_frontier_partition" = "kind=proof; introduced=0145; last=0145; occurrences=1; teaching_state=explained; note=生成阶段的剩余 Mirror 序列是栈顶到栈底子树段串接；唯一父节点使各前沿子树不交且每个节点恰好记录一次。"
+"adapter.r_repeated_vector_append" = "kind=language_adapter; introduced=0145; last=0145; occurrences=1; teaching_state=explained; note=R 不再以 c 反复扩展结果；environment 通常常数时间写槽，最后在 count>=1 见证下用合法递减 seq.int 一次物化逆序答案。"
