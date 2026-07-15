@@ -5,7 +5,7 @@ last_problem = 141
 inherits = "state/concepts/0139-0140.toml"
 
 [updates]
-"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0141 继续执行，累计强化 8 次。"
+"workflow.targeted_static_review" = "0134 引入人工示例推演与逐语言静态审查；0141 继续执行，累计强化 8 次。"
 
 [concepts]
 "algorithm.floyd_cycle_detection" = "kind=algorithm; introduced=0141; last=0141; occurrences=1; teaching_state=explained; note=慢指针每轮一步、快指针每轮两步；无环时快指针到空，有环时相对速度一使两者在环内相遇。"

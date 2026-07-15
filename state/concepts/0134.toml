@@ -7,4 +7,4 @@ inherits = "state/concepts/0132-0133.toml"
 [concepts]
 "algorithm.gas_station_failed_prefix_elimination" = "kind=algorithm; introduced=0134; last=0134; occurrences=1; teaching_state=explained; note=候选起点到某站的累计净油量为负时，该区间内任一点都不能跨过失败站，下一候选直接移到失败站之后。"
 "proof.gas_station_total_surplus_feasibility" = "kind=proof; introduced=0134; last=0134; occurrences=1; teaching_state=explained; note=全局 gas-cost 总和为负时任何起点都不可能完成一圈；总和非负时，最后一次失败之后的候选能够完成。"
-"workflow.targeted_example_validation" = "kind=workflow; introduced=0134; last=0134; occurrences=1; teaching_state=canonical; note=普通题默认验证官方示例和少量关键边界，运行 Python、编译 C++，不以大规模随机案例作为完成条件。"
+"workflow.targeted_static_review" = "kind=workflow; introduced=0134; last=0134; occurrences=1; teaching_state=canonical; note=题解代码不运行、不编译、不对拍；逐题人工推演示例和关键边界，静态核对十语言接口、索引、位宽、所有权与失败路径，并记录剩余风险。"

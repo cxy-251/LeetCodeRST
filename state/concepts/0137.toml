@@ -5,7 +5,7 @@ last_problem = 137
 inherits = "state/concepts/0136.toml"
 
 [updates]
-"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0137 继续执行，累计强化 4 次。"
+"workflow.targeted_static_review" = "0134 引入人工示例推演与逐语言静态审查；0137 继续执行，累计强化 4 次。"
 
 [concepts]
 "algorithm.bitwise_mod_three_fsm" = "kind=algorithm; introduced=0137; last=0137; occurrences=1; teaching_state=explained; note=ones 与 twos 在所有二进制位上并行编码出现次数模三的 00、01、10 状态。"

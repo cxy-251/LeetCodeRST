@@ -5,7 +5,7 @@ last_problem = 140
 inherits = "state/concepts/0139.toml"
 
 [updates]
-"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0140 继续执行，累计强化 7 次。"
+"workflow.targeted_static_review" = "0134 引入人工示例推演与逐语言静态审查；0140 继续执行，累计强化 7 次。"
 "complexity.dictionary_character_budget" = "0139 以 C 表达布尔切分的匹配成本；0140 在 O(nC) 之外新增所有后缀答案字符总量 T。"
 
 [concepts]

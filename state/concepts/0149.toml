@@ -5,8 +5,8 @@ last_problem = 149
 inherits = "state/concepts/0148.toml"
 
 [updates]
-"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0149 继续执行，累计强化 16 次。"
-"workflow.risk_triggered_sampling" = "0138 建立风险触发抽查；0149 因几何方向规范化执行 200 组小规模随机对拍。"
+"workflow.targeted_static_review" = "0134 引入人工示例推演与逐语言静态审查；0149 继续执行，累计强化 16 次。"
+"workflow.risk_triggered_sampling" = "0138 建立风险触发抽查；0149 的历史批次曾因几何方向规范化执行 200 组小规模随机对拍，该历史事实不构成现行许可，当前题解统一只做静态审查。"
 
 [concepts]
 "algorithm.anchor_normalized_direction_count" = "kind=algorithm; introduced=0149; last=0149; occurrences=1; teaching_state=explained; note=逐点作为锚点，以约分后的方向向量哈希计数经过锚点的各条直线。"

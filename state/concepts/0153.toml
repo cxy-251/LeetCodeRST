@@ -5,7 +5,7 @@ last_problem = 153
 inherits = "state/concepts/0150-0152.toml"
 
 [updates]
-"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0153 继续执行，累计强化 20 次。"
+"workflow.targeted_static_review" = "0134 引入人工示例推演与逐语言静态审查；0153 继续执行，累计强化 20 次。"
 
 [concepts]
 "algorithm.rotated_array_minimum_right_boundary" = "kind=algorithm; introduced=0153; last=0153; occurrences=1; teaching_state=explained; note=比较中点与右端值，判断最小值位于中点右侧还是包含中点的左侧候选区间。"

@@ -5,7 +5,7 @@ last_problem = 148
 inherits = "state/concepts/0147.toml"
 
 [updates]
-"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0148 继续执行，累计强化 15 次。"
+"workflow.targeted_static_review" = "0134 引入人工示例推演与逐语言静态审查；0148 继续执行，累计强化 15 次。"
 
 [concepts]
 "algorithm.linked_list_top_down_merge_sort" = "kind=algorithm; introduced=0148; last=0148; occurrences=1; teaching_state=explained; note=快慢指针断开链表，递归排序两半，再顺序合并，实现 O(n log n) 链表排序。"

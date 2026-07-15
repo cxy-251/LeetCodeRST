@@ -5,7 +5,7 @@ last_problem = 155
 inherits = "state/concepts/0153-0154.toml"
 
 [updates]
-"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0155 继续执行，累计强化 22 次。"
+"workflow.targeted_static_review" = "0134 引入人工示例推演与逐语言静态审查；0155 继续执行，累计强化 22 次。"
 
 [concepts]
 "data_structure.augmented_stack" = "kind=data_structure; introduced=0155; last=0155; occurrences=1; teaching_state=explained; note=每个栈层同时保存元素值与该前缀最小值，使查询不需要重新扫描。"

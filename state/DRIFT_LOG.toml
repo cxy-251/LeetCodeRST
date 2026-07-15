@@ -75,3 +75,20 @@ regression_checks = [
   "高风险题明确列出最小静态审查",
   "未通过压缩证明、注释或语言说明维持原批次范围",
 ]
+
+[[incident]]
+id = "validation-policy-split-brain"
+status = "controlled"
+range = "cross-conversation"
+problem = "现行规则已经禁止执行题解代码，但知识账本仍保留运行、编译或对拍作为活动工作流，形成互相冲突的完成标准。"
+likely_cause = "验证策略修改时只更新了前向规则和质量门，没有同步清理活动状态链中的旧工作流键与说明。"
+permanent_controls = [
+  "题解统一执行人工示例推演与逐语言静态审查，不运行、不编译、不对拍",
+  "PROGRESS、批次合同、质量门和知识账本使用同一静态审查口径",
+  "历史运行事实必须明确标注为历史，不构成当前或后续批次许可",
+]
+regression_checks = [
+  "活动状态中不存在 workflow.targeted_example_validation 键",
+  "活动规则不存在允许运行、编译、对拍、穷举、属性测试或 sanitizer 题解代码的条款",
+  "题解静态审查记录明确未运行、未编译和剩余风险",
+]

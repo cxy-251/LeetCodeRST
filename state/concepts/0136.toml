@@ -1,12 +1,13 @@
 [meta]
-version = 1
+version = 2
 range = "0136"
 last_problem = 136
 inherits = "state/concepts/0135.toml"
 
 [updates]
-"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0136 继续执行，累计强化 3 次。"
+"workflow.targeted_static_review" = "0134 引入人工示例推演与逐语言静态审查；0136 继续执行，累计强化 3 次。"
 
 [concepts]
-"algorithm.xor_pair_cancellation" = "kind=algorithm; introduced=0136; last=0136; occurrences=1; teaching_state=explained; note=异或满足交换律与结合律，成对相同元素归零，全部元素异或后只留下唯一元素。"
-"proof.xor_prefix_invariant" = "kind=proof; introduced=0136; last=0136; occurrences=1; teaching_state=explained; note=扫描任意前缀后累加器等于该前缀全部元素的异或值，结束时由成对抵消得到唯一元素。"
+"algorithm.xor_pair_cancellation" = "kind=algorithm; introduced=0136; last=0136; occurrences=1; teaching_state=explained; note=异或的单位元、自消去、交换律和结合律让任意距离的相同整数对归零，全部元素异或后只留下唯一元素的位模式。"
+"proof.xor_prefix_invariant" = "kind=proof; introduced=0136; last=0136; occurrences=1; teaching_state=explained; note=扫描任意前缀后累加器精确等于该前缀全部元素的异或；结束时按出现次数契约消去每一对重复值，得到唯一元素。"
+"language.xor_signed_width_contract" = "kind=language_boundary; introduced=0136; last=0136; occurrences=1; teaching_state=explained; note=TypeScript 与 R 的按位操作使用 32 位有符号语义，Python 负数采用无限符号扩展，Go 与 Julia 使用宿主整数宽度；官方 32 位内值域使十语言适配保持输入值。"

@@ -10,4 +10,4 @@ difficulty_budget = 6
 summary = "完成逆波兰栈求值、逆序单词扫描与最大最小乘积滚动动态规划。"
 
 [updates]
-"workflow.targeted_example_validation" = "0150-0152 三题继续执行官方示例与关键边界，累计强化 19 次。"
+"workflow.targeted_static_review" = "0150-0152 三题继续执行人工示例推演、关键边界检查与逐语言静态审查，累计强化 19 次。"

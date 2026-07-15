@@ -5,7 +5,7 @@ last_problem = 139
 inherits = "state/concepts/0136-0138.toml"
 
 [updates]
-"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0139 继续执行，累计强化 6 次。"
+"workflow.targeted_static_review" = "0134 引入人工示例推演与逐语言静态审查；0139 继续执行，累计强化 6 次。"
 
 [concepts]
 "algorithm.word_break_reachable_prefix" = "kind=algorithm; introduced=0139; last=0139; occurrences=1; teaching_state=explained; note=reachable[i] 表示长度为 i 的前缀可由字典词组成，只从可达起点向匹配单词的终点传播。"

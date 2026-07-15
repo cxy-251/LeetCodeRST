@@ -5,10 +5,10 @@ last_problem = 138
 inherits = "state/concepts/0137.toml"
 
 [updates]
-"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0138 继续执行，累计强化 5 次。"
+"workflow.targeted_static_review" = "0134 引入人工示例推演与逐语言静态审查；0138 继续执行，累计强化 5 次。"
 
 [concepts]
 "algorithm.identity_map_two_pass_clone" = "kind=algorithm; introduced=0138; last=0138; occurrences=1; teaching_state=explained; note=第一遍为每个原节点建立身份到副本的映射，第二遍连接 next 与 random，支持前向、后向和自引用。"
 "proof.deep_copy_edge_preservation" = "kind=proof; introduced=0138; last=0138; occurrences=1; teaching_state=explained; note=身份映射建立节点双射，第二遍保留每条 next 和 random 边，且所有非空副本引用都指向新对象。"
 "adapter.r_identity_linear_lookup" = "kind=language_adapter; introduced=0138; last=0138; occurrences=1; teaching_state=explained; note=R 基础实现以 identical 在线性表中比较 environment 身份，避免非标准地址键，时间因此为 O(n^2)。"
-"workflow.risk_triggered_review" = "kind=workflow; introduced=0138; last=0138; occurrences=1; teaching_state=canonical; note=取消固定每 50 题全量审核；普通批次自检，只有高风险语义、验证异常、规则冲突或用户明确要求时抽查。"
+"workflow.risk_triggered_review" = "kind=workflow; introduced=0138; last=0138; occurrences=1; teaching_state=canonical; note=取消固定每 50 题全量审核；普通批次自检，只有高风险语义、静态审查异常、规则冲突或用户明确要求时抽查。"

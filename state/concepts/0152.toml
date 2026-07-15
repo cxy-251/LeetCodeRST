@@ -5,7 +5,7 @@ last_problem = 152
 inherits = "state/concepts/0151.toml"
 
 [updates]
-"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0152 继续执行，累计强化 19 次。"
+"workflow.targeted_static_review" = "0134 引入人工示例推演与逐语言静态审查；0152 继续执行，累计强化 19 次。"
 
 [concepts]
 "algorithm.max_min_product_ending_here" = "kind=algorithm; introduced=0152; last=0152; occurrences=1; teaching_state=explained; note=同时维护以当前位置结尾的最大与最小乘积，负数使两者角色交换。"

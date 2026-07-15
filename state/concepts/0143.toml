@@ -5,7 +5,7 @@ last_problem = 143
 inherits = "state/concepts/0142.toml"
 
 [updates]
-"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0143 继续执行，累计强化 10 次。"
+"workflow.targeted_static_review" = "0134 引入人工示例推演与逐语言静态审查；0143 继续执行，累计强化 10 次。"
 
 [concepts]
 "algorithm.reorder_list_split_reverse_merge" = "kind=algorithm; introduced=0143; last=0143; occurrences=1; teaching_state=explained; note=快慢指针切分链表，原地反转后半段，再交替合并两段得到首尾交错顺序。"

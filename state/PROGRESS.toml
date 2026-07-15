@@ -17,7 +17,7 @@ completed_ranges = ["0001-0155", "0160", "0162", "0164-0165"]
 premium_skipped = [156, 157, 158, 159, 161, 163]
 blocked = []
 needs_revision = [
-  135, 136, 137, 138, 139, 140,
+  137, 138, 139, 140,
   141, 142, 143, 144, 145, 146, 147, 148, 149, 150,
   151, 152, 153, 154, 155, 160, 162, 164, 165,
 ]
@@ -26,8 +26,8 @@ needs_revision = [
 status = "in_progress"
 reason = "0127 起部分题解退化为算法摘要与代码集合，未达到冻结教学质量基线。"
 original_scope = [127, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 160, 162, 164, 165]
-repaired = [127, 129, 130, 131, 132, 133, 134]
-remaining_count = 25
+repaired = [127, 129, 130, 131, 132, 133, 134, 135, 136]
+remaining_count = 23
 baseline = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 batch_contract = "state/BATCH_CONTRACT.toml"
 drift_log = "state/DRIFT_LOG.toml"
@@ -42,7 +42,7 @@ required_sections = [
   "complete_correctness_proof",
   "real_complexity_and_language_costs",
   "ten_language_implementations",
-  "validation_evidence",
+  "static_review_evidence",
   "critical_edges_and_failure_modes",
   "knowledge_updates_and_related_problems",
   "check_questions_with_answers",
@@ -61,22 +61,22 @@ quality_over_batch_score = true
 [last_batch]
 status = "completed"
 kind = "quality_repair"
-start = 133
-end = 134
+start = 135
+end = 136
 repaired_problem_count = 2
-repaired_problem_ids = [133, 134]
-reference_problem = 128
-difficulty_budget = 4
-summary = "重写 0133、0134，恢复图深拷贝与环形贪心的完整教学推导。"
+repaired_problem_ids = [135, 136]
+reference_problems = [50, 76, 128]
+difficulty_budget = 5
+summary = "重写 0135、0136，补齐双向约束逐点最优性、异或前缀不变量和十语言静态语义审查。"
 
 [next_batch]
 status = "quality_repair_ready"
 kind = "quality_repair"
-start = 135
-end = 136
-difficulty_budget = 5
+start = 137
+end = 138
+difficulty_budget = 4
 contract = "state/BATCH_CONTRACT.toml"
-purpose = "返工 0135 Candy 与 0136 Single Number；新题 0166 继续暂停。"
+purpose = "返工 0137 Single Number II 与 0138 Copy List with Random Pointer；新题 0166 继续暂停。"
 
 [review_history]
 status = "completed"
@@ -178,7 +178,7 @@ index = "state/CONCEPT_LEDGER.toml"
 latest_record = "state/concepts/0163-0165.toml"
 
 [next_action]
-summary = "按 BATCH_CONTRACT 返工 0135-0136；高风险叠加时允许只提交完整连续前缀；完成剩余 25 道前不生成 0166。"
+summary = "按 BATCH_CONTRACT 返工 0137-0138；高风险叠加时允许只提交完整连续前缀；完成剩余 23 道前不生成 0166。"
 
 [last_update]
-summary = "题解统一静态审查；Codex 使用标准 git add、commit、push 形成单个原子 main 提交。"
+summary = "0135-0136 已按冻结基线完成返工；当前统一静态审查，下一批为 0137-0138。"

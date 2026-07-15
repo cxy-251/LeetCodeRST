@@ -5,7 +5,7 @@ last_problem = 146
 inherits = "state/concepts/0145.toml"
 
 [updates]
-"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0146 继续执行，累计强化 13 次。"
+"workflow.targeted_static_review" = "0134 引入人工示例推演与逐语言静态审查；0146 继续执行，累计强化 13 次。"
 
 [concepts]
 "datastructure.lru_hash_doubly_linked_list" = "kind=data_structure; introduced=0146; last=0146; occurrences=1; teaching_state=explained; note=哈希表负责按键定位，双向链表维护最近到最久使用顺序，组合后 get 与 put 平均 O(1)。"

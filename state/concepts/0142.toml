@@ -5,7 +5,7 @@ last_problem = 142
 inherits = "state/concepts/0141.toml"
 
 [updates]
-"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0142 继续执行，累计强化 9 次。"
+"workflow.targeted_static_review" = "0134 引入人工示例推演与逐语言静态审查；0142 继续执行，累计强化 9 次。"
 "language.node_identity_comparison" = "0141 强化链表身份比较；0142 返回原链表入口节点，累计强化 4 次。"
 
 [concepts]

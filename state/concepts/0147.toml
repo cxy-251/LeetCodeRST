@@ -5,7 +5,7 @@ last_problem = 147
 inherits = "state/concepts/0146.toml"
 
 [updates]
-"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0147 继续执行，累计强化 14 次。"
+"workflow.targeted_static_review" = "0134 引入人工示例推演与逐语言静态审查；0147 继续执行，累计强化 14 次。"
 
 [concepts]
 "algorithm.linked_list_insertion_sorted_prefix" = "kind=algorithm; introduced=0147; last=0147; occurrences=1; teaching_state=explained; note=维护已排序前缀尾节点；失序节点从原处摘下，再插入前缀中第一个更大值之前。"

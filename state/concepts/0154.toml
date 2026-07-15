@@ -5,7 +5,7 @@ last_problem = 154
 inherits = "state/concepts/0153.toml"
 
 [updates]
-"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0154 继续执行，累计强化 21 次。"
+"workflow.targeted_static_review" = "0134 引入人工示例推演与逐语言静态审查；0154 继续执行，累计强化 21 次。"
 
 [concepts]
 "algorithm.rotated_array_minimum_right_boundary" = "kind=algorithm; introduced=0153; last=0154; occurrences=2; teaching_state=reinforcing; note=重复值版本沿用右端比较；不等时保持二分排除，等值时只删除无信息右端。"

@@ -1,12 +1,12 @@
 [meta]
-version = 1
+version = 2
 range = "0135"
 last_problem = 135
 inherits = "state/concepts/0134.toml"
 
 [updates]
-"workflow.targeted_example_validation" = "0134 引入针对性样例验证；0135 继续执行，累计强化 2 次。"
+"workflow.targeted_static_review" = "0134 引入人工示例推演与逐语言静态审查；0135 继续执行，累计强化 2 次。"
 
 [concepts]
-"algorithm.candy_two_directional_constraints" = "kind=algorithm; introduced=0135; last=0135; occurrences=1; teaching_state=explained; note=左扫满足左邻约束，右扫满足右邻约束，并对同一孩子取两个下界的最大值。"
-"proof.candy_minimum_by_max_lower_bounds" = "kind=proof; introduced=0135; last=0135; occurrences=1; teaching_state=explained; note=每个位置的最少糖果数等于来自左右相邻关系的两个必要下界的最大值，逐点取最大后总和最小。"
+"algorithm.candy_two_directional_constraints" = "kind=algorithm; introduced=0135; last=0135; occurrences=1; teaching_state=explained; note=左扫计算只由左邻严格上升链强制出的最小下界 L，右扫合并只由右邻严格下降链强制出的下界 R，最终逐点取 max(L,R)。"
+"proof.candy_minimum_by_max_lower_bounds" = "kind=proof; introduced=0135; last=0135; occurrences=1; teaching_state=explained; note=任意合法分配逐点不低于 L 和 R；max(L,R) 又能满足两侧全部边约束，因此算法同时达到每个坐标的必要下界，总和全局最小。"
