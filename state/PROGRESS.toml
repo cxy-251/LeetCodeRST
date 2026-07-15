@@ -24,11 +24,13 @@ needs_revision = [
 
 [quality_repair]
 status = "in_progress"
-reason = "0127 起部分题解退化为算法摘要与代码集合，未达到 0001-0100 和 0128 的教学质量基线。"
+reason = "0127 起部分题解退化为算法摘要与代码集合，未达到冻结教学质量基线。"
 original_scope = [127, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 160, 162, 164, 165]
 repaired = [127, 129, 130, 131, 132, 133, 134]
 remaining_count = 25
-baseline = ["0001-0100", "0128"]
+baseline = "docs/TUTORIAL_QUALITY_BASELINE.rst"
+batch_contract = "state/BATCH_CONTRACT.toml"
+drift_log = "state/DRIFT_LOG.toml"
 new_problem_generation_paused = true
 completion_count_unchanged = true
 required_sections = [
@@ -45,6 +47,16 @@ required_sections = [
   "knowledge_updates_and_related_problems",
   "check_questions_with_answers",
 ]
+
+[quality_control]
+status = "active"
+style_authority = "frozen_baseline_only"
+recent_problem_style_authority = false
+recent_problem_role = "fact_continuity_only"
+golden_samples_auto_promote = false
+risk_dimensions = ["proof", "language_semantics", "platform_type", "output_volume"]
+scope_shrink_allowed = true
+quality_over_batch_score = true
 
 [last_batch]
 status = "completed"
@@ -63,6 +75,7 @@ kind = "quality_repair"
 start = 135
 end = 136
 difficulty_budget = 5
+contract = "state/BATCH_CONTRACT.toml"
 purpose = "返工 0135 Candy 与 0136 Single Number；新题 0166 继续暂停。"
 
 [review_history]
@@ -100,10 +113,12 @@ maintenance = "update_in_place"
 segmented_successors_allowed = false
 source_rules = "docs/FORWARD_RULES_0101_0150.rst"
 active_corrections = "state/REVIEW_INDEX.toml"
+tutorial_quality_baseline = "docs/TUTORIAL_QUALITY_BASELINE.rst"
+batch_contract = "state/BATCH_CONTRACT.toml"
+drift_log = "state/DRIFT_LOG.toml"
 single_problem_artifact = "exactly_one_self_contained_rst"
 include_directives_allowed = false
 problem_inc_files_allowed = false
-content_quality_baseline = "0001-0100_and_0128"
 summary_only_tutorials_allowed = false
 
 [validation]
@@ -139,7 +154,7 @@ persistent_rule_start = 151
 persistent_rule = "docs/FORWARD_RULES_0151_ONWARD.rst"
 forward_rule_policy = "0151 起全部后续题目持续执行并原位维护长期前向规则。"
 single_rst_policy = "每道公开可访问题目只有一个自包含 RST，全部语言代码直接内联。"
-content_quality_policy = "单文件只是结构门；缺少教学推导、完整证明和验证证据的题解不得计入质量完成。"
+content_quality_policy = "冻结基线和批次合同是内容质量门；最近题目只提供事实连续性。"
 
 [execution]
 trigger = "explicit_user_message_in_active_conversation"
@@ -161,7 +176,7 @@ index = "state/CONCEPT_LEDGER.toml"
 latest_record = "state/concepts/0163-0165.toml"
 
 [next_action]
-summary = "继续返工 0135-0136；完成全部 25 道剩余题目前不生成 0166。"
+summary = "按 BATCH_CONTRACT 返工 0135-0136；高风险叠加时允许只提交完整连续前缀；完成剩余 25 道前不生成 0166。"
 
 [last_update]
-summary = "0133、0134 已按教学质量基线重写；累计修复 7 道，剩余 25 道，后续采用精简针对性验证。"
+summary = "新增冻结质量基线、风险批次合同和漂移日志；最近题目不再具有格式示范权。"

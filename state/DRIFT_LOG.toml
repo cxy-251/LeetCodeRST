@@ -1,0 +1,77 @@
+[policy]
+schema_version = 1
+purpose = "记录已经发生的质量漂移、可能原因、永久控制和回归检查，防止新对话重复犯错。"
+use = "每批开始读取；命中当前题或工作流的 incident 时执行 regression_checks。"
+maintenance = "只记录有仓库证据的通用漂移；单题错误仍进入题目修复或 active correction。"
+
+[[incident]]
+id = "single-rst-split-0129-0165"
+status = "controlled"
+range = "0129-0165"
+problem = "一个公开题被拆成多个 .inc 文件，再通过 .. include:: 组装。"
+likely_cause = "模型把降低单文件写入压力和工程化拆分误当成可维护性优化。"
+permanent_controls = [
+  "一个公开题只允许一个自包含 RST",
+  "十语言代码与全部正文直接内联",
+  "禁止题目 .inc、代码分片和 include 指令",
+]
+regression_checks = [
+  "搜索当前题 RST 中的 .. include::，结果必须为零",
+  "搜索当前题号和 slug 对应的 .inc 或正文分片，结果必须为零",
+  "确认代码块数量与当前题所需语言范围一致",
+]
+
+[[incident]]
+id = "summary-skeleton-0127-0165"
+status = "in_repair"
+range = "0127,0129-0165"
+problem = "题解退化为算法摘要、简短正确性、复杂度和十语言代码集合。"
+likely_cause = "批次后半部分为了控制输出体积，逐步删除例子、抽象、证明义务、语言差异和答案要点。"
+permanent_controls = [
+  "执行冻结质量基线",
+  "批次合同列出 must_preserve 和风险",
+  "高风险叠加时允许缩批，禁止压缩题解",
+  "内容质量未通过时保留 needs_revision",
+]
+regression_checks = [
+  "存在精确契约、自建示例、问题抽象和解法选择",
+  "状态和不变量可逐项映射到代码",
+  "证明覆盖当前题真正需要的合法性、完整性、最优性或终止性",
+  "复杂度包含语言适配和输出成本",
+  "自检问题带有答案要点",
+]
+
+[[incident]]
+id = "recent-output-style-contamination"
+status = "controlled"
+range = "cross-conversation"
+problem = "下一对话把最近生成题目同时当作状态来源和格式样本，导致错误结构递归复制。"
+likely_cause = "事实连续性与格式示范权没有分离。"
+permanent_controls = [
+  "格式与解释深度只来自 TUTORIAL_QUALITY_BASELINE",
+  "当前批次只使用 BATCH_CONTRACT 中声明的 style_baselines",
+  "最近题目只作为合同声明的 fact_sources",
+  "新完成题目不会自动升级为黄金样本",
+]
+regression_checks = [
+  "批次合同分别声明 style_baselines 和 fact_sources",
+  "新题结构没有以最近题目为唯一依据",
+  "最终报告说明使用了哪些黄金题及其角色",
+]
+
+[[incident]]
+id = "difficulty-score-only-batching"
+status = "controlled"
+range = "cross-conversation"
+problem = "Easy/Medium/Hard 分数无法反映证明、十语言语义和输出体积，批次后半部分更容易降质。"
+likely_cause = "单批预算只有算法难度，没有风险维度和缩批规则。"
+permanent_controls = [
+  "批次合同增加 proof、language_semantics、platform_type 和 output_volume 风险",
+  "两个以上高风险维度允许缩批",
+  "质量优先于 4-6 分目标",
+]
+regression_checks = [
+  "合同包含四个风险维度",
+  "高风险题明确列出最小验证",
+  "未通过压缩证明、注释或语言说明维持原批次范围",
+]

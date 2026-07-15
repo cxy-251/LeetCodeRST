@@ -1,0 +1,109 @@
+[contract]
+schema_version = 1
+batch_id = "quality-repair-0135-0136"
+status = "ready"
+phase = "quality_repair"
+kind = "quality_repair"
+scope = [135, 136]
+state_source = "state/PROGRESS.toml"
+baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
+quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
+drift_log = "state/DRIFT_LOG.toml"
+new_problem_generation_paused = true
+completion_count_must_remain_unchanged = true
+
+[budget]
+algorithm_score = 5
+target_min = 4
+target_max = 6
+proof_risk = "high"
+language_semantics_risk = "high"
+platform_type_risk = "low"
+output_volume_risk = "high"
+scope_may_shrink = true
+shrink_rule = "若高风险叠加导致后题只能压缩，提交已完整达标的连续前缀，并把未完成题写入下一份合同。"
+
+[references]
+style_baselines = [
+  "problems/0001-0100/0050-powx-n.rst",
+  "problems/0001-0100/0076-minimum-window-substring.rst",
+  "problems/0101-0200/0128-longest-consecutive-sequence.rst",
+]
+fact_sources = [
+  "state/PROGRESS.toml",
+  "state/REVIEW_INDEX.toml",
+  "state/CONCEPT_LEDGER.toml",
+  "problems/0101-0200/README.rst",
+  "problems/0101-0200/0134-gas-station.rst",
+]
+fact_sources_may_provide = [
+  "术语和知识衰减连续性",
+  "平台接口连续性",
+  "关联题目和范围状态",
+]
+fact_sources_must_not_provide = [
+  "章节结构",
+  "证明深度",
+  "代码注释密度",
+  "验证标准",
+  "文件组织形式",
+]
+
+[problems."0135"]
+title = "Candy"
+difficulty = "Hard"
+primary_risks = [
+  "两次扫描各自维护什么约束必须映射到代码",
+  "正确性需要证明左右局部约束合并后满足全局条件",
+  "最优性不能只用贪心直觉，必须给出逐位置下界与达到下界的论证",
+]
+minimum_validation = [
+  "官方示例与单元素、严格递增、严格递减、平台、峰谷边界",
+  "Python 主实现运行",
+  "C++17 严格警告编译并运行代表案例",
+  "代码变化或证明疑点时，与小规模独立穷举或约束基准对拍",
+]
+
+[problems."0136"]
+title = "Single Number"
+difficulty = "Easy"
+primary_risks = [
+  "异或抵消证明必须基于交换律、结合律和 x xor x = 0",
+  "负数和最高位涉及固定宽补码语义",
+  "TypeScript 位运算会转换为 32 位有符号整数",
+  "Go、Rust、Julia、R 的整数宽度或按位 API 需要与平台契约一致",
+]
+minimum_validation = [
+  "官方示例、唯一值为负数、成对值含负数和边界位模式",
+  "Python 主实现运行",
+  "C++17 严格警告编译并运行代表案例",
+  "逐语言静态检查位宽、补码和返回类型",
+]
+
+must_preserve = [
+  "精确契约与自建反例",
+  "问题抽象和真实解法选择",
+  "状态到代码变量的逐项映射",
+  "完整正确性与最优性证明",
+  "真实复杂度和语言语义成本",
+  "十语言完整实现",
+  "准确验证证据",
+  "边界、易错点、学习链和带答案自检",
+]
+
+forbidden = [
+  "参考 0133 或 0134 的章节结构",
+  "为保持两题一批而压缩任一题",
+  "摘要式正确性证明",
+  "把十语言实现当作无差别机械翻译",
+  "拆分为 inc 或 include",
+  "虚报未执行的随机测试、编译或全语言运行",
+]
+
+completion_checks = [
+  "每题逐项对照合同选定黄金题",
+  "命中 DRIFT_LOG 的回归检查均通过",
+  "每题只有一个自包含 RST",
+  "PROGRESS、README、范围索引和知识账本同步",
+  "原子提交后 BATCH_CONTRACT 被替换为下一批合同",
+]
