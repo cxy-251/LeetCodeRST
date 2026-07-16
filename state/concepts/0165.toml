@@ -1,5 +1,5 @@
 [meta]
-version = 1
+version = 2
 range = "0165"
 last_problem = 165
 inherits = "state/concepts/0164.toml"
@@ -8,6 +8,9 @@ inherits = "state/concepts/0164.toml"
 "workflow.targeted_static_review" = "0134 引入人工示例推演与逐语言静态审查；0165 继续执行，累计强化 26 次。"
 
 [concepts]
-"algorithm.version_significant_span_compare" = "kind=algorithm; introduced=0165; last=0165; occurrences=1; teaching_state=explained; note=逐段跳过前导零，先比较有效位数，再比较等长十进制字符。"
-"invariant.missing_revision_equals_zero" = "kind=invariant; introduced=0165; last=0165; occurrences=1; teaching_state=explained; note=版本结束后的缺失修订号与全零修订号统一表示为有效长度零。"
-"string.ascii_segment_scanning" = "kind=string; introduced=0165; last=0165; occurrences=1; teaching_state=explained; note=数字与点号的 ASCII 契约允许字节级扫描；R 适配器显式物化整数向量。"
+"algorithm.version_significant_span_compare" = "kind=algorithm; introduced=0165; last=0165; occurrences=1; teaching_state=explained; note=每段定位 end、跳零得 significant，以有效位数和等长 ASCII 字典序比较，不解析任意长整数。"
+"invariant.missing_revision_equals_zero" = "kind=invariant; introduced=0165; last=0165; occurrences=1; teaching_state=explained; note=全零段与已结束侧的缺失修订号都规范为有效长度 0；较短版本结束后仍逐段核对非零尾部。"
+"proof.decimal_span_numeric_order" = "kind=proof; introduced=0165; last=0165; occurrences=1; teaching_state=explained; note=无前导零十进制串先由位数定序，等长时首个不同高位定序；首次不同修订号决定版本关系。"
+"invariant.version_scanner_progress" = "kind=invariant; introduced=0165; last=0165; occurrences=1; teaching_state=explained; note=循环继续时至少一侧未结束，该侧跨过一个合法非空段并严格前进；结束侧可停留为缺失零段而不死循环。"
+"string.ascii_segment_scanning" = "kind=string; introduced=0165; last=0165; occurrences=1; teaching_state=explained; note=ASCII 合同支撑 Rust/Go 字节扫描；Julia codeunits 是轻量包装，R utf8ToInt 物化 O(n+m) 整数向量。"
+"complexity.version_interface_materialization" = "kind=complexity; introduced=0165; last=0165; occurrences=1; teaching_state=explained; note=核心扫描 O(n+m) 时间/O(1) 索引；另计 C++ 按值副本、Java/TS 短命段对象、Rust 所有权与 R 输入物化。"

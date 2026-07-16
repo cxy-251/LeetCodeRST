@@ -1,16 +1,16 @@
 [contract]
 schema_version = 2
-batch_id = "quality-repair-0164-0165"
+batch_id = "generation-0166-0168"
 status = "ready"
-phase = "quality_repair"
-kind = "quality_repair"
-scope = [164, 165]
+phase = "generation"
+kind = "generation"
+scope = [166, 167, 168]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
 drift_log = "state/DRIFT_LOG.toml"
-new_problem_generation_paused = true
-completion_count_must_remain_unchanged = true
+new_problem_generation_paused = false
+completion_count_must_remain_unchanged = false
 
 [static_review]
 solution_code_execution = "forbidden"
@@ -22,7 +22,7 @@ repository_structure_state_and_git_checks = "allowed"
 reporting = "只声明实际完成的静态审查；明确未运行、未编译、未测试和剩余风险。"
 
 [budget]
-algorithm_score = 6
+algorithm_score = 5
 target_min = 4
 target_max = 6
 proof_risk = "high"
@@ -30,7 +30,7 @@ language_semantics_risk = "high"
 platform_type_risk = "high"
 output_volume_risk = "high"
 scope_may_shrink = true
-scope_reason = "0164 为 Hard、0165 为 Medium，合计 6 分且是返工范围最后两题。0164 的桶宽与数值证明不得因批次收尾压缩；必须先完整验收 0164，再写 0165。若第二题开始压缩长修订号、缺失零段、字符单位或物化成本，只提交连续前缀 0164 并重建合同。"
+scope_reason = "0166、0167、0168 分别为 Medium、Medium、Easy，合计 5 分。0166 的符号、INT_MIN、余数循环与十语言哈希/字符串资源风险最高，必须先独立完整验收；若后续题开始压缩证明、接口或静态审查，只提交已达标连续前缀并重建合同。"
 
 [references]
 style_baselines = [
@@ -43,16 +43,15 @@ fact_sources = [
   "state/CONCEPT_LEDGER.toml",
   "docs/FORWARD_RULES_0151_ONWARD.rst",
   "problems/0101-0200/README.rst",
-  "https://leetcode.com/problems/maximum-gap/description/",
-  "https://leetcode.com/problems/compare-version-numbers/description/",
-  "state/concepts/0164.toml",
-  "state/concepts/0165.toml",
+  "https://leetcode.com/problems/fraction-to-recurring-decimal/description/",
+  "https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/description/",
+  "https://leetcode.com/problems/excel-sheet-column-title/description/",
 ]
 fact_sources_may_provide = [
-  "0164 的非负整数域、长度和值域、排序后相邻差目标、少于两项返回零和线性时空要求",
-  "0165 的点分十进制修订号、前导零忽略、缺失修订号按零、返回 -1/0/1 和字符串约束",
-  "既有鸽巢桶、有效数字跨度比较与当前语言接口连续性",
-  "当前范围、进度和统一静态审查政策",
+  "0166 的有符号 32 位分子分母、非零分母、有限或循环小数格式、答案长度上界与官方示例",
+  "0167 的非递减数组、唯一解、不同元素、一基返回、长度和值域与常数额外空间要求",
+  "0168 的正整数范围、Excel 列标题映射、无零位二十六进制语义与官方示例",
+  "当前题号、Premium 间隔、质量返工完成状态和统一静态审查政策",
 ]
 fact_sources_must_not_provide = [
   "章节结构",
@@ -62,72 +61,88 @@ fact_sources_must_not_provide = [
   "文件组织形式",
 ]
 
-[problems."0164"]
-title = "Maximum Gap"
-difficulty = "Hard"
-primary_risks = [
-  "输入长度 1..100000、元素在 [0,10^9]；返回排序后相邻元素最大差，少于两项返回 0，输入只读且要求 O(n) 时间、O(n) 额外空间",
-  "当 n>=2 且 high>low 时，桶宽 w=ceil((high-low)/(n-1))；必须从 n-1 个排序间距总和证明最大间距至少 w",
-  "同桶整数差严格小于 w，因此最大间距必跨桶；扫描相邻非空桶时，前桶最大值与后桶最小值必须证明为排序后真正相邻元素",
-  "桶数 floor((high-low)/w)+1 必须证明不超过 n；不能只声称线性而分配与值域 10^9 成正比的计数数组",
-  "n<2、high==low、重复值、极端稀疏值、空桶和第一个非空桶的 previous 状态需要分别闭合，不能用数值哨兵假装桶已使用",
-  "差值、上取整分子、桶索引和跨桶差在固定宽语言中先提升到足够宽类型；TypeScript/R 需证明当前整数域精确",
-]
-minimum_static_review = [
-  "人工推演官方 [3,6,9,1]、单元素示例及自建重复稀疏例，列 low/high/range/w/count、每个值桶号、桶极值和跨桶候选",
-  "覆盖两元素、全相等、重复最小/最大、连续整数、最大值 10^9、最大间距在首尾和多个空桶",
-  "完整证明鸽巢下界、桶内严格小于 w、最大差必跨桶、相邻非空桶边界是排序相邻元素以及扫描完备性",
-  "独立证明 w>=1、最大值桶号<count、bucket_count<=n、所有宽化表达式和最终 int 返回安全",
-  "逐语言核对公开签名、桶初始化/used 标记、索引转换、容器分配、输入所有权、只读语义和资源失败",
-  "专项审查 C calloc 数量与元素大小、失败返回歧义、free 成功路径；报告三次线性扫描和 O(n) 桶载荷",
-]
-
-[problems."0165"]
-title = "Compare Version Numbers"
+[problems."0166"]
+title = "Fraction to Recurring Decimal"
 difficulty = "Medium"
 primary_risks = [
-  "两个版本字符串长度各 1..500，由 ASCII 数字与点号组成；按修订号从左到右比较，忽略前导零，缺失后续修订号视为 0，返回 -1/0/1",
-  "不能把任意修订号解析为固定宽整数或浮点数；有效跨度先比去零后位数，等长再逐字符比较，才能覆盖 500 位修订号",
-  "全零修订号与缺失修订号都规范化为有效长度 0；一侧结束后另一侧必须继续检查非零尾段，不能按字符串结束立即判小",
-  "每轮 end、significant、next 三个边界必须区分段尾点号与字符串尾；已结束侧读取为空零段且位置保持结束，未结束侧严格前进",
-  "ASCII 合同支撑 C/Rune 以外的字节或代码单元扫描；Julia codeunits 是 O(1) 包装，R utf8ToInt 是 O(n+m) 物化，不能统一写成常数空间",
-  "C++ 按值字符串接口、Rust 消费 String、Java 每轮 Segment 对象、R 整数向量和各语言字符比较顺序需如实计费",
+  "numerator 与 denominator 都在有符号 32 位范围，denominator 非零；返回十进制字符串，有限小数必须终止，循环节加括号，答案长度保证小于 10000",
+  "符号仅在结果非零且分子分母异号时输出；必须先提升再取绝对值，避免 abs(INT_MIN) 在 32 位溢出和负零",
+  "整数部分用绝对值相除，余数驱动长除法；每轮必须在乘 10 前记录当前余数对应的输出位置，重复余数首次位置确定循环节起点",
+  "证明需覆盖余数为零恰好有限、非零余数集合有限必重复、相同余数决定相同后续数字、首次重复括号位置与输出值等于原分数",
+  "余数绝对值小于正分母，remainder*10 可能超过 32 位但适合 64 位；TypeScript/R 必须证明最大约 2.15e10 仍在精确整数域",
+  "C 需要有界增长字符串和 remainder->position 哈希表的容量、冲突、失败清理与返回所有权；不得按 2^31 分母直接分配数组",
 ]
 minimum_static_review = [
-  "人工推演官方等价、较小、尾零等案例及超长修订号，逐段记录 end、significant、digits、next 和首次差异",
-  "覆盖 1.01 与 1.001、1.0 与 1.0.0、1.0.1 与 1、全零段、长前导零、500 位非零修订号和不同段数",
-  "证明有效位数与等长字典序等价于非负十进制整数序，首次不同修订号决定版本序，扫描完毕等价",
-  "证明两指针每轮至少有未结束侧前进、不会在缺失零段上死循环，且每个字符只被常数次访问",
-  "逐语言核对公开签名、ASCII 单位、半开跨度、点号跳过、结束位置、返回符号、输入复制/所有权和辅助对象",
-  "分别报告核心 O(n+m) 时间与 O(1) 索引状态，以及 C++ 参数副本、Java 短命对象、Rust 所有权、Julia 包装和 R 物化成本",
+  "人工推演 1/2、2/1、4/333 及负数与 INT_MIN 边界，逐轮记录余数、首次位置、乘十、商数字与新余数",
+  "覆盖零分子、符号组合、整除、有限多位、纯循环、非循环前缀加循环、分母绝对值 2^31 和输出长度边界",
+  "完整证明长除法表示、有限/循环二分、余数首次出现映射、括号插入和算法终止",
+  "逐语言核对平台签名、宽化后绝对值、整数除法、余数键类型、哈希位置、构建器插入、字符反转与所有权",
+  "专项审查 C 所有分配乘法、哈希负载/冲突、字符串增长、失败释放和成功返回；不把资源失败写成合法空结果",
+  "复杂度以产生的小数位数 L 和不同余数数 r 报告 O(L) 期望时间、O(r+L) 空间及哈希最坏风险",
+]
+
+[problems."0167"]
+title = "Two Sum II - Input Array Is Sorted"
+difficulty = "Medium"
+primary_risks = [
+  "numbers 长度 2..30000、值在 [-1000,1000] 且非递减，target 在 [-1000,1000]；恰有一组不同下标解，返回两个一基下标并只用常数额外空间",
+  "左右指针必须保持 left<right，禁止同一元素使用两次；和小于 target 时只移动左端，和大于时只移动右端",
+  "不变量需保留唯一解下标仍在 [left,right]；若当前最大配对和仍过小，left 不可能参与任何剩余解，过大分支对 right 对称",
+  "重复值合法，唯一的是下标对解而非数组值互异；证明不能依赖严格递增，也不能跳过重复值破坏唯一解",
+  "返回载荷固定两个整数；C 需分配长度 2 并设置 returnSize，失败语义与调用者释放责任明确",
+  "内部零基与题目一基返回需逐语言核对；Julia/R 内部一基时不能再次加一，和的当前范围虽安全仍要准确说明",
+]
+minimum_static_review = [
+  "人工推演三个官方示例，逐轮记录 left/right、端点值、sum、删除端点和唯一解见证",
+  "覆盖两元素、负数与零、重复值构成答案、答案在首尾、指针相邻和合同保证的唯一解",
+  "证明两个排除分支、唯一解保留、每轮严格缩短、有限终止及返回不同一基下标",
+  "逐语言核对公开签名、只读输入、索引单位、结果容器、固定返回载荷与 C 资源路径",
+  "明确核心 O(n) 时间/O(1) 状态，输出数组 O(1)；不得用哈希表却声称常数额外空间",
+]
+
+[problems."0168"]
+title = "Excel Sheet Column Title"
+difficulty = "Easy"
+primary_risks = [
+  "输入 columnNumber 在 [1,2^31-1]，返回 Excel 列标题；A..Z 表示 1..26，AA 表示 27，不存在表示零的字符",
+  "每轮必须先把当前正数减一，再以 26 取余得到 0..25 字母并整除；直接 n%26 会在 26、52 等倍数产生不存在的零位",
+  "生成顺序从最低位到最高位，需要反转或前插；证明需建立减一后的标准余数与原无零位二十六进制表示等价",
+  "循环状态保持尚未编码的高位商，严格变小至零；还原公式需证明输出标题数值等于原输入且表示唯一",
+  "最大输入输出长度有限但各语言字符构建、反转、ASCII 转换和返回物化成本要准确，C 容量与终止符闭合",
+  "R/Julia 一基容器不影响数值位次，TypeScript number 精确表示 32 位输入和所有除法中间量",
+]
+minimum_static_review = [
+  "人工推演 1、28、701 以及 26、52、2^31-1，逐轮记录减一值、余数、字母、商和反转结果",
+  "覆盖 A/Z/AA/AZ/ZZ/AAA 边界、26 的倍数、最大输入和单字符输出",
+  "证明每轮位公式、循环不变量、商严格下降、终止、表示正确与唯一性",
+  "逐语言核对平台签名、整数除法、字符码、构建方向、反转、C 返回所有权和 R 字符拼接成本",
+  "复杂度以标题长度 L 报告 O(L) 时间与 O(L) 返回/构建空间，不把返回字符串写成 O(1)",
 ]
 
 must_preserve = [
-  "两题各自具备精确契约、自建反例、问题抽象、解法取舍、状态不变量和完整正确性证明",
-  "0164 的鸽巢下界、桶内严格界、跨桶相邻性、桶数线性与宽整数资源证明",
-  "0165 的有效数字跨度、缺失等于零、长修订号无解析、双指针进度与字符物化成本",
-  "固定十语言完整实现，平台签名、整数、字符单位、索引、所有权和失败路径准确",
-  "每题独立的人工推演、逐语言静态审查、剩余风险、失败方式、学习链和带答案自检",
+  "三题各自具备精确契约、自建反例、问题抽象、解法取舍、状态不变量和完整正确性证明",
+  "0166 的宽化符号、长除法余数映射、有限/循环证明、括号位置与资源路径",
+  "0167 的唯一解区间、单调端点排除、不同下标与一基返回",
+  "0168 的先减一无零位进制、逆序位生成、终止和字符物化",
+  "固定十语言完整实现以及每题独立人工推演、静态语义审查、剩余风险、学习链和带答案自检",
 ]
 
 forbidden = [
-  "参考 0155、0160、0162 或其他最近题目的章节结构、证明篇幅或静态审查密度",
-  "在 0164 中直接排序形成 O(n log n)，按值域分配 10^9 桶，或只背诵鸽巢原理而不证明桶边界覆盖",
-  "使用 floor 平均间距导致桶内差可等于目标下界，却仍声称最大差必跨桶",
-  "在窄类型完成 high-low 或 range+n-2 后再赋给宽类型，或用 0 作为桶未使用的唯一哨兵",
-  "在 0165 中用 int/long/double 解析任意修订号，以 split 物化却声称 O(1) 辅助空间，或按原始段长度比较前导零",
-  "一侧字符串结束就立即判版本较小，遗漏缺失修订号等于零；或让结束侧与零尾段循环不前进",
-  "把 Unicode 通用字符边界外推给 ASCII 字节扫描，或混淆 Julia codeunits 包装与 R utf8ToInt 物化",
+  "参考 0164–0165 或其他最近题目的章节结构、证明篇幅或静态审查密度",
+  "在 0166 中对 32 位 INT_MIN 直接 abs、用浮点格式化、按分母值域分配数组或在乘十后才记录余数位置",
+  "把重复商数字当作循环判据；循环由余数状态重复决定，数字重复不充分",
+  "在 0167 中返回零基下标、允许 left==right 复用元素、使用哈希表却声称常数空间，或依赖元素互异",
+  "在 0168 中直接 n%26 映射 A..Z、遗漏先减一、按生成逆序直接返回，或把返回载荷忽略为空间零",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试或 sanitizer 题解代码",
   "把静态审查写成测试、编译或运行通过",
 ]
 
 completion_checks = [
-  "两题逐项对照 0050 的数值边界/状态递推深度与 0076 的扫描不变量/物化深度",
-  "每题写完立即完成自身质量门；0165 出现压缩迹象时按连续前缀缩批",
+  "三题逐项对照 0050 的数值边界/递推深度与 0076 的不变量/物化深度",
+  "每题写完立即完成自身质量门；后题出现压缩迹象时按连续前缀缩批",
   "命中 DRIFT_LOG 的拆分、摘要、最近样本、预算与验证策略回归检查均通过",
-  "0164 与 0165 各自只有一个自包含 RST，每题十语言代码全部内联",
-  "完成后 PROGRESS 退出质量返工、解除 0166 暂停，并同步 README、AGENTS、范围索引和知识账本",
-  "原子提交后 BATCH_CONTRACT 被替换为新题 0166 的生成合同，而不是保留已消费返工合同",
+  "0166–0168 各自只有一个自包含 RST，每题十语言代码全部内联",
+  "完成范围、completed_count、next_problem、README、范围索引和知识账本同步",
+  "原子提交后 BATCH_CONTRACT 被替换为下一批合同",
 ]

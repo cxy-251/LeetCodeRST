@@ -1,6 +1,6 @@
 [project]
 name = "leetcode-multilang-rst"
-phase = "quality_repair"
+phase = "generation"
 format = "rst"
 ordering = "leetcode_number_ascending"
 execution_mode = "conversation_only"
@@ -16,20 +16,18 @@ completed_count = 159
 completed_ranges = ["0001-0155", "0160", "0162", "0164-0165"]
 premium_skipped = [156, 157, 158, 159, 161, 163]
 blocked = []
-needs_revision = [
-  164, 165,
-]
+needs_revision = []
 
 [quality_repair]
-status = "in_progress"
+status = "completed"
 reason = "0127 起部分题解退化为算法摘要与代码集合，未达到冻结教学质量基线。"
 original_scope = [127, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 160, 162, 164, 165]
-repaired = [127, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 160, 162]
-remaining_count = 2
+repaired = [127, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 160, 162, 164, 165]
+remaining_count = 0
 baseline = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 batch_contract = "state/BATCH_CONTRACT.toml"
 drift_log = "state/DRIFT_LOG.toml"
-new_problem_generation_paused = true
+new_problem_generation_paused = false
 completion_count_unchanged = true
 required_sections = [
   "precise_contract",
@@ -59,23 +57,23 @@ quality_over_batch_score = true
 [last_batch]
 status = "completed"
 kind = "quality_repair"
-start = 155
-end = 162
-repaired_problem_count = 3
-repaired_problem_ids = [155, 160, 162]
-reference_problems = [76, 100]
-difficulty_budget = 5
-summary = "重写 0155、0160、0162，补齐逐层前缀最小操作归纳、含空哨兵的节点身份换头路径，以及相邻斜率二分的双边界峰值证书。"
-
-[next_batch]
-status = "quality_repair_ready"
-kind = "quality_repair"
 start = 164
 end = 165
-problem_ids = [164, 165]
+repaired_problem_count = 2
+repaired_problem_ids = [164, 165]
+reference_problems = [50, 76]
 difficulty_budget = 6
+summary = "重写 0164–0165，补齐最大间距的鸽巢桶下界、跨桶相邻性与线性桶数证明，以及无整数解析的版本有效跨度比较和尾零进度证明。"
+
+[next_batch]
+status = "generation_ready"
+kind = "generation"
+start = 166
+end = 168
+problem_ids = [166, 167, 168]
+difficulty_budget = 5
 contract = "state/BATCH_CONTRACT.toml"
-purpose = "连续返工 0164 Maximum Gap 与 0165 Compare Version Numbers；新题 0166 继续暂停。"
+purpose = "生成 0166 Fraction to Recurring Decimal、0167 Two Sum II 与 0168 Excel Sheet Column Title。"
 
 [review_history]
 status = "completed"
@@ -145,7 +143,7 @@ problem_code_fragments_present = false
 [quality_scope]
 historical_start = 1
 historical_end = 165
-historical_policy = "用户已明确要求返工 0127 起的低质量题解；按 needs_revision 连续处理。"
+historical_policy = "用户指定的 32 道低质量题解已经全部返工完成；历史题默认保持不变，风险触发时定向抽查。"
 persistent_rule_start = 151
 persistent_rule = "docs/FORWARD_RULES_0151_ONWARD.rst"
 forward_rule_policy = "0151 起全部后续题目持续执行并原位维护长期前向规则。"
@@ -177,7 +175,7 @@ index = "state/CONCEPT_LEDGER.toml"
 latest_record = "state/concepts/0163-0165.toml"
 
 [next_action]
-summary = "按 BATCH_CONTRACT 连续返工 0164–0165；完成剩余 2 道前不生成 0166。"
+summary = "按 BATCH_CONTRACT 生成 0166–0168；质量返工已完成。"
 
 [last_update]
-summary = "0155、0160、0162 已按冻结基线完成返工；当前统一静态审查，最后一批处理 0164–0165。"
+summary = "0164–0165 已完成返工，needs_revision 清空并解除新题暂停；下一批生成 0166–0168。"
