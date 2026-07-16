@@ -11,10 +11,10 @@ code_comment_language = "zh-CN"
 problem_artifact_shape = "one_self_contained_rst_per_public_problem"
 
 [progress]
-next_problem = 169
-completed_count = 162
-completed_ranges = ["0001-0155", "0160", "0162", "0164-0168"]
-premium_skipped = [156, 157, 158, 159, 161, 163]
+next_problem = 173
+completed_count = 165
+completed_ranges = ["0001-0155", "0160", "0162", "0164-0169", "0171-0172"]
+premium_skipped = [156, 157, 158, 159, 161, 163, 170]
 blocked = []
 needs_revision = []
 
@@ -57,27 +57,27 @@ quality_over_batch_score = true
 [last_batch]
 status = "completed"
 kind = "generation"
-start = 167
-end = 168
-generated_problem_count = 2
-generated_problem_ids = [167, 168]
-reference_problems = [50, 76]
-difficulty_budget = 3
-planned_scope = [167, 168]
+start = 169
+end = 172
+generated_problem_count = 3
+generated_problem_ids = [169, 171, 172]
+premium_skipped_ids = [170]
+reference_problems = [1, 50]
+difficulty_budget = 4
+planned_scope = [169, 171, 172]
 scope_shrunk = false
-scope_reason = "0167 与 0168 均完整通过单题质量门，未出现证明、接口或静态审查压缩。"
-summary = "完成 0167 有序数组双指针单调排除与一基索引契约，以及 0168 无零位二十六进制的先减一位分解、唯一性证明和十语言字符构造。"
+scope_reason = "0169、0171、0172 均完整通过单题质量门；0170 仅按合同登记 Premium，没有生成猜测性题解。"
+summary = "完成 0169 Boyer-Moore 异值抵消与严格多数存活证明、0171 无零位二十六进制前缀解码，以及 0172 阶乘因子 5 的分层计数与对数循环证明。"
 
 [next_batch]
 status = "generation_ready"
 kind = "generation"
-start = 169
-end = 172
-problem_ids = [169, 171, 172]
-expected_premium_skips = [170]
-difficulty_budget = 4
+start = 173
+end = 174
+problem_ids = [173, 174]
+difficulty_budget = 6
 contract = "state/BATCH_CONTRACT.toml"
-purpose = "生成 0169 Majority Element、登记 Premium 0170、生成 0171 Excel Sheet Column Number 与 0172 Factorial Trailing Zeroes。"
+purpose = "生成 0173 Binary Search Tree Iterator 与 0174 Dungeon Game；先独立验收对象接口与栈不变量，再处理高风险逆向动态规划。"
 
 [review_history]
 status = "completed"
@@ -146,7 +146,7 @@ problem_code_fragments_present = false
 
 [quality_scope]
 historical_start = 1
-historical_end = 168
+historical_end = 172
 historical_policy = "用户指定的 32 道低质量题解已经全部返工完成；历史题默认保持不变，风险触发时定向抽查。"
 persistent_rule_start = 151
 persistent_rule = "docs/FORWARD_RULES_0151_ONWARD.rst"
@@ -176,10 +176,10 @@ concurrency_policy = "fetch_and_compare_before_commit; stop_on_remote_change_or_
 
 [concept_ledger]
 index = "state/CONCEPT_LEDGER.toml"
-latest_record = "state/concepts/0167-0168.toml"
+latest_record = "state/concepts/0169-0172.toml"
 
 [next_action]
-summary = "按 BATCH_CONTRACT 从 0169 开始；0170 按 Premium 规则登记后继续 0171–0172。"
+summary = "按 BATCH_CONTRACT 生成 0173–0174；先完成 0173 并单题验收，再决定是否在同批继续 0174。"
 
 [last_update]
-summary = "0167–0168 已完整生成并通过静态质量门，完成数更新为 162，下一题为 0169。"
+summary = "0169、0171、0172 已完整生成，0170 登记 Premium；完成数更新为 165，下一题为 0173。"

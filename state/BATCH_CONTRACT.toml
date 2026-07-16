@@ -1,11 +1,10 @@
 [contract]
 schema_version = 2
-batch_id = "generation-0169-0172"
+batch_id = "generation-0173-0174"
 status = "ready"
 phase = "generation"
 kind = "generation"
-scope = [169, 171, 172]
-expected_premium_skips = [170]
+scope = [173, 174]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
@@ -23,19 +22,19 @@ repository_structure_state_and_git_checks = "allowed"
 reporting = "只声明实际完成的静态审查；明确未运行、未编译、未测试和剩余风险。"
 
 [budget]
-algorithm_score = 4
+algorithm_score = 6
 target_min = 4
 target_max = 6
 proof_risk = "high"
-language_semantics_risk = "medium"
-platform_type_risk = "medium"
+language_semantics_risk = "high"
+platform_type_risk = "high"
 output_volume_risk = "high"
 scope_may_shrink = true
-scope_reason = "0169 的 Boyer-Moore 抵消证明是本批主要证明风险；0171 与 0172 算法较短，但固定十语言和三题输出体积仍为 high。若后题开始压缩证明、适配成本或静态审查，只提交已完整达标的连续可执行前缀。"
+scope_reason = "0173 是对象设计题，十语言接口、树节点引用、显式栈与 C 生命周期风险较高；0174 是 Hard 逆向动态规划，证明和数值边界同样为 high。必须先独立完成 0173；若继续 0174 会压缩证明、接口或静态审查，只提交 0173 并重建合同。"
 
 [references]
 style_baselines = [
-  "problems/0001-0100/0001-two-sum.rst",
+  "problems/0001-0100/0100-same-tree.rst",
   "problems/0001-0100/0050-powx-n.rst",
 ]
 fact_sources = [
@@ -44,16 +43,12 @@ fact_sources = [
   "state/CONCEPT_LEDGER.toml",
   "docs/FORWARD_RULES_0151_ONWARD.rst",
   "problems/0101-0200/README.rst",
-  "https://leetcode.com/problems/majority-element/description/",
-  "https://leetcode.com/problems/two-sum-iii-data-structure-design/description/",
-  "https://leetcode.com/problems/excel-sheet-column-number/description/",
-  "https://leetcode.com/problems/factorial-trailing-zeroes/description/",
+  "https://leetcode.com/problems/binary-search-tree-iterator/description/",
+  "https://leetcode.com/problems/dungeon-game/description/",
 ]
 fact_sources_may_provide = [
-  "0169 的数组范围、严格超过一半的多数元素保证、返回值和官方示例",
-  "0170 的 Premium 访问状态与题号推进事实",
-  "0171 的大写字母标题、长度上界、A=1 到 Z=26 的解码合同和官方示例",
-  "0172 的非负整数范围、阶乘尾零定义、复杂度追问和官方示例",
+  "0173 的 BST、next/hasNext 调用合同、调用次数与 O(h) 空间/均摊 O(1) 进阶要求",
+  "0174 的网格、初始生命至少 1、生命不能降到 0、右下公主房和输入范围",
   "当前完成范围、静态审查政策和长期质量控制状态",
 ]
 fact_sources_must_not_provide = [
@@ -64,86 +59,67 @@ fact_sources_must_not_provide = [
   "文件组织形式",
 ]
 
-[problems."0169"]
-title = "Majority Element"
-difficulty = "Easy"
-primary_risks = [
-  "nums 非空，题目保证存在出现次数严格大于 floor(n/2) 的元素；不能把众数或恰好一半误写成多数",
-  "Boyer-Moore 的 candidate 与 balance 只表达未抵消后缀代表，不是遍历中实时出现次数",
-  "证明必须说明不同值成对抵消不会消灭真正多数，并说明最终候选为何必为多数",
-  "题目已保证多数存在，因此无需第二遍验证；若扩展到无保证输入，必须增加计数验证",
-  "十语言实现保持 O(n) 时间/O(1) 状态，不使用哈希表后仍声称常数空间",
-]
-minimum_static_review = [
-  "人工推演 [3,2,3]、[2,2,1,1,1,2,2]、连续候选切换和单元素",
-  "写出抵消模型、候选段不变量、严格多数存活和终止证明",
-  "逐语言核对公开签名、只读输入、balance 类型、空输入前提和返回类型",
-  "复杂度区分 Boyer-Moore 常数状态与哈希/排序备选成本",
-]
-
-[problems."0170"]
-title = "Two Sum III - Data structure design"
-access = "Premium"
-action = "登记 premium_skipped 后继续 0171，不生成猜测性 RST。"
-
-[problems."0171"]
-title = "Excel Sheet Column Number"
-difficulty = "Easy"
-primary_risks = [
-  "输入由 A..Z 构成，A=1、Z=26；从左到右执行 answer=answer*26+digit",
-  "它是 0168 的逆过程，不需要先减一；错误照搬编码侧减一会破坏结果",
-  "乘加顺序体现高位折叠不变量，必须证明处理前缀的数值含义",
-  "结果在 32 位有符号范围内；固定宽语言可用 int，但乘加前后的范围说明要准确",
-  "R/TypeScript 的整数精确性和字符码转换、Julia 一基字符串索引与 ASCII 合同需要静态核对",
-]
-minimum_static_review = [
-  "人工推演 A、AB、ZY、FXSHRXW 和 Z/AA 边界",
-  "证明前缀折叠不变量、每位合法、终止和与 0168 的互逆关系",
-  "逐语言核对 ASCII 字符码、字符串扫描单位、乘加类型和返回值",
-  "复杂度以标题长度 L 报告 O(L) 时间，区分字符物化适配成本",
-]
-
-[problems."0172"]
-title = "Factorial Trailing Zeroes"
+[problems."0173"]
+title = "Binary Search Tree Iterator"
 difficulty = "Medium"
 primary_risks = [
-  "尾零来自因子 10=2*5；阶乘中因子 2 多于因子 5，因此只累计 5 的指数",
-  "倍数 25、125 等提供多个因子 5，不能只计算 floor(n/5)",
-  "主循环反复令 current=floor(current/5) 并累加，避免显式计算 5^k 的乘法溢出",
-  "证明需要覆盖每层 floor(n/5^k) 的计数含义、总和不重不漏和循环终止",
-  "复杂度为 O(log_5 n) 时间/O(1) 空间，不能计算 n! 或转字符串",
+  "迭代器初始化只压入根到最左节点的路径；栈顶必须始终是尚未返回节点中的最小值",
+  "next 弹出栈顶后，只把其右子树的最左路径压栈；不能预先物化完整中序序列后声称 O(h) 空间",
+  "证明需覆盖栈中路径结构、BST 有序性、每个节点恰好压入和弹出一次，以及 next 的均摊 O(1)",
+  "十语言对象接口差异显著；C 需要对象结构、动态节点指针栈、扩容失败、构造失败清理和 free 所有权",
+  "根可为空，hasNext 只检查栈；题目保证 next 在存在下一元素时调用，但扩展接口不得越界弹栈",
+  "R 应使用 environment 保存可变迭代器状态，Julia 使用 mutable struct；不能把局部副本更新误写成持久对象状态",
 ]
 minimum_static_review = [
-  "人工推演 n=0、3、5、25、10000，逐层记录商与累计值",
-  "证明因子 2 充足、每个整数贡献的 5 因子按层计数且恰好一次",
-  "逐语言核对整数除法、循环条件、累计范围和平台签名",
-  "明确未计算阶乘，复杂度按除以 5 的轮数报告",
+  "人工推演 [7,3,15,null,null,9,20] 的构造、next、hasNext 序列，并覆盖空树、单节点、全左链、全右链",
+  "证明栈顶最小不变量、右子树最左路径恢复、无遗漏无重复和均摊复杂度",
+  "逐语言核对平台类名、TreeNode 引用、栈容器、对象可变性、空状态与返回类型",
+  "专项审查 C 容量增长、realloc 失败不丢旧指针、构造失败释放和 bSTIteratorFree",
+  "复杂度区分单次最坏 O(h)、整个遍历 O(n)、均摊 next O(1)、空间 O(h)",
+]
+
+[problems."0174"]
+title = "Dungeon Game"
+difficulty = "Hard"
+primary_risks = [
+  "状态必须定义为进入当前格前所需的最小生命值，而不是从起点累计的最大剩余生命；生命任何时刻至少为 1",
+  "从右下向左上转移 need=max(1,min(down,right)-dungeon[i][j])，终点基础条件也必须由同一语义推出",
+  "证明需同时覆盖必要性和充分性：低于 need 必死或无法完成，等于 need 沿选定后继可以存活到终点",
+  "边界哨兵只能让公主格拥有一个值 1 的合法后继；其他越界方向必须是不可达大值，防止错误选择",
+  "网格值与后继需求相减应使用足够宽类型；不可达哨兵参与减法前必须先取合法最小后继，避免溢出",
+  "一维滚动 DP 的 dp[j] 在更新前分别代表下方和右方状态；十语言索引方向、R/Julia 一基下标和输入物化需逐项核对",
+  "C 需要分配 n 列宽整数数组并处理失败；不能返回合法生命值 1 来伪装资源失败",
+]
+minimum_static_review = [
+  "人工推演官方 3x3 示例、单格正数、单格负数、全正路径、必须绕开大伤害的分支",
+  "写出进入生命状态定义、基础条件、滚动数组不变量和必要/充分双向证明",
+  "逐语言核对逆向循环、min/max、宽整数、哨兵、矩阵索引和 C 分配释放",
+  "复杂度报告 O(mn) 时间、O(n) 核心空间，并分别记录语言矩阵或行物化成本",
+  "明确未运行、未编译，保留极端数值和平台接口的剩余风险",
 ]
 
 must_preserve = [
-  "0169 的抵消模型、严格多数存活证明、候选状态与无验证前提",
-  "0170 只登记 Premium，不创建题解文件",
-  "0171 的高位前缀折叠、A=1 数位语义、与 0168 的逆向关系",
-  "0172 的 5 因子分层计数、不重不漏证明和对数轮终止",
-  "三道公开题各自固定十语言完整实现、独立人工推演、静态语义审查、剩余风险和带答案自检",
+  "0173 的显式栈惰性中序、栈顶最小不变量、右子树左链恢复、对象生命周期与均摊分析",
+  "0174 的进入生命状态、逆向最优子结构、必要/充分证明、哨兵边界与宽整数",
+  "两题固定十语言完整实现、独立人工推演、静态语义审查、剩余风险和带答案自检",
 ]
 
 forbidden = [
-  "参考 0167–0168 或其他最近题目的章节结构、证明篇幅或静态审查密度",
-  "在 0169 中把 balance 当作当前候选真实频次，或在无多数保证的扩展输入中省略验证",
-  "为 0170 创建猜测性 RST、代码或题面重述",
-  "在 0171 中沿用 0168 的先减一编码步骤，或按普通零基字符值计算 A=0",
-  "在 0172 中计算阶乘、转字符串数零，或只统计 5 的倍数遗漏 25/125 的额外因子",
+  "参考 0169–0172 或其他最近题目的章节结构、证明篇幅或静态审查密度",
+  "在 0173 中预先保存完整中序数组却声明 O(h) 空间，或只给总 O(n) 而遗漏 next 均摊证明",
+  "在 0173 的 C 实现中泄漏动态栈、覆盖 realloc 旧指针或省略对象释放接口",
+  "在 0174 中使用从起点的局部贪心、只最大化最终生命、允许生命暂时为 0，或把 dp 定义与转移写反",
+  "在 0174 中让普通边界哨兵等于 1，导致路径逃出网格，或让大哨兵直接参与溢出减法",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试或 sanitizer 题解代码",
   "把静态审查写成测试、编译或运行通过",
 ]
 
 completion_checks = [
-  "三道公开题逐项对照 0001 的紧凑完整性与 0050 的状态/数值边界深度",
-  "每题写完立即完成自身质量门；后题出现压缩迹象时按连续可执行前缀缩批",
+  "两题逐项对照 0100 的树接口/引用语义与 0050 的状态递推/数值边界深度",
+  "0173 写完立即完成单题质量门；0174 出现压缩迹象时按连续前缀缩批",
   "命中 DRIFT_LOG 的拆分、摘要、最近样本、预算与验证策略回归检查均通过",
-  "0169、0171、0172 各自只有一个自包含 RST，每题十语言代码全部内联；0170 不生成题解",
-  "完成范围、premium_skipped、completed_count、next_problem、README、范围索引和知识账本同步",
-  "原子提交后 BATCH_CONTRACT 被替换为下一批合同",
+  "0173 与 0174 各自只有一个自包含 RST，每题十语言代码全部内联",
+  "完成范围、completed_count、next_problem、README、范围索引和知识账本同步",
+  "提交后 BATCH_CONTRACT 被替换为下一批合同",
 ]

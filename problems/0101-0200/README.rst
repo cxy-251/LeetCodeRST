@@ -2,12 +2,12 @@ LeetCode 0101–0200
 ==================
 
 本目录按题号顺序保存 0101 至 0200 的题目教程。当前题号进度为：完成 0101 至 0155、0160、0162、
-0164 至 0168；0156 至 0159、0161、0163 登记为 Premium 跳过。每道公开题只有一个自包含 RST，
-正文与十语言代码全部直接内联，不使用 ``.inc`` 或 ``.. include::``。
+0164 至 0169、0171 至 0172；0156 至 0159、0161、0163、0170 登记为 Premium 跳过。每道公开题只有
+一个自包含 RST，正文与十语言代码全部直接内联，不使用 ``.inc`` 或 ``.. include::``。
 
 ``0127``、``0129–0155``、``0160``、``0162``、``0164``、``0165`` 共 32 道公开题的质量返工
 已经完成，``../../state/PROGRESS.toml`` 的 ``needs_revision`` 保持为空。
-``0166–0168`` 已按冻结基线生成，下一题为 0169。
+``0166–0169``、``0171–0172`` 已按冻结基线生成，下一题为 0173。
 
 已完成
 ------
@@ -84,6 +84,9 @@ LeetCode 0101–0200
 #. `0167. Two Sum II - Input Array Is Sorted
    <0167-two-sum-ii-input-array-is-sorted.rst>`_
 #. `0168. Excel Sheet Column Title <0168-excel-sheet-column-title.rst>`_
+#. `0169. Majority Element <0169-majority-element.rst>`_
+#. `0171. Excel Sheet Column Number <0171-excel-sheet-column-number.rst>`_
+#. `0172. Factorial Trailing Zeroes <0172-factorial-trailing-zeroes.rst>`_
 
 Premium 跳过
 ------------
@@ -93,7 +96,8 @@ Premium 跳过
 * ``0158`` Read N Characters Given Read4 II - Call Multiple Times；
 * ``0159`` Longest Substring with At Most Two Distinct Characters；
 * ``0161`` One Edit Distance；
-* ``0163`` Missing Ranges。
+* ``0163`` Missing Ranges；
+* ``0170`` Two Sum III - Data structure design。
 
 返工验收标准
 ------------
@@ -125,6 +129,5 @@ Premium 跳过
 下一动作
 --------
 
-下一批从 ``0169`` 开始：生成 ``0169`` Majority Element、登记 Premium ``0170``，
-继续生成 ``0171`` Excel Sheet Column Number 与 ``0172`` Factorial Trailing Zeroes。
+下一批生成 ``0173`` Binary Search Tree Iterator 与 ``0174`` Dungeon Game。
 批次风险和黄金样本由 ``../../state/BATCH_CONTRACT.toml`` 指定。

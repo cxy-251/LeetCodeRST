@@ -1,0 +1,26 @@
+[meta]
+version = 1
+range = "0169-0172"
+last_problem = 172
+inherits = "state/concepts/0167-0168.toml"
+
+[batch]
+completed = 3
+premium_skipped = [170]
+difficulty_budget = 4
+summary = "完成严格多数抵消、Excel 标题解码与阶乘尾零质因数分层计数。"
+
+[updates]
+"algorithm.boyer_moore_majority_vote" = "kind=algorithm; introduced=0169; last=0169; occurrences=1; teaching_state=explained; note=用 candidate 与 balance 压缩异值成对抵消；题目保证严格多数存在时最终候选可直接返回。"
+"invariant.majority_unpaired_partition" = "kind=invariant; introduced=0169; last=0169; occurrences=1; teaching_state=explained; note=任意已处理前缀可划分为若干异值对和 balance 个 candidate；balance 不是候选真实频次。"
+"proof.strict_majority_survives_cancellation" = "kind=proof; introduced=0169; last=0169; occurrences=1; teaching_state=explained; note=删除任意异值对后 2m>n 的严格多数关系保持，因此真正多数不可能被全部抵消。"
+"contract.majority_verification_precondition" = "kind=contract; introduced=0169; last=0169; occurrences=1; teaching_state=explained; note=官方保证多数存在，故省略第二遍；扩展到任意输入时必须验证最终候选频次。"
+"algorithm.bijective_base26_decode" = "kind=algorithm; introduced=0171; last=0171; occurrences=1; teaching_state=explained; note=按 A=1..Z=26 从左到右执行 answer=answer*26+digit；解码侧不使用 0168 的先减一。"
+"invariant.column_number_prefix_fold" = "kind=invariant; introduced=0171; last=0171; occurrences=1; teaching_state=explained; note=处理前 k 位后累计值恰等于该标题前缀的位权和，读下一位时整体乘 26 再加数位。"
+"proof.column_title_encode_decode_inverse" = "kind=proof; introduced=0171; last=0171; occurrences=1; teaching_state=explained; note=0168 的 current=26q+digit 分解与 0171 的 value=26value+digit 逐层互逆。"
+"adapter.r_string_materialization_vs_julia_codeunits" = "kind=language_adapter; introduced=0171; last=0171; occurrences=1; teaching_state=explained; note=R utf8ToInt 物化 O(L) 整数向量；Julia codeunits 为包装，核心扫描保持常数额外状态。"
+"algorithm.factorial_trailing_zero_layer_sum" = "kind=algorithm; introduced=0172; last=0172; occurrences=1; teaching_state=explained; note=v5(n!)=sum floor(n/5^k)，反复把 current 除以 5 并累加，避免计算阶乘或显式幂。"
+"invariant.factor_five_quotient_sum" = "kind=invariant; introduced=0172; last=0172; occurrences=1; teaching_state=explained; note=t 轮后 current=floor(n/5^t)，answer 为前 t 层 floor(n/5^k) 之和。"
+"proof.prime_factor_layer_counting" = "kind=proof; introduced=0172; last=0172; occurrences=1; teaching_state=explained; note=5^k 的倍数恰贡献第 k 个因子 5；分层计数使每个整数按其 5-adic 指数被统计恰当次数。"
+"complexity.logarithmic_integer_division_loop" = "kind=complexity; introduced=0172; last=0172; occurrences=1; teaching_state=explained; note=状态每轮除以 5，时间 O(log_5 n)、空间 O(1)，没有阶乘中间值或字符串输出。"
+"workflow.targeted_static_review" = "kind=workflow; introduced=0167; last=0172; occurrences=5; teaching_state=explained; note=本批三题只执行人工推演、证明映射、十语言静态语义与仓库一致性检查；0170 只登记 Premium。"
