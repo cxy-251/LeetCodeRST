@@ -2,13 +2,14 @@ LeetCode 0101–0200
 ==================
 
 本目录按题号顺序保存 0101 至 0200 的算法教程。当前题号进度为：完成 0101 至 0155、0160、0162、
-0164 至 0169、0171 至 0174、0179、0187 至 0188；0156 至 0159、0161、0163、0170、0186 登记为
-Premium 跳过，0175 至 0178、0180 至 0185 登记为 Database 跳过。每道公开算法题只有一个自包含 RST，
-正文与十语言代码全部直接内联，不使用 ``.inc`` 或 ``.. include::``。
+0164 至 0169、0171 至 0174、0179、0187 至 0191；0156 至 0159、0161、0163、0170、0186 登记为
+Premium 跳过，0175 至 0178、0180 至 0185、0196 至 0197 登记为 Database 跳过，0192 至 0195
+登记为 Shell 跳过。每道公开算法题只有一个自包含 RST，正文与十语言代码全部直接内联，
+不使用 ``.inc`` 或 ``.. include::``。
 
 ``0127``、``0129–0155``、``0160``、``0162``、``0164``、``0165`` 共 32 道公开题的质量返工
 已经完成，``../../state/PROGRESS.toml`` 的 ``needs_revision`` 保持为空。
-``0166–0169``、``0171–0174``、``0179`` 与 ``0187–0188`` 已按冻结基线生成，下一入口为 0189。
+``0166–0169``、``0171–0174``、``0179`` 与 ``0187–0191`` 已按冻结基线生成，下一入口为 0198。
 
 已完成
 ------
@@ -94,6 +95,9 @@ Premium 跳过，0175 至 0178、0180 至 0185 登记为 Database 跳过。每�
 #. `0187. Repeated DNA Sequences <0187-repeated-dna-sequences.rst>`_
 #. `0188. Best Time to Buy and Sell Stock IV
    <0188-best-time-to-buy-and-sell-stock-iv.rst>`_
+#. `0189. Rotate Array <0189-rotate-array.rst>`_
+#. `0190. Reverse Bits <0190-reverse-bits.rst>`_
+#. `0191. Number of 1 Bits <0191-number-of-1-bits.rst>`_
 
 Premium 跳过
 ------------
@@ -119,7 +123,17 @@ Database 跳过
 * ``0182`` Duplicate Emails；
 * ``0183`` Customers Who Never Order；
 * ``0184`` Department Highest Salary；
-* ``0185`` Department Top Three Salaries。
+* ``0185`` Department Top Three Salaries；
+* ``0196`` Delete Duplicate Emails；
+* ``0197`` Rising Temperature。
+
+Shell 跳过
+----------
+
+* ``0192`` Word Frequency；
+* ``0193`` Valid Phone Numbers；
+* ``0194`` Transpose File；
+* ``0195`` Tenth Line。
 
 返工验收标准
 ------------
@@ -151,6 +165,5 @@ Database 跳过
 下一动作
 --------
 
-下一批按题号处理 ``0189–0198``：生成 ``0189`` Rotate Array、``0190`` Reverse Bits、
-``0191`` Number of 1 Bits 与 ``0198`` House Robber；``0192–0195`` 按 Shell 登记，
-``0196–0197`` 按 Database 登记。批次风险和黄金样本由 ``../../state/BATCH_CONTRACT.toml`` 指定。
+下一批单独生成 ``0198`` House Robber。原 ``0189–0198`` 合同已按连续前缀缩批，
+批次风险和黄金样本由 ``../../state/BATCH_CONTRACT.toml`` 指定。

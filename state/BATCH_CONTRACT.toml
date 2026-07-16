@@ -1,24 +1,16 @@
 [contract]
 schema_version = 2
-batch_id = "generation-0189-0198"
+batch_id = "generation-0198"
 status = "ready"
 phase = "generation"
 kind = "generation"
-scope = [189, 190, 191, 198]
-expected_shell_skips = [192, 193, 194, 195]
-expected_database_skips = [196, 197]
+scope = [198]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
 drift_log = "state/DRIFT_LOG.toml"
 new_problem_generation_paused = false
 completion_count_must_remain_unchanged = false
-
-[domain_policy]
-algorithm_artifact_scope = "fixed_ten_language_algorithm_problems"
-shell_action = "登记 shell_skipped；不把 Shell 文本处理题伪装成固定十语言算法题。"
-database_action = "登记 database_skipped；不创建无法满足十语言算法合同的空壳 RST。"
-next_problem_after_batch = 199
 
 [static_review]
 solution_code_execution = "forbidden"
@@ -30,15 +22,15 @@ repository_structure_state_and_git_checks = "allowed"
 reporting = "只声明实际完成的静态审查；明确未运行、未编译、未测试和剩余风险。"
 
 [budget]
-algorithm_score = 6
-target_min = 4
-target_max = 6
+algorithm_score = 2
+target_min = 2
+target_max = 4
 proof_risk = "medium"
-language_semantics_risk = "high"
-platform_type_risk = "high"
-output_volume_risk = "high"
-scope_may_shrink = true
-scope_reason = "0189 涉及原地旋转和 R/Julia 变异可见性，0190–0191 涉及固定 32 位、无符号语义和 TypeScript/R 适配，0198 需要独立 DP 证明。先逐题验收 0189–0191；若继续 0198 会压缩证明或语言边界，则提交已完整算法题及 0192–0197 的域登记，并重建 0198 合同。"
+language_semantics_risk = "medium"
+platform_type_risk = "medium"
+output_volume_risk = "medium"
+scope_may_shrink = false
+scope_reason = "0198 从原 0189–0198 高输出批次中拆出，必须独立恢复完整前缀 DP 证明、滚动变量语义和十语言边界；本批不追加 0199。"
 
 [references]
 style_baselines = [
@@ -51,25 +43,10 @@ fact_sources = [
   "state/CONCEPT_LEDGER.toml",
   "docs/FORWARD_RULES_0151_ONWARD.rst",
   "problems/0101-0200/README.rst",
-  "problems/0101-0200/0136-single-number.rst",
-  "https://leetcode.com/problems/rotate-array/description/",
-  "https://leetcode.com/problems/reverse-bits/description/",
-  "https://leetcode.com/problems/number-of-1-bits/description/",
-  "https://leetcode.com/problems/word-frequency/description/",
-  "https://leetcode.com/problems/valid-phone-numbers/description/",
-  "https://leetcode.com/problems/transpose-file/description/",
-  "https://leetcode.com/problems/tenth-line/description/",
-  "https://leetcode.com/problems/delete-duplicate-emails/description/",
-  "https://leetcode.com/problems/rising-temperature/description/",
   "https://leetcode.com/problems/house-robber/description/",
 ]
 fact_sources_may_provide = [
-  "0189 的数组右旋、原地要求、k 规范化与输入范围",
-  "0190 的 32 位无符号输入和逐位反转合同",
-  "0191 的 32 位汉明重量合同",
-  "0192–0195 的 Shell 分类、题号和标题",
-  "0196–0197 的 Database 分类、题号和标题",
-  "0198 的非负金额数组、相邻房屋不能同时选择和最大金额合同",
+  "0198 的非负金额数组、不能同时选择相邻房屋、返回最大可得金额与官方示例",
   "当前完成范围、静态审查政策和长期质量控制状态",
 ]
 fact_sources_must_not_provide = [
@@ -80,94 +57,47 @@ fact_sources_must_not_provide = [
   "文件组织形式",
 ]
 
-[problems."0189"]
-title = "Rotate Array"
-difficulty = "Medium"
-primary_risks = [
-  "右旋 k 步必须先做 k mod n；不能把方向写成左旋，也不能在 n=1 或 k=0 时构造错误区间",
-  "三次反转顺序应为全数组、前 k 项、后 n-k 项；证明需说明每段元素相对顺序如何恢复",
-  "主算法要求原地 O(1) 核心空间；不能复制完整数组后仍声明常数空间",
-  "C/C++/Java/Rust/Go/TypeScript/C#/Julia 应修改调用者可见数组；R 适配器按值语义返回旋转后的向量",
-  "Julia/R 一基坐标、空范围和反转边界需逐项核对；官方 n>=1，扩展空数组时必须先返回",
-]
-minimum_static_review = [
-  "人工推演 [1,2,3,4,5,6,7], k=3；[-1,-100,3,99], k=2；k=0；k>n；n=1；重复元素",
-  "证明三次反转得到右旋结果，并核对 O(n) 时间/O(1) 核心空间",
-  "逐语言核对原地可见性、索引、取模、交换类型和 R 返回适配器",
-]
-
-[problems."0190"]
-title = "Reverse Bits"
-difficulty = "Easy"
-primary_risks = [
-  "必须处理恰好 32 位，包括输入高位的前导零；不能只循环到数值变为 0 后省略输出低位补零",
-  "循环不变量需说明已处理低位如何按反序进入 answer，未处理位仍保留在 input 中",
-  "C/C++/Rust/Go/C# 使用无符号 32 位；Java 使用无符号右移 >>>；TypeScript 位运算为有符号 32 位，返回前需 >>> 0",
-  "R 没有直接的无符号 32 位整数结果域，应使用精确 double 的除 2/取余适配器，避免 bitw 符号解释",
-]
-minimum_static_review = [
-  "人工推演 00000010100101000001111010011100、全零、最低位 1、最高位 1、全 1",
-  "证明 32 轮循环不变量和终止后位序完全反转",
-  "逐语言核对逻辑右移、32 位截断、返回无符号解释和 R 数值精确性",
-]
-
-[problems."0191"]
-title = "Number of 1 Bits"
-difficulty = "Easy"
-primary_risks = [
-  "主解法 n & (n-1) 每轮清除最低有效 1，需证明不会改变更高 1 位且循环次数等于汉明重量",
-  "Java/TypeScript 的有符号显示不影响 32 位位模式；TypeScript 每轮需重新规范为无符号 32 位",
-  "R 适配器可用精确除 2/取余计数，必须单独说明它与 Kernighan 主状态的复杂度差异仍为固定 32 轮",
-  "不能使用算术右移处理最高位为 1 的输入并导致永不归零",
-]
-minimum_static_review = [
-  "人工推演 11、128、0、2^31、2^32-1",
-  "证明最低 1 位消除性质、循环次数和 32 位平台语义",
-  "逐语言核对返回计数范围 0..32、无符号适配和输入不修改",
-]
-
 [problems."0198"]
 title = "House Robber"
 difficulty = "Medium"
 primary_risks = [
-  "状态应表示前缀最大金额；选择当前房屋只能加到 i-2 状态，不能与 i-1 同时选择",
-  "滚动变量 prev2/prev1 更新顺序必须保留旧前缀含义；不能覆盖后再读取",
-  "金额非负使空策略提供 0 下界；需覆盖单房屋、两房屋、全零和交替大值",
-  "固定宽语言应使用足够宽中间和；R/Julia 索引与空输入扩展需静态核对",
+  "状态必须定义为前 i 间房屋的最大可得金额；选择当前房屋只能接到 i-2 前缀，不能同时使用 i-1",
+  "递推 max(dp[i-1],dp[i-2]+nums[i]) 需要分别证明最后一间不选与选择两类策略的完备性和最优性",
+  "滚动变量 prev2/prev1 更新前分别代表 i-2 与 i-1 前缀，必须先计算 current 再整体推进，不能覆盖后读取",
+  "金额非负使空策略提供 0 下界；官方数组非空，但扩展空输入应返回 0，并覆盖单房、双房、全零和交替大值",
+  "固定宽语言使用足够宽中间金额；C/C++/Java/Rust/Go/C# 的返回接口通常为 int，但状态可用 64 位后安全转换",
+  "R/Julia 一基索引和空输入分支需逐项核对；输入数组只读，不构造完整 DP 数组",
 ]
 minimum_static_review = [
-  "人工推演 [1,2,3,1]、[2,7,9,3,1]、单元素、两个元素、全零和空输入扩展",
-  "证明最后一间不选/选择的完备分类、滚动不变量和 O(n)/O(1)",
-  "逐语言核对宽整数、输入只读、循环起点和返回类型",
+  "人工推演 [1,2,3,1]、[2,7,9,3,1]、单元素、两个元素、全零、空输入扩展与交替大值",
+  "证明最后一间不选/选择的完备分类、前缀最优递推和滚动不变量",
+  "逐语言核对宽整数、循环起点、输入只读、空输入、返回类型和 R/Julia 索引",
+  "复杂度报告 O(n) 时间、O(1) 核心空间，并明确没有完整 DP 数组",
 ]
 
 must_preserve = [
-  "0189 的右旋方向、k 规范化、三次反转证明、原地合同和 R 适配差异",
-  "0190 的固定 32 轮反转、逻辑右移和跨语言无符号语义",
-  "0191 的最低 1 位消除证明、Java/TypeScript/R 特化语义",
-  "0198 的前缀 DP、滚动更新和相邻排斥证明",
-  "0192–0195 只登记 Shell，0196–0197 只登记 Database，不创建固定十语言空壳 RST",
-  "每道算法题固定十语言完整实现、独立人工推演、静态语义审查、剩余风险和带答案自检",
+  "前缀 DP 状态定义与最后一间二分分类",
+  "递推的必要性、充分性、归纳证明和滚动更新顺序",
+  "非负金额、空策略、单房/双房/全零边界",
+  "固定十语言完整实现、宽整数与语言适配成本",
+  "人工推演、静态语义审查、剩余风险和带答案自检",
 ]
 
 forbidden = [
-  "参考 0188 或其他最近题目的章节结构、证明篇幅或静态审查密度",
-  "把 Shell 或 Database 题伪装成十语言算法题",
-  "0189 复制完整数组却声明 O(1) 核心空间，或把右旋写成左旋",
-  "0190 只循环到输入变 0 而遗漏固定宽前导零，或在 Java 使用算术右移",
-  "0191 对负 Java int 使用算术右移循环，或把位计数解释为数值正负",
-  "0198 使用局部选择较大邻居的贪心而不做前缀最优状态",
+  "参考 0189–0191 或其他最近题目的章节结构、证明篇幅或静态审查密度",
+  "使用每次选择较大邻居的局部贪心",
+  "覆盖 prev1 后再把它当作旧 i-1 状态读取",
+  "构造完整 DP 数组却声明 O(1) 核心空间",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试或 sanitizer 题解代码",
   "把静态审查写成测试、编译或运行通过",
 ]
 
 completion_checks = [
-  "顺序处理 0189–0198，不遗漏 Shell/Database 登记",
-  "逐题对照 0050 的状态/数值边界和 0076 的语言适配/资源成本深度",
-  "每题完成后立即执行质量门；0198 出现压缩迹象时按合同缩批",
+  "逐项对照 0050 的状态/数值边界和 0076 的语言适配/资源成本深度",
+  "0198 只有一个自包含 RST，十语言代码全部内联",
+  "人工推演全部要求边界，完成状态、转移、终止和最优性证明",
   "命中 DRIFT_LOG 的拆分、摘要、最近样本、预算和验证策略回归检查均通过",
-  "每道算法题只有一个自包含 RST，十语言代码全部内联",
-  "完成范围、shell_skipped、database_skipped、completed_count、next_problem、README、范围索引和知识账本同步",
+  "完成范围、completed_count、next_problem、README、范围索引和知识账本同步",
   "提交后 BATCH_CONTRACT 被替换为下一批合同",
 ]
