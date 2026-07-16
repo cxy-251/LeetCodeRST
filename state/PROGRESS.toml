@@ -11,9 +11,9 @@ code_comment_language = "zh-CN"
 problem_artifact_shape = "one_self_contained_rst_per_public_algorithm_problem"
 
 [progress]
-next_problem = 198
-completed_count = 173
-completed_ranges = ["0001-0155", "0160", "0162", "0164-0169", "0171-0174", "0179", "0187-0191"]
+next_problem = 199
+completed_count = 174
+completed_ranges = ["0001-0155", "0160", "0162", "0164-0169", "0171-0174", "0179", "0187-0191", "0198"]
 premium_skipped = [156, 157, 158, 159, 161, 163, 170, 186]
 database_skipped = [175, 176, 177, 178, 180, 181, 182, 183, 184, 185, 196, 197]
 shell_skipped = [192, 193, 194, 195]
@@ -59,28 +59,26 @@ quality_over_batch_score = true
 [last_batch]
 status = "completed"
 kind = "generation"
-start = 189
-end = 197
-generated_problem_count = 3
-generated_problem_ids = [189, 190, 191]
-shell_skipped_ids = [192, 193, 194, 195]
-database_skipped_ids = [196, 197]
+start = 198
+end = 198
+generated_problem_count = 1
+generated_problem_ids = [198]
 reference_problems = [50, 76]
-difficulty_budget = 4
-planned_scope = [189, 190, 191, 198]
-scope_shrunk = true
-scope_reason = "0189–0191 已完整通过单题质量门并完成 0192–0197 域登记；继续同批生成 0198 会压缩其独立 DP 证明与十语言边界，因此按合同提交完整连续前缀并重建单题合同。"
-summary = "完成 0189 三次反转右旋与变异语义、0190 固定 32 位反转与无符号适配、0191 最低有效 1 消除证明；登记 0192–0195 Shell 和 0196–0197 Database。"
+difficulty_budget = 2
+planned_scope = [198]
+scope_shrunk = false
+scope_reason = "0198 从高输出批次拆出后独立完成；前缀 DP、最后一间二分、滚动更新顺序和十语言数值边界均未压缩。"
+summary = "完成 0198 House Robber：前缀最优状态、选择/不选最后一间的完备分类、两变量滚动不变量和十语言宽整数适配。"
 
 [next_batch]
 status = "generation_ready"
 kind = "generation"
-start = 198
-end = 198
-problem_ids = [198]
-difficulty_budget = 2
+start = 199
+end = 200
+problem_ids = [199, 200]
+difficulty_budget = 4
 contract = "state/BATCH_CONTRACT.toml"
-purpose = "单独生成 0198 House Robber；完整处理前缀 DP、相邻排斥、滚动更新顺序和十语言数值边界。"
+purpose = "生成 0199 Binary Tree Right Side View 与 0200 Number of Islands；完整处理层边界/可见节点、四邻接连通块、输入变异和十语言资源边界。"
 
 [review_history]
 status = "completed"
@@ -149,7 +147,7 @@ problem_code_fragments_present = false
 
 [quality_scope]
 historical_start = 1
-historical_end = 197
+historical_end = 198
 historical_policy = "用户指定的 32 道低质量题解已经全部返工完成；历史题默认保持不变，风险触发时定向抽查。"
 persistent_rule_start = 151
 persistent_rule = "docs/FORWARD_RULES_0151_ONWARD.rst"
@@ -181,10 +179,10 @@ concurrency_policy = "fetch_and_compare_before_commit; stop_on_remote_change_or_
 
 [concept_ledger]
 index = "state/CONCEPT_LEDGER.toml"
-latest_record = "state/concepts/0189-0197.toml"
+latest_record = "state/concepts/0198.toml"
 
 [next_action]
-summary = "按 BATCH_CONTRACT 单独生成 0198 House Robber；0189–0197 已完整处理。"
+summary = "按 BATCH_CONTRACT 生成 0199–0200；0198 已完整处理。"
 
 [last_update]
-summary = "0189–0191 已完整生成，0192–0195 登记 Shell，0196–0197 登记 Database；完成数更新为 173，下一入口为 0198。"
+summary = "0198 已完整生成并通过静态质量门，完成数更新为 174，下一入口为 0199。"

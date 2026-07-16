@@ -1,16 +1,17 @@
 [contract]
 schema_version = 2
-batch_id = "generation-0198"
+batch_id = "generation-0199-0200"
 status = "ready"
 phase = "generation"
 kind = "generation"
-scope = [198]
+scope = [199, 200]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
 drift_log = "state/DRIFT_LOG.toml"
 new_problem_generation_paused = false
 completion_count_must_remain_unchanged = false
+next_problem_after_batch = 201
 
 [static_review]
 solution_code_execution = "forbidden"
@@ -22,15 +23,15 @@ repository_structure_state_and_git_checks = "allowed"
 reporting = "只声明实际完成的静态审查；明确未运行、未编译、未测试和剩余风险。"
 
 [budget]
-algorithm_score = 2
-target_min = 2
-target_max = 4
-proof_risk = "medium"
-language_semantics_risk = "medium"
-platform_type_risk = "medium"
-output_volume_risk = "medium"
-scope_may_shrink = false
-scope_reason = "0198 从原 0189–0198 高输出批次中拆出，必须独立恢复完整前缀 DP 证明、滚动变量语义和十语言边界；本批不追加 0199。"
+algorithm_score = 4
+target_min = 4
+target_max = 6
+proof_risk = "high"
+language_semantics_risk = "high"
+platform_type_risk = "high"
+output_volume_risk = "high"
+scope_may_shrink = true
+scope_reason = "0199 涉及树节点接口、层边界、队列与 C/R/Rust 资源语义；0200 涉及二维字符容器、输入变异、四邻接洪泛和最坏 O(mn) 工作栈。先完整验收 0199；若继续 0200 会压缩连通块证明或十语言资源说明，则提交 0199 并重建 0200 单题合同。"
 
 [references]
 style_baselines = [
@@ -43,10 +44,15 @@ fact_sources = [
   "state/CONCEPT_LEDGER.toml",
   "docs/FORWARD_RULES_0151_ONWARD.rst",
   "problems/0101-0200/README.rst",
-  "https://leetcode.com/problems/house-robber/description/",
+  "problems/0001-0100/0102-binary-tree-level-order-traversal.rst",
+  "problems/0101-0200/0130-surrounded-regions.rst",
+  "https://leetcode.com/problems/binary-tree-right-side-view/description/",
+  "https://leetcode.com/problems/number-of-islands/description/",
 ]
 fact_sources_may_provide = [
-  "0198 的非负金额数组、不能同时选择相邻房屋、返回最大可得金额与官方示例",
+  "0199 的二叉树接口、从右侧观察每层一个节点、空树与官方示例",
+  "0200 的矩形 0/1 字符网格、水平垂直四邻接、岛屿计数与官方示例",
+  "0102 的树队列接口连续性与 0130 的网格遍历术语连续性",
   "当前完成范围、静态审查政策和长期质量控制状态",
 ]
 fact_sources_must_not_provide = [
@@ -57,47 +63,68 @@ fact_sources_must_not_provide = [
   "文件组织形式",
 ]
 
-[problems."0198"]
-title = "House Robber"
+[problems."0199"]
+title = "Binary Tree Right Side View"
 difficulty = "Medium"
 primary_risks = [
-  "状态必须定义为前 i 间房屋的最大可得金额；选择当前房屋只能接到 i-2 前缀，不能同时使用 i-1",
-  "递推 max(dp[i-1],dp[i-2]+nums[i]) 需要分别证明最后一间不选与选择两类策略的完备性和最优性",
-  "滚动变量 prev2/prev1 更新前分别代表 i-2 与 i-1 前缀，必须先计算 current 再整体推进，不能覆盖后读取",
-  "金额非负使空策略提供 0 下界；官方数组非空，但扩展空输入应返回 0，并覆盖单房、双房、全零和交替大值",
-  "固定宽语言使用足够宽中间金额；C/C++/Java/Rust/Go/C# 的返回接口通常为 int，但状态可用 64 位后安全转换",
-  "R/Julia 一基索引和空输入分支需逐项核对；输入数组只读，不构造完整 DP 数组",
+  "结果必须每个深度恰好一个值，表示从右侧可见的该层最右节点；空树返回空结果",
+  "若使用 BFS，必须在处理层开始时冻结当前队列长度；只处理这批节点，不能让新入队子节点混入同层",
+  "按左后右入队时应提交本层最后出队节点；证明需连接队列层边界、从左到右顺序与最右节点",
+  "每个非空节点恰好入队和出队一次，队列峰值是树宽 w；结果载荷是树高 h，不能把输出空间混入核心队列空间",
+  "C 需要动态节点指针队列与结果数组，扩容失败使用临时指针、清理全部已分配资源并通过返回大小区分失败",
+  "Rust 的 Rc<RefCell<TreeNode>> 必须缩短借用后再克隆子节点；R/Julia 队列用头索引避免反复删除首元素",
+  "逐语言核对空节点表示、节点字段名、结果所有权和输入树不修改",
 ]
 minimum_static_review = [
-  "人工推演 [1,2,3,1]、[2,7,9,3,1]、单元素、两个元素、全零、空输入扩展与交替大值",
-  "证明最后一间不选/选择的完备分类、前缀最优递推和滚动不变量",
-  "逐语言核对宽整数、循环起点、输入只读、空输入、返回类型和 R/Julia 索引",
-  "复杂度报告 O(n) 时间、O(1) 核心空间，并明确没有完整 DP 数组",
+  "人工推演 [1,2,3,null,5,null,4]、[1,2,3,4,null,null,null,5]、单节点、空树、全左链和全右链",
+  "证明队列在每层开始时恰好保存该层全部节点且顺序从左到右，本层最后节点即右视图值",
+  "证明节点无遗漏无重复、终止性、O(n) 时间、O(w) 核心队列与 O(h) 输出载荷",
+  "逐语言核对树节点接口、队列头索引、Rust 借用、C 扩容失败和结果返回契约",
+]
+
+[problems."0200"]
+title = "Number of Islands"
+difficulty = "Medium"
+primary_risks = [
+  "岛屿只按上、下、左、右四邻接连通；对角接触不能合并",
+  "扫描到仍为 1 的格子时计数一次，并在洪泛入栈前立即改为 0；延迟标记会导致同一格重复入栈",
+  "每次洪泛必须且只覆盖当前四邻接连通分量；证明需包含计数不重复、不遗漏和不同岛屿不会互相吞并",
+  "主实现允许原地把陆地 1 改为水 0，以省去 visited 矩阵；正文和十语言接口必须明确输入网格被修改",
+  "迭代栈避免深网格递归溢出；最坏需要 O(mn) 工作空间，不能宣称 O(1)",
+  "C 可一次分配 m*n 个编码坐标并检查乘法/分配失败；失败时返回合法域外的 -1，不能伪装成岛屿数 0",
+  "TypeScript 使用 string[][] 的单字符元素，Julia 使用 Matrix{Char}，R 使用字符矩阵；逐语言核对矩形尺寸、索引和字符比较",
+]
+minimum_static_review = [
+  "人工推演单岛、多岛、全水、全陆、单行、单列、对角仅接触和空网格扩展",
+  "证明外层扫描首次发现与岛屿一一对应，洪泛完整覆盖四邻接分量且每格至多处理一次",
+  "逐语言核对入栈前标记、坐标边界、字符类型、输入变异、C 资源失败和空网格分支",
+  "复杂度报告 O(mn) 时间、O(mn) 最坏工作栈；明确未分配 visited 矩阵但修改了输入",
 ]
 
 must_preserve = [
-  "前缀 DP 状态定义与最后一间二分分类",
-  "递推的必要性、充分性、归纳证明和滚动更新顺序",
-  "非负金额、空策略、单房/双房/全零边界",
-  "固定十语言完整实现、宽整数与语言适配成本",
-  "人工推演、静态语义审查、剩余风险和带答案自检",
+  "0199 的冻结层大小、从左到右队列顺序、最右节点提交与 C/R/Rust 队列资源语义",
+  "0200 的四邻接定义、发现即计数、入栈前标记、连通分量证明和输入变异合同",
+  "两题各自固定十语言完整实现、人工推演、静态语义审查、剩余风险和带答案自检",
+  "核心工作空间与输出载荷或输入变异成本分开报告",
 ]
 
 forbidden = [
-  "参考 0189–0191 或其他最近题目的章节结构、证明篇幅或静态审查密度",
-  "使用每次选择较大邻居的局部贪心",
-  "覆盖 prev1 后再把它当作旧 i-1 状态读取",
-  "构造完整 DP 数组却声明 O(1) 核心空间",
+  "参考 0198 或其他最近题目的章节结构、证明篇幅或静态审查密度",
+  "0199 在处理层时使用动态变化的队列长度，或没有证明提交节点确为本层最右",
+  "0199 通过预先完整序列化树再提取结果却声称只使用 O(w) 队列空间",
+  "0200 把对角线视为连通，或同一岛屿每遇到一个陆地格就增加计数",
+  "0200 延迟到出栈时才标记且不处理重复入栈风险，或使用递归却忽略最坏深度",
+  "0200 修改输入却在契约中声称只读",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试或 sanitizer 题解代码",
   "把静态审查写成测试、编译或运行通过",
 ]
 
 completion_checks = [
-  "逐项对照 0050 的状态/数值边界和 0076 的语言适配/资源成本深度",
-  "0198 只有一个自包含 RST，十语言代码全部内联",
-  "人工推演全部要求边界，完成状态、转移、终止和最优性证明",
+  "逐题对照 0050 的状态/数值边界和 0076 的语言适配/资源成本深度",
+  "0199 完成后立即执行质量门；0200 出现压缩迹象时按合同缩批",
   "命中 DRIFT_LOG 的拆分、摘要、最近样本、预算和验证策略回归检查均通过",
+  "每道算法题只有一个自包含 RST，十语言代码全部内联",
   "完成范围、completed_count、next_problem、README、范围索引和知识账本同步",
   "提交后 BATCH_CONTRACT 被替换为下一批合同",
 ]

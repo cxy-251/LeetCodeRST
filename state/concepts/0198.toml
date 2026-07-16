@@ -1,0 +1,20 @@
+[meta]
+version = 1
+range = "0198"
+last_problem = 198
+inherits = "state/concepts/0189-0197.toml"
+
+[batch]
+completed = 1
+difficulty_budget = 2
+scope_shrunk = false
+summary = "完成线性相邻排斥的前缀最优动态规划与常数空间滚动实现。"
+
+[updates]
+"algorithm.house_robber_prefix_dp" = "kind=algorithm; introduced=0198; last=0198; occurrences=1; teaching_state=explained; note=F(i) 表示前 i 间房屋最大金额，递推 max(F(i-1),F(i-2)+nums[i-1])。"
+"state.house_robber_prefix_optimum" = "kind=state; introduced=0198; last=0198; occurrences=1; teaching_state=explained; note=状态只保留前缀最优金额，具体选择路径在相同前缀下被更大金额支配。"
+"proof.house_robber_last_house_partition" = "kind=proof; introduced=0198; last=0198; occurrences=1; teaching_state=explained; note=所有方案按最后一间不选或选择完备且互斥；选择时必须连接到 i-2 前缀。"
+"invariant.house_robber_rolling_pair" = "kind=invariant; introduced=0198; last=0198; occurrences=1; teaching_state=explained; note=处理前 i 间后 previous_one=F(i)、previous_two=F(i-1)，先算 current 再整体推进避免覆盖旧依赖。"
+"boundary.house_robber_empty_strategy" = "kind=boundary; introduced=0198; last=0198; occurrences=1; teaching_state=explained; note=金额非负使空方案提供 0 下界；实现额外兼容空数组、单房、双房和全零。"
+"numeric.house_robber_wide_accumulator" = "kind=numeric; introduced=0198; last=0198; occurrences=1; teaching_state=explained; note=固定宽语言用 64 位中间状态，最终按官方约束转换到平台返回类型。"
+"workflow.targeted_static_review" = "kind=workflow; introduced=0167; last=0198; occurrences=14; teaching_state=explained; note=本题仅执行人工推演、递推证明、十语言静态语义和仓库一致性检查；未运行、未编译、未测试题解。"
