@@ -1,5 +1,5 @@
 [meta]
-version = 1
+version = 2
 range = "0152"
 last_problem = 152
 inherits = "state/concepts/0151.toml"
@@ -8,6 +8,10 @@ inherits = "state/concepts/0151.toml"
 "workflow.targeted_static_review" = "0134 引入人工示例推演与逐语言静态审查；0152 继续执行，累计强化 19 次。"
 
 [concepts]
-"algorithm.max_min_product_ending_here" = "kind=algorithm; introduced=0152; last=0152; occurrences=1; teaching_state=explained; note=同时维护以当前位置结尾的最大与最小乘积，负数使两者角色交换。"
-"invariant.nonempty_subarray_initialization" = "kind=invariant; introduced=0152; last=0152; occurrences=1; teaching_state=explained; note=滚动状态从首元素初始化，确保所有候选都是题目允许的非空连续子数组。"
-"technique.scalar_dynamic_programming" = "kind=technique; introduced=0152; last=0152; occurrences=1; teaching_state=explained; note=完整 DP 只依赖前一位置的最大值和最小值，可压缩为常数个滚动标量。"
+"algorithm.max_min_product_ending_here" = "kind=algorithm; introduced=0152; last=0152; occurrences=1; teaching_state=explained; note=当前位置只比较 value、old_max*value、old_min*value 三个候选；乘负数反转极值角色，乘零令扩展候选合并为零。"
+"invariant.maximum_minimum_product_endpoints" = "kind=invariant; introduced=0152; last=0152; occurrences=1; teaching_state=explained; note=max_ending/min_ending 是所有恰以当前位置结尾的非空子数组乘积两端极值，answer 覆盖全部已处理右端点。"
+"invariant.nonempty_subarray_initialization" = "kind=invariant; introduced=0152; last=0152; occurrences=1; teaching_state=explained; note=三个状态从 nums[0] 初始化，避免用 0 或 1 引入不存在的空子数组候选。"
+"proof.product_subarray_right_endpoint_partition" = "kind=proof; introduced=0152; last=0152; occurrences=1; teaching_state=explained; note=每个以 i 结尾的子数组要么单取 i，要么唯一延长一个以 i-1 结尾的子数组；乘以固定数的单调或反单调性使旧两端充分。"
+"technique.scalar_dynamic_programming" = "kind=technique; introduced=0152; last=0152; occurrences=1; teaching_state=explained; note=完整 DP 只依赖前一位置双极值，可压缩为常数标量；覆盖前必须先保存同一旧状态的两个扩展候选。"
+"semantics.same_old_state_parallel_update" = "kind=language_semantics; introduced=0152; last=0152; occurrences=1; teaching_state=explained; note=新最大与新最小必须来自同一组三候选；先覆盖最大值再计算最小值会在一轮内重复使用当前元素。"
+"numeric.actual_subarray_product_witness" = "kind=numeric; introduced=0152; last=0152; occurrences=1; teaching_state=explained; note=每个 DP 候选都有真实连续子数组见证，因此官方任意子数组乘积适合 32 位的保证覆盖最大、最小和扩展候选。"

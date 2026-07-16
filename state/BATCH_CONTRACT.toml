@@ -1,10 +1,10 @@
 [contract]
 schema_version = 2
-batch_id = "quality-repair-0151-0152"
+batch_id = "quality-repair-0153-0154"
 status = "ready"
 phase = "quality_repair"
 kind = "quality_repair"
-scope = [151, 152]
+scope = [153, 154]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
@@ -22,15 +22,15 @@ repository_structure_state_and_git_checks = "allowed"
 reporting = "只声明实际完成的静态审查；明确未运行、未编译、未测试和剩余风险。"
 
 [budget]
-algorithm_score = 4
+algorithm_score = 6
 target_min = 4
 target_max = 6
 proof_risk = "high"
-language_semantics_risk = "high"
-platform_type_risk = "high"
+language_semantics_risk = "medium"
+platform_type_risk = "medium"
 output_volume_risk = "high"
 scope_may_shrink = true
-scope_reason = "0151 与 0152 都是 Medium，合计 4 分且算法状态紧凑，恢复为多题批次；必须先完整验收 0151 再写 0152。若第二题开始压缩示例、证明、十语言语义或静态审查，只提交连续前缀 0151，并同步重建 0152 合同。"
+scope_reason = "0153 为 Medium、0154 为 Hard，合计 6 分且共享右端比较框架，适合连续对照返工；必须先完整验收 0153，再用独立见证不变量处理 0154。若 Hard 题开始压缩等值分支证明、最坏复杂度、十语言语义或静态审查，只提交连续前缀 0153，并同步重建 0154 合同。"
 
 [references]
 style_baselines = [
@@ -43,15 +43,15 @@ fact_sources = [
   "state/CONCEPT_LEDGER.toml",
   "docs/FORWARD_RULES_0151_ONWARD.rst",
   "problems/0101-0200/README.rst",
-  "https://leetcode.com/problems/reverse-words-in-a-string/description/",
-  "https://leetcode.com/problems/maximum-product-subarray/description/",
-  "state/concepts/0151.toml",
-  "state/concepts/0152.toml",
+  "https://leetcode.com/problems/find-minimum-in-rotated-sorted-array/description/",
+  "https://leetcode.com/problems/find-minimum-in-rotated-sorted-array-ii/description/",
+  "state/concepts/0153.toml",
+  "state/concepts/0154.toml",
 ]
 fact_sources_may_provide = [
-  "0151 的 ASCII 字符域、单词定义、空格规范、至少一个单词与返回新字符串合同",
-  "0152 的非空连续子数组、长度和值域、任意子数组乘积适合有符号 32 位的保证",
-  "既有逆向单词扫描、最大最小乘积状态与当前语言接口连续性",
+  "0153 的非空、互异、严格递增后旋转、长度和值域以及 O(log n) 要求",
+  "0154 的非空、允许重复、非递减后旋转、长度和值域以及尽量减少操作的要求",
+  "既有右端比较、闭区间候选、等值删除和当前语言接口连续性",
   "当前范围、进度和统一静态审查政策",
 ]
 fact_sources_must_not_provide = [
@@ -62,72 +62,71 @@ fact_sources_must_not_provide = [
   "文件组织形式",
 ]
 
-[problems."0151"]
-title = "Reverse Words in a String"
+[problems."0153"]
+title = "Find Minimum in Rotated Sorted Array"
 difficulty = "Medium"
 primary_risks = [
-  "输入长度 1..10000，只含英文字母、数字与普通空格且至少有一个单词；单词是最大连续非空格片段，输入只读，输出按单词逆序且相邻词恰一个空格",
-  "从右向左的状态必须区分跳过空格、确定 word_end、向左找到 word_start 和提交片段；下标可越过左端作为终止证书，但不能继续读取",
-  "证明需覆盖每次选择尚未处理的最右单词、每个原单词恰提交一次、内部字符顺序保持、输出顺序反转、无首尾空格且分隔符唯一",
-  "ASCII 合同支撑 C/C++/Rust/Go/Julia 字节扫描以及 Java/TypeScript/C# 代码单元扫描；扩展到 Unicode 后不能沿用同一字节边界证明",
-  "返回载荷长度为 r<=n；C 分配 n+1、写入不越界、失败返回 NULL 且调用者释放，C++ 按值参数复制与最终结果同时存活需计费",
-  "Python/TypeScript/C# 的切片文本、Rust/Go 的借用或共享片段、Julia 的 CodeUnits 与逐词复制、R 字符物化和 join/paste 累计成本不能统一写成常数空间",
+  "输入长度 1..5000、值域 [-5000,5000]，元素互异且来自严格递增数组旋转 1..n 次；输入非空只读，必须返回最小值并达到 O(log n)",
+  "闭区间 [left,right] 必须始终包含唯一最小值下标；mid 使用 left+(right-left)/2，循环只在 left<right 时读取右端和中点",
+  "nums[mid]>nums[right] 时最小值严格在 [mid+1,right]；nums[mid]<nums[right] 时最小值在 [left,mid]，后者必须保留可能正是答案的 mid",
+  "证明不能只说中点属于较大段或较小段，必须从旋转后至多一个下降断点的结构推出两个排除区间都不含唯一最小值",
+  "元素互异排除不同下标等值分支，保证每轮候选长度至多约减半；单元素、未有效旋转、两元素和最小值邻近两端必须闭合",
+  "十语言需核对零基/一基闭区间、整数中点、非空签名、只读输入和返回标量；不得把平台输入容器或按值参数复制忽略为核心算法空间",
 ]
 minimum_static_review = [
-  "逐步人工推演三个官方示例，记录 scan/end/start、跳空格范围、提交词、输出词序列和最终单空格结果",
-  "覆盖单词长度一、只有一个单词、前后多空格、词间多空格、数字混合、整个输入已经规范和输出长度等于输入长度",
-  "证明循环入口的未处理前缀与已输出后缀单词不变量，以及跳空格不漏词、最右单词选择完整、每轮严格越过至少一个词的终止性",
-  "逐语言核对公开签名、ASCII 单位、零基/一基边界、切片半开或闭区间、分隔符提交、输入不修改和结果独立性",
-  "专项审查 C strlen、n+1 容量、ptrdiff_t/size_t 边界、memcpy 长度、终止符、malloc 失败与返回所有权",
-  "分别报告扫描 O(n)、写出 O(r)、核心索引 O(1)、片段元数据 O(k)、输入/单词物化、join 返回与峰值同时存活空间",
+  "人工推演三个官方示例及自建两元素旋转例，逐轮记录 left、mid、right、三处值、比较分支、删除区间和保留的最小值见证",
+  "覆盖单元素、未有效旋转、两元素旋转与未旋转、最小值位于中点、最小值紧邻首尾和负数值域",
+  "证明初始化、两个比较分支的不变量保持、候选区间严格缩短、终止以及终止点等于唯一最小值下标",
+  "单独证明每轮新长度至多为旧长度上取整的一半，从而满足最坏 O(log n)，而不是只凭使用二分循环得出复杂度",
+  "逐语言核对公开签名、中点公式、索引类型、Julia 一基范围、R 双精度下标的精确域、输入所有权和不修改语义",
+  "复杂度报告 O(log n) 比较、O(1) 核心下标；另列 C++ 按值与 Rust 按值接口的输入所有权成本，不计返回标量为辅助容器",
 ]
 
-[problems."0152"]
-title = "Maximum Product Subarray"
-difficulty = "Medium"
+[problems."0154"]
+title = "Find Minimum in Rotated Sorted Array II"
+difficulty = "Hard"
 primary_risks = [
-  "输入是长度 1..20000、元素在 [-10,10] 的整数数组；必须选择非空连续子数组，任意子数组乘积都保证适合有符号 32 位，输入只读",
-  "以位置 i 结尾的候选只有 nums[i]、old_max*nums[i]、old_min*nums[i]；负数反转大小顺序，零同时允许旧链乘零和从零重新开始",
-  "max_ending 与 min_ending 必须都来自同一组旧状态；顺序覆盖导致用新 max 计算 min 会伪造重复使用当前元素的候选",
-  "状态必须从 nums[0] 初始化，不能用空子数组的 0 或 1；全负单元素、奇数负数、零分段与负最小转最大都要闭合",
-  "证明需说明每个以 i 结尾非空子数组的完整分类、乘正/负/零时极值端点足够、全局 answer 覆盖所有终点且循环终止",
-  "任意子数组乘积保证使三个 DP 候选真实适合 32 位；固定宽实现仍须先选择足够宽表达式或明确保证，TypeScript/R 必须证明 32 位整数乘积精确",
+  "输入长度 1..5000、值域 [-5000,5000]，来自允许重复的非递减数组旋转 1..n 次；输入非空只读，返回最小值并尽量减少操作",
+  "重复值使固定最小下标不适合作为不变量；候选区间只需始终保留至少一个值等于全局最小值的见证",
+  "nums[mid]>nums[right] 与 nums[mid]<nums[right] 仍分别保留 [mid+1,right] 和 [left,mid]；证明必须覆盖最小值可能重复出现而不能照抄互异版本措辞",
+  "nums[mid]==nums[right] 时只能得到右端冗余，令 right-=1；若被删右端是最小值，仍在区间内的 mid 提供等值见证",
+  "不得声称所有分支都折半或总是 O(log n)；连续等值可每轮只删一个位置，最坏 O(n)，有序比较分支才产生几何收缩",
+  "[10,1,10,10,10]、[1,10,10,10,10] 和全相等数组必须揭示等值时固定选择一侧、删除 mid 或错误提前返回的失败方式",
 ]
 minimum_static_review = [
-  "人工推演两个官方示例及自建 [-2,3,-4]，逐位置列 value、old_max、old_min、三个候选、new_max、new_min 与 answer",
-  "覆盖单负数、全负奇偶个数、含零分段、多个零、正负交替、最大答案为零以及最优子数组位于中间",
-  "归纳证明 max_ending/min_ending 是全部以当前下标结尾非空子数组乘积的两端极值，answer 是全部已处理终点的最大值",
-  "逐语言核对非空入口、旧状态快照、乘法表达式宽度、返回窄化、索引/范围、输入所有权和不修改语义",
-  "专项核对 Julia 2:n 的单元素空范围、R 在 n=1 时不构造反向 seq.int，以及 TypeScript/R 的精确整数域",
-  "复杂度报告单次 O(n) 扫描、O(1) 核心标量、Rust 按值消费输入但不克隆、无输出容器和固定返回载荷",
+  "人工推演两个官方示例及 [10,1,10,10,10]，逐轮记录 left、mid、right、比较结果、删去位置和仍保留的最小值见证",
+  "覆盖单元素、全相等、未有效旋转、两元素重复、最小值多次出现、旋转点两侧重复和长等值前后缀",
+  "以值见证而非固定下标完成初始化、三分支保持、严格收缩、终止和返回正确性的完整证明",
+  "给出 O(n) 最坏上界及全相等族的线性下界见证；不得把有利输入上的几何收缩写成平均或保证复杂度",
+  "逐语言核对 right-=1 不越过 left、闭区间中点、Julia/R 单元素循环边界、输入所有权和标量返回",
+  "与 0153 明确对照互异条件究竟消除了哪个分支，以及为何同一代码只增加等值分支却改变最坏时间界",
 ]
 
 must_preserve = [
-  "每题各自具备精确契约、自建反例、问题抽象、真实解法取舍、状态映射和完整证明",
-  "0151 的最右未处理单词、唯一提交、单分隔符、字符单位和各语言输出物化成本",
-  "0152 的非空初始化、同一旧状态三候选、最大最小两端极值、零与负数语义和真实乘积宽度",
-  "固定十语言完整实现，C 容量与资源路径闭合，平台签名、语言版本和所有权准确",
+  "每题各自具备精确契约、自建反例、问题抽象、解法取舍、状态映射、循环不变量和完整正确性证明",
+  "0153 的唯一最小下标闭区间、两个不等比较的安全排除、保留 mid 和真正的 O(log n) 收缩证明",
+  "0154 的最小值见证区间、等值删除右端的替代见证、重复值反例和最坏 O(n) 证明",
+  "固定十语言完整实现，平台签名、索引单位、中点计算、输入所有权和空间成本准确",
   "每题独立的人工推演、逐语言静态审查、剩余风险、失败方式、学习链和带答案自检",
 ]
 
 forbidden = [
-  "参考 0149–0150 或其他最近题目的章节结构、证明篇幅或静态审查密度",
-  "把 0151 的 split/reverse/join 一行调用当作完整教学解释，或忽略切片、片段和最终 join 的物化成本",
-  "在 0151 中把字节扫描无条件推广到 Unicode，遗漏多空格压缩，翻转单词内部字符或产生首尾空格",
-  "声称 0151 是 O(1) 总空间而不计返回载荷、片段容器、输入副本或运行时字符串物化",
-  "在 0152 中只保存最大乘积、从 0/1 初始化允许空子数组，或把不相邻的负数相乘",
-  "用已经更新的 max_ending 计算同一位置的 min_ending，或只说负数交换而不证明候选完整性",
-  "只凭最终答案 32 位就外推所有中间表达式安全；必须使用官方任意子数组乘积保证和候选的真实子数组见证",
+  "参考 0151–0152 或其他最近题目的章节结构、证明篇幅或静态审查密度",
+  "把‘二分模板’当作正确性证明，或只凭循环写法声称 O(log n)",
+  "在 0153 中写 right=mid-1 丢掉可能的答案，或加入互异合同不可能出现的等值兜底来掩盖不变量",
+  "在 0154 中把某个固定最小下标当作必须保留的对象，等值时任意选边，删除 mid 或直接返回右端值",
+  "声称 0154 始终、平均或通常 O(log n) 而没有相应模型；必须明确最坏 O(n) 和可核实的退化输入族",
+  "把 C++/Rust 按值输入接口、Julia 一基下标或 R 数值下标统一描述成 C 风格零基数组",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试或 sanitizer 题解代码",
   "把静态审查写成测试、编译或运行通过",
 ]
 
 completion_checks = [
-  "两题逐项对照 0076 的不变量/物化深度与 0050 的数值边界/状态递推深度",
-  "每题写完立即完成自身质量门；0152 出现压缩迹象时按连续前缀缩批",
+  "两题逐项对照 0076 的不变量/反例深度与 0050 的边界/递推深度",
+  "每题写完立即完成自身质量门；0154 出现压缩迹象时按连续前缀缩批",
   "命中 DRIFT_LOG 的拆分、摘要、最近样本、预算与验证策略回归检查均通过",
-  "0151 与 0152 各自只有一个自包含 RST，每题十语言代码全部内联",
+  "0153 与 0154 各自只有一个自包含 RST，每题十语言代码全部内联",
   "PROGRESS、README、AGENTS 当前状态、范围索引和知识账本同步",
   "原子提交后 BATCH_CONTRACT 被替换为下一批合同",
 ]

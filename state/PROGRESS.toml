@@ -17,15 +17,15 @@ completed_ranges = ["0001-0155", "0160", "0162", "0164-0165"]
 premium_skipped = [156, 157, 158, 159, 161, 163]
 blocked = []
 needs_revision = [
-  151, 152, 153, 154, 155, 160, 162, 164, 165,
+  153, 154, 155, 160, 162, 164, 165,
 ]
 
 [quality_repair]
 status = "in_progress"
 reason = "0127 起部分题解退化为算法摘要与代码集合，未达到冻结教学质量基线。"
 original_scope = [127, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 160, 162, 164, 165]
-repaired = [127, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150]
-remaining_count = 9
+repaired = [127, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152]
+remaining_count = 7
 baseline = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 batch_contract = "state/BATCH_CONTRACT.toml"
 drift_log = "state/DRIFT_LOG.toml"
@@ -59,22 +59,22 @@ quality_over_batch_score = true
 [last_batch]
 status = "completed"
 kind = "quality_repair"
-start = 150
-end = 150
-repaired_problem_count = 1
-repaired_problem_ids = [150]
+start = 151
+end = 152
+repaired_problem_count = 2
+repaired_problem_ids = [151, 152]
 reference_problems = [50, 76]
-difficulty_budget = 2
-summary = "重写 0150，补齐合法前缀栈深、完成子表达式分块归纳、左右操作数次序、十语言向零除法与 C 栈资源失败语义。"
+difficulty_budget = 4
+summary = "重写 0151–0152，补齐逆向单词覆盖与输出物化证明，以及同一旧状态的乘积双极值递推、非空初始化和数值边界。"
 
 [next_batch]
 status = "quality_repair_ready"
 kind = "quality_repair"
-start = 151
-end = 152
-difficulty_budget = 4
+start = 153
+end = 154
+difficulty_budget = 6
 contract = "state/BATCH_CONTRACT.toml"
-purpose = "连续返工 0151 Reverse Words in a String 与 0152 Maximum Product Subarray；新题 0166 继续暂停。"
+purpose = "连续返工 0153 Find Minimum in Rotated Sorted Array 与 0154 Find Minimum in Rotated Sorted Array II；新题 0166 继续暂停。"
 
 [review_history]
 status = "completed"
@@ -176,7 +176,7 @@ index = "state/CONCEPT_LEDGER.toml"
 latest_record = "state/concepts/0163-0165.toml"
 
 [next_action]
-summary = "按 BATCH_CONTRACT 连续返工 0151–0152；完成剩余 9 道前不生成 0166。"
+summary = "按 BATCH_CONTRACT 连续返工 0153–0154；完成剩余 7 道前不生成 0166。"
 
 [last_update]
-summary = "0150 已按冻结基线完成返工；当前统一静态审查，下一批连续处理 0151–0152。"
+summary = "0151–0152 已按冻结基线完成返工；当前统一静态审查，下一批连续处理 0153–0154。"

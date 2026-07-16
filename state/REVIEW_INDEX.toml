@@ -149,9 +149,9 @@ statement = "O(min(m,n)) describes only the rolling Boolean DP array. The C++ si
 [next_action]
 kind = "quality_repair"
 status = "ready"
-start = 151
-end = 152
-purpose = "连续返工 0151 Reverse Words in a String 与 0152 Maximum Product Subarray；完成剩余质量返工前暂停生成 0166。"
+start = 153
+end = 154
+purpose = "连续返工 0153 Find Minimum in Rotated Sorted Array 与 0154 Find Minimum in Rotated Sorted Array II；完成剩余质量返工前暂停生成 0166。"
 
 [artifact_lifecycle]
 policy = "docs/ARTIFACT_LIFECYCLE_POLICY.rst"
