@@ -1,0 +1,21 @@
+[meta]
+version = 1
+range = "0204"
+last_problem = 204
+inherits = "state/concepts/0201-0203.toml"
+
+[batch]
+completed = 1
+difficulty_budget = 2
+planned_scope = [204]
+scope_shrunk = false
+summary = "独立完成 Count Primes：严格半开区间、埃氏筛、最小质因子证明、平方起点与跨语言筛存储。"
+
+[updates]
+"algorithm.sieve_of_eratosthenes" = "kind=algorithm; introduced=0204; last=0204; occurrences=1; teaching_state=explained; note=为 [0,n) 建立合数标记，只让未标记候选 p 从 p*p 开始按步长 p 划去倍数，最后统计 2..n-1 的未标记索引。"
+"proof.sieve_start_at_square" = "kind=proof; introduced=0204; last=0204; occurrences=1; teaching_state=explained; note=小于 p*p 的 p 倍数写成 p*k 且 k<p，已经包含更小质因子并被更早扫描标记，因此从 p*p 开始不漏合数。"
+"proof.smallest_prime_factor_completeness" = "kind=proof; introduced=0204; last=0204; occurrences=1; teaching_state=explained; note=任意合数 x 的最小质因子 p 不超过 sqrt(x)，处理 p 时 x 位于从 p*p 开始的倍数序列中；质数从不可能成为该序列元素。"
+"invariant.sieve_candidate_state" = "kind=invariant; introduced=0204; last=0204; occurrences=1; teaching_state=explained; note=处理候选 p 前，小于 p*p 的合数已标记、所有标记都是真合数、未标记 p 没有更小质因子。"
+"safety.square_bound_by_division" = "kind=numeric_safety; introduced=0204; last=0204; occurrences=1; teaching_state=explained; note=外层使用 p <= (n-1)/p 表达 p*p<n，在比较前避免固定宽整数平方溢出；内层按语言使用 size_t 或宽整数。"
+"adapter.sieve_storage_cross_language" = "kind=language_adapter; introduced=0204; last=0204; occurrences=1; teaching_state=explained; note=C/C++/Python/Rust/Go/TypeScript/C# 使用字节状态，Java 使用 boolean[]，Julia 使用 BitVector，R 使用更重的 logical 向量；全部为 O(n) 空间。"
+"workflow.targeted_static_review" = "kind=workflow; introduced=0167; last=0204; occurrences=19; teaching_state=explained; note=0204 只执行边界人工推演、筛法证明、十语言静态语义与仓库一致性检查；未运行、未编译、未测试题解。"

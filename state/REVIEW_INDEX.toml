@@ -149,10 +149,10 @@ statement = "O(min(m,n)) describes only the rolling Boolean DP array. The C++ si
 [next_action]
 kind = "generation"
 status = "ready"
-start = 204
-end = 204
-problem_ids = [204]
-purpose = "单独生成 0204 Count Primes；完整处理严格小于 n、埃氏筛证明、乘法溢出和筛数组内存边界；历史题继续风险触发抽查。"
+start = 205
+end = 207
+problem_ids = [205, 206, 207]
+purpose = "生成 0205–0207；完整处理字符双射、链表反转所有权和课程依赖有向图判环；历史题继续风险触发抽查。"
 
 [artifact_lifecycle]
 policy = "docs/ARTIFACT_LIFECYCLE_POLICY.rst"

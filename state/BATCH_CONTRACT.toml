@@ -1,17 +1,17 @@
 [contract]
 schema_version = 2
-batch_id = "generation-0204"
+batch_id = "generation-0205-0207"
 status = "ready"
 phase = "generation"
 kind = "generation"
-scope = [204]
+scope = [205, 206, 207]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
 drift_log = "state/DRIFT_LOG.toml"
 new_problem_generation_paused = false
 completion_count_must_remain_unchanged = false
-next_problem_after_batch = 205
+next_problem_after_batch = 208
 
 [static_review]
 solution_code_execution = "forbidden"
@@ -23,15 +23,15 @@ repository_structure_state_and_git_checks = "allowed"
 reporting = "只声明实际完成的静态审查；明确未运行、未编译、未测试和剩余风险。"
 
 [budget]
-algorithm_score = 2
-target_min = 2
-target_max = 4
-proof_risk = "medium"
+algorithm_score = 4
+target_min = 4
+target_max = 6
+proof_risk = "high"
 language_semantics_risk = "high"
 platform_type_risk = "high"
-output_volume_risk = "medium"
-scope_may_shrink = false
-scope_reason = "0204 从原 0201–0204 高风险批次中拆出，必须独立恢复完整筛法证明、严格小于 n 的边界、p*p 起点依据、乘法溢出和十语言筛数组成本；本批不追加 0205。"
+output_volume_risk = "high"
+scope_may_shrink = true
+scope_reason = "0205 涉及字符单位和双向映射，0206 涉及链表指针反转及 Rust/C 所有权，0207 涉及有向图建边方向、入度与环判定。先完整验收 0205–0206；若继续 0207 会压缩拓扑证明、邻接表资源或十语言容器边界，则提交连续前缀并重建 0207 单题合同。"
 
 [references]
 style_baselines = [
@@ -44,12 +44,18 @@ fact_sources = [
   "state/CONCEPT_LEDGER.toml",
   "docs/FORWARD_RULES_0151_ONWARD.rst",
   "problems/0201-0300/README.rst",
-  "problems/0101-0200/0172-factorial-trailing-zeroes.rst",
-  "https://leetcode.com/problems/count-primes/description/",
+  "problems/0201-0300/0203-remove-linked-list-elements.rst",
+  "problems/0101-0200/0141-linked-list-cycle.rst",
+  "problems/0101-0200/0133-clone-graph.rst",
+  "https://leetcode.com/problems/isomorphic-strings/description/",
+  "https://leetcode.com/problems/reverse-linked-list/description/",
+  "https://leetcode.com/problems/course-schedule/description/",
 ]
 fact_sources_may_provide = [
-  "0204 的非负整数 n、统计严格小于 n 的质数数量和官方示例",
-  "已有整除边界、宽整数和循环条件的平台语义连续性",
+  "0205 的等长字符串、字符一一映射与保持位置对应关系的合同",
+  "0206 的单链表反转、返回新头和空链表合同",
+  "0207 的课程数量、先修关系、有向依赖与是否可完成全部课程合同",
+  "已有链表节点接口、图邻接表与循环检测术语连续性",
   "当前完成范围、静态审查政策和长期质量控制状态",
 ]
 fact_sources_must_not_provide = [
@@ -60,50 +66,79 @@ fact_sources_must_not_provide = [
   "文件组织形式",
 ]
 
-[problems."0204"]
-title = "Count Primes"
-difficulty = "Medium"
+[problems."0205"]
+title = "Isomorphic Strings"
+difficulty = "Easy"
 primary_risks = [
-  "统计范围严格是 [0,n)，不能把 n 本身计入；0 与 1 不是质数，n<=2 返回 0",
-  "埃氏筛只在当前 p 尚未被标记时从 p*p 开始标记；必须证明小于 p*p 的 p 倍数已被更小质因子处理",
-  "外层循环不能用可能溢出的 p*p<n 直接判断；优先使用 p<= (n-1)/p、p<n/p 或足够宽状态，并逐语言核对",
-  "筛数组长度应与 [0,n) 一一对应，初始化 0、1 为非质数，最终只统计索引 2..n-1",
-  "C 分配失败返回合法计数域外的 -1，并检查 size_t 容量；固定十语言需分别说明布尔表示和 O(n) 内存成本",
-  "TypeScript 普通 Array<boolean> 与 Uint8Array 的存储差异、R logical 向量分配、Julia 一基索引映射需要单独审查",
+  "必须存在从 s 字符到 t 字符的双射；单向一致不足以阻止两个源字符映射到同一目标字符",
+  "相同源字符每次必须映射到相同目标字符，不同源字符必须映射到不同目标字符",
+  "官方字符域允许按固定字符单位扫描；C/C++/Rust/Go 可按字节处理平台 ASCII 契约，Java/TypeScript/C# 需说明 UTF-16 单元，Julia/R 需显式物化同一字符单位",
+  "长度不同立即返回 false；映射状态 O(字符集) 或 O(k)，输入只读",
+  "可使用两个方向映射表或首次出现位置签名；正文与十语言实现必须采用同一证明模型",
 ]
 minimum_static_review = [
-  "人工推演 n=0、1、2、3、10、20、25 和平方边界",
-  "证明未被更小质数标记的 p 必为质数、从 p*p 标记不漏合数且不影响质数",
-  "证明最终未标记索引与严格小于 n 的质数一一对应",
-  "逐语言核对筛长度、0/1 初始化、循环上界、乘法溢出、标记步长、内存分配和返回类型",
-  "复杂度报告 O(n log log n) 时间与 O(n) 空间，并区分算法量级和各语言容器真实字节成本",
+  "人工推演 egg/add、foo/bar、paper/title、badc/baba、空字符串和单字符",
+  "证明映射保持、目标唯一性、双射充分性和失败分支无误判",
+  "逐语言核对字符单位、数组或映射表哨兵、长度语义和输入物化成本",
+]
+
+[problems."0206"]
+title = "Reverse Linked List"
+difficulty = "Easy"
+primary_risks = [
+  "迭代状态 previous/current/next 必须在覆盖 current.next 前保存原后继，否则未处理后缀丢失",
+  "循环不变量需说明 previous 是已反转前缀的新头，current 是未处理后缀首节点，两部分节点不重不漏",
+  "算法原地重接 next，不新建数据节点；返回原尾节点作为新头，空链表返回空",
+  "C 只改变链接，不释放或分配节点；Rust Option<Box<ListNode>> 通过 take 转移所有权；托管语言只重接引用",
+  "R 使用 environment 节点时修改调用者可见链接；必须排除输入有环的情况",
+]
+minimum_static_review = [
+  "人工推演空链表、单节点、两节点、五节点和重复值链表",
+  "证明每轮保存后继、反转一条边、节点守恒、无环性和最终头正确",
+  "逐语言核对节点模型、返回头、C 所有权、Rust Box 移动、R 环境引用和 O(1) 核心空间",
+]
+
+[problems."0207"]
+title = "Course Schedule"
+difficulty = "Medium"
+primary_risks = [
+  "先修对 [course, prerequisite] 应建立 prerequisite -> course 的有向边；建反会破坏入度含义",
+  "Kahn 算法初始只入队入度 0 课程；弹出课程后逐条删除其出边并递减后继入度",
+  "处理课程数等于 numCourses 当且仅当依赖图无环；必须证明有环时环内节点无法归零、无环图必有入度 0 节点",
+  "自环、重复边、孤立课程和多个连通分量需覆盖；重复边若保留必须让入度与邻接表次数一致",
+  "C 需要邻接表、入度和队列的全部失败清理；各语言报告 O(V+E) 时间和 O(V+E) 空间",
+  "R/Julia 一基索引映射课程编号，TypeScript/Java/C# 数组嵌套与 Go/Rust 所有权需静态核对",
+]
+minimum_static_review = [
+  "人工推演 numCourses=2 的单边可行、自环、两节点环、菱形 DAG、孤立课程和重复边",
+  "证明入度语义、队列不变量、DAG 必有零入度节点、环阻塞与 processed==V 判定",
+  "逐语言核对建边方向、索引、入度更新、队列头索引、邻接表资源和 C 失败路径",
 ]
 
 must_preserve = [
-  "严格小于 n 的计数合同与 n<=2 边界",
-  "p*p 起点的必要性与充分性证明",
-  "避免 p*p 循环判断溢出的跨语言实现",
-  "筛数组 O(n) 成本、C 分配失败和 TypeScript/R/Julia 容器适配",
-  "固定十语言完整实现、人工推演、静态语义审查、剩余风险和带答案自检",
+  "0205 的双向一致映射、目标唯一性证明和跨语言字符单位",
+  "0206 的 previous/current/next 不变量、后继保存、原地链接反转和所有权语义",
+  "0207 的 prerequisite->course 建边、Kahn 入度不变量、环等价证明和邻接表资源成本",
+  "每题固定十语言完整实现、人工推演、静态语义审查、剩余风险和带答案自检",
 ]
 
 forbidden = [
-  "参考 0201–0203 或其他最近题目的章节结构、证明篇幅或静态审查密度",
-  "把 n 本身计入答案，或把 1 当作质数",
-  "使用可能溢出的 p*p 作为唯一外层循环条件而不做位宽证明",
-  "从 2*p 开始却仍声称没有重复标记成本，或从 p*p 开始却不给出完整依据",
-  "C 分配失败返回 0 并伪装成合法答案",
-  "把 O(n) 筛数组写成 O(1) 空间",
+  "参考 0204 或其他最近题目的章节结构、证明篇幅或静态审查密度",
+  "0205 只维护单向映射却不检查目标字符是否已被其他源字符占用",
+  "0205 混用字节、Unicode 码点和 UTF-16 单元却声称字符语义完全相同",
+  "0206 覆盖 current.next 后才读取原后继，或创建整条新链表却声称 O(1) 空间原地反转",
+  "0206 C 释放仍需保留的节点，或 Rust 使用同时借用和移动同一 Box 的无效写法",
+  "0207 把建边方向写反、只检查是否存在初始零入度节点，或 processed<V 时仍返回 true",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试或 sanitizer 题解代码",
   "把静态审查写成测试、编译或运行通过",
 ]
 
 completion_checks = [
-  "逐项对照 0050 的状态/数值边界和 0076 的语言适配/资源成本深度",
-  "0204 只有一个自包含 RST，十语言代码全部内联并位于 problems/0201-0300",
-  "人工推演全部要求边界，完成筛法不变量、质数判定、标记完整性和终止证明",
+  "逐题对照 0050 的状态/数值边界和 0076 的语言适配/资源成本深度",
+  "每题完成后立即执行质量门；0207 出现压缩迹象时按合同缩批",
   "命中 DRIFT_LOG 的拆分、摘要、最近样本、预算和验证策略回归检查均通过",
-  "完成范围、completed_count、next_problem、根 README、新范围索引和知识账本同步",
+  "每道算法题只有一个自包含 RST，十语言代码全部内联并位于 problems/0201-0300",
+  "完成范围、completed_count、next_problem、根 README、范围索引和知识账本同步",
   "提交后 BATCH_CONTRACT 被替换为下一批合同",
 ]
