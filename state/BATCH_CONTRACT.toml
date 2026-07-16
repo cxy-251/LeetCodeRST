@@ -1,10 +1,10 @@
 [contract]
 schema_version = 2
-batch_id = "quality-repair-0148"
+batch_id = "quality-repair-0149"
 status = "ready"
 phase = "quality_repair"
 kind = "quality_repair"
-scope = [148]
+scope = [149]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
@@ -22,15 +22,15 @@ repository_structure_state_and_git_checks = "allowed"
 reporting = "只声明实际完成的静态审查；明确未运行、未编译、未测试和剩余风险。"
 
 [budget]
-algorithm_score = 2
-target_min = 2
+algorithm_score = 4
+target_min = 4
 target_max = 4
 proof_risk = "high"
 language_semantics_risk = "high"
 platform_type_risk = "high"
 output_volume_risk = "high"
 scope_may_shrink = false
-scope_reason = "0148 需要把现有递归归并替换为自底向上常量工作空间方案，并在十语言中证明 run 切分、稳定合并、逐轮覆盖、宽度终止和 Rust 独占所有权；单题完整返工。"
+scope_reason = "0149 是 Hard 几何计数题，需要独立证明整数方向规范化的充要性、仅枚举后续点的全局覆盖，并关闭十语言整数与哈希键及 C 开放寻址资源路径；单题已占满风险预算。"
 
 [references]
 style_baselines = [
@@ -42,14 +42,13 @@ fact_sources = [
   "state/REVIEW_INDEX.toml",
   "state/CONCEPT_LEDGER.toml",
   "problems/0101-0200/README.rst",
-  "problems/0101-0200/0143-reorder-list.rst",
-  "problems/0101-0200/0147-insertion-sort-list.rst",
-  "state/concepts/0148.toml",
+  "https://leetcode.com/problems/max-points-on-a-line/description/",
+  "state/concepts/0149.toml",
 ]
 fact_sources_may_provide = [
-  "ListNode 字段、节点身份、断链、稳定连接和尾链接槽位术语",
-  "Rust Option<Box<ListNode>>、Julia mutable struct 与 R environment 的事实连续性",
-  "当前范围、进度和既有概念记录",
+  "官方输入域、互异点保证、坐标与点数上界及平台签名",
+  "方向向量、gcd 约分、符号规范化、哈希计数和整数适配的既有事实连续性",
+  "当前范围、进度和历史静态审查政策",
 ]
 fact_sources_must_not_provide = [
   "章节结构",
@@ -59,56 +58,57 @@ fact_sources_must_not_provide = [
   "文件组织形式",
 ]
 
-[problems."0148"]
-title = "Sort List"
-difficulty = "Medium"
+[problems."0149"]
+title = "Max Points on a Line"
+difficulty = "Hard"
 primary_risks = [
-  "输入是可空无环单链，输出按值非递减并复用全部原节点；目标为 O(n log n) 时间和 O(1) 核心额外空间，递归 top-down 的 O(log n) 调用栈不能伪装成常量空间",
-  "自底向上归并先统计 n，再按 width=1,2,4,... 分轮；每轮输入必须已经分成长度至多 width 的有序 runs，输出合并成长度至多 2*width 的有序 runs",
-  "split_run 必须截取至多 width 个节点、清空该 run 尾边并返回剩余链；短尾 run、空 right run 和两节点边界不能共享旧边",
-  "merge_runs 必须稳定选择左侧等值节点，逐个消费两个 run 并同时交付新头与新尾；若合并后再扫描找尾会引入隐藏重复工作",
-  "每轮必须精确覆盖全部节点一次，已输出前缀、当前左右 runs 与未处理后缀两两不交；节点守恒、连通、无重复、无环和尾部为空都要证明",
-  "width 翻倍与循环终止由 n<=50000 支撑；计数、2*width、末轮和 n=0/1 路径不得产生溢出或零宽死循环",
-  "Rust 需要非递归安全所有权方案，用 take 切出 runs、消费 Box 合并并经尾槽位拼回；禁止 unsafe、裸指针、Rc 图或节点克隆",
-  "R environment 与 Julia 可变节点要表达返回新头和共享字段修改；托管语言每轮 dummy 分配、平台构造器和累计常数对象成本需如实说明",
+  "输入含 1..300 个两两不同整数点，坐标在 [-10000,10000]；输出单条无限直线包含的最大点数，不能把浮点斜率近似当成精确等价类",
+  "固定 anchor 后以整数差 (dy,dx) 表示经过 anchor 的方向；互异点保证不会出现 (0,0)，gcd(abs(dy),abs(dx)) 必须为正并完整约分",
+  "规范键必须统一正反方向，并把水平线唯一化为 (0,1)、竖直线唯一化为 (1,0)；需证明两点键相同当且仅当与 anchor 共线",
+  "内层只扫描 other>anchor；全局覆盖证明必须选择最优直线上输入下标最小的点作为 anchor，不能笼统说每条线会被枚举",
+  "每个方向桶计数的是除 anchor 外的后续点，局部答案必须加一；n=1/2、同一直线、水平、竖直、正负斜率和多条直线竞争都要闭合",
+  "坐标差范围为 [-20000,20000]，当前整数运算安全；逐语言仍需核对 abs、gcd、整除、符号翻转、tuple/packed/string 键不会碰撞或产生 -0/精度问题",
+  "C 固定容量开放寻址表必须使用二次幂容量、明确低负载、探测终止、逐 anchor 清空、哈希有符号位编码和分配释放路径；不能把期望哈希界写成确定最坏界",
+  "C++ std::gcd 的 C++17 要求、Java/TypeScript 64/53 位键、Rust HashMap entry、Go 可比较 struct、C# ValueTuple、Julia Dict 与 R environment 字符串键需逐项适配",
 ]
 minimum_static_review = [
-  "人工推演 n=5 的 width=1、2、4 三轮，逐段记录 left、right、rest、合并结果、输出尾和剩余节点集合",
-  "覆盖空链、单节点、两节点、奇数尾 run、没有配对 right run、已排序、逆序和带身份标签重复值",
-  "逐辅助操作证明 split_run 的长度、断边和剩余入口，merge_runs 的有序、稳定、完整、返回尾与终止",
-  "证明每轮所有节点恰好进入一个输入 run 和一个输出 run，每轮 O(n)，轮数 ceil(log2 n)，最终单 run 覆盖全部节点",
-  "逐语言核对公开签名、ListNode 字段、计数和 width 类型、dummy 生命周期、返回新头、无递归和无额外节点数组",
-  "专项审查 Rust run 所有权分区、take 后空槽、尾槽位借用、剩余链交还、无 clone/unsafe 与真实 O(1) 活跃辅助状态",
-  "专项审查 C 无分配路径、Go/TypeScript/C# 构造器与空引用、Julia mutable struct 和 R environment 的逐轮重连可见性",
+  "人工推演至少一个含水平、竖直、正斜率、负斜率和竞争直线的点集，逐 anchor 记录原差、gcd、规范键、桶计数、local_best 与全局答案",
+  "用身份点分别核对 (2,2)/(-2,-2)、(0,positive)/(0,negative)、(positive,0)/(negative,0) 归一到同键，且 (1,1) 与 (1,-1) 不碰撞",
+  "证明规范化充要性：同键推出方向为正比例并共线；共线的非零整数方向经本原化和符号规则后同键",
+  "证明 other>anchor 不遗漏：任取最优直线中下标最小点，所有同线其余点均在其内层范围；桶最大加 anchor 得到整条线规模",
+  "核对 n=1/2、全部共线、水平、竖直、两侧分布、多个方向同局部最大以及互异点对 gcd 非零的作用",
+  "逐语言核对公开签名、坐标差整数域、gcd 对零分量、规范键编码、哈希容器更新、答案类型和真实期望复杂度",
+  "专项审查 C capacity>=4*n 的二次幂构造、每 anchor 至多 n-1 个键、线性探测空槽终止、calloc/memset/free 与失败返回说明",
+  "删除旧文中运行官方示例和 200 组随机对拍的现行验证表述；该记录只能作为历史事实，当前仅写人工推演与静态语义审查",
 ]
 
 must_preserve = [
-  "精确 O(n log n)/常量工作空间契约、自建多轮 run 示例和重复值身份稳定性反例",
-  "自底向上归并取舍、n 与 width 状态、当前 pass 的 run 分区及代码变量映射",
-  "split_run、merge_runs、pass 和 width 四层不变量与完整正确性证明",
-  "节点唯一覆盖、稳定性、无环、尾部终止、每轮严格进展和最终单 run 证明",
-  "每轮 O(n)、O(log n) 轮、总 O(n log n)、O(1) 核心状态及语言真实 dummy/所有权成本",
-  "固定十语言完整非递归实现，平台节点定义不重复，C 与 Rust 资源和所有权路径闭合",
+  "精确互异整数点契约、自建多方向示例和不能用浮点斜率的可解释反例",
+  "anchor、other、dx/dy、gcd、规范键、方向桶、local_best 和 answer 的状态映射",
+  "方向本原化、符号唯一化、桶计数与全局覆盖四层不变量和完整充要性证明",
+  "仅扫描后续点的最小下标见证、局部加一、无重复点除零安全与有限循环证明",
+  "期望 O(n^2) 时间、O(n) 峰值空间、哈希最坏退化及各语言键/字符串/容器真实成本",
+  "固定十语言完整整数实现，C 表容量和资源路径闭合，平台接口与标准版本准确",
   "准确静态审查证据、失败方式、学习链和带答案自检",
 ]
 
 forbidden = [
-  "参考 0146–0147 或其他最近题目的章节结构",
-  "以 top-down 递归作为主实现却声称严格 O(1) 额外空间",
-  "只说归并排序所以正确，不证明 run 切分、逐轮覆盖和节点守恒",
-  "split 后保留跨 run 旧边，或 merge 后不交付真实尾节点",
-  "相等值优先取右侧却声称稳定",
-  "把节点复制到数组、创建同规模新链、递归调用栈或每轮节点引用表藏进常量空间",
-  "Rust 使用 unsafe、裸指针、Rc<RefCell<_>>、节点 clone 或无法通过借用检查的伪代码",
+  "参考 0146–0148 或其他最近题目的章节结构",
+  "以 double/float 斜率、反正切角度或带舍入字符串作为精确哈希键",
+  "只约分而不统一正反方向，或让水平/竖直方向存在多个键",
+  "在互异点合同下添加含糊 duplicates 分支却不说明状态含义，或让 gcd(0,0) 后继续除法",
+  "只说枚举所有 anchor 所以覆盖全局最优，不证明仅扫描 other>anchor 的下标方向",
+  "把平均/期望哈希 O(1) 写成无条件最坏 O(1)，或忽略 C 清表、探测和资源释放",
+  "使用会碰撞的字符串拼接或窄位打包键，或忽略语言整数除法和负号语义",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试或 sanitizer 题解代码",
-  "把静态审查写成测试、编译或运行通过",
+  "把历史随机对拍或静态审查写成本轮测试、编译或运行通过",
 ]
 
 completion_checks = [
   "当前题逐项对照合同选定的 0076 与 0100 黄金题",
   "命中 DRIFT_LOG 的回归检查均通过",
-  "0148 只有一个自包含 RST，十语言代码全部内联",
+  "0149 只有一个自包含 RST，十语言代码全部内联",
   "PROGRESS、README、AGENTS 当前状态、范围索引和知识账本同步",
   "原子提交后 BATCH_CONTRACT 被替换为下一批合同",
 ]
