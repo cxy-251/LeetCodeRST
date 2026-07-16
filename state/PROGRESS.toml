@@ -17,7 +17,7 @@ completed_ranges = ["0001-0155", "0160", "0162", "0164-0165"]
 premium_skipped = [156, 157, 158, 159, 161, 163]
 blocked = []
 needs_revision = [
-  149, 150,
+  150,
   151, 152, 153, 154, 155, 160, 162, 164, 165,
 ]
 
@@ -25,8 +25,8 @@ needs_revision = [
 status = "in_progress"
 reason = "0127 起部分题解退化为算法摘要与代码集合，未达到冻结教学质量基线。"
 original_scope = [127, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 160, 162, 164, 165]
-repaired = [127, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148]
-remaining_count = 11
+repaired = [127, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149]
+remaining_count = 10
 baseline = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 batch_contract = "state/BATCH_CONTRACT.toml"
 drift_log = "state/DRIFT_LOG.toml"
@@ -60,22 +60,22 @@ quality_over_batch_score = true
 [last_batch]
 status = "completed"
 kind = "quality_repair"
-start = 148
-end = 148
+start = 149
+end = 149
 repaired_problem_count = 1
-repaired_problem_ids = [148]
+repaired_problem_ids = [149]
 reference_problems = [76, 100]
-difficulty_budget = 2
-summary = "重写 0148，以非递归自底向上归并补齐 run 切分、稳定合并、逐轮覆盖、节点守恒、宽度终止与 Rust Box 尾槽所有权证明。"
+difficulty_budget = 4
+summary = "重写 0149，补齐本原整数方向的充要规范化、方向桶不变量、最小输入下标锚点覆盖、哈希退化边界与 C 开放寻址资源证明。"
 
 [next_batch]
 status = "quality_repair_ready"
 kind = "quality_repair"
-start = 149
-end = 149
-difficulty_budget = 4
+start = 150
+end = 150
+difficulty_budget = 2
 contract = "state/BATCH_CONTRACT.toml"
-purpose = "单独返工 0149 Max Points on a Line；新题 0166 继续暂停。"
+purpose = "单独返工 0150 Evaluate Reverse Polish Notation；新题 0166 继续暂停。"
 
 [review_history]
 status = "completed"
@@ -177,7 +177,7 @@ index = "state/CONCEPT_LEDGER.toml"
 latest_record = "state/concepts/0163-0165.toml"
 
 [next_action]
-summary = "按 BATCH_CONTRACT 单独返工 0149；完成剩余 11 道前不生成 0166。"
+summary = "按 BATCH_CONTRACT 单独返工 0150；完成剩余 10 道前不生成 0166。"
 
 [last_update]
-summary = "0148 已按冻结基线完成返工；当前统一静态审查，下一批单独处理 0149。"
+summary = "0149 已按冻结基线完成返工；当前统一静态审查，下一批单独处理 0150。"

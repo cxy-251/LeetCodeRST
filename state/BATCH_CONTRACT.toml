@@ -1,10 +1,10 @@
 [contract]
 schema_version = 2
-batch_id = "quality-repair-0149"
+batch_id = "quality-repair-0150"
 status = "ready"
 phase = "quality_repair"
 kind = "quality_repair"
-scope = [149]
+scope = [150]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
@@ -22,33 +22,33 @@ repository_structure_state_and_git_checks = "allowed"
 reporting = "只声明实际完成的静态审查；明确未运行、未编译、未测试和剩余风险。"
 
 [budget]
-algorithm_score = 4
-target_min = 4
+algorithm_score = 2
+target_min = 2
 target_max = 4
 proof_risk = "high"
 language_semantics_risk = "high"
 platform_type_risk = "high"
 output_volume_risk = "high"
 scope_may_shrink = false
-scope_reason = "0149 是 Hard 几何计数题，需要独立证明整数方向规范化的充要性、仅枚举后续点的全局覆盖，并关闭十语言整数与哈希键及 C 开放寻址资源路径；单题已占满风险预算。"
+scope_reason = "0150 虽是 Medium，但合法 RPN 前缀证明、非交换操作数顺序、十语言向零截断差异、32 位中间值、解析与 C 栈分配失败路径叠加；单题完整返工，避免跨越 0150/0151 规则边界压缩内容。"
 
 [references]
 style_baselines = [
+  "problems/0001-0100/0050-powx-n.rst",
   "problems/0001-0100/0076-minimum-window-substring.rst",
-  "problems/0001-0100/0100-same-tree.rst",
 ]
 fact_sources = [
   "state/PROGRESS.toml",
   "state/REVIEW_INDEX.toml",
   "state/CONCEPT_LEDGER.toml",
   "problems/0101-0200/README.rst",
-  "https://leetcode.com/problems/max-points-on-a-line/description/",
-  "state/concepts/0149.toml",
+  "https://leetcode.com/problems/evaluate-reverse-polish-notation/description/",
+  "state/concepts/0150.toml",
 ]
 fact_sources_may_provide = [
-  "官方输入域、互异点保证、坐标与点数上界及平台签名",
-  "方向向量、gcd 约分、符号规范化、哈希计数和整数适配的既有事实连续性",
-  "当前范围、进度和历史静态审查政策",
+  "官方 token 域、合法表达式、非零除数、向零截断与所有中间值适合有符号 32 位的保证",
+  "RPN 栈、左右操作数、整数解析和跨语言除法适配的既有事实连续性",
+  "当前范围、进度和统一静态审查政策",
 ]
 fact_sources_must_not_provide = [
   "章节结构",
@@ -58,57 +58,58 @@ fact_sources_must_not_provide = [
   "文件组织形式",
 ]
 
-[problems."0149"]
-title = "Max Points on a Line"
-difficulty = "Hard"
+[problems."0150"]
+title = "Evaluate Reverse Polish Notation"
+difficulty = "Medium"
 primary_risks = [
-  "输入含 1..300 个两两不同整数点，坐标在 [-10000,10000]；输出单条无限直线包含的最大点数，不能把浮点斜率近似当成精确等价类",
-  "固定 anchor 后以整数差 (dy,dx) 表示经过 anchor 的方向；互异点保证不会出现 (0,0)，gcd(abs(dy),abs(dx)) 必须为正并完整约分",
-  "规范键必须统一正反方向，并把水平线唯一化为 (0,1)、竖直线唯一化为 (1,0)；需证明两点键相同当且仅当与 anchor 共线",
-  "内层只扫描 other>anchor；全局覆盖证明必须选择最优直线上输入下标最小的点作为 anchor，不能笼统说每条线会被枚举",
-  "每个方向桶计数的是除 anchor 外的后续点，局部答案必须加一；n=1/2、同一直线、水平、竖直、正负斜率和多条直线竞争都要闭合",
-  "坐标差范围为 [-20000,20000]，当前整数运算安全；逐语言仍需核对 abs、gcd、整除、符号翻转、tuple/packed/string 键不会碰撞或产生 -0/精度问题",
-  "C 固定容量开放寻址表必须使用二次幂容量、明确低负载、探测终止、逐 anchor 清空、哈希有符号位编码和分配释放路径；不能把期望哈希界写成确定最坏界",
-  "C++ std::gcd 的 C++17 要求、Java/TypeScript 64/53 位键、Rust HashMap entry、Go 可比较 struct、C# ValueTuple、Julia Dict 与 R environment 字符串键需逐项适配",
+  "输入含 1..10000 个 token，每个是 +、-、*、/ 之一或 [-200,200] 的十进制整数；表达式合法、除数非零、答案与全部中间结果适合有符号 32 位，输入只读",
+  "处理任意合法前缀后，栈深必须等于已见操作数数减运算符数；运算符到达前深度至少 2，完整表达式结束深度恰为 1，不能只说用栈所以正确",
+  "栈中从底到顶保存已完成且尚未消费的子表达式；数字新建子表达式，运算符把最靠后的 left/right 两项替换为合成值，需证明顺序、覆盖和终止",
+  "减法与除法非交换：第一次弹出的是 right，第二次才是 left；任何数组 top 实现都要与此顺序一致",
+  "运算符识别必须是完整单 token 相等，负数 -11 不能因首字符 '-' 被误判；合法 token 保证可解析，但解析函数、字符扫描与错误通道仍需逐语言核对",
+  "除法统一向零截断；Python // 与 R %/% 对负商向负无穷取整，必须用绝对值商和符号恢复或等价精确方案，TypeScript 用 Math.trunc，Julia 明确 RoundToZero",
+  "全部真实中间值适合 32 位，但语言表达式、abs、INT_MIN/-1、解析与最终窄化仍要由官方保证闭合；TypeScript/R 的浮点载体需证明 32 位整数算术精确",
+  "C 栈容量为 tokensSize、乘法与 malloc 大小安全，成功路径 free；分配失败若返回 0 会与合法答案 0 冲突，必须明确平台 int 签名没有独立错误通道",
 ]
 minimum_static_review = [
-  "人工推演至少一个含水平、竖直、正斜率、负斜率和竞争直线的点集，逐 anchor 记录原差、gcd、规范键、桶计数、local_best 与全局答案",
-  "用身份点分别核对 (2,2)/(-2,-2)、(0,positive)/(0,negative)、(positive,0)/(negative,0) 归一到同键，且 (1,1) 与 (1,-1) 不碰撞",
-  "证明规范化充要性：同键推出方向为正比例并共线；共线的非零整数方向经本原化和符号规则后同键",
-  "证明 other>anchor 不遗漏：任取最优直线中下标最小点，所有同线其余点均在其内层范围；桶最大加 anchor 得到整条线规模",
-  "核对 n=1/2、全部共线、水平、竖直、两侧分布、多个方向同局部最大以及互异点对 gcd 非零的作用",
-  "逐语言核对公开签名、坐标差整数域、gcd 对零分量、规范键编码、哈希容器更新、答案类型和真实期望复杂度",
-  "专项审查 C capacity>=4*n 的二次幂构造、每 anchor 至多 n-1 个键、线性探测空槽终止、calloc/memset/free 与失败返回说明",
-  "删除旧文中运行官方示例和 200 组随机对拍的现行验证表述；该记录只能作为历史事实，当前仅写人工推演与静态语义审查",
+  "逐 token 人工推演三个官方示例，记录 token、动作、栈内容、top/深度和最终唯一值，第三例专项核对 -11 是数字与 6/-132 向零得到 0",
+  "覆盖单数字、left-right 次序、left/right 三种负号除法组合、绝对值小于除数得到 0、连续子表达式合成和最大可能栈深",
+  "对每个前缀证明 depth=operands-operators、合法运算符前 depth>=2、数字与运算符转移保持子表达式栈不变量、完整输入最终 depth=1",
+  "逐语言核对公开签名、token 完整匹配、整数解析、pop/top 更新、除法方向、32 位/安全整数、返回类型和输入不修改",
+  "专项对照 C/C++/Java/Rust/Go/C# 原生向零整数除法、Python 符号恢复、TypeScript Math.trunc、Julia div RoundToZero 与 R 绝对值 %/%",
+  "专项审查 C tokensSize*sizeof(stack item)、malloc 失败的歧义哨兵、所有返回路径、合法前缀防下溢和最终 stack[0] 读取见证",
+  "复杂度同时报告 token 数 t、总字符数 L、峰值栈深 s；解析 O(L)、栈操作 O(t)、峰值 O(s)<=O(t)，并核对 R/托管语言对象与累计分配",
+  "删除旧文中运行官方示例和多语言输出一致的验证表述；当前只记录纸面推演、静态语义审查与剩余风险",
 ]
 
 must_preserve = [
-  "精确互异整数点契约、自建多方向示例和不能用浮点斜率的可解释反例",
-  "anchor、other、dx/dy、gcd、规范键、方向桶、local_best 和 answer 的状态映射",
-  "方向本原化、符号唯一化、桶计数与全局覆盖四层不变量和完整充要性证明",
-  "仅扫描后续点的最小下标见证、局部加一、无重复点除零安全与有限循环证明",
-  "期望 O(n^2) 时间、O(n) 峰值空间、哈希最坏退化及各语言键/字符串/容器真实成本",
-  "固定十语言完整整数实现，C 表容量和资源路径闭合，平台接口与标准版本准确",
+  "精确合法 RPN 契约、自建非交换与负商示例、可区分 -11 数字和 '-' 运算符的反例",
+  "token、stack、top/depth、left、right、value 与 answer 的状态映射",
+  "前缀栈深、完成子表达式、运算符合成、最终唯一值和有限扫描不变量及完整证明",
+  "向零截断的数学定义、跨语言实现分类、32 位中间保证与除零排除",
+  "O(t+L) 或 O(L) 时间、O(s) 峰值栈及 C/托管语言解析与分配真实成本",
+  "固定十语言完整实现，C 资源路径闭合，平台签名、解析 API 和语言版本准确",
   "准确静态审查证据、失败方式、学习链和带答案自检",
 ]
 
 forbidden = [
-  "参考 0146–0148 或其他最近题目的章节结构",
-  "以 double/float 斜率、反正切角度或带舍入字符串作为精确哈希键",
-  "只约分而不统一正反方向，或让水平/竖直方向存在多个键",
-  "在互异点合同下添加含糊 duplicates 分支却不说明状态含义，或让 gcd(0,0) 后继续除法",
-  "只说枚举所有 anchor 所以覆盖全局最优，不证明仅扫描 other>anchor 的下标方向",
-  "把平均/期望哈希 O(1) 写成无条件最坏 O(1)，或忽略 C 清表、探测和资源释放",
-  "使用会碰撞的字符串拼接或窄位打包键，或忽略语言整数除法和负号语义",
+  "参考 0147–0149 或其他最近题目的章节结构",
+  "调用 eval、表达式解释器或把 RPN 重新拼成宿主语言表达式",
+  "只说遇数入栈遇运算符计算，不证明合法前缀深度、子表达式对应和最终唯一值",
+  "把第一次弹出值当 left，导致减法和除法反序",
+  "只检查 token 首字符或是否包含符号，把 -11 等负整数误判为运算符",
+  "Python 直接使用 //、R 直接使用 %/% 或 floor 处理负商并声称向零截断",
+  "用浮点 left/right 除法再未经审查地强转整数，或把 Python 任意精度结论外推到固定宽语言",
+  "忽略 C 栈分配失败、释放、容量乘法或合法 0 与失败 0 无法区分的接口限制",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试或 sanitizer 题解代码",
-  "把历史随机对拍或静态审查写成本轮测试、编译或运行通过",
+  "把静态审查写成测试、编译或运行通过",
 ]
 
 completion_checks = [
-  "当前题逐项对照合同选定的 0076 与 0100 黄金题",
+  "当前题逐项对照合同选定的 0050 与 0076 黄金题",
   "命中 DRIFT_LOG 的回归检查均通过",
-  "0149 只有一个自包含 RST，十语言代码全部内联",
+  "0150 只有一个自包含 RST，十语言代码全部内联",
   "PROGRESS、README、AGENTS 当前状态、范围索引和知识账本同步",
   "原子提交后 BATCH_CONTRACT 被替换为下一批合同",
 ]

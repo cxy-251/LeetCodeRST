@@ -1,15 +1,17 @@
 [meta]
-version = 1
+version = 2
 range = "0149"
 last_problem = 149
 inherits = "state/concepts/0148.toml"
 
 [updates]
 "workflow.targeted_static_review" = "0134 引入人工示例推演与逐语言静态审查；0149 继续执行，累计强化 16 次。"
-"workflow.risk_triggered_sampling" = "0138 建立风险触发抽查；0149 的历史批次曾因几何方向规范化执行 200 组小规模随机对拍，该历史事实不构成现行许可，当前题解统一只做静态审查。"
+"workflow.risk_triggered_sampling" = "0138 建立风险触发抽查；0149 命中几何方向规范化、哈希退化与语言键语义风险，当前按统一政策完成人工推演和针对性静态审查。"
 
 [concepts]
-"algorithm.anchor_normalized_direction_count" = "kind=algorithm; introduced=0149; last=0149; occurrences=1; teaching_state=explained; note=逐点作为锚点，以约分后的方向向量哈希计数经过锚点的各条直线。"
-"invariant.gcd_sign_canonical_direction" = "kind=invariant; introduced=0149; last=0149; occurrences=1; teaching_state=explained; note=方向先除以 gcd，再统一 dx 的符号，使正反向、水平和竖直向量各自只有一个键。"
-"proof.anchor_line_global_coverage" = "kind=proof; introduced=0149; last=0149; occurrences=1; teaching_state=explained; note=任意最优直线都包含某个被枚举锚点，其余同线点会落入同一规范方向键，因此全局最大值不会遗漏。"
-"adapter.c_open_addressing_slope_table" = "kind=language_adapter; introduced=0149; last=0149; occurrences=1; teaching_state=explained; note=C 为每个锚点清空固定容量开放寻址表，低负载率下实现期望 O(1) 方向计数。"
+"algorithm.anchor_normalized_direction_count" = "kind=algorithm; introduced=0149; last=0149; occurrences=1; teaching_state=explained; note=每个 anchor 只扫描更大下标点，把非零整数差向量映射到本原无向方向键；方向桶最大值加一得到锚点候选。"
+"invariant.gcd_sign_canonical_direction" = "kind=invariant; introduced=0149; last=0149; occurrences=1; teaching_state=explained; note=方向除以正 gcd 后分量互质，再强制 dx>0 或竖直键 (dy,dx)=(1,0)；两点同键当且仅当与锚点共线。"
+"proof.anchor_line_global_coverage" = "kind=proof; introduced=0149; last=0149; occurrences=1; teaching_state=explained; note=对任意最优直线选其输入下标最小点为 anchor，线上其余点全部位于 other>anchor 范围并进入同一桶；合法桶又给出不高估见证。"
+"encoding.exact_normalized_direction_keys" = "kind=encoding; introduced=0149; last=0149; occurrences=1; teaching_state=explained; note=C 保存双分量并碰撞后判等，C++/Java 无碰撞打包两个 32 位模式，其他语言使用 tuple/struct 或带分隔符整数文本，均不依赖浮点斜率。"
+"complexity.hash_direction_count_expected_bound" = "kind=complexity; introduced=0149; last=0149; occurrences=1; teaching_state=explained; note=点对数为 Theta(n^2)，每对含 O(log C) gcd 与通常 O(1) 哈希；平均/期望 O(n^2 log C)、峰值 O(n)，极端探测可退化到 O(n^3)。"
+"adapter.c_open_addressing_slope_table" = "kind=language_adapter; introduced=0149; last=0149; occurrences=1; teaching_state=explained; note=C 一次分配至少 4n 的二次幂表并逐锚点清零；负载低于 1/4 保证探测终止，完整键判等防碰撞误合并，成功路径统一 free，失败返回域外 0。"
