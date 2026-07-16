@@ -1,10 +1,11 @@
 [contract]
 schema_version = 2
-batch_id = "generation-0167-0168"
+batch_id = "generation-0169-0172"
 status = "ready"
 phase = "generation"
 kind = "generation"
-scope = [167, 168]
+scope = [169, 171, 172]
+expected_premium_skips = [170]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
@@ -22,20 +23,20 @@ repository_structure_state_and_git_checks = "allowed"
 reporting = "只声明实际完成的静态审查；明确未运行、未编译、未测试和剩余风险。"
 
 [budget]
-algorithm_score = 3
-target_min = 3
-target_max = 3
-proof_risk = "medium"
+algorithm_score = 4
+target_min = 4
+target_max = 6
+proof_risk = "high"
 language_semantics_risk = "medium"
-platform_type_risk = "high"
+platform_type_risk = "medium"
 output_volume_risk = "high"
 scope_may_shrink = true
-scope_reason = "本合同承接原 0166–0168 批次缩批后的连续剩余范围。两题算法分数合计 3；固定十语言、C 返回资源、索引单位和输出物化仍使平台与体积风险为 high。若 0168 开始压缩证明或语言说明，只提交 0167 并重建合同。"
+scope_reason = "0169 的 Boyer-Moore 抵消证明是本批主要证明风险；0171 与 0172 算法较短，但固定十语言和三题输出体积仍为 high。若后题开始压缩证明、适配成本或静态审查，只提交已完整达标的连续可执行前缀。"
 
 [references]
 style_baselines = [
+  "problems/0001-0100/0001-two-sum.rst",
   "problems/0001-0100/0050-powx-n.rst",
-  "problems/0001-0100/0076-minimum-window-substring.rst",
 ]
 fact_sources = [
   "state/PROGRESS.toml",
@@ -43,13 +44,17 @@ fact_sources = [
   "state/CONCEPT_LEDGER.toml",
   "docs/FORWARD_RULES_0151_ONWARD.rst",
   "problems/0101-0200/README.rst",
-  "https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/description/",
-  "https://leetcode.com/problems/excel-sheet-column-title/description/",
+  "https://leetcode.com/problems/majority-element/description/",
+  "https://leetcode.com/problems/two-sum-iii-data-structure-design/description/",
+  "https://leetcode.com/problems/excel-sheet-column-number/description/",
+  "https://leetcode.com/problems/factorial-trailing-zeroes/description/",
 ]
 fact_sources_may_provide = [
-  "0167 的非递减数组、唯一解、不同元素、一基返回、长度和值域与常数额外空间要求",
-  "0168 的正整数范围、Excel 列标题映射、无零位二十六进制语义与官方示例",
-  "当前题号、Premium 间隔、0166 完成状态和统一静态审查政策",
+  "0169 的数组范围、严格超过一半的多数元素保证、返回值和官方示例",
+  "0170 的 Premium 访问状态与题号推进事实",
+  "0171 的大写字母标题、长度上界、A=1 到 Z=26 的解码合同和官方示例",
+  "0172 的非负整数范围、阶乘尾零定义、复杂度追问和官方示例",
+  "当前完成范围、静态审查政策和长期质量控制状态",
 ]
 fact_sources_must_not_provide = [
   "章节结构",
@@ -59,65 +64,86 @@ fact_sources_must_not_provide = [
   "文件组织形式",
 ]
 
-[problems."0167"]
-title = "Two Sum II - Input Array Is Sorted"
-difficulty = "Medium"
-primary_risks = [
-  "numbers 长度 2..30000、值在 [-1000,1000] 且非递减，target 在 [-1000,1000]；恰有一组不同下标解，返回两个一基下标并只用常数额外空间",
-  "左右指针必须保持 left<right，禁止同一元素使用两次；和小于 target 时只移动左端，和大于时只移动右端",
-  "不变量需保留唯一解下标仍在 [left,right]；若当前最大配对和仍过小，left 不可能参与任何剩余解，过大分支对 right 对称",
-  "重复值合法，唯一的是下标对解而非数组值互异；证明不能依赖严格递增，也不能跳过重复值破坏唯一解",
-  "返回载荷固定两个整数；C 需分配长度 2 并设置 returnSize，失败语义与调用者释放责任明确",
-  "内部零基与题目一基返回需逐语言核对；Julia/R 内部一基时不能再次加一，和的当前范围虽安全仍要准确说明",
-]
-minimum_static_review = [
-  "人工推演三个官方示例，逐轮记录 left/right、端点值、sum、删除端点和唯一解见证",
-  "覆盖两元素、负数与零、重复值构成答案、答案在首尾、指针相邻和合同保证的唯一解",
-  "证明两个排除分支、唯一解保留、每轮严格缩短、有限终止及返回不同一基下标",
-  "逐语言核对公开签名、只读输入、索引单位、结果容器、固定返回载荷与 C 资源路径",
-  "明确核心 O(n) 时间/O(1) 状态，输出数组 O(1)；不得用哈希表却声称常数额外空间",
-]
-
-[problems."0168"]
-title = "Excel Sheet Column Title"
+[problems."0169"]
+title = "Majority Element"
 difficulty = "Easy"
 primary_risks = [
-  "输入 columnNumber 在 [1,2^31-1]，返回 Excel 列标题；A..Z 表示 1..26，AA 表示 27，不存在表示零的字符",
-  "每轮必须先把当前正数减一，再以 26 取余得到 0..25 字母并整除；直接 n%26 会在 26、52 等倍数产生不存在的零位",
-  "生成顺序从最低位到最高位，需要反转或前插；证明需建立减一后的标准余数与原无零位二十六进制表示等价",
-  "循环状态保持尚未编码的高位商，严格变小至零；还原公式需证明输出标题数值等于原输入且表示唯一",
-  "最大输入输出长度有限但各语言字符构建、反转、ASCII 转换和返回物化成本要准确，C 容量与终止符闭合",
-  "R/Julia 一基容器不影响数值位次，TypeScript number 精确表示 32 位输入和所有除法中间量",
+  "nums 非空，题目保证存在出现次数严格大于 floor(n/2) 的元素；不能把众数或恰好一半误写成多数",
+  "Boyer-Moore 的 candidate 与 balance 只表达未抵消后缀代表，不是遍历中实时出现次数",
+  "证明必须说明不同值成对抵消不会消灭真正多数，并说明最终候选为何必为多数",
+  "题目已保证多数存在，因此无需第二遍验证；若扩展到无保证输入，必须增加计数验证",
+  "十语言实现保持 O(n) 时间/O(1) 状态，不使用哈希表后仍声称常数空间",
 ]
 minimum_static_review = [
-  "人工推演 1、28、701 以及 26、52、2^31-1，逐轮记录减一值、余数、字母、商和反转结果",
-  "覆盖 A/Z/AA/AZ/ZZ/AAA 边界、26 的倍数、最大输入和单字符输出",
-  "证明每轮位公式、循环不变量、商严格下降、终止、表示正确与唯一性",
-  "逐语言核对平台签名、整数除法、字符码、构建方向、反转、C 返回所有权和 R 字符拼接成本",
-  "复杂度以标题长度 L 报告 O(L) 时间与 O(L) 返回/构建空间，不把返回字符串写成 O(1)",
+  "人工推演 [3,2,3]、[2,2,1,1,1,2,2]、连续候选切换和单元素",
+  "写出抵消模型、候选段不变量、严格多数存活和终止证明",
+  "逐语言核对公开签名、只读输入、balance 类型、空输入前提和返回类型",
+  "复杂度区分 Boyer-Moore 常数状态与哈希/排序备选成本",
+]
+
+[problems."0170"]
+title = "Two Sum III - Data structure design"
+access = "Premium"
+action = "登记 premium_skipped 后继续 0171，不生成猜测性 RST。"
+
+[problems."0171"]
+title = "Excel Sheet Column Number"
+difficulty = "Easy"
+primary_risks = [
+  "输入由 A..Z 构成，A=1、Z=26；从左到右执行 answer=answer*26+digit",
+  "它是 0168 的逆过程，不需要先减一；错误照搬编码侧减一会破坏结果",
+  "乘加顺序体现高位折叠不变量，必须证明处理前缀的数值含义",
+  "结果在 32 位有符号范围内；固定宽语言可用 int，但乘加前后的范围说明要准确",
+  "R/TypeScript 的整数精确性和字符码转换、Julia 一基字符串索引与 ASCII 合同需要静态核对",
+]
+minimum_static_review = [
+  "人工推演 A、AB、ZY、FXSHRXW 和 Z/AA 边界",
+  "证明前缀折叠不变量、每位合法、终止和与 0168 的互逆关系",
+  "逐语言核对 ASCII 字符码、字符串扫描单位、乘加类型和返回值",
+  "复杂度以标题长度 L 报告 O(L) 时间，区分字符物化适配成本",
+]
+
+[problems."0172"]
+title = "Factorial Trailing Zeroes"
+difficulty = "Medium"
+primary_risks = [
+  "尾零来自因子 10=2*5；阶乘中因子 2 多于因子 5，因此只累计 5 的指数",
+  "倍数 25、125 等提供多个因子 5，不能只计算 floor(n/5)",
+  "主循环反复令 current=floor(current/5) 并累加，避免显式计算 5^k 的乘法溢出",
+  "证明需要覆盖每层 floor(n/5^k) 的计数含义、总和不重不漏和循环终止",
+  "复杂度为 O(log_5 n) 时间/O(1) 空间，不能计算 n! 或转字符串",
+]
+minimum_static_review = [
+  "人工推演 n=0、3、5、25、10000，逐层记录商与累计值",
+  "证明因子 2 充足、每个整数贡献的 5 因子按层计数且恰好一次",
+  "逐语言核对整数除法、循环条件、累计范围和平台签名",
+  "明确未计算阶乘，复杂度按除以 5 的轮数报告",
 ]
 
 must_preserve = [
-  "两题各自具备精确契约、自建反例、问题抽象、解法取舍、状态不变量和完整正确性证明",
-  "0167 的唯一解区间、单调端点排除、不同下标与一基返回",
-  "0168 的先减一无零位进制、逆序位生成、终止和字符物化",
-  "固定十语言完整实现以及每题独立人工推演、静态语义审查、剩余风险、学习链和带答案自检",
+  "0169 的抵消模型、严格多数存活证明、候选状态与无验证前提",
+  "0170 只登记 Premium，不创建题解文件",
+  "0171 的高位前缀折叠、A=1 数位语义、与 0168 的逆向关系",
+  "0172 的 5 因子分层计数、不重不漏证明和对数轮终止",
+  "三道公开题各自固定十语言完整实现、独立人工推演、静态语义审查、剩余风险和带答案自检",
 ]
 
 forbidden = [
-  "参考 0166 或其他最近题目的章节结构、证明篇幅或静态审查密度",
-  "在 0167 中返回零基下标、允许 left==right 复用元素、使用哈希表却声称常数空间，或依赖元素互异",
-  "在 0168 中直接 n%26 映射 A..Z、遗漏先减一、按生成逆序直接返回，或把返回载荷忽略为空间零",
+  "参考 0167–0168 或其他最近题目的章节结构、证明篇幅或静态审查密度",
+  "在 0169 中把 balance 当作当前候选真实频次，或在无多数保证的扩展输入中省略验证",
+  "为 0170 创建猜测性 RST、代码或题面重述",
+  "在 0171 中沿用 0168 的先减一编码步骤，或按普通零基字符值计算 A=0",
+  "在 0172 中计算阶乘、转字符串数零，或只统计 5 的倍数遗漏 25/125 的额外因子",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试或 sanitizer 题解代码",
   "把静态审查写成测试、编译或运行通过",
 ]
 
 completion_checks = [
-  "两题逐项对照 0050 的数值边界/递推深度与 0076 的不变量/物化深度",
-  "每题写完立即完成自身质量门；0168 出现压缩迹象时按连续前缀缩批",
+  "三道公开题逐项对照 0001 的紧凑完整性与 0050 的状态/数值边界深度",
+  "每题写完立即完成自身质量门；后题出现压缩迹象时按连续可执行前缀缩批",
   "命中 DRIFT_LOG 的拆分、摘要、最近样本、预算与验证策略回归检查均通过",
-  "0167–0168 各自只有一个自包含 RST，每题十语言代码全部内联",
-  "完成范围、completed_count、next_problem、README、范围索引和知识账本同步",
+  "0169、0171、0172 各自只有一个自包含 RST，每题十语言代码全部内联；0170 不生成题解",
+  "完成范围、premium_skipped、completed_count、next_problem、README、范围索引和知识账本同步",
   "原子提交后 BATCH_CONTRACT 被替换为下一批合同",
 ]

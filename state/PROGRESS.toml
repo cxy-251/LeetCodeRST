@@ -11,9 +11,9 @@ code_comment_language = "zh-CN"
 problem_artifact_shape = "one_self_contained_rst_per_public_problem"
 
 [progress]
-next_problem = 167
-completed_count = 160
-completed_ranges = ["0001-0155", "0160", "0162", "0164-0166"]
+next_problem = 169
+completed_count = 162
+completed_ranges = ["0001-0155", "0160", "0162", "0164-0168"]
 premium_skipped = [156, 157, 158, 159, 161, 163]
 blocked = []
 needs_revision = []
@@ -57,26 +57,27 @@ quality_over_batch_score = true
 [last_batch]
 status = "completed"
 kind = "generation"
-start = 166
-end = 166
-generated_problem_count = 1
-generated_problem_ids = [166]
+start = 167
+end = 168
+generated_problem_count = 2
+generated_problem_ids = [167, 168]
 reference_problems = [50, 76]
-difficulty_budget = 2
-planned_scope = [166, 167, 168]
-scope_shrunk = true
-scope_reason = "0166 的证明、十语言哈希/字符串语义、C 资源事务和输出体积风险同时为 high；按合同先完整交付单题，未通过压缩正文维持三题范围。"
-summary = "完成 0166 Fraction to Recurring Decimal：以余数状态驱动长除法，证明有限或循环二分、首次重复括号位置、宽整数符号处理，并完成十语言静态语义与 C 资源路径审查。"
+difficulty_budget = 3
+planned_scope = [167, 168]
+scope_shrunk = false
+scope_reason = "0167 与 0168 均完整通过单题质量门，未出现证明、接口或静态审查压缩。"
+summary = "完成 0167 有序数组双指针单调排除与一基索引契约，以及 0168 无零位二十六进制的先减一位分解、唯一性证明和十语言字符构造。"
 
 [next_batch]
 status = "generation_ready"
 kind = "generation"
-start = 167
-end = 168
-problem_ids = [167, 168]
-difficulty_budget = 3
+start = 169
+end = 172
+problem_ids = [169, 171, 172]
+expected_premium_skips = [170]
+difficulty_budget = 4
 contract = "state/BATCH_CONTRACT.toml"
-purpose = "继续生成 0167 Two Sum II 与 0168 Excel Sheet Column Title；这是原 0166–0168 合同缩批后的连续剩余范围。"
+purpose = "生成 0169 Majority Element、登记 Premium 0170、生成 0171 Excel Sheet Column Number 与 0172 Factorial Trailing Zeroes。"
 
 [review_history]
 status = "completed"
@@ -145,7 +146,7 @@ problem_code_fragments_present = false
 
 [quality_scope]
 historical_start = 1
-historical_end = 166
+historical_end = 168
 historical_policy = "用户指定的 32 道低质量题解已经全部返工完成；历史题默认保持不变，风险触发时定向抽查。"
 persistent_rule_start = 151
 persistent_rule = "docs/FORWARD_RULES_0151_ONWARD.rst"
@@ -175,10 +176,10 @@ concurrency_policy = "fetch_and_compare_before_commit; stop_on_remote_change_or_
 
 [concept_ledger]
 index = "state/CONCEPT_LEDGER.toml"
-latest_record = "state/concepts/0166.toml"
+latest_record = "state/concepts/0167-0168.toml"
 
 [next_action]
-summary = "按 BATCH_CONTRACT 生成 0167–0168；0166 已因高风险叠加独立完成。"
+summary = "按 BATCH_CONTRACT 从 0169 开始；0170 按 Premium 规则登记后继续 0171–0172。"
 
 [last_update]
-summary = "0166 已按冻结基线完成，completed_count 更新为 160、next_problem 更新为 0167；下一合同承接 0167–0168。"
+summary = "0167–0168 已完整生成并通过静态质量门，完成数更新为 162，下一题为 0169。"

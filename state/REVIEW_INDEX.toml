@@ -144,15 +144,16 @@ statement = "0094 defines the R constructor as new_tree_node(val, left, right), 
 [corrections.interleaving_string_adapter_materialization]
 status = "active"
 supersedes = "0097 complexity text presenting O(min(m,n)) as the complete auxiliary-space bound for every language implementation."
-statement = "O(min(m,n)) describes only the rolling Boolean DP array. The C++ signature copies s1, s2, and s3 by value for O(m+n+|s3|) extra and peak space; Julia materializes O(m+n) source byte arrays with collect(codeunits(...)); R materializes O(m+n+|s3|) integer vectors with utf8ToInt."
+statement = "O(min(m,n)) describes only the rolling Boolean DP array. C++ signature copies s1, s2, and s3 by value for O(m+n+|s3|) extra and peak space; Julia materializes O(m+n) source byte arrays with collect(codeunits(...)); R materializes O(m+n+|s3|) integer vectors with utf8ToInt."
 
 [next_action]
 kind = "generation"
 status = "ready"
-start = 167
-end = 168
-problem_ids = [167, 168]
-purpose = "生成 0167 Two Sum II 与 0168 Excel Sheet Column Title；这是原 0166–0168 合同缩批后的连续剩余范围。"
+start = 169
+end = 172
+problem_ids = [169, 171, 172]
+expected_premium_skips = [170]
+purpose = "生成 0169 Majority Element、登记 Premium 0170、生成 0171 Excel Sheet Column Number 与 0172 Factorial Trailing Zeroes；历史题继续风险触发抽查。"
 
 [artifact_lifecycle]
 policy = "docs/ARTIFACT_LIFECYCLE_POLICY.rst"

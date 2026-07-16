@@ -2,12 +2,12 @@ LeetCode 0101–0200
 ==================
 
 本目录按题号顺序保存 0101 至 0200 的题目教程。当前题号进度为：完成 0101 至 0155、0160、0162、
-0164 至 0166；0156 至 0159、0161、0163 登记为 Premium 跳过。每道公开题只有一个自包含 RST，正文与
-十语言代码全部直接内联，不使用 ``.inc`` 或 ``.. include::``。
+0164 至 0168；0156 至 0159、0161、0163 登记为 Premium 跳过。每道公开题只有一个自包含 RST，
+正文与十语言代码全部直接内联，不使用 ``.inc`` 或 ``.. include::``。
 
 ``0127``、``0129–0155``、``0160``、``0162``、``0164``、``0165`` 共 32 道公开题的质量返工
-已经完成，``../../state/PROGRESS.toml`` 的 ``needs_revision`` 为空。``0166`` 已按完整质量门生成；
-当前下一批继续 0167 至 0168。
+已经完成，``../../state/PROGRESS.toml`` 的 ``needs_revision`` 保持为空。
+``0166–0168`` 已按冻结基线生成，下一题为 0169。
 
 已完成
 ------
@@ -81,6 +81,9 @@ LeetCode 0101–0200
 #. `0164. Maximum Gap <0164-maximum-gap.rst>`_
 #. `0165. Compare Version Numbers <0165-compare-version-numbers.rst>`_
 #. `0166. Fraction to Recurring Decimal <0166-fraction-to-recurring-decimal.rst>`_
+#. `0167. Two Sum II - Input Array Is Sorted
+   <0167-two-sum-ii-input-array-is-sorted.rst>`_
+#. `0168. Excel Sheet Column Title <0168-excel-sheet-column-title.rst>`_
 
 Premium 跳过
 ------------
@@ -122,5 +125,6 @@ Premium 跳过
 下一动作
 --------
 
-下一批生成 ``0167–0168``：一道 Medium 与一道 Easy，合计 3 分。这是原 ``0166–0168`` 高风险批次
-缩批后的连续剩余范围，分别处理有序数组双指针唯一解与 Excel 无零位二十六进制转换。
+下一批从 ``0169`` 开始：生成 ``0169`` Majority Element、登记 Premium ``0170``，
+继续生成 ``0171`` Excel Sheet Column Number 与 ``0172`` Factorial Trailing Zeroes。
+批次风险和黄金样本由 ``../../state/BATCH_CONTRACT.toml`` 指定。
