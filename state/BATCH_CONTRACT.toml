@@ -1,10 +1,10 @@
 [contract]
 schema_version = 2
-batch_id = "quality-repair-0146"
+batch_id = "quality-repair-0147"
 status = "ready"
 phase = "quality_repair"
 kind = "quality_repair"
-scope = [146]
+scope = [147]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
@@ -30,25 +30,25 @@ language_semantics_risk = "high"
 platform_type_risk = "high"
 output_volume_risk = "high"
 scope_may_shrink = false
-scope_reason = "0146 需要在十语言中同时承载对象接口、哈希定位、双向链表拓扑、容量淘汰、分配失败和所有权替代；单题完整返工优先于难度分数目标。"
+scope_reason = "0147 需要分别承载指针版已排序前缀和 Rust Box 所有权版有序链重建，完整证明节点守恒、稳定性、无环与真实分语言复杂度；单题优先于和 0148 叠加。"
 
 [references]
 style_baselines = [
-  "problems/0001-0100/0050-powx-n.rst",
   "problems/0001-0100/0076-minimum-window-substring.rst",
+  "problems/0001-0100/0100-same-tree.rst",
 ]
 fact_sources = [
   "state/PROGRESS.toml",
   "state/REVIEW_INDEX.toml",
   "state/CONCEPT_LEDGER.toml",
   "problems/0101-0200/README.rst",
-  "problems/0101-0200/0138-copy-list-with-random-pointer.rst",
+  "problems/0101-0200/0109-convert-sorted-list-to-binary-search-tree.rst",
   "problems/0101-0200/0143-reorder-list.rst",
-  "state/concepts/0146.toml",
+  "state/concepts/0147.toml",
 ]
 fact_sources_may_provide = [
-  "节点身份、哈希定位、链表断接和引用对象术语",
-  "C 分配责任、Rust 所有权与 R environment 的事实连续性",
+  "ListNode 平台字段、节点身份、哨兵和 next 断接术语",
+  "Rust Option<Box<ListNode>>、R environment 与 Julia 可变节点的事实连续性",
   "当前范围、进度和既有概念记录",
 ]
 fact_sources_must_not_provide = [
@@ -59,55 +59,56 @@ fact_sources_must_not_provide = [
   "文件组织形式",
 ]
 
-[problems."0146"]
-title = "LRU Cache"
+[problems."0147"]
+title = "Insertion Sort List"
 difficulty = "Medium"
 primary_risks = [
-  "构造器固定正容量；get 命中和 put 更新都必须刷新最近使用顺序，get 未命中返回 -1，插入新键满容时淘汰唯一最久未使用项",
-  "状态必须同时保持哈希表键到节点的唯一映射、双向链表从 MRU 到 LRU 的严格顺序、有效节点数不超过容量以及两个哨兵边界完整",
-  "摘除、头插、更新、插入和淘汰的更新顺序若不同步，会产生悬空哈希项、重复键、断链、环或错误 size",
-  "平均 O(1) 依赖哈希容器平均界和已知节点双向摘除；任何扫描链表找键、扫描最小时间戳或线性删除都不满足操作合同",
-  "C 构造、桶数组、节点池、失败清理、victim 复用和 free 必须闭合；void put 发生分配失败时不能留下部分状态或伪装成成功插入",
-  "Rust 需要可通过借用检查的安全结构，可用键到稳定索引与预分配节点池替代自引用裸指针；必须重新证明槽位复用、索引合法和空间界",
-  "R environment 的映射键、节点 prev/next 引用和缓存对象修改可见性需要明确；Julia mutable node、JavaScript Map 和各语言标准容器接口不得机械同构",
+  "输入是单链表头，输出按值非递减；实现应复用每个输入节点并只重写 next，空表扩展、单节点、负数和重复值身份必须与平台类型一致",
+  "普通指针版维护 dummy 后到 last_sorted 的已排序稳定前缀，current 固定为 last_sorted.next；已顺序时扩前缀，失序时从 dummy 搜索插入点",
+  "搜索条件 <= 使 current 插在前缀中全部相等值之后；必须证明 position.next 在比较时存在，并区分稳定性是所选算法性质而非只按值输出的唯一要求",
+  "摘除 current 与插入的赋值顺序若错误会丢失未处理后缀、形成环、重复节点或让 last_sorted 指向错误位置",
+  "节点守恒证明必须覆盖每个原节点恰好一次出现在结果、没有新结果节点、dummy 不进入返回链以及循环有限终止",
+  "最坏逆序时间 O(n^2)，普通 last_sorted 快路径在已排序输入为 O(n)；Rust 若逐个取 Box 并从有序链头搜索，其最好时间也可能为 O(n^2)，不得把其他语言最好界机械外推",
+  "Rust 需要安全取得、断开并重新接回 Option<Box<ListNode>>，不能使用 unsafe、克隆节点值替代身份或写无法通过借用检查的游标伪代码",
+  "C/C++ 不分配结果节点，Java/Python/Go/TypeScript/C#/Julia/R 的引用节点修改对调用者可见；R environment 和局部 dummy 的可见性不得与向量复制语义混用",
 ]
 minimum_static_review = [
-  "人工逐操作推演 capacity=2 的插入、命中刷新、更新已有键、满容淘汰、淘汰后未命中与再插入，并覆盖 capacity=1 和重复 put",
-  "每次操作后列出 MRU 到 LRU 键序列、哈希键集合、size 与哨兵相邻关系，核对 map/list 双射和容量不变量",
-  "逐辅助操作静态证明 detach、push_front、remove_lru 的前置条件、修改边、保持条件和有限终止",
-  "逐语言检查构造器及 get/put 命名、缺失哨兵、键值域、引用或迭代器稳定性、哈希平均界和对象状态持久性",
-  "专项审查 C 容量算术、整体分配、节点复用、哈希桶增删、全部释放路径以及 put 无错误返回接口的失败语义",
-  "专项审查 Rust 稳定索引池、HashMap 更新、同一 Vec 的多节点修改借用路径和淘汰槽复用；禁止 unsafe 或伪自引用代码",
-  "专项审查 R environment 键编码和共享修改、Julia 可变节点、C++ list iterator、Java/C#/Go/TypeScript/Python 容器语义",
+  "人工逐轮推演空链扩展、单节点、已排序、完全逆序、头部失序、尾部失序和带相等值身份标签的混合链表",
+  "每轮记录 sorted prefix、last_sorted、current、position、未处理后缀与完整节点身份集合，核对有序、稳定、守恒和无环不变量",
+  "逐赋值审查 last_sorted.next=current.next、current.next=position.next、position.next=current 的读取依赖和执行顺序，并证明搜索不会越过 last_sorted",
+  "分别证明快路径与搬移路径保持不变量、每轮已排序节点数增加一、最终 dummy.next 覆盖全部输入节点",
+  "逐语言核对 ListNode 字段、平台签名、空指针、哨兵生命周期、引用修改、数值域和返回头",
+  "专项审查 Rust take 路径、Box 节点身份、可变借用作用域、稳定插入点和实际最好/最坏复杂度；禁止 unsafe",
+  "专项审查 C 无分配失败路径、Go 指针节点、TypeScript 非空断言、Julia mutable struct 与 R environment 共享修改",
 ]
 
 must_preserve = [
-  "精确对象契约、完整自建操作序列和能区分错误刷新顺序的反例",
-  "哈希表与双向链表组合的解法取舍、状态字段和每个辅助操作的变量映射",
-  "map/list 双射、MRU-LRU 顺序、容量、哨兵拓扑和 size 的完整不变量",
-  "get 未命中、get 命中、put 更新、put 新增未满、put 新增已满五类路径的保持与返回证明",
-  "平均 O(1) 操作界、最坏哈希退化、O(capacity) 状态及各语言分配和对象成本",
-  "十语言完整类或对象实现，C 与 Rust 使用真实资源和所有权安全路径",
-  "准确静态审查证据、失败路径、学习链和带答案自检",
+  "精确链表排序契约、自建节点身份示例和能区分不稳定插入的重复值反例",
+  "插入排序取舍、普通指针版已排序前缀状态、搜索边界与 Rust 所有权替代状态",
+  "非递减、稳定性、已处理/未处理分界、节点唯一覆盖、无环和 dummy 排除不变量",
+  "快路径与搬移路径保持证明、搜索安全、节点守恒和有限终止证明",
+  "最坏 O(n^2)、普通版本最好 O(n)、O(1) 核心指针空间以及 Rust/托管语言真实成本",
+  "固定十语言完整实现，平台节点定义不重复且所有语言保持原节点身份",
+  "准确静态审查证据、失败方式、学习链和带答案自检",
 ]
 
 forbidden = [
-  "参考 0143–0145 或其他最近题目的章节结构",
-  "只说哈希加链表所以 O(1) 而不证明结构同步",
-  "get 命中不刷新、put 更新重复创建节点或淘汰后保留哈希项",
-  "通过扫描链表、时间戳数组或全表寻找最久未使用项",
-  "C realloc 或分配失败后留下半更新结构、泄漏节点或让 size 与真实节点数不一致",
-  "Rust 使用 unsafe、裸自引用指针或无法通过借用检查的伪代码",
-  "把哈希操作最坏界无条件写成 O(1)",
+  "参考 0144–0146 或其他最近题目的章节结构",
+  "只说插入到正确位置所以有序而不证明搜索边界、稳定性和节点守恒",
+  "把节点值复制到数组排序后回写，或为每个结果元素新建节点",
+  "相等值前插却声称算法稳定",
+  "摘除 current 前丢失其后继，或把 current 插入自身之后形成环",
+  "把所有语言最好时间统一写成 O(n) 而不检查 Rust 实现控制流",
+  "Rust 使用 unsafe、裸指针、节点克隆或无法通过借用检查的伪代码",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试或 sanitizer 题解代码",
   "把静态审查写成测试、编译或运行通过",
 ]
 
 completion_checks = [
-  "当前题逐项对照合同选定的 0050 与 0076 黄金题",
+  "当前题逐项对照合同选定的 0076 与 0100 黄金题",
   "命中 DRIFT_LOG 的回归检查均通过",
-  "0146 只有一个自包含 RST，十语言代码全部内联",
+  "0147 只有一个自包含 RST，十语言代码全部内联",
   "PROGRESS、README、AGENTS 当前状态、范围索引和知识账本同步",
   "原子提交后 BATCH_CONTRACT 被替换为下一批合同",
 ]

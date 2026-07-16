@@ -1,5 +1,5 @@
 [meta]
-version = 1
+version = 2
 range = "0146"
 last_problem = 146
 inherits = "state/concepts/0145.toml"
@@ -8,6 +8,9 @@ inherits = "state/concepts/0145.toml"
 "workflow.targeted_static_review" = "0134 引入人工示例推演与逐语言静态审查；0146 继续执行，累计强化 13 次。"
 
 [concepts]
-"datastructure.lru_hash_doubly_linked_list" = "kind=data_structure; introduced=0146; last=0146; occurrences=1; teaching_state=explained; note=哈希表负责按键定位，双向链表维护最近到最久使用顺序，组合后 get 与 put 平均 O(1)。"
-"invariant.lru_map_list_bijection" = "kind=invariant; introduced=0146; last=0146; occurrences=1; teaching_state=explained; note=每个有效键恰好对应一个链表节点；移动、更新和淘汰必须同步保持哈希记录与链表节点一一对应。"
-"adapter.r_environment_cache_nodes" = "kind=language_adapter; introduced=0146; last=0146; occurrences=1; teaching_state=explained; note=R 用 environment 表达缓存和双向节点引用，并用哈希 environment 保存键到节点映射。"
+"datastructure.lru_hash_doubly_linked_list" = "kind=data_structure; introduced=0146; last=0146; occurrences=1; teaching_state=explained; note=哈希表按键定位唯一节点，双向链表把当前对象历史压缩为 MRU 到 LRU 全序；已知节点摘除、头插和选尾均只改常数条边。"
+"invariant.lru_map_list_bijection" = "kind=invariant; introduced=0146; last=0146; occurrences=1; teaching_state=explained; note=映射键集合、真实链表节点键集合与 size 三者一致；移动不改双射，新增同时加一，满容淘汰必须先按 victim 旧键删除再登记新键。"
+"invariant.lru_sentinel_topology" = "kind=invariant; introduced=0146; last=0146; occurrences=1; teaching_state=explained; note=永久 head/tail 哨兵不入映射且不被淘汰；相邻正反链接一致，空表哨兵直接相邻，非空首尾节点分别连接 head/tail。"
+"resource.c_lru_preallocated_node_pool" = "kind=resource; introduced=0146; last=0146; occurrences=1; teaching_state=explained; note=C 构造器事务式分配对象、O(capacity) 桶数组和固定节点池；成功后 put 不再分配，满容复用 victim，free 释放三个外层块。"
+"adapter.rust_lru_stable_index_pool" = "kind=language_adapter; introduced=0146; last=0146; occurrences=1; teaching_state=explained; note=Rust HashMap 保存 key 到 usize，Vec 槽保存前后 Option 索引；预留 capacity 后只追加未用槽或复用 LRU 槽，无 unsafe、自引用或悬空地址。"
+"adapter.r_environment_cache_nodes" = "kind=language_adapter; introduced=0146; last=0146; occurrences=1; teaching_state=explained; note=R 用 environment 表达缓存、可变双向节点和哈希映射；整数键显式字符编码，查找禁用继承，victim 改键前删除旧环境名。"
