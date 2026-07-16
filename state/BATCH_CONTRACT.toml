@@ -1,10 +1,10 @@
 [contract]
 schema_version = 2
-batch_id = "generation-0166-0168"
+batch_id = "generation-0167-0168"
 status = "ready"
 phase = "generation"
 kind = "generation"
-scope = [166, 167, 168]
+scope = [167, 168]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
@@ -22,15 +22,15 @@ repository_structure_state_and_git_checks = "allowed"
 reporting = "只声明实际完成的静态审查；明确未运行、未编译、未测试和剩余风险。"
 
 [budget]
-algorithm_score = 5
-target_min = 4
-target_max = 6
-proof_risk = "high"
-language_semantics_risk = "high"
+algorithm_score = 3
+target_min = 3
+target_max = 3
+proof_risk = "medium"
+language_semantics_risk = "medium"
 platform_type_risk = "high"
 output_volume_risk = "high"
 scope_may_shrink = true
-scope_reason = "0166、0167、0168 分别为 Medium、Medium、Easy，合计 5 分。0166 的符号、INT_MIN、余数循环与十语言哈希/字符串资源风险最高，必须先独立完整验收；若后续题开始压缩证明、接口或静态审查，只提交已达标连续前缀并重建合同。"
+scope_reason = "本合同承接原 0166–0168 批次缩批后的连续剩余范围。两题算法分数合计 3；固定十语言、C 返回资源、索引单位和输出物化仍使平台与体积风险为 high。若 0168 开始压缩证明或语言说明，只提交 0167 并重建合同。"
 
 [references]
 style_baselines = [
@@ -43,15 +43,13 @@ fact_sources = [
   "state/CONCEPT_LEDGER.toml",
   "docs/FORWARD_RULES_0151_ONWARD.rst",
   "problems/0101-0200/README.rst",
-  "https://leetcode.com/problems/fraction-to-recurring-decimal/description/",
   "https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/description/",
   "https://leetcode.com/problems/excel-sheet-column-title/description/",
 ]
 fact_sources_may_provide = [
-  "0166 的有符号 32 位分子分母、非零分母、有限或循环小数格式、答案长度上界与官方示例",
   "0167 的非递减数组、唯一解、不同元素、一基返回、长度和值域与常数额外空间要求",
   "0168 的正整数范围、Excel 列标题映射、无零位二十六进制语义与官方示例",
-  "当前题号、Premium 间隔、质量返工完成状态和统一静态审查政策",
+  "当前题号、Premium 间隔、0166 完成状态和统一静态审查政策",
 ]
 fact_sources_must_not_provide = [
   "章节结构",
@@ -59,26 +57,6 @@ fact_sources_must_not_provide = [
   "代码注释密度",
   "静态审查标准",
   "文件组织形式",
-]
-
-[problems."0166"]
-title = "Fraction to Recurring Decimal"
-difficulty = "Medium"
-primary_risks = [
-  "numerator 与 denominator 都在有符号 32 位范围，denominator 非零；返回十进制字符串，有限小数必须终止，循环节加括号，答案长度保证小于 10000",
-  "符号仅在结果非零且分子分母异号时输出；必须先提升再取绝对值，避免 abs(INT_MIN) 在 32 位溢出和负零",
-  "整数部分用绝对值相除，余数驱动长除法；每轮必须在乘 10 前记录当前余数对应的输出位置，重复余数首次位置确定循环节起点",
-  "证明需覆盖余数为零恰好有限、非零余数集合有限必重复、相同余数决定相同后续数字、首次重复括号位置与输出值等于原分数",
-  "余数绝对值小于正分母，remainder*10 可能超过 32 位但适合 64 位；TypeScript/R 必须证明最大约 2.15e10 仍在精确整数域",
-  "C 需要有界增长字符串和 remainder->position 哈希表的容量、冲突、失败清理与返回所有权；不得按 2^31 分母直接分配数组",
-]
-minimum_static_review = [
-  "人工推演 1/2、2/1、4/333 及负数与 INT_MIN 边界，逐轮记录余数、首次位置、乘十、商数字与新余数",
-  "覆盖零分子、符号组合、整除、有限多位、纯循环、非循环前缀加循环、分母绝对值 2^31 和输出长度边界",
-  "完整证明长除法表示、有限/循环二分、余数首次出现映射、括号插入和算法终止",
-  "逐语言核对平台签名、宽化后绝对值、整数除法、余数键类型、哈希位置、构建器插入、字符反转与所有权",
-  "专项审查 C 所有分配乘法、哈希负载/冲突、字符串增长、失败释放和成功返回；不把资源失败写成合法空结果",
-  "复杂度以产生的小数位数 L 和不同余数数 r 报告 O(L) 期望时间、O(r+L) 空间及哈希最坏风险",
 ]
 
 [problems."0167"]
@@ -120,17 +98,14 @@ minimum_static_review = [
 ]
 
 must_preserve = [
-  "三题各自具备精确契约、自建反例、问题抽象、解法取舍、状态不变量和完整正确性证明",
-  "0166 的宽化符号、长除法余数映射、有限/循环证明、括号位置与资源路径",
+  "两题各自具备精确契约、自建反例、问题抽象、解法取舍、状态不变量和完整正确性证明",
   "0167 的唯一解区间、单调端点排除、不同下标与一基返回",
   "0168 的先减一无零位进制、逆序位生成、终止和字符物化",
   "固定十语言完整实现以及每题独立人工推演、静态语义审查、剩余风险、学习链和带答案自检",
 ]
 
 forbidden = [
-  "参考 0164–0165 或其他最近题目的章节结构、证明篇幅或静态审查密度",
-  "在 0166 中对 32 位 INT_MIN 直接 abs、用浮点格式化、按分母值域分配数组或在乘十后才记录余数位置",
-  "把重复商数字当作循环判据；循环由余数状态重复决定，数字重复不充分",
+  "参考 0166 或其他最近题目的章节结构、证明篇幅或静态审查密度",
   "在 0167 中返回零基下标、允许 left==right 复用元素、使用哈希表却声称常数空间，或依赖元素互异",
   "在 0168 中直接 n%26 映射 A..Z、遗漏先减一、按生成逆序直接返回，或把返回载荷忽略为空间零",
   "拆分为 inc 或 include",
@@ -139,10 +114,10 @@ forbidden = [
 ]
 
 completion_checks = [
-  "三题逐项对照 0050 的数值边界/递推深度与 0076 的不变量/物化深度",
-  "每题写完立即完成自身质量门；后题出现压缩迹象时按连续前缀缩批",
+  "两题逐项对照 0050 的数值边界/递推深度与 0076 的不变量/物化深度",
+  "每题写完立即完成自身质量门；0168 出现压缩迹象时按连续前缀缩批",
   "命中 DRIFT_LOG 的拆分、摘要、最近样本、预算与验证策略回归检查均通过",
-  "0166–0168 各自只有一个自包含 RST，每题十语言代码全部内联",
+  "0167–0168 各自只有一个自包含 RST，每题十语言代码全部内联",
   "完成范围、completed_count、next_problem、README、范围索引和知识账本同步",
   "原子提交后 BATCH_CONTRACT 被替换为下一批合同",
 ]

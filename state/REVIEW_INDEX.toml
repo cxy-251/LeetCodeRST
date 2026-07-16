@@ -149,10 +149,10 @@ statement = "O(min(m,n)) describes only the rolling Boolean DP array. The C++ si
 [next_action]
 kind = "generation"
 status = "ready"
-start = 166
+start = 167
 end = 168
-problem_ids = [166, 167, 168]
-purpose = "生成 0166 Fraction to Recurring Decimal、0167 Two Sum II 与 0168 Excel Sheet Column Title；历史题继续风险触发抽查。"
+problem_ids = [167, 168]
+purpose = "生成 0167 Two Sum II 与 0168 Excel Sheet Column Title；这是原 0166–0168 合同缩批后的连续剩余范围。"
 
 [artifact_lifecycle]
 policy = "docs/ARTIFACT_LIFECYCLE_POLICY.rst"

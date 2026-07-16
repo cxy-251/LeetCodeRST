@@ -11,9 +11,9 @@ code_comment_language = "zh-CN"
 problem_artifact_shape = "one_self_contained_rst_per_public_problem"
 
 [progress]
-next_problem = 166
-completed_count = 159
-completed_ranges = ["0001-0155", "0160", "0162", "0164-0165"]
+next_problem = 167
+completed_count = 160
+completed_ranges = ["0001-0155", "0160", "0162", "0164-0166"]
 premium_skipped = [156, 157, 158, 159, 161, 163]
 blocked = []
 needs_revision = []
@@ -56,24 +56,27 @@ quality_over_batch_score = true
 
 [last_batch]
 status = "completed"
-kind = "quality_repair"
-start = 164
-end = 165
-repaired_problem_count = 2
-repaired_problem_ids = [164, 165]
+kind = "generation"
+start = 166
+end = 166
+generated_problem_count = 1
+generated_problem_ids = [166]
 reference_problems = [50, 76]
-difficulty_budget = 6
-summary = "重写 0164–0165，补齐最大间距的鸽巢桶下界、跨桶相邻性与线性桶数证明，以及无整数解析的版本有效跨度比较和尾零进度证明。"
+difficulty_budget = 2
+planned_scope = [166, 167, 168]
+scope_shrunk = true
+scope_reason = "0166 的证明、十语言哈希/字符串语义、C 资源事务和输出体积风险同时为 high；按合同先完整交付单题，未通过压缩正文维持三题范围。"
+summary = "完成 0166 Fraction to Recurring Decimal：以余数状态驱动长除法，证明有限或循环二分、首次重复括号位置、宽整数符号处理，并完成十语言静态语义与 C 资源路径审查。"
 
 [next_batch]
 status = "generation_ready"
 kind = "generation"
-start = 166
+start = 167
 end = 168
-problem_ids = [166, 167, 168]
-difficulty_budget = 5
+problem_ids = [167, 168]
+difficulty_budget = 3
 contract = "state/BATCH_CONTRACT.toml"
-purpose = "生成 0166 Fraction to Recurring Decimal、0167 Two Sum II 与 0168 Excel Sheet Column Title。"
+purpose = "继续生成 0167 Two Sum II 与 0168 Excel Sheet Column Title；这是原 0166–0168 合同缩批后的连续剩余范围。"
 
 [review_history]
 status = "completed"
@@ -142,7 +145,7 @@ problem_code_fragments_present = false
 
 [quality_scope]
 historical_start = 1
-historical_end = 165
+historical_end = 166
 historical_policy = "用户指定的 32 道低质量题解已经全部返工完成；历史题默认保持不变，风险触发时定向抽查。"
 persistent_rule_start = 151
 persistent_rule = "docs/FORWARD_RULES_0151_ONWARD.rst"
@@ -172,10 +175,10 @@ concurrency_policy = "fetch_and_compare_before_commit; stop_on_remote_change_or_
 
 [concept_ledger]
 index = "state/CONCEPT_LEDGER.toml"
-latest_record = "state/concepts/0163-0165.toml"
+latest_record = "state/concepts/0166.toml"
 
 [next_action]
-summary = "按 BATCH_CONTRACT 生成 0166–0168；质量返工已完成。"
+summary = "按 BATCH_CONTRACT 生成 0167–0168；0166 已因高风险叠加独立完成。"
 
 [last_update]
-summary = "0164–0165 已完成返工，needs_revision 清空并解除新题暂停；下一批生成 0166–0168。"
+summary = "0166 已按冻结基线完成，completed_count 更新为 160、next_problem 更新为 0167；下一合同承接 0167–0168。"

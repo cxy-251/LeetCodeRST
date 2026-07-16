@@ -23,7 +23,7 @@ regression_checks = [
 
 [[incident]]
 id = "summary-skeleton-0127-0165"
-status = "in_repair"
+status = "controlled"
 range = "0127,0129-0165"
 problem = "题解退化为算法摘要、简短正确性、复杂度和十语言代码集合。"
 likely_cause = "批次后半部分为了控制输出体积，逐步删除例子、抽象、证明义务、语言差异和答案要点。"

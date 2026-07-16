@@ -1,0 +1,22 @@
+[meta]
+version = 1
+range = "0166"
+last_problem = 166
+inherits = "state/concepts/0163-0165.toml"
+
+[batch]
+completed = 1
+difficulty_budget = 2
+planned_scope = [166, 167, 168]
+scope_shrunk = true
+summary = "完成 Fraction to Recurring Decimal；以余数状态映射输出位置，生成有限或带括号的循环十进制。"
+
+[updates]
+"algorithm.long_division_remainder_position_map" = "kind=algorithm; introduced=0166; last=0166; occurrences=1; teaching_state=explained; note=整数部分后以当前非零余数为状态，在乘十前记录 remainder->next_digit_position；余数重复时在首次位置插入左括号。"
+"invariant.exact_fraction_decimal_prefix" = "kind=invariant; introduced=0166; last=0166; occurrences=1; teaching_state=explained; note=生成 k 位后保持 N/D=q+sum(d_i/10^i)+r_k/(D*10^k)，且 0<=r_k<D；每轮 10r=dD+r' 精确延伸一位。"
+"proof.remainder_finite_or_cycle_dichotomy" = "kind=proof; introduced=0166; last=0166; occurrences=1; teaching_state=explained; note=余数为零恰好有限终止；否则非零余数来自有限集合且转移确定，首次重复状态给出函数图的环入口和循环部分。"
+"numeric.widen_before_abs_signed_minimum" = "kind=numeric; introduced=0166; last=0166; occurrences=1; teaching_state=reinforced; note=分子分母先从 32 位提升至 64 位，再取绝对值和处理符号，覆盖 -2^31；零分子先返回避免负零。"
+"complexity.output_sensitive_recurring_decimal" = "kind=complexity; introduced=0166; last=0166; occurrences=1; teaching_state=explained; note=以生成位数 L 和不同余数 r 报告期望 O(L) 时间、O(L+r) 空间、一次括号插入 O(L)；哈希极端冲突最坏可达 O(L^2)。"
+"resource.c_transactional_builder_and_remainder_hash" = "kind=language_adapter; introduced=0166; last=0166; occurrences=1; teaching_state=explained; note=C 动态字符串检查终止符容量和 realloc，开放寻址表保持二次幂容量并失败清理；成功返回堆字符串所有权。"
+"language.javascript_r_exact_integer_range" = "kind=language_adapter; introduced=0166; last=0166; occurrences=1; teaching_state=explained; note=TypeScript/R 的最大 remainder*10 约 2.15e10，低于 2^53；不使用 JS 32 位位运算，R 用固定槽与 environment 避免逐位向量重建。"
+"workflow.targeted_static_review" = "kind=workflow; introduced=0166; last=0166; occurrences=1; teaching_state=reinforced; note=人工推演 1/2、2/1、4/333、符号和 INT_MIN；逐语言审查整数宽度、位置单位、插入、哈希与资源路径，未运行未编译。"
