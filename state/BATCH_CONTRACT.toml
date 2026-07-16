@@ -1,10 +1,10 @@
 [contract]
 schema_version = 2
-batch_id = "quality-repair-0147"
+batch_id = "quality-repair-0148"
 status = "ready"
 phase = "quality_repair"
 kind = "quality_repair"
-scope = [147]
+scope = [148]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
@@ -30,7 +30,7 @@ language_semantics_risk = "high"
 platform_type_risk = "high"
 output_volume_risk = "high"
 scope_may_shrink = false
-scope_reason = "0147 需要分别承载指针版已排序前缀和 Rust Box 所有权版有序链重建，完整证明节点守恒、稳定性、无环与真实分语言复杂度；单题优先于和 0148 叠加。"
+scope_reason = "0148 需要把现有递归归并替换为自底向上常量工作空间方案，并在十语言中证明 run 切分、稳定合并、逐轮覆盖、宽度终止和 Rust 独占所有权；单题完整返工。"
 
 [references]
 style_baselines = [
@@ -42,13 +42,13 @@ fact_sources = [
   "state/REVIEW_INDEX.toml",
   "state/CONCEPT_LEDGER.toml",
   "problems/0101-0200/README.rst",
-  "problems/0101-0200/0109-convert-sorted-list-to-binary-search-tree.rst",
   "problems/0101-0200/0143-reorder-list.rst",
-  "state/concepts/0147.toml",
+  "problems/0101-0200/0147-insertion-sort-list.rst",
+  "state/concepts/0148.toml",
 ]
 fact_sources_may_provide = [
-  "ListNode 平台字段、节点身份、哨兵和 next 断接术语",
-  "Rust Option<Box<ListNode>>、R environment 与 Julia 可变节点的事实连续性",
+  "ListNode 字段、节点身份、断链、稳定连接和尾链接槽位术语",
+  "Rust Option<Box<ListNode>>、Julia mutable struct 与 R environment 的事实连续性",
   "当前范围、进度和既有概念记录",
 ]
 fact_sources_must_not_provide = [
@@ -59,47 +59,47 @@ fact_sources_must_not_provide = [
   "文件组织形式",
 ]
 
-[problems."0147"]
-title = "Insertion Sort List"
+[problems."0148"]
+title = "Sort List"
 difficulty = "Medium"
 primary_risks = [
-  "输入是单链表头，输出按值非递减；实现应复用每个输入节点并只重写 next，空表扩展、单节点、负数和重复值身份必须与平台类型一致",
-  "普通指针版维护 dummy 后到 last_sorted 的已排序稳定前缀，current 固定为 last_sorted.next；已顺序时扩前缀，失序时从 dummy 搜索插入点",
-  "搜索条件 <= 使 current 插在前缀中全部相等值之后；必须证明 position.next 在比较时存在，并区分稳定性是所选算法性质而非只按值输出的唯一要求",
-  "摘除 current 与插入的赋值顺序若错误会丢失未处理后缀、形成环、重复节点或让 last_sorted 指向错误位置",
-  "节点守恒证明必须覆盖每个原节点恰好一次出现在结果、没有新结果节点、dummy 不进入返回链以及循环有限终止",
-  "最坏逆序时间 O(n^2)，普通 last_sorted 快路径在已排序输入为 O(n)；Rust 若逐个取 Box 并从有序链头搜索，其最好时间也可能为 O(n^2)，不得把其他语言最好界机械外推",
-  "Rust 需要安全取得、断开并重新接回 Option<Box<ListNode>>，不能使用 unsafe、克隆节点值替代身份或写无法通过借用检查的游标伪代码",
-  "C/C++ 不分配结果节点，Java/Python/Go/TypeScript/C#/Julia/R 的引用节点修改对调用者可见；R environment 和局部 dummy 的可见性不得与向量复制语义混用",
+  "输入是可空无环单链，输出按值非递减并复用全部原节点；目标为 O(n log n) 时间和 O(1) 核心额外空间，递归 top-down 的 O(log n) 调用栈不能伪装成常量空间",
+  "自底向上归并先统计 n，再按 width=1,2,4,... 分轮；每轮输入必须已经分成长度至多 width 的有序 runs，输出合并成长度至多 2*width 的有序 runs",
+  "split_run 必须截取至多 width 个节点、清空该 run 尾边并返回剩余链；短尾 run、空 right run 和两节点边界不能共享旧边",
+  "merge_runs 必须稳定选择左侧等值节点，逐个消费两个 run 并同时交付新头与新尾；若合并后再扫描找尾会引入隐藏重复工作",
+  "每轮必须精确覆盖全部节点一次，已输出前缀、当前左右 runs 与未处理后缀两两不交；节点守恒、连通、无重复、无环和尾部为空都要证明",
+  "width 翻倍与循环终止由 n<=50000 支撑；计数、2*width、末轮和 n=0/1 路径不得产生溢出或零宽死循环",
+  "Rust 需要非递归安全所有权方案，用 take 切出 runs、消费 Box 合并并经尾槽位拼回；禁止 unsafe、裸指针、Rc 图或节点克隆",
+  "R environment 与 Julia 可变节点要表达返回新头和共享字段修改；托管语言每轮 dummy 分配、平台构造器和累计常数对象成本需如实说明",
 ]
 minimum_static_review = [
-  "人工逐轮推演空链扩展、单节点、已排序、完全逆序、头部失序、尾部失序和带相等值身份标签的混合链表",
-  "每轮记录 sorted prefix、last_sorted、current、position、未处理后缀与完整节点身份集合，核对有序、稳定、守恒和无环不变量",
-  "逐赋值审查 last_sorted.next=current.next、current.next=position.next、position.next=current 的读取依赖和执行顺序，并证明搜索不会越过 last_sorted",
-  "分别证明快路径与搬移路径保持不变量、每轮已排序节点数增加一、最终 dummy.next 覆盖全部输入节点",
-  "逐语言核对 ListNode 字段、平台签名、空指针、哨兵生命周期、引用修改、数值域和返回头",
-  "专项审查 Rust take 路径、Box 节点身份、可变借用作用域、稳定插入点和实际最好/最坏复杂度；禁止 unsafe",
-  "专项审查 C 无分配失败路径、Go 指针节点、TypeScript 非空断言、Julia mutable struct 与 R environment 共享修改",
+  "人工推演 n=5 的 width=1、2、4 三轮，逐段记录 left、right、rest、合并结果、输出尾和剩余节点集合",
+  "覆盖空链、单节点、两节点、奇数尾 run、没有配对 right run、已排序、逆序和带身份标签重复值",
+  "逐辅助操作证明 split_run 的长度、断边和剩余入口，merge_runs 的有序、稳定、完整、返回尾与终止",
+  "证明每轮所有节点恰好进入一个输入 run 和一个输出 run，每轮 O(n)，轮数 ceil(log2 n)，最终单 run 覆盖全部节点",
+  "逐语言核对公开签名、ListNode 字段、计数和 width 类型、dummy 生命周期、返回新头、无递归和无额外节点数组",
+  "专项审查 Rust run 所有权分区、take 后空槽、尾槽位借用、剩余链交还、无 clone/unsafe 与真实 O(1) 活跃辅助状态",
+  "专项审查 C 无分配路径、Go/TypeScript/C# 构造器与空引用、Julia mutable struct 和 R environment 的逐轮重连可见性",
 ]
 
 must_preserve = [
-  "精确链表排序契约、自建节点身份示例和能区分不稳定插入的重复值反例",
-  "插入排序取舍、普通指针版已排序前缀状态、搜索边界与 Rust 所有权替代状态",
-  "非递减、稳定性、已处理/未处理分界、节点唯一覆盖、无环和 dummy 排除不变量",
-  "快路径与搬移路径保持证明、搜索安全、节点守恒和有限终止证明",
-  "最坏 O(n^2)、普通版本最好 O(n)、O(1) 核心指针空间以及 Rust/托管语言真实成本",
-  "固定十语言完整实现，平台节点定义不重复且所有语言保持原节点身份",
+  "精确 O(n log n)/常量工作空间契约、自建多轮 run 示例和重复值身份稳定性反例",
+  "自底向上归并取舍、n 与 width 状态、当前 pass 的 run 分区及代码变量映射",
+  "split_run、merge_runs、pass 和 width 四层不变量与完整正确性证明",
+  "节点唯一覆盖、稳定性、无环、尾部终止、每轮严格进展和最终单 run 证明",
+  "每轮 O(n)、O(log n) 轮、总 O(n log n)、O(1) 核心状态及语言真实 dummy/所有权成本",
+  "固定十语言完整非递归实现，平台节点定义不重复，C 与 Rust 资源和所有权路径闭合",
   "准确静态审查证据、失败方式、学习链和带答案自检",
 ]
 
 forbidden = [
-  "参考 0144–0146 或其他最近题目的章节结构",
-  "只说插入到正确位置所以有序而不证明搜索边界、稳定性和节点守恒",
-  "把节点值复制到数组排序后回写，或为每个结果元素新建节点",
-  "相等值前插却声称算法稳定",
-  "摘除 current 前丢失其后继，或把 current 插入自身之后形成环",
-  "把所有语言最好时间统一写成 O(n) 而不检查 Rust 实现控制流",
-  "Rust 使用 unsafe、裸指针、节点克隆或无法通过借用检查的伪代码",
+  "参考 0146–0147 或其他最近题目的章节结构",
+  "以 top-down 递归作为主实现却声称严格 O(1) 额外空间",
+  "只说归并排序所以正确，不证明 run 切分、逐轮覆盖和节点守恒",
+  "split 后保留跨 run 旧边，或 merge 后不交付真实尾节点",
+  "相等值优先取右侧却声称稳定",
+  "把节点复制到数组、创建同规模新链、递归调用栈或每轮节点引用表藏进常量空间",
+  "Rust 使用 unsafe、裸指针、Rc<RefCell<_>>、节点 clone 或无法通过借用检查的伪代码",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试或 sanitizer 题解代码",
   "把静态审查写成测试、编译或运行通过",
@@ -108,7 +108,7 @@ forbidden = [
 completion_checks = [
   "当前题逐项对照合同选定的 0076 与 0100 黄金题",
   "命中 DRIFT_LOG 的回归检查均通过",
-  "0147 只有一个自包含 RST，十语言代码全部内联",
+  "0148 只有一个自包含 RST，十语言代码全部内联",
   "PROGRESS、README、AGENTS 当前状态、范围索引和知识账本同步",
   "原子提交后 BATCH_CONTRACT 被替换为下一批合同",
 ]

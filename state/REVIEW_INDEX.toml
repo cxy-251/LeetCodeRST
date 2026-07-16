@@ -149,9 +149,9 @@ statement = "O(min(m,n)) describes only the rolling Boolean DP array. The C++ si
 [next_action]
 kind = "quality_repair"
 status = "ready"
-start = 147
-end = 147
-purpose = "单独返工 0147 Insertion Sort List；完成剩余质量返工前暂停生成 0166。"
+start = 148
+end = 148
+purpose = "单独返工 0148 Sort List；完成剩余质量返工前暂停生成 0166。"
 
 [artifact_lifecycle]
 policy = "docs/ARTIFACT_LIFECYCLE_POLICY.rst"
