@@ -8,13 +8,14 @@ git_workflow = "direct_main_only"
 build_required = false
 content_language = "zh-CN"
 code_comment_language = "zh-CN"
-problem_artifact_shape = "one_self_contained_rst_per_public_problem"
+problem_artifact_shape = "one_self_contained_rst_per_public_algorithm_problem"
 
 [progress]
-next_problem = 175
-completed_count = 167
-completed_ranges = ["0001-0155", "0160", "0162", "0164-0169", "0171-0174"]
-premium_skipped = [156, 157, 158, 159, 161, 163, 170]
+next_problem = 188
+completed_count = 169
+completed_ranges = ["0001-0155", "0160", "0162", "0164-0169", "0171-0174", "0179", "0187"]
+premium_skipped = [156, 157, 158, 159, 161, 163, 170, 186]
+database_skipped = [175, 176, 177, 178, 180, 181, 182, 183, 184, 185]
 blocked = []
 needs_revision = []
 
@@ -57,28 +58,28 @@ quality_over_batch_score = true
 [last_batch]
 status = "completed"
 kind = "generation"
-start = 173
-end = 174
+start = 175
+end = 187
 generated_problem_count = 2
-generated_problem_ids = [173, 174]
-reference_problems = [100, 50]
-difficulty_budget = 6
-planned_scope = [173, 174]
+generated_problem_ids = [179, 187]
+database_skipped_ids = [175, 176, 177, 178, 180, 181, 182, 183, 184, 185]
+premium_skipped_ids = [186]
+reference_problems = [50, 76]
+difficulty_budget = 4
+planned_scope = [179, 187]
 scope_shrunk = false
-scope_reason = "0173 与 0174 均完整通过单题质量门；对象接口、C 生命周期、逆向 DP 证明和宽整数边界均未压缩。"
-summary = "完成 0173 惰性 BST 中序迭代器的递归续点栈、无遗漏与均摊证明，以及 0174 地下城最小初始生命的逆向状态、唯一虚拟后继和必要/充分证明。"
+scope_reason = "0179 与 0187 均完整通过单题质量门；Database 与 Premium 题只按域规则登记，没有创建空壳 RST。"
+summary = "完成 0179 拼接比较器的周期串严格弱序与相邻交换全局最优证明，以及 0187 DNA 2 位滚动编码、20 位无碰撞窗口和第二次出现去重。"
 
 [next_batch]
 status = "generation_ready"
 kind = "generation"
-start = 175
-end = 187
-problem_ids = [179, 187]
-expected_database_skips = [175, 176, 177, 178, 180, 181, 182, 183, 184, 185]
-expected_premium_skips = [186]
+start = 188
+end = 188
+problem_ids = [188]
 difficulty_budget = 4
 contract = "state/BATCH_CONTRACT.toml"
-purpose = "按题号登记 0175–0178 与 0180–0185 Database 题、登记 Premium 0186，并生成 0179 Largest Number 与 0187 Repeated DNA Sequences。"
+purpose = "生成 0188 Best Time to Buy and Sell Stock IV；完整处理交易次数状态、无限交易退化、滚动更新顺序与十语言数值/资源边界。"
 
 [review_history]
 status = "completed"
@@ -147,13 +148,14 @@ problem_code_fragments_present = false
 
 [quality_scope]
 historical_start = 1
-historical_end = 174
+historical_end = 187
 historical_policy = "用户指定的 32 道低质量题解已经全部返工完成；历史题默认保持不变，风险触发时定向抽查。"
 persistent_rule_start = 151
 persistent_rule = "docs/FORWARD_RULES_0151_ONWARD.rst"
 forward_rule_policy = "0151 起全部后续题目持续执行并原位维护长期前向规则。"
-single_rst_policy = "每道公开可访问题目只有一个自包含 RST，全部语言代码直接内联。"
+single_rst_policy = "每道公开算法题只有一个自包含 RST，全部语言代码直接内联。"
 content_quality_policy = "冻结基线和批次合同是内容质量门；最近题目只提供事实连续性。"
+database_policy = "Database 题只登记 database_skipped，不创建固定十语言算法 RST。"
 
 [execution]
 trigger = "explicit_user_message_in_active_conversation"
@@ -177,10 +179,10 @@ concurrency_policy = "fetch_and_compare_before_commit; stop_on_remote_change_or_
 
 [concept_ledger]
 index = "state/CONCEPT_LEDGER.toml"
-latest_record = "state/concepts/0173-0174.toml"
+latest_record = "state/concepts/0175-0187.toml"
 
 [next_action]
-summary = "按 BATCH_CONTRACT 从 0175 起处理数据库题登记，并生成 0179 与 0187；非算法题不得伪造十语言 RST。"
+summary = "按 BATCH_CONTRACT 生成 0188；该 Hard 题单独成批，完成后再从 0189 继续。"
 
 [last_update]
-summary = "0173–0174 已完整生成并通过静态质量门，完成数更新为 167，下一入口为 0175。"
+summary = "0175–0187 已顺序处理：生成 0179 与 0187，登记十道 Database 与 0186 Premium；完成数更新为 169，下一题为 0188。"

@@ -149,12 +149,10 @@ statement = "O(min(m,n)) describes only the rolling Boolean DP array. The C++ si
 [next_action]
 kind = "generation"
 status = "ready"
-start = 175
-end = 187
-problem_ids = [179, 187]
-expected_database_skips = [175, 176, 177, 178, 180, 181, 182, 183, 184, 185]
-expected_premium_skips = [186]
-purpose = "顺序登记 0175–0187 中的 Database/Premium 题，并生成 0179 Largest Number 与 0187 Repeated DNA Sequences；历史题继续风险触发抽查。"
+start = 188
+end = 188
+problem_ids = [188]
+purpose = "生成 0188 Best Time to Buy and Sell Stock IV；历史题继续风险触发抽查。"
 
 [artifact_lifecycle]
 policy = "docs/ARTIFACT_LIFECYCLE_POLICY.rst"

@@ -2,12 +2,13 @@ LeetCode 0101–0200
 ==================
 
 本目录按题号顺序保存 0101 至 0200 的算法教程。当前题号进度为：完成 0101 至 0155、0160、0162、
-0164 至 0169、0171 至 0174；0156 至 0159、0161、0163、0170 登记为 Premium 跳过。每道公开算法题
-只有一个自包含 RST，正文与十语言代码全部直接内联，不使用 ``.inc`` 或 ``.. include::``。
+0164 至 0169、0171 至 0174、0179、0187；0156 至 0159、0161、0163、0170、0186 登记为
+Premium 跳过，0175 至 0178、0180 至 0185 登记为 Database 跳过。每道公开算法题只有一个自包含 RST，
+正文与十语言代码全部直接内联，不使用 ``.inc`` 或 ``.. include::``。
 
 ``0127``、``0129–0155``、``0160``、``0162``、``0164``、``0165`` 共 32 道公开题的质量返工
 已经完成，``../../state/PROGRESS.toml`` 的 ``needs_revision`` 保持为空。
-``0166–0169``、``0171–0174`` 已按冻结基线生成，下一入口为 0175。
+``0166–0169``、``0171–0174``、``0179`` 与 ``0187`` 已按冻结基线生成，下一入口为 0188。
 
 已完成
 ------
@@ -89,6 +90,8 @@ LeetCode 0101–0200
 #. `0172. Factorial Trailing Zeroes <0172-factorial-trailing-zeroes.rst>`_
 #. `0173. Binary Search Tree Iterator <0173-binary-search-tree-iterator.rst>`_
 #. `0174. Dungeon Game <0174-dungeon-game.rst>`_
+#. `0179. Largest Number <0179-largest-number.rst>`_
+#. `0187. Repeated DNA Sequences <0187-repeated-dna-sequences.rst>`_
 
 Premium 跳过
 ------------
@@ -99,7 +102,22 @@ Premium 跳过
 * ``0159`` Longest Substring with At Most Two Distinct Characters；
 * ``0161`` One Edit Distance；
 * ``0163`` Missing Ranges；
-* ``0170`` Two Sum III - Data structure design。
+* ``0170`` Two Sum III - Data structure design；
+* ``0186`` Reverse Words in a String II。
+
+Database 跳过
+-------------
+
+* ``0175`` Combine Two Tables；
+* ``0176`` Second Highest Salary；
+* ``0177`` Nth Highest Salary；
+* ``0178`` Rank Scores；
+* ``0180`` Consecutive Numbers；
+* ``0181`` Employees Earning More Than Their Managers；
+* ``0182`` Duplicate Emails；
+* ``0183`` Customers Who Never Order；
+* ``0184`` Department Highest Salary；
+* ``0185`` Department Top Three Salaries。
 
 返工验收标准
 ------------
@@ -131,6 +149,5 @@ Premium 跳过
 下一动作
 --------
 
-下一批按题号处理 ``0175–0187``：Database 题只登记，``0186`` 按 Premium 登记，
-生成 ``0179`` Largest Number 与 ``0187`` Repeated DNA Sequences。
+下一批生成 ``0188`` Best Time to Buy and Sell Stock IV。
 批次风险和黄金样本由 ``../../state/BATCH_CONTRACT.toml`` 指定。

@@ -1,0 +1,26 @@
+[meta]
+version = 1
+range = "0175-0187"
+last_problem = 187
+inherits = "state/concepts/0173-0174.toml"
+
+[batch]
+completed = 2
+database_skipped = [175, 176, 177, 178, 180, 181, 182, 183, 184, 185]
+premium_skipped = [186]
+difficulty_budget = 4
+summary = "登记 Database/Premium 题，完成最大拼接数排序与重复 DNA 定长滚动编码。"
+
+[updates]
+"domain.database_problem_registration" = "kind=domain_policy; introduced=0175; last=0185; occurrences=10; teaching_state=registered; note=Database 题不符合固定十语言算法产物合同，只登记 database_skipped，不创建空壳 RST。"
+"algorithm.largest_number_concat_sort" = "kind=algorithm; introduced=0179; last=0179; occurrences=1; teaching_state=explained; note=数字转十进制字符串后，以 ab>ba 决定 a 在 b 前，排序并拼接；全零结果归一化为单个 0。"
+"proof.largest_number_adjacent_exchange" = "kind=proof; introduced=0179; last=0179; occurrences=1; teaching_state=explained; note=相邻块 ab 与 ba 具有相同外部前后缀，交换逆序对会增大完整拼接；任意排列可通过相邻交换转为排序排列。"
+"proof.concat_comparator_strict_weak_order" = "kind=proof; introduced=0179; last=0179; occurrences=1; teaching_state=explained; note=ab 与 ba 的顺序等价于无限周期串 a^ω 与 b^ω 的字典序，继承传递性；ab=ba 的等价项任意顺序不改变结果。"
+"implementation.virtual_concatenation_compare" = "kind=implementation; introduced=0179; last=0179; occurrences=1; teaching_state=explained; note=比较器按 m+n 个虚拟字符扫描 a+b 与 b+a，不分配临时拼接串；C qsort 比较器无失败路径。"
+"boundary.largest_number_all_zero_normalization" = "kind=boundary; introduced=0179; last=0179; occurrences=1; teaching_state=explained; note=排序后首项为 0 时所有输入均为 0，规范返回单个字符串 0。"
+"algorithm.dna_two_bit_rolling_window" = "kind=algorithm; introduced=0187; last=0187; occurrences=1; teaching_state=explained; note=A/C/G/T 映射为 0..3，每轮左移 2 位并用 20 位掩码保留最近 10 个字符。"
+"invariant.dna_fixed_window_code" = "kind=invariant; introduced=0187; last=0187; occurrences=1; teaching_state=explained; note=处理下标 i 后 code 是最近 min(i+1,10) 个 DNA 字符的定长四进制编码；长度 10 时与窗口一一对应。"
+"state.dna_second_occurrence_emission" = "kind=state; introduced=0187; last=0187; occurrences=1; teaching_state=explained; note=2^20 状态表使用 0/1/2 表示未见、见一次、已输出，只在第二次出现时追加结果。"
+"resource.c_dna_result_ownership" = "kind=resource; introduced=0187; last=0187; occurrences=1; teaching_state=explained; note=C 分配固定状态表、动态 char** 与独立 11 字节字符串，任一失败释放全部已拥有资源。"
+"adapter.go_repeated_dna_clone" = "kind=language_adapter; introduced=0187; last=0187; occurrences=1; teaching_state=explained; note=Go 使用 strings.Clone 复制 10 字符结果，避免切片长期保留完整输入底层存储。"
+"workflow.targeted_static_review" = "kind=workflow; introduced=0167; last=0187; occurrences=9; teaching_state=explained; note=本批两道算法题只执行人工推演、证明映射、十语言静态语义和仓库一致性检查；Database/Premium 仅登记。"

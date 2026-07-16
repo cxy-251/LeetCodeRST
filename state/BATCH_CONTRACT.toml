@@ -1,24 +1,16 @@
 [contract]
 schema_version = 2
-batch_id = "generation-0175-0187"
+batch_id = "generation-0188"
 status = "ready"
 phase = "generation"
 kind = "generation"
-scope = [179, 187]
-expected_database_skips = [175, 176, 177, 178, 180, 181, 182, 183, 184, 185]
-expected_premium_skips = [186]
+scope = [188]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
 drift_log = "state/DRIFT_LOG.toml"
 new_problem_generation_paused = false
 completion_count_must_remain_unchanged = false
-
-[domain_policy]
-algorithm_artifact_scope = "fixed_ten_language_algorithm_problems"
-database_action = "登记 database_skipped；不创建无法满足十语言算法合同的猜测性 RST。"
-premium_action = "登记 premium_skipped；不生成题面或实现。"
-next_problem_after_batch = 188
 
 [static_review]
 solution_code_execution = "forbidden"
@@ -35,10 +27,10 @@ target_min = 4
 target_max = 6
 proof_risk = "high"
 language_semantics_risk = "high"
-platform_type_risk = "high"
+platform_type_risk = "medium"
 output_volume_risk = "high"
-scope_may_shrink = true
-scope_reason = "0179 的字符串拼接比较器需要证明排序关系与全局最优，C/R/Julia 比较器和字符串物化风险较高；0187 涉及固定窗口编码、重复结果去重和十语言字符单位。若 0187 开始压缩证明或适配说明，只提交已完成的顺序登记与 0179，并重建合同。"
+scope_may_shrink = false
+scope_reason = "0188 是单道 Hard，交易次数状态、无限交易退化、原地滚动更新顺序、负无穷初始化和十语言资源边界均需要完整展开；本批不追加 0189。"
 
 [references]
 style_baselines = [
@@ -51,25 +43,12 @@ fact_sources = [
   "state/CONCEPT_LEDGER.toml",
   "docs/FORWARD_RULES_0151_ONWARD.rst",
   "problems/0101-0200/README.rst",
-  "https://leetcode.com/problems/combine-two-tables/description/",
-  "https://leetcode.com/problems/second-highest-salary/description/",
-  "https://leetcode.com/problems/nth-highest-salary/description/",
-  "https://leetcode.com/problems/rank-scores/description/",
-  "https://leetcode.com/problems/largest-number/description/",
-  "https://leetcode.com/problems/consecutive-numbers/description/",
-  "https://leetcode.com/problems/employees-earning-more-than-their-managers/description/",
-  "https://leetcode.com/problems/duplicate-emails/description/",
-  "https://leetcode.com/problems/customers-who-never-order/description/",
-  "https://leetcode.com/problems/department-highest-salary/description/",
-  "https://leetcode.com/problems/department-top-three-salaries/description/",
-  "https://leetcode.com/problems/reverse-words-in-a-string-ii/description/",
-  "https://leetcode.com/problems/repeated-dna-sequences/description/",
+  "problems/0101-0200/0123-best-time-to-buy-and-sell-stock-iii.rst",
+  "https://leetcode.com/problems/best-time-to-buy-and-sell-stock-iv/description/",
 ]
 fact_sources_may_provide = [
-  "0175–0178 与 0180–0185 的 Database 分类、题号和标题",
-  "0186 的 Premium 访问状态与题号推进事实",
-  "0179 的非负整数数组、按拼接结果最大化、全零输出与官方示例",
-  "0187 的 DNA 字符域、固定长度 10、重复片段输出合同与官方示例",
+  "0188 的至多 k 笔交易、买入前必须卖出、价格范围、返回最大利润和官方示例",
+  "0123 的股票交易状态术语与平台接口连续性",
   "当前完成范围、静态审查政策和长期质量控制状态",
 ]
 fact_sources_must_not_provide = [
@@ -80,65 +59,49 @@ fact_sources_must_not_provide = [
   "文件组织形式",
 ]
 
-[problems."0179"]
-title = "Largest Number"
-difficulty = "Medium"
+[problems."0188"]
+title = "Best Time to Buy and Sell Stock IV"
+difficulty = "Hard"
 primary_risks = [
-  "排序关键字不是数值大小或字典序，而是比较 a+b 与 b+a；必须说明交换相邻逆序对为何不会降低整体拼接值",
-  "比较关系需要满足排序 API 的严格弱序要求；不能只用若干例子宣称传递性",
-  "全部元素为 0 时排序拼接会产生多个前导零，必须统一返回单个 0",
-  "输入可含大整数但比较应基于十进制字符串，不能把拼接结果解析成固定宽整数",
-  "C qsort 比较器的字符串生命周期、临时拼接分配和失败路径需要完整处理；若选择索引排序，所有权必须明确",
-  "R/Julia/TypeScript 的排序比较器返回契约、稳定性无关性、字符串拼接成本与输出载荷需静态核对",
+  "一笔交易必须先买后卖，同一时刻最多持有一股；k 表示最多完成的卖出次数，不能把买入和卖出各算一笔",
+  "有效交易上限为 min(k,floor(n/2))；k>=floor(n/2) 时退化为无限交易，需证明所有正相邻差之和最优",
+  "有限交易 DP 必须精确定义 hold[t] 与 cash[t] 的前缀语义、不可达初始化和卖出次数坐标",
+  "若使用同日原地更新，需要解释升序或降序如何读取旧状态；不得无证明地混用刚更新的 cash/hold",
+  "利润中间状态使用足够宽类型和安全负无穷；不能对负无穷直接减价格造成溢出",
+  "C 需要为两组交易状态分配和释放内存，分配失败不得伪装成合法利润；R/Julia 一基索引和循环边界需静态核对",
+  "复杂度必须报告 O(n*min(k,n/2)) 时间、O(min(k,n/2)) 核心空间，并单独说明无限交易快捷分支",
 ]
 minimum_static_review = [
-  "人工推演 [10,2]、[3,30,34,5,9]、[0,0]、[121,12] 和前缀相同的比较边界",
-  "证明局部交换准则、全局最优和比较关系可供排序使用；说明相等比较允许任意顺序",
-  "逐语言核对字符串转换、比较器方向、前导零、输入修改与返回字符串所有权",
-  "复杂度区分 n 次字符串化、O(n log n) 次比较、每次最多 O(k) 拼接比较及最终输出长度",
-]
-
-[problems."0187"]
-title = "Repeated DNA Sequences"
-difficulty = "Medium"
-primary_risks = [
-  "窗口长度固定为 10，输入字符只来自 A/C/G/T；长度小于 10 时返回空结果",
-  "2 位编码配合 20 位掩码滚动，必须证明编码与长度 10 字符串一一对应，且移位后只保留最近 10 个字符",
-  "同一片段出现三次以上只能加入结果一次，需要区分首次出现、第二次出现和后续出现状态",
-  "结果顺序通常不作为合同核心，但十语言输出不能依赖未声明的哈希迭代顺序；主实现应按第二次出现的扫描顺序追加",
-  "C 可使用 2^20 状态字节数组避免通用哈希；分配失败、结果数组和每个 11 字节字符串的清理必须完整",
-  "TypeScript 位运算转 32 位有符号但 20 位状态安全；R bitw 操作同样安全；Julia/Go/C 字节扫描依赖 ASCII 合同",
-]
-minimum_static_review = [
-  "人工推演 AAAAACCCCCAAAAACCCCCCAAAAAGGGTTT、AAAAAAAAAAAAA、长度 9、长度 10 和无重复",
-  "证明滚动编码窗口不变量、编码无碰撞和状态 0/1/2 的去重语义",
-  "逐语言核对字符到 2 位编码、20 位掩码、子串坐标、结果所有权和 C 失败清理",
-  "复杂度报告 O(L) 扫描、固定 2^20 计数状态或语言哈希成本，以及结果字符串载荷",
+  "人工推演 k=2, prices=[2,4,1]；k=2, [3,2,6,5,0,3]；k=0；单日；单调上升；单调下降；k>=n/2",
+  "证明交易状态不变量、买卖转移必要/充分性、至多 k 限制和滚动更新不覆盖所需旧状态",
+  "证明无限交易分支中每段上涨利润可分解为正相邻差，且任意交易利润不超过对应差之和",
+  "逐语言核对宽整数、负无穷、数组长度、索引、输入只读和返回类型",
+  "专项审查 C 分配失败清理、TypeScript/R 精确整数、Julia 递增区间和 Rust 所有权",
 ]
 
 must_preserve = [
-  "0175–0178、0180–0185 只登记 Database，不创建十语言算法 RST；0186 只登记 Premium",
-  "0179 的拼接比较器、局部交换到全局最优证明、比较器排序契约、全零归一化和字符串成本",
-  "0187 的 2 位滚动编码、20 位掩码、第二次出现去重状态、C 结果资源和字符单位",
-  "两道公开算法题各自固定十语言完整实现、独立人工推演、静态语义审查、剩余风险和带答案自检",
+  "有效交易数裁剪与无限交易退化条件",
+  "有限交易 hold/cash 状态定义、不可达初始化、转移与完整正确性证明",
+  "原地滚动更新的读写顺序证明，或使用明确的前一日副本避免语义含混",
+  "宽整数、负无穷、C 资源失败和十语言接口适配",
+  "固定十语言完整实现、人工推演、静态语义审查、剩余风险和带答案自检",
 ]
 
 forbidden = [
-  "把 Database 题伪装成十语言算法题或为其创建空壳 RST",
-  "参考 0173–0174 或其他最近题目的章节结构、证明篇幅或静态审查密度",
-  "在 0179 中按普通字典序或数值大小排序，解析 a+b 为固定宽整数，或省略全零归一化",
-  "在 0187 中保存全部长度 10 子串后做二次全局计数却声称固定状态空间，或同一重复片段输出多次",
+  "参考 0179、0187 或其他最近题目的章节结构、证明篇幅或静态审查密度",
+  "把 k 笔交易误写成 k 次操作，允许未卖出再次买入，或在同一状态中同时持有多股",
+  "无条件使用 O(nk) 而遗漏 k>=n/2 的退化，或把贪心分支用于有限小 k",
+  "使用 INT_MIN/LLONG_MIN 后直接减价格导致溢出，或把资源失败返回 0 当作已验证答案",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试或 sanitizer 题解代码",
   "把静态审查写成测试、编译或运行通过",
 ]
 
 completion_checks = [
-  "顺序登记 Database 与 Premium 跳过，不遗漏 0175–0187 中任何题号",
-  "0179 与 0187 逐项对照 0050 的证明/数值边界和 0076 的字符串/适配成本深度",
-  "0179 写完立即完成单题质量门；0187 出现压缩迹象时按已完整连续前缀缩批",
+  "逐项对照 0050 的状态/数值边界和 0076 的语言适配/资源成本深度",
+  "0188 只有一个自包含 RST，十语言代码全部直接内联",
+  "人工推演有限交易与无限交易分支，完成状态、转移、终止和最优性证明",
   "命中 DRIFT_LOG 的拆分、摘要、最近样本、预算与验证策略回归检查均通过",
-  "0179 与 0187 各自只有一个自包含 RST，每题十语言代码全部内联",
-  "完成范围、database_skipped、premium_skipped、completed_count、next_problem、README、范围索引和知识账本同步",
+  "完成范围、completed_count、next_problem、README、范围索引和知识账本同步",
   "提交后 BATCH_CONTRACT 被替换为下一批合同",
 ]
