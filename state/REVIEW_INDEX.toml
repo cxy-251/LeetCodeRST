@@ -149,10 +149,10 @@ statement = "O(min(m,n)) describes only the rolling Boolean DP array. The C++ si
 [next_action]
 kind = "generation"
 status = "ready"
-start = 199
-end = 200
-problem_ids = [199, 200]
-purpose = "生成 0199 Binary Tree Right Side View 与 0200 Number of Islands；历史题继续风险触发抽查。"
+start = 201
+end = 204
+problem_ids = [201, 202, 203, 204]
+purpose = "生成 0201–0204；完整处理公共位前缀、快乐数循环、链表删除所有权和质数筛边界；历史题继续风险触发抽查。"
 
 [artifact_lifecycle]
 policy = "docs/ARTIFACT_LIFECYCLE_POLICY.rst"

@@ -1,0 +1,22 @@
+[meta]
+version = 1
+range = "0199-0200"
+last_problem = 200
+inherits = "state/concepts/0198.toml"
+
+[batch]
+completed = 2
+difficulty_budget = 4
+scope_shrunk = false
+summary = "完成二叉树右视图的分层队列不变量，以及原地网格洪泛的四邻接连通分量计数。"
+
+[updates]
+"algorithm.level_bfs_right_view" = "kind=algorithm; introduced=0199; last=0199; occurrences=1; teaching_state=explained; note=冻结当前层大小，按左后右从左到右处理，本层最后出队节点即右侧可见节点。"
+"invariant.level_frontier_snapshot" = "kind=invariant; introduced=0102; last=0199; occurrences=2; teaching_state=explained; note=每轮开始时队列快照恰好包含当前层全部节点，新入队孩子只属于下一层。"
+"proof.rightmost_node_visibility" = "kind=proof; introduced=0199; last=0199; occurrences=1; teaching_state=explained; note=同层队列按从左到右排列，最后节点是最靠右非空节点，每层恰好提交一个值。"
+"adapter.circular_node_queue" = "kind=language_adapter; introduced=0199; last=0199; occurrences=1; teaching_state=explained; note=C/Go/TypeScript/Julia 使用循环队列保持活动存储与树宽同阶；R 用环境槽位并在弹出后删除。"
+"algorithm.grid_component_flood_fill" = "kind=algorithm; introduced=0200; last=0200; occurrences=1; teaching_state=explained; note=外层扫描首次发现陆地时计数一次，并用迭代栈清除整个四邻接连通分量。"
+"invariant.mark_before_push" = "kind=invariant; introduced=0130; last=0200; occurrences=2; teaching_state=explained; note=邻居在压入队列或栈前立即标记，防止被多个相邻格重复发现。"
+"proof.component_discovery_bijection" = "kind=proof; introduced=0200; last=0200; occurrences=1; teaching_state=explained; note=每个岛屿的最早扫描陆地恰好触发一次计数，洪泛完整清除该分量，后续同岛格不再计数。"
+"adapter.mutable_grid_cross_language" = "kind=language_adapter; introduced=0200; last=0200; occurrences=1; teaching_state=explained; note=多数语言修改调用者可见网格；Rust 消费拥有值，R 局部矩阵修改可能写时复制，需分别报告。"
+"workflow.targeted_static_review" = "kind=workflow; introduced=0167; last=0200; occurrences=16; teaching_state=explained; note=本批两题仅执行人工推演、证明映射、十语言静态语义和仓库一致性检查；未运行、未编译、未测试题解。"
