@@ -1,5 +1,5 @@
 [meta]
-version = 1
+version = 2
 range = "0155"
 last_problem = 155
 inherits = "state/concepts/0153-0154.toml"
@@ -8,6 +8,9 @@ inherits = "state/concepts/0153-0154.toml"
 "workflow.targeted_static_review" = "0134 引入人工示例推演与逐语言静态审查；0155 继续执行，累计强化 22 次。"
 
 [concepts]
-"data_structure.augmented_stack" = "kind=data_structure; introduced=0155; last=0155; occurrences=1; teaching_state=explained; note=每个栈层同时保存元素值与该前缀最小值，使查询不需要重新扫描。"
-"invariant.prefix_minimum_per_entry" = "kind=invariant; introduced=0155; last=0155; occurrences=1; teaching_state=explained; note=第 k 层 minimum 等于前 k 个元素的最小值，压栈以旧最小值递推，弹栈自然恢复。"
-"complexity.amortized_dynamic_array_push" = "kind=complexity; introduced=0155; last=0155; occurrences=1; teaching_state=explained; note=动态数组扩容会让个别 push 线性复制，但连续操作的摊还时间为常数。"
+"data_structure.augmented_stack" = "kind=data_structure; introduced=0155; last=0155; occurrences=1; teaching_state=explained; note=每层保存 (value,prefix_min)，把昂贵的最小值查询提前到 push 时增量计算，并随 pop 回滚。"
+"invariant.prefix_minimum_per_entry" = "kind=invariant; introduced=0155; last=0155; occurrences=1; teaching_state=explained; note=第 i 层 minimum 等于当前栈底到该层全部值的最小值；末层同时证实 top 与 getMin，重复最小值逐层保留。"
+"proof.min_stack_operation_sequence_induction" = "kind=proof; introduced=0155; last=0155; occurrences=1; teaching_state=explained; note=构造建立空状态，push 建立新层证书，pop 删除完整末层并恢复旧证书，查询只读不变量；对任意合法操作序列归纳。"
+"complexity.amortized_dynamic_array_push" = "kind=complexity; introduced=0155; last=0155; occurrences=1; teaching_state=explained; note=前缀最小递推是最坏 O(1)；动态数组个别扩容复制 O(d)，连续 push 摊还 O(1)，不能混写为单次最坏常数。"
+"adapter.c_min_stack_resource_atomicity" = "kind=language_adapter; introduced=0155; last=0155; occurrences=1; teaching_state=explained; note=C realloc 使用临时指针，失败保持旧栈；void push 无法报告未压入，资源耗尽时无法完全履行抽象更新合同。"
+"semantics.mutable_stack_object_identity" = "kind=language_semantics; introduced=0155; last=0155; occurrences=1; teaching_state=explained; note=各方法必须修改同一持久对象；Go 用指针接收者，Julia 用 mutable struct，R 用环境节点表达引用语义。"

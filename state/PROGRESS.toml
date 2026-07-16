@@ -17,15 +17,15 @@ completed_ranges = ["0001-0155", "0160", "0162", "0164-0165"]
 premium_skipped = [156, 157, 158, 159, 161, 163]
 blocked = []
 needs_revision = [
-  155, 160, 162, 164, 165,
+  164, 165,
 ]
 
 [quality_repair]
 status = "in_progress"
 reason = "0127 起部分题解退化为算法摘要与代码集合，未达到冻结教学质量基线。"
 original_scope = [127, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 160, 162, 164, 165]
-repaired = [127, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154]
-remaining_count = 5
+repaired = [127, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150, 151, 152, 153, 154, 155, 160, 162]
+remaining_count = 2
 baseline = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 batch_contract = "state/BATCH_CONTRACT.toml"
 drift_log = "state/DRIFT_LOG.toml"
@@ -59,23 +59,23 @@ quality_over_batch_score = true
 [last_batch]
 status = "completed"
 kind = "quality_repair"
-start = 153
-end = 154
-repaired_problem_count = 2
-repaired_problem_ids = [153, 154]
-reference_problems = [50, 76]
-difficulty_budget = 6
-summary = "重写 0153–0154，补齐旋转两段的严格排除与折半证明，并以最小值见证证明重复值等值消歧及最坏线性退化。"
+start = 155
+end = 162
+repaired_problem_count = 3
+repaired_problem_ids = [155, 160, 162]
+reference_problems = [76, 100]
+difficulty_budget = 5
+summary = "重写 0155、0160、0162，补齐逐层前缀最小操作归纳、含空哨兵的节点身份换头路径，以及相邻斜率二分的双边界峰值证书。"
 
 [next_batch]
 status = "quality_repair_ready"
 kind = "quality_repair"
-start = 155
-end = 162
-problem_ids = [155, 160, 162]
-difficulty_budget = 5
+start = 164
+end = 165
+problem_ids = [164, 165]
+difficulty_budget = 6
 contract = "state/BATCH_CONTRACT.toml"
-purpose = "连续返工公开题 0155 Min Stack、0160 Intersection of Two Linked Lists 与 0162 Find Peak Element；Premium 题保持登记，新题 0166 继续暂停。"
+purpose = "连续返工 0164 Maximum Gap 与 0165 Compare Version Numbers；新题 0166 继续暂停。"
 
 [review_history]
 status = "completed"
@@ -177,7 +177,7 @@ index = "state/CONCEPT_LEDGER.toml"
 latest_record = "state/concepts/0163-0165.toml"
 
 [next_action]
-summary = "按 BATCH_CONTRACT 连续返工公开题 0155、0160、0162；完成剩余 5 道前不生成 0166。"
+summary = "按 BATCH_CONTRACT 连续返工 0164–0165；完成剩余 2 道前不生成 0166。"
 
 [last_update]
-summary = "0153–0154 已按冻结基线完成返工；当前统一静态审查，下一批连续处理 0155、0160、0162。"
+summary = "0155、0160、0162 已按冻结基线完成返工；当前统一静态审查，最后一批处理 0164–0165。"

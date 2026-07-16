@@ -149,10 +149,10 @@ statement = "O(min(m,n)) describes only the rolling Boolean DP array. The C++ si
 [next_action]
 kind = "quality_repair"
 status = "ready"
-start = 155
-end = 162
-problem_ids = [155, 160, 162]
-purpose = "连续返工公开题 0155 Min Stack、0160 Intersection of Two Linked Lists 与 0162 Find Peak Element；完成剩余质量返工前暂停生成 0166。"
+start = 164
+end = 165
+problem_ids = [164, 165]
+purpose = "连续返工 0164 Maximum Gap 与 0165 Compare Version Numbers；完成剩余质量返工前暂停生成 0166。"
 
 [artifact_lifecycle]
 policy = "docs/ARTIFACT_LIFECYCLE_POLICY.rst"
