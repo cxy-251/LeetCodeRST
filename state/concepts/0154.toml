@@ -1,5 +1,5 @@
 [meta]
-version = 1
+version = 2
 range = "0154"
 last_problem = 154
 inherits = "state/concepts/0153.toml"
@@ -8,7 +8,9 @@ inherits = "state/concepts/0153.toml"
 "workflow.targeted_static_review" = "0134 引入人工示例推演与逐语言静态审查；0154 继续执行，累计强化 21 次。"
 
 [concepts]
-"algorithm.rotated_array_minimum_right_boundary" = "kind=algorithm; introduced=0153; last=0154; occurrences=2; teaching_state=reinforcing; note=重复值版本沿用右端比较；不等时保持二分排除，等值时只删除无信息右端。"
-"invariant.minimum_value_witness_interval" = "kind=invariant; introduced=0154; last=0154; occurrences=1; teaching_state=explained; note=候选区间始终保留至少一个等于全局最小值的见证，不要求保留某个固定最小值下标。"
-"technique.equal_right_endpoint_disambiguation" = "kind=technique; introduced=0154; last=0154; occurrences=1; teaching_state=explained; note=nums[mid]==nums[right] 时删除右端；若右端是最小值，中点提供相同值见证。"
-"complexity.duplicate_binary_search_linear_worst_case" = "kind=complexity; introduced=0154; last=0154; occurrences=1; teaching_state=explained; note=重复值可能使每轮只能缩短一个端点，通常接近对数而最坏退化为线性。"
+"algorithm.rotated_array_minimum_right_boundary" = "kind=algorithm; introduced=0153; last=0154; occurrences=2; teaching_state=reinforcing; note=重复值版本保留两个严格比较分支；等值无法判向时只删除有中点同值副本的右端。"
+"invariant.minimum_value_witness_interval" = "kind=invariant; introduced=0154; last=0154; occurrences=1; teaching_state=explained; note=候选区间始终至少含一个值等于全局最小值的位置；允许删除某个最小下标，不要求保留固定答案身份。"
+"technique.equal_right_endpoint_disambiguation" = "kind=technique; introduced=0154; last=0154; occurrences=1; teaching_state=explained; note=nums[mid]==nums[right] 时令 right-=1；若右端是最小值，仍留在新区间的 mid 提供替代见证。"
+"proof.opposite_direction_equal_comparison_counterexamples" = "kind=proof; introduced=0154; last=0154; occurrences=1; teaching_state=explained; note=两个中点等于右端但最小值分处左右的输入证明等值比较确实无法固定判向。"
+"complexity.duplicate_binary_search_linear_worst_case" = "kind=complexity; introduced=0154; last=0154; occurrences=1; teaching_state=explained; note=每轮至少删一项给出 O(n) 上界；全相等长度 n 输入执行 n-1 个等值分支，给出 Omega(n)，最坏为 Theta(n)。"
+"semantics.unsigned_right_decrement_guard" = "kind=language_semantics; introduced=0154; last=0154; occurrences=1; teaching_state=explained; note=right 减一只发生在 left<right 的循环内，保证 Rust usize 及一基 Julia/R 边界不会下溢。"

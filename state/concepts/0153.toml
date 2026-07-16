@@ -1,5 +1,5 @@
 [meta]
-version = 1
+version = 2
 range = "0153"
 last_problem = 153
 inherits = "state/concepts/0150-0152.toml"
@@ -8,6 +8,9 @@ inherits = "state/concepts/0150-0152.toml"
 "workflow.targeted_static_review" = "0134 引入人工示例推演与逐语言静态审查；0153 继续执行，累计强化 20 次。"
 
 [concepts]
-"algorithm.rotated_array_minimum_right_boundary" = "kind=algorithm; introduced=0153; last=0153; occurrences=1; teaching_state=explained; note=比较中点与右端值，判断最小值位于中点右侧还是包含中点的左侧候选区间。"
-"invariant.minimum_index_closed_interval" = "kind=invariant; introduced=0153; last=0153; occurrences=1; teaching_state=explained; note=闭区间始终包含唯一最小值下标；大于右端时删除中点及左侧，否则保留中点。"
-"technique.binary_search_keep_mid_candidate" = "kind=technique; introduced=0153; last=0153; occurrences=1; teaching_state=explained; note=中点可能直接成为答案的分支使用 right=mid，而不是 mid-1。"
+"algorithm.rotated_array_minimum_right_boundary" = "kind=algorithm; introduced=0153; last=0153; occurrences=1; teaching_state=explained; note=比较下中点与当前候选右端；大于说明二者跨过下降断点，小于说明中点位于包含最小值的递增尾段。"
+"invariant.minimum_index_closed_interval" = "kind=invariant; introduced=0153; last=0153; occurrences=1; teaching_state=explained; note=闭区间始终包含唯一最小值下标；大于分支保留 [mid+1,right]，小于分支保留 [left,mid]。"
+"proof.rotated_two_segment_exclusion" = "kind=proof; introduced=0153; last=0153; occurrences=1; teaching_state=explained; note=旋转后由较大值段与从最小值开始的较小值段组成；同段严格递增与跨段值序共同证明两个分支的整段排除。"
+"technique.binary_search_keep_mid_candidate" = "kind=technique; introduced=0153; last=0153; occurrences=1; teaching_state=explained; note=小于右端只排除中点右侧，中点可能正是唯一最小值，因此必须 right=mid 而不能 mid-1。"
+"complexity.binary_candidate_length_halving" = "kind=complexity; introduced=0153; last=0153; occurrences=1; teaching_state=explained; note=旧闭区间长度 s>=2 时任一分支新长度至多 ceil(s/2)，由长度递推而非二分外形证明最坏 O(log n)。"
+"semantics.closed_interval_lower_midpoint" = "kind=language_semantics; introduced=0153; last=0153; occurrences=1; teaching_state=explained; note=left<right 时下中点满足 left<=mid<right，支撑比较不同下标、严格收缩和各语言边界安全。"

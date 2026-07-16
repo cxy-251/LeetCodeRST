@@ -1,10 +1,10 @@
 [contract]
 schema_version = 2
-batch_id = "quality-repair-0153-0154"
+batch_id = "quality-repair-0155-0160-0162"
 status = "ready"
 phase = "quality_repair"
 kind = "quality_repair"
-scope = [153, 154]
+scope = [155, 160, 162]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
@@ -22,20 +22,20 @@ repository_structure_state_and_git_checks = "allowed"
 reporting = "只声明实际完成的静态审查；明确未运行、未编译、未测试和剩余风险。"
 
 [budget]
-algorithm_score = 6
+algorithm_score = 5
 target_min = 4
 target_max = 6
 proof_risk = "high"
-language_semantics_risk = "medium"
-platform_type_risk = "medium"
+language_semantics_risk = "high"
+platform_type_risk = "high"
 output_volume_risk = "high"
 scope_may_shrink = true
-scope_reason = "0153 为 Medium、0154 为 Hard，合计 6 分且共享右端比较框架，适合连续对照返工；必须先完整验收 0153，再用独立见证不变量处理 0154。若 Hard 题开始压缩等值分支证明、最坏复杂度、十语言语义或静态审查，只提交连续前缀 0153，并同步重建 0154 合同。"
+scope_reason = "0155、0160、0162 是 Premium 间隔后的连续公开题，难度分 2+1+2=5；算法本体紧凑，但分别叠加可变对象资源、节点身份和峰值存在性风险。必须逐题完整验收；若后题开始压缩证明、平台适配或十语言静态审查，只提交已达标的公开题连续前缀并重建合同。"
 
 [references]
 style_baselines = [
   "problems/0001-0100/0076-minimum-window-substring.rst",
-  "problems/0001-0100/0050-powx-n.rst",
+  "problems/0001-0100/0100-same-tree.rst",
 ]
 fact_sources = [
   "state/PROGRESS.toml",
@@ -43,16 +43,19 @@ fact_sources = [
   "state/CONCEPT_LEDGER.toml",
   "docs/FORWARD_RULES_0151_ONWARD.rst",
   "problems/0101-0200/README.rst",
-  "https://leetcode.com/problems/find-minimum-in-rotated-sorted-array/description/",
-  "https://leetcode.com/problems/find-minimum-in-rotated-sorted-array-ii/description/",
-  "state/concepts/0153.toml",
-  "state/concepts/0154.toml",
+  "https://leetcode.com/problems/min-stack/description/",
+  "https://leetcode.com/problems/intersection-of-two-linked-lists/description/",
+  "https://leetcode.com/problems/find-peak-element/description/",
+  "state/concepts/0155.toml",
+  "state/concepts/0160.toml",
+  "state/concepts/0162.toml",
 ]
 fact_sources_may_provide = [
-  "0153 的非空、互异、严格递增后旋转、长度和值域以及 O(log n) 要求",
-  "0154 的非空、允许重复、非递减后旋转、长度和值域以及尽量减少操作的要求",
-  "既有右端比较、闭区间候选、等值删除和当前语言接口连续性",
-  "当前范围、进度和统一静态审查政策",
+  "0155 的四操作接口、32 位值域、非空调用前提、调用次数上限和常数时间目标",
+  "0160 的无环共享后缀、节点身份、长度和值域、结构不修改以及 O(1) 空间追问",
+  "0162 的峰值定义、虚拟负无穷边界、相邻不等、长度和值域以及 O(log n) 要求",
+  "既有前缀最小值、换头双指针、相邻斜率状态和当前语言接口连续性",
+  "当前范围、Premium 间隔、进度和统一静态审查政策",
 ]
 fact_sources_must_not_provide = [
   "章节结构",
@@ -62,71 +65,93 @@ fact_sources_must_not_provide = [
   "文件组织形式",
 ]
 
-[problems."0153"]
-title = "Find Minimum in Rotated Sorted Array"
+[problems."0155"]
+title = "Min Stack"
 difficulty = "Medium"
 primary_risks = [
-  "输入长度 1..5000、值域 [-5000,5000]，元素互异且来自严格递增数组旋转 1..n 次；输入非空只读，必须返回最小值并达到 O(log n)",
-  "闭区间 [left,right] 必须始终包含唯一最小值下标；mid 使用 left+(right-left)/2，循环只在 left<right 时读取右端和中点",
-  "nums[mid]>nums[right] 时最小值严格在 [mid+1,right]；nums[mid]<nums[right] 时最小值在 [left,mid]，后者必须保留可能正是答案的 mid",
-  "证明不能只说中点属于较大段或较小段，必须从旋转后至多一个下降断点的结构推出两个排除区间都不含唯一最小值",
-  "元素互异排除不同下标等值分支，保证每轮候选长度至多约减半；单元素、未有效旋转、两元素和最小值邻近两端必须闭合",
-  "十语言需核对零基/一基闭区间、整数中点、非空签名、只读输入和返回标量；不得把平台输入容器或按值参数复制忽略为核心算法空间",
+  "构造器建立空栈；push 接受有符号 32 位值，pop/top/getMin 只在非空栈调用，四类操作总数至多 30000",
+  "每层必须保存 value 与从栈底到该层的 prefix_min；重复最小值需要逐层保留，不能只保存一个会在 pop 后丢失历史的全局变量",
+  "用操作序列归纳证明 push 建立新前缀最小、pop 恢复旧层证书、top 与 getMin 各读取正确字段，且不依赖未来操作",
+  "抽象栈操作做常数次状态访问；动态数组 push 可能扩容复制，只能声明摊还 O(1)，不得把容器增长伪装成单次最坏 O(1)",
+  "C 的 create/realloc/free、容量与失败路径必须闭合；void push 无法报告扩容失败，只能保持旧栈并明确平台接口限制",
+  "Go Constructor、Java/C++/Python/TypeScript/C# 类、Rust new、Julia 可变结构和 R 环境引用必须保持可变对象身份与平台方法名",
 ]
 minimum_static_review = [
-  "人工推演三个官方示例及自建两元素旋转例，逐轮记录 left、mid、right、三处值、比较分支、删除区间和保留的最小值见证",
-  "覆盖单元素、未有效旋转、两元素旋转与未旋转、最小值位于中点、最小值紧邻首尾和负数值域",
-  "证明初始化、两个比较分支的不变量保持、候选区间严格缩短、终止以及终止点等于唯一最小值下标",
-  "单独证明每轮新长度至多为旧长度上取整的一半，从而满足最坏 O(log n)，而不是只凭使用二分循环得出复杂度",
-  "逐语言核对公开签名、中点公式、索引类型、Julia 一基范围、R 双精度下标的精确域、输入所有权和不修改语义",
-  "复杂度报告 O(log n) 比较、O(1) 核心下标；另列 C++ 按值与 Rust 按值接口的输入所有权成本，不计返回标量为辅助容器",
+  "逐操作人工推演官方序列，记录完整层对 (value,prefix_min)、返回值和 pop 后恢复状态",
+  "覆盖首个值、重复最小值、严格递减压栈、弹出当前最小值、零、INT_MIN/INT_MAX 和交替压弹",
+  "证明每个可达非空深度的栈顶 minimum 等于全部当前元素最小值，并说明空栈没有 top/getMin/pop 义务",
+  "逐语言核对构造器与方法签名、可变接收者、元组字段、非空解包、整数精确域、持久状态和析构/GC 责任",
+  "专项审查 C 初始分配、容量翻倍上界、size/capacity 不变量、realloc 临时指针、失败原子性和双层释放",
+  "分别报告四操作的算法步骤、动态数组摊还扩容、当前深度 O(d) 载荷以及链式 R 环境节点成本",
 ]
 
-[problems."0154"]
-title = "Find Minimum in Rotated Sorted Array II"
-difficulty = "Hard"
+[problems."0160"]
+title = "Intersection of Two Linked Lists"
+difficulty = "Easy"
 primary_risks = [
-  "输入长度 1..5000、值域 [-5000,5000]，来自允许重复的非递减数组旋转 1..n 次；输入非空只读，返回最小值并尽量减少操作",
-  "重复值使固定最小下标不适合作为不变量；候选区间只需始终保留至少一个值等于全局最小值的见证",
-  "nums[mid]>nums[right] 与 nums[mid]<nums[right] 仍分别保留 [mid+1,right] 和 [left,mid]；证明必须覆盖最小值可能重复出现而不能照抄互异版本措辞",
-  "nums[mid]==nums[right] 时只能得到右端冗余，令 right-=1；若被删右端是最小值，仍在区间内的 mid 提供等值见证",
-  "不得声称所有分支都折半或总是 O(log n)；连续等值可每轮只删一个位置，最坏 O(n)，有序比较分支才产生几何收缩",
-  "[10,1,10,10,10]、[1,10,10,10,10] 和全相等数组必须揭示等值时固定选择一侧、删除 mid 或错误提前返回的失败方式",
+  "两条链长度 m,n 各在 1..30000、节点值在 1..100000，整体结构无环；返回首个共享节点对象或空，且链表必须保持原结构",
+  "相交按节点身份而不是值判断；两个同值独立节点不能相交，共享一个节点后单链 next 唯一性意味着后缀全部共享",
+  "两个指针分别枚举 A、空哨兵、B 与 B、空哨兵、A；换头路径证明必须计入共同空哨兵，避免少算一步却声称精确相遇时刻",
+  "相交时用独有前缀 a、b 与共享后缀 c 证明在首个共享节点对齐；不相交时证明两条有限组合路径同时到空并终止",
+  "算法只重绑定局部引用，不能断链、拼接、复制节点或改值；O(1) 空间只统计常数个额外引用，不把输入节点算成新分配",
+  "Rust 的 Box 无法让两个头共同拥有尾链，教学适配器须明确使用 Rc 与 Rc::ptr_eq；各语言都要使用引用身份而非结构相等",
 ]
 minimum_static_review = [
-  "人工推演两个官方示例及 [10,1,10,10,10]，逐轮记录 left、mid、right、比较结果、删去位置和仍保留的最小值见证",
-  "覆盖单元素、全相等、未有效旋转、两元素重复、最小值多次出现、旋转点两侧重复和长等值前后缀",
-  "以值见证而非固定下标完成初始化、三分支保持、严格收缩、终止和返回正确性的完整证明",
-  "给出 O(n) 最坏上界及全相等族的线性下界见证；不得把有利输入上的几何收缩写成平均或保证复杂度",
-  "逐语言核对 right-=1 不越过 left、闭区间中点、Julia/R 单元素循环边界、输入所有权和标量返回",
-  "与 0153 明确对照互异条件究竟消除了哪个分支，以及为何同一代码只增加等值分支却改变最坏时间界",
+  "人工推演前缀长度不同且中间相交、头节点即相交、仅尾节点相交和完全不相交，逐步记录两个指针及换头/空状态",
+  "覆盖同值不同节点、两链完全相同、长度差极大、无交点以及合同外空头的防御行为",
+  "完整证明组合路径的身份序列、首个共享节点对齐、不相交共同空状态与无环终止性",
+  "逐语言核对 C/C++/Java/Go/TypeScript 引用比较、Python is、C# ReferenceEquals、Julia ===、R 环境 identical 和空值",
+  "专项说明 Rust Rc 适配器并非 Box 平台模板，clone 只增加引用计数、ptr_eq 比身份、返回额外 Rc 所有权如何交接",
+  "复杂度报告 O(m+n) 时间、O(1) 额外引用；不得把 Rc 引用计数操作写成节点深拷贝或声称算法修改输入",
+]
+
+[problems."0162"]
+title = "Find Peak Element"
+difficulty = "Medium"
+primary_risks = [
+  "输入长度 1..1000、值域为有符号 32 位，相邻元素互不相等；数组外 nums[-1] 与 nums[n] 视为负无穷，返回任意严格峰值的零基下标",
+  "闭区间始终至少含一个峰值；left<right 时下中点满足 mid+1<=right，邻居读取合法且无需真的存储负无穷哨兵",
+  "nums[mid]<nums[mid+1] 时右半区存在峰值，反之左半区连同 mid 存在峰值；证明需沿斜率到首次下降或虚拟边界闭合",
+  "相邻不等使比较只有严格上升或严格下降；若允许平台相等，现有二分存在性证明和严格峰定义都需重新处理",
+  "每轮保留非空含峰区间且长度至多减半，终止单点由存在性不变量直接成为峰值，不要求返回全局最大值",
+  "Julia/R 内部一基但必须返回 left-1；Rust usize 到 i32、TypeScript/R 数值下标和全部语言 mid+1 边界需逐项核对",
+]
+minimum_static_review = [
+  "人工推演两个官方示例，记录 left、mid、right、相邻值、斜率分支和保留区间；多峰示例允许所得合法下标与说明不同",
+  "覆盖单元素、两元素升降、严格递增、严格递减、峰在首尾、多个峰和 32 位极值",
+  "证明两个斜率分支的峰值存在性、mid+1 合法、区间严格折半、终止以及返回零基索引",
+  "逐语言核对公开签名、中点公式、相邻读取、非空入口、输入只读、索引返回类型和一基适配",
+  "明确虚拟负无穷只参与数学边界证明，代码不以 INT_MIN 充当哨兵，避免与合法 INT_MIN 输入冲突",
+  "复杂度报告 O(log n) 比较与 O(1) 核心状态，并说明 Rust 按值 Vec 仅移动所有权、不克隆输入",
 ]
 
 must_preserve = [
-  "每题各自具备精确契约、自建反例、问题抽象、解法取舍、状态映射、循环不变量和完整正确性证明",
-  "0153 的唯一最小下标闭区间、两个不等比较的安全排除、保留 mid 和真正的 O(log n) 收缩证明",
-  "0154 的最小值见证区间、等值删除右端的替代见证、重复值反例和最坏 O(n) 证明",
-  "固定十语言完整实现，平台签名、索引单位、中点计算、输入所有权和空间成本准确",
+  "三题各自具备精确契约、自建反例、问题抽象、解法取舍、状态不变量和完整正确性证明",
+  "0155 的逐层前缀最小证书、重复最小恢复、操作复杂度与动态存储/失败语义",
+  "0160 的节点身份、含空哨兵的换头路径、相交与不相交证明以及只读结构",
+  "0162 的含峰区间、斜率存在性证明、虚拟边界、mid+1 安全和零基返回",
+  "固定十语言完整实现，平台对象模型、所有权、索引、整数和资源路径准确",
   "每题独立的人工推演、逐语言静态审查、剩余风险、失败方式、学习链和带答案自检",
 ]
 
 forbidden = [
-  "参考 0151–0152 或其他最近题目的章节结构、证明篇幅或静态审查密度",
-  "把‘二分模板’当作正确性证明，或只凭循环写法声称 O(log n)",
-  "在 0153 中写 right=mid-1 丢掉可能的答案，或加入互异合同不可能出现的等值兜底来掩盖不变量",
-  "在 0154 中把某个固定最小下标当作必须保留的对象，等值时任意选边，删除 mid 或直接返回右端值",
-  "声称 0154 始终、平均或通常 O(log n) 而没有相应模型；必须明确最坏 O(n) 和可核实的退化输入族",
-  "把 C++/Rust 按值输入接口、Julia 一基下标或 R 数值下标统一描述成 C 风格零基数组",
+  "参考 0153–0154 或其他最近题目的章节结构、证明篇幅或静态审查密度",
+  "在 0155 中只保存当前最小变量、pop 后扫描恢复，或把动态数组单次扩容写成最坏 O(1)",
+  "忽略 0155 C 扩容失败、R 值语义导致状态不持久，或把 top/getMin 的非空前提外推到 push",
+  "在 0160 中比较节点值、修改 next、使用 O(m+n) 身份集合却声称 O(1) 空间，或把 Box 伪装成共享尾链",
+  "在 0160 的精确路程中漏掉代码实际经过的空哨兵，或只说走同样远而不闭合无交点终止",
+  "在 0162 中返回峰值而非索引、读取越界邻居、把虚拟负无穷实现成可能与合法值冲突的整数哨兵",
+  "只凭二分循环外形声称 0162 为 O(log n)，而不证明含峰半区和候选长度递推",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试或 sanitizer 题解代码",
   "把静态审查写成测试、编译或运行通过",
 ]
 
 completion_checks = [
-  "两题逐项对照 0076 的不变量/反例深度与 0050 的边界/递推深度",
-  "每题写完立即完成自身质量门；0154 出现压缩迹象时按连续前缀缩批",
+  "三题逐项对照 0076 的不变量/物化深度与 0100 的结构身份/归纳证明深度",
+  "每题写完立即完成自身质量门；后题出现压缩迹象时按公开题连续前缀缩批",
   "命中 DRIFT_LOG 的拆分、摘要、最近样本、预算与验证策略回归检查均通过",
-  "0153 与 0154 各自只有一个自包含 RST，每题十语言代码全部内联",
+  "0155、0160、0162 各自只有一个自包含 RST，每题十语言代码全部内联",
   "PROGRESS、README、AGENTS 当前状态、范围索引和知识账本同步",
   "原子提交后 BATCH_CONTRACT 被替换为下一批合同",
 ]
