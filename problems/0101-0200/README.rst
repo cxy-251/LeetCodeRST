@@ -1,13 +1,13 @@
 LeetCode 0101–0200
 ==================
 
-本目录按题号顺序保存 0101 至 0200 的题目教程。当前题号进度为：完成 0101 至 0155、0160、0162、
-0164 至 0169、0171 至 0172；0156 至 0159、0161、0163、0170 登记为 Premium 跳过。每道公开题只有
-一个自包含 RST，正文与十语言代码全部直接内联，不使用 ``.inc`` 或 ``.. include::``。
+本目录按题号顺序保存 0101 至 0200 的算法教程。当前题号进度为：完成 0101 至 0155、0160、0162、
+0164 至 0169、0171 至 0174；0156 至 0159、0161、0163、0170 登记为 Premium 跳过。每道公开算法题
+只有一个自包含 RST，正文与十语言代码全部直接内联，不使用 ``.inc`` 或 ``.. include::``。
 
 ``0127``、``0129–0155``、``0160``、``0162``、``0164``、``0165`` 共 32 道公开题的质量返工
 已经完成，``../../state/PROGRESS.toml`` 的 ``needs_revision`` 保持为空。
-``0166–0169``、``0171–0172`` 已按冻结基线生成，下一题为 0173。
+``0166–0169``、``0171–0174`` 已按冻结基线生成，下一入口为 0175。
 
 已完成
 ------
@@ -87,6 +87,8 @@ LeetCode 0101–0200
 #. `0169. Majority Element <0169-majority-element.rst>`_
 #. `0171. Excel Sheet Column Number <0171-excel-sheet-column-number.rst>`_
 #. `0172. Factorial Trailing Zeroes <0172-factorial-trailing-zeroes.rst>`_
+#. `0173. Binary Search Tree Iterator <0173-binary-search-tree-iterator.rst>`_
+#. `0174. Dungeon Game <0174-dungeon-game.rst>`_
 
 Premium 跳过
 ------------
@@ -120,14 +122,15 @@ Premium 跳过
 ``0151`` 起执行 ``../../docs/FORWARD_RULES_0151_ONWARD.rst``。两段范围都同时执行
 ``../../docs/AUTOMATION_QUALITY_GATE.rst``：
 
-* 每道公开题只创建一个 ``<题号>-<slug>.rst``；
+* 每道公开算法题只创建一个 ``<题号>-<slug>.rst``；
 * 原创重述、算法、证明、复杂度、静态审查证据和十语言代码全部直接内联；
 * 禁止题目 ``.inc``、代码分片和 ``.. include::``；
-* Premium 或题面不可可靠确认的题目只登记状态；
+* Premium、Database 或题面不可可靠确认的题目只登记对应状态；
 * 所有生成、返工、抽查和规则维护只允许直接在 ``main`` 形成一个原子提交。
 
 下一动作
 --------
 
-下一批生成 ``0173`` Binary Search Tree Iterator 与 ``0174`` Dungeon Game。
+下一批按题号处理 ``0175–0187``：Database 题只登记，``0186`` 按 Premium 登记，
+生成 ``0179`` Largest Number 与 ``0187`` Repeated DNA Sequences。
 批次风险和黄金样本由 ``../../state/BATCH_CONTRACT.toml`` 指定。

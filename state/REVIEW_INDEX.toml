@@ -107,8 +107,8 @@ sources = [
   "https://docs.julialang.org/en/v1/base/collections/#Base.collect",
   "https://stat.ethz.ch/R-manual/R-devel/library/base/html/utf8Conversion.html",
 ]
-supersedes = "0072 complexity text presenting O(min(m,n)) as the complete auxiliary-space bound for all ten adapters."
-statement = "O(min(m,n)) describes the rolling DP array. C++ copies both by-value strings, Julia collect(codeunits(...)) materializes two byte arrays, and R utf8ToInt materializes two integer vectors; these adapters have O(m+n) extra and peak space."
+supersedes = "0072 complexity text presenting O(min(m,n)) as the complete auxiliary-space bound for every language implementation."
+statement = "O(min(m,n)) describes only the rolling DP array. C++ copies both by-value strings, Julia collect(codeunits(...)) materializes two byte arrays, and R utf8ToInt materializes two integer vectors; these adapters have O(m+n) extra and peak space."
 
 [corrections.go_min_window_substring_storage]
 status = "active"
@@ -149,10 +149,12 @@ statement = "O(min(m,n)) describes only the rolling Boolean DP array. The C++ si
 [next_action]
 kind = "generation"
 status = "ready"
-start = 173
-end = 174
-problem_ids = [173, 174]
-purpose = "生成 0173 Binary Search Tree Iterator 与 0174 Dungeon Game；历史题继续风险触发抽查。"
+start = 175
+end = 187
+problem_ids = [179, 187]
+expected_database_skips = [175, 176, 177, 178, 180, 181, 182, 183, 184, 185]
+expected_premium_skips = [186]
+purpose = "顺序登记 0175–0187 中的 Database/Premium 题，并生成 0179 Largest Number 与 0187 Repeated DNA Sequences；历史题继续风险触发抽查。"
 
 [artifact_lifecycle]
 policy = "docs/ARTIFACT_LIFECYCLE_POLICY.rst"
