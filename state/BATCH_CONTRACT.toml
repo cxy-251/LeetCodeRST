@@ -1,10 +1,10 @@
 [contract]
 schema_version = 2
-batch_id = "generation-0201-0204"
+batch_id = "generation-0204"
 status = "ready"
 phase = "generation"
 kind = "generation"
-scope = [201, 202, 203, 204]
+scope = [204]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
@@ -23,15 +23,15 @@ repository_structure_state_and_git_checks = "allowed"
 reporting = "只声明实际完成的静态审查；明确未运行、未编译、未测试和剩余风险。"
 
 [budget]
-algorithm_score = 6
-target_min = 4
-target_max = 6
-proof_risk = "high"
+algorithm_score = 2
+target_min = 2
+target_max = 4
+proof_risk = "medium"
 language_semantics_risk = "high"
 platform_type_risk = "high"
-output_volume_risk = "high"
-scope_may_shrink = true
-scope_reason = "0201 涉及固定宽位前缀和跨语言无符号适配，0202 涉及有限状态循环证明，0203 涉及链表头删除、C 内存释放与 Rust 所有权，0204 涉及筛法数组和乘法溢出。先逐题验收 0201–0203；若继续 0204 会压缩筛法证明或十语言内存边界，则提交完整连续前缀并重建 0204 单题合同。"
+output_volume_risk = "medium"
+scope_may_shrink = false
+scope_reason = "0204 从原 0201–0204 高风险批次中拆出，必须独立恢复完整筛法证明、严格小于 n 的边界、p*p 起点依据、乘法溢出和十语言筛数组成本；本批不追加 0205。"
 
 [references]
 style_baselines = [
@@ -43,20 +43,13 @@ fact_sources = [
   "state/REVIEW_INDEX.toml",
   "state/CONCEPT_LEDGER.toml",
   "docs/FORWARD_RULES_0151_ONWARD.rst",
-  "problems/0101-0200/0136-single-number.rst",
-  "problems/0101-0200/0141-linked-list-cycle.rst",
-  "problems/0001-0100/0083-remove-duplicates-from-sorted-list.rst",
-  "https://leetcode.com/problems/bitwise-and-of-numbers-range/description/",
-  "https://leetcode.com/problems/happy-number/description/",
-  "https://leetcode.com/problems/remove-linked-list-elements/description/",
+  "problems/0201-0300/README.rst",
+  "problems/0101-0200/0172-factorial-trailing-zeroes.rst",
   "https://leetcode.com/problems/count-primes/description/",
 ]
 fact_sources_may_provide = [
-  "0201 的非负闭区间、区间内全部整数按位与和返回值合同",
-  "0202 的重复平方位和过程、到达 1 判定和循环失败合同",
-  "0203 的单链表接口、删除所有目标值节点和返回新头合同",
-  "0204 的严格小于 n 的质数数量与非负输入合同",
-  "已有位运算、循环检测和链表平台类型连续性",
+  "0204 的非负整数 n、统计严格小于 n 的质数数量和官方示例",
+  "已有整除边界、宽整数和循环条件的平台语义连续性",
   "当前完成范围、静态审查政策和长期质量控制状态",
 ]
 fact_sources_must_not_provide = [
@@ -67,94 +60,50 @@ fact_sources_must_not_provide = [
   "文件组织形式",
 ]
 
-[problems."0201"]
-title = "Bitwise AND of Numbers Range"
-difficulty = "Medium"
-primary_risks = [
-  "答案是 left 与 right 的公共二进制前缀补零；必须证明区间跨过某位边界时该位在按位与中归零",
-  "主解法同步逻辑右移直到 left==right，再左移恢复；循环次数受固定整数位宽限制",
-  "输入非负且不超过有符号 32 位上界；C/C++/Rust/Go/C# 可使用无符号状态，Java 使用 >>>，TypeScript 位运算需 >>>0",
-  "R 没有无符号 32 位整数结果域，应使用精确 double 的除二前缀适配，不能依赖负 bitw 解释",
-  "不能枚举整个区间，也不能把算术右移用于可能出现符号位的适配状态",
-]
-minimum_static_review = [
-  "人工推演 [5,7]、[0,0]、[1,2]、[26,30]、宽区间跨最高有效位",
-  "证明公共前缀保留、变化后缀全部归零、移位恢复和终止性",
-  "逐语言核对逻辑右移、位宽、移位计数、TypeScript/R 数值适配和返回类型",
-]
-
-[problems."0202"]
-title = "Happy Number"
-difficulty = "Easy"
-primary_risks = [
-  "平方位和转移必须基于十进制数字；0 的下一状态为 0，正整数过程不会溢出宽状态",
-  "使用 Floyd 快慢指针时 slow 每轮一步、fast 每轮两步；相遇后只有值 1 表示快乐数",
-  "需证明状态最终进入 1 或非 1 环，而不是无限产生互异大数；可用位数平方和上界进入有限集合",
-  "R/Julia 十进制取位循环与整数除法语义需静态核对，输入不可被调用者观察为修改",
-]
-minimum_static_review = [
-  "人工推演 19、2、1、7、100 和边界正整数",
-  "证明平方位和进入有限状态集合、Floyd 必然相遇、相遇值判定正确",
-  "逐语言核对除法、取余、平方和位宽和循环终止条件",
-]
-
-[problems."0203"]
-title = "Remove Linked List Elements"
-difficulty = "Easy"
-primary_risks = [
-  "删除可能连续发生在头部，必须使用虚拟头或等价头指针循环，返回新的真实头",
-  "遍历时只在确认保留当前节点后推进前驱；删除分支必须重新连接到 next，不能跳过连续目标节点",
-  "C 应释放被移除节点且不释放保留节点；平台若由外部统一管理内存，正文需明确本实现的所有权假设",
-  "C++/Java/Python/Go/TypeScript/C#/Julia/R 重新链接节点但通常不手工释放，由运行时管理不可达节点",
-  "Rust Option<Box<ListNode>> 需要通过可变链接槽位重接所有权，避免同时可变借用与移动冲突",
-]
-minimum_static_review = [
-  "人工推演头部连续删除、中间连续删除、尾节点删除、全部删除、无匹配和空链表",
-  "证明虚拟头统一头部与中间删除、每个原节点恰好检查一次、连接无丢失无环",
-  "逐语言核对节点字段名、返回头、C 释放、Rust 所有权和 R 环境节点变异",
-]
-
 [problems."0204"]
 title = "Count Primes"
 difficulty = "Medium"
 primary_risks = [
-  "统计范围严格是小于 n；0、1 不是质数，n<=2 返回 0",
-  "埃氏筛从 p*p 开始标记倍数，需证明更小倍数已由更小质因子处理",
-  "循环条件应避免 p*p 溢出；可使用 p<=n/p 或足够宽状态，标记步长为 p",
-  "布尔筛需要 O(n) 空间；C 分配失败返回合法计数域外的 -1，并清理资源",
-  "TypeScript/R 的数组元素表示和大 n 内存成本、Julia 一基索引偏移需单独核对",
+  "统计范围严格是 [0,n)，不能把 n 本身计入；0 与 1 不是质数，n<=2 返回 0",
+  "埃氏筛只在当前 p 尚未被标记时从 p*p 开始标记；必须证明小于 p*p 的 p 倍数已被更小质因子处理",
+  "外层循环不能用可能溢出的 p*p<n 直接判断；优先使用 p<= (n-1)/p、p<n/p 或足够宽状态，并逐语言核对",
+  "筛数组长度应与 [0,n) 一一对应，初始化 0、1 为非质数，最终只统计索引 2..n-1",
+  "C 分配失败返回合法计数域外的 -1，并检查 size_t 容量；固定十语言需分别说明布尔表示和 O(n) 内存成本",
+  "TypeScript 普通 Array<boolean> 与 Uint8Array 的存储差异、R logical 向量分配、Julia 一基索引映射需要单独审查",
 ]
 minimum_static_review = [
-  "人工推演 n=0、1、2、3、10、20 和一个平方边界",
-  "证明未标记数为质数、从 p*p 标记完整且不漏合数、最终计数严格小于 n",
-  "逐语言核对筛长度、索引、乘法溢出、内存分配和返回类型",
+  "人工推演 n=0、1、2、3、10、20、25 和平方边界",
+  "证明未被更小质数标记的 p 必为质数、从 p*p 标记不漏合数且不影响质数",
+  "证明最终未标记索引与严格小于 n 的质数一一对应",
+  "逐语言核对筛长度、0/1 初始化、循环上界、乘法溢出、标记步长、内存分配和返回类型",
+  "复杂度报告 O(n log log n) 时间与 O(n) 空间，并区分算法量级和各语言容器真实字节成本",
 ]
 
 must_preserve = [
-  "0201 的公共位前缀证明、逻辑右移和 TypeScript/R 无符号适配",
-  "0202 的有限状态上界、Floyd 循环检测和相遇值判定",
-  "0203 的虚拟头连接不变量、连续删除、C 释放和 Rust 所有权",
-  "0204 的严格上界、p*p 起点证明、溢出安全和筛数组成本",
-  "每题固定十语言完整实现、人工推演、静态语义审查、剩余风险和带答案自检",
+  "严格小于 n 的计数合同与 n<=2 边界",
+  "p*p 起点的必要性与充分性证明",
+  "避免 p*p 循环判断溢出的跨语言实现",
+  "筛数组 O(n) 成本、C 分配失败和 TypeScript/R/Julia 容器适配",
+  "固定十语言完整实现、人工推演、静态语义审查、剩余风险和带答案自检",
 ]
 
 forbidden = [
-  "参考 0199–0200 或其他最近题目的章节结构、证明篇幅或静态审查密度",
-  "0201 枚举区间内全部整数或忽略固定宽无符号语义",
-  "0202 使用无界集合却不说明空间，或声称过程单调下降",
-  "0203 删除节点后仍推进到被删除节点的 next 之外，跳过连续目标节点",
-  "0203 C 删除节点但不处理释放语义，或 Rust 使用无法成立的重叠可变借用",
-  "0204 把 n 本身计入，或用溢出的 p*p 作为循环判断",
+  "参考 0201–0203 或其他最近题目的章节结构、证明篇幅或静态审查密度",
+  "把 n 本身计入答案，或把 1 当作质数",
+  "使用可能溢出的 p*p 作为唯一外层循环条件而不做位宽证明",
+  "从 2*p 开始却仍声称没有重复标记成本，或从 p*p 开始却不给出完整依据",
+  "C 分配失败返回 0 并伪装成合法答案",
+  "把 O(n) 筛数组写成 O(1) 空间",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试或 sanitizer 题解代码",
   "把静态审查写成测试、编译或运行通过",
 ]
 
 completion_checks = [
-  "逐题对照 0050 的状态/数值边界和 0076 的语言适配/资源成本深度",
-  "每题完成后立即执行质量门；0204 出现压缩迹象时按合同缩批",
+  "逐项对照 0050 的状态/数值边界和 0076 的语言适配/资源成本深度",
+  "0204 只有一个自包含 RST，十语言代码全部内联并位于 problems/0201-0300",
+  "人工推演全部要求边界，完成筛法不变量、质数判定、标记完整性和终止证明",
   "命中 DRIFT_LOG 的拆分、摘要、最近样本、预算和验证策略回归检查均通过",
-  "每道算法题只有一个自包含 RST，十语言代码全部内联",
-  "创建并同步 problems/0201-0300/README.rst，完成范围、completed_count、next_problem 和知识账本一致",
+  "完成范围、completed_count、next_problem、根 README、新范围索引和知识账本同步",
   "提交后 BATCH_CONTRACT 被替换为下一批合同",
 ]

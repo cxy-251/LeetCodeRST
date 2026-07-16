@@ -11,9 +11,9 @@ code_comment_language = "zh-CN"
 problem_artifact_shape = "one_self_contained_rst_per_public_algorithm_problem"
 
 [progress]
-next_problem = 201
-completed_count = 176
-completed_ranges = ["0001-0155", "0160", "0162", "0164-0169", "0171-0174", "0179", "0187-0191", "0198-0200"]
+next_problem = 204
+completed_count = 179
+completed_ranges = ["0001-0155", "0160", "0162", "0164-0169", "0171-0174", "0179", "0187-0191", "0198-0203"]
 premium_skipped = [156, 157, 158, 159, 161, 163, 170, 186]
 database_skipped = [175, 176, 177, 178, 180, 181, 182, 183, 184, 185, 196, 197]
 shell_skipped = [192, 193, 194, 195]
@@ -59,26 +59,26 @@ quality_over_batch_score = true
 [last_batch]
 status = "completed"
 kind = "generation"
-start = 199
-end = 200
-generated_problem_count = 2
-generated_problem_ids = [199, 200]
+start = 201
+end = 203
+generated_problem_count = 3
+generated_problem_ids = [201, 202, 203]
 reference_problems = [50, 76]
 difficulty_budget = 4
-planned_scope = [199, 200]
-scope_shrunk = false
-scope_reason = "0199 与 0200 均完整通过单题质量门；层边界、树队列资源语义、四邻接分量证明、输入变异和十语言容器边界均未压缩。"
-summary = "完成 0199 分层 BFS 右视图与循环队列资源语义，以及 0200 原地四邻接洪泛、入栈前标记和连通分量一一对应证明。"
+planned_scope = [201, 202, 203, 204]
+scope_shrunk = true
+scope_reason = "0201–0203 已完整通过单题质量门并完成新范围目录初始化；继续同批生成 0204 会压缩埃氏筛正确性证明、乘法溢出和十语言筛数组内存边界，因此按合同提交完整连续前缀并重建 0204 单题合同。"
+summary = "进入 problems/0201-0300，完成 0201 公共位前缀、0202 快乐数有限函数图与 Floyd 检测、0203 虚拟头链表过滤及 C/Rust 所有权适配。"
 
 [next_batch]
 status = "generation_ready"
 kind = "generation"
-start = 201
+start = 204
 end = 204
-problem_ids = [201, 202, 203, 204]
-difficulty_budget = 6
+problem_ids = [204]
+difficulty_budget = 2
 contract = "state/BATCH_CONTRACT.toml"
-purpose = "生成 0201 Range Bitwise AND、0202 Happy Number、0203 Remove Linked List Elements 与 0204 Count Primes；完整处理位前缀、循环检测、链表所有权和筛法边界。"
+purpose = "单独生成 0204 Count Primes；完整处理严格小于 n、埃氏筛不变量、p*p 起点、乘法溢出和十语言筛数组成本。"
 
 [review_history]
 status = "completed"
@@ -147,7 +147,7 @@ problem_code_fragments_present = false
 
 [quality_scope]
 historical_start = 1
-historical_end = 200
+historical_end = 203
 historical_policy = "用户指定的 32 道低质量题解已经全部返工完成；历史题默认保持不变，风险触发时定向抽查。"
 persistent_rule_start = 151
 persistent_rule = "docs/FORWARD_RULES_0151_ONWARD.rst"
@@ -179,10 +179,10 @@ concurrency_policy = "fetch_and_compare_before_commit; stop_on_remote_change_or_
 
 [concept_ledger]
 index = "state/CONCEPT_LEDGER.toml"
-latest_record = "state/concepts/0199-0200.toml"
+latest_record = "state/concepts/0201-0203.toml"
 
 [next_action]
-summary = "按 BATCH_CONTRACT 生成 0201–0204；0199–0200 已完整处理。"
+summary = "按 BATCH_CONTRACT 单独生成 0204 Count Primes；0201–0203 已完整处理并进入 problems/0201-0300。"
 
 [last_update]
-summary = "0199 与 0200 已完整生成并通过静态质量门，完成数更新为 176，下一入口为 0201。"
+summary = "0201–0203 已完整生成并通过静态质量门，新范围 README 已创建；完成数更新为 179，下一入口为 0204。"
