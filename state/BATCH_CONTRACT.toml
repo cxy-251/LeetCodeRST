@@ -1,10 +1,10 @@
 [contract]
 schema_version = 2
-batch_id = "quality-repair-0150"
+batch_id = "quality-repair-0151-0152"
 status = "ready"
 phase = "quality_repair"
 kind = "quality_repair"
-scope = [150]
+scope = [151, 152]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
@@ -16,38 +16,42 @@ completion_count_must_remain_unchanged = true
 solution_code_execution = "forbidden"
 solution_code_compilation = "forbidden"
 differential_exhaustive_property_and_sanitizer = "forbidden"
-example_hand_tracing = "required"
-language_semantics_review = "required"
+example_hand_tracing = "required_per_problem"
+language_semantics_review = "required_per_problem"
 repository_structure_state_and_git_checks = "allowed"
 reporting = "只声明实际完成的静态审查；明确未运行、未编译、未测试和剩余风险。"
 
 [budget]
-algorithm_score = 2
-target_min = 2
-target_max = 4
+algorithm_score = 4
+target_min = 4
+target_max = 6
 proof_risk = "high"
 language_semantics_risk = "high"
 platform_type_risk = "high"
 output_volume_risk = "high"
-scope_may_shrink = false
-scope_reason = "0150 虽是 Medium，但合法 RPN 前缀证明、非交换操作数顺序、十语言向零截断差异、32 位中间值、解析与 C 栈分配失败路径叠加；单题完整返工，避免跨越 0150/0151 规则边界压缩内容。"
+scope_may_shrink = true
+scope_reason = "0151 与 0152 都是 Medium，合计 4 分且算法状态紧凑，恢复为多题批次；必须先完整验收 0151 再写 0152。若第二题开始压缩示例、证明、十语言语义或静态审查，只提交连续前缀 0151，并同步重建 0152 合同。"
 
 [references]
 style_baselines = [
-  "problems/0001-0100/0050-powx-n.rst",
   "problems/0001-0100/0076-minimum-window-substring.rst",
+  "problems/0001-0100/0050-powx-n.rst",
 ]
 fact_sources = [
   "state/PROGRESS.toml",
   "state/REVIEW_INDEX.toml",
   "state/CONCEPT_LEDGER.toml",
+  "docs/FORWARD_RULES_0151_ONWARD.rst",
   "problems/0101-0200/README.rst",
-  "https://leetcode.com/problems/evaluate-reverse-polish-notation/description/",
-  "state/concepts/0150.toml",
+  "https://leetcode.com/problems/reverse-words-in-a-string/description/",
+  "https://leetcode.com/problems/maximum-product-subarray/description/",
+  "state/concepts/0151.toml",
+  "state/concepts/0152.toml",
 ]
 fact_sources_may_provide = [
-  "官方 token 域、合法表达式、非零除数、向零截断与所有中间值适合有符号 32 位的保证",
-  "RPN 栈、左右操作数、整数解析和跨语言除法适配的既有事实连续性",
+  "0151 的 ASCII 字符域、单词定义、空格规范、至少一个单词与返回新字符串合同",
+  "0152 的非空连续子数组、长度和值域、任意子数组乘积适合有符号 32 位的保证",
+  "既有逆向单词扫描、最大最小乘积状态与当前语言接口连续性",
   "当前范围、进度和统一静态审查政策",
 ]
 fact_sources_must_not_provide = [
@@ -58,58 +62,72 @@ fact_sources_must_not_provide = [
   "文件组织形式",
 ]
 
-[problems."0150"]
-title = "Evaluate Reverse Polish Notation"
+[problems."0151"]
+title = "Reverse Words in a String"
 difficulty = "Medium"
 primary_risks = [
-  "输入含 1..10000 个 token，每个是 +、-、*、/ 之一或 [-200,200] 的十进制整数；表达式合法、除数非零、答案与全部中间结果适合有符号 32 位，输入只读",
-  "处理任意合法前缀后，栈深必须等于已见操作数数减运算符数；运算符到达前深度至少 2，完整表达式结束深度恰为 1，不能只说用栈所以正确",
-  "栈中从底到顶保存已完成且尚未消费的子表达式；数字新建子表达式，运算符把最靠后的 left/right 两项替换为合成值，需证明顺序、覆盖和终止",
-  "减法与除法非交换：第一次弹出的是 right，第二次才是 left；任何数组 top 实现都要与此顺序一致",
-  "运算符识别必须是完整单 token 相等，负数 -11 不能因首字符 '-' 被误判；合法 token 保证可解析，但解析函数、字符扫描与错误通道仍需逐语言核对",
-  "除法统一向零截断；Python // 与 R %/% 对负商向负无穷取整，必须用绝对值商和符号恢复或等价精确方案，TypeScript 用 Math.trunc，Julia 明确 RoundToZero",
-  "全部真实中间值适合 32 位，但语言表达式、abs、INT_MIN/-1、解析与最终窄化仍要由官方保证闭合；TypeScript/R 的浮点载体需证明 32 位整数算术精确",
-  "C 栈容量为 tokensSize、乘法与 malloc 大小安全，成功路径 free；分配失败若返回 0 会与合法答案 0 冲突，必须明确平台 int 签名没有独立错误通道",
+  "输入长度 1..10000，只含英文字母、数字与普通空格且至少有一个单词；单词是最大连续非空格片段，输入只读，输出按单词逆序且相邻词恰一个空格",
+  "从右向左的状态必须区分跳过空格、确定 word_end、向左找到 word_start 和提交片段；下标可越过左端作为终止证书，但不能继续读取",
+  "证明需覆盖每次选择尚未处理的最右单词、每个原单词恰提交一次、内部字符顺序保持、输出顺序反转、无首尾空格且分隔符唯一",
+  "ASCII 合同支撑 C/C++/Rust/Go/Julia 字节扫描以及 Java/TypeScript/C# 代码单元扫描；扩展到 Unicode 后不能沿用同一字节边界证明",
+  "返回载荷长度为 r<=n；C 分配 n+1、写入不越界、失败返回 NULL 且调用者释放，C++ 按值参数复制与最终结果同时存活需计费",
+  "Python/TypeScript/C# 的切片文本、Rust/Go 的借用或共享片段、Julia 的 CodeUnits 与逐词复制、R 字符物化和 join/paste 累计成本不能统一写成常数空间",
 ]
 minimum_static_review = [
-  "逐 token 人工推演三个官方示例，记录 token、动作、栈内容、top/深度和最终唯一值，第三例专项核对 -11 是数字与 6/-132 向零得到 0",
-  "覆盖单数字、left-right 次序、left/right 三种负号除法组合、绝对值小于除数得到 0、连续子表达式合成和最大可能栈深",
-  "对每个前缀证明 depth=operands-operators、合法运算符前 depth>=2、数字与运算符转移保持子表达式栈不变量、完整输入最终 depth=1",
-  "逐语言核对公开签名、token 完整匹配、整数解析、pop/top 更新、除法方向、32 位/安全整数、返回类型和输入不修改",
-  "专项对照 C/C++/Java/Rust/Go/C# 原生向零整数除法、Python 符号恢复、TypeScript Math.trunc、Julia div RoundToZero 与 R 绝对值 %/%",
-  "专项审查 C tokensSize*sizeof(stack item)、malloc 失败的歧义哨兵、所有返回路径、合法前缀防下溢和最终 stack[0] 读取见证",
-  "复杂度同时报告 token 数 t、总字符数 L、峰值栈深 s；解析 O(L)、栈操作 O(t)、峰值 O(s)<=O(t)，并核对 R/托管语言对象与累计分配",
-  "删除旧文中运行官方示例和多语言输出一致的验证表述；当前只记录纸面推演、静态语义审查与剩余风险",
+  "逐步人工推演三个官方示例，记录 scan/end/start、跳空格范围、提交词、输出词序列和最终单空格结果",
+  "覆盖单词长度一、只有一个单词、前后多空格、词间多空格、数字混合、整个输入已经规范和输出长度等于输入长度",
+  "证明循环入口的未处理前缀与已输出后缀单词不变量，以及跳空格不漏词、最右单词选择完整、每轮严格越过至少一个词的终止性",
+  "逐语言核对公开签名、ASCII 单位、零基/一基边界、切片半开或闭区间、分隔符提交、输入不修改和结果独立性",
+  "专项审查 C strlen、n+1 容量、ptrdiff_t/size_t 边界、memcpy 长度、终止符、malloc 失败与返回所有权",
+  "分别报告扫描 O(n)、写出 O(r)、核心索引 O(1)、片段元数据 O(k)、输入/单词物化、join 返回与峰值同时存活空间",
+]
+
+[problems."0152"]
+title = "Maximum Product Subarray"
+difficulty = "Medium"
+primary_risks = [
+  "输入是长度 1..20000、元素在 [-10,10] 的整数数组；必须选择非空连续子数组，任意子数组乘积都保证适合有符号 32 位，输入只读",
+  "以位置 i 结尾的候选只有 nums[i]、old_max*nums[i]、old_min*nums[i]；负数反转大小顺序，零同时允许旧链乘零和从零重新开始",
+  "max_ending 与 min_ending 必须都来自同一组旧状态；顺序覆盖导致用新 max 计算 min 会伪造重复使用当前元素的候选",
+  "状态必须从 nums[0] 初始化，不能用空子数组的 0 或 1；全负单元素、奇数负数、零分段与负最小转最大都要闭合",
+  "证明需说明每个以 i 结尾非空子数组的完整分类、乘正/负/零时极值端点足够、全局 answer 覆盖所有终点且循环终止",
+  "任意子数组乘积保证使三个 DP 候选真实适合 32 位；固定宽实现仍须先选择足够宽表达式或明确保证，TypeScript/R 必须证明 32 位整数乘积精确",
+]
+minimum_static_review = [
+  "人工推演两个官方示例及自建 [-2,3,-4]，逐位置列 value、old_max、old_min、三个候选、new_max、new_min 与 answer",
+  "覆盖单负数、全负奇偶个数、含零分段、多个零、正负交替、最大答案为零以及最优子数组位于中间",
+  "归纳证明 max_ending/min_ending 是全部以当前下标结尾非空子数组乘积的两端极值，answer 是全部已处理终点的最大值",
+  "逐语言核对非空入口、旧状态快照、乘法表达式宽度、返回窄化、索引/范围、输入所有权和不修改语义",
+  "专项核对 Julia 2:n 的单元素空范围、R 在 n=1 时不构造反向 seq.int，以及 TypeScript/R 的精确整数域",
+  "复杂度报告单次 O(n) 扫描、O(1) 核心标量、Rust 按值消费输入但不克隆、无输出容器和固定返回载荷",
 ]
 
 must_preserve = [
-  "精确合法 RPN 契约、自建非交换与负商示例、可区分 -11 数字和 '-' 运算符的反例",
-  "token、stack、top/depth、left、right、value 与 answer 的状态映射",
-  "前缀栈深、完成子表达式、运算符合成、最终唯一值和有限扫描不变量及完整证明",
-  "向零截断的数学定义、跨语言实现分类、32 位中间保证与除零排除",
-  "O(t+L) 或 O(L) 时间、O(s) 峰值栈及 C/托管语言解析与分配真实成本",
-  "固定十语言完整实现，C 资源路径闭合，平台签名、解析 API 和语言版本准确",
-  "准确静态审查证据、失败方式、学习链和带答案自检",
+  "每题各自具备精确契约、自建反例、问题抽象、真实解法取舍、状态映射和完整证明",
+  "0151 的最右未处理单词、唯一提交、单分隔符、字符单位和各语言输出物化成本",
+  "0152 的非空初始化、同一旧状态三候选、最大最小两端极值、零与负数语义和真实乘积宽度",
+  "固定十语言完整实现，C 容量与资源路径闭合，平台签名、语言版本和所有权准确",
+  "每题独立的人工推演、逐语言静态审查、剩余风险、失败方式、学习链和带答案自检",
 ]
 
 forbidden = [
-  "参考 0147–0149 或其他最近题目的章节结构",
-  "调用 eval、表达式解释器或把 RPN 重新拼成宿主语言表达式",
-  "只说遇数入栈遇运算符计算，不证明合法前缀深度、子表达式对应和最终唯一值",
-  "把第一次弹出值当 left，导致减法和除法反序",
-  "只检查 token 首字符或是否包含符号，把 -11 等负整数误判为运算符",
-  "Python 直接使用 //、R 直接使用 %/% 或 floor 处理负商并声称向零截断",
-  "用浮点 left/right 除法再未经审查地强转整数，或把 Python 任意精度结论外推到固定宽语言",
-  "忽略 C 栈分配失败、释放、容量乘法或合法 0 与失败 0 无法区分的接口限制",
+  "参考 0149–0150 或其他最近题目的章节结构、证明篇幅或静态审查密度",
+  "把 0151 的 split/reverse/join 一行调用当作完整教学解释，或忽略切片、片段和最终 join 的物化成本",
+  "在 0151 中把字节扫描无条件推广到 Unicode，遗漏多空格压缩，翻转单词内部字符或产生首尾空格",
+  "声称 0151 是 O(1) 总空间而不计返回载荷、片段容器、输入副本或运行时字符串物化",
+  "在 0152 中只保存最大乘积、从 0/1 初始化允许空子数组，或把不相邻的负数相乘",
+  "用已经更新的 max_ending 计算同一位置的 min_ending，或只说负数交换而不证明候选完整性",
+  "只凭最终答案 32 位就外推所有中间表达式安全；必须使用官方任意子数组乘积保证和候选的真实子数组见证",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试或 sanitizer 题解代码",
   "把静态审查写成测试、编译或运行通过",
 ]
 
 completion_checks = [
-  "当前题逐项对照合同选定的 0050 与 0076 黄金题",
-  "命中 DRIFT_LOG 的回归检查均通过",
-  "0150 只有一个自包含 RST，十语言代码全部内联",
+  "两题逐项对照 0076 的不变量/物化深度与 0050 的数值边界/状态递推深度",
+  "每题写完立即完成自身质量门；0152 出现压缩迹象时按连续前缀缩批",
+  "命中 DRIFT_LOG 的拆分、摘要、最近样本、预算与验证策略回归检查均通过",
+  "0151 与 0152 各自只有一个自包含 RST，每题十语言代码全部内联",
   "PROGRESS、README、AGENTS 当前状态、范围索引和知识账本同步",
   "原子提交后 BATCH_CONTRACT 被替换为下一批合同",
 ]
