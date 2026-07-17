@@ -1,17 +1,17 @@
 [contract]
 schema_version = 2
-batch_id = "generation-0218"
+batch_id = "generation-0219-0220"
 status = "ready"
 phase = "generation"
 kind = "generation"
-scope = [218]
+scope = [219, 220]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
 drift_log = "state/DRIFT_LOG.toml"
 new_problem_generation_paused = false
 completion_count_must_remain_unchanged = false
-next_problem_after_batch = 219
+next_problem_after_batch = 221
 
 [static_review]
 solution_code_execution = "forbidden"
@@ -23,15 +23,15 @@ repository_structure_state_and_git_checks = "allowed"
 reporting = "只声明实际完成的静态审查；明确未运行、未编译、未测试和剩余风险。"
 
 [budget]
-algorithm_score = 4
+algorithm_score = 5
 target_min = 4
-target_max = 4
+target_max = 6
 proof_risk = "high"
 language_semantics_risk = "high"
 platform_type_risk = "high"
 output_volume_risk = "high"
-scope_may_shrink = false
-scope_reason = "0218 是独立 Hard。边界坐标扫描、活动建筑最大高度、同坐标分组、堆中过期元素惰性清理、关键点规范化、C 堆和二维输出失败清理，以及十语言优先队列语义均需要完整篇幅；本批不追加 0219。"
+scope_may_shrink = true
+scope_reason = "0219 是 Easy，但需要精确维护前 k 个下标对应的滑动集合、k=0 边界、删除时机和 C/R 容器删除语义；0220 是 Hard，需要宽整数值差、负数桶编号、桶宽 valueDiff+1、相邻桶充分性、滑动删除和十语言映射实现。先完整验收 0219；若继续 0220 会压缩证明或资源说明，则在 0219 后缩批。"
 
 [references]
 style_baselines = [
@@ -44,13 +44,14 @@ fact_sources = [
   "state/CONCEPT_LEDGER.toml",
   "docs/FORWARD_RULES_0151_ONWARD.rst",
   "problems/0201-0300/README.rst",
-  "problems/0201-0300/0217-contains-duplicate.rst",
-  "https://leetcode.com/problems/the-skyline-problem/description/",
+  "problems/0201-0300/0218-the-skyline-problem.rst",
+  "https://leetcode.com/problems/contains-duplicate-ii/description/",
+  "https://leetcode.com/problems/contains-duplicate-iii/description/",
 ]
 fact_sources_may_provide = [
-  "0218 的建筑三元组 left、right、height 与半开区间覆盖合同",
-  "天空线关键点按横坐标递增、相邻高度变化和最终回到 0 的输出合同",
-  "当前目录、完成范围、静态审查状态和已有堆术语连续性",
+  "0219 存在 i!=j、nums[i]=nums[j] 且 |i-j|<=indexDiff 的合同",
+  "0220 存在索引距离不超过 indexDiff 且值差不超过 valueDiff 的合同",
+  "当前目录、完成范围、静态审查状态和已有哈希术语连续性",
 ]
 fact_sources_must_not_provide = [
   "章节结构",
@@ -60,58 +61,70 @@ fact_sources_must_not_provide = [
   "文件组织形式",
 ]
 
-[problems."0218"]
-title = "The Skyline Problem"
-difficulty = "Hard"
+[problems."0219"]
+title = "Contains Duplicate II"
+difficulty = "Easy"
 primary_risks = [
-  "建筑 [left,right,height] 只在 left<=x<right 时活跃；right 端点不能继续贡献高度",
-  "所有高度变化只可能发生在建筑左右边界；应收集并按升序处理边界横坐标",
-  "同一横坐标上的全部开始与结束必须作为一个整体状态处理，再决定是否输出关键点",
-  "主解法使用最大堆保存候选建筑的 height 与 right；堆中允许存在已过期的非顶部元素",
-  "在每个边界 x 先加入 left<=x 的建筑，再持续弹出堆顶 right<=x 的建筑，清理后堆顶才是当前最大有效高度",
-  "必须证明只清理过期堆顶就足够：被过期高建筑压住的其他元素不影响当前最大值，成为堆顶时再清理",
-  "关键点只在当前高度与前一高度不同时追加，横坐标严格增加，不允许相邻关键点高度相同",
-  "建筑完全结束后必须产生高度 0 的终止关键点；空输入返回空结果",
-  "输入若依赖官方 left 非递减合同可按索引推进；推广到无序输入必须先排序副本且说明额外成本",
-  "C 需要边界数组、最大堆、动态二维结果、容量溢出检查、部分分配失败清理和调用方所有权",
-  "Java/Rust/Go/TypeScript/C#/Julia/R 的优先队列或自建堆、二元组比较、二维输出快照和整数位宽需逐项核对",
+  "扫描位置 i 前窗口必须恰好对应下标 max(0,i-indexDiff) 到 i-1，而不是任意已见前缀",
+  "查询当前值前必须先移除超出索引距离的最旧元素，或采用与证明一致的查询后删除顺序",
+  "indexDiff=0 时任何两个不同下标都不满足距离合同，应直接返回 false",
+  "集合实现需要说明为什么删除单个旧值不会误删仍在窗口中的同值；在算法尚未返回的前缀中窗口值互异，或改用计数映射",
+  "重复可能相邻、恰好距离 indexDiff、刚好超出窗口或多次出现",
+  "C 需要支持插入、查询和删除的窗口哈希结构，独立槽位状态、墓碑或重新散列策略以及失败语义",
+  "R 环境删除、字符串整数键和窗口状态必须无歧义；其他语言集合删除返回值与输入只读语义需核对",
 ]
 minimum_static_review = [
-  "人工推演经典重叠建筑、单建筑、相邻等高建筑、同起点不同高度、同终点、完全包含、互不重叠、空输入",
-  "证明每个开区间边界之间活动建筑集合不变，因此只需处理全部左右边界",
-  "证明加入与过期清理后堆顶高度等于 x 处所有活跃建筑的最大高度",
-  "证明惰性删除不会让过期建筑成为输出高度，且每个堆元素至多入堆出堆一次",
-  "证明高度变化时且仅在必要时输出，得到横坐标递增、无相邻等高点和完整轮廓",
-  "逐语言核对堆比较方向、right<=x 过期条件、同坐标分组、输入只读、二维结果所有权和整数范围",
-  "专项核对 C 边界排序、堆容量、结果扩容、size_t 算术、失败清理和成功所有权",
+  "人工推演 [1,2,3,1], indexDiff=3；同数组 indexDiff=2；[1,0,1,1], indexDiff=1；indexDiff=0；负数和远距离重复",
+  "证明窗口集合在查询位置 i 前恰好代表允许的更早下标，并证明命中与合法索引对双向对应",
+  "证明移除时机和单值删除在未提前返回路径上安全",
+  "逐语言核对窗口删除、集合键、输入只读、平均/最坏复杂度和 C 失败清理",
+]
+
+[problems."0220"]
+title = "Contains Duplicate III"
+difficulty = "Hard"
+primary_risks = [
+  "同时满足 |i-j|<=indexDiff 与 |nums[i]-nums[j]|<=valueDiff；任一阈值为负的扩展输入应判无解",
+  "值差必须在 64 位或更宽整数中计算，不能让 int 减法先溢出",
+  "桶宽必须为 valueDiff+1，使同桶任意两值差至多 valueDiff，并防止 valueDiff+1 溢出",
+  "负数桶编号必须使用数学 floor 除法，不能直接依赖向零截断",
+  "当前值只需检查同桶和相邻两个桶，但相邻桶仍必须做精确值差比较",
+  "窗口映射只保留最近 indexDiff 个下标对应的值；加入前查询，加入后删除离开窗口的旧值，顺序必须与不变量一致",
+  "同桶至多保存一个值的论证依赖算法在第二个同桶值到来时立即返回 true",
+  "C、TypeScript、Java、C#、Go、Rust、Julia、R 的 64 位整数、整除和映射删除语义需逐项核对",
+]
+minimum_static_review = [
+  "人工推演 [1,2,3,1], indexDiff=3,valueDiff=0；[1,5,9,1,5,9],2,3；负数；INT_MIN/INT_MAX；indexDiff=0；valueDiff=0",
+  "证明同桶必满足值差阈值、只检查相邻桶足够、跨两桶以上不可能满足阈值",
+  "证明负数 floor 桶编号和滑动窗口删除保持映射不变量",
+  "逐语言核对宽整数转换发生在减法之前、桶宽、键类型、删除、平均/最坏复杂度和资源失败",
 ]
 
 must_preserve = [
-  "半开区间活动条件 left<=x<right 与同坐标整体处理",
-  "最大堆惰性删除不变量和当前最高建筑证明",
-  "关键点规范化、最终高度 0、完整性与无冗余证明",
-  "O(n log n) 时间、堆/边界/输出载荷分离和真实语言资源",
-  "固定十语言完整实现、人工推演、静态语义审查、剩余风险和带答案自检",
+  "0219 的精确索引窗口不变量、删除安全性和命中充要证明",
+  "0219 的 C 窗口哈希删除、R 键与十语言集合适配",
+  "0220 的双阈值合同、宽整数、负数分桶、相邻桶证明和滑动删除",
+  "每题固定十语言完整实现、人工推演、静态语义审查、剩余风险和带答案自检",
 ]
 
 forbidden = [
-  "参考 0217 或其他最近题目的章节结构、证明篇幅或静态审查密度",
-  "把 right==x 的建筑仍视为活跃",
-  "同一横坐标每处理一个事件就立即输出，产生重复横坐标或中间伪高度",
-  "只弹出一个过期堆顶而不持续清理",
-  "直接删除堆中任意过期元素却未提供支持该操作的数据结构",
-  "输出相邻高度相同的冗余关键点",
-  "遗漏最终回到 0 的关键点",
-  "把堆和边界材料忽略后声称额外空间 O(1)",
+  "参考 0218 或其他最近题目的章节结构、证明篇幅或静态审查密度",
+  "0219 把整个历史前缀保留在集合中而忽略 indexDiff",
+  "0219 删除仍可能由另一个窗口下标代表的值却没有唯一性或计数证明",
+  "0220 在 32 位 int 中先做减法再转换为宽整数",
+  "0220 对负数使用向零截断桶编号却声称是 floor",
+  "0220 只因落在相邻桶就直接返回而不检查真实值差",
+  "把哈希映射最坏复杂度写成保证 O(n)",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试或 sanitizer 题解代码",
   "把静态审查写成测试、编译或运行通过",
 ]
 
 completion_checks = [
-  "对照 0050 的状态/数值边界和 0076 的最优性/资源深度",
+  "逐题对照 0050 的状态/数值边界和 0076 的最优性/资源深度",
+  "每题完成后立即执行质量门；0220 出现压缩迹象时按合同缩批",
   "命中 DRIFT_LOG 的拆分、摘要、最近样本、预算和验证策略回归检查均通过",
-  "单题只有一个自包含 RST，十语言代码全部内联并位于 problems/0201-0300",
+  "每道算法题只有一个自包含 RST，十语言代码全部内联并位于 problems/0201-0300",
   "完成范围、completed_count、next_problem、根 README、范围索引和知识账本同步",
   "提交后 BATCH_CONTRACT 被替换为下一批合同",
 ]

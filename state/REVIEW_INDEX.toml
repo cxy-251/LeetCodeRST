@@ -149,10 +149,10 @@ statement = "O(min(m,n)) describes only the rolling Boolean DP array. The C++ si
 [next_action]
 kind = "generation"
 status = "ready"
-start = 218
-end = 218
-problem_ids = [218]
-purpose = "独立生成 0218 The Skyline Problem；完整处理同坐标边界分组、活动建筑最大高度、惰性删除、关键点规范化、十语言优先队列和二维输出所有权；历史题继续风险触发抽查。"
+start = 219
+end = 220
+problem_ids = [219, 220]
+purpose = "生成 0219–0220；完整处理 Contains Duplicate II 的索引窗口集合不变量与删除语义，以及 Contains Duplicate III 的双阈值、宽整数、负数分桶、相邻桶证明和滑动删除；历史题继续风险触发抽查。"
 
 [artifact_lifecycle]
 policy = "docs/ARTIFACT_LIFECYCLE_POLICY.rst"
