@@ -6,92 +6,115 @@
 
 :题号: 0215
 :难度: Medium
-:主题: Quickselect、三路分区、顺序统计量、原地算法
+:主题: Quickselect、三路分区、顺序统计量
 :原题: `LeetCode 0215 <https://leetcode.com/problems/kth-largest-element-in-an-array/>`_
 :访问状态: Available
-:教学重点: ``n-k`` 目标下标、重复值等值区、严格区间收缩、真实最坏复杂度
+:教学重点: 把第 ``k`` 大转换为升序目标下标，并通过三路分区只保留目标所在区间
 
 精确契约
 --------
 
-给定长度为 ``n`` 的整数数组 ``nums`` 和整数 ``k``，返回按从大到小排序后的第 ``k`` 个元素。
+给定整数数组 ``nums`` 和整数 ``k``，返回数组按从大到小排列后的第 ``k`` 个元素。
 
-* ``1 <= k <= n``；
-* 重复元素分别占据排序位置，不要求返回第 ``k`` 个不同值；
-* 主实现允许原地重排输入数组；
-* 返回一个整数值，不需要恢复原顺序；
-* 本文扩展边界只在叙述中说明非法 ``k``，平台实现按官方合法输入合同编写。
+官方约束为：
 
-若业务接口要求输入只读，应先复制数组，再在副本上执行 Quickselect。复制会增加 ``O(n)`` 时间和空间；本文平台实现直接重排输入。
+* ``1 <= k <= nums.length <= 10^5``；
+* ``-10^4 <= nums[i] <= 10^4``；
+* 重复值分别占据排序位置，题目要求的不是第 ``k`` 个不同值。
 
-第 k 大如何变成升序目标下标
-----------------------------
+例如 ``[5,5,4]`` 的第 2 大仍是 5，不能先去重。
 
-把数组升序排列后，下标范围为 ``0..n-1``：最大值位于 ``n-1``，第 2 大位于 ``n-2``，第 ``k`` 大位于 ``n-k``。
+本文使用原地 Quickselect，执行过程中会重排 ``nums``，但不要求恢复原顺序。若调用方要求输入只读，应先复制数组，再在副本上选择。
+
+从第 k 大到升序目标下标
+----------------------
+
+长度为 ``n`` 的数组升序排列后，下标范围为 ``0..n-1``：
+
+* 最大值位于 ``n-1``；
+* 第 2 大位于 ``n-2``；
+* 第 ``k`` 大位于 ``n-k``。
+
+因此 Quickselect 要寻找的升序下标为：
 
 .. code-block:: text
 
    target = n - k
 
-``k-1`` 是从大到小排列时的下标，不能直接用于按升序分区的 Quickselect。
+``k-1`` 是从大到小排列时的下标，不能直接用于按升序关系分区的实现。
 
-自建示例
---------
+示例
+----
+
+普通输入
+~~~~~~~~
 
 .. code-block:: text
 
-   nums = [3,2,1,5,6,4], k = 2
-   升序 = [1,2,3,4,5,6]
-   target = 4
+   nums = [3, 2, 1, 5, 6, 4]
+   k = 2
+
+   升序结果 = [1, 2, 3, 4, 5, 6]
+   target = 6 - 2 = 4
    answer = 5
 
+包含重复值
+~~~~~~~~~~
+
 .. code-block:: text
 
-   nums = [3,2,3,1,2,4,5,5,6], k = 4
-   升序 = [1,2,2,3,3,4,5,5,6]
-   target = 5
+   nums = [3, 2, 3, 1, 2, 4, 5, 5, 6]
+   k = 4
+
+   升序结果 = [1, 2, 2, 3, 3, 4, 5, 5, 6]
+   target = 9 - 4 = 5
    answer = 4
 
-重复值分别占据排序位置，不能先去重。全相等数组 ``[7,7,7,7]`` 对任意合法 ``k`` 都返回 7。
-``k=1`` 搜索升序下标 ``n-1``，``k=n`` 搜索下标 0。
+边界位置
+~~~~~~~~
 
-问题抽象与解法选择
-------------------
+``k=1`` 时目标是下标 ``n-1``，也就是最大值；``k=n`` 时目标是下标 0，也就是最小值。
+全相等数组对任意合法 ``k`` 都返回同一个值。
 
-目标是找到一个顺序统计量，不需要完整排序。
+解法选择
+--------
+
+题目只要求一个顺序统计量，不需要得到完整有序数组。
 
 .. list-table::
    :header-rows: 1
 
    * - 方法
-     - 时间
+     - 时间复杂度
      - 额外空间
-     - 取舍
+     - 特点
    * - 完整排序
      - ``O(n log n)``
-     - 依排序实现而定
-     - 简单，但完成无关的全局次序工作
+     - 取决于排序实现
+     - 简单，但完成了不需要的全局排序
    * - 大小为 ``k`` 的最小堆
      - ``O(n log k)``
      - ``O(k)``
-     - 输入可只读，适合流式数据
-   * - 三路 Quickselect
-     - 单轮 ``O(m)``，最坏 ``O(n^2)``
-     - ``O(1)`` 核心额外空间
-     - 主解法，只保留目标一侧
+     - 不必修改输入，适合流式数据
+   * - Quickselect
+     - 通常接近 ``O(n)``，最坏 ``O(n^2)``
+     - ``O(1)``
+     - 每轮只保留目标所在的一侧
 
-本文使用当前区间中点元素的值作为确定性 pivot。它不需要随机状态，但不能保证每轮平衡，因此不声称保证或无条件期望 ``O(n)``。
+本文使用三路 Quickselect。三路分区把当前区间分成“小于 pivot”“等于 pivot”“大于 pivot”三段，重复值会集中进入等值段，因此全相等或大量重复的输入可以直接结束，而不会反复处理相同 pivot。
 
-三路分区状态
-------------
+三路分区不变量
+--------------
 
-当前处理闭区间 ``[left,right]``，先复制 pivot 值：
+当前只考虑闭区间 ``[left,right]``。先复制一个 pivot 值：
 
 .. code-block:: text
 
    pivot = nums[left + (right-left)/2]
 
-维护 ``less``、``scan``、``greater``，循环开始时保持：
+pivot 必须保存为值，因为它原来所在的数组位置可能在分区过程中被交换。
+
+维护三个指针 ``less``、``scan``、``greater``。每轮循环开始时：
 
 .. code-block:: text
 
@@ -100,21 +123,21 @@
    [scan, greater]    尚未分类
    (greater, right]   > pivot
 
-初始 ``less=scan=left``、``greater=right``，三个已分类区域为空。
+初始时 ``less=scan=left``、``greater=right``，已分类区域都为空。
 
-状态转移
---------
+处理当前元素
+------------
 
 ``nums[scan] < pivot``
-   交换 ``nums[less]`` 与 ``nums[scan]``，同时增加 ``less`` 和 ``scan``。原等值区首元素被移到等值区末端，小值进入小于区。
+   交换 ``nums[less]`` 与 ``nums[scan]``，然后同时增加 ``less`` 和 ``scan``。当前小值进入左侧小于区。
 
 ``nums[scan] == pivot``
    只增加 ``scan``，把当前元素并入等值区。
 
 ``nums[scan] > pivot``
-   交换 ``nums[scan]`` 与 ``nums[greater]``，减少 ``greater``，不能增加 ``scan``。右端换入的元素此前未知，必须再次分类。
+   交换 ``nums[scan]`` 与 ``nums[greater]``，然后减少 ``greater``。此时不能增加 ``scan``，因为从右侧换来的元素尚未分类。
 
-当 ``scan>greater`` 时未知区为空：
+当 ``scan>greater`` 时未知区为空，当前区间变为：
 
 .. code-block:: text
 
@@ -122,58 +145,53 @@
    [less, greater]    == pivot
    (greater, right]   > pivot
 
-目标下标有三种情况：
+选择下一段
+----------
 
-* ``target < less``：保留 ``[left,less-1]``；
-* ``target > greater``：保留 ``[greater+1,right]``；
-* ``less <= target <= greater``：该排序位置的值就是 pivot，直接返回。
+分区结束后，目标下标只有三种位置：
 
-区间严格收缩
-------------
+* ``target < less``：目标在小于段，新区间为 ``[left,less-1]``；
+* ``target > greater``：目标在大于段，新区间为 ``[greater+1,right]``；
+* ``less <= target <= greater``：目标位于等值段，该位置的值就是 pivot，直接返回。
 
-若 ``target<less``，目标仍满足 ``target>=left``，所以 ``less>=left+1``，新右端严格左移。
-若 ``target>greater``，目标仍满足 ``target<=right``，所以 ``greater<=right-1``，新左端严格右移。
-目标落在等值段时立即结束。每次未结束迭代都缩短候选区间。
+Quickselect 的关键不是把每一段继续排序，而是确认目标在哪一段，只保留那一段。
+
+为什么区间一定收缩
+------------------
+
+目标在左段时，等值段至少包含一个 pivot，所以 ``less>left``，新右端 ``less-1`` 严格小于旧右端。
+
+目标在右段时，同理 ``greater<right``，新左端 ``greater+1`` 严格大于旧左端。
+
+目标在等值段时立即返回。因此每次外层循环要么结束，要么缩短候选区间，不会停在同一范围内反复分区。
 
 正确性证明
 ----------
 
-引理一：分区不变量初始化成立
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+**引理一：三路分区结束后，当前区间按与 pivot 的大小关系被正确分成三段。**
 
-初始小于区、等值区和大于区均为空，整个闭区间是未知区，四段描述成立。
+循环开始时不变量成立。遇到小值时将它移入左段；遇到等值时扩展中段；遇到大值时将它移入右段，并保留换入元素继续检查。每轮都缩短未知区且保持四段关系。循环结束时未知区为空，因此三段分类完整。
 
-引理二：三种转移保持不变量
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+**引理二：分区不会改变目标顺序统计量。**
 
-小值交换后进入小于区，原等值元素移到等值区末端；等值只扩展等值区；大值交换后进入右侧大于区，换入 ``scan`` 的未知元素保留待检查。三种比较结果覆盖全部整数关系，因此每轮保持不变量。
+分区只交换元素，不增加、删除或修改任何值，因此数组的多重集合保持不变。小于 pivot 的元素在升序中必然位于等值段之前，大于 pivot 的元素必然位于等值段之后。
 
-引理三：分区结束后所有元素分类完整
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+**引理三：每轮保留的区间一定包含目标下标对应的值。**
 
-循环在 ``scan>greater`` 时结束，未知区为空。结合引理二，当前区间被连续分成小于、等于和大于 pivot 的三段，重复 pivot 值全部集中在等值段。
+若 ``target`` 在小于段，等值段和大于段中的值都不可能占据该升序位置；若目标在大于段，左侧两段同样可以排除；若目标在等值段，该位置的值必然等于 pivot。三种处理都不会丢失答案。
 
-引理四：只保留目标所在一侧是安全的
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+**定理：算法返回第 ``k`` 大元素。**
 
-小于段的元素在升序中必位于等值段之前，大于段必位于等值段之后。目标在左侧时不可能由等值或大值占据；目标在右侧时不可能由小值或等值占据；目标在等值段时该位置的值必为 pivot。分区只改变排列，不改变元素多重集合，重复值的排序位置完整保留。
+``target=n-k`` 正是第 ``k`` 大元素在升序排列中的下标。引理三保证每轮保留包含该顺序统计量的区间；候选区间持续收缩，最终目标进入某个 pivot 的等值段并返回。返回值因此正确。
 
-引理五：算法终止
-~~~~~~~~~~~~~~~~
+复杂度
+------
 
-内层每轮让 ``scan`` 增加或 ``greater`` 减少，未知区长度下降。外层未返回时候选区间严格缩短。有限数组上最终必进入某个 pivot 等值段并返回。
+一次长度为 ``m`` 的三路分区耗时 ``O(m)``，只使用若干下标和一个 pivot 值，额外空间为 ``O(1)``。
 
-定理：算法返回第 k 大元素
-~~~~~~~~~~~~~~~~~~~~~~~~
+若 pivot 持续把区间分得较平衡，总工作量形成 ``n+n/2+n/4+...``，为 ``O(n)``。本文使用确定性的中点元素值作为 pivot，仍可能遇到连续极不平衡的排列，最坏时间复杂度为 ``O(n^2)``。因此不能把这个具体实现写成保证线性。
 
-升序目标下标 ``n-k`` 正是第 ``k`` 大元素的位置。引理四保证每轮保留包含该位置的候选区间，目标进入等值段时返回正确值；引理五保证过程终止。
-
-复杂度与真实边界
-----------------
-
-一次长度为 ``m`` 的三路分区耗时 ``O(m)``，核心额外状态为 ``O(1)``，输入被原地重排。
-
-若各轮较平衡，总工作量为 ``n+n/2+n/4+...=O(n)``；全相等数组也在一轮结束。确定性中点 pivot 仍存在连续极不平衡的对抗排列，最坏累计 ``O(n^2)``。因此本文只报告常见输入下通常接近线性、最坏 ``O(n^2)``，不写成保证线性。
+输入数组会被原地重排。若先复制输入，则增加 ``O(n)`` 复制时间和 ``O(n)`` 空间。
 
 十语言实现
 ----------
@@ -213,14 +231,19 @@ C
                }
            }
 
-           if (target < less) right = less - 1;
-           else if (target > greater) left = greater + 1;
-           else return pivot;
+           if (target < less) {
+               right = less - 1;
+           } else if (target > greater) {
+               left = greater + 1;
+           } else {
+               return pivot;
+           }
        }
+
        return 0;
    }
 
-C 不分配内存，直接重排调用方数组。pivot 在交换前复制为值。
+函数按官方合法输入合同执行；最后的 ``return 0`` 在该合同下不可达。数组在原地被重排。
 
 C++
 ~~~
@@ -236,7 +259,10 @@ C++
 
            while (left <= right) {
                const int pivot = nums[left + (right - left) / 2];
-               int less = left, scan = left, greater = right;
+               int less = left;
+               int scan = left;
+               int greater = right;
+
                while (scan <= greater) {
                    if (nums[scan] < pivot) {
                        std::swap(nums[less++], nums[scan++]);
@@ -246,15 +272,17 @@ C++
                        ++scan;
                    }
                }
+
                if (target < less) right = less - 1;
                else if (target > greater) left = greater + 1;
                else return pivot;
            }
+
            return 0;
        }
    };
 
-需要 ``<vector>`` 与 ``<utility>``；参数按引用接收并被重排。
+需要 ``<utility>`` 与 ``<vector>``。参数按引用接收并被重排。
 
 Python
 ~~~~~~
@@ -270,6 +298,7 @@ Python
                pivot = nums[left + (right - left) // 2]
                less = scan = left
                greater = right
+
                while scan <= greater:
                    if nums[scan] < pivot:
                        nums[less], nums[scan] = nums[scan], nums[less]
@@ -280,15 +309,17 @@ Python
                        greater -= 1
                    else:
                        scan += 1
+
                if target < less:
                    right = less - 1
                elif target > greater:
                    left = greater + 1
                else:
                    return pivot
+
            raise RuntimeError("unreachable for valid input")
 
-Python 元组赋值完成交换，输入列表被修改。
+Python 列表被原地修改。与右侧交换后不移动 ``scan``。
 
 Java
 ~~~~
@@ -298,32 +329,41 @@ Java
    class Solution {
        public int findKthLargest(int[] nums, int k) {
            int target = nums.length - k;
-           int left = 0, right = nums.length - 1;
+           int left = 0;
+           int right = nums.length - 1;
+
            while (left <= right) {
                int pivot = nums[left + (right - left) / 2];
-               int less = left, scan = left, greater = right;
+               int less = left;
+               int scan = left;
+               int greater = right;
+
                while (scan <= greater) {
                    if (nums[scan] < pivot) {
-                       int temporary = nums[less];
-                       nums[less++] = nums[scan];
-                       nums[scan++] = temporary;
+                       swap(nums, less++, scan++);
                    } else if (nums[scan] > pivot) {
-                       int temporary = nums[scan];
-                       nums[scan] = nums[greater];
-                       nums[greater--] = temporary;
+                       swap(nums, scan, greater--);
                    } else {
                        ++scan;
                    }
                }
+
                if (target < less) right = less - 1;
                else if (target > greater) left = greater + 1;
                else return pivot;
            }
-           throw new IllegalStateException();
+
+           throw new IllegalStateException("valid input must return");
+       }
+
+       private void swap(int[] nums, int a, int b) {
+           int temporary = nums[a];
+           nums[a] = nums[b];
+           nums[b] = temporary;
        }
    }
 
-Java 数组元素会被原地重排。
+pivot 先复制到局部变量，不依赖它原来的数组位置。
 
 Rust
 ~~~~
@@ -332,24 +372,26 @@ Rust
 
    impl Solution {
        pub fn find_kth_largest(mut nums: Vec<i32>, k: i32) -> i32 {
-           let target = nums.len() as isize - k as isize;
-           let mut left = 0_isize;
-           let mut right = nums.len() as isize - 1;
+           let target = nums.len() - k as usize;
+           let mut left = 0_usize;
+           let mut right = nums.len() - 1;
 
-           while left <= right {
-               let pivot = nums[(left + (right - left) / 2) as usize];
+           loop {
+               let pivot = nums[left + (right - left) / 2];
                let mut less = left;
                let mut scan = left;
                let mut greater = right;
 
                while scan <= greater {
-                   let value = nums[scan as usize];
-                   if value < pivot {
-                       nums.swap(less as usize, scan as usize);
+                   if nums[scan] < pivot {
+                       nums.swap(less, scan);
                        less += 1;
                        scan += 1;
-                   } else if value > pivot {
-                       nums.swap(scan as usize, greater as usize);
+                   } else if nums[scan] > pivot {
+                       nums.swap(scan, greater);
+                       if greater == 0 {
+                           break;
+                       }
                        greater -= 1;
                    } else {
                        scan += 1;
@@ -364,11 +406,10 @@ Rust
                    return pivot;
                }
            }
-           unreachable!("valid input must return")
        }
    }
 
-Rust 平台签名按值取得 ``Vec``。分区游标使用 ``isize``，避免右边界下降到 -1 时发生 ``usize`` 下溢；仅在已证明非负的数组访问处转换为 ``usize``。
+Rust 使用 ``usize`` 下标。``greater==0`` 的保护避免无符号下标减一；发生该情况时右侧未知区已经耗尽。
 
 Go
 ~~
@@ -378,9 +419,11 @@ Go
    func findKthLargest(nums []int, k int) int {
        target := len(nums) - k
        left, right := 0, len(nums)-1
+
        for left <= right {
            pivot := nums[left+(right-left)/2]
            less, scan, greater := left, left, right
+
            for scan <= greater {
                if nums[scan] < pivot {
                    nums[less], nums[scan] = nums[scan], nums[less]
@@ -393,6 +436,7 @@ Go
                    scan++
                }
            }
+
            if target < less {
                right = less - 1
            } else if target > greater {
@@ -401,10 +445,11 @@ Go
                return pivot
            }
        }
+
        panic("unreachable for valid input")
    }
 
-Go 切片共享底层数组，调用方可观察到重排。
+切片底层数组被原地重排。
 
 TypeScript
 ~~~~~~~~~~
@@ -415,11 +460,13 @@ TypeScript
        const target = nums.length - k;
        let left = 0;
        let right = nums.length - 1;
+
        while (left <= right) {
            const pivot = nums[left + Math.floor((right - left) / 2)];
            let less = left;
            let scan = left;
            let greater = right;
+
            while (scan <= greater) {
                if (nums[scan] < pivot) {
                    [nums[less], nums[scan]] = [nums[scan], nums[less]];
@@ -432,14 +479,16 @@ TypeScript
                    scan += 1;
                }
            }
+
            if (target < less) right = less - 1;
            else if (target > greater) left = greater + 1;
            else return pivot;
        }
+
        throw new Error("unreachable for valid input");
    }
 
-``number`` 能精确表示官方 32 位整数，输入数组被修改。
+官方整数范围可由 ``number`` 精确表示。
 
 C#
 ~~
@@ -449,47 +498,58 @@ C#
    public class Solution {
        public int FindKthLargest(int[] nums, int k) {
            int target = nums.Length - k;
-           int left = 0, right = nums.Length - 1;
+           int left = 0;
+           int right = nums.Length - 1;
+
            while (left <= right) {
                int pivot = nums[left + (right - left) / 2];
-               int less = left, scan = left, greater = right;
+               int less = left;
+               int scan = left;
+               int greater = right;
+
                while (scan <= greater) {
                    if (nums[scan] < pivot) {
-                       (nums[less], nums[scan]) = (nums[scan], nums[less]);
-                       ++less;
-                       ++scan;
+                       Swap(nums, less++, scan++);
                    } else if (nums[scan] > pivot) {
-                       (nums[scan], nums[greater]) = (nums[greater], nums[scan]);
-                       --greater;
+                       Swap(nums, scan, greater--);
                    } else {
                        ++scan;
                    }
                }
+
                if (target < less) right = less - 1;
                else if (target > greater) left = greater + 1;
                else return pivot;
            }
+
            throw new System.InvalidOperationException();
+       }
+
+       private static void Swap(int[] nums, int a, int b) {
+           int temporary = nums[a];
+           nums[a] = nums[b];
+           nums[b] = temporary;
        }
    }
 
-C# 数组对象在调用方与函数之间共享，元素顺序会改变。
+数组按引用语义传入，分区会改变其中元素顺序。
 
 Julia
 ~~~~~
 
 .. code-block:: julia
 
-   function find_kth_largest!(nums::Vector{Int}, k::Int)::Int
-       n = length(nums)
-       target = n - k + 1
+   function find_kth_largest(nums::Vector{Int}, k::Int)::Int
+       target = length(nums) - k + 1
        left = 1
-       right = n
+       right = length(nums)
+
        while left <= right
            pivot = nums[left + (right - left) ÷ 2]
            less = left
            scan = left
            greater = right
+
            while scan <= greater
                if nums[scan] < pivot
                    nums[less], nums[scan] = nums[scan], nums[less]
@@ -502,6 +562,7 @@ Julia
                    scan += 1
                end
            end
+
            if target < less
                right = less - 1
            elseif target > greater
@@ -510,10 +571,11 @@ Julia
                return pivot
            end
        end
+
        error("unreachable for valid input")
    end
 
-Julia 使用一基目标位置 ``n-k+1``；函数名 ``!`` 明确输入向量被重排。
+Julia 使用一基下标，所以升序目标位置是 ``length(nums)-k+1``。
 
 R
 ~
@@ -521,15 +583,16 @@ R
 .. code-block:: r
 
    find_kth_largest <- function(nums, k) {
-     n <- length(nums)
-     target <- n - k + 1L
+     target <- length(nums) - k + 1L
      left <- 1L
-     right <- n
+     right <- length(nums)
+
      while (left <= right) {
        pivot <- nums[left + (right - left) %/% 2L]
        less <- left
        scan <- left
        greater <- right
+
        while (scan <= greater) {
          if (nums[scan] < pivot) {
            temporary <- nums[less]
@@ -546,68 +609,54 @@ R
            scan <- scan + 1L
          }
        }
-       if (target < less) right <- less - 1L
-       else if (target > greater) left <- greater + 1L
-       else return(pivot)
+
+       if (target < less) {
+         right <- less - 1L
+       } else if (target > greater) {
+         left <- greater + 1L
+       } else {
+         return(pivot)
+       }
      }
+
      stop("unreachable for valid input")
    }
 
-R 使用一基目标位置。元素赋值重排函数本地向量绑定；函数只返回答案。官方整数范围在双精度 ``numeric`` 中可精确比较。
-
-人工静态推演
-------------
-
-* ``[3,2,1,5,6,4], k=2``：``target=4``，每轮只保留下标 4 所在段，最终返回 5；
-* ``[3,2,3,1,2,4,5,5,6], k=4``：``target=5``，重复值分别参与排序，最终返回 4；
-* 全相等：第一轮等值段覆盖整个区间，直接返回；
-* 升序、降序：正确性不依赖分区平衡，目标侧仍严格缩小；
-* ``k=1`` 与 ``k=n``：分别搜索升序下标 ``n-1`` 与 0。
-
-静态审查记录
-------------
-
-本题未运行、未编译、未对拍、未穷举，也未执行 sanitizer。已人工核对：
-
-* ``n-k`` 与 Julia/R 的一基 ``n-k+1``；
-* 四段不变量及大值交换后不增加 ``scan``；
-* 重复值形成连续等值段；
-* 左右候选区间严格收缩；
-* 十语言交换、索引和输入变异语义；
-* Rust 有符号游标避免无符号下溢；
-* 确定性 pivot 的 ``O(n^2)`` 最坏时间。
-
-剩余风险是代码没有经过目标平台编译或执行；接口名称和容器类型按常见 LeetCode 适配器静态核对。
+R 同样使用一基目标位置。函数内部重排局部向量绑定，不依赖完整排序。
 
 关键易错点
 ----------
 
-* 把目标写成 ``k-1``，实际寻找第 ``k`` 小；
-* 大值交换后增加 ``scan``，跳过换入的未知元素；
-* 二路分区在大量重复值下无法可靠收缩；
-* pivot 未复制为值，交换后比较基准变化；
-* 把确定性 pivot 写成保证 ``O(n)``；
-* 忘记说明输入被重排。
+* 把目标写成 ``k-1``，混淆降序位置与升序下标；
+* 先对数组去重，错误改变重复值占据的排序位置；
+* 与右侧未知元素交换后立即增加 ``scan``，漏掉对换入值的分类；
+* pivot 保存为数组位置而不是值，交换后比较基准发生变化；
+* 二路分区在大量重复值时反复处理相同元素；
+* 目标在等值段时仍继续搜索；
+* 声称确定性 pivot 的实现保证 ``O(n)``；
+* 忘记说明 Quickselect 会改变输入顺序。
 
 知识联系
 --------
 
-Quickselect 与快速排序共享分区思想，差别是每轮只处理目标一侧。重复值多时三路分区能一次跳过整个等值段。输入不可修改或数据流持续到达时，可使用大小为 ``k`` 的最小堆。
+Quickselect 与快速排序使用相同的分区思想。快速排序递归处理两侧，因为它需要完整顺序；Quickselect 只处理包含目标顺序统计量的一侧，所以通常能省去大量工作。
+
+大小为 ``k`` 的最小堆适合输入不能修改、数据持续到达或只允许保存少量元素的场景。完整排序适合后续还要进行多次有序查询的场景。选择算法时，应先判断需求是“一个位置”“前 ``k`` 个元素”还是“完整顺序”。
 
 自检问题
 --------
 
 #. 为什么第 ``k`` 大对应升序下标 ``n-k``？
-#. 大值交换后为什么不能增加 ``scan``？
-#. 目标位于等值段时为什么直接返回 pivot？
-#. 为什么本文不能声称保证 ``O(n)``？
-#. 输入必须只读时需要什么额外成本？
+#. 三路分区结束后 ``less`` 与 ``greater`` 分别表示什么边界？
+#. 与 ``greater`` 位置交换后为什么不能立即增加 ``scan``？
+#. 为什么目标落入等值段时可以直接返回 pivot？
+#. 这个确定性 pivot 实现为什么不能保证最坏 ``O(n)``？
 
 参考答案
 ~~~~~~~~
 
-#. 升序末端 ``n-1`` 是第 1 大，每向前一位名次增加 1。
-#. 换入 ``scan`` 的元素来自未知区，必须重新比较。
-#. 等值段每个排序位置都由值等于 pivot 的元素占据。
-#. 确定性 pivot 存在连续极不平衡分区，最坏累计 ``O(n^2)``。
-#. 先复制数组，再在副本上执行，增加 ``O(n)`` 时间和空间。
+#. 升序最大值在 ``n-1``，每向前一个位置，大的排名增加 1，因此第 ``k`` 大在 ``n-k``。
+#. ``less`` 是等值段起点，``greater`` 是等值段终点；左侧都小于 pivot，右侧都大于 pivot。
+#. 从右侧换来的值此前属于未知区，尚未判断与 pivot 的关系。
+#. 等值段中的每个排序位置都由 pivot 值占据，目标值已经确定。
+#. pivot 可能连续产生极不平衡分区，使处理规模接近 ``n+(n-1)+...+1``。
