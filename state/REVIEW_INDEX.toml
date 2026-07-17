@@ -108,7 +108,7 @@ sources = [
   "https://stat.ethz.ch/R-manual/R-devel/library/base/html/utf8Conversion.html",
 ]
 supersedes = "0072 complexity text presenting O(min(m,n)) as the complete auxiliary-space bound for every language implementation."
-statement = "O(min(m,n)) describes only the rolling Boolean DP array. C++ copies both by-value strings, Julia collect(codeunits(...)) materializes two byte arrays, and R utf8ToInt materializes two integer vectors; these adapters have O(m+n) extra and peak space."
+statement = "O(min(m,n)) describes only the rolling DP array. C++ copies both by-value strings, Julia collect(codeunits(...)) materializes two byte arrays, and R utf8ToInt materializes two integer vectors; these adapters have O(m+n) extra and peak space."
 
 [corrections.go_min_window_substring_storage]
 status = "active"
@@ -149,10 +149,10 @@ statement = "O(min(m,n)) describes only the rolling Boolean DP array. The C++ si
 [next_action]
 kind = "generation"
 status = "ready"
-start = 207
-end = 207
-problem_ids = [207]
-purpose = "单独生成 0207 Course Schedule；完整处理 prerequisite->course 建边、Kahn 入度不变量、环等价证明、重复边和邻接表资源成本；历史题继续风险触发抽查。"
+start = 208
+end = 209
+problem_ids = [208, 209]
+purpose = "生成 0208–0209；完整处理 Trie 路径/终止标记与对象生命周期，以及正数滑动窗口的单调性、最短性和宽整数边界；历史题继续风险触发抽查。"
 
 [artifact_lifecycle]
 policy = "docs/ARTIFACT_LIFECYCLE_POLICY.rst"
