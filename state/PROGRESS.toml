@@ -11,9 +11,9 @@ code_comment_language = "zh-CN"
 problem_artifact_shape = "one_self_contained_rst_per_public_algorithm_problem"
 
 [progress]
-next_problem = 214
-completed_count = 189
-completed_ranges = ["0001-0155", "0160", "0162", "0164-0169", "0171-0174", "0179", "0187-0191", "0198-0213"]
+next_problem = 215
+completed_count = 190
+completed_ranges = ["0001-0155", "0160", "0162", "0164-0169", "0171-0174", "0179", "0187-0191", "0198-0214"]
 premium_skipped = [156, 157, 158, 159, 161, 163, 170, 186]
 database_skipped = [175, 176, 177, 178, 180, 181, 182, 183, 184, 185, 196, 197]
 shell_skipped = [192, 193, 194, 195]
@@ -59,26 +59,26 @@ quality_over_batch_score = true
 [last_batch]
 status = "completed"
 kind = "generation"
-start = 213
-end = 213
+start = 214
+end = 214
 generated_problem_count = 1
-generated_problem_ids = [213]
-reference_problems = [50, 76, 198]
-difficulty_budget = 2
-planned_scope = [213, 214]
-scope_shrunk = true
-scope_reason = "0213 的首尾互斥两段覆盖、线性滚动 DP、单元素边界和十语言宽整数适配已完整通过质量门；0214 为 Hard，KMP border 充要证明、安全分隔符、十语言字符串构造和 C 失败清理需要独立批次，继续同批会压缩证明与资源说明。"
-summary = "完成 0213 House Robber II：环形首尾互斥拆分、两个线性区间覆盖证明、滚动 DP 不变量、O(1) 核心空间和十语言数值适配。"
+generated_problem_ids = [214]
+reference_problems = [50, 76]
+difficulty_budget = 4
+planned_scope = [214]
+scope_shrunk = false
+scope_reason = "0214 作为 Hard 独立完成；最长回文前缀最优性、KMP 最终 border 充要证明、安全分隔符、十语言字符单位和 C 分配失败清理均未压缩。"
+summary = "完成 0214 Shortest Palindrome：最少前置字符与最长回文前缀等价、KMP border 双向证明、安全分隔符、线性复杂度和十语言字符串资源适配。"
 
 [next_batch]
 status = "generation_ready"
 kind = "generation"
-start = 214
-end = 214
-problem_ids = [214]
-difficulty_budget = 4
+start = 215
+end = 217
+problem_ids = [215, 216, 217]
+difficulty_budget = 5
 contract = "state/BATCH_CONTRACT.toml"
-purpose = "独立生成 0214 Shortest Palindrome；完整处理最长回文前缀转化、KMP 最终 border 充要证明、安全分隔符和十语言字符/字符串资源。"
+purpose = "生成 0215–0217；完整处理三路 Quickselect 的目标下标与重复值、Combination Sum III 的递增组合回溯和可达和剪枝、Contains Duplicate 的哈希集合语义。"
 
 [review_history]
 status = "completed"
@@ -147,7 +147,7 @@ problem_code_fragments_present = false
 
 [quality_scope]
 historical_start = 1
-historical_end = 213
+historical_end = 214
 historical_policy = "用户指定的 32 道低质量题解已经全部返工完成；历史题默认保持不变，风险触发时定向抽查。"
 persistent_rule_start = 151
 persistent_rule = "docs/FORWARD_RULES_0151_ONWARD.rst"
@@ -179,10 +179,10 @@ concurrency_policy = "fetch_and_compare_before_commit; stop_on_remote_change_or_
 
 [concept_ledger]
 index = "state/CONCEPT_LEDGER.toml"
-latest_record = "state/concepts/0213.toml"
+latest_record = "state/concepts/0214.toml"
 
 [next_action]
-summary = "按 BATCH_CONTRACT 独立生成 0214；0213 House Robber II 已完整处理。"
+summary = "按 BATCH_CONTRACT 生成 0215–0217；0214 Shortest Palindrome 已完整处理。"
 
 [last_update]
-summary = "0213 已生成并通过静态质量门；完成数更新为 189，下一入口为 0214。"
+summary = "0214 已独立生成并通过静态质量门；完成数更新为 190，下一入口为 0215。"

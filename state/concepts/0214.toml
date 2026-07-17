@@ -1,0 +1,40 @@
+[meta]
+problem_ids = [214]
+range = "0214"
+status = "completed"
+source = "problems/0201-0300/0214-shortest-palindrome.rst"
+static_review_only = true
+
+[concepts."0214"]
+title = "Shortest Palindrome"
+difficulty = "Hard"
+primary_algorithm = "KMP prefix function on s + separator + reverse(s)"
+
+introduced = [
+  "optimization.longest_palindromic_prefix",
+  "proof.prepend_overlap_lower_bound",
+  "string.kmp_border_palindrome_equivalence",
+  "safety.unique_separator_boundary",
+  "adapter.shortest_palindrome_string_materialization",
+]
+
+reinforced = [
+  "algorithm.kmp_prefix_function",
+  "proof.lower_bound_matched_by_construction",
+  "string.ascii_code_unit_contract",
+  "complexity.output_payload_separation",
+  "safety.c_size_arithmetic_and_cleanup",
+]
+
+[updates]
+"optimization.longest_palindromic_prefix" = "只能在前端添加字符时，任意添加 k 个字符的回文结果都会迫使原串前 n-k 个字符成为回文；最大化可保留回文前缀等价于最小化新增字符。"
+"proof.prepend_overlap_lower_bound" = "通过结果串镜像位置 k+i 与 n-1-i 的下标关系，直接推出 s[0:n-k] 回文，并得到 k>=n-L 的最优性下界。"
+"string.kmp_border_palindrome_equivalence" = "在 s + unique_separator + reverse(s) 中，最终 border 长度不超过 n；其前缀是 P，后缀是 reverse(P)，因此 border 与回文前缀双向等价。"
+"safety.unique_separator_boundary" = "分隔符必须不属于输入字符域且只出现一次；否则跨边界 border 与长度上界证明失效。"
+"adapter.shortest_palindrome_string_materialization" = "C 显式分配序列、size_t 前缀表和答案；Julia codeunits 是视图但拼接与答案物化；R raw、UTF-16 和字节适配只在官方 ASCII 合同下等价。"
+
+[static_review]
+manual_cases = ["aacecaaa", "abcd", "empty", "single_character", "already_palindrome", "repeated_characters", "aaab", "abbacd"]
+proof_checks = ["prepend_overlap", "separator_border_bound", "border_to_palindrome", "palindrome_to_border", "minimal_construction"]
+language_checks = ["c_allocation_cleanup", "zero_vs_one_based_prefix_fallback", "ascii_character_units", "r_safe_ranges", "input_read_only"]
+execution_performed = false
