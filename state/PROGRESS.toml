@@ -179,7 +179,10 @@ concurrency_policy = "fetch_and_compare_before_commit; stop_on_remote_change_or_
 
 [concept_ledger]
 index = "state/CONCEPT_LEDGER.toml"
-latest_record = "state/concepts/0218.toml"
+latest_record = "state/concepts/0201-0250.toml"
+latest_problem = 218
+storage = "fifty_problem_range"
+active_data_self_contained = true
 
 [next_action]
 summary = "按 BATCH_CONTRACT 生成 0219–0220；0218 The Skyline Problem 已完整处理。"

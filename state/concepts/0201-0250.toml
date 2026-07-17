@@ -1,16 +1,18 @@
 [meta]
-version = 1
+version = 2
+schema = "problem_delta_v1"
 range = "0201-0250"
 first_problem = 201
 last_problem = 218
 inherits = "state/concepts/0151-0200.toml"
 storage = "fifty_problem_range"
+self_contained = true
 open_range = true
-history_archive = "archive/state/concepts/pre-consolidation/"
 
 [policy]
 append_rule = "0201–0250 的后续题只追加到本文件，不再创建单题或小批次 concept TOML。"
 teaching_rule = "introduced 首次完整讲解；reinforced 只记录当前题新增差异和教学状态变化。"
+archive_dependency = false
 
 [problems."0201"]
 title = "Bitwise AND of Numbers Range"

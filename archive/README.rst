@@ -20,7 +20,8 @@
 --------
 
 * ``reviews/0001-0050/MANIFEST.rst``：第一次逐题审查与其前向规则产物；
-* ``reviews/0051-0100/MANIFEST.rst``：第二轮逐题审查、批次证据与规则归并记录。
+* ``reviews/0051-0100/MANIFEST.rst``：第二轮逐题审查、批次证据与规则归并记录；
+* ``state/concepts/pre-consolidation/MANIFEST.rst``：Concept 账本 50 题范围收口前的原始分片与迁移说明。
 
 后续生命周期
 ------------
