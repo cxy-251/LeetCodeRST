@@ -1,130 +1,51 @@
 [contract]
 schema_version = 2
-batch_id = "generation-0219-0220"
+batch_id = "historical-review-0166"
 status = "ready"
-phase = "generation"
-kind = "generation"
-scope = [219, 220]
+phase = "historical_review"
+kind = "targeted_review"
+scope = [166]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
 drift_log = "state/DRIFT_LOG.toml"
-new_problem_generation_paused = false
-completion_count_must_remain_unchanged = false
-next_problem_after_batch = 221
+new_problem_generation_paused = true
+completion_count_must_remain_unchanged = true
+next_review_after_batch = 167
 
 [static_review]
 solution_code_execution = "forbidden"
 solution_code_compilation = "forbidden"
 differential_exhaustive_property_and_sanitizer = "forbidden"
-example_hand_tracing = "required_per_problem"
-language_semantics_review = "required_per_problem"
+example_hand_tracing = "required"
+language_semantics_review = "required"
 repository_structure_state_and_git_checks = "allowed"
 reporting = "只声明实际完成的静态审查；明确未运行、未编译、未测试和剩余风险。"
 
-[budget]
-algorithm_score = 5
-target_min = 4
-target_max = 6
-proof_risk = "high"
-language_semantics_risk = "high"
-platform_type_risk = "high"
-output_volume_risk = "high"
-scope_may_shrink = true
-scope_reason = "0219 是 Easy，但需要精确维护前 k 个下标对应的滑动集合、k=0 边界、删除时机和 C/R 容器删除语义；0220 是 Hard，需要宽整数值差、负数桶编号、桶宽 valueDiff+1、相邻桶充分性、滑动删除和十语言映射实现。先完整验收 0219；若继续 0220 会压缩证明或资源说明，则在 0219 后缩批。"
-
-[references]
-style_baselines = [
-  "problems/0001-0100/0050-powx-n.rst",
-  "problems/0001-0100/0076-minimum-window-substring.rst",
-]
-fact_sources = [
-  "state/PROGRESS.toml",
-  "state/REVIEW_INDEX.toml",
-  "state/CONCEPT_LEDGER.toml",
-  "docs/FORWARD_RULES_0151_ONWARD.rst",
-  "problems/0201-0300/README.rst",
-  "problems/0201-0300/0218-the-skyline-problem.rst",
-  "https://leetcode.com/problems/contains-duplicate-ii/description/",
-  "https://leetcode.com/problems/contains-duplicate-iii/description/",
-]
-fact_sources_may_provide = [
-  "0219 存在 i!=j、nums[i]=nums[j] 且 |i-j|<=indexDiff 的合同",
-  "0220 存在索引距离不超过 indexDiff 且值差不超过 valueDiff 的合同",
-  "当前目录、完成范围、静态审查状态和已有哈希术语连续性",
-]
-fact_sources_must_not_provide = [
-  "章节结构",
-  "证明深度",
-  "代码注释密度",
-  "静态审查标准",
-  "文件组织形式",
-]
-
-[problems."0219"]
-title = "Contains Duplicate II"
-difficulty = "Easy"
+[problem]
+id = 166
+title = "Fraction to Recurring Decimal"
+path = "problems/0101-0200/0166-fraction-to-recurring-decimal.rst"
+review_mode = "preserve_strong_body_and_apply_targeted_fixes"
 primary_risks = [
-  "扫描位置 i 前窗口必须恰好对应下标 max(0,i-indexDiff) 到 i-1，而不是任意已见前缀",
-  "查询当前值前必须先移除超出索引距离的最旧元素，或采用与证明一致的查询后删除顺序",
-  "indexDiff=0 时任何两个不同下标都不满足距离合同，应直接返回 false",
-  "集合实现需要说明为什么删除单个旧值不会误删仍在窗口中的同值；在算法尚未返回的前缀中窗口值互异，或改用计数映射",
-  "重复可能相邻、恰好距离 indexDiff、刚好超出窗口或多次出现",
-  "C 需要支持插入、查询和删除的窗口哈希结构，独立槽位状态、墓碑或重新散列策略以及失败语义",
-  "R 环境删除、字符串整数键和窗口状态必须无歧义；其他语言集合删除返回值与输入只读语义需核对",
+  "核对十语言长除法余数状态、循环赵点、符号、INT_MIN 扩宽和字符串所有权",
+  "合并 numeric.widen_before_abs_signed_minimum 与既有 numeric.int_min_absolute_value_widening 的近义重复状态",
+  "把新引入、强化和关联知识分开，避免把 0029/0050 已讲解内容错误标为 0166 首次引入",
+  "只做局部去重和学习链修正；没有确定性错误时不重写正文",
 ]
+
 minimum_static_review = [
-  "人工推演 [1,2,3,1], indexDiff=3；同数组 indexDiff=2；[1,0,1,1], indexDiff=1；indexDiff=0；负数和远距离重复",
-  "证明窗口集合在查询位置 i 前恰好代表允许的更早下标，并证明命中与合法索引对双向对应",
-  "证明移除时机和单值删除在未提前返回路径上安全",
-  "逐语言核对窗口删除、集合键、输入只读、平均/最坏复杂度和 C 失败清理",
+  "人工推演 1/2、2/1、2/3、1/6、-50/8、INT_MIN/-1 与零分子",
+  "证明余数为零有限终止、余数重复形成循环、首次位置插入括号正确",
+  "逐语言核对扩宽发生在 abs 前、除法与取余符号、哈希键、索引和失败清理",
+  "核对活动知识账本只从 state/concepts 读取，并在完成后把下一审查入口更新为 0167",
 ]
 
-[problems."0220"]
-title = "Contains Duplicate III"
-difficulty = "Hard"
-primary_risks = [
-  "同时满足 |i-j|<=indexDiff 与 |nums[i]-nums[j]|<=valueDiff；任一阈值为负的扩展输入应判无解",
-  "值差必须在 64 位或更宽整数中计算，不能让 int 减法先溢出",
-  "桶宽必须为 valueDiff+1，使同桶任意两值差至多 valueDiff，并防止 valueDiff+1 溢出",
-  "负数桶编号必须使用数学 floor 除法，不能直接依赖向零截断",
-  "当前值只需检查同桶和相邻两个桶，但相邻桶仍必须做精确值差比较",
-  "窗口映射只保留最近 indexDiff 个下标对应的值；加入前查询，加入后删除离开窗口的旧值，顺序必须与不变量一致",
-  "同桶至多保存一个值的论证依赖算法在第二个同桶值到来时立即返回 true",
-  "C、TypeScript、Java、C#、Go、Rust、Julia、R 的 64 位整数、整除和映射删除语义需逐项核对",
-]
-minimum_static_review = [
-  "人工推演 [1,2,3,1], indexDiff=3,valueDiff=0；[1,5,9,1,5,9],2,3；负数；INT_MIN/INT_MAX；indexDiff=0；valueDiff=0",
-  "证明同桶必满足值差阈值、只检查相邻桶足够、跨两桶以上不可能满足阈值",
-  "证明负数 floor 桶编号和滑动窗口删除保持映射不变量",
-  "逐语言核对宽整数转换发生在减法之前、桶宽、键类型、删除、平均/最坏复杂度和资源失败",
-]
-
-must_preserve = [
-  "0219 的精确索引窗口不变量、删除安全性和命中充要证明",
-  "0219 的 C 窗口哈希删除、R 键与十语言集合适配",
-  "0220 的双阈值合同、宽整数、负数分桶、相邻桶证明和滑动删除",
-  "每题固定十语言完整实现、人工推演、静态语义审查、剩余风险和带答案自检",
-]
-
-forbidden = [
-  "参考 0218 或其他最近题目的章节结构、证明篇幅或静态审查密度",
-  "0219 把整个历史前缀保留在集合中而忽略 indexDiff",
-  "0219 删除仍可能由另一个窗口下标代表的值却没有唯一性或计数证明",
-  "0220 在 32 位 int 中先做减法再转换为宽整数",
-  "0220 对负数使用向零截断桶编号却声称是 floor",
-  "0220 只因落在相邻桶就直接返回而不检查真实值差",
-  "把哈希映射最坏复杂度写成保证 O(n)",
-  "拆分为 inc 或 include",
-  "运行、编译、对拍、穷举、属性测试或 sanitizer 题解代码",
-  "把静态审查写成测试、编译或运行通过",
-]
-
-completion_checks = [
-  "逐题对照 0050 的状态/数值边界和 0076 的最优性/资源深度",
-  "每题完成后立即执行质量门；0220 出现压缩迹象时按合同缩批",
-  "命中 DRIFT_LOG 的拆分、摘要、最近样本、预算和验证策略回归检查均通过",
-  "每道算法题只有一个自包含 RST，十语言代码全部内联并位于 problems/0201-0300",
-  "完成范围、completed_count、next_problem、根 README、范围索引和知识账本同步",
-  "提交后 BATCH_CONTRACT 被替换为下一批合同",
+[completion]
+required = [
+  "正文只在审查发现明确问题时修改",
+  "知识账本消除 0166 的近义重复 concept",
+  "PROGRESS 与下一份 BATCH_CONTRACT 同步到 0167",
+  "不修改完成题数和 0219 的生成进度事实",
+  "一个原子 main 提交，不创建分支或 PR",
 ]

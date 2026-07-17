@@ -1,0 +1,16 @@
+[meta]
+version = 2
+range = "0138"
+last_problem = 138
+inherits = "state/concepts/0137.toml"
+
+[updates]
+"workflow.targeted_static_review" = "0134 引入人工示例推演与逐语言静态审查；0138 继续执行，累计强化 5 次。"
+
+[concepts]
+"algorithm.identity_map_two_pass_clone" = "kind=algorithm; introduced=0138; last=0138; occurrences=1; teaching_state=explained; note=第一遍沿 next 为每个原节点建立身份到独立副本的完整映射，第二遍只从映射值连接 next 与 random，支持前向、后向、自引用和重复节点值。"
+"proof.deep_copy_edge_preservation" = "kind=proof; introduced=0138; last=0138; occurrences=1; teaching_state=explained; note=证明分为节点双射、两类边保持、新旧对象隔离与原输入不变；返回头和全部非空副本边都来自新建映射值。"
+"adapter.r_identity_linear_lookup" = "kind=language_adapter; introduced=0138; last=0138; occurrences=1; teaching_state=explained; note=R 基础实现预分配原节点与副本列表，以 identical 比较 environment 身份定位 random 目标；最坏时间 O(n^2)，辅助空间 O(n)。"
+"language.identity_map_cross_language" = "kind=language_boundary; introduced=0138; last=0138; occurrences=1; teaching_state=explained; note=C 指针表、Python id、Java IdentityHashMap、Rust Rc 地址、C# ReferenceEquals、Julia IdDict 与 R identical 都按节点身份而不是 val 建立映射。"
+"resource.clone_partial_failure_ownership" = "kind=resource; introduced=0138; last=0138; occurrences=1; teaching_state=explained; note=C 失败时逐个释放已建副本，C++ 以 unique_ptr 暂存到成功交权；返回图是 Theta(n) 必要载荷，与 O(n) 身份映射工作空间分开报告。"
+"workflow.risk_triggered_review" = "kind=workflow; introduced=0138; last=0138; occurrences=1; teaching_state=canonical; note=取消固定每 50 题全量审核；普通批次自检，只有高风险语义、静态审查异常、规则冲突或用户明确要求时抽查。"

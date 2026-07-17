@@ -1,0 +1,24 @@
+[meta]
+version = 1
+range = "0117-0120"
+last_problem = 120
+inherits = "state/concepts/0115-0116.toml"
+
+[updates]
+"interface.next_node_reference_model" = "0116 首次建立带 next 字段的跨语言节点模型；0117 推广到稀疏树并继续保持节点身份、左右拓扑和共享引用语义，累计 2 次。"
+"algorithm.level_next_chain_reuse" = "0116 在完美树中用已建 next 链替代队列；0117 以通用 next_head/next_tail 构造未知形状下一层，累计 2 次。"
+"boundary.explicit_chain_tail_null" = "0116 要求每层最右 next 为空；0117 进一步用于覆盖旧链接污染和保证下一轮导航终止，累计 2 次。"
+"algorithm.reverse_rolling_update" = "0115 组合计数首次用目标前缀逆序覆盖；0119 用帕斯卡单行再次证明逆序保护上一轮左邻居，累计 2 次。"
+"language.julia_r_descending_iteration" = "历史更正已要求显式负步长；0119、0120 分别在单行递推和自底向上行循环中强化端点证明与空循环处理。"
+"complexity.output_space_exclusion" = "此前 25 次区分工作状态与返回载荷；0118、0119 分别区分二维输出、单行输出和核心工作空间，累计 27 次。"
+
+[concepts]
+"algorithm.sparse_level_chain_tail" = "kind=algorithm; introduced=0117; last=0117; occurrences=1; teaching_state=explained; note=沿当前层 next 扫描父节点，按左后右追加非空孩子，用 next_head 与 next_tail 常数空间构造稀疏下一层。"
+"proof.current_level_read_next_level_write" = "kind=proof; introduced=0117; last=0117; occurrences=1; teaching_state=explained; note=本轮只读取当前层 next 并只写孩子层 next，两层节点集合分离，因此横向导航不会被正在构造的链破坏。"
+"algorithm.pascal_adjacent_parent_recurrence" = "kind=algorithm; introduced=0118; last=0119; occurrences=2; teaching_state=reinforcing; note=内部位置等于上一行左上与右上之和；0118 保存全部行，0119 用最终输出数组逆序压缩。"
+"interface.ragged_matrix_row_ownership" = "kind=interface; introduced=0118; last=0118; occurrences=1; teaching_state=explained; note=第 row 行长度为 row+1 且拥有独立容器；C 同步返回行目录、列宽和逐行分配结果。"
+"c.transactional_ragged_matrix_result" = "kind=language_boundary; introduced=0118; last=0118; occurrences=1; teaching_state=explained; note=C 任一行分配失败时释放全部已完成行和元数据，只在整体成功后发布返回行数与列宽。"
+"algorithm.pascal_row_reverse_in_place" = "kind=algorithm; introduced=0119; last=0119; occurrences=1; teaching_state=explained; note=从 current 下降到 1 更新 row[column]+=row[column-1]，保证两个来源都属于上一行且输出数组兼作工作区。"
+"algorithm.triangle_bottom_up_suffix_dp" = "kind=algorithm; introduced=0120; last=0120; occurrences=1; teaching_state=explained; note=dp[column] 表示下一行对应位置到底部的最小后缀和，当前节点加两个相邻孩子后缀的较小值。"
+"proof.triangle_suffix_optimality" = "kind=proof; introduced=0120; last=0120; occurrences=1; teaching_state=explained; note=任意路径第一步只能进入两个孩子之一，归纳假设提供各孩子完整最优后缀，取较小者覆盖全部合法路径。"
+"boundary.readonly_input_working_copy" = "kind=boundary; introduced=0120; last=0120; occurrences=1; teaching_state=explained; note=复制最后一行作为 O(r) 工作数组，避免把 DP 写回调用者三角形并支持调用前后深比较。"

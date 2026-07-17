@@ -1,0 +1,25 @@
+[meta]
+version = 1
+range = "0101-0104"
+last_problem = 104
+inherits = "state/concepts/0092-0100.toml"
+
+[updates]
+"interface.binary_tree_node_reference_model" = "0094 建立跨语言 TreeNode 引用模型，0095、0098-0100 已复用；0101-0104 继续覆盖镜像比较、BFS 队列与树高递归，累计 9 次。"
+"complexity.tree_height_stack_space" = "0094 首次解释显式栈按树高计费；0100、0101、0104 在成对递归、镜像递归和树高递推中继续区分平衡树与退化树，累计 4 次。"
+"complexity.output_space_exclusion" = "此前 17 次已区分工作状态与返回载荷；0102、0103 新增二维树层输出，明确队列 O(w) 与 Theta(n+h) 返回载荷，累计 19 次。"
+
+[concepts]
+"algorithm.symmetric_tree_mirror_pair_recursion" = "kind=algorithm; introduced=0101; last=0101; occurrences=1; teaching_state=explained; note=状态 mirror(a,b) 比较镜像位置，递归交叉处理 a.left 对 b.right、a.right 对 b.left。"
+"proof.symmetric_tree_cross_direction_induction" = "kind=proof; introduced=0101; last=0101; occurrences=1; teaching_state=explained; note=以子树最大高度归纳，根值相等且外侧、内侧两组交叉子树分别镜像，当且仅当当前子树对镜像。"
+"algorithm.binary_tree_level_order_queue_snapshot" = "kind=algorithm; introduced=0102; last=0103; occurrences=2; teaching_state=reinforced; note=每轮先保存队列中当前层节点数，只处理快照范围；处理时按父节点自然顺序先左后右追加下一层。"
+"proof.bfs_level_frontier_order" = "kind=proof; introduced=0102; last=0103; occurrences=2; teaching_state=reinforced; note=当前层父节点从左到右出队，每个父节点先追加左孩子再追加右孩子，因此下一层队列完整且保持从左到右。"
+"interface.two_dimensional_row_independence" = "kind=interface; introduced=0102; last=0103; occurrences=2; teaching_state=reinforced; note=每层结果使用独立行缓冲；加入答案后不清空或复用，避免历史行随当前行修改。"
+"c.transactional_tree_level_results" = "kind=language_boundary; introduced=0102; last=0103; occurrences=2; teaching_state=reinforced; note=C 先统计节点数，再一次性分配队列、外层行指针与列长度；任一行分配失败时释放全部已完成行和元数据。"
+"complexity.bfs_frontier_width" = "kind=complexity; introduced=0102; last=0103; occurrences=2; teaching_state=reinforced; note=BFS 工作队列按最大同时存活前沿宽度 w 计为 O(w)，二维返回载荷单独按全部节点与行容器计。"
+"algorithm.zigzag_level_target_index" = "kind=algorithm; introduced=0103; last=0103; occurrences=1; teaching_state=explained; note=队列保持自然层序，方向只映射当前行写入位置；零基正向 i、反向 k-1-i。"
+"proof.zigzag_index_bijection" = "kind=proof; introduced=0103; last=0103; occurrences=1; teaching_state=explained; note=i 到 i 与 i 到 k-1-i 都是层下标集合上的双射，保证每个节点值和每个行槽位一一对应。"
+"julia_r.zigzag_one_based_target" = "kind=language_boundary; introduced=0103; last=0103; occurrences=1; teaching_state=explained; note=Julia 与 R 使用一基位置，反向目标为 k-i+1；不能直接照搬零基 k-1-i。"
+"algorithm.binary_tree_max_depth_postorder" = "kind=algorithm; introduced=0104; last=0104; occurrences=1; teaching_state=explained; note=空节点深度为 0，非空节点返回 1+max(left_depth,right_depth)，先计算孩子再汇总当前节点。"
+"proof.max_depth_structural_induction" = "kind=proof; introduced=0104; last=0104; occurrences=1; teaching_state=explained; note=任意根到叶路径离开当前节点后只能进入一侧子树，选择较深子树并加当前节点得到最长合法向下路径。"
+"r.environment_queue_slots" = "kind=language_boundary; introduced=0102; last=0103; occurrences=2; teaching_state=reinforced; note=R 用哈希 environment 保存队列槽位和行表，避免从列表头删除或反复增长列表产生累计复制。"

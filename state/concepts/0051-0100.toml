@@ -1,68 +1,29 @@
 [meta]
-version = 6
-schema = "problem_index_v3"
+version = 7
+schema = "range_manifest_v1"
 range = "0051-0100"
 first_problem = 51
 last_problem = 100
 inherits = "state/concepts/0001-0050.toml"
 storage = "fifty_problem_range"
-self_contained = true
-
-[policy]
+active_data_complete = true
 archive_dependency = false
-catalog_rule = "catalog.ids stores concept IDs once; problem i/r arrays store catalog indices for introduced/reinforced events."
 
-[catalog]
-ids = ["algorithm.backtracking_n_queens","algorithm.binary_string_two_pointer_addition","algorithm.binary_tree_inorder_explicit_stack","algorithm.climbing_stairs_rolling_dp","algorithm.combinations_pruned_backtracking","algorithm.count_without_materializing_solutions","algorithm.decode_ways_forced_zero_segmentation","algorithm.decode_ways_nonzero_segment_rolling_dp","algorithm.dutch_national_flag_partition","algorithm.edit_distance_one_row_dp","algorithm.factorial_block_permutation_selection","algorithm.gray_code_binary_reflected_formula","algorithm.grid_dp_top_left_predecessors","algorithm.histogram_monotonic_index_stack","algorithm.insert_interval_three_phase_scan","algorithm.integer_sqrt_last_true_binary_search","algorithm.interleaving_string_one_row_dp","algorithm.ipv4_four_segment_backtracking","algorithm.jump_game_bfs_layer_boundary","algorithm.jump_game_farthest_reach","algorithm.kadane_prefix_minimum","algorithm.linked_list_interval_head_insertion","algorithm.matrix_first_row_column_markers","algorithm.matrix_flattened_binary_search","algorithm.maximal_rectangle_row_histograms","algorithm.merge_sorted_array_reverse_two_pointers","algorithm.merge_sorted_intervals_scan","algorithm.minimum_path_sum_rolling_dp","algorithm.minimum_window_deficit_sliding_window","algorithm.n_queens_bitmask_available_positions","algorithm.numeric_literal_state_scan","algorithm.obstacle_absorbing_zero","algorithm.partition_list_two_stable_chains","algorithm.path_component_stack_canonicalization","algorithm.plus_one_carry_suffix","algorithm.recover_bst_inversion_endpoints","algorithm.rotate_list_cycle_cut","algorithm.rotated_array_duplicate_binary_search","algorithm.same_tree_paired_recursion","algorithm.scramble_string_memoized_interval_search","algorithm.sorted_array_keep_at_most_two","algorithm.sorted_list_keep_first_of_run","algorithm.sorted_list_remove_all_duplicate_runs","algorithm.spiral_matrix_boundary_simulation","algorithm.spiral_matrix_sequential_fill","algorithm.spiral_matrix_shrinking_boundaries","algorithm.subsets_duplicate_same_depth_skip","algorithm.subsets_node_snapshot_backtracking","algorithm.text_justification_greedy_line_packing","algorithm.text_space_quotient_remainder","algorithm.unique_bst_catalan_dp","algorithm.unique_bst_interval_cartesian_product","algorithm.validate_bst_inorder_strict_increase","algorithm.word_search_in_place_marking","c.boolean_allocation_failure_contract","c.contiguous_matrix_with_row_views","c.counter_context_pointer","c.dp_allocation_failure_out_of_domain","c.path_output_buffer_rollback","c.scramble_fixed_capacity_memo","c.transactional_board_result","c.transactional_combination_result","c.transactional_interval_matrix_result","c.transactional_ip_string_results","c.transactional_text_line_result","c.transactional_tree_forest_construction","capacity.binary_sum_max_length","complexity.combination_output_size","complexity.fixed_width_text_output","complexity.gray_code_output_lower_bound","complexity.histogram_stack_amortized_linear","complexity.interleaving_shorter_column_space","complexity.ipv4_fixed_depth_output","complexity.maximal_rectangle_linear_cells","complexity.ordered_candidate_deletion","complexity.output_space_exclusion","complexity.rotated_search_duplicate_linear_degradation","complexity.same_tree_short_circuit_height","complexity.scramble_string_cubic_states_quartic_time","complexity.subset_total_payload","complexity.tree_height_stack_space","complexity.unique_bst_catalan_output","complexity.unique_subsets_payload","complexity.word_search_three_way_branch_bound","construction.reverse_output_buffer","data_structure.mutable_backtracking_path","interface.array_result_snapshot","interface.binary_tree_node_reference_model","interface.insert_interval_input_immutability","interface.interval_result_snapshot","interface.linked_list_node_reuse","interface.merge_sorted_array_copy_return","interface.r_matrix_copy_return","interface.r_sort_colors_copy_return","interface.r_valid_prefix_copy_return","interface.subsets_sorting_input","interface.unique_bst_independent_tree_clones","interface.valid_prefix_result_contract","julia_r.zero_based_algorithm_coordinates","language.julia_type_preserving_max","language.r_no_split_string_scan","language.r_numeric_exact_integer_range","numeric.catalan_19_int64_intermediate","numeric.climbing_stairs_int32_bound","numeric.decode_ways_segment_product_bound","numeric.edit_distance_length_bound","numeric.gray_code_bit_width_bound","numeric.histogram_area_bound","numeric.index_plus_jump_bound","numeric.matrix_flattened_index_bound","numeric.maximal_rectangle_area_bound","numeric.maximum_subarray_sum_bound","numeric.minimum_path_sum_bound","numeric.minimum_window_ascii_frequency_bound","numeric.n_queens_signed_shift_bounds","numeric.permutation_factorial_bound_nine","numeric.saturating_path_count","numeric.square_compare_by_division","numeric.square_dimension_capacity","numeric.unique_paths_final_bound","pattern.linked_list_detach_before_append","pattern.optional_previous_without_numeric_sentinel","pattern.virtual_sentinel_flush","proof.backtracking_prefix_partition","proof.binary_addition_carry_invariant","proof.binary_search_candidate_interval","proof.bst_inorder_strict_characterization","proof.climbing_stairs_last_step_partition","proof.combination_increasing_path_bijection","proof.combination_last_start_pruning","proof.decode_ways_transition_partition","proof.decode_ways_zero_separator_factorization","proof.dutch_flag_region_invariant","proof.dutch_flag_swap_recheck","proof.edit_distance_three_operations","proof.exponent_digit_witness","proof.factorial_block_partition_rank","proof.gray_code_bijection_and_cycle","proof.gray_code_consecutive_one_bit","proof.grid_dp_left_to_right_overwrite","proof.grid_last_step_partition","proof.histogram_optimal_rectangle_coverage","proof.histogram_pop_boundaries","proof.in_place_multiset_conservation","proof.inorder_stack_continuation_invariant","proof.insert_interval_phase_partition","proof.integer_sqrt_floor_boundary","proof.interleaving_left_to_right_overwrite","proof.ipv4_monotone_segment_rejection","proof.ipv4_remaining_length_pruning","proof.jump_game_reachable_prefix","proof.kadane_dominance","proof.last_word_two_phase_boundary","proof.left_biased_space_distribution","proof.linked_list_head_insertion_fixed_tail","proof.linked_list_interval_conservation_no_cycle","proof.matrix_marker_phase_order","proof.matrix_row_major_global_order","proof.maximal_rectangle_bottom_row_reduction","proof.merge_sorted_array_second_exhaustion_stop","proof.merge_sorted_array_unread_prefix_safety","proof.merged_interval_finalization","proof.minimum_path_optimal_substructure","proof.minimum_window_contraction_optimality","proof.minimum_window_deficit_invariant","proof.n_queens_constraint_invariant","proof.numeric_literal_local_constraints","proof.partition_list_node_conservation","proof.partition_list_stable_order","proof.path_stack_prefix_canonical","proof.plus_one_first_non_nine_absorbs_carry","proof.recover_bst_one_or_two_descents","proof.recover_bst_structure_preservation","proof.reversible_constraint_state","proof.rotate_list_cut_position","proof.rotate_list_cycle_break_node_conservation","proof.rotated_array_equal_endpoints_shrink","proof.same_tree_structural_induction","proof.saturation_preserves_bounded_answer","proof.scramble_string_multiset_pruning","proof.scramble_string_two_root_correspondences","proof.solution_count_bijection","proof.sorted_array_second_last_witness","proof.sorted_list_dummy_predecessor_invariant","proof.sorted_list_run_first_node_conservation","proof.spiral_degenerate_guard","proof.spiral_matrix_exactly_once_write","proof.spiral_matrix_layer_invariant","proof.spiral_remaining_rectangle_invariant","proof.subset_increasing_index_bijection","proof.subsets_duplicate_canonical_leftmost_path","proof.subsets_duplicate_deeper_copy_allowed","proof.text_justification_maximal_prefix","proof.unique_bst_count_root_product_sum","proof.unique_bst_root_partition_bijection","proof.word_search_restore_on_success","r.binary_tree_environment_nodes","r.return_value_recursion_count","r.scramble_environment_memo","r.subsets_environment_rows","rust.bitmask_unsigned_boundary","rust.linear_split_append_rotation","rust.mutable_link_slot_deletion","rust.owned_list_segment_reverse_reconnect","rust.partition_list_owned_tail_slots","string.ascii_byte_character_equivalence","string.backward_last_word_scan","syntax.javascript_avoid_bitwise_2pow31","technique.edit_distance_diagonal_cache","technique.grid_dp_one_row_compression","technique.lowest_set_bit_iteration","typescript.bitwise_32bit_proof"]
+[resolution]
+mode = "ordered_active_shards"
+statement = "按 shards 顺序读取活动分片；只合并 updates、concepts 与 problems，后出现的同名键覆盖更早值。分片中的 legacy meta、inherits、batch 与 resolution 只作来源记录。"
 
-[problems]
-"0051" = { i = [0,29,60,114,165,200,211], r = [85,98,123,173,207,210] }
-"0052" = { i = [5,56,75,181,197], r = [29,98,114,165,200,207,210,211] }
-"0053" = { i = [20,99,101,111,151], r = [98] }
-"0054" = { i = [43,187], r = [45,98,185,188] }
-"0055" = { i = [19,108,150], r = [18,98] }
-"0056" = { i = [26,161], r = [62,89,98] }
-"0057" = { i = [14,88,145], r = [26,62,89,98,161] }
-"0058" = { i = [100,152,205,206], r = [98] }
-"0059" = { i = [44,55,118,186], r = [43,45,98,185,187,188] }
-"0060" = { i = [10,74,115,136], r = [98] }
-"0061" = { i = [36,174,175,201], r = [98] }
-"0062" = { i = [12,57,119,139,140,209], r = [75,98,207] }
-"0063" = { i = [31,116,178], r = [12,75,98,139,207,209] }
-"0064" = { i = [27,112,162], r = [12,75,98,139,140,207,209] }
-"0065" = { i = [30,135,166], r = [98,205,207] }
-"0066" = { i = [34,86,170], r = [98,207] }
-"0067" = { i = [1,66,84,124], r = [98,205,207] }
-"0068" = { i = [48,49,64,68,153,192], r = [98,205,207] }
-"0069" = { i = [15,117,146], r = [98,125,207] }
-"0070" = { i = [3,103,127], r = [75,98,207] }
-"0071" = { i = [33,58,169], r = [98,205,207] }
-"0072" = { i = [9,105,134,208], r = [57,75,98,101,139,205,207,209] }
-"0073" = { i = [22,92,156], r = [98,207] }
-"0074" = { i = [23,109,157], r = [98,125,207] }
-"0075" = { i = [8,93,132,133], r = [98,143,207] }
-"0076" = { i = [28,113,163,164], r = [98,207] }
-"0077" = { i = [4,61,67,128,129], r = [98,207] }
-"0078" = { i = [47,79,189], r = [98,207] }
-"0079" = { i = [53,83,195], r = [98,207] }
-"0080" = { i = [40,94,97,182], r = [98,143,207] }
-"0081" = { i = [37,76,176], r = [98,125,207] }
-"0082" = { i = [42,90,183,202], r = [98,143,207] }
-"0083" = { i = [41,184], r = [90,98,143,207] }
-"0084" = { i = [13,70,107,122,141,142], r = [98,207] }
-"0085" = { i = [24,73,110,158], r = [13,70,98,122,141,142,207] }
-"0086" = { i = [32,120,167,168,204], r = [90,98,143,207] }
-"0087" = { i = [39,59,78,179,180,198], r = [75,98,205,207] }
-"0088" = { i = [25,91,159,160], r = [98,143,207] }
-"0089" = { i = [11,69,106,137,138], r = [75,98,207] }
-"0090" = { i = [46,82,95,190,191,199], r = [47,75,79,98,207] }
-"0091" = { i = [6,7,104,130,131], r = [75,98,205,207] }
-"0092" = { i = [21,154,155,203], r = [75,90] }
-"0093" = { i = [17,63,72,148,149], r = [75,98,205] }
-"0094" = { i = [2,80,144,196], r = [75,87] }
-"0095" = { i = [51,65,81,96,194], r = [75,87] }
-"0096" = { i = [50,102,193], r = [98] }
-"0097" = { i = [16,54,71,147], r = [75,98,205] }
-"0098" = { i = [52,121,126], r = [75,87] }
-"0099" = { i = [35,171,172], r = [75,87,126] }
-"0100" = { i = [38,77,177], r = [75,87] }
+[[shards]]
+path = "state/concepts/ranges/0051-0100/0051-0073.toml"
+effective_range = "0051-0073"
+role = "data"
+
+[[shards]]
+path = "state/concepts/ranges/0051-0100/0074-0091.toml"
+effective_range = "0074-0091"
+role = "data"
+
+[[shards]]
+path = "state/concepts/ranges/0051-0100/0092-0100.toml"
+effective_range = "0092-0100"
+role = "data"

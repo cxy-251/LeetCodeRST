@@ -1,6 +1,6 @@
 [project]
 name = "leetcode-multilang-rst"
-phase = "generation"
+phase = "historical_review"
 format = "rst"
 ordering = "leetcode_number_ascending"
 execution_mode = "conversation_only"
@@ -29,7 +29,7 @@ remaining_count = 0
 baseline = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 batch_contract = "state/BATCH_CONTRACT.toml"
 drift_log = "state/DRIFT_LOG.toml"
-new_problem_generation_paused = false
+new_problem_generation_paused = true
 completion_count_unchanged = true
 required_sections = [
   "precise_contract",
@@ -71,14 +71,24 @@ scope_reason = "0218 作为独立 Hard 完整完成；半开区间、同坐标�
 summary = "完成 0218 The Skyline Problem：全部边界扫描、活动建筑最大堆、过期堆顶持续清理、同坐标分组、规范化关键点、二维输出所有权和十语言适配。"
 
 [next_batch]
-status = "generation_ready"
+status = "paused_for_historical_review"
 kind = "generation"
 start = 219
 end = 220
 problem_ids = [219, 220]
 difficulty_budget = 5
 contract = "state/BATCH_CONTRACT.toml"
-purpose = "生成 0219 Contains Duplicate II 与 0220 Contains Duplicate III；完整处理索引距离滑动窗口、窗口集合删除，以及有序集合或桶方法的值差边界、负数分桶、宽整数和跨语言容器语义。"
+purpose = "0219–0220 新题生成暂缓；先按用户要求从 0166 开始升序审查历史题和知识账本。"
+
+[review_queue]
+status = "ready"
+kind = "historical_review"
+start = 166
+current = 166
+ordering = "ascending_public_algorithm_problems"
+contract = "state/BATCH_CONTRACT.toml"
+problem_path = "problems/0101-0200/0166-fraction-to-recurring-decimal.rst"
+purpose = "从 0166 开始逐题审查正文质量、十语言静态语义、学习链与 concept 状态；修复必须形成独立原子提交。"
 
 [review_history]
 status = "completed"
@@ -140,7 +150,7 @@ policy = "docs/ARTIFACT_LIFECYCLE_POLICY.rst"
 archive_index = "archive/README.rst"
 active_review_batch_files = 0
 active_review_finding_files = 0
-last_archive = "archive/reviews/0051-0100/MANIFEST.rst"
+last_archive = "archive/state/concepts/pre-consolidation/MANIFEST.rst"
 temporary_marker_present = false
 disposable_generation_reports_committed = false
 problem_code_fragments_present = false
@@ -148,7 +158,7 @@ problem_code_fragments_present = false
 [quality_scope]
 historical_start = 1
 historical_end = 218
-historical_policy = "用户指定的 32 道低质量题解已经全部返工完成；历史题默认保持不变，风险触发时定向抽查。"
+historical_policy = "既有集中质量返工已完成；当前按用户明确要求从 0166 开始升序审查，未审到的历史题默认不改。"
 persistent_rule_start = 151
 persistent_rule = "docs/FORWARD_RULES_0151_ONWARD.rst"
 forward_rule_policy = "0151 起全部后续题目持续执行并原位维护长期前向规则。"
@@ -181,11 +191,13 @@ concurrency_policy = "fetch_and_compare_before_commit; stop_on_remote_change_or_
 index = "state/CONCEPT_LEDGER.toml"
 latest_record = "state/concepts/0201-0250.toml"
 latest_problem = 218
-storage = "fifty_problem_range"
-active_data_self_contained = true
+storage = "range_manifest_with_active_shards"
+active_data_complete = true
+active_data_self_contained = false
+archive_dependency = false
 
 [next_action]
-summary = "按 BATCH_CONTRACT 生成 0219–0220；0218 The Skyline Problem 已完整处理。"
+summary = "按 BATCH_CONTRACT 从 0166 开始升序审查；0219–0220 新题生成暂停。"
 
 [last_update]
-summary = "0218 已生成并通过静态质量门；完成数更新为 194，下一入口为 0219。"
+summary = "知识账本恢复为活动 range manifest 与 active shards；完整历史状态不再依赖 archive，下一入口为 0166 审查。"

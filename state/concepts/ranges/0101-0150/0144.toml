@@ -1,0 +1,14 @@
+[meta]
+version = 2
+range = "0144"
+last_problem = 144
+inherits = "state/concepts/0143.toml"
+
+[updates]
+"workflow.targeted_static_review" = "0134 引入人工示例推演与逐语言静态审查；0144 继续执行，累计强化 11 次。"
+
+[concepts]
+"algorithm.iterative_preorder_right_before_left" = "kind=algorithm; introduced=0144; last=0144; occurrences=1; teaching_state=explained; note=由 Pre(u)=[u]+Pre(left)+Pre(right) 推出先压右、后压左，使栈顶到栈底的待访问子树顺序与剩余前序一致。"
+"proof.preorder_stack_invariant" = "kind=proof; introduced=0144; last=0144; occurrences=1; teaching_state=explained; note=已输出值是完整前序前缀，剩余序列是栈顶到栈底各子树 Pre 的串接；合法树唯一父节点保证每个节点恰好入栈并提交一次。"
+"complexity.output_vs_working_space" = "kind=complexity; introduced=0054; last=0144; occurrences=6; teaching_state=reinforced; note=显式 DFS 栈每层至多保存一个待访问兄弟子树根，峰值 O(h)；返回 n 个值是独立 Theta(n) 载荷，R environment 还产生 O(n) 适配器物化。"
+"ownership.read_only_tree_reference_stack" = "kind=ownership; introduced=0144; last=0144; occurrences=1; teaching_state=explained; note=十语言栈只保存树节点引用并读取字段；Rust Rc 克隆只增加临时强计数，短 RefCell 借用块结束后再操作局部栈。"

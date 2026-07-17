@@ -4,30 +4,34 @@
 职责
 ----
 
-``state/CONCEPT_LEDGER.toml`` 是活动知识账本总入口，``state/concepts/`` 中每个文件负责一个 50 题范围。
-活动范围文件必须直接包含有效数据，正常生成、审查和修复流程不得读取 ``archive/`` 才能恢复知识状态。
+``state/CONCEPT_LEDGER.toml`` 是活动知识账本总入口。每个五十题范围由一个稳定 manifest 和零个或多个
+``state/concepts/ranges/<范围>/`` 活动数据分片组成。归档只保存迁移前原件，不参与正常读取。
 
-范围与 schema
--------------
+权威 schema
+-----------
 
-当前五个范围文件允许使用显式登记的兼容 schema：
+``concept_state_v1``
+  ``0001-0050`` 使用的历史平面状态文件。
 
-* ``concept_state_v1``：平面 ``concepts`` 累计状态；
-* ``problem_index_v3``：在 ``catalog.ids`` 中集中保存 concept ID，题号表用 ``i/r`` 索引记录 introduced/reinforced，直接覆盖完整 50 题范围；
-* ``flat_concept_state_v1``：一个完整范围的平面 ``concepts``；
-* ``problem_delta_v1``：按题号保存 ``introduced`` 与 ``reinforced`` ID，供开放范围原位追加。
+``range_manifest_v1``
+  manifest 直接声明范围、父范围、活动数据完整性和有序 ``shards``。读取器按顺序合并每个分片中的
+  ``updates``、``concepts``、``problems`` 与 ``skipped``；同名键以后出现的值为准。manifest 可以通过 shard ``role`` 区分完整状态分片、旧题号记录和规范化补充分片。
 
-权威关系
---------
+活动数据规则
+------------
 
-#. 总索引的 ``records`` 顺序定义跨范围继承和覆盖顺序；
-#. 范围文件内部按自身 schema 解析；
-#. 后出现的同名知识状态覆盖更早状态；
-#. ``archive/state/concepts/pre-consolidation`` 只保留迁移前原件，不参与活动解析；
-#. 历史文件中的旧 ``inherits`` 字段与总索引冲突时，以总索引为准。
+#. manifest 与全部 shard 都必须位于 ``state/concepts/``；
+#. 正常生成、审查和修复不得读取 ``archive/`` 才能恢复有效状态；
+#. shard 中迁移前留下的 ``meta``、``inherits``、``batch`` 与 ``resolution`` 只作来源记录；当前继承顺序只由 manifest 定义；
+#. 历史 shard 的 ``updates`` 若值本身包含完整 ``kind/introduced/last/occurrences/teaching_state/note``，按完整 concept 状态参与覆盖；
+#. concept 状态必须保留 ``kind``、``introduced``、``last``、``occurrences``、``teaching_state`` 和 ``note``；
+#. 缺少完整元数据的历史题必须由同范围的 ``normalized-concepts.toml`` 补齐，且注明来源；
+#. ``problems`` 只提供题目到 concept ID 的辅助映射，不能替代 ``updates`` 或 ``concepts``；
+#. 新题必须同时写入完整知识状态和题目映射，禁止只追加 ID；
+#. composite 壳与 archive manifest 不属于活动解析链。
 
 维护规则
 --------
 
-新题只修改所属 50 题范围文件。跨越 0250 后创建 ``0251-0300.toml``，同时更新总索引、进度和下一批合同。
-禁止重新创建单题或小批次 concept 文件，也禁止把归档路径作为活动数据源。
+``0201-0250`` 仍是开放范围。后续题在该范围目录新增活动数据分片，并更新范围 manifest、problem index、
+总索引和进度。跨过 0250 后创建 ``0251-0300.toml`` 与对应 ranges 目录。

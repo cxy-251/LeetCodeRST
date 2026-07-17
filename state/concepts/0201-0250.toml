@@ -1,123 +1,63 @@
 [meta]
-version = 2
-schema = "problem_delta_v1"
+version = 3
+schema = "range_manifest_v1"
 range = "0201-0250"
 first_problem = 201
 last_problem = 218
 inherits = "state/concepts/0151-0200.toml"
 storage = "fifty_problem_range"
-self_contained = true
 open_range = true
-
-[policy]
-append_rule = "0201–0250 的后续题只追加到本文件，不再创建单题或小批次 concept TOML。"
-teaching_rule = "introduced 首次完整讲解；reinforced 只记录当前题新增差异和教学状态变化。"
+active_data_complete = true
 archive_dependency = false
 
-[problems."0201"]
-title = "Bitwise AND of Numbers Range"
-primary_algorithm = "common binary prefix"
-introduced = ["algorithm.range_and_common_prefix", "proof.range_and_variable_suffix_zero", "adapter.unsigned_prefix_shift"]
-reinforced = []
+[policy]
+append_rule = "0201–0250 的后续题先更新本范围 problem index，并把完整知识状态写入新的活动数据分片；禁止把 archive 作为有效数据源。"
 
-[problems."0202"]
-title = "Happy Number"
-primary_algorithm = "Floyd cycle detection on digit-square function"
-introduced = ["algorithm.happy_number_floyd", "proof.happy_number_finite_state", "invariant.decimal_digit_square_sum"]
-reinforced = []
+[resolution]
+mode = "ordered_active_shards"
+statement = "legacy_state_data 的 updates 值按完整 concept 状态读取；legacy_problem_record 的题号表和 updates 只作来源记录；normalized_concept_state 提供 0213–0218 的规范 concept 状态。problem_index 只提供题目到 concept ID 的辅助映射。"
+problem_index = "state/concepts/ranges/0201-0250/problems.toml"
 
-[problems."0203"]
-title = "Remove Linked List Elements"
-primary_algorithm = "dummy-head linked-list filtering"
-introduced = ["algorithm.linked_list_dummy_head_filter", "invariant.mutable_link_slot", "ownership.removed_list_nodes"]
-reinforced = ["workflow.range_directory_boundary"]
+[[shards]]
+path = "state/concepts/ranges/0201-0250/0201-0203.toml"
+role = "legacy_state_data"
+[[shards]]
+path = "state/concepts/ranges/0201-0250/0204.toml"
+role = "legacy_state_data"
+[[shards]]
+path = "state/concepts/ranges/0201-0250/0205-0206.toml"
+role = "legacy_state_data"
+[[shards]]
+path = "state/concepts/ranges/0201-0250/0207.toml"
+role = "legacy_state_data"
+[[shards]]
+path = "state/concepts/ranges/0201-0250/0208-0209.toml"
+role = "legacy_state_data"
+[[shards]]
+path = "state/concepts/ranges/0201-0250/0210-0211.toml"
+role = "legacy_state_data"
+[[shards]]
+path = "state/concepts/ranges/0201-0250/0212.toml"
+role = "legacy_state_data"
+[[shards]]
+path = "state/concepts/ranges/0201-0250/0213.toml"
+role = "legacy_problem_record"
+[[shards]]
+path = "state/concepts/ranges/0201-0250/0214.toml"
+role = "legacy_problem_record"
+[[shards]]
+path = "state/concepts/ranges/0201-0250/0215.toml"
+role = "legacy_problem_record"
+[[shards]]
+path = "state/concepts/ranges/0201-0250/0216.toml"
+role = "legacy_problem_record"
+[[shards]]
+path = "state/concepts/ranges/0201-0250/0217.toml"
+role = "legacy_problem_record"
+[[shards]]
+path = "state/concepts/ranges/0201-0250/0218.toml"
+role = "legacy_problem_record"
 
-[problems."0204"]
-title = "Count Primes"
-primary_algorithm = "Sieve of Eratosthenes"
-introduced = ["algorithm.sieve_of_eratosthenes", "proof.sieve_start_at_square", "proof.smallest_prime_factor_completeness", "invariant.sieve_candidate_state", "safety.square_bound_by_division", "adapter.sieve_storage_cross_language"]
-reinforced = []
-
-[problems."0205"]
-title = "Isomorphic Strings"
-primary_algorithm = "bidirectional character mapping"
-introduced = ["algorithm.isomorphic_bidirectional_mapping", "proof.isomorphic_bijection", "semantics.string_character_unit"]
-reinforced = []
-
-[problems."0206"]
-title = "Reverse Linked List"
-primary_algorithm = "three-link iterative reversal"
-introduced = ["algorithm.reverse_list_three_links", "invariant.reversed_prefix_unprocessed_suffix", "proof.reverse_list_node_conservation", "ownership.reverse_list_links"]
-reinforced = []
-
-[problems."0207"]
-title = "Course Schedule"
-primary_algorithm = "Kahn topological cycle detection"
-introduced = ["model.course_prerequisite_graph", "algorithm.kahn_topological_sort", "invariant.remaining_indegree", "proof.dag_zero_indegree", "proof.processed_equals_acyclic", "adapter.graph_duplicate_edges", "adapter.c_graph_csr_failure", "adapter.r_julia_course_index"]
-reinforced = []
-
-[problems."0208"]
-title = "Implement Trie (Prefix Tree)"
-primary_algorithm = "Trie operations"
-introduced = ["model.trie_prefix_path", "state.trie_terminal_marker", "proof.trie_operation_sequence", "adapter.c_trie_transactional_insert", "adapter.trie_object_lifecycle"]
-reinforced = []
-
-[problems."0209"]
-title = "Minimum Size Subarray Sum"
-primary_algorithm = "positive sliding window"
-introduced = ["algorithm.positive_sliding_window", "invariant.window_exact_sum", "proof.discarded_left_boundary", "proof.positive_window_minimality", "adapter.wide_window_sum"]
-reinforced = []
-
-[problems."0210"]
-title = "Course Schedule II"
-primary_algorithm = "Kahn topological ordering"
-introduced = ["algorithm.kahn_topological_order", "invariant.valid_topological_prefix", "proof.topological_output_complete_or_empty", "output.non_unique_topological_order", "output.topological_order_payload"]
-reinforced = []
-
-[problems."0211"]
-title = "Design Add and Search Words Data Structure"
-primary_algorithm = "Trie wildcard DFS"
-introduced = ["model.trie_pattern_state", "algorithm.trie_dot_branch_dfs", "proof.wildcard_sound_complete", "complexity.trie_actual_visited_states"]
-reinforced = ["adapter.c_transactional_word_add", "adapter.r_environment_trie"]
-
-[problems."0212"]
-title = "Word Search II"
-primary_algorithm = "Trie-guided board DFS"
-introduced = ["model.trie_board_joint_state", "algorithm.multiword_trie_board_dfs", "invariant.board_path_trie_prefix", "proof.trie_prefix_pruning", "proof.terminal_payload_dedup", "complexity.actual_board_trie_states", "adapter.c_word_search_ownership", "adapter.r_board_state_environment"]
-reinforced = ["invariant.mark_and_restore_board"]
-
-[problems."0213"]
-title = "House Robber II"
-primary_algorithm = "circular-to-linear rolling DP"
-introduced = ["model.circular_path_to_two_linear_paths", "proof.circular_first_last_exclusion_cover"]
-reinforced = ["algorithm.house_robber_prefix_dp", "invariant.house_robber_rolling_pair"]
-
-[problems."0214"]
-title = "Shortest Palindrome"
-primary_algorithm = "KMP longest palindromic prefix"
-introduced = ["optimization.longest_palindromic_prefix", "proof.prepend_overlap_lower_bound", "string.kmp_border_palindrome_equivalence", "safety.unique_separator_boundary", "adapter.shortest_palindrome_string_materialization"]
-reinforced = ["algorithm.kmp_prefix_function", "proof.lower_bound_matched_by_construction", "string.ascii_code_unit_contract", "complexity.output_payload_separation", "safety.c_size_arithmetic_and_cleanup"]
-
-[problems."0215"]
-title = "Kth Largest Element in an Array"
-primary_algorithm = "three-way Quickselect"
-introduced = ["selection.kth_largest_target_index", "partition.three_way_quickselect_invariant", "proof.quickselect_target_region_reduction", "complexity.deterministic_pivot_worst_case", "adapter.quickselect_mutation_and_indices"]
-reinforced = ["algorithm.order_statistics", "proof.strict_interval_shrink", "array.in_place_partition", "semantics.duplicate_values_preserve_multiplicity", "safety.rust_signed_partition_cursor"]
-
-[problems."0216"]
-title = "Combination Sum III"
-primary_algorithm = "increasing combination backtracking"
-introduced = ["backtracking.strictly_increasing_candidate_start", "invariant.remaining_slots_and_sum", "pruning.minimum_reachable_sum", "pruning.maximum_reachable_sum", "proof.unique_combination_path", "adapter.two_dimensional_result_ownership"]
-reinforced = ["backtracking.path_restore", "output.mutable_path_snapshot", "proof.pruning_safety", "complexity.output_payload_separation", "safety.c_transactional_parallel_array_growth", "adapter.r_explicit_recursive_state"]
-
-[problems."0217"]
-title = "Contains Duplicate"
-primary_algorithm = "seen-set scan"
-introduced = ["invariant.seen_prefix_value_set", "proof.duplicate_second_occurrence", "complexity.hash_average_vs_worst", "adapter.c_open_addressing_occupied_metadata", "adapter.c_hash_failure_exact_fallback", "adapter.r_canonical_integer_environment_key"]
-reinforced = ["algorithm.query_before_insert", "proof.soundness_and_completeness", "safety.capacity_arithmetic", "safety.signed_to_unsigned_hash_domain", "complexity.input_read_only_vs_sorting"]
-
-[problems."0218"]
-title = "The Skyline Problem"
-primary_algorithm = "boundary sweep with max heap"
-introduced = ["geometry.skyline_half_open_buildings", "sweep.boundary_coordinate_compression", "heap.lazy_expiration_by_right_endpoint", "invariant.active_building_maximum", "output.normalized_skyline_keypoints", "adapter.c_skyline_owned_rows"]
-reinforced = ["algorithm.sweep_line", "data_structure.max_heap", "proof.event_coordinates_suffice", "proof.lazy_deletion_extreme_query", "complexity.heap_push_pop_amortization", "complexity.output_payload_separation", "safety.c_size_arithmetic_and_cleanup"]
+[[shards]]
+path = "state/concepts/ranges/0201-0250/normalized-concepts.toml"
+role = "normalized_concept_state"

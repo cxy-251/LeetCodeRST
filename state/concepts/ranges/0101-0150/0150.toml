@@ -1,0 +1,18 @@
+[meta]
+version = 2
+range = "0150"
+last_problem = 150
+inherits = "state/concepts/0149.toml"
+
+[updates]
+"workflow.targeted_static_review" = "0134 引入人工示例推演与逐语言静态审查；0150 继续执行，累计强化 17 次。"
+
+[concepts]
+"algorithm.reverse_polish_stack_evaluation" = "kind=algorithm; introduced=0150; last=0150; occurrences=1; teaching_state=explained; note=单次从左到右扫描；数字形成新表达式块，运算符先取 right 再取 left，把 left op right 的结果压回。"
+"semantics.integer_division_toward_zero" = "kind=language_semantics; introduced=0150; last=0150; occurrences=1; teaching_state=explained; note=C/C++/Java/Rust/Go/C# 使用原生向零整数除法，Python 与 R 对绝对值整除后恢复符号，TypeScript 用 Math.trunc，Julia 显式 RoundToZero。"
+"invariant.rpn_stack_completed_subexpressions" = "kind=invariant; introduced=0150; last=0150; occurrences=1; teaching_state=explained; note=处理任意前缀后，栈从底到顶对应尚未被已处理运算符合并的完整表达式块；块无重叠覆盖整个前缀且栈项等于块值。"
+"invariant.rpn_prefix_depth_balance" = "kind=invariant; introduced=0150; last=0150; occurrences=1; teaching_state=explained; note=每个前缀的 depth=operands-operators；合法运算符到达前 depth>=2，完整二元 RPN 结束 depth=1，为弹栈和最终读取提供结构见证。"
+"proof.rpn_block_partition_induction" = "kind=proof; introduced=0150; last=0150; occurrences=1; teaching_state=explained; note=数字追加单 token 块；运算符把末尾 left-block、right-block 与自身替换为一个合成块，归纳保持覆盖、次序和值正确性。"
+"semantics.exact_operator_token_classification" = "kind=language_semantics; introduced=0150; last=0150; occurrences=1; teaching_state=explained; note=只有完整 token 等于 +、-、*、/ 才是运算符；-11 等负数字符串进入整数解析，不能只检查首字符。"
+"complexity.rpn_token_characters_and_stack_depth" = "kind=complexity; introduced=0150; last=0150; occurrences=1; teaching_state=explained; note=以 token 数 t、字符总量 L、最大栈深 s 计，时间 O(t+L)、核心峰值 O(s)；C/Java/C#/R 按 t 预分配，实际空间 O(t)。"
+"adapter.c_rpn_stack_resource_path" = "kind=language_adapter; introduced=0150; last=0150; occurrences=1; teaching_state=explained; note=C 以 size_t 计算 t 个 int 的容量，成功路径统一 free；malloc 失败返回 0 与合法答案 0 无法区分，明确为平台 int 接口限制。"

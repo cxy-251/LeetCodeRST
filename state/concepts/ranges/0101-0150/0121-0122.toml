@@ -1,0 +1,18 @@
+[meta]
+version = 1
+range = "0121-0122"
+last_problem = 122
+inherits = "state/concepts/0117-0120.toml"
+
+[updates]
+"complexity.output_space_exclusion" = "此前 27 次区分工作状态与返回载荷；0121、0122 都只返回标量并使用常数扫描状态，累计 29 次。"
+
+[concepts]
+"algorithm.stock_single_transaction_prefix_minimum" = "kind=algorithm; introduced=0121; last=0121; occurrences=1; teaching_state=explained; note=固定卖出日后，只需维护严格更早前缀的最低价格，消除对全部买入日的重复枚举。"
+"proof.fixed_sell_day_best_buy" = "kind=proof; introduced=0121; last=0121; occurrences=1; teaching_state=explained; note=对任意卖出日，利润随买入价降低而增加；前缀最低价既给出该组交易上界，又来自真实更早日期，因此候选可实现。"
+"boundary.stock_zero_profit_option" = "kind=boundary; introduced=0121; last=0122; occurrences=2; teaching_state=reinforcing; note=不交易是合法基线；持续下降、单元素或无正涨幅输入都返回零，不发布负利润。"
+"algorithm.stock_unlimited_positive_deltas" = "kind=algorithm; introduced=0122; last=0122; occurrences=1; teaching_state=explained; note=无限次且最多持有一股时，累加全部正相邻价格变化，等价于依次执行每个最大上涨段的谷底到峰顶交易。"
+"proof.stock_telescoping_upper_bound" = "kind=proof; introduced=0122; last=0122; occurrences=1; teaching_state=explained; note=任意交易区间利润望远镜展开为相邻变化；合法持仓区间不重叠，每条边最多计入一次，删除非正变化得到全局上界。"
+"proof.stock_increasing_run_realization" = "kind=proof; introduced=0122; last=0122; occurrences=1; teaching_state=explained; note=每个最大严格上涨段的一次交易恰好实现该段全部正变化，不同段互不重叠，从而达到正变化总和。"
+"relation.stock_transaction_budget_changes_state" = "kind=relation; introduced=0122; last=0122; occurrences=1; teaching_state=explained; note=0121 的一次交易要求保留前缀最低买入价；0122 可在下降前结束持仓，状态折叠为正差分累加；0123 将因两次交易上限恢复阶段状态。"
+"boundary.stock_profit_integer_upper_bound" = "kind=boundary; introduced=0121; last=0122; occurrences=2; teaching_state=reinforcing; note=0121 最大利润不超过 10000；0122 最多约 floor(n/2) 个盈利段，总利润不超过 500000000，32 位有符号整数安全。"

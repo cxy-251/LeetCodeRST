@@ -1,0 +1,44 @@
+[meta]
+problem_ids = [218]
+range = "0218"
+status = "completed"
+source = "problems/0201-0300/0218-the-skyline-problem.rst"
+static_review_only = true
+
+[concepts."0218"]
+title = "The Skyline Problem"
+difficulty = "Hard"
+primary_algorithm = "boundary sweep with max heap and lazy expiration"
+
+introduced = [
+  "geometry.skyline_half_open_buildings",
+  "sweep.boundary_coordinate_compression",
+  "heap.lazy_expiration_by_right_endpoint",
+  "invariant.active_building_maximum",
+  "output.normalized_skyline_keypoints",
+  "adapter.c_skyline_owned_rows",
+]
+
+reinforced = [
+  "algorithm.sweep_line",
+  "data_structure.max_heap",
+  "proof.event_coordinates_suffice",
+  "proof.lazy_deletion_extreme_query",
+  "complexity.heap_push_pop_amortization",
+  "complexity.output_payload_separation",
+  "safety.c_size_arithmetic_and_cleanup",
+]
+
+[updates]
+"geometry.skyline_half_open_buildings" = "建筑 [left,right,height] 只在 left<=x<right 时活跃；right==x 必须在读取当前高度前失效。"
+"sweep.boundary_coordinate_compression" = "高度只可能在左右边界变化；排序去重后每个横坐标整体处理全部开始与结束，避免重复横坐标和中间伪高度。"
+"heap.lazy_expiration_by_right_endpoint" = "堆保存 height 与 right；过期非顶部元素暂留无害，成为顶部时持续按 right<=x 清理。"
+"invariant.active_building_maximum" = "加入全部 left<=x 建筑并清理过期顶部后，堆顶若存在既活跃又不低于任何活跃建筑，等于当前轮廓高度。"
+"output.normalized_skyline_keypoints" = "仅在高度变化时追加 [x,height]，保证横坐标严格递增、相邻高度不同，并在最大右边界回到 0。"
+"adapter.c_skyline_owned_rows" = "C 显式分配边界、堆、行指针、列长度与每个二元行；失败释放部分资源，成功所有权交给调用方。"
+
+[static_review]
+manual_cases = ["classic_overlap", "single_building", "adjacent_equal_height", "same_left", "same_right", "contained", "disjoint", "empty"]
+proof_checks = ["boundary_sufficiency", "all_starts_inserted", "expired_top_cleanup", "lazy_deletion_safety", "keypoint_completeness", "final_zero"]
+language_checks = ["heap_comparison_direction", "right_le_x_expiration", "same_coordinate_grouping", "one_based_fields", "c_allocation_cleanup", "owned_two_column_output"]
+execution_performed = false

@@ -1,0 +1,15 @@
+[meta]
+version = 2
+range = "0142"
+last_problem = 142
+inherits = "state/concepts/0141.toml"
+
+[updates]
+"workflow.targeted_static_review" = "0134 引入人工示例推演与逐语言静态审查；0142 继续执行，累计强化 9 次。"
+"language.node_identity_comparison" = "0141 强化链表身份比较；0142 返回原链表入口节点，累计强化 4 次。"
+
+[concepts]
+"algorithm.floyd_cycle_entry_recovery" = "kind=algorithm; introduced=0142; last=0142; occurrences=1; teaching_state=explained; note=第一阶段保留环内身份相遇点；seeker 回到 head 后与 slow 同步一步，至多走尾长 mu 步在原入口对象首次相遇。"
+"proof.cycle_distance_congruence" = "kind=proof; introduced=0142; last=0142; occurrences=1; teaching_state=explained; note=慢指针相遇总步数 t 满足 t≡0(mod lambda)，入口到相遇偏移 r≡t-mu，因此 mu+r≡0；该推导完整保留相遇前可能走过的整圈。"
+"proof.cycle_entry_first_meeting" = "kind=proof; introduced=0142; last=0142; occurrences=1; teaching_state=explained; note=k<mu 时 seeker 在环外、slow 在环内，不可能提前同一；k=mu 时二者都到入口，mu=0 则第一阶段相遇点已经是 head。"
+"ownership.original_cycle_entry_reference" = "kind=ownership; introduced=0142; last=0142; occurrences=1; teaching_state=explained; note=返回指针或引用只从 head 沿原 next 获得，不新建同值节点、不修改拓扑；Rust 返回 Rc 句柄仍指向入口原分配。"

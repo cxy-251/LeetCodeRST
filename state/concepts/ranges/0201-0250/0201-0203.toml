@@ -1,0 +1,25 @@
+[meta]
+version = 1
+range = "0201-0203"
+last_problem = 203
+inherits = "state/concepts/0199-0200.toml"
+
+[batch]
+completed = 3
+difficulty_budget = 4
+planned_scope = [201, 202, 203, 204]
+scope_shrunk = true
+summary = "进入 problems/0201-0300，完成公共位前缀、快乐数函数图循环检测和链表目标节点删除；0204 筛法独立后移。"
+
+[updates]
+"algorithm.range_and_common_prefix" = "kind=algorithm; introduced=0201; last=0201; occurrences=1; teaching_state=explained; note=同步逻辑右移区间端点直到相等，得到最长公共二进制前缀，再补回相同数量的低位 0。"
+"proof.range_and_variable_suffix_zero" = "kind=proof; introduced=0201; last=0201; occurrences=1; teaching_state=explained; note=端点跨越第一个差异位对应的块边界，变化后缀的每一位都在区间内至少出现一次 0，因此按位与全部归零。"
+"adapter.unsigned_prefix_shift" = "kind=language_adapter; introduced=0201; last=0201; occurrences=1; teaching_state=explained; note=C/C++/Rust/Go/C# 使用无符号状态，Java 使用 >>>，TypeScript 使用 >>>0，R 用精确 double 的除二与乘幂恢复。"
+"algorithm.happy_number_floyd" = "kind=algorithm; introduced=0202; last=0202; occurrences=1; teaching_state=explained; note=在平方位和函数图中使用快慢指针；fast 到达 1 表示快乐，slow 与 fast 在非 1 状态相遇表示进入非快乐环。"
+"proof.happy_number_finite_state" = "kind=proof; introduced=0202; last=0202; occurrences=1; teaching_state=explained; note=d 位数的平方位和不超过 81d，四位及以上严格下降，最终进入小于 1000 的有限集合并必然到达 1 或形成环。"
+"invariant.decimal_digit_square_sum" = "kind=invariant; introduced=0202; last=0202; occurrences=1; teaching_state=explained; note=取余与整除逐个移除十进制低位，累计值始终等于已处理数字的平方和。"
+"algorithm.linked_list_dummy_head_filter" = "kind=algorithm; introduced=0203; last=0203; occurrences=1; teaching_state=explained; note=虚拟头把原头删除转化为普通 next 重接；删除分支不推进前驱，保留分支才推进。"
+"invariant.mutable_link_slot" = "kind=invariant; introduced=0203; last=0203; occurrences=1; teaching_state=explained; note=已确认前缀全部保留且顺序不变，previous.next 始终是未检查后缀首节点；Rust 直接操作拥有 Option<Box<Node>> 的可变链接槽位。"
+"ownership.removed_list_nodes" = "kind=ownership; introduced=0203; last=0203; occurrences=1; teaching_state=explained; note=C 在明确接收节点所有权的假设下重接后 free；托管语言交给运行时，Rust 通过 Box 移动自动释放被删除节点。"
+"workflow.range_directory_boundary" = "kind=workflow; introduced=0201; last=0203; occurrences=1; teaching_state=registered; note=0201 起题解进入 problems/0201-0300，并创建独立范围 README；0101-0200 目录不再接收新题。"
+"workflow.targeted_static_review" = "kind=workflow; introduced=0167; last=0203; occurrences=18; teaching_state=explained; note=本批三题仅执行人工推演、证明映射、十语言静态语义和仓库一致性检查；未运行、未编译、未测试题解。"

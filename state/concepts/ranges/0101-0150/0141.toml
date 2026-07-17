@@ -1,0 +1,14 @@
+[meta]
+version = 2
+range = "0141"
+last_problem = 141
+inherits = "state/concepts/0139-0140.toml"
+
+[updates]
+"workflow.targeted_static_review" = "0134 引入人工示例推演与逐语言静态审查；0141 继续执行，累计强化 8 次。"
+
+[concepts]
+"algorithm.floyd_cycle_detection" = "kind=algorithm; introduced=0141; last=0141; occurrences=1; teaching_state=explained; note=完成 k 轮后 slow=x(k)、fast=x(2k)；无环时两步守卫到空，有环时取不小于尾长 mu 的环长 lambda 倍数即可构造身份相遇。"
+"proof.relative_speed_cycle_meeting" = "kind=proof; introduced=0141; last=0141; occurrences=1; teaching_state=explained; note=证明同时覆盖真返回意味着不同步数到达同一对象、无环路径节点互异，以及有环时 k≡0(mod lambda) 的有限相遇轮。"
+"language.node_identity_comparison" = "kind=language_semantics; introduced=0133; last=0141; occurrences=3; teaching_state=reinforced; note=C/C++/Go 指针、Python is、Java ==、Rust Rc::ptr_eq、TypeScript/Julia ===、C# ReferenceEquals 与 R identical 都按节点身份相遇，不比较 val。"
+"adapter.rust_rc_cyclic_list" = "kind=language_adapter; introduced=0141; last=0141; occurrences=1; teaching_state=explained; note=普通 Option<Box<ListNode>> 不能安全表达回边；循环题以 Rc<RefCell<ListNode>> 适配共享可变节点，并明确强 Rc 输入环不会仅靠引用计数自动回收。"

@@ -1,68 +1,75 @@
 [meta]
-version = 6
-schema = "problem_index_v3"
+version = 7
+schema = "range_manifest_v1"
 range = "0101-0150"
 first_problem = 101
 last_problem = 150
 inherits = "state/concepts/0051-0100.toml"
 storage = "fifty_problem_range"
-self_contained = true
-
-[policy]
+active_data_complete = true
 archive_dependency = false
-catalog_rule = "catalog.ids stores concept IDs once; problem i/r arrays store catalog indices for introduced/reinforced events."
 
-[catalog]
-ids = ["adapter.c_open_addressing_slope_table","adapter.c_rpn_stack_resource_path","adapter.r_environment_cache_nodes","adapter.r_full_int32_bit_count","adapter.r_identity_linear_lookup","adapter.r_repeated_vector_append","adapter.rust_box_list_split_merge","adapter.rust_lru_stable_index_pool","adapter.rust_ownership_returning_list_insert","adapter.rust_rc_cyclic_list","algorithm.anchor_normalized_direction_count","algorithm.ascii_filtered_two_pointer","algorithm.balance_height_or_failure","algorithm.bfs_delete_on_enqueue","algorithm.binary_tree_level_order_queue_snapshot","algorithm.binary_tree_max_depth_postorder","algorithm.bitwise_mod_three_fsm","algorithm.boundary_connected_complement","algorithm.candy_two_directional_constraints","algorithm.consecutive_sequence_start_filter","algorithm.distinct_subsequence_prefix_count_dp","algorithm.flatten_preorder_right_splice","algorithm.floyd_cycle_detection","algorithm.floyd_cycle_entry_recovery","algorithm.gas_station_failed_prefix_elimination","algorithm.graph_clone_memo_before_recursion","algorithm.grid_mark_on_enqueue","algorithm.identity_map_two_pass_clone","algorithm.inorder_position_hash_map","algorithm.iterative_preorder_right_before_left","algorithm.level_next_chain_reuse","algorithm.level_order_bottom_outer_reverse","algorithm.linked_list_bottom_up_merge_sort","algorithm.linked_list_insertion_sorted_prefix","algorithm.minimum_depth_bfs_first_leaf","algorithm.palindrome_interval_dp","algorithm.palindrome_min_cut_prefix_dp","algorithm.pascal_adjacent_parent_recurrence","algorithm.pascal_row_reverse_in_place","algorithm.path_sum_backtracking_snapshot","algorithm.path_sum_remaining_target","algorithm.perfect_tree_next_chain_constant_space","algorithm.postorder_inorder_reverse_cursor","algorithm.postorder_reverse_root_right_left","algorithm.preorder_inorder_reconstruction_cursor","algorithm.reorder_list_split_reverse_merge","algorithm.reverse_polish_stack_evaluation","algorithm.reverse_rolling_update","algorithm.shortest_path_predecessor_dag","algorithm.sorted_array_midpoint_bst_partition","algorithm.sorted_list_inorder_cursor_construction","algorithm.sparse_level_chain_tail","algorithm.stock_single_transaction_prefix_minimum","algorithm.stock_two_transaction_four_state","algorithm.stock_unlimited_positive_deltas","algorithm.symmetric_tree_mirror_pair_recursion","algorithm.tree_decimal_prefix_accumulation","algorithm.tree_max_path_dual_state","algorithm.triangle_bottom_up_suffix_dp","algorithm.word_break_reachable_prefix","algorithm.word_break_suffix_sentence_dp","algorithm.xor_pair_cancellation","algorithm.zigzag_level_target_index","boundary.ascii_character_contract","boundary.bfs_finish_target_parent_layer","boundary.cut_count_not_partition_count","boundary.explicit_chain_tail_null","boundary.graph_identity_not_business_value","boundary.leaf_requires_no_children","boundary.leaf_requires_two_null_children","boundary.nonempty_negative_answer_initialization","boundary.readonly_input_working_copy","boundary.stock_old_state_snapshot","boundary.stock_profit_integer_upper_bound","boundary.stock_zero_profit_option","boundary.word_ladder_end_must_be_dictionary_word","boundary.word_ladder_same_level_multiple_parents","c.transactional_path_matrix_result","c.transactional_ragged_matrix_result","c.transactional_tree_level_results","c.transactional_tree_reconstruction","complexity.bfs_frontier_width","complexity.bottom_up_list_merge_passes","complexity.dictionary_character_budget","complexity.enumeration_output_payload","complexity.front_insert_vs_outer_reverse","complexity.hash_direction_count_expected_bound","complexity.hash_expected_linear","complexity.linked_insertion_input_shape","complexity.output_sensitive_path_total","complexity.output_sensitive_suffix_materialization","complexity.output_space_exclusion","complexity.output_vs_working_space","complexity.rpn_token_characters_and_stack_depth","complexity.tree_height_stack_space","datastructure.lru_hash_doubly_linked_list","encoding.exact_normalized_direction_keys","interface.binary_tree_node_reference_model","interface.in_place_next_pointer_mutation","interface.in_place_tree_topology_mutation","interface.next_node_reference_model","interface.nonunique_tree_property_validation","interface.perfect_binary_tree_next_node","interface.ragged_matrix_row_ownership","interface.two_dimensional_row_independence","invariant.gcd_sign_canonical_direction","invariant.lru_map_list_bijection","invariant.lru_sentinel_topology","invariant.rpn_prefix_depth_balance","invariant.rpn_stack_completed_subexpressions","invariant.stable_insertion_after_equals","invariant.stable_merge_left_on_equal","julia_r.zigzag_one_based_target","language.ascii_coordinate_equivalence","language.identity_map_cross_language","language.julia_r_descending_iteration","language.node_identity_comparison","language.r_ascii_raw_materialization","language.xor_signed_width_contract","numeric.monotone_saturation_bounded_answer","numeric.path_sum_widen_before_subtract","ownership.in_place_link_rewiring","ownership.original_cycle_entry_reference","ownership.read_only_tree_reference_stack","ownership.relink_existing_list_nodes","ownership.rust_box_take_tail_slot","pattern.cross_recursive_shared_cursor","pattern.one_row_count_dp_reverse_update","pattern.unsigned_reverse_cursor_as_length","proof.anchor_line_global_coverage","proof.balance_failure_propagation","proof.bfs_first_discovery_shortest","proof.bfs_level_frontier_order","proof.candy_minimum_by_max_lower_bounds","proof.current_level_read_next_level_write","proof.cycle_distance_congruence","proof.cycle_entry_first_meeting","proof.deep_copy_edge_preservation","proof.distance_strictly_decreases_in_backtracking","proof.distinct_subsequence_last_source_partition","proof.empty_sentence_composition_identity","proof.fixed_sell_day_best_buy","proof.flatten_node_identity_topology","proof.flatten_right_edge_amortization","proof.gas_station_total_surplus_feasibility","proof.graph_clone_identity_bijection","proof.independent_bit_state_transition","proof.last_palindrome_segment_decomposition","proof.level_order_bottom_order_transform","proof.max_depth_structural_induction","proof.minimum_depth_first_leaf_optimality","proof.partition_cut_sequence_unique","proof.path_sum_root_to_leaf_induction","proof.path_sum_snapshot_independence","proof.perfect_tree_two_edge_connections","proof.postorder_frontier_partition","proof.postorder_global_reverse_local_order","proof.postorder_right_before_left","proof.preorder_inorder_partition_consumption","proof.preorder_stack_invariant","proof.relative_speed_cycle_meeting","proof.reorder_node_partition_preservation","proof.reorder_split_length","proof.rpn_block_partition_induction","proof.sorted_array_balance_by_halving","proof.sorted_list_exact_consumption","proof.stock_at_most_state_initialization","proof.stock_increasing_run_realization","proof.stock_phase_state_dominance","proof.stock_telescoping_upper_bound","proof.symmetric_tree_cross_direction_induction","proof.tree_path_unique_highest_node","proof.tree_return_chain_no_branch","proof.triangle_suffix_optimality","proof.unique_minimum_represents_run","proof.word_break_last_token_completeness","proof.word_break_sentence_uniqueness","proof.xor_prefix_invariant","proof.zigzag_index_bijection","r.environment_queue_slots","r.environment_recursive_cursor","r.environment_shared_path_buffer","relation.stock_transaction_budget_changes_state","resource.c_lru_preallocated_node_pool","resource.c_suffix_sentence_ownership","resource.clone_partial_failure_ownership","rust.refcell_level_chain_rewire","rust.refcell_short_borrow_rewire","semantics.exact_operator_token_classification","semantics.integer_division_toward_zero","topology.insertion_three_link_commit","topology.run_split_output_rest_partition","workflow.direct_main_only_atomic_commit","workflow.risk_triggered_review","workflow.risk_triggered_sampling","workflow.targeted_static_review"]
+[resolution]
+mode = "ordered_active_shards"
+statement = "按 shards 顺序读取活动数据分片；只合并 updates、concepts 与 problems，后出现的同名键覆盖更早值。composite 壳不进入活动读取链。"
 
-[problems]
-"0101" = { i = [55,170], r = [94,97] }
-"0102" = { i = [14,79,81,104,132,179], r = [91,94,97] }
-"0103" = { i = [62,112,178], r = [14,79,81,91,94,97,104,132,179] }
-"0104" = { i = [15,149], r = [94,97] }
-"0105" = { i = [28,44,80,158], r = [91,94,97] }
-"0106" = { i = [42,128,157], r = [28,80,91,94,97] }
-"0107" = { i = [31,85,148], r = [14,79,81,91,94,97,104,132] }
-"0108" = { i = [49,101,164], r = [91,94,97] }
-"0109" = { i = [50,126,165,180], r = [91,94,97] }
-"0110" = { i = [12,130], r = [94,97] }
-"0111" = { i = [34,69,150], r = [14,81,94,97,132] }
-"0112" = { i = [40,120,152], r = [69,94,97] }
-"0113" = { i = [39,77,89,153,181], r = [40,69,91,94,97,120] }
-"0114" = { i = [21,99,121,142,143,187], r = [94,97] }
-"0115" = { i = [20,119,127,139], r = [47,91] }
-"0116" = { i = [41,98,102,154,186], r = [30,66,91,97,100] }
-"0117" = { i = [51,134], r = [30,66,100] }
-"0118" = { i = [37,78,103], r = [91] }
-"0119" = { i = [38], r = [37,47,91,115] }
-"0120" = { i = [58,71,173], r = [115] }
-"0121" = { i = [52,73,74,141], r = [91,182] }
-"0122" = { i = [54,167,169,182], r = [73,74,91] }
-"0123" = { i = [53,72,166,168], r = [73,74,91,182] }
-"0124" = { i = [57,70,171,172], r = [91] }
-"0125" = { i = [11,63,117], r = [91] }
-"0126" = { i = [48,64,76,84,138], r = [91,131] }
-"0127" = { i = [13,75], r = [131] }
-"0128" = { i = [19,87,174,192], r = [] }
-"0129" = { i = [56,68], r = [] }
-"0130" = { i = [17,26], r = [] }
-"0131" = { i = [35,151], r = [84] }
-"0132" = { i = [36,65,147], r = [35] }
-"0133" = { i = [25,67,116,145], r = [] }
-"0134" = { i = [24,144,195], r = [] }
-"0135" = { i = [18,133], r = [195] }
-"0136" = { i = [61,118,177], r = [195] }
-"0137" = { i = [3,16,146], r = [195] }
-"0138" = { i = [4,27,114,137,185,193], r = [194,195] }
-"0139" = { i = [59,83,113,175], r = [195] }
-"0140" = { i = [60,90,140,176,184], r = [83,195] }
-"0141" = { i = [9,22,160], r = [116,195] }
-"0142" = { i = [23,122,135,136], r = [116,195] }
-"0143" = { i = [45,125,161,162], r = [121,195] }
-"0144" = { i = [29,123,159], r = [92,195] }
-"0145" = { i = [5,43,155,156], r = [195] }
-"0146" = { i = [2,7,95,106,107,183], r = [195] }
-"0147" = { i = [8,33,88,110,190], r = [195] }
-"0148" = { i = [6,32,82,111,124,191], r = [195] }
-"0149" = { i = [0,10,86,96,105,129], r = [194,195] }
-"0150" = { i = [1,46,93,108,109,163,188,189], r = [195] }
+[[shards]]
+path = "state/concepts/ranges/0101-0150/0101-0104.toml"
+[[shards]]
+path = "state/concepts/ranges/0101-0150/0105-0107.toml"
+[[shards]]
+path = "state/concepts/ranges/0101-0150/0108-0112.toml"
+[[shards]]
+path = "state/concepts/ranges/0101-0150/0113-0114.toml"
+[[shards]]
+path = "state/concepts/ranges/0101-0150/0115-0116.toml"
+[[shards]]
+path = "state/concepts/ranges/0101-0150/0117-0120.toml"
+[[shards]]
+path = "state/concepts/ranges/0101-0150/0121-0122.toml"
+[[shards]]
+path = "state/concepts/ranges/0101-0150/0123.toml"
+[[shards]]
+path = "state/concepts/ranges/0101-0150/0124-0125.toml"
+[[shards]]
+path = "state/concepts/ranges/0101-0150/0126.toml"
+[[shards]]
+path = "state/concepts/ranges/0101-0150/0127-0128.toml"
+[[shards]]
+path = "state/concepts/ranges/0101-0150/0129-0131.toml"
+[[shards]]
+path = "state/concepts/ranges/0101-0150/0132-0133.toml"
+[[shards]]
+path = "state/concepts/ranges/0101-0150/0134.toml"
+[[shards]]
+path = "state/concepts/ranges/0101-0150/0135.toml"
+[[shards]]
+path = "state/concepts/ranges/0101-0150/0136.toml"
+[[shards]]
+path = "state/concepts/ranges/0101-0150/0137.toml"
+[[shards]]
+path = "state/concepts/ranges/0101-0150/0138.toml"
+[[shards]]
+path = "state/concepts/ranges/0101-0150/0139.toml"
+[[shards]]
+path = "state/concepts/ranges/0101-0150/0140.toml"
+[[shards]]
+path = "state/concepts/ranges/0101-0150/0141.toml"
+[[shards]]
+path = "state/concepts/ranges/0101-0150/0142.toml"
+[[shards]]
+path = "state/concepts/ranges/0101-0150/0143.toml"
+[[shards]]
+path = "state/concepts/ranges/0101-0150/0144.toml"
+[[shards]]
+path = "state/concepts/ranges/0101-0150/0145.toml"
+[[shards]]
+path = "state/concepts/ranges/0101-0150/0146.toml"
+[[shards]]
+path = "state/concepts/ranges/0101-0150/0147.toml"
+[[shards]]
+path = "state/concepts/ranges/0101-0150/0148.toml"
+[[shards]]
+path = "state/concepts/ranges/0101-0150/0149.toml"
+[[shards]]
+path = "state/concepts/ranges/0101-0150/0150.toml"

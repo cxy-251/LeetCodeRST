@@ -1,0 +1,27 @@
+[meta]
+version = 1
+range = "0105-0107"
+last_problem = 107
+inherits = "state/concepts/0101-0104.toml"
+
+[updates]
+"interface.binary_tree_node_reference_model" = "0094 建立跨语言 TreeNode 引用模型；0101-0104 已累计 9 次，0105-0107 继续覆盖新树构造与自底向上 BFS，累计 12 次。"
+"complexity.tree_height_stack_space" = "0094 首次解释按树高计费；0100、0101、0104 已累计 4 次，0105、0106 的构造递归继续区分平衡树与退化树，累计 6 次。"
+"complexity.output_space_exclusion" = "此前 19 次已区分工作状态与返回载荷；0105、0106 区分 O(n) 下标表、O(h) 栈与 Theta(n) 返回树，0107 区分队列与二维返回，累计 22 次。"
+"algorithm.binary_tree_level_order_queue_snapshot" = "0102 引入、0103 强化；0107 继续复用当前层长度快照，自顶向下生成自然层序后只改变外层排列，累计 3 次。"
+"proof.bfs_level_frontier_order" = "0102、0103 已证明父节点从左到右且先左后右入队保持下一层顺序；0107 直接复用并追加外层反转证明，累计 3 次。"
+"interface.two_dimensional_row_independence" = "0102、0103 已强化；0107 每层继续创建独立行，最终只交换外层行引用，累计 3 次。"
+"c.transactional_tree_level_results" = "0102、0103 已覆盖二维结果分配；0107 在反转行指针时同步反转列长度，并保持失败清理事务，累计 3 次。"
+"complexity.bfs_frontier_width" = "0102、0103 已区分 O(w) 活动前沿与返回载荷；0107 继续区分标准队列 O(w) 和数组加头下标适配器 O(n) 峰值，累计 3 次。"
+
+[concepts]
+"algorithm.preorder_inorder_reconstruction_cursor" = "kind=algorithm; introduced=0105; last=0105; occurrences=1; teaching_state=explained; note=build(in_left,in_right) 以中序半开区间确定节点集合，共享 pre_index 从前序左向右提供根，并按左后右顺序消费。"
+"proof.preorder_inorder_partition_consumption" = "kind=proof; introduced=0105; last=0105; occurrences=1; teaching_state=explained; note=前序首值唯一给出根，中序唯一位置划分左右集合；左调用恰好消费左子树节点数后，游标自然指向右子树根。"
+"algorithm.inorder_position_hash_map" = "kind=algorithm; introduced=0105; last=0106; occurrences=2; teaching_state=reinforced; note=互异值建立 value 到 inorder 下标表，删除递归层中的重复线性搜索，使重建期望时间从最坏 O(n^2) 降为 O(n)。"
+"c.transactional_tree_reconstruction" = "kind=language_boundary; introduced=0105; last=0106; occurrences=2; teaching_state=reinforced; note=C 使用低装载率开放寻址表和 ok 失败状态；任一分配或区间错误都释放部分子树与索引表，成功树交给调用者。"
+"algorithm.postorder_inorder_reverse_cursor" = "kind=algorithm; introduced=0106; last=0106; occurrences=1; teaching_state=explained; note=post_index 保存未消费后序前缀长度，非空调用先减一取得根，再按右后左顺序递归中序区间。"
+"proof.postorder_right_before_left" = "kind=proof; introduced=0106; last=0106; occurrences=1; teaching_state=explained; note=后序为左、右、根；从尾部向前消费根后首先到达右子树末尾，右子树必须完整消费后游标才位于左子树末尾。"
+"pattern.unsigned_reverse_cursor_as_length" = "kind=pattern; introduced=0106; last=0106; occurrences=1; teaching_state=explained; note=Rust 等无符号索引语言把反向游标表示为未消费长度，非空调用先减一再读取，避免以 -1 表达结束状态。"
+"algorithm.level_order_bottom_outer_reverse" = "kind=algorithm; introduced=0107; last=0107; occurrences=1; teaching_state=explained; note=先用自然 BFS 生成根到叶各层，再原地反转外层行引用；每层内部顺序与孩子入队顺序保持不变。"
+"proof.level_order_bottom_order_transform" = "kind=proof; introduced=0107; last=0107; occurrences=1; teaching_state=explained; note=BFS 先证明 answer[d] 等于深度 d 行；外层映射 d 到 h-1-d 是双射，故每层恰好出现一次且行内顺序不变。"
+"complexity.front_insert_vs_outer_reverse" = "kind=complexity; introduced=0107; last=0107; occurrences=1; teaching_state=explained; note=普通数组每层头插可能累计 Theta(h^2) 行引用搬移；尾插全部行后一次反转只需 O(h) 交换。"

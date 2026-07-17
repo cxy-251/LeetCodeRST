@@ -1,0 +1,42 @@
+[meta]
+problem_ids = [217]
+range = "0217"
+status = "completed"
+source = "problems/0201-0300/0217-contains-duplicate.rst"
+static_review_only = true
+
+[concepts."0217"]
+title = "Contains Duplicate"
+difficulty = "Easy"
+primary_algorithm = "seen-value hash set scan"
+
+introduced = [
+  "invariant.seen_prefix_value_set",
+  "proof.duplicate_second_occurrence",
+  "complexity.hash_average_vs_worst",
+  "adapter.c_open_addressing_occupied_metadata",
+  "adapter.c_hash_failure_exact_fallback",
+  "adapter.r_canonical_integer_environment_key",
+]
+
+reinforced = [
+  "algorithm.query_before_insert",
+  "proof.soundness_and_completeness",
+  "safety.capacity_arithmetic",
+  "safety.signed_to_unsigned_hash_domain",
+  "complexity.input_read_only_vs_sorting",
+]
+
+[updates]
+"invariant.seen_prefix_value_set" = "处理下标 i 前，seen 恰好保存 nums[0:i] 的值集合；命中对应更早同值元素，未命中插入后为下一位置保持不变量。"
+"proof.duplicate_second_occurrence" = "选择任一重复值第二次出现的最早位置，该位置查询时更早副本必在集合中；扫描结束未命中则不存在任何 j<i 的同值对。"
+"complexity.hash_average_vs_worst" = "哈希查询和插入只在平均模型下为 O(1)，总平均 O(n)；对抗碰撞、聚簇或实现退化时总最坏可达 O(n^2)，不能写成严格保证线性。"
+"adapter.c_open_addressing_occupied_metadata" = "C 线性探测表使用 values 与独立 occupied 数组，容量至少为 2*n 的二次幂，任何 int 包括 0、INT_MIN、INT_MAX 都不与空槽冲突。"
+"adapter.c_hash_failure_exact_fallback" = "C 布尔接口没有错误通道；容量溢出或分配失败时释放资源并退回无分配的二次比较，保持答案正确，仅改变失败路径性能。"
+"adapter.r_canonical_integer_environment_key" = "R 使用空父环境和 inherits=FALSE，并把精确 32 位整数编码为带前缀的无小数十进制键；零统一规范化，避免父环境命中与格式碰撞。"
+
+[static_review]
+manual_cases = ["distant_duplicate", "all_unique", "adjacent_duplicate", "single_element", "empty_extension", "negative", "zero", "int_min", "int_max"]
+proof_checks = ["seen_invariant", "true_soundness", "duplicate_completeness", "false_pairwise_distinct", "termination"]
+language_checks = ["query_before_insert", "input_read_only", "hash_average_worst_boundary", "c_capacity_and_cleanup", "c_occupied_and_probe", "r_canonical_key"]
+execution_performed = false
