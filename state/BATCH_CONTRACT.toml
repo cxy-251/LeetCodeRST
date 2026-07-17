@@ -1,17 +1,17 @@
 [contract]
 schema_version = 2
-batch_id = "generation-0210-0211"
+batch_id = "generation-0212"
 status = "ready"
 phase = "generation"
 kind = "generation"
-scope = [210, 211]
+scope = [212]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
 drift_log = "state/DRIFT_LOG.toml"
 new_problem_generation_paused = false
 completion_count_must_remain_unchanged = false
-next_problem_after_batch = 212
+next_problem_after_batch = 213
 
 [static_review]
 solution_code_execution = "forbidden"
@@ -30,8 +30,8 @@ proof_risk = "high"
 language_semantics_risk = "high"
 platform_type_risk = "high"
 output_volume_risk = "high"
-scope_may_shrink = true
-scope_reason = "0210 要在与 0207 相同的依赖图上返回实际拓扑序并区分无解空结果，涉及 C 输出数组和非唯一顺序；0211 在状态化 Trie 上加入点号通配符分支 DFS，涉及最坏搜索规模、递归深度和对象生命周期。先完整验收 0210；若继续 0211 会压缩通配符证明或十语言资源边界，则提交连续前缀并重建 0211 单题合同。"
+scope_may_shrink = false
+scope_reason = "0212 是 Hard，组合 Trie、二维棋盘 DFS、路径访问恢复、结果去重、字符串输出所有权与十语言递归/容器资源；必须独立完成，本批不追加 0213。"
 
 [references]
 style_baselines = [
@@ -44,15 +44,14 @@ fact_sources = [
   "state/CONCEPT_LEDGER.toml",
   "docs/FORWARD_RULES_0151_ONWARD.rst",
   "problems/0201-0300/README.rst",
-  "problems/0201-0300/0207-course-schedule.rst",
+  "problems/0201-0300/0200-number-of-islands.rst",
   "problems/0201-0300/0208-implement-trie-prefix-tree.rst",
-  "https://leetcode.com/problems/course-schedule-ii/description/",
-  "https://leetcode.com/problems/design-add-and-search-words-data-structure/description/",
+  "problems/0201-0300/0211-design-add-and-search-words-data-structure.rst",
+  "https://leetcode.com/problems/word-search-ii/description/",
 ]
 fact_sources_may_provide = [
-  "0210 的课程编号、先修对语义、返回任意合法顺序或无解空数组合同",
-  "0211 的 addWord/search 状态对象、小写字母与点号匹配任意单字符合同",
-  "已有 Kahn 入度、Trie 路径/终止标记、对象生命周期和递归搜索术语连续性",
+  "0212 的字符棋盘、单词列表、四邻接路径、单格单次使用和返回全部存在单词合同",
+  "已有 Trie 路径/终止标记、四邻接 DFS、棋盘标记恢复和对象生命周期术语连续性",
   "当前完成范围、静态审查政策和长期质量控制状态",
 ]
 fact_sources_must_not_provide = [
@@ -63,66 +62,50 @@ fact_sources_must_not_provide = [
   "文件组织形式",
 ]
 
-[problems."0210"]
-title = "Course Schedule II"
-difficulty = "Medium"
+[problems."0212"]
+title = "Word Search II"
+difficulty = "Hard"
 primary_risks = [
-  "先修对 [course, prerequisite] 仍建立 prerequisite -> course；输出弹出零入度课程的实际顺序",
-  "processed==numCourses 时返回长度 V 的拓扑序；队列耗尽且 processed<V 时必须返回空结果，不能返回部分顺序",
-  "合法拓扑序通常不唯一，十语言队列顺序可以不同；正确性验证依赖边的先后关系而非固定示例数组",
-  "重复边的邻接次数与入度次数保持一致，自环、两节点环、孤立课程、多分量和菱形 DAG 要覆盖",
-  "C 需要分配邻接、入度、队列和返回数组，并通过 returnSize 表示成功长度；任一失败要清理且返回 NULL/0",
-  "R/Julia 零基课程编号映射到一基数组；Rust/Go/TypeScript/C# 的输出容器和队列头索引需静态核对",
+  "Trie 终止节点保存单词或单词索引；棋盘 DFS 状态同时包含坐标、当前 Trie 节点和当前路径访问集合",
+  "只能上下左右移动，同一搜索路径内单格不能重复；进入前标记、返回后恢复，不能污染其他起点或分支",
+  "同一单词可能由多个起点或多条路径找到，输出必须去重；清除终止载荷时要证明不会妨碍更长共享前缀单词",
+  "从当前 Trie 节点不存在的字符分支立即剪枝；不能为每个单词独立搜索后仍声称 Trie 联合搜索复杂度",
+  "复杂度需按 Trie 节点、棋盘格、实际 DFS 状态和最大单词长度表达；粗略最坏分支界与持久 Trie/输出载荷分开",
+  "C 需要构建/释放 Trie、保存词索引、管理结果字符串或指针所有权、棋盘标记恢复和任一分配失败清理",
+  "Rust 借用 Trie 终止载荷与递归棋盘可变借用、Julia/R 一基索引、TypeScript/Java/C# 二维字符容器都需静态核对",
 ]
 minimum_static_review = [
-  "人工推演单边、菱形 DAG、多个合法顺序、自环、两节点环、孤立课程、重复边和多分量",
-  "证明输出前缀始终满足所有已输出节点先修边，且完整输出当且仅当图无环",
-  "证明有环时不会把部分顺序误作答案；无环时有限 DAG 零入度引理保证处理全部节点",
-  "逐语言核对输出长度、空结果、建边方向、重复边、队列头索引和 C 失败清理",
-  "复杂度报告 O(V+E) 时间、O(V+E) 工作空间和 O(V) 输出载荷",
-]
-
-[problems."0211"]
-title = "Design Add and Search Words Data Structure"
-difficulty = "Medium"
-primary_risks = [
-  "addWord 复用 Trie 路径并只在完整单词终点设置标记；search 中小写字母只走一个分支，点号必须尝试所有非空子链接",
-  "点号匹配恰好一个字符，不是零个或任意长度；搜索消费完模式后仍必须检查 is_word",
-  "连续点号、共享前缀、完整词/前缀区分、重复插入、无匹配分支和空字符串扩展要覆盖",
-  "无通配符搜索 O(L)；含通配符时用实际访问节点数表达，最坏可达 Trie 中深度 L 的大量分支，不能统一声称 O(L)",
-  "C 插入仍需一致的分配失败策略和释放函数，递归通配符搜索有 O(L) 调用栈；平台 void 插入缺少失败通道",
-  "Rust Box、Julia mutable struct、R environment 和托管语言对象图的所有权/回收与递归分支需静态核对",
-]
-minimum_static_review = [
-  "人工推演 add bad/dad/mad，search pad/bad/.ad/b..，连续点号、仅前缀、重复插入和空字符串扩展",
-  "证明字母分支、点号分支和终点标记覆盖且只覆盖所有匹配单词",
-  "按访问节点数和模式长度报告时间，报告 O(L) 递归栈并区分 Trie 持久存储",
-  "逐语言核对字符索引、通配符分支、递归终止、节点生命周期和 C 失败/释放路径",
+  "人工推演经典棋盘与 words=[oath,pea,eat,rain]、共享前缀词、同词多路径、单格重复诱惑、对角线伪路径和空输入扩展",
+  "证明 Trie 剪枝只排除不可能前缀，DFS 路径标记恰好实施单格单次使用，恢复后不同分支互不污染",
+  "证明发现终止词后去重策略只删除输出载荷，不删除仍供更长单词使用的路径",
+  "逐语言核对四方向边界、字符索引、访问标记恢复、结果去重、递归深度、字符串/节点生命周期和 C 失败清理",
+  "复杂度区分 Trie 构建 O(total word characters)、实际 DFS 访问状态、O(Lmax) 递归栈、Trie 持久存储与输出载荷",
 ]
 
 must_preserve = [
-  "0210 的实际拓扑序、无解空结果、非唯一顺序和输出载荷",
-  "0211 的点号单字符语义、分支 DFS、终止标记和真实最坏搜索规模",
-  "每题固定十语言完整实现、人工推演、静态语义审查、剩余风险和带答案自检",
+  "棋盘坐标、Trie 节点和路径访问集合的联合状态",
+  "四邻接、单格单次使用、进入标记与退出恢复",
+  "Trie 前缀剪枝、终止词去重和共享前缀安全性证明",
+  "C 输出/Trie 所有权与十语言二维容器、递归和资源成本",
+  "固定十语言完整实现、人工推演、静态语义审查、剩余风险和带答案自检",
 ]
 
 forbidden = [
-  "参考 0208–0209 或其他最近题目的章节结构、证明篇幅或静态审查密度",
-  "0210 在有环时返回已经生成的部分课程顺序",
-  "0210 把某一个官方示例顺序当成唯一正确输出",
-  "0211 把点号当成零个字符、任意长度或只尝试第一个子节点",
-  "0211 模式结束后不检查单词终止标记",
-  "把通配符搜索统一写成 O(L)，忽略分支访问",
+  "参考 0210–0211 或其他最近题目的章节结构、证明篇幅或静态审查密度",
+  "允许对角线移动或在同一路径重复使用一个棋盘格",
+  "找到单词后不恢复棋盘，导致其他起点或分支状态被污染",
+  "用集合去重却不报告哈希与字符串存储成本，或清除整个 Trie 分支而遗漏更长词",
+  "把最坏搜索统一声称为 O(mn) 或 O(total word characters)",
+  "C 返回指向会随 Trie 释放而失效的字符串指针却未声明所有权",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试或 sanitizer 题解代码",
   "把静态审查写成测试、编译或运行通过",
 ]
 
 completion_checks = [
-  "逐题对照 0050 的状态/数值边界和 0076 的最优性/语言资源深度",
-  "每题完成后立即执行质量门；0211 出现压缩迹象时按合同缩批",
+  "逐题对照 0050 的状态/边界和 0076 的剪枝/最优性/资源说明深度",
   "命中 DRIFT_LOG 的拆分、摘要、最近样本、预算和验证策略回归检查均通过",
-  "每道算法题只有一个自包含 RST，十语言代码全部内联并位于 problems/0201-0300",
+  "单题只有一个自包含 RST，十语言代码全部内联并位于 problems/0201-0300",
   "完成范围、completed_count、next_problem、根 README、范围索引和知识账本同步",
-  "提交后 BATCH_CONTRACT 被替换为下一批合同",
+  "提交后 BATCH_CONTRACT 被替换为 0213 起的下一批合同",
 ]

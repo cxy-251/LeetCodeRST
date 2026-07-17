@@ -11,9 +11,9 @@ code_comment_language = "zh-CN"
 problem_artifact_shape = "one_self_contained_rst_per_public_algorithm_problem"
 
 [progress]
-next_problem = 210
-completed_count = 185
-completed_ranges = ["0001-0155", "0160", "0162", "0164-0169", "0171-0174", "0179", "0187-0191", "0198-0209"]
+next_problem = 212
+completed_count = 187
+completed_ranges = ["0001-0155", "0160", "0162", "0164-0169", "0171-0174", "0179", "0187-0191", "0198-0211"]
 premium_skipped = [156, 157, 158, 159, 161, 163, 170, 186]
 database_skipped = [175, 176, 177, 178, 180, 181, 182, 183, 184, 185, 196, 197]
 shell_skipped = [192, 193, 194, 195]
@@ -59,26 +59,26 @@ quality_over_batch_score = true
 [last_batch]
 status = "completed"
 kind = "generation"
-start = 208
-end = 209
+start = 210
+end = 211
 generated_problem_count = 2
-generated_problem_ids = [208, 209]
+generated_problem_ids = [210, 211]
 reference_problems = [50, 76]
 difficulty_budget = 4
-planned_scope = [208, 209]
+planned_scope = [210, 211]
 scope_shrunk = false
-scope_reason = "0208 Trie 的路径/终止标记、C 事务式插入和十语言对象生命周期，以及 0209 正数窗口单调性、持续收缩、最短性证明和宽整数边界均完整通过单题质量门，本批无需缩减。"
-summary = "完成 0208 Implement Trie (Prefix Tree) 的状态化前缀树与跨语言资源生命周期，以及 0209 Minimum Size Subarray Sum 的全正数滑动窗口、不遗漏最短窗口证明和十语言数值适配。"
+scope_reason = "0210 的完整拓扑序、无解空结果和输出载荷，以及 0211 的点号分支 DFS、终止标记、真实访问规模和十语言对象生命周期均完整通过单题质量门，本批无需缩减。"
+summary = "完成 0210 Course Schedule II 的实际拓扑顺序与非唯一答案验证，以及 0211 Design Add and Search Words Data Structure 的 Trie 通配符搜索、分支完备性和跨语言资源适配。"
 
 [next_batch]
 status = "generation_ready"
 kind = "generation"
-start = 210
-end = 211
-problem_ids = [210, 211]
+start = 212
+end = 212
+problem_ids = [212]
 difficulty_budget = 4
 contract = "state/BATCH_CONTRACT.toml"
-purpose = "生成 0210 Course Schedule II 与 0211 Design Add and Search Words Data Structure；完整处理拓扑顺序输出和 Trie 通配符分支搜索。"
+purpose = "独立生成 0212 Word Search II；完整处理 Trie 与棋盘 DFS 联合状态、单格不可重复、结果去重、路径恢复和十语言二维容器/对象生命周期。"
 
 [review_history]
 status = "completed"
@@ -147,7 +147,7 @@ problem_code_fragments_present = false
 
 [quality_scope]
 historical_start = 1
-historical_end = 209
+historical_end = 211
 historical_policy = "用户指定的 32 道低质量题解已经全部返工完成；历史题默认保持不变，风险触发时定向抽查。"
 persistent_rule_start = 151
 persistent_rule = "docs/FORWARD_RULES_0151_ONWARD.rst"
@@ -179,10 +179,10 @@ concurrency_policy = "fetch_and_compare_before_commit; stop_on_remote_change_or_
 
 [concept_ledger]
 index = "state/CONCEPT_LEDGER.toml"
-latest_record = "state/concepts/0208-0209.toml"
+latest_record = "state/concepts/0210-0211.toml"
 
 [next_action]
-summary = "按 BATCH_CONTRACT 生成 0210–0211；0208–0209 已完整处理。"
+summary = "按 BATCH_CONTRACT 独立生成 0212；0210–0211 已完整处理。"
 
 [last_update]
-summary = "0208 与 0209 已完整生成并通过静态质量门；完成数更新为 185，下一入口为 0210。"
+summary = "0210 与 0211 已完整生成并通过静态质量门；完成数更新为 187，下一入口为 0212。"
