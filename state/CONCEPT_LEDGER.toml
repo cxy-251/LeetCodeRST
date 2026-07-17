@@ -1,6 +1,6 @@
 [meta]
-version = 55
-last_problem = 211
+version = 56
+last_problem = 212
 format = "segmented"
 
 [records]
@@ -43,7 +43,8 @@ latest_before_string_list_batch = "state/concepts/0204.toml"
 latest_before_course_schedule = "state/concepts/0205-0206.toml"
 latest_before_trie_window = "state/concepts/0207.toml"
 latest_before_topology_wildcard = "state/concepts/0208-0209.toml"
-latest = "state/concepts/0210-0211.toml"
+latest_before_word_search = "state/concepts/0210-0211.toml"
+latest = "state/concepts/0212.toml"
 
 [resolution]
 statement = "按 records 声明顺序读取；后续分段中的同名 updates 覆盖更早记录。"

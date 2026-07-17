@@ -1,0 +1,24 @@
+[meta]
+version = 1
+range = "0212"
+last_problem = 212
+inherits = "state/concepts/0210-0211.toml"
+
+[batch]
+completed = 1
+difficulty_budget = 4
+planned_scope = [212]
+scope_shrunk = false
+summary = "独立完成 Trie 与二维棋盘 DFS 联合状态、四邻接路径、路径内单格不可重复、终止载荷去重、恢复证明和十语言资源适配。"
+
+[updates]
+"model.trie_board_joint_state" = "kind=model; introduced=0212; last=0212; occurrences=1; teaching_state=explained; note=递归状态同时由棋盘坐标、当前 Trie 节点和当前路径访问集合决定；实现以棋盘哨兵隐式保存路径集合。"
+"algorithm.multiword_trie_board_dfs" = "kind=algorithm; introduced=0212; last=0212; occurrences=1; teaching_state=explained; note=先构建全部单词 Trie，再从每个棋盘格启动四邻接 DFS；不存在的 Trie 前缀立即剪枝。"
+"invariant.board_path_trie_prefix" = "kind=invariant; introduced=0212; last=0212; occurrences=1; teaching_state=explained; note=每个有效递归状态的棋盘路径字符与根到当前 Trie 节点标签完全一致，路径格互不重复。"
+"invariant.mark_and_restore_board" = "kind=invariant; introduced=0200; last=0212; occurrences=2; teaching_state=explained; note=进入合法状态后临时标记当前格，探索四邻格，退出前恢复原字符；标记只属于当前递归路径。"
+"proof.trie_prefix_pruning" = "kind=proof; introduced=0212; last=0212; occurrences=1; teaching_state=explained; note=当前路径追加字符后若无 Trie 子链接，则它不是任何候选词前缀，继续延伸不可能重新成为合法前缀。"
+"proof.terminal_payload_dedup" = "kind=proof; introduced=0212; last=0212; occurrences=1; teaching_state=explained; note=首次发现后只清空终止词索引，不删除节点或子链接；同词不重复输出，共享前缀下更长单词仍可搜索。"
+"complexity.actual_board_trie_states" = "kind=complexity; introduced=0212; last=0212; occurrences=1; teaching_state=explained; note=搜索时间按实际进入状态数 Q 报告；无剪枝粗略上界为 mn·4·3^(L-1)，并与 Trie、递归栈和输出载荷分开。"
+"adapter.c_word_search_ownership" = "kind=language_adapter; introduced=0212; last=0212; occurrences=1; teaching_state=explained; note=C 事务式构建缺失 Trie 后缀，结果字符串独立复制，返回前释放 Trie；任一失败清理结果和节点。"
+"adapter.r_board_state_environment" = "kind=language_adapter; introduced=0212; last=0212; occurrences=1; teaching_state=explained; note=R 使用 environment 保存 Trie 节点、棋盘和结果计数，使递归分支共享临时标记并逐层恢复。"
+"workflow.targeted_static_review" = "kind=workflow; introduced=0167; last=0212; occurrences=25; teaching_state=explained; note=本题仅执行人工推演、证明映射、十语言静态语义和仓库一致性检查；未运行、未编译、未测试题解。"
