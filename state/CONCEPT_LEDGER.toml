@@ -1,6 +1,6 @@
 [meta]
-version = 59
-last_problem = 215
+version = 60
+last_problem = 216
 format = "segmented"
 
 [records]
@@ -47,7 +47,8 @@ latest_before_word_search = "state/concepts/0210-0211.toml"
 latest_before_circular_dp = "state/concepts/0212.toml"
 latest_before_shortest_palindrome = "state/concepts/0213.toml"
 latest_before_quickselect = "state/concepts/0214.toml"
-latest = "state/concepts/0215.toml"
+latest_before_combination_backtracking = "state/concepts/0215.toml"
+latest = "state/concepts/0216.toml"
 
 [resolution]
 statement = "按 records 声明顺序读取；后续分段中的同名 updates 覆盖更早记录。"

@@ -11,9 +11,9 @@ code_comment_language = "zh-CN"
 problem_artifact_shape = "one_self_contained_rst_per_public_algorithm_problem"
 
 [progress]
-next_problem = 216
-completed_count = 191
-completed_ranges = ["0001-0155", "0160", "0162", "0164-0169", "0171-0174", "0179", "0187-0191", "0198-0215"]
+next_problem = 217
+completed_count = 192
+completed_ranges = ["0001-0155", "0160", "0162", "0164-0169", "0171-0174", "0179", "0187-0191", "0198-0216"]
 premium_skipped = [156, 157, 158, 159, 161, 163, 170, 186]
 database_skipped = [175, 176, 177, 178, 180, 181, 182, 183, 184, 185, 196, 197]
 shell_skipped = [192, 193, 194, 195]
@@ -59,26 +59,26 @@ quality_over_batch_score = true
 [last_batch]
 status = "completed"
 kind = "generation"
-start = 215
-end = 215
+start = 216
+end = 216
 generated_problem_count = 1
-generated_problem_ids = [215]
+generated_problem_ids = [216]
 reference_problems = [50, 76]
 difficulty_budget = 2
-planned_scope = [215, 216, 217]
+planned_scope = [216, 217]
 scope_shrunk = true
-scope_reason = "0215 的 n-k 目标下标、三路分区不变量、重复值等值段、严格区间收缩、十语言交换语义和确定性 pivot 的 O(n^2) 最坏时间已完整通过质量门；继续 0216–0217 会压缩组合剪枝证明、二维结果所有权或哈希容器边界，因此按合同提交连续前缀。"
-summary = "完成 0215 Kth Largest Element in an Array：升序目标下标 n-k、原地三路 Quickselect、重复值等值区、严格收缩、真实复杂度和十语言索引适配。"
+scope_reason = "0216 的严格递增唯一性、完整枚举、路径恢复、最小/最大可达和剪枝、十语言结果快照和 C 二维结果失败清理已完整通过质量门；0217 的 C 开放寻址、容量溢出、独立占用标记、R 无歧义键和哈希平均/最坏复杂度需要独立篇幅，继续同批会压缩容器边界说明。"
+summary = "完成 0216 Combination Sum III：递增组合回溯、数量与总和守恒、可达和剪枝证明、结果快照、二维输出所有权和十语言适配。"
 
 [next_batch]
 status = "generation_ready"
 kind = "generation"
-start = 216
+start = 217
 end = 217
-problem_ids = [216, 217]
-difficulty_budget = 3
+problem_ids = [217]
+difficulty_budget = 1
 contract = "state/BATCH_CONTRACT.toml"
-purpose = "生成 0216 Combination Sum III 与 0217 Contains Duplicate；完整处理递增组合回溯、可达和剪枝、二维结果所有权，以及哈希集合的平均/最坏复杂度和跨语言容器语义。"
+purpose = "独立生成 0217 Contains Duplicate；完整处理已见集合不变量、哈希平均/最坏复杂度、C 开放寻址的容量与占用标记，以及 R 无歧义整数键。"
 
 [review_history]
 status = "completed"
@@ -147,7 +147,7 @@ problem_code_fragments_present = false
 
 [quality_scope]
 historical_start = 1
-historical_end = 215
+historical_end = 216
 historical_policy = "用户指定的 32 道低质量题解已经全部返工完成；历史题默认保持不变，风险触发时定向抽查。"
 persistent_rule_start = 151
 persistent_rule = "docs/FORWARD_RULES_0151_ONWARD.rst"
@@ -179,10 +179,10 @@ concurrency_policy = "fetch_and_compare_before_commit; stop_on_remote_change_or_
 
 [concept_ledger]
 index = "state/CONCEPT_LEDGER.toml"
-latest_record = "state/concepts/0215.toml"
+latest_record = "state/concepts/0216.toml"
 
 [next_action]
-summary = "按 BATCH_CONTRACT 生成 0216–0217；0215 Kth Largest Element in an Array 已完整处理。"
+summary = "按 BATCH_CONTRACT 独立生成 0217；0216 Combination Sum III 已完整处理。"
 
 [last_update]
-summary = "0215 已生成并通过静态质量门；完成数更新为 191，下一入口为 0216。"
+summary = "0216 已生成并通过静态质量门；完成数更新为 192，下一入口为 0217。"

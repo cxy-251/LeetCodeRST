@@ -1,0 +1,43 @@
+[meta]
+problem_ids = [216]
+range = "0216"
+status = "completed"
+source = "problems/0201-0300/0216-combination-sum-iii.rst"
+static_review_only = true
+
+[concepts."0216"]
+title = "Combination Sum III"
+difficulty = "Medium"
+primary_algorithm = "strictly increasing combination backtracking with reachable-sum pruning"
+
+introduced = [
+  "backtracking.strictly_increasing_candidate_start",
+  "invariant.remaining_slots_and_sum",
+  "pruning.minimum_reachable_sum",
+  "pruning.maximum_reachable_sum",
+  "proof.unique_combination_path",
+  "adapter.two_dimensional_result_ownership",
+]
+
+reinforced = [
+  "backtracking.path_restore",
+  "output.mutable_path_snapshot",
+  "proof.pruning_safety",
+  "complexity.output_payload_separation",
+  "safety.c_transactional_parallel_array_growth",
+  "adapter.r_explicit_recursive_state",
+]
+
+[updates]
+"backtracking.strictly_increasing_candidate_start" = "选择 value 后只从 value+1 继续，使数字不重复，并让每个无序组合只有唯一的递增生成路径。"
+"invariant.remaining_slots_and_sum" = "递归状态保持 len(path)+slots=k 与 sum(path)+remaining=n；slots=0 时只有 remaining=0 才能提交。"
+"pruning.minimum_reachable_sum" = "从 start 起连续选择 slots 个数字给出任何合法补全的可实现下界；remaining 更小时状态无解。"
+"pruning.maximum_reachable_sum" = "候选数量足够时，1..9 中最大的 slots 个数字给出可实现上界；remaining 更大时状态无解。"
+"proof.unique_combination_path" = "任意合法组合排序为 c1<...<ck 后，搜索中恰有一条依次选择这些数字的路径；严格递增阻止所有排列重复。"
+"adapter.two_dimensional_result_ownership" = "C 显式拥有行指针、列长度和每行快照并在失败时完整清理；托管语言提交时复制路径，Go 必须复制切片底层内容。"
+
+[static_review]
+manual_cases = ["k3_n7", "k3_n9", "k4_n1", "k9_n45", "k2_n18", "multiple_answers", "no_answer"]
+proof_checks = ["strict_increase", "soundness", "completeness", "uniqueness", "minimum_prune", "maximum_prune", "candidate_upper_bound", "termination"]
+language_checks = ["c_parallel_growth_cleanup", "path_snapshot", "push_pop_restore", "go_slice_copy", "julia_safe_range", "r_explicit_path_and_environment"]
+execution_performed = false

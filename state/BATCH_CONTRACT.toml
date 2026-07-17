@@ -1,10 +1,10 @@
 [contract]
 schema_version = 2
-batch_id = "generation-0216-0217"
+batch_id = "generation-0217"
 status = "ready"
 phase = "generation"
 kind = "generation"
-scope = [216, 217]
+scope = [217]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
@@ -23,15 +23,15 @@ repository_structure_state_and_git_checks = "allowed"
 reporting = "只声明实际完成的静态审查；明确未运行、未编译、未测试和剩余风险。"
 
 [budget]
-algorithm_score = 3
-target_min = 3
-target_max = 4
-proof_risk = "high"
+algorithm_score = 1
+target_min = 1
+target_max = 2
+proof_risk = "medium"
 language_semantics_risk = "high"
 platform_type_risk = "high"
-output_volume_risk = "high"
-scope_may_shrink = true
-scope_reason = "这是上一合同缩批后的连续剩余范围。0216 需要严格递增唯一性、路径恢复、最小/最大可达和剪枝与 C 二维结果所有权；0217 需要哈希集合平均/最坏复杂度、C 开放寻址和 R 键语义。先完整验收 0216；若继续 0217 会压缩容器或复杂度说明，则在 0216 后缩批。"
+output_volume_risk = "medium"
+scope_may_shrink = false
+scope_reason = "0217 虽为 Easy，但 C 开放寻址需要安全容量、负数与整数极值哈希、独立占用标记和失败语义；R 环境键必须无歧义，且所有语言都要准确区分哈希平均复杂度与最坏复杂度。本批只处理 0217，不追加 0218。"
 
 [references]
 style_baselines = [
@@ -44,14 +44,13 @@ fact_sources = [
   "state/CONCEPT_LEDGER.toml",
   "docs/FORWARD_RULES_0151_ONWARD.rst",
   "problems/0201-0300/README.rst",
-  "problems/0201-0300/0215-kth-largest-element-in-an-array.rst",
-  "https://leetcode.com/problems/combination-sum-iii/description/",
+  "problems/0201-0300/0216-combination-sum-iii.rst",
   "https://leetcode.com/problems/contains-duplicate/description/",
 ]
 fact_sources_may_provide = [
-  "0216 从 1 到 9 选择 k 个互不相同数字、和为 n、组合不重复的合同",
-  "0217 判断是否存在至少一对相同整数的合同",
+  "0217 判断数组中是否存在至少一对下标不同且值相同元素的合同",
   "当前目录、完成范围和静态审查状态",
+  "已有哈希集合、输入只读和整数适配术语连续性",
 ]
 fact_sources_must_not_provide = [
   "章节结构",
@@ -61,65 +60,53 @@ fact_sources_must_not_provide = [
   "文件组织形式",
 ]
 
-[problems."0216"]
-title = "Combination Sum III"
-difficulty = "Medium"
-primary_risks = [
-  "只能使用 1 到 9，每个数字最多一次，组合必须恰好包含 k 个数字且总和为 n",
-  "候选按严格递增顺序选择，从结构上同时避免重复使用与重复组合",
-  "状态包含下一个最小候选、剩余槽位、剩余和与当前路径；递归退出必须恢复路径",
-  "剩余槽位为 0 时只有剩余和也为 0 才提交结果快照",
-  "最小可达和与最大可达和必须基于当前起点和剩余槽位，且不能使用超过 9 的数字",
-  "C 需要二维结果数组、列长度数组、容量增长和失败清理；其他语言需要明确路径快照语义",
-  "Julia/R 一基索引、R 递归参数复制和结果列表追加成本需准确说明",
-]
-minimum_static_review = [
-  "人工推演 k=3,n=7；k=3,n=9；k=4,n=1；k=9,n=45；多解和无解情况",
-  "证明严格递增使每个合法组合只有一条生成路径，并证明所有合法组合都会被枚举",
-  "证明最小/最大可达和剪枝只排除必不可能完成的状态",
-  "逐语言核对 push/pop、结果快照、递归边界、二维输出和 C 失败清理",
-]
-
 [problems."0217"]
 title = "Contains Duplicate"
 difficulty = "Easy"
 primary_risks = [
   "扫描元素时先查询已见集合；命中返回 true，未命中再插入",
-  "重复可能相邻或远隔，负数、零和整数极值按值比较",
-  "哈希集合平均 O(n) 时间、O(n) 空间；哈希最坏情况不能写成保证线性",
-  "C 开放寻址必须用独立占用标记区分空槽和任意 int 值，并安全计算容量与哈希",
-  "R 环境字符串键必须无歧义编码负数和整数值；TypeScript/Julia/其他语言集合语义需核对",
+  "必须证明首次命中对应更早的同值元素，扫描结束未命中则所有元素两两不同",
+  "重复可能相邻或远隔，负数、零、INT_MIN 和 INT_MAX 都按整数值比较",
+  "哈希集合方法平均 O(n) 时间、O(n) 空间；不能把对抗碰撞下的最坏情况写成保证线性",
+  "C 开放寻址必须使用独立 occupied 数组区分空槽和任意合法 int 值",
+  "C 容量应保持低负载并安全计算至少 2*n 的二次幂；长度乘法、分配失败和清理必须完整",
+  "C 哈希必须先把有符号 int 映射到固定宽度无符号值，不能对负数直接取可能为负的数组下标",
+  "R 环境字符串键必须对负数、零和极值保持一一对应；TypeScript Set、Julia Set 和托管语言集合语义需准确",
+  "排序方案会修改输入或复制数组，不能在采用哈希方案时混淆其资源合同",
 ]
 minimum_static_review = [
-  "人工推演 [1,2,3,1]、[1,2,3,4]、[1,1]、单元素、负数与远距离重复",
-  "证明首次集合命中对应更早相同元素，扫描结束未命中则所有元素两两不同",
-  "逐语言核对集合键、输入只读、平均/最坏复杂度和额外空间",
+  "人工推演 [1,2,3,1]、[1,2,3,4]、[1,1]、单元素、负数、零、整数极值和远距离重复",
+  "证明 seen 在扫描位置 i 前恰好包含 nums[0:i] 的值集合",
+  "证明集合命中与存在更早相同元素双向对应",
+  "逐语言核对集合键相等语义、输入只读、平均/最坏复杂度和额外空间",
+  "专项核对 C 容量溢出、occupied 标记、探测终止、负数哈希、分配失败和释放",
+  "专项核对 R 环境键编码不会把不同整数映射为同一字符串",
 ]
 
 must_preserve = [
-  "0216 的严格递增唯一性、完整性、路径恢复和可达和剪枝证明",
-  "0216 的 C 二维结果所有权与十语言结果快照语义",
-  "0217 的集合正确性、平均/最坏复杂度和 C/R 容器边界",
-  "每题固定十语言完整实现、人工推演、静态语义审查、剩余风险和带答案自检",
+  "已见集合不变量与正确性双向证明",
+  "哈希平均/最坏复杂度边界和输入只读合同",
+  "C 开放寻址容量、占用标记、负数哈希和失败清理",
+  "R 无歧义整数键与十语言集合适配",
+  "固定十语言完整实现、人工推演、静态语义审查、剩余风险和带答案自检",
 ]
 
 forbidden = [
-  "参考 0215 或其他最近题目的章节结构、证明篇幅或静态审查密度",
-  "0216 依赖结果集合事后去重而不维护严格递增选择",
-  "0216 使用未证明安全或可能越过 9 的剪枝公式",
-  "0216 提交路径引用而不是结果快照",
-  "0217 把哈希最坏复杂度写成保证 O(n)",
-  "0217 使用整数哨兵表示空槽而与合法输入值冲突",
+  "参考 0216 或其他最近题目的章节结构、证明篇幅或静态审查密度",
+  "把哈希最坏复杂度写成保证 O(n)",
+  "C 使用某个整数哨兵表示空槽并与合法输入值冲突",
+  "C 对负整数直接取模后未经处理作为数组下标",
+  "排序修改输入却声称输入保持只读",
+  "R 使用格式不稳定或可能碰撞的整数键",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试或 sanitizer 题解代码",
   "把静态审查写成测试、编译或运行通过",
 ]
 
 completion_checks = [
-  "逐题对照 0050 的状态/数值边界和 0076 的最优性/资源深度",
-  "每题完成后立即执行质量门；0217 出现压缩迹象时按合同缩批",
+  "对照 0050 的状态/数值边界和 0076 的资源深度",
   "命中 DRIFT_LOG 的拆分、摘要、最近样本、预算和验证策略回归检查均通过",
-  "每道算法题只有一个自包含 RST，十语言代码全部内联并位于 problems/0201-0300",
+  "单题只有一个自包含 RST，十语言代码全部内联并位于 problems/0201-0300",
   "完成范围、completed_count、next_problem、根 README、范围索引和知识账本同步",
   "提交后 BATCH_CONTRACT 被替换为下一批合同",
 ]
