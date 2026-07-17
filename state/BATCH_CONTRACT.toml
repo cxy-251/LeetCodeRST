@@ -1,10 +1,10 @@
 [contract]
 schema_version = 2
-batch_id = "generation-0215-0217"
+batch_id = "generation-0216-0217"
 status = "ready"
 phase = "generation"
 kind = "generation"
-scope = [215, 216, 217]
+scope = [216, 217]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
@@ -23,15 +23,15 @@ repository_structure_state_and_git_checks = "allowed"
 reporting = "只声明实际完成的静态审查；明确未运行、未编译、未测试和剩余风险。"
 
 [budget]
-algorithm_score = 5
-target_min = 4
-target_max = 6
+algorithm_score = 3
+target_min = 3
+target_max = 4
 proof_risk = "high"
 language_semantics_risk = "high"
 platform_type_risk = "high"
 output_volume_risk = "high"
 scope_may_shrink = true
-scope_reason = "0215 的三路 Quickselect 需要目标下标、重复值分区、区间收缩和真实最坏复杂度；0216 的组合回溯需要严格递增、状态恢复与上下界剪枝；0217 的哈希集合需要 C/R 等语言的容器与平均复杂度边界。先完整验收 0215；若继续 0216 或 0217 会压缩证明、十语言实现或资源说明，则提交连续前缀并重建剩余合同。"
+scope_reason = "这是上一合同缩批后的连续剩余范围。0216 需要严格递增唯一性、路径恢复、最小/最大可达和剪枝与 C 二维结果所有权；0217 需要哈希集合平均/最坏复杂度、C 开放寻址和 R 键语义。先完整验收 0216；若继续 0217 会压缩容器或复杂度说明，则在 0216 后缩批。"
 
 [references]
 style_baselines = [
@@ -44,15 +44,14 @@ fact_sources = [
   "state/CONCEPT_LEDGER.toml",
   "docs/FORWARD_RULES_0151_ONWARD.rst",
   "problems/0201-0300/README.rst",
-  "https://leetcode.com/problems/kth-largest-element-in-an-array/description/",
+  "problems/0201-0300/0215-kth-largest-element-in-an-array.rst",
   "https://leetcode.com/problems/combination-sum-iii/description/",
   "https://leetcode.com/problems/contains-duplicate/description/",
 ]
 fact_sources_may_provide = [
-  "0215 的第 k 大、重复值、k 的合法范围和数组元素合同",
   "0216 从 1 到 9 选择 k 个互不相同数字、和为 n、组合不重复的合同",
-  "0217 只需判断是否存在至少一对相同元素的合同",
-  "当前完成范围、静态审查政策和长期质量控制状态",
+  "0217 判断是否存在至少一对相同整数的合同",
+  "当前目录、完成范围和静态审查状态",
 ]
 fact_sources_must_not_provide = [
   "章节结构",
@@ -62,75 +61,55 @@ fact_sources_must_not_provide = [
   "文件组织形式",
 ]
 
-[problems."0215"]
-title = "Kth Largest Element in an Array"
-difficulty = "Medium"
-primary_risks = [
-  "第 k 大转换为升序目标下标 n-k；不能误用 k-1",
-  "主解法使用原地三路 Quickselect，把当前区间分为小于、等于和大于 pivot 的连续区域",
-  "重复值必须全部落入等值区域，目标落在等值区域时直接返回 pivot",
-  "每轮只能保留包含目标下标的一侧，区间必须严格缩小",
-  "输入数组会被重排；必须明确平台允许修改或说明若需只读要先复制",
-  "确定性 pivot 不能无条件声称期望 O(n)；实现应准确报告其 pivot 策略、典型表现和 O(n^2) 最坏时间",
-  "C/R/Julia/TypeScript 等语言的交换、索引和数值类型需要逐项核对",
-]
-minimum_static_review = [
-  "人工推演 [3,2,1,5,6,4], k=2；[3,2,3,1,2,4,5,5,6], k=4；全相等；升序；降序；k=1；k=n",
-  "证明三路分区结束后 [left,less) 全小于、[less,greater] 全等于、(greater,right] 全大于 pivot",
-  "证明目标落在哪个区域就只需保留哪个区间，并证明区间严格缩小和终止",
-  "复杂度区分单轮 O(m)、典型/平均行为与 O(n^2) 最坏情况，不把确定性 pivot 写成保证线性",
-  "逐语言核对输入变异、下标类型、交换语义和重复值",
-]
-
 [problems."0216"]
 title = "Combination Sum III"
 difficulty = "Medium"
 primary_risks = [
   "只能使用 1 到 9，每个数字最多一次，组合必须恰好包含 k 个数字且总和为 n",
-  "候选数字按严格递增顺序选择，从结构上避免重复组合和重复使用",
-  "回溯状态包含下一个最小候选、剩余槽位、剩余和与当前路径；递归返回必须恢复路径",
-  "槽位为 0 时只有剩余和也为 0 才提交答案",
-  "最小可达和与最大可达和剪枝必须与当前起点和剩余槽位一致，不能越过 9 或使用重复数字",
-  "输出二维容器和 C 的结果所有权、Julia/R 一基索引及复制路径语义需要说明",
+  "候选按严格递增顺序选择，从结构上同时避免重复使用与重复组合",
+  "状态包含下一个最小候选、剩余槽位、剩余和与当前路径；递归退出必须恢复路径",
+  "剩余槽位为 0 时只有剩余和也为 0 才提交结果快照",
+  "最小可达和与最大可达和必须基于当前起点和剩余槽位，且不能使用超过 9 的数字",
+  "C 需要二维结果数组、列长度数组、容量增长和失败清理；其他语言需要明确路径快照语义",
+  "Julia/R 一基索引、R 递归参数复制和结果列表追加成本需准确说明",
 ]
 minimum_static_review = [
-  "人工推演 k=3,n=7；k=3,n=9；k=4,n=1；k=9,n=45；无解和多解情况",
-  "证明严格递增保证每个组合只生成一次，且所有合法组合都沿唯一递增路径被枚举",
+  "人工推演 k=3,n=7；k=3,n=9；k=4,n=1；k=9,n=45；多解和无解情况",
+  "证明严格递增使每个合法组合只有一条生成路径，并证明所有合法组合都会被枚举",
   "证明最小/最大可达和剪枝只排除必不可能完成的状态",
-  "逐语言核对路径 push/pop、结果快照、递归边界和二维输出所有权",
+  "逐语言核对 push/pop、结果快照、递归边界、二维输出和 C 失败清理",
 ]
 
 [problems."0217"]
 title = "Contains Duplicate"
 difficulty = "Easy"
 primary_risks = [
-  "扫描元素时先查询已见集合；命中即返回 true，未命中再插入",
-  "重复可以相邻或远隔，负数、零和极值都按整数值比较",
-  "哈希集合方法平均 O(n) 时间、O(n) 空间；不能把哈希最坏情况无条件写成 O(n)",
-  "C 若实现开放寻址必须区分空槽与合法整数值，并处理容量、负数哈希、扩容或基于题目上界分配",
-  "R 环境键、TypeScript Set、Julia Set 与固定宽度语言整数哈希的适配需要准确",
+  "扫描元素时先查询已见集合；命中返回 true，未命中再插入",
+  "重复可能相邻或远隔，负数、零和整数极值按值比较",
+  "哈希集合平均 O(n) 时间、O(n) 空间；哈希最坏情况不能写成保证线性",
+  "C 开放寻址必须用独立占用标记区分空槽和任意 int 值，并安全计算容量与哈希",
+  "R 环境字符串键必须无歧义编码负数和整数值；TypeScript/Julia/其他语言集合语义需核对",
 ]
 minimum_static_review = [
   "人工推演 [1,2,3,1]、[1,2,3,4]、[1,1]、单元素、负数与远距离重复",
-  "证明首次命中集合时存在更早相同元素；扫描结束未命中则所有元素两两不同",
-  "逐语言核对集合键语义、平均/最坏复杂度、输入只读和额外空间",
+  "证明首次集合命中对应更早相同元素，扫描结束未命中则所有元素两两不同",
+  "逐语言核对集合键、输入只读、平均/最坏复杂度和额外空间",
 ]
 
 must_preserve = [
-  "0215 的 n-k 目标下标、三路分区不变量、重复值与最坏复杂度",
-  "0216 的严格递增唯一性、回溯恢复和可达和剪枝证明",
-  "0217 的哈希集合正确性与平均/最坏复杂度边界",
+  "0216 的严格递增唯一性、完整性、路径恢复和可达和剪枝证明",
+  "0216 的 C 二维结果所有权与十语言结果快照语义",
+  "0217 的集合正确性、平均/最坏复杂度和 C/R 容器边界",
   "每题固定十语言完整实现、人工推演、静态语义审查、剩余风险和带答案自检",
 ]
 
 forbidden = [
-  "参考 0214 或其他最近题目的章节结构、证明篇幅或静态审查密度",
-  "0215 把第 k 大直接当作升序下标 k-1",
-  "0215 在重复值下使用不收缩或无法终止的二路分区",
-  "0215 对确定性 pivot 声称保证或无条件期望 O(n)",
-  "0216 依赖结果集合事后去重而不维护递增选择",
-  "0216 剪枝公式未证明合法或越过数字 9",
-  "0217 把排序修改输入却声称输入只读，或把哈希最坏复杂度写成保证线性",
+  "参考 0215 或其他最近题目的章节结构、证明篇幅或静态审查密度",
+  "0216 依赖结果集合事后去重而不维护严格递增选择",
+  "0216 使用未证明安全或可能越过 9 的剪枝公式",
+  "0216 提交路径引用而不是结果快照",
+  "0217 把哈希最坏复杂度写成保证 O(n)",
+  "0217 使用整数哨兵表示空槽而与合法输入值冲突",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试或 sanitizer 题解代码",
   "把静态审查写成测试、编译或运行通过",
@@ -138,7 +117,7 @@ forbidden = [
 
 completion_checks = [
   "逐题对照 0050 的状态/数值边界和 0076 的最优性/资源深度",
-  "每题完成后立即执行质量门；后续题出现压缩迹象时按合同缩批",
+  "每题完成后立即执行质量门；0217 出现压缩迹象时按合同缩批",
   "命中 DRIFT_LOG 的拆分、摘要、最近样本、预算和验证策略回归检查均通过",
   "每道算法题只有一个自包含 RST，十语言代码全部内联并位于 problems/0201-0300",
   "完成范围、completed_count、next_problem、根 README、范围索引和知识账本同步",

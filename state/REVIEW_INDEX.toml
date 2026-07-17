@@ -149,10 +149,10 @@ statement = "O(min(m,n)) describes only the rolling Boolean DP array. The C++ si
 [next_action]
 kind = "generation"
 status = "ready"
-start = 215
+start = 216
 end = 217
-problem_ids = [215, 216, 217]
-purpose = "生成 0215–0217；完整处理三路 Quickselect 的目标下标、重复值和复杂度，Combination Sum III 的递增回溯与可达和剪枝，以及 Contains Duplicate 的哈希集合语义；历史题继续风险触发抽查。"
+problem_ids = [216, 217]
+purpose = "生成 0216–0217；完整处理 Combination Sum III 的递增回溯、可达和剪枝和二维结果所有权，以及 Contains Duplicate 的哈希集合正确性、平均/最坏复杂度和 C/R 容器语义；历史题继续风险触发抽查。"
 
 [artifact_lifecycle]
 policy = "docs/ARTIFACT_LIFECYCLE_POLICY.rst"
