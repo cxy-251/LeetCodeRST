@@ -1,0 +1,236 @@
+[meta]
+version = 1
+range = "0101-0150"
+first_problem = 101
+last_problem = 150
+inherits = "state/concepts/0051-0100.toml"
+storage = "fifty_problem_range"
+migration_mode = "lossless_ordered_overlay"
+resolver_version = 1
+
+[coverage]
+problems = [101, 102, 103, 104, 105, 106, 107, 108, 109, 110, 111, 112, 113, 114, 115, 116, 117, 118, 119, 120, 121, 122, 123, 124, 125, 126, 127, 128, 129, 130, 131, 132, 133, 134, 135, 136, 137, 138, 139, 140, 141, 142, 143, 144, 145, 146, 147, 148, 149, 150]
+complete = true
+
+[resolution]
+mode = "ordered_archive_overlay"
+archive_root = "archive/state/concepts/pre-consolidation"
+statement = "按 data_shards 顺序叠加知识记录；同名 updates 或 concepts 以后者为准。composite_shells 只保存旧解析拓扑，不参与第二次叠加。"
+
+[[data_shards]]
+effective_range = "0101-0104"
+archive_path = "archive/state/concepts/pre-consolidation/0101-0104.toml"
+blob_sha = "29ce771af80faede1f708f4b0a32c96471c78e24"
+role = "ordered_overlay"
+
+[[data_shards]]
+effective_range = "0105-0107"
+archive_path = "archive/state/concepts/pre-consolidation/0105-0107.toml"
+blob_sha = "4269f3a75f895a40294ca4fdab4753a5608d1c6a"
+role = "ordered_overlay"
+
+[[data_shards]]
+effective_range = "0108-0112"
+archive_path = "archive/state/concepts/pre-consolidation/0108-0112.toml"
+blob_sha = "b461ddaa8feeb0dea3ce75959555d2696bc5abb6"
+role = "ordered_overlay"
+
+[[data_shards]]
+effective_range = "0113-0114"
+archive_path = "archive/state/concepts/pre-consolidation/0113-0114.toml"
+blob_sha = "0b88c03fb8bb15c3e580f1675d9340fed73b2e01"
+role = "ordered_overlay"
+
+[[data_shards]]
+effective_range = "0115-0116"
+archive_path = "archive/state/concepts/pre-consolidation/0115-0116.toml"
+blob_sha = "8559d9c0130b40220bc1d3a3938a1f5167d9ed1a"
+role = "ordered_overlay"
+
+[[data_shards]]
+effective_range = "0117-0120"
+archive_path = "archive/state/concepts/pre-consolidation/0117-0120.toml"
+blob_sha = "f6a3a37c3991b63738e480d54302427c35f8defc"
+role = "ordered_overlay"
+
+[[data_shards]]
+effective_range = "0121-0122"
+archive_path = "archive/state/concepts/pre-consolidation/0121-0122.toml"
+blob_sha = "46c0997915d7f8ba57707c404b2cc1ccfd33dcc7"
+role = "ordered_overlay"
+
+[[data_shards]]
+effective_range = "0123"
+archive_path = "archive/state/concepts/pre-consolidation/0123.toml"
+blob_sha = "99e79536c0d78e360cc752a5d4462a4470e0b72b"
+role = "ordered_overlay"
+
+[[data_shards]]
+effective_range = "0124-0125"
+archive_path = "archive/state/concepts/pre-consolidation/0124-0125.toml"
+blob_sha = "97e6e87403c4f5d80a897c5806937bf1054e736c"
+role = "ordered_overlay"
+
+[[data_shards]]
+effective_range = "0126"
+archive_path = "archive/state/concepts/pre-consolidation/0126.toml"
+blob_sha = "58b0807df9e6bc3f53b2ac30bc25a553db0dcae1"
+role = "ordered_overlay"
+
+[[data_shards]]
+effective_range = "0127-0128"
+archive_path = "archive/state/concepts/pre-consolidation/0127-0128.toml"
+blob_sha = "05b0a01db71d8869b2df325918ec5f1606fc3d86"
+role = "ordered_overlay"
+
+[[data_shards]]
+effective_range = "0129-0131"
+archive_path = "archive/state/concepts/pre-consolidation/0129-0131.toml"
+blob_sha = "782fe55404da2b5e730c44fad4271914e0659ced"
+role = "ordered_overlay"
+
+[[data_shards]]
+effective_range = "0132-0133"
+archive_path = "archive/state/concepts/pre-consolidation/0132-0133.toml"
+blob_sha = "7448201eeca1492cef3787bb4aa43281997e71ff"
+role = "ordered_overlay"
+
+[[data_shards]]
+effective_range = "0134"
+archive_path = "archive/state/concepts/pre-consolidation/0134.toml"
+blob_sha = "c014369158b8a513042b6d17ab0780ac674065fd"
+role = "ordered_overlay"
+
+[[data_shards]]
+effective_range = "0135"
+archive_path = "archive/state/concepts/pre-consolidation/0135.toml"
+blob_sha = "3d0d9dd9574bec5f14371ab7732ad2df65a419d4"
+role = "ordered_overlay"
+
+[[data_shards]]
+effective_range = "0136"
+archive_path = "archive/state/concepts/pre-consolidation/0136.toml"
+blob_sha = "8c2c5ba06ea6304347faa779ace3d5b113be23fa"
+role = "ordered_overlay"
+
+[[data_shards]]
+effective_range = "0137"
+archive_path = "archive/state/concepts/pre-consolidation/0137.toml"
+blob_sha = "084af97fd278d9e1e6bf5c41c44fc5c0f4ffbc2b"
+role = "ordered_overlay"
+
+[[data_shards]]
+effective_range = "0138"
+archive_path = "archive/state/concepts/pre-consolidation/0138.toml"
+blob_sha = "c7ac6c7c78f81ca5660f26f3075ef86400ccc46c"
+role = "ordered_overlay"
+
+[[data_shards]]
+effective_range = "0139"
+archive_path = "archive/state/concepts/pre-consolidation/0139.toml"
+blob_sha = "bbdea17cb7e21d49769c6d57e8b68f09a3e64a39"
+role = "ordered_overlay"
+
+[[data_shards]]
+effective_range = "0140"
+archive_path = "archive/state/concepts/pre-consolidation/0140.toml"
+blob_sha = "8ddbcd9dde7bb589202c71c2bfc179609638289e"
+role = "ordered_overlay"
+
+[[data_shards]]
+effective_range = "0141"
+archive_path = "archive/state/concepts/pre-consolidation/0141.toml"
+blob_sha = "3b76b0a5b98fdc7e6528f476db7ade6ce796f84a"
+role = "ordered_overlay"
+
+[[data_shards]]
+effective_range = "0142"
+archive_path = "archive/state/concepts/pre-consolidation/0142.toml"
+blob_sha = "236ed2887fef5e5091556b5c79316dda3e41e213"
+role = "ordered_overlay"
+
+[[data_shards]]
+effective_range = "0143"
+archive_path = "archive/state/concepts/pre-consolidation/0143.toml"
+blob_sha = "2a2056c6f82a079747f4659cccfb080d4ab33fab"
+role = "ordered_overlay"
+
+[[data_shards]]
+effective_range = "0144"
+archive_path = "archive/state/concepts/pre-consolidation/0144.toml"
+blob_sha = "b9a5a446f5b3eefe8f130b42914e102f5e64e3a0"
+role = "ordered_overlay"
+
+[[data_shards]]
+effective_range = "0145"
+archive_path = "archive/state/concepts/pre-consolidation/0145.toml"
+blob_sha = "0d656d02df551d16c6af20edd7c3360762b34401"
+role = "ordered_overlay"
+
+[[data_shards]]
+effective_range = "0146"
+archive_path = "archive/state/concepts/pre-consolidation/0146.toml"
+blob_sha = "cd41c4d3f152a272379ca37c3f4c426045ff3fc6"
+role = "ordered_overlay"
+
+[[data_shards]]
+effective_range = "0147"
+archive_path = "archive/state/concepts/pre-consolidation/0147.toml"
+blob_sha = "7ea6fff3d4aa6d8fc4de31e05e844a0654e52c40"
+role = "ordered_overlay"
+
+[[data_shards]]
+effective_range = "0148"
+archive_path = "archive/state/concepts/pre-consolidation/0148.toml"
+blob_sha = "4cf0708ce17784ff4f1984605b0d73cbac749d2e"
+role = "ordered_overlay"
+
+[[data_shards]]
+effective_range = "0149"
+archive_path = "archive/state/concepts/pre-consolidation/0149.toml"
+blob_sha = "3d7927ac32637d4186c9dac0249ccafc92518120"
+role = "ordered_overlay"
+
+[[data_shards]]
+effective_range = "0150"
+archive_path = "archive/state/concepts/pre-consolidation/0150.toml"
+blob_sha = "d684dc12ee31ce7a87ccec001a975dbeb2c2dfc3"
+role = "ordered_overlay"
+
+[[composite_shells]]
+archive_path = "archive/state/concepts/pre-consolidation/0134-0135.toml"
+blob_sha = "cf8fe69625fef04d4a2f4300f7eed3248aa92400"
+role = "provenance_only"
+
+[[composite_shells]]
+archive_path = "archive/state/concepts/pre-consolidation/0136-0138.toml"
+blob_sha = "8e034d03b001019f36d94be91cfafb4758566b1e"
+role = "provenance_only"
+
+[[composite_shells]]
+archive_path = "archive/state/concepts/pre-consolidation/0139-0140.toml"
+blob_sha = "77fb5a39dc4dc913dfd65d99f355ca29208f5ced"
+role = "provenance_only"
+
+[[composite_shells]]
+archive_path = "archive/state/concepts/pre-consolidation/0141-0144.toml"
+blob_sha = "f700ae72e6d127e0faa73fdc1eace4da112e5766"
+role = "provenance_only"
+
+[[composite_shells]]
+archive_path = "archive/state/concepts/pre-consolidation/0145-0147.toml"
+blob_sha = "e549d7b89522453bd94afa2840567c5d1f3395f5"
+role = "provenance_only"
+
+[[composite_shells]]
+archive_path = "archive/state/concepts/pre-consolidation/0148-0149.toml"
+blob_sha = "2b98121347a7acdf43ff4d996b68f7ebce96e89d"
+role = "provenance_only"
+
+[audit]
+data_shards = 30
+composite_shells = 6
+source_blobs_pinned = true
+active_single_problem_files = 0
+data_loss = false
+known_legacy_gap = "0113-0133 部分旧批次只记录累计 updates，迁移保持原状，不伪造缺失 concepts。"
