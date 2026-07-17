@@ -1,0 +1,22 @@
+[meta]
+version = 1
+range = "0205-0206"
+last_problem = 206
+inherits = "state/concepts/0204.toml"
+
+[batch]
+completed = 2
+difficulty_budget = 2
+planned_scope = [205, 206, 207]
+scope_shrunk = true
+summary = "完成字符串同构双射与单链表原地反转；0207 课程依赖拓扑判环独立后移。"
+
+[updates]
+"algorithm.isomorphic_bidirectional_mapping" = "kind=algorithm; introduced=0205; last=0205; occurrences=1; teaching_state=explained; note=同时维护 source->target 与 target->source，前者保证同一源字符映射一致，后者保证目标不被不同源字符重复占用。"
+"proof.isomorphic_bijection" = "kind=proof; introduced=0205; last=0205; occurrences=1; teaching_state=explained; note=双向冲突检查维护函数与单射；每个实际目标字符都来自一个对应位置，扫描完成后映射对出现字符集合构成双射。"
+"semantics.string_character_unit" = "kind=language_semantics; introduced=0205; last=0205; occurrences=1; teaching_state=explained; note=官方 ASCII 输入允许字节、UTF-16 单元和 Unicode 码点适配一致；超出 ASCII 时不得混称同一种字符边界。"
+"algorithm.reverse_list_three_links" = "kind=algorithm; introduced=0206; last=0206; occurrences=1; teaching_state=explained; note=先保存 next_node，再把 current.next 指向 previous，最后整体推进 previous/current。"
+"invariant.reversed_prefix_unprocessed_suffix" = "kind=invariant; introduced=0206; last=0206; occurrences=1; teaching_state=explained; note=previous 是已反转前缀新头，current 是未处理后缀首节点；两部分不交且合并覆盖全部原节点。"
+"proof.reverse_list_node_conservation" = "kind=proof; introduced=0206; last=0206; occurrences=1; teaching_state=explained; note=每轮恰好移动一个节点，保存后继避免丢失，新增边只指向无环前缀，最终 previous 包含全部节点逆序。"
+"ownership.reverse_list_links" = "kind=ownership; introduced=0206; last=0206; occurrences=1; teaching_state=explained; note=C/C++ 借用并重接指针不释放；Rust 以 Option<Box<Node>> 的 take 和移动转交唯一所有权；R/Julia 修改共享可变节点。"
+"workflow.targeted_static_review" = "kind=workflow; introduced=0167; last=0206; occurrences=20; teaching_state=explained; note=本批两题仅执行人工推演、证明映射、十语言静态语义和仓库一致性检查；未运行、未编译、未测试题解。"

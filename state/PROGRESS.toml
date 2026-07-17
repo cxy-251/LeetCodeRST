@@ -11,9 +11,9 @@ code_comment_language = "zh-CN"
 problem_artifact_shape = "one_self_contained_rst_per_public_algorithm_problem"
 
 [progress]
-next_problem = 205
-completed_count = 180
-completed_ranges = ["0001-0155", "0160", "0162", "0164-0169", "0171-0174", "0179", "0187-0191", "0198-0204"]
+next_problem = 207
+completed_count = 182
+completed_ranges = ["0001-0155", "0160", "0162", "0164-0169", "0171-0174", "0179", "0187-0191", "0198-0206"]
 premium_skipped = [156, 157, 158, 159, 161, 163, 170, 186]
 database_skipped = [175, 176, 177, 178, 180, 181, 182, 183, 184, 185, 196, 197]
 shell_skipped = [192, 193, 194, 195]
@@ -59,26 +59,26 @@ quality_over_batch_score = true
 [last_batch]
 status = "completed"
 kind = "generation"
-start = 204
-end = 204
-generated_problem_count = 1
-generated_problem_ids = [204]
+start = 205
+end = 206
+generated_problem_count = 2
+generated_problem_ids = [205, 206]
 reference_problems = [50, 76]
 difficulty_budget = 2
-planned_scope = [204]
-scope_shrunk = false
-scope_reason = "0204 从高风险批次拆出后独立完成；严格半开区间、埃氏筛不变量、p*p 起点证明、乘法溢出和十语言筛数组成本均未压缩。"
-summary = "完成 0204 Count Primes：最小质因子保证、从 p*p 标记的完整性、除法式平方边界和十语言 O(n) 筛存储适配。"
+planned_scope = [205, 206, 207]
+scope_shrunk = true
+scope_reason = "0205 与 0206 已完整通过单题质量门；继续同批生成 0207 会压缩 Kahn 入度不变量、环等价证明、重复边语义或十语言邻接表资源边界，因此按合同提交完整连续前缀并重建 0207 单题合同。"
+summary = "完成 0205 Isomorphic Strings 的双向字符映射与双射证明，以及 0206 Reverse Linked List 的 previous/current/next 不变量、节点守恒和跨语言所有权适配。"
 
 [next_batch]
 status = "generation_ready"
 kind = "generation"
-start = 205
+start = 207
 end = 207
-problem_ids = [205, 206, 207]
-difficulty_budget = 4
+problem_ids = [207]
+difficulty_budget = 2
 contract = "state/BATCH_CONTRACT.toml"
-purpose = "生成 0205 Isomorphic Strings、0206 Reverse Linked List 与 0207 Course Schedule；完整处理字符双射、链表反转所有权和有向依赖图判环。"
+purpose = "单独生成 0207 Course Schedule；完整处理 prerequisite->course 建边、Kahn 入度不变量、环等价证明、重复边与十语言邻接表资源成本。"
 
 [review_history]
 status = "completed"
@@ -147,7 +147,7 @@ problem_code_fragments_present = false
 
 [quality_scope]
 historical_start = 1
-historical_end = 204
+historical_end = 206
 historical_policy = "用户指定的 32 道低质量题解已经全部返工完成；历史题默认保持不变，风险触发时定向抽查。"
 persistent_rule_start = 151
 persistent_rule = "docs/FORWARD_RULES_0151_ONWARD.rst"
@@ -179,10 +179,10 @@ concurrency_policy = "fetch_and_compare_before_commit; stop_on_remote_change_or_
 
 [concept_ledger]
 index = "state/CONCEPT_LEDGER.toml"
-latest_record = "state/concepts/0204.toml"
+latest_record = "state/concepts/0205-0206.toml"
 
 [next_action]
-summary = "按 BATCH_CONTRACT 生成 0205–0207；0204 Count Primes 已完整处理。"
+summary = "按 BATCH_CONTRACT 单独生成 0207 Course Schedule；0205–0206 已完整处理。"
 
 [last_update]
-summary = "0204 已完整生成并通过静态质量门；完成数更新为 180，下一入口为 0205。"
+summary = "0205–0206 已完整生成并通过静态质量门；完成数更新为 182，下一入口为 0207。"

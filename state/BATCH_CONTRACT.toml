@@ -1,10 +1,10 @@
 [contract]
 schema_version = 2
-batch_id = "generation-0205-0207"
+batch_id = "generation-0207"
 status = "ready"
 phase = "generation"
 kind = "generation"
-scope = [205, 206, 207]
+scope = [207]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
@@ -23,15 +23,15 @@ repository_structure_state_and_git_checks = "allowed"
 reporting = "只声明实际完成的静态审查；明确未运行、未编译、未测试和剩余风险。"
 
 [budget]
-algorithm_score = 4
-target_min = 4
-target_max = 6
+algorithm_score = 2
+target_min = 2
+target_max = 4
 proof_risk = "high"
 language_semantics_risk = "high"
 platform_type_risk = "high"
 output_volume_risk = "high"
-scope_may_shrink = true
-scope_reason = "0205 涉及字符单位和双向映射，0206 涉及链表指针反转及 Rust/C 所有权，0207 涉及有向图建边方向、入度与环判定。先完整验收 0205–0206；若继续 0207 会压缩拓扑证明、邻接表资源或十语言容器边界，则提交连续前缀并重建 0207 单题合同。"
+scope_may_shrink = false
+scope_reason = "0207 从原 0205–0207 高风险批次中拆出，必须独立恢复有向依赖图建边、Kahn 入度不变量、环等价证明、重复边语义和十语言邻接表资源成本；本批不追加 0208。"
 
 [references]
 style_baselines = [
@@ -44,18 +44,13 @@ fact_sources = [
   "state/CONCEPT_LEDGER.toml",
   "docs/FORWARD_RULES_0151_ONWARD.rst",
   "problems/0201-0300/README.rst",
-  "problems/0201-0300/0203-remove-linked-list-elements.rst",
-  "problems/0101-0200/0141-linked-list-cycle.rst",
   "problems/0101-0200/0133-clone-graph.rst",
-  "https://leetcode.com/problems/isomorphic-strings/description/",
-  "https://leetcode.com/problems/reverse-linked-list/description/",
+  "problems/0101-0200/0141-linked-list-cycle.rst",
   "https://leetcode.com/problems/course-schedule/description/",
 ]
 fact_sources_may_provide = [
-  "0205 的等长字符串、字符一一映射与保持位置对应关系的合同",
-  "0206 的单链表反转、返回新头和空链表合同",
-  "0207 的课程数量、先修关系、有向依赖与是否可完成全部课程合同",
-  "已有链表节点接口、图邻接表与循环检测术语连续性",
+  "0207 的课程数量、先修对 [course, prerequisite]、是否能完成全部课程和官方示例",
+  "已有邻接表、图遍历、环与队列术语连续性",
   "当前完成范围、静态审查政策和长期质量控制状态",
 ]
 fact_sources_must_not_provide = [
@@ -66,79 +61,53 @@ fact_sources_must_not_provide = [
   "文件组织形式",
 ]
 
-[problems."0205"]
-title = "Isomorphic Strings"
-difficulty = "Easy"
-primary_risks = [
-  "必须存在从 s 字符到 t 字符的双射；单向一致不足以阻止两个源字符映射到同一目标字符",
-  "相同源字符每次必须映射到相同目标字符，不同源字符必须映射到不同目标字符",
-  "官方字符域允许按固定字符单位扫描；C/C++/Rust/Go 可按字节处理平台 ASCII 契约，Java/TypeScript/C# 需说明 UTF-16 单元，Julia/R 需显式物化同一字符单位",
-  "长度不同立即返回 false；映射状态 O(字符集) 或 O(k)，输入只读",
-  "可使用两个方向映射表或首次出现位置签名；正文与十语言实现必须采用同一证明模型",
-]
-minimum_static_review = [
-  "人工推演 egg/add、foo/bar、paper/title、badc/baba、空字符串和单字符",
-  "证明映射保持、目标唯一性、双射充分性和失败分支无误判",
-  "逐语言核对字符单位、数组或映射表哨兵、长度语义和输入物化成本",
-]
-
-[problems."0206"]
-title = "Reverse Linked List"
-difficulty = "Easy"
-primary_risks = [
-  "迭代状态 previous/current/next 必须在覆盖 current.next 前保存原后继，否则未处理后缀丢失",
-  "循环不变量需说明 previous 是已反转前缀的新头，current 是未处理后缀首节点，两部分节点不重不漏",
-  "算法原地重接 next，不新建数据节点；返回原尾节点作为新头，空链表返回空",
-  "C 只改变链接，不释放或分配节点；Rust Option<Box<ListNode>> 通过 take 转移所有权；托管语言只重接引用",
-  "R 使用 environment 节点时修改调用者可见链接；必须排除输入有环的情况",
-]
-minimum_static_review = [
-  "人工推演空链表、单节点、两节点、五节点和重复值链表",
-  "证明每轮保存后继、反转一条边、节点守恒、无环性和最终头正确",
-  "逐语言核对节点模型、返回头、C 所有权、Rust Box 移动、R 环境引用和 O(1) 核心空间",
-]
-
 [problems."0207"]
 title = "Course Schedule"
 difficulty = "Medium"
 primary_risks = [
-  "先修对 [course, prerequisite] 应建立 prerequisite -> course 的有向边；建反会破坏入度含义",
-  "Kahn 算法初始只入队入度 0 课程；弹出课程后逐条删除其出边并递减后继入度",
-  "处理课程数等于 numCourses 当且仅当依赖图无环；必须证明有环时环内节点无法归零、无环图必有入度 0 节点",
-  "自环、重复边、孤立课程和多个连通分量需覆盖；重复边若保留必须让入度与邻接表次数一致",
-  "C 需要邻接表、入度和队列的全部失败清理；各语言报告 O(V+E) 时间和 O(V+E) 空间",
-  "R/Julia 一基索引映射课程编号，TypeScript/Java/C# 数组嵌套与 Go/Rust 所有权需静态核对",
+  "先修对 [course, prerequisite] 必须建立 prerequisite -> course 的边；正文、入度定义和十语言实现方向一致",
+  "Kahn 算法初始只入队入度 0 课程；每次弹出后删除其全部出边并逐次递减后继入度",
+  "processed==numCourses 当且仅当图无环；证明需包含有限 DAG 必有零入度节点和有向环内节点无法被处理",
+  "重复边若按输入逐条保留，邻接表和入度必须同时保留相同次数；不能邻接去重却仍重复增加入度",
+  "自环、两节点环、菱形 DAG、孤立课程、多个分量和空 prerequisites 都要覆盖",
+  "C 需要一次构建出度、前缀偏移、邻接数组、入度和队列；任一分配失败返回 false 不能与图有环区分，正文必须声明平台签名缺少失败通道及剩余风险，或采用明确适配器状态",
+  "R/Julia 使用课程编号加一映射到一基索引；TypeScript/Java/C# 嵌套容器和 Rust/Go 所有权需静态核对",
 ]
 minimum_static_review = [
-  "人工推演 numCourses=2 的单边可行、自环、两节点环、菱形 DAG、孤立课程和重复边",
-  "证明入度语义、队列不变量、DAG 必有零入度节点、环阻塞与 processed==V 判定",
-  "逐语言核对建边方向、索引、入度更新、队列头索引、邻接表资源和 C 失败路径",
+  "人工推演 numCourses=2 的单边可行、自环、两节点环、菱形 DAG、孤立课程、多个分量和重复边",
+  "证明入度始终等于来自未处理节点的剩余入边数",
+  "证明无环图只要仍有节点就存在零入度节点；有环时环内每个节点始终保留至少一条环内入边",
+  "证明 processed==V 与可完成全部课程等价，并证明每个顶点至多入队一次",
+  "逐语言核对建边方向、课程编号边界、重复边次数、队列头索引、邻接表成本和 C 失败路径",
+  "复杂度报告 O(V+E) 时间与 O(V+E) 空间，区分邻接载荷、入度、队列和语言容器开销",
 ]
 
 must_preserve = [
-  "0205 的双向一致映射、目标唯一性证明和跨语言字符单位",
-  "0206 的 previous/current/next 不变量、后继保存、原地链接反转和所有权语义",
-  "0207 的 prerequisite->course 建边、Kahn 入度不变量、环等价证明和邻接表资源成本",
-  "每题固定十语言完整实现、人工推演、静态语义审查、剩余风险和带答案自检",
+  "prerequisite->course 建边方向和入度定义",
+  "Kahn 队列不变量、processed 计数与环等价完整证明",
+  "自环、重复边、孤立课程和多分量边界",
+  "C 邻接表构建与失败清理、R/Julia 索引映射和十语言容器资源成本",
+  "固定十语言完整实现、人工推演、静态语义审查、剩余风险和带答案自检",
 ]
 
 forbidden = [
-  "参考 0204 或其他最近题目的章节结构、证明篇幅或静态审查密度",
-  "0205 只维护单向映射却不检查目标字符是否已被其他源字符占用",
-  "0205 混用字节、Unicode 码点和 UTF-16 单元却声称字符语义完全相同",
-  "0206 覆盖 current.next 后才读取原后继，或创建整条新链表却声称 O(1) 空间原地反转",
-  "0206 C 释放仍需保留的节点，或 Rust 使用同时借用和移动同一 Box 的无效写法",
-  "0207 把建边方向写反、只检查是否存在初始零入度节点，或 processed<V 时仍返回 true",
+  "参考 0205–0206 或其他最近题目的章节结构、证明篇幅或静态审查密度",
+  "把 [course, prerequisite] 建成 course->prerequisite 却沿用原入度解释",
+  "只检查是否存在初始零入度节点，或 processed<V 时仍返回 true",
+  "忽略重复边导致邻接次数与入度次数不一致",
+  "用无向图判环方法处理课程依赖",
+  "声称只有 O(V) 空间而忽略 E 条邻接载荷",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试或 sanitizer 题解代码",
   "把静态审查写成测试、编译或运行通过",
 ]
 
 completion_checks = [
-  "逐题对照 0050 的状态/数值边界和 0076 的语言适配/资源成本深度",
-  "每题完成后立即执行质量门；0207 出现压缩迹象时按合同缩批",
+  "逐项对照 0050 的状态/数值边界和 0076 的语言适配/资源成本深度",
+  "0207 只有一个自包含 RST，十语言代码全部内联并位于 problems/0201-0300",
+  "完整证明建边与入度语义、DAG 零入度性质、环阻塞和 processed 判定",
+  "人工推演全部要求边界并逐语言核对邻接表、队列、索引和失败路径",
   "命中 DRIFT_LOG 的拆分、摘要、最近样本、预算和验证策略回归检查均通过",
-  "每道算法题只有一个自包含 RST，十语言代码全部内联并位于 problems/0201-0300",
   "完成范围、completed_count、next_problem、根 README、范围索引和知识账本同步",
   "提交后 BATCH_CONTRACT 被替换为下一批合同",
 ]
