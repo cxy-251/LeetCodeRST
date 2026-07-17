@@ -1,10 +1,10 @@
 [contract]
 schema_version = 2
-batch_id = "generation-0213-0214"
+batch_id = "generation-0214"
 status = "ready"
 phase = "generation"
 kind = "generation"
-scope = [213, 214]
+scope = [214]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
@@ -23,15 +23,15 @@ repository_structure_state_and_git_checks = "allowed"
 reporting = "只声明实际完成的静态审查；明确未运行、未编译、未测试和剩余风险。"
 
 [budget]
-algorithm_score = 6
+algorithm_score = 4
 target_min = 4
 target_max = 6
 proof_risk = "high"
 language_semantics_risk = "high"
 platform_type_risk = "high"
 output_volume_risk = "high"
-scope_may_shrink = true
-scope_reason = "0213 是环形相邻约束 DP，需要首尾互斥拆分、单元素边界和滚动状态证明；0214 是 Hard，需要把最短前置字符转化为最长回文前缀，并完整证明 KMP 拼接、分隔符和十语言字符单位。先完整验收 0213；若继续 0214 会压缩 KMP 证明、字符串构造或 C/Rust/R 资源边界，则提交连续前缀并重建 0214 单题合同。"
+scope_may_shrink = false
+scope_reason = "0214 是 Hard；最短前置字符与最长回文前缀的最优性、KMP 最终 border 的充要证明、安全分隔符、十语言字符单位和 C 字符串分配必须独立完成，本批不追加 0215。"
 
 [references]
 style_baselines = [
@@ -44,15 +44,13 @@ fact_sources = [
   "state/CONCEPT_LEDGER.toml",
   "docs/FORWARD_RULES_0151_ONWARD.rst",
   "problems/0201-0300/README.rst",
-  "problems/0101-0200/0198-house-robber.rst",
-  "https://leetcode.com/problems/house-robber-ii/description/",
+  "problems/0201-0300/0213-house-robber-ii.rst",
   "https://leetcode.com/problems/shortest-palindrome/description/",
 ]
 fact_sources_may_provide = [
-  "0213 的环形房屋、首尾相邻、不能同时抢相邻房屋和最大金额合同",
-  "0214 的只允许在字符串前添加字符、返回最短回文串和小写英文字母合同",
-  "已有线性 House Robber 滚动 DP、回文、字符串反转和宽整数术语连续性",
-  "当前完成范围、静态审查政策和长期质量控制状态",
+  "0214 只能在原字符串前添加字符并返回最短回文串的合同",
+  "官方小写英文字母字符域和当前目录/进度事实",
+  "已有回文、字符串反转、KMP 前缀函数与跨语言字符串资源术语连续性",
 ]
 fact_sources_must_not_provide = [
   "章节结构",
@@ -62,33 +60,17 @@ fact_sources_must_not_provide = [
   "文件组织形式",
 ]
 
-[problems."0213"]
-title = "House Robber II"
-difficulty = "Medium"
-primary_risks = [
-  "房屋形成环，第一间与最后一间也相邻；不能直接把线性 0198 算法应用到整个数组",
-  "任一合法方案至少排除首屋或尾屋，因此答案是区间 [0,n-2] 与 [1,n-1] 两个线性子问题最大值；n=1 必须单独处理",
-  "线性滚动 DP 的 previous_two/previous_one 必须分别表示处理到前两位置与前一位置的最优值，更新顺序不能覆盖旧状态",
-  "金额非负；空数组扩展、两间房、全零、最优只含首屋或尾屋以及两段答案相同都要覆盖",
-  "固定宽度语言使用足够宽的累计类型并说明平台返回 int 的约束；R number 与 Julia Int 的适配需核对",
-]
-minimum_static_review = [
-  "人工推演 [2,3,2]、[1,2,3,1]、单元素、两元素、全零、首屋最优和尾屋最优",
-  "证明每个环形合法集合必属于至少一个线性区间，两个线性最优解也都满足环形约束",
-  "证明滚动线性 DP 的取/不取转移和状态更新顺序，时间 O(n)、核心额外空间 O(1)",
-  "逐语言核对区间端点、n=1、宽整数、输入只读和返回类型",
-]
-
 [problems."0214"]
 title = "Shortest Palindrome"
 difficulty = "Hard"
 primary_risks = [
-  "只能在原字符串前添加字符；最短答案等价于保留最长回文前缀，并把剩余后缀反转后加到前面",
-  "使用 KMP 前缀函数处理 s + separator + reverse(s)；separator 必须不在官方字符域，防止匹配跨越边界",
-  "最终前缀函数值必须证明等于最长回文前缀长度，不能只给公式或把任意前后缀相等误称为回文",
-  "空串、单字符、已是回文、无长度大于一的回文前缀、重复字符和整个串接近回文要覆盖",
-  "官方小写 ASCII 允许按字节/代码单元处理；十语言必须说明 C 字节、Rust/Go bytes、Java/C#/TypeScript UTF-16、Julia codeunits 和 R raw 的适用边界",
-  "C 需要安全分配拼接序列、前缀表和答案；长度加法溢出、终止符和失败清理必须完整",
+  "只能在字符串前添加字符；最短答案等价于保留最长回文前缀，并把剩余后缀反转后加到前面",
+  "使用 KMP 前缀函数处理 s + separator + reverse(s)；separator 必须不在官方字符域，阻止匹配跨越边界",
+  "必须证明最终前缀函数值恰好等于最长回文前缀长度，不能把任意相等前后缀直接称为回文",
+  "空串、单字符、已回文、最长回文前缀只有 1、重复字符和接近整串回文都要覆盖",
+  "官方小写 ASCII 可按字节/代码单元处理；不得把结论无条件推广到任意 Unicode",
+  "C 需要安全分配拼接序列、前缀表和答案；长度加法溢出、终止符与失败清理必须完整",
+  "Rust/Go 字节、Java/C#/TypeScript UTF-16、Julia codeunits 和 R raw 的物化/视图成本需分别说明",
 ]
 minimum_static_review = [
   "人工推演 aacecaaa、abcd、空串、单字符、已回文、重复字符和最长回文前缀为 1 的情况",
@@ -99,17 +81,17 @@ minimum_static_review = [
 ]
 
 must_preserve = [
-  "0213 的首尾互斥两段拆分、n=1 特判和线性 DP 完整证明",
-  "0214 的最长回文前缀转化、KMP border 证明、分隔符和真实字符串资源成本",
-  "每题固定十语言完整实现、人工推演、静态语义审查、剩余风险和带答案自检",
+  "最长回文前缀转化与最少添加字符的完整最优性证明",
+  "KMP 最终 border 的双向证明和安全分隔符",
+  "C 长度溢出/失败清理与十语言字符资源成本",
+  "固定十语言完整实现、人工推演、静态语义审查、剩余风险和带答案自检",
 ]
 
 forbidden = [
-  "参考 0212 或其他最近题目的章节结构、证明篇幅或静态审查密度",
-  "0213 直接对整个环运行线性 House Robber，或遗漏单元素边界",
-  "0213 只说分成两段而不证明所有合法环形方案被覆盖",
-  "0214 使用滚动哈希却声称无碰撞确定正确，或只枚举前缀导致二次复杂度而不说明",
-  "0214 在 KMP 拼接中省略安全分隔符，或不证明最终 border 与回文前缀等价",
+  "参考 0213 或其他最近题目的章节结构、证明篇幅或静态审查密度",
+  "使用滚动哈希却声称无碰撞确定正确",
+  "省略安全分隔符或不证明最终 border 与回文前缀等价",
+  "只枚举前缀形成二次复杂度却声称 O(n)",
   "把官方 ASCII 适配结论无条件推广到任意 Unicode",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试或 sanitizer 题解代码",
@@ -117,10 +99,9 @@ forbidden = [
 ]
 
 completion_checks = [
-  "逐题对照 0050 的状态/数值边界和 0076 的最优性/字符串资源深度",
-  "每题完成后立即执行质量门；0214 出现压缩迹象时按合同缩批",
+  "对照 0050 的状态/数值边界和 0076 的最优性/字符串资源深度",
   "命中 DRIFT_LOG 的拆分、摘要、最近样本、预算和验证策略回归检查均通过",
-  "每道算法题只有一个自包含 RST，十语言代码全部内联并位于 problems/0201-0300",
+  "单题只有一个自包含 RST，十语言代码全部内联并位于 problems/0201-0300",
   "完成范围、completed_count、next_problem、根 README、范围索引和知识账本同步",
   "提交后 BATCH_CONTRACT 被替换为下一批合同",
 ]

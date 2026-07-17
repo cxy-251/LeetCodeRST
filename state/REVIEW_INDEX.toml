@@ -149,10 +149,10 @@ statement = "O(min(m,n)) describes only the rolling Boolean DP array. The C++ si
 [next_action]
 kind = "generation"
 status = "ready"
-start = 213
+start = 214
 end = 214
-problem_ids = [213, 214]
-purpose = "生成 0213–0214；完整处理环形 House Robber 的首尾互斥两段 DP，以及最短回文串的最长回文前缀、KMP border、分隔符和字符资源；历史题继续风险触发抽查。"
+problem_ids = [214]
+purpose = "独立生成 0214；完整处理最短前置字符与最长回文前缀的最优性、KMP 最终 border 充要证明、安全分隔符和十语言字符/字符串资源；历史题继续风险触发抽查。"
 
 [artifact_lifecycle]
 policy = "docs/ARTIFACT_LIFECYCLE_POLICY.rst"
