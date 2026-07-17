@@ -11,9 +11,9 @@ code_comment_language = "zh-CN"
 problem_artifact_shape = "one_self_contained_rst_per_public_algorithm_problem"
 
 [progress]
-next_problem = 217
-completed_count = 192
-completed_ranges = ["0001-0155", "0160", "0162", "0164-0169", "0171-0174", "0179", "0187-0191", "0198-0216"]
+next_problem = 218
+completed_count = 193
+completed_ranges = ["0001-0155", "0160", "0162", "0164-0169", "0171-0174", "0179", "0187-0191", "0198-0217"]
 premium_skipped = [156, 157, 158, 159, 161, 163, 170, 186]
 database_skipped = [175, 176, 177, 178, 180, 181, 182, 183, 184, 185, 196, 197]
 shell_skipped = [192, 193, 194, 195]
@@ -59,26 +59,26 @@ quality_over_batch_score = true
 [last_batch]
 status = "completed"
 kind = "generation"
-start = 216
-end = 216
+start = 217
+end = 217
 generated_problem_count = 1
-generated_problem_ids = [216]
+generated_problem_ids = [217]
 reference_problems = [50, 76]
-difficulty_budget = 2
-planned_scope = [216, 217]
-scope_shrunk = true
-scope_reason = "0216 的严格递增唯一性、完整枚举、路径恢复、最小/最大可达和剪枝、十语言结果快照和 C 二维结果失败清理已完整通过质量门；0217 的 C 开放寻址、容量溢出、独立占用标记、R 无歧义键和哈希平均/最坏复杂度需要独立篇幅，继续同批会压缩容器边界说明。"
-summary = "完成 0216 Combination Sum III：递增组合回溯、数量与总和守恒、可达和剪枝证明、结果快照、二维输出所有权和十语言适配。"
+difficulty_budget = 1
+planned_scope = [217]
+scope_shrunk = false
+scope_reason = "0217 作为独立 Easy 完整完成；已见集合双向证明、哈希平均/最坏复杂度、C 开放寻址容量与 occupied 标记、负数和极值哈希、分配失败精确回退、R 无歧义整数键均未压缩。"
+summary = "完成 0217 Contains Duplicate：已见集合不变量、先查询后插入、哈希复杂度边界、C 开放寻址与失败回退、R 规范整数键和十语言集合语义。"
 
 [next_batch]
 status = "generation_ready"
 kind = "generation"
-start = 217
-end = 217
-problem_ids = [217]
-difficulty_budget = 1
+start = 218
+end = 218
+problem_ids = [218]
+difficulty_budget = 4
 contract = "state/BATCH_CONTRACT.toml"
-purpose = "独立生成 0217 Contains Duplicate；完整处理已见集合不变量、哈希平均/最坏复杂度、C 开放寻址的容量与占用标记，以及 R 无歧义整数键。"
+purpose = "独立生成 0218 The Skyline Problem；完整处理边界坐标扫描、活动建筑最大高度、堆惰性删除、同坐标分组、关键点规范化、二维输出所有权和十语言堆适配。"
 
 [review_history]
 status = "completed"
@@ -147,7 +147,7 @@ problem_code_fragments_present = false
 
 [quality_scope]
 historical_start = 1
-historical_end = 216
+historical_end = 217
 historical_policy = "用户指定的 32 道低质量题解已经全部返工完成；历史题默认保持不变，风险触发时定向抽查。"
 persistent_rule_start = 151
 persistent_rule = "docs/FORWARD_RULES_0151_ONWARD.rst"
@@ -179,10 +179,10 @@ concurrency_policy = "fetch_and_compare_before_commit; stop_on_remote_change_or_
 
 [concept_ledger]
 index = "state/CONCEPT_LEDGER.toml"
-latest_record = "state/concepts/0216.toml"
+latest_record = "state/concepts/0217.toml"
 
 [next_action]
-summary = "按 BATCH_CONTRACT 独立生成 0217；0216 Combination Sum III 已完整处理。"
+summary = "按 BATCH_CONTRACT 独立生成 0218；0217 Contains Duplicate 已完整处理。"
 
 [last_update]
-summary = "0216 已生成并通过静态质量门；完成数更新为 192，下一入口为 0217。"
+summary = "0217 已独立生成并通过静态质量门；完成数更新为 193，下一入口为 0218。"

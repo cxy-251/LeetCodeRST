@@ -1,17 +1,17 @@
 [contract]
 schema_version = 2
-batch_id = "generation-0217"
+batch_id = "generation-0218"
 status = "ready"
 phase = "generation"
 kind = "generation"
-scope = [217]
+scope = [218]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
 drift_log = "state/DRIFT_LOG.toml"
 new_problem_generation_paused = false
 completion_count_must_remain_unchanged = false
-next_problem_after_batch = 218
+next_problem_after_batch = 219
 
 [static_review]
 solution_code_execution = "forbidden"
@@ -23,15 +23,15 @@ repository_structure_state_and_git_checks = "allowed"
 reporting = "只声明实际完成的静态审查；明确未运行、未编译、未测试和剩余风险。"
 
 [budget]
-algorithm_score = 1
-target_min = 1
-target_max = 2
-proof_risk = "medium"
+algorithm_score = 4
+target_min = 4
+target_max = 4
+proof_risk = "high"
 language_semantics_risk = "high"
 platform_type_risk = "high"
-output_volume_risk = "medium"
+output_volume_risk = "high"
 scope_may_shrink = false
-scope_reason = "0217 虽为 Easy，但 C 开放寻址需要安全容量、负数与整数极值哈希、独立占用标记和失败语义；R 环境键必须无歧义，且所有语言都要准确区分哈希平均复杂度与最坏复杂度。本批只处理 0217，不追加 0218。"
+scope_reason = "0218 是独立 Hard。边界坐标扫描、活动建筑最大高度、同坐标分组、堆中过期元素惰性清理、关键点规范化、C 堆和二维输出失败清理，以及十语言优先队列语义均需要完整篇幅；本批不追加 0219。"
 
 [references]
 style_baselines = [
@@ -44,13 +44,13 @@ fact_sources = [
   "state/CONCEPT_LEDGER.toml",
   "docs/FORWARD_RULES_0151_ONWARD.rst",
   "problems/0201-0300/README.rst",
-  "problems/0201-0300/0216-combination-sum-iii.rst",
-  "https://leetcode.com/problems/contains-duplicate/description/",
+  "problems/0201-0300/0217-contains-duplicate.rst",
+  "https://leetcode.com/problems/the-skyline-problem/description/",
 ]
 fact_sources_may_provide = [
-  "0217 判断数组中是否存在至少一对下标不同且值相同元素的合同",
-  "当前目录、完成范围和静态审查状态",
-  "已有哈希集合、输入只读和整数适配术语连续性",
+  "0218 的建筑三元组 left、right、height 与半开区间覆盖合同",
+  "天空线关键点按横坐标递增、相邻高度变化和最终回到 0 的输出合同",
+  "当前目录、完成范围、静态审查状态和已有堆术语连续性",
 ]
 fact_sources_must_not_provide = [
   "章节结构",
@@ -60,51 +60,56 @@ fact_sources_must_not_provide = [
   "文件组织形式",
 ]
 
-[problems."0217"]
-title = "Contains Duplicate"
-difficulty = "Easy"
+[problems."0218"]
+title = "The Skyline Problem"
+difficulty = "Hard"
 primary_risks = [
-  "扫描元素时先查询已见集合；命中返回 true，未命中再插入",
-  "必须证明首次命中对应更早的同值元素，扫描结束未命中则所有元素两两不同",
-  "重复可能相邻或远隔，负数、零、INT_MIN 和 INT_MAX 都按整数值比较",
-  "哈希集合方法平均 O(n) 时间、O(n) 空间；不能把对抗碰撞下的最坏情况写成保证线性",
-  "C 开放寻址必须使用独立 occupied 数组区分空槽和任意合法 int 值",
-  "C 容量应保持低负载并安全计算至少 2*n 的二次幂；长度乘法、分配失败和清理必须完整",
-  "C 哈希必须先把有符号 int 映射到固定宽度无符号值，不能对负数直接取可能为负的数组下标",
-  "R 环境字符串键必须对负数、零和极值保持一一对应；TypeScript Set、Julia Set 和托管语言集合语义需准确",
-  "排序方案会修改输入或复制数组，不能在采用哈希方案时混淆其资源合同",
+  "建筑 [left,right,height] 只在 left<=x<right 时活跃；right 端点不能继续贡献高度",
+  "所有高度变化只可能发生在建筑左右边界；应收集并按升序处理边界横坐标",
+  "同一横坐标上的全部开始与结束必须作为一个整体状态处理，再决定是否输出关键点",
+  "主解法使用最大堆保存候选建筑的 height 与 right；堆中允许存在已过期的非顶部元素",
+  "在每个边界 x 先加入 left<=x 的建筑，再持续弹出堆顶 right<=x 的建筑，清理后堆顶才是当前最大有效高度",
+  "必须证明只清理过期堆顶就足够：被过期高建筑压住的其他元素不影响当前最大值，成为堆顶时再清理",
+  "关键点只在当前高度与前一高度不同时追加，横坐标严格增加，不允许相邻关键点高度相同",
+  "建筑完全结束后必须产生高度 0 的终止关键点；空输入返回空结果",
+  "输入若依赖官方 left 非递减合同可按索引推进；推广到无序输入必须先排序副本且说明额外成本",
+  "C 需要边界数组、最大堆、动态二维结果、容量溢出检查、部分分配失败清理和调用方所有权",
+  "Java/Rust/Go/TypeScript/C#/Julia/R 的优先队列或自建堆、二元组比较、二维输出快照和整数位宽需逐项核对",
 ]
 minimum_static_review = [
-  "人工推演 [1,2,3,1]、[1,2,3,4]、[1,1]、单元素、负数、零、整数极值和远距离重复",
-  "证明 seen 在扫描位置 i 前恰好包含 nums[0:i] 的值集合",
-  "证明集合命中与存在更早相同元素双向对应",
-  "逐语言核对集合键相等语义、输入只读、平均/最坏复杂度和额外空间",
-  "专项核对 C 容量溢出、occupied 标记、探测终止、负数哈希、分配失败和释放",
-  "专项核对 R 环境键编码不会把不同整数映射为同一字符串",
+  "人工推演经典重叠建筑、单建筑、相邻等高建筑、同起点不同高度、同终点、完全包含、互不重叠、空输入",
+  "证明每个开区间边界之间活动建筑集合不变，因此只需处理全部左右边界",
+  "证明加入与过期清理后堆顶高度等于 x 处所有活跃建筑的最大高度",
+  "证明惰性删除不会让过期建筑成为输出高度，且每个堆元素至多入堆出堆一次",
+  "证明高度变化时且仅在必要时输出，得到横坐标递增、无相邻等高点和完整轮廓",
+  "逐语言核对堆比较方向、right<=x 过期条件、同坐标分组、输入只读、二维结果所有权和整数范围",
+  "专项核对 C 边界排序、堆容量、结果扩容、size_t 算术、失败清理和成功所有权",
 ]
 
 must_preserve = [
-  "已见集合不变量与正确性双向证明",
-  "哈希平均/最坏复杂度边界和输入只读合同",
-  "C 开放寻址容量、占用标记、负数哈希和失败清理",
-  "R 无歧义整数键与十语言集合适配",
+  "半开区间活动条件 left<=x<right 与同坐标整体处理",
+  "最大堆惰性删除不变量和当前最高建筑证明",
+  "关键点规范化、最终高度 0、完整性与无冗余证明",
+  "O(n log n) 时间、堆/边界/输出载荷分离和真实语言资源",
   "固定十语言完整实现、人工推演、静态语义审查、剩余风险和带答案自检",
 ]
 
 forbidden = [
-  "参考 0216 或其他最近题目的章节结构、证明篇幅或静态审查密度",
-  "把哈希最坏复杂度写成保证 O(n)",
-  "C 使用某个整数哨兵表示空槽并与合法输入值冲突",
-  "C 对负整数直接取模后未经处理作为数组下标",
-  "排序修改输入却声称输入保持只读",
-  "R 使用格式不稳定或可能碰撞的整数键",
+  "参考 0217 或其他最近题目的章节结构、证明篇幅或静态审查密度",
+  "把 right==x 的建筑仍视为活跃",
+  "同一横坐标每处理一个事件就立即输出，产生重复横坐标或中间伪高度",
+  "只弹出一个过期堆顶而不持续清理",
+  "直接删除堆中任意过期元素却未提供支持该操作的数据结构",
+  "输出相邻高度相同的冗余关键点",
+  "遗漏最终回到 0 的关键点",
+  "把堆和边界材料忽略后声称额外空间 O(1)",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试或 sanitizer 题解代码",
   "把静态审查写成测试、编译或运行通过",
 ]
 
 completion_checks = [
-  "对照 0050 的状态/数值边界和 0076 的资源深度",
+  "对照 0050 的状态/数值边界和 0076 的最优性/资源深度",
   "命中 DRIFT_LOG 的拆分、摘要、最近样本、预算和验证策略回归检查均通过",
   "单题只有一个自包含 RST，十语言代码全部内联并位于 problems/0201-0300",
   "完成范围、completed_count、next_problem、根 README、范围索引和知识账本同步",
