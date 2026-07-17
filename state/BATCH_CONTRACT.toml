@@ -1,17 +1,17 @@
 [contract]
 schema_version = 2
-batch_id = "generation-0208-0209"
+batch_id = "generation-0210-0211"
 status = "ready"
 phase = "generation"
 kind = "generation"
-scope = [208, 209]
+scope = [210, 211]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
 drift_log = "state/DRIFT_LOG.toml"
 new_problem_generation_paused = false
 completion_count_must_remain_unchanged = false
-next_problem_after_batch = 210
+next_problem_after_batch = 212
 
 [static_review]
 solution_code_execution = "forbidden"
@@ -31,7 +31,7 @@ language_semantics_risk = "high"
 platform_type_risk = "high"
 output_volume_risk = "high"
 scope_may_shrink = true
-scope_reason = "0208 是带状态生命周期的 Trie 设计题，涉及节点终止标记、C 构造/释放和 Rust/R/Julia 引用语义；0209 依赖全正数窗口单调性、最短性证明与宽整数。先完整验收 0208；若继续 0209 会压缩窗口证明或十语言数值边界，则提交连续前缀并重建 0209 单题合同。"
+scope_reason = "0210 要在与 0207 相同的依赖图上返回实际拓扑序并区分无解空结果，涉及 C 输出数组和非唯一顺序；0211 在状态化 Trie 上加入点号通配符分支 DFS，涉及最坏搜索规模、递归深度和对象生命周期。先完整验收 0210；若继续 0211 会压缩通配符证明或十语言资源边界，则提交连续前缀并重建 0211 单题合同。"
 
 [references]
 style_baselines = [
@@ -44,15 +44,15 @@ fact_sources = [
   "state/CONCEPT_LEDGER.toml",
   "docs/FORWARD_RULES_0151_ONWARD.rst",
   "problems/0201-0300/README.rst",
-  "problems/0001-0100/0076-minimum-window-substring.rst",
-  "problems/0101-0200/0133-clone-graph.rst",
-  "https://leetcode.com/problems/implement-trie-prefix-tree/description/",
-  "https://leetcode.com/problems/minimum-size-subarray-sum/description/",
+  "problems/0201-0300/0207-course-schedule.rst",
+  "problems/0201-0300/0208-implement-trie-prefix-tree.rst",
+  "https://leetcode.com/problems/course-schedule-ii/description/",
+  "https://leetcode.com/problems/design-add-and-search-words-data-structure/description/",
 ]
 fact_sources_may_provide = [
-  "0208 的小写英文字母、insert/search/startsWith 操作和调用序列合同",
-  "0209 的正整数数组、目标和、最短非空连续子数组与不存在时返回 0 的合同",
-  "已有前缀、可变节点、滑动窗口、字符单位和资源生命周期术语连续性",
+  "0210 的课程编号、先修对语义、返回任意合法顺序或无解空数组合同",
+  "0211 的 addWord/search 状态对象、小写字母与点号匹配任意单字符合同",
+  "已有 Kahn 入度、Trie 路径/终止标记、对象生命周期和递归搜索术语连续性",
   "当前完成范围、静态审查政策和长期质量控制状态",
 ]
 fact_sources_must_not_provide = [
@@ -63,62 +63,64 @@ fact_sources_must_not_provide = [
   "文件组织形式",
 ]
 
-[problems."0208"]
-title = "Implement Trie (Prefix Tree)"
+[problems."0210"]
+title = "Course Schedule II"
 difficulty = "Medium"
 primary_risks = [
-  "Trie 节点必须同时保存最多 26 个子链接和 is_word 终止标记；路径存在不等于完整单词存在",
-  "insert 逐字符创建缺失节点，search 要求路径存在且终点 is_word=true，startsWith 只要求路径存在",
-  "重复插入、一个词是另一个词前缀、共享前缀、查询不存在分支和空字符串扩展必须区分",
-  "官方字符域为小写英文字母；每种语言都要核对字符到 0..25 索引、字符单位和非法字符边界",
-  "C 需要构造、插入分配失败策略、递归或迭代释放；平台 insert 返回 void 时无法报告中途失败，必须声明对象一致性方案",
-  "Rust Option<Box<Node>>、Julia mutable struct、R environment 节点和托管语言对象图的所有权/回收成本需静态核对",
+  "先修对 [course, prerequisite] 仍建立 prerequisite -> course；输出弹出零入度课程的实际顺序",
+  "processed==numCourses 时返回长度 V 的拓扑序；队列耗尽且 processed<V 时必须返回空结果，不能返回部分顺序",
+  "合法拓扑序通常不唯一，十语言队列顺序可以不同；正确性验证依赖边的先后关系而非固定示例数组",
+  "重复边的邻接次数与入度次数保持一致，自环、两节点环、孤立课程、多分量和菱形 DAG 要覆盖",
+  "C 需要分配邻接、入度、队列和返回数组，并通过 returnSize 表示成功长度；任一失败要清理且返回 NULL/0",
+  "R/Julia 零基课程编号映射到一基数组；Rust/Go/TypeScript/C# 的输出容器和队列头索引需静态核对",
 ]
 minimum_static_review = [
-  "人工推演 insert apple、search apple、search app、startsWith app、insert app、重复插入、共享前缀和不存在分支",
-  "证明每条路径与字符前缀一一对应、终止标记区分完整词、三种操作返回语义正确",
-  "逐语言核对字符索引、节点初始化、缺失分支、重复插入、对象生命周期和 C 失败清理",
-  "复杂度按单次字符串长度 L 报告 O(L) 时间；新增节点最坏 O(L)，整体存储按创建节点数计",
+  "人工推演单边、菱形 DAG、多个合法顺序、自环、两节点环、孤立课程、重复边和多分量",
+  "证明输出前缀始终满足所有已输出节点先修边，且完整输出当且仅当图无环",
+  "证明有环时不会把部分顺序误作答案；无环时有限 DAG 零入度引理保证处理全部节点",
+  "逐语言核对输出长度、空结果、建边方向、重复边、队列头索引和 C 失败清理",
+  "复杂度报告 O(V+E) 时间、O(V+E) 工作空间和 O(V) 输出载荷",
 ]
 
-[problems."0209"]
-title = "Minimum Size Subarray Sum"
+[problems."0211"]
+title = "Design Add and Search Words Data Structure"
 difficulty = "Medium"
 primary_risks = [
-  "数组元素严格为正是滑动窗口可行性的核心；若允许 0 或负数，右扩和左缩的单调性证明失效",
-  "右指针加入元素后，只要 sum>=target 就持续收缩左端并更新最短长度；不能只收缩一次",
-  "窗口状态必须保持 sum 等于 nums[left..right] 之和，左端越界和不存在答案返回 0 需覆盖",
-  "固定宽度语言使用宽整数累计，避免元素和溢出；返回长度仍为普通整数",
-  "R/Julia 一基索引、TypeScript number 精确域、C 指针与长度接口以及输入只读需静态核对",
+  "addWord 复用 Trie 路径并只在完整单词终点设置标记；search 中小写字母只走一个分支，点号必须尝试所有非空子链接",
+  "点号匹配恰好一个字符，不是零个或任意长度；搜索消费完模式后仍必须检查 is_word",
+  "连续点号、共享前缀、完整词/前缀区分、重复插入、无匹配分支和空字符串扩展要覆盖",
+  "无通配符搜索 O(L)；含通配符时用实际访问节点数表达，最坏可达 Trie 中深度 L 的大量分支，不能统一声称 O(L)",
+  "C 插入仍需一致的分配失败策略和释放函数，递归通配符搜索有 O(L) 调用栈；平台 void 插入缺少失败通道",
+  "Rust Box、Julia mutable struct、R environment 和托管语言对象图的所有权/回收与递归分支需静态核对",
 ]
 minimum_static_review = [
-  "人工推演 target=7 nums=[2,3,1,2,4,3]、单元素命中、总和不足、答案在开头/结尾和连续多次收缩",
-  "证明正数使右扩和左缩具有单调性，算法不会跳过任何更短可行窗口",
-  "证明每个元素最多被左右指针各经过一次，时间 O(n)、核心额外空间 O(1)",
-  "逐语言核对宽整数求和、哨兵最短长度、空输入扩展和返回 0 语义",
+  "人工推演 add bad/dad/mad，search pad/bad/.ad/b..，连续点号、仅前缀、重复插入和空字符串扩展",
+  "证明字母分支、点号分支和终点标记覆盖且只覆盖所有匹配单词",
+  "按访问节点数和模式长度报告时间，报告 O(L) 递归栈并区分 Trie 持久存储",
+  "逐语言核对字符索引、通配符分支、递归终止、节点生命周期和 C 失败/释放路径",
 ]
 
 must_preserve = [
-  "0208 的路径节点、终止标记、search/startsWith 区分和对象生命周期",
-  "0209 的全正数前提、窗口和不变量、持续收缩与最短性完整证明",
+  "0210 的实际拓扑序、无解空结果、非唯一顺序和输出载荷",
+  "0211 的点号单字符语义、分支 DFS、终止标记和真实最坏搜索规模",
   "每题固定十语言完整实现、人工推演、静态语义审查、剩余风险和带答案自检",
 ]
 
 forbidden = [
-  "参考 0207 或其他最近题目的章节结构、证明篇幅或静态审查密度",
-  "0208 只凭路径存在让 search 返回 true，或把 startsWith 也要求终止标记",
-  "0208 C 分配失败后留下无法说明的一半新路径，或不提供释放函数",
-  "0209 在含负数模型上继续声称同一滑动窗口正确",
-  "0209 达到 target 后只移动一次 left，或更新答案时使用错误窗口长度",
-  "把 Trie 返回节点载荷或滑动窗口输入算成 O(1) 总空间",
+  "参考 0208–0209 或其他最近题目的章节结构、证明篇幅或静态审查密度",
+  "0210 在有环时返回已经生成的部分课程顺序",
+  "0210 把某一个官方示例顺序当成唯一正确输出",
+  "0211 把点号当成零个字符、任意长度或只尝试第一个子节点",
+  "0211 模式结束后不检查单词终止标记",
+  "把通配符搜索统一写成 O(L)，忽略分支访问",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试或 sanitizer 题解代码",
   "把静态审查写成测试、编译或运行通过",
 ]
 
 completion_checks = [
-  "逐题对照 0050 的状态/数值边界和 0076 的语言适配/资源成本深度",
-  "每题完成后立即执行质量门；0209 出现压缩迹象时按合同缩批",
+  "逐题对照 0050 的状态/数值边界和 0076 的最优性/语言资源深度",
+  "每题完成后立即执行质量门；0211 出现压缩迹象时按合同缩批",
   "命中 DRIFT_LOG 的拆分、摘要、最近样本、预算和验证策略回归检查均通过",
   "每道算法题只有一个自包含 RST，十语言代码全部内联并位于 problems/0201-0300",
   "完成范围、completed_count、next_problem、根 README、范围索引和知识账本同步",

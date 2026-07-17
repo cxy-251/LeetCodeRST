@@ -1,0 +1,25 @@
+[meta]
+version = 1
+range = "0208-0209"
+last_problem = 209
+inherits = "state/concepts/0207.toml"
+
+[batch]
+completed = 2
+difficulty_budget = 4
+planned_scope = [208, 209]
+scope_shrunk = false
+summary = "完成状态化 Trie 的路径/终止标记和对象生命周期，以及全正数滑动窗口的持续收缩、最短性证明和宽整数适配。"
+
+[updates]
+"model.trie_prefix_path" = "kind=model; introduced=0208; last=0208; occurrences=1; teaching_state=explained; note=根到节点的路径标签表示一个前缀；固定 26 子链接共享公共前缀，节点存在与完整单词存在分离。"
+"state.trie_terminal_marker" = "kind=state; introduced=0208; last=0208; occurrences=1; teaching_state=explained; note=is_word 只在完整插入词终点为真，使 search 检查路径加终止标记、startsWith 只检查路径。"
+"proof.trie_operation_sequence" = "kind=proof; introduced=0208; last=0208; occurrences=1; teaching_state=explained; note=对字符路径和调用序列归纳，证明插入保持旧词、加入目标词，两种查询返回充要结果。"
+"adapter.c_trie_transactional_insert" = "kind=language_adapter; introduced=0208; last=0208; occurrences=1; teaching_state=explained; note=C 在主树外构造完整缺失后缀，成功后一次接入；失败释放临时链并保持对象不变，void 接口仍无法报告失败。"
+"adapter.trie_object_lifecycle" = "kind=language_adapter; introduced=0208; last=0208; occurrences=1; teaching_state=explained; note=C 递归释放，C++ unique_ptr、Rust Box、Julia mutable struct、R environment 与托管对象图分别说明唯一所有权、共享变异和回收成本。"
+"algorithm.positive_sliding_window" = "kind=algorithm; introduced=0209; last=0209; occurrences=1; teaching_state=explained; note=右端加入正数；窗口达标时持续提交长度并移动左端，和不足时只扩展右端。"
+"invariant.window_exact_sum" = "kind=invariant; introduced=0209; last=0209; occurrences=1; teaching_state=explained; note=sum 始终等于 nums[left..right] 的真实元素和，best 保存所有已提交可行窗口的最短长度。"
+"proof.discarded_left_boundary" = "kind=proof; introduced=0209; last=0209; occurrences=1; teaching_state=explained; note=左端被越过前对应可行窗口已经提交；未来沿用同一起点只会更长，因此不会产生新的更短答案。"
+"proof.positive_window_minimality" = "kind=proof; introduced=0209; last=0209; occurrences=1; teaching_state=explained; note=全正数使左缩和严格下降；算法对每个右端枚举所有连续可行左边界，并保证任意全局最短窗口被提交。"
+"adapter.wide_window_sum" = "kind=language_adapter; introduced=0209; last=0209; occurrences=1; teaching_state=explained; note=固定宽语言使用 64 位窗口和，TypeScript/R 只在官方精确整数域内承诺准确，返回长度仍为普通整数。"
+"workflow.targeted_static_review" = "kind=workflow; introduced=0167; last=0209; occurrences=24; teaching_state=explained; note=两题仅执行人工推演、证明映射、十语言静态语义和仓库一致性检查；未运行、未编译、未测试题解。"

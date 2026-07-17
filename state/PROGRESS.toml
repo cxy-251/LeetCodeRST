@@ -11,9 +11,9 @@ code_comment_language = "zh-CN"
 problem_artifact_shape = "one_self_contained_rst_per_public_algorithm_problem"
 
 [progress]
-next_problem = 208
-completed_count = 183
-completed_ranges = ["0001-0155", "0160", "0162", "0164-0169", "0171-0174", "0179", "0187-0191", "0198-0207"]
+next_problem = 210
+completed_count = 185
+completed_ranges = ["0001-0155", "0160", "0162", "0164-0169", "0171-0174", "0179", "0187-0191", "0198-0209"]
 premium_skipped = [156, 157, 158, 159, 161, 163, 170, 186]
 database_skipped = [175, 176, 177, 178, 180, 181, 182, 183, 184, 185, 196, 197]
 shell_skipped = [192, 193, 194, 195]
@@ -59,26 +59,26 @@ quality_over_batch_score = true
 [last_batch]
 status = "completed"
 kind = "generation"
-start = 207
-end = 207
-generated_problem_count = 1
-generated_problem_ids = [207]
+start = 208
+end = 209
+generated_problem_count = 2
+generated_problem_ids = [208, 209]
 reference_problems = [50, 76]
-difficulty_budget = 2
-planned_scope = [207]
+difficulty_budget = 4
+planned_scope = [208, 209]
 scope_shrunk = false
-scope_reason = "0207 从高风险批次拆出后独立完成；先修边方向、Kahn 入度不变量、环等价证明、重复边语义和十语言邻接表资源均未压缩。"
-summary = "完成 0207 Course Schedule：prerequisite->course 建边、剩余入度不变量、DAG 零入度引理、processed==V 与无环等价，以及 C/R CSR 和十语言资源适配。"
+scope_reason = "0208 Trie 的路径/终止标记、C 事务式插入和十语言对象生命周期，以及 0209 正数窗口单调性、持续收缩、最短性证明和宽整数边界均完整通过单题质量门，本批无需缩减。"
+summary = "完成 0208 Implement Trie (Prefix Tree) 的状态化前缀树与跨语言资源生命周期，以及 0209 Minimum Size Subarray Sum 的全正数滑动窗口、不遗漏最短窗口证明和十语言数值适配。"
 
 [next_batch]
 status = "generation_ready"
 kind = "generation"
-start = 208
-end = 209
-problem_ids = [208, 209]
+start = 210
+end = 211
+problem_ids = [210, 211]
 difficulty_budget = 4
 contract = "state/BATCH_CONTRACT.toml"
-purpose = "生成 0208 Implement Trie (Prefix Tree) 与 0209 Minimum Size Subarray Sum；完整处理 Trie 节点语义、所有权和正数滑动窗口最短性证明。"
+purpose = "生成 0210 Course Schedule II 与 0211 Design Add and Search Words Data Structure；完整处理拓扑顺序输出和 Trie 通配符分支搜索。"
 
 [review_history]
 status = "completed"
@@ -147,7 +147,7 @@ problem_code_fragments_present = false
 
 [quality_scope]
 historical_start = 1
-historical_end = 207
+historical_end = 209
 historical_policy = "用户指定的 32 道低质量题解已经全部返工完成；历史题默认保持不变，风险触发时定向抽查。"
 persistent_rule_start = 151
 persistent_rule = "docs/FORWARD_RULES_0151_ONWARD.rst"
@@ -179,10 +179,10 @@ concurrency_policy = "fetch_and_compare_before_commit; stop_on_remote_change_or_
 
 [concept_ledger]
 index = "state/CONCEPT_LEDGER.toml"
-latest_record = "state/concepts/0207.toml"
+latest_record = "state/concepts/0208-0209.toml"
 
 [next_action]
-summary = "按 BATCH_CONTRACT 生成 0208–0209；0207 Course Schedule 已完整处理。"
+summary = "按 BATCH_CONTRACT 生成 0210–0211；0208–0209 已完整处理。"
 
 [last_update]
-summary = "0207 已完整生成并通过静态质量门；完成数更新为 183，下一入口为 0208。"
+summary = "0208 与 0209 已完整生成并通过静态质量门；完成数更新为 185，下一入口为 0210。"
