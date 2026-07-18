@@ -73,11 +73,11 @@ summary = "完成 0218 The Skyline Problem：全部边界扫描、活动建筑�
 [last_review_batch]
 status = "completed"
 kind = "targeted_review"
-problem_id = 179
+problem_id = 187
 body_changed = true
 concept_state_changed = true
-reference_problems = [1, 76]
-summary = "保留 0179 主算法与九种语言代码；用循环小数分数补强严格弱序证明，修复 R 科学计数法风险，并把 ASCII 扫描、输出载荷和 C 堆字符串所有权合并回稳定 concept。"
+reference_problems = [50, 76]
+summary = "保留 0187 算法、证明与十语言代码；校正托管子串只保证不可变值而非统一底层复制，并把 ASCII 扫描、输出载荷和 C 多字符串事务合并回稳定 concept。"
 
 [next_batch]
 status = "paused_for_historical_review"
@@ -87,17 +87,17 @@ end = 220
 problem_ids = [219, 220]
 difficulty_budget = 5
 contract = "state/BATCH_CONTRACT.toml"
-purpose = "0219–0220 新题生成暂缓；0166–0169、0171–0174、0179 已审查完成，越过 Database 与 Premium 登记后从 0187 继续审查。"
+purpose = "0219–0220 新题生成暂缓；0166–0169、0171–0174、0179、0187 已审查完成，继续从 Hard 0188 审查。"
 
 [review_queue]
 status = "ready"
 kind = "historical_review"
 start = 166
-current = 187
+current = 188
 ordering = "ascending_public_algorithm_problems"
 contract = "state/BATCH_CONTRACT.toml"
-problem_path = "problems/0101-0200/0187-repeated-dna-sequences.rst"
-purpose = "0166–0169、0171–0174、0179 已完成；0175–0178、0180–0185 为 Database，0186 为 Premium，继续审查下一道公开算法题 0187。"
+problem_path = "problems/0101-0200/0188-best-time-to-buy-and-sell-stock-iv.rst"
+purpose = "0166–0169、0171–0174、0179、0187 已完成；继续审查 Hard 0188 的状态机、原地更新、贪心退化和十语言数值语义。"
 
 [review_history]
 status = "completed"
@@ -167,7 +167,7 @@ problem_code_fragments_present = false
 [quality_scope]
 historical_start = 1
 historical_end = 218
-historical_policy = "既有集中质量返工已完成；0166–0169、0171–0174、0179 已完成针对性静态审查，当前从 0187 继续升序推进，未审到的历史题默认不改。"
+historical_policy = "既有集中质量返工已完成；0166–0169、0171–0174、0179、0187 已完成针对性静态审查，当前从 0188 继续升序推进，未审到的历史题默认不改。"
 persistent_rule_start = 151
 persistent_rule = "docs/FORWARD_RULES_0151_ONWARD.rst"
 forward_rule_policy = "0151 起全部后续题目持续执行并原位维护长期前向规则。"
@@ -206,7 +206,7 @@ active_data_self_contained = true
 archive_dependency = false
 
 [next_action]
-summary = "按 BATCH_CONTRACT 审查 0187；0219–0220 新题生成暂停。"
+summary = "按 BATCH_CONTRACT 审查 0188；0219–0220 新题生成暂停。"
 
 [last_update]
-summary = "0179 针对性静态审查完成；严格弱序证明、R 十进制格式和既有字符串/资源 concept 已校正，下一入口为 0187。"
+summary = "0187 针对性静态审查完成；托管字符串存储表述和既有 ASCII、输出、C 资源 concept 已校正，下一入口为 0188。"

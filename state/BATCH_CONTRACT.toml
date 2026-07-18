@@ -1,17 +1,17 @@
 [contract]
 schema_version = 2
-batch_id = "historical-review-0187"
+batch_id = "historical-review-0188"
 status = "ready"
 phase = "historical_review"
 kind = "targeted_review"
-scope = [187]
+scope = [188]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
 drift_log = "state/DRIFT_LOG.toml"
 new_problem_generation_paused = true
 completion_count_must_remain_unchanged = true
-next_review_after_batch = 188
+next_review_after_batch = 189
 
 [static_review]
 solution_code_execution = "forbidden"
@@ -23,13 +23,13 @@ repository_structure_state_and_git_checks = "allowed"
 reporting = "只声明实际完成的静态审查；明确未运行、未编译、未测试和剩余风险。"
 
 [budget]
-algorithm_score = 2
+algorithm_score = 4
 proof_risk = "high"
 language_semantics_risk = "high"
 platform_type_risk = "high"
 output_volume_risk = "high"
 scope_may_shrink = false
-scope_reason = "0187 单题包含 20 位滚动编码、十语言位运算、约 1 MiB 固定状态表和多层结果所有权；0188 为 Hard，必须另批。"
+scope_reason = "0188 是独立 Hard，精确交易状态、原地依赖顺序、贪心退化、负无穷与十语言实现均为高风险；不能与 0189 合批。"
 
 [references]
 style_baselines = [
@@ -37,23 +37,23 @@ style_baselines = [
   "problems/0001-0100/0076-minimum-window-substring.rst",
 ]
 style_roles = [
-  "0050 提供位宽、移位、掩码、固定宽语言和边界推导基线",
-  "0076 提供滑动窗口不变量、字符单位、输出提交时机与语言物化成本基线",
+  "0050 提供固定宽边界、安全哨兵、状态递推、终止和十语言数值语义基线",
+  "0076 提供 Hard 不变量、局部更新安全性、最优性证明和滚动状态成本基线",
 ]
 fact_sources = [
   "state/PROGRESS.toml",
   "state/REVIEW_INDEX.toml",
   "state/CONCEPT_LEDGER.toml",
-  "state/concepts/0051-0100.toml",
+  "state/concepts/0101-0150.toml",
   "state/concepts/0151-0200.toml",
   "docs/FORWARD_RULES_0151_ONWARD.rst",
   "problems/0101-0200/README.rst",
-  "https://leetcode.com/problems/repeated-dna-sequences/description/",
+  "https://leetcode.com/problems/best-time-to-buy-and-sell-stock-iv/description/",
 ]
 fact_sources_may_provide = [
-  "0187 的 A/C/G/T 字符域、固定长度 10、至少两次、每种结果一次和输出顺序要求",
-  "既有 ASCII 扫描、滑动窗口、位编码、重复提交、字符串副本和 C 多层结果知识状态",
-  "0187 完成后下一公开算法题是 Hard 0188，新题生成仍暂停在 0219",
+  "0188 的 k、价格范围、一买一卖交易、最多持有一股、至多 k 笔与只读输入合同",
+  "0121–0123 股票状态、滚动 DP、不可达状态、宽整数和正相邻差知识连续性",
+  "0188 完成后的下一公开算法题为 0189，新题生成仍暂停在 0219",
 ]
 fact_sources_must_not_provide = [
   "章节结构",
@@ -63,42 +63,43 @@ fact_sources_must_not_provide = [
 ]
 
 [problem]
-id = 187
-title = "Repeated DNA Sequences"
-path = "problems/0101-0200/0187-repeated-dna-sequences.rst"
+id = 188
+title = "Best Time to Buy and Sell Stock IV"
+path = "problems/0101-0200/0188-best-time-to-buy-and-sell-stock-iv.rst"
 review_mode = "preserve_strong_body_and_apply_targeted_fixes"
 primary_risks = [
-  "核对 A/C/G/T 到 0/1/2/3 的无碰撞 2 位映射，固定十字符使前导 A 的零位不产生歧义",
-  "核对每轮左移 2 位、加入新字符并与 2^20-1；处理到下标 9 后才形成第一个完整窗口",
-  "证明滚动 code 恰表示最近 min(i+1,10) 个字符，长度 10 时编码与窗口一一对应",
-  "核对状态 0/1/2 分别表示未见、见过一次、已输出；只在 1 到 2 时提交，第三次以后不能重复",
-  "证明每个合法结束位置恰被扫描一次、结果无假阳性、所有重复窗口无遗漏且每种只返回一次",
-  "逐语言核对无符号或 32 位有符号移位、20 位非负范围、一基状态索引、ASCII 字节切片和长度边界",
-  "核对状态表固定 2^20 字节的 O(1) 渐进口径与约 1 MiB 实际成本，另计 R 输入物化和 Theta(R) 结果载荷",
-  "核对 Go strings.Clone、Rust/Julia 字节切片和其他语言子串均形成独立结果，不长期保留完整输入存储",
-  "核对 C returnSize 初始化、状态表、char** 几何扩容、11 字节独立字符串、容量溢出、失败清理和调用者所有权",
-  "审计位编码、滚动窗口、三态提交、ASCII 扫描和 C 结果资源与稳定 concept 的复用边界",
+  "先修复 C 代码块中重复的 maxProfit 函数签名，随后核对十语言公开接口只有一个有效入口",
+  "核对 cash[t]/hold[t] 表示恰好完成 t 次卖出后的空仓/持仓最大现金，买入不增加 t，卖出才从 t-1 推进到 t",
+  "核对空前缀只有 cash[0]=0 可达，其他状态为安全 NEG；只从可达来源执行价格加减",
+  "证明持股与空仓转移覆盖全部且仅有合法来源，最终对所有 cash[0..limit] 取最大实现至多 k 笔",
+  "证明按 t 递减时 hold[t] 读取旧 cash[t]、cash[t] 读取旧 hold[t-1]，不串联同日新状态",
+  "核对 floor(n/2) 是可完成交易物理上限；k 达到上限时约束失效并可累加全部正相邻差",
+  "分别证明正差和是任意交易集合的上界且可由合法一日交易实现，不能在有限 k 时误用",
+  "推导官方约束下利润上界，核对 64 位中间状态、平台 int 转换、TypeScript/R 精确域与 Rust/Go int 假设",
+  "逐语言核对递减范围、零基/一基状态槽、NEG/Infinity、输入只读、最终空仓和 k<=0 扩展",
+  "核对 C 两数组容量、部分分配失败清理、正常释放和合法答案域外 -1 资源标记",
+  "审计股票状态、正差贪心、逆序滚动、宽状态与 C 资源 concept，优先合并到 0121–0123 的稳定 ID",
 ]
 
 minimum_static_review = [
-  "人工推演经典输入、AAAAAAAAAAAAA、长度 9、长度 10 与无重复字符串，记录 code 和 0/1/2 状态",
-  "逐位证明 20 位掩码删除第 11 个字符、定长四进制编码唯一、第二次提交充分且完整",
-  "逐语言核对公开签名、字符映射、移位类型、状态索引、切片边界、结果副本、顺序和输入只读",
-  "核对 TypeScript/R 的 20 位状态始终位于安全有符号范围，纸面检查 C 每个扩容与分配失败路径",
-  "知识账本只从 state/concepts 的五十题平面状态读取，完成后把下一审查入口推进到 0188",
+  "人工推演 k=2,[2,4,1]、k=2/[1] 对 [3,2,6,5,0,3]、k=0、单日、单调升降和大 k",
+  "逐日记录小例 cash/hold，核对不可达状态、买卖坐标、递减覆盖顺序和最终 max(cash)",
+  "完整复核有限 DP 的来源充分必要性、原地等价性，以及无限分支的上界与可达性",
+  "逐语言核对签名、数组长度、负无穷、递减循环、宽整数、返回转换、输入所有权与 C 失败路径",
+  "知识账本只从 state/concepts 的五十题平面状态读取，完成后把下一审查入口推进到 0189",
 ]
 
 must_preserve = [
-  "精确 DNA 合同、位编码与布尔去重反例、滚动不变量、编码唯一性、三态提交和完整覆盖证明",
-  "固定十语言实现、1 MiB 实际状态成本、独立结果副本、C 多层失败清理、静态审查和带答案自检",
+  "精确交易合同、动作次数反例、无限退化阈值、cash/hold 状态、不可达初始化、递减更新和完整双分支证明",
+  "固定十语言实现、宽负无穷、C 资源路径、真实 O(nq)/O(q) 成本、静态审查、剩余风险和带答案自检",
 ]
 
 forbidden = [
   "把最近完成题目作为格式样本",
   "没有确定性问题时整篇重写或压缩强主体",
-  "使用错误字符码、10 位掩码、处理第 9 个字符就查询、布尔状态重复输出或依赖哈希迭代顺序",
-  "把一种语言的移位、切片、字符串共享或数组索引语义外推为十语言一致",
-  "把固定状态表写成没有实际成本的零空间，或遗漏返回字符串载荷与 C 失败清理",
+  "保留重复 C 函数签名、把买入计为完成交易、把不可达状态置零或返回持仓状态",
+  "按 t 递增原地更新、在有限 k 时无条件累计正差、对类型最小值直接加减价格",
+  "把一种语言的 Infinity、整数位宽、递减范围或数组索引语义外推为十语言一致",
   "为同一知识新造近义 concept ID",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试、sanitizer 或目标语言最小程序",
@@ -106,9 +107,10 @@ forbidden = [
 
 [completion]
 required = [
+  "删除 C 重复签名并完成对应静态语义复核",
   "正文只在审查发现明确问题时修改",
   "知识账本保留稳定 concept ID，并准确区分首次引入、强化和关联",
-  "PROGRESS、REVIEW_INDEX 与下一份 BATCH_CONTRACT 同步到 0188",
+  "PROGRESS、REVIEW_INDEX 与下一份 BATCH_CONTRACT 同步到 0189",
   "不修改完成题数和 0219 的生成进度事实",
   "一个原子 main 提交，不创建分支或 PR",
 ]
