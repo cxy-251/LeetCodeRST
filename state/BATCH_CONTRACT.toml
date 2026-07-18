@@ -1,17 +1,17 @@
 [contract]
 schema_version = 2
-batch_id = "historical-review-0168"
+batch_id = "historical-review-0173"
 status = "ready"
 phase = "historical_review"
 kind = "targeted_review"
-scope = [168]
+scope = [173]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
 drift_log = "state/DRIFT_LOG.toml"
 new_problem_generation_paused = true
 completion_count_must_remain_unchanged = true
-next_review_after_batch = 169
+next_review_after_batch = 174
 
 [static_review]
 solution_code_execution = "forbidden"
@@ -23,37 +23,37 @@ repository_structure_state_and_git_checks = "allowed"
 reporting = "只声明实际完成的静态审查；明确未运行、未编译、未测试和剩余风险。"
 
 [budget]
-algorithm_score = 1
-proof_risk = "medium"
-language_semantics_risk = "medium"
-platform_type_risk = "low"
+algorithm_score = 2
+proof_risk = "high"
+language_semantics_risk = "high"
+platform_type_risk = "high"
 output_volume_risk = "low"
 scope_may_shrink = false
-scope_reason = "本批只审查一道 Easy；无零位进制证明与七字符容量需要精确，但不应为满足固定篇幅重写强主体。"
+scope_reason = "0173 单题同时涉及惰性遍历、不摊还复杂度、平台树节点和十语言可变迭代器状态，独立成批。"
 
 [references]
 style_baselines = [
-  "problems/0001-0100/0050-powx-n.rst",
   "problems/0001-0100/0076-minimum-window-substring.rst",
+  "problems/0001-0100/0100-same-tree.rst",
 ]
 style_roles = [
-  "0050 提供整数边界、严格下降循环状态、十语言数值语义和终止证明基线",
-  "0076 提供字符串构造、返回载荷、字符单位与逐语言物化成本基线",
+  "0076 提供状态不变量、摊还资源核算和逐语言容器语义基线",
+  "0100 提供平台 TreeNode、树结构归纳证明和十语言树节点适配基线",
 ]
 fact_sources = [
   "state/PROGRESS.toml",
   "state/REVIEW_INDEX.toml",
   "state/CONCEPT_LEDGER.toml",
-  "state/concepts/0101-0150.toml",
+  "state/concepts/0051-0100.toml",
   "state/concepts/0151-0200.toml",
   "docs/FORWARD_RULES_0151_ONWARD.rst",
   "problems/0101-0200/README.rst",
-  "https://leetcode.com/problems/excel-sheet-column-title/description/",
+  "https://leetcode.com/problems/binary-search-tree-iterator/description/",
 ]
 fact_sources_may_provide = [
-  "0168 的正整数范围、Excel 标题映射、无零字符语义和官方示例",
-  "此前输出载荷、整数边界、字符串构造和 0171 互逆学习链的知识状态",
-  "0219 新题生成暂停和历史审查推进到 0168 的状态事实",
+  "0173 的 BSTIterator 接口、调用约束、树节点结构和复杂度要求",
+  "既有中序遍历、TreeNode、容器所有权、摊还分析和 C 资源管理知识状态",
+  "0219 新题生成暂停和历史审查推进到 0173 的状态事实",
 ]
 fact_sources_must_not_provide = [
   "章节结构",
@@ -63,37 +63,39 @@ fact_sources_must_not_provide = [
 ]
 
 [problem]
-id = 168
-title = "Excel Sheet Column Title"
-path = "problems/0101-0200/0168-excel-sheet-column-title.rst"
+id = 173
+title = "Binary Search Tree Iterator"
+path = "problems/0101-0200/0173-binary-search-tree-iterator.rst"
 review_mode = "preserve_strong_body_and_apply_targeted_fixes"
 primary_risks = [
-  "核对每轮先减一再取余、0..25 到 A..Z、低位逆序生成与最终反转；26 的倍数不能产生零字符",
-  "核对 N=current*26^k+sum(x_i*26^i) 不变量、欧几里得商余唯一性、商严格下降和整体还原证明",
-  "核对 2^31-1 对应 FXSHRXW 且长度最多 7，C/C#/R 固定容量必须由该上界支撑",
-  "核对 TypeScript/R 在 2^53 内保持整数精确，Rust/Go/Julia 只构造已证明合法的 ASCII 字节",
-  "审计 complexity.title_output_payload 与既有 complexity.output_space_exclusion 的关系；专门状态可以保留，但学习链不能把返回载荷核算误写成 0168 首次出现",
-  "把新引入、强化和关联知识分开，保留 0171 编解码互逆关系但不以最近题结构作为样本",
+  "核对栈保存尚未输出的中序续延，栈顶始终是下一最小节点，不能预先物化完整中序序列",
+  "核对构造、next 和 hasNext 的状态转移；弹出节点后必须压入其右子树完整左链",
+  "证明每个节点不遗漏、不重复且按严格递增次序返回；hasNext 当且仅当续延栈非空",
+  "分别报告构造 O(h)、单次 next 最坏 O(h)、摊还 O(1)、总计 O(n) 与额外空间 O(h)",
+  "逐语言核对 TreeNode 身份和生命周期、可变迭代器状态、空树、栈容器和公开签名",
+  "核对 Rust RefCell 借用在修改迭代器前结束，Julia mutable struct 与 R environment 保留引用语义",
+  "核对 C 动态节点指针栈先扩容后改状态、realloc 临时指针、容量检查、失败路径和销毁责任",
+  "审计惰性中序迭代器与既有中序遍历知识的复用边界，禁止为通用 TreeNode 或遍历概念新造近义 ID",
 ]
 
 minimum_static_review = [
-  "人工推演 1、26、28、52、701、702、703 与 2^31-1，逐轮记录减一值、余数、字符和高位商",
-  "完整核对合法字符、位值不变量、商严格下降、终止、数值还原与表示唯一性",
-  "逐语言核对公开签名、整数除法、字符码、构建方向、反转、固定容量、C 返回所有权和 R 物化",
-  "复杂度以标题长度 L 报告循环、反转、字符串构造与返回载荷，不能把输出空间写成 O(1)",
-  "知识账本只从 state/concepts 的五十题平面状态读取，完成后把下一审查入口推进到 0169",
+  "人工推演空树、单节点、全左链、全右链和同时含左右子树的 BST，记录每次调用前后的栈",
+  "完整核对续延栈不变量、下一最小值、无遗漏无重复、有序性、终止和 hasNext 等价关系",
+  "逐语言核对平台签名、节点引用语义、栈顶方向、右子树左链推进和可变状态保存",
+  "按节点入栈和出栈总次数证明摊还 O(1)，同时保留单次最坏 O(h) 与空间 O(h)",
+  "知识账本只从 state/concepts 的五十题平面状态读取，完成后把下一审查入口推进到 0174",
 ]
 
 must_preserve = [
-  "精确契约、26 倍数反例、无零位抽象、位值不变量、完整五段证明和输出载荷复杂度",
-  "固定十语言实现、七字符容量、TypeScript/R 精确域、静态审查、剩余风险、边界和带答案自检",
+  "精确接口契约、惰性中序抽象、续延栈不变量、完整正确性证明和摊还复杂度证明",
+  "固定十语言实现、平台 TreeNode 约束、C 失败路径、逐语言所有权说明、静态审查和带答案自检",
 ]
 
 forbidden = [
   "把最近完成题目作为格式样本",
   "没有确定性问题时整篇重写或压缩强主体",
-  "直接用 current%26 映射字母、遗漏先减一、忘记反转或在正输入结束前停止",
-  "忽略固定容量证明、返回字符串载荷或语言字符物化",
+  "预先生成完整中序序列、遗漏右子树左链、只写摊还 O(1) 而隐藏单次最坏 O(h)",
+  "把一种语言的引用或失败处理外推为十语言均正确",
   "为同一知识新造近义 concept ID",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试、sanitizer 或目标语言最小程序",
@@ -103,7 +105,7 @@ forbidden = [
 required = [
   "正文只在审查发现明确问题时修改",
   "知识账本保留稳定 concept ID，并准确区分首次引入、强化和关联",
-  "PROGRESS、REVIEW_INDEX 与下一份 BATCH_CONTRACT 同步到 0169",
+  "PROGRESS、REVIEW_INDEX 与下一份 BATCH_CONTRACT 同步到 0174",
   "不修改完成题数和 0219 的生成进度事实",
   "一个原子 main 提交，不创建分支或 PR",
 ]
