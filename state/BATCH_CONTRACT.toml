@@ -1,17 +1,17 @@
 [contract]
 schema_version = 2
-batch_id = "historical-review-0179"
+batch_id = "historical-review-0187"
 status = "ready"
 phase = "historical_review"
 kind = "targeted_review"
-scope = [179]
+scope = [187]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
 drift_log = "state/DRIFT_LOG.toml"
 new_problem_generation_paused = true
 completion_count_must_remain_unchanged = true
-next_review_after_batch = 187
+next_review_after_batch = 188
 
 [static_review]
 solution_code_execution = "forbidden"
@@ -27,34 +27,33 @@ algorithm_score = 2
 proof_risk = "high"
 language_semantics_risk = "high"
 platform_type_risk = "high"
-output_volume_risk = "medium"
+output_volume_risk = "high"
 scope_may_shrink = false
-scope_reason = "0179 单题的严格弱序证明、十种排序接口、C 资源路径和 R 自定义归并已构成高风险批次；完成后再跳到 0187。"
+scope_reason = "0187 单题包含 20 位滚动编码、十语言位运算、约 1 MiB 固定状态表和多层结果所有权；0188 为 Hard，必须另批。"
 
 [references]
 style_baselines = [
-  "problems/0001-0100/0001-two-sum.rst",
+  "problems/0001-0100/0050-powx-n.rst",
   "problems/0001-0100/0076-minimum-window-substring.rst",
 ]
 style_roles = [
-  "0001 提供紧凑数组契约、C 返回所有权、十语言容器接口和失败路径基线",
-  "0076 提供全局最优性、不变量、局部安全性证明与字符串适配成本基线",
+  "0050 提供位宽、移位、掩码、固定宽语言和边界推导基线",
+  "0076 提供滑动窗口不变量、字符单位、输出提交时机与语言物化成本基线",
 ]
 fact_sources = [
   "state/PROGRESS.toml",
   "state/REVIEW_INDEX.toml",
   "state/CONCEPT_LEDGER.toml",
-  "state/concepts/0001-0050.toml",
   "state/concepts/0051-0100.toml",
   "state/concepts/0151-0200.toml",
   "docs/FORWARD_RULES_0151_ONWARD.rst",
   "problems/0101-0200/README.rst",
-  "https://leetcode.com/problems/largest-number/description/",
+  "https://leetcode.com/problems/repeated-dna-sequences/description/",
 ]
 fact_sources_may_provide = [
-  "0179 的非空非负整数数组、十进制拼接、字符串返回、全零规范化与官方约束",
-  "既有排序合同、交换证明、ASCII 扫描、字符串载荷和 C 事务式资源知识状态",
-  "0180–0185 为 Database、0186 为 Premium，0179 完成后的下一公开算法题是 0187",
+  "0187 的 A/C/G/T 字符域、固定长度 10、至少两次、每种结果一次和输出顺序要求",
+  "既有 ASCII 扫描、滑动窗口、位编码、重复提交、字符串副本和 C 多层结果知识状态",
+  "0187 完成后下一公开算法题是 Hard 0188，新题生成仍暂停在 0219",
 ]
 fact_sources_must_not_provide = [
   "章节结构",
@@ -64,43 +63,42 @@ fact_sources_must_not_provide = [
 ]
 
 [problem]
-id = 179
-title = "Largest Number"
-path = "problems/0101-0200/0179-largest-number.rst"
+id = 187
+title = "Repeated DNA Sequences"
+path = "problems/0101-0200/0187-repeated-dna-sequences.rst"
 review_mode = "preserve_strong_body_and_apply_targeted_fixes"
 primary_risks = [
-  "核对比较器只在 ab>ba 时把 a 放在 b 前，不能按整数值、普通字典序、长度或前缀启发式排序",
-  "核对 ab 与 ba 为等长 ASCII 数字串，字典序等于数值顺序；实现不得解析可能溢出的拼接整数",
-  "核对虚拟拼接的 m+n 个字符映射与首个差异，等价项返回 equal/false 而非强造顺序",
-  "证明有限 ab/ba 比较与无限周期串顺序一致，并由此建立非自反、不对称、传递和等价类传递性",
-  "用相邻交换证明任意排列可不减地转为排序排列，并证明等价项和排序稳定性不影响最终拼接",
-  "核对首项为 0 当且仅当全部输入为 0，返回单个 0；其他结果保留完整 Theta(D) 输出载荷",
-  "逐语言核对 qsort/std::sort/cmp_to_key/List.sort/sort_by/sort.Slice/Array.sort/List.Sort/sort! 的比较方向和等价语义",
-  "核对十语言只比较 ASCII 十进制字节或代码单元，字符串化 10^9、总长度 D、构建器容量和输入不修改",
-  "核对 C 的 calloc、snprintf 两阶段转换、比较器无分配、长度乘加、部分清理、答案终止符和返回所有权",
-  "核对 R 底向上归并覆盖每轮全部槽位、宽度倍增、尾段边界、记录字节物化和 O(n) 工作缓冲",
-  "审计拼接比较器、交换证明、排序合同和输出归一化与既有稳定 concept 的关系，禁止近义重复",
+  "核对 A/C/G/T 到 0/1/2/3 的无碰撞 2 位映射，固定十字符使前导 A 的零位不产生歧义",
+  "核对每轮左移 2 位、加入新字符并与 2^20-1；处理到下标 9 后才形成第一个完整窗口",
+  "证明滚动 code 恰表示最近 min(i+1,10) 个字符，长度 10 时编码与窗口一一对应",
+  "核对状态 0/1/2 分别表示未见、见过一次、已输出；只在 1 到 2 时提交，第三次以后不能重复",
+  "证明每个合法结束位置恰被扫描一次、结果无假阳性、所有重复窗口无遗漏且每种只返回一次",
+  "逐语言核对无符号或 32 位有符号移位、20 位非负范围、一基状态索引、ASCII 字节切片和长度边界",
+  "核对状态表固定 2^20 字节的 O(1) 渐进口径与约 1 MiB 实际成本，另计 R 输入物化和 Theta(R) 结果载荷",
+  "核对 Go strings.Clone、Rust/Julia 字节切片和其他语言子串均形成独立结果，不长期保留完整输入存储",
+  "核对 C returnSize 初始化、状态表、char** 几何扩容、11 字节独立字符串、容量溢出、失败清理和调用者所有权",
+  "审计位编码、滚动窗口、三态提交、ASCII 扫描和 C 结果资源与稳定 concept 的复用边界",
 ]
 
 minimum_static_review = [
-  "人工推演 [10,2]、[3,30,34,5,9]、[0,0]、[121,12]、[8308,830] 与等价周期 [12,1212]",
-  "选择三个字符串核对比较传递链，并完整复核周期串严格弱序、相邻交换、等价类和全零证明",
-  "逐语言核对公开签名、排序 API 比较方向、相等返回、ASCII 单位、输入所有权、字符串构建和输出载荷",
-  "纸面推演 R 在奇数 n 和非二次幂 n 下的归并轮次，核对 C 每个分配失败点的清理集合",
-  "知识账本只从 state/concepts 的五十题平面状态读取，完成后越过 Database 与 Premium 登记把入口推进到 0187",
+  "人工推演经典输入、AAAAAAAAAAAAA、长度 9、长度 10 与无重复字符串，记录 code 和 0/1/2 状态",
+  "逐位证明 20 位掩码删除第 11 个字符、定长四进制编码唯一、第二次提交充分且完整",
+  "逐语言核对公开签名、字符映射、移位类型、状态索引、切片边界、结果副本、顺序和输入只读",
+  "核对 TypeScript/R 的 20 位状态始终位于安全有符号范围，纸面检查 C 每个扩容与分配失败路径",
+  "知识账本只从 state/concepts 的五十题平面状态读取，完成后把下一审查入口推进到 0188",
 ]
 
 must_preserve = [
-  "精确字符串合同、数值与前缀反例、虚拟拼接、周期串严格弱序、相邻交换和全零规范化证明",
-  "固定十语言实现、C 无分配比较器和失败清理、R 自定义归并、真实 D 载荷、静态审查和带答案自检",
+  "精确 DNA 合同、位编码与布尔去重反例、滚动不变量、编码唯一性、三态提交和完整覆盖证明",
+  "固定十语言实现、1 MiB 实际状态成本、独立结果副本、C 多层失败清理、静态审查和带答案自检",
 ]
 
 forbidden = [
   "把最近完成题目作为格式样本",
   "没有确定性问题时整篇重写或压缩强主体",
-  "按整数值、普通字典序或长度排序，构造并解析拼接整数，或只凭示例声称比较器可传递",
-  "把一种排序 API 的负值、布尔值或 Ordering 方向外推为十语言一致",
-  "忽略等价项、全零归一化、临时字符串分配、返回载荷或 R 归并工作缓冲",
+  "使用错误字符码、10 位掩码、处理第 9 个字符就查询、布尔状态重复输出或依赖哈希迭代顺序",
+  "把一种语言的移位、切片、字符串共享或数组索引语义外推为十语言一致",
+  "把固定状态表写成没有实际成本的零空间，或遗漏返回字符串载荷与 C 失败清理",
   "为同一知识新造近义 concept ID",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试、sanitizer 或目标语言最小程序",
@@ -110,7 +108,7 @@ forbidden = [
 required = [
   "正文只在审查发现明确问题时修改",
   "知识账本保留稳定 concept ID，并准确区分首次引入、强化和关联",
-  "PROGRESS、REVIEW_INDEX 与下一份 BATCH_CONTRACT 同步到 0187",
+  "PROGRESS、REVIEW_INDEX 与下一份 BATCH_CONTRACT 同步到 0188",
   "不修改完成题数和 0219 的生成进度事实",
   "一个原子 main 提交，不创建分支或 PR",
 ]

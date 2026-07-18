@@ -1,5 +1,5 @@
 [meta]
-version = 6
+version = 7
 last_problem = 200
 
 # teaching_state: introduced / reinforcing / familiar / refresh / mastered
@@ -63,7 +63,7 @@ last_problem = 200
 "invariant.missing_revision_equals_zero" = { kind = "invariant", first_problem = 165, last_problem = 165, occurrences = 1, teaching_state = "introduced", difficult = false, note = "全零段与已结束侧的缺失修订号都规范为有效长度 0；较短版本结束后仍逐段核对非零尾部。" }
 "invariant.version_scanner_progress" = { kind = "invariant", first_problem = 165, last_problem = 165, occurrences = 1, teaching_state = "introduced", difficult = false, note = "循环继续时至少一侧未结束，该侧跨过一个合法非空段并严格前进；结束侧可停留为缺失零段而不死循环。" }
 "proof.decimal_span_numeric_order" = { kind = "proof", first_problem = 165, last_problem = 165, occurrences = 1, teaching_state = "introduced", difficult = true, note = "无前导零十进制串先由位数定序，等长时首个不同高位定序；首次不同修订号决定版本关系。" }
-"string.ascii_segment_scanning" = { kind = "string", first_problem = 165, last_problem = 171, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0165 与 0171 的 ASCII 合同支撑 Rust/Go 字节扫描；Julia codeunits 是轻量包装，R utf8ToInt 物化 O(L) 输入整数向量。" }
+"string.ascii_segment_scanning" = { kind = "string", first_problem = 165, last_problem = 179, occurrences = 3, teaching_state = "familiar", difficult = false, note = "0165、0171 与 0179 的 ASCII 合同支撑字节或代码单元扫描；0179 只比较十进制数字，Julia codeunits 为包装，R utf8ToInt 物化字节记录。" }
 "algorithm.long_division_remainder_position_map" = { kind = "algorithm", first_problem = 166, last_problem = 166, occurrences = 1, teaching_state = "introduced", difficult = false, note = "整数部分后以当前非零余数为状态，在乘十前记录 remainder->next_digit_position；余数重复时在首次位置插入左括号。" }
 "complexity.output_sensitive_recurring_decimal" = { kind = "complexity", first_problem = 166, last_problem = 166, occurrences = 1, teaching_state = "introduced", difficult = true, note = "以生成位数 L 和不同余数 r 报告期望 O(L) 时间、O(L+r) 空间、一次括号插入 O(L)；哈希极端冲突最坏可达 O(L^2)。" }
 "invariant.exact_fraction_decimal_prefix" = { kind = "invariant", first_problem = 166, last_problem = 166, occurrences = 1, teaching_state = "introduced", difficult = false, note = "生成 k 位后保持 N/D=q+sum(d_i/10^i)+r_k/(D*10^k)，且 0<=r_k<D；每轮 10r=dD+r' 精确延伸一位。" }
@@ -77,7 +77,7 @@ last_problem = 200
 "proof.monotone_sum_pointer_elimination" = { kind = "proof", first_problem = 15, last_problem = 167, occurrences = 3, teaching_state = "familiar", difficult = true, note = "0015–0016 与 0167 都用有序端点界证明：和过小时排除左端，和过大时排除右端；重复值不破坏非严格不等式。" }
 "resource.c_fixed_pair_return" = { kind = "resource", first_problem = 1, last_problem = 167, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0001 与 0167 的 C 实现都只在两个 int 成功分配并写入后设置 returnSize=2；失败保持长度 0，成功返回所有权交给调用者。" }
 "algorithm.bijective_base26_decrement" = { kind = "algorithm", first_problem = 168, last_problem = 168, occurrences = 1, teaching_state = "introduced", difficult = false, note = "每轮先 current-1，再以 26 取余映射 A..Z，高位商继续编码，最后反转低位优先字符。" }
-"complexity.output_space_exclusion" = { kind = "complexity", first_problem = 52, last_problem = 168, occurrences = 34, teaching_state = "mastered", difficult = false, note = "0052–0168 持续区分核心工作状态与返回载荷；0168 的循环状态为常数，但逆序字符缓冲和返回标题均为 O(L)。" }
+"complexity.output_space_exclusion" = { kind = "complexity", first_problem = 52, last_problem = 179, occurrences = 35, teaching_state = "mastered", difficult = false, note = "0052–0179 持续区分核心工作状态与返回载荷；0179 的数字字符串和最终拼接结果合计 O(D)，不能只报告排序引用工作区。" }
 "invariant.column_title_place_value" = { kind = "invariant", first_problem = 168, last_problem = 168, occurrences = 1, teaching_state = "introduced", difficult = false, note = "N=current*26^k+sum(x_i*26^i)，其中已生成 x_i 属于 1..26；每轮由 current=26q+x_k 保持。" }
 "numeric.column_title_32bit_length" = { kind = "numeric", first_problem = 168, last_problem = 168, occurrences = 1, teaching_state = "introduced", difficult = true, note = "2^31-1 对应 FXSHRXW，当前输入域标题最多 7 位；C/C#/R 固定缓冲容量由该上界支撑。" }
 "proof.bijective_base26_uniqueness" = { kind = "proof", first_problem = 168, last_problem = 168, occurrences = 1, teaching_state = "introduced", difficult = true, note = "(current-1) 的欧几里得商余唯一决定最低位与剩余高位，递归应用推出标题表示唯一。" }
@@ -114,6 +114,8 @@ last_problem = 200
 "implementation.virtual_concatenation_compare" = { kind = "implementation", first_problem = 179, last_problem = 179, occurrences = 1, teaching_state = "introduced", difficult = false, note = "比较器按 m+n 个虚拟字符扫描 a+b 与 b+a，不分配临时拼接串；C qsort 比较器无失败路径。" }
 "proof.concat_comparator_strict_weak_order" = { kind = "proof", first_problem = 179, last_problem = 179, occurrences = 1, teaching_state = "introduced", difficult = true, note = "ab 与 ba 的顺序等价于无限周期串 a^ω 与 b^ω 的字典序，继承传递性；ab=ba 的等价项任意顺序不改变结果。" }
 "proof.largest_number_adjacent_exchange" = { kind = "proof", first_problem = 179, last_problem = 179, occurrences = 1, teaching_state = "introduced", difficult = true, note = "相邻块 ab 与 ba 具有相同外部前后缀，交换逆序对会增大完整拼接；任意排列可通过相邻交换转为排序排列。" }
+"adapter.r_fixed_decimal_integer_format" = { kind = "language_adapter", first_problem = 179, last_problem = 179, occurrences = 1, teaching_state = "introduced", difficult = true, note = "R 用 sprintf(\"%.0f\", value) 把 0..10^9 精确整数固定写成纯十进制串，避免 as.character 的科学计数法破坏比较字符域。" }
+"interface.c_heap_owned_string_result" = { kind = "interface", first_problem = 43, last_problem = 179, occurrences = 3, teaching_state = "familiar", difficult = false, note = "0043、0049 与 0179 都返回调用者负责释放的 C 堆字符串；0179 还事务式清理数字中间串并为答案保留终止符。" }
 "adapter.go_repeated_dna_clone" = { kind = "language_adapter", first_problem = 187, last_problem = 187, occurrences = 1, teaching_state = "introduced", difficult = false, note = "Go 使用 strings.Clone 复制 10 字符结果，避免切片长期保留完整输入底层存储。" }
 "algorithm.dna_two_bit_rolling_window" = { kind = "algorithm", first_problem = 187, last_problem = 187, occurrences = 1, teaching_state = "introduced", difficult = false, note = "A/C/G/T 映射为 0..3，每轮左移 2 位并用 20 位掩码保留最近 10 个字符。" }
 "invariant.dna_fixed_window_code" = { kind = "invariant", first_problem = 187, last_problem = 187, occurrences = 1, teaching_state = "introduced", difficult = false, note = "处理下标 i 后 code 是最近 min(i+1,10) 个 DNA 字符的定长四进制编码；长度 10 时与窗口一一对应。" }
