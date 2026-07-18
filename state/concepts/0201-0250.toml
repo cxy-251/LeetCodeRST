@@ -1,12 +1,12 @@
 [meta]
-version = 1
+version = 2
 last_problem = 218
 
 # teaching_state: introduced / reinforcing / familiar / refresh / mastered
 
 [concepts]
-"workflow.targeted_static_review" = { kind = "workflow", first_problem = 167, last_problem = 212, occurrences = 25, teaching_state = "mastered", difficult = false, note = "0201–0212 继续执行人工推演、证明映射、十语言静态语义和仓库一致性检查；未运行、未编译、未测试题解。" }
-"invariant.mark_and_restore_board" = { kind = "invariant", first_problem = 200, last_problem = 212, occurrences = 2, teaching_state = "introduced", difficult = false, note = "进入合法状态后临时标记当前格，探索四邻格，退出前恢复原字符；标记只属于当前递归路径。" }
+"workflow.targeted_static_review" = { kind = "workflow", first_problem = 134, last_problem = 212, occurrences = 54, teaching_state = "mastered", difficult = false, note = "0134–0212 持续执行人工推演、证明映射、十语言静态语义和仓库一致性检查；未运行、未编译、未测试题解。" }
+"invariant.mark_and_restore_board" = { kind = "invariant", first_problem = 200, last_problem = 212, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "进入合法状态后临时标记当前格，探索四邻格，退出前恢复原字符；标记只属于当前递归路径。" }
 "adapter.unsigned_prefix_shift" = { kind = "language_adapter", first_problem = 201, last_problem = 201, occurrences = 1, teaching_state = "introduced", difficult = false, note = "C/C++/Rust/Go/C# 使用无符号状态，Java 使用 >>>，TypeScript 使用 >>>0，R 用精确 double 的除二与乘幂恢复。" }
 "algorithm.range_and_common_prefix" = { kind = "algorithm", first_problem = 201, last_problem = 201, occurrences = 1, teaching_state = "introduced", difficult = false, note = "同步逻辑右移区间端点直到相等，得到最长公共二进制前缀，再补回相同数量的低位 0。" }
 "proof.range_and_variable_suffix_zero" = { kind = "proof", first_problem = 201, last_problem = 201, occurrences = 1, teaching_state = "introduced", difficult = true, note = "端点跨越第一个差异位对应的块边界，变化后缀的每一位都在区间内至少出现一次 0，因此按位与全部归零。" }
@@ -43,8 +43,8 @@ last_problem = 218
 "model.trie_prefix_path" = { kind = "model", first_problem = 208, last_problem = 208, occurrences = 1, teaching_state = "introduced", difficult = false, note = "根到节点的路径标签表示一个前缀；固定 26 子链接共享公共前缀，节点存在与完整单词存在分离。" }
 "proof.trie_operation_sequence" = { kind = "proof", first_problem = 208, last_problem = 208, occurrences = 1, teaching_state = "introduced", difficult = true, note = "对字符路径和调用序列归纳，证明插入保持旧词、加入目标词，两种查询返回充要结果。" }
 "state.trie_terminal_marker" = { kind = "state", first_problem = 208, last_problem = 208, occurrences = 1, teaching_state = "introduced", difficult = false, note = "is_word 只在完整插入词终点为真，使 search 检查路径加终止标记、startsWith 只检查路径。" }
-"adapter.c_transactional_word_add" = { kind = "language_adapter", first_problem = 208, last_problem = 211, occurrences = 2, teaching_state = "introduced", difficult = false, note = "C void 添加接口先在主树外构造完整缺失链，成功后一次接入，失败时释放临时链并保持对象不变。" }
-"adapter.r_environment_trie" = { kind = "language_adapter", first_problem = 208, last_problem = 211, occurrences = 2, teaching_state = "introduced", difficult = false, note = "R 使用 environment 节点获得共享可变语义；模式 strsplit 产生 O(L) 字符物化。" }
+"adapter.c_transactional_word_add" = { kind = "language_adapter", first_problem = 208, last_problem = 211, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "C void 添加接口先在主树外构造完整缺失链，成功后一次接入，失败时释放临时链并保持对象不变。" }
+"adapter.r_environment_trie" = { kind = "language_adapter", first_problem = 208, last_problem = 211, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "R 使用 environment 节点获得共享可变语义；模式 strsplit 产生 O(L) 字符物化。" }
 "adapter.wide_window_sum" = { kind = "language_adapter", first_problem = 209, last_problem = 209, occurrences = 1, teaching_state = "introduced", difficult = false, note = "固定宽语言使用 64 位窗口和，TypeScript/R 只在官方精确整数域内承诺准确，返回长度仍为普通整数。" }
 "algorithm.positive_sliding_window" = { kind = "algorithm", first_problem = 209, last_problem = 209, occurrences = 1, teaching_state = "introduced", difficult = false, note = "右端加入正数；窗口达标时持续提交长度并移动左端，和不足时只扩展右端。" }
 "invariant.window_exact_sum" = { kind = "invariant", first_problem = 209, last_problem = 209, occurrences = 1, teaching_state = "introduced", difficult = false, note = "sum 始终等于 nums[left..right] 的真实元素和，best 保存所有已提交可行窗口的最短长度。" }
@@ -97,3 +97,48 @@ last_problem = 218
 "invariant.active_building_maximum" = { kind = "invariant", first_problem = 218, last_problem = 218, occurrences = 1, teaching_state = "introduced", difficult = false, note = "加入全部 left<=x 建筑并清理过期顶部后，堆顶若存在既活跃又不低于任何活跃建筑，等于当前轮廓高度。" }
 "output.normalized_skyline_keypoints" = { kind = "output_contract", first_problem = 218, last_problem = 218, occurrences = 1, teaching_state = "introduced", difficult = false, note = "仅在高度变化时追加 [x,height]，保证横坐标严格递增、相邻高度不同，并在最大右边界回到 0。" }
 "sweep.boundary_coordinate_compression" = { kind = "algorithm", first_problem = 218, last_problem = 218, occurrences = 1, teaching_state = "introduced", difficult = false, note = "高度只可能在左右边界变化；排序去重后每个横坐标整体处理全部开始与结束，避免重复横坐标和中间伪高度。" }
+
+# Migration corrections: restore effective states lost or malformed during flattening.
+"algorithm.reverse_rolling_update" = { kind = "algorithm", first_problem = 115, last_problem = 119, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0115 的一行子序列计数和 0119 的帕斯卡单行都逆序覆盖，保护上一轮左邻状态。" }
+"language.julia_r_descending_iteration" = { kind = "language_boundary", first_problem = 115, last_problem = 120, occurrences = 3, teaching_state = "reinforcing", difficult = false, note = "Julia/R 在逆序 DP 与自底向上循环中使用显式递减范围，证明端点并处理空循环。" }
+"algorithm.level_next_chain_reuse" = { kind = "algorithm", first_problem = 116, last_problem = 117, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0116 复用已建当前层 next 链，0117 以 next_head/next_tail 常数空间构造任意形状下一层。" }
+"boundary.explicit_chain_tail_null" = { kind = "boundary", first_problem = 116, last_problem = 117, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0116、0117 都显式保证每层最右 next 为空，覆盖旧链接并保证后续导航终止。" }
+"interface.next_node_reference_model" = { kind = "interface", first_problem = 116, last_problem = 117, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0116 建立带 next 字段的完美树节点模型，0117 推广到稀疏树并保持节点身份与左右拓扑。" }
+"proof.bfs_first_discovery_shortest" = { kind = "proof", first_problem = 126, last_problem = 127, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "0126 用距离与前驱 DAG 保存全部最短路径，0127 只求距离并在首次入队时删除未访问节点。" }
+"workflow.risk_triggered_sampling" = { kind = "workflow", first_problem = 138, last_problem = 149, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0138 建立风险触发抽查；0149 因几何方向规范化、哈希退化和语言键语义风险执行针对性静态审查。" }
+"workflow.premium_skip_progression" = { kind = "workflow", first_problem = 156, last_problem = 186, occurrences = 8, teaching_state = "mastered", difficult = false, note = "0156–0159、0161、0163、0170、0186 按 Premium 登记并保持题号推进。" }
+"domain.database_problem_registration" = { kind = "domain_policy", first_problem = 175, last_problem = 185, occurrences = 10, teaching_state = "mastered", difficult = false, note = "Database 题不符合固定十语言算法产物合同，只登记 database_skipped，不创建空壳 RST。" }
+"domain.database_skipped" = { kind = "domain_policy", first_problem = 175, last_problem = 197, occurrences = 12, teaching_state = "mastered", difficult = false, note = "新增 0196–0197 Database 登记，不生成固定十语言算法 RST。" }
+"domain.shell_skipped" = { kind = "domain_policy", first_problem = 192, last_problem = 195, occurrences = 4, teaching_state = "familiar", difficult = false, note = "0192–0195 属于 Shell 文本处理域，只登记状态，不生成固定十语言算法空壳。" }
+"adapter.unsigned_32_bit_cross_language" = { kind = "language_adapter", first_problem = 190, last_problem = 191, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "Java 用 32 位补码与逻辑右移，TypeScript 每轮 >>>0，R 用精确 double 的除二取余适配完整无符号域。" }
+"algorithm.house_robber_prefix_dp" = { kind = "algorithm", first_problem = 198, last_problem = 213, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0198 建立线性前缀 DP；0213 把同一 take-or-skip 递推分别应用到排除首屋和排除尾屋的两个线性区间。" }
+"invariant.house_robber_rolling_pair" = { kind = "invariant", first_problem = 198, last_problem = 213, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0198 维护 previous_one=F(i)、previous_two=F(i-1)；0213 在两个线性子区间中继续保持同一滚动状态。" }
+
+# Legacy 0214–0218 problem indexes marked the following concepts as reinforced,
+# but the earlier active range ledgers contained no recoverable full records.
+# Register the first verifiable authoritative state instead of inventing prior counts.
+"algorithm.kmp_prefix_function" = { kind = "algorithm", first_problem = 214, last_problem = 214, occurrences = 1, teaching_state = "introduced", difficult = true, note = "在拼接串上维护最长真前后缀长度；失配时沿 prefix[j-1] 回退，匹配时递增长度，使全部回退总成本保持线性。" }
+"proof.lower_bound_matched_by_construction" = { kind = "proof", first_problem = 214, last_problem = 214, occurrences = 1, teaching_state = "introduced", difficult = true, note = "先证明任意方案至少补 n-L 个字符，再由 reverse(s[L:]) 的构造恰好达到该下界。" }
+"string.ascii_code_unit_contract" = { kind = "string", first_problem = 214, last_problem = 214, occurrences = 1, teaching_state = "introduced", difficult = true, note = "官方 ASCII 输入使字节、UTF-16 code unit 与 Unicode code point 边界一致；超出 ASCII 后不得继续混用这些坐标。" }
+"complexity.output_payload_separation" = { kind = "complexity", first_problem = 214, last_problem = 218, occurrences = 3, teaching_state = "familiar", difficult = true, note = "0214、0216、0218 分别把字符串、二维组合行和轮廓关键点的返回载荷，与核心工作状态及临时物化成本分开报告。" }
+"safety.c_size_arithmetic_and_cleanup" = { kind = "safety", first_problem = 214, last_problem = 218, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "0214、0218 的 C 适配器在分配前检查 size_t 加乘，任一中途失败释放全部已拥有对象，成功后明确所有权转移。" }
+"algorithm.order_statistics" = { kind = "algorithm", first_problem = 215, last_problem = 215, occurrences = 1, teaching_state = "introduced", difficult = false, note = "只要求第 k 个排序位置时使用选择算法，不必完成全局排序；第 k 大对应升序下标 n-k。" }
+"proof.strict_interval_shrink" = { kind = "proof", first_problem = 215, last_problem = 215, occurrences = 1, teaching_state = "introduced", difficult = true, note = "未命中等值段时，新闭区间严格落在小值侧或大值侧并至少删除一个位置，因此搜索必然终止。" }
+"array.in_place_partition" = { kind = "array", first_problem = 215, last_problem = 215, occurrences = 1, teaching_state = "introduced", difficult = false, note = "通过交换在原数组中维护分区，不建立元素副本数组；调用契约必须说明输入顺序会被重排。" }
+"semantics.duplicate_values_preserve_multiplicity" = { kind = "language_semantics", first_problem = 215, last_problem = 215, occurrences = 1, teaching_state = "introduced", difficult = true, note = "重复值分别占据排序位置；三路分区可把等值集中处理，但不得去重或改成第 k 个不同值。" }
+"safety.rust_signed_partition_cursor" = { kind = "safety", first_problem = 215, last_problem = 215, occurrences = 1, teaching_state = "introduced", difficult = true, note = "Rust 的右侧分区游标使用有符号类型，转换为 usize 访问前证明非负，避免零位置递减造成下溢。" }
+"backtracking.path_restore" = { kind = "backtracking", first_problem = 216, last_problem = 216, occurrences = 1, teaching_state = "introduced", difficult = false, note = "进入分支时追加选择，返回父层前撤销该选择；成功、失败与剪枝路径都必须恢复父状态。" }
+"output.mutable_path_snapshot" = { kind = "output_contract", first_problem = 216, last_problem = 216, occurrences = 1, teaching_state = "introduced", difficult = false, note = "提交答案时复制当前有效路径，后续 push、pop 或兄弟分支覆盖不得修改历史结果。" }
+"proof.pruning_safety" = { kind = "proof", first_problem = 216, last_problem = 216, occurrences = 1, teaching_state = "introduced", difficult = true, note = "只有可达最小和已经超过 remaining，或可达最大和仍小于 remaining 时才剪枝；两类条件分别排除全部补全。" }
+"safety.c_transactional_parallel_array_growth" = { kind = "safety", first_problem = 216, last_problem = 216, occurrences = 1, teaching_state = "introduced", difficult = true, note = "C 同步扩展行指针和列长元数据时使用事务式临时缓冲；任一失败保留旧地址并完整清理已有结果。" }
+"adapter.r_explicit_recursive_state" = { kind = "language_adapter", first_problem = 216, last_problem = 216, occurrences = 1, teaching_state = "introduced", difficult = false, note = "R 显式传递 start、slots、remaining 与路径状态，并用受控结果容器保存快照，避免隐式全局副作用。" }
+"algorithm.query_before_insert" = { kind = "algorithm", first_problem = 217, last_problem = 217, occurrences = 1, teaching_state = "introduced", difficult = false, note = "扫描当前元素时先查询 seen，再插入当前值，使命中见证必定来自严格更早的输入前缀。" }
+"proof.soundness_and_completeness" = { kind = "proof", first_problem = 217, last_problem = 217, occurrences = 1, teaching_state = "introduced", difficult = true, note = "命中时给出两个不同下标上的相等值；任一重复值的第二次出现又必然命中，分别证明可靠性与完备性。" }
+"safety.capacity_arithmetic" = { kind = "safety", first_problem = 217, last_problem = 217, occurrences = 1, teaching_state = "introduced", difficult = true, note = "哈希容量的 2*n、二次幂上取整和字节数乘法都在 size_t 中先检查溢出，再执行分配。" }
+"safety.signed_to_unsigned_hash_domain" = { kind = "safety", first_problem = 217, last_problem = 217, occurrences = 1, teaching_state = "introduced", difficult = true, note = "有符号整数先映射为同宽无符号位模式再参与哈希，避免负数绝对值和 INT_MIN 的未定义边界。" }
+"complexity.input_read_only_vs_sorting" = { kind = "complexity", first_problem = 217, last_problem = 217, occurrences = 1, teaching_state = "introduced", difficult = true, note = "哈希扫描只读输入并使用额外集合；排序替代方案会修改或复制输入且时间为 O(n log n)，接口与复杂度必须分别说明。" }
+"algorithm.sweep_line" = { kind = "algorithm", first_problem = 218, last_problem = 218, occurrences = 1, teaching_state = "introduced", difficult = false, note = "按横坐标递增处理全部边界事件，更新活动建筑集合并读取当前最大高度，只在高度变化时提交关键点。" }
+"data_structure.max_heap" = { kind = "data_structure", first_problem = 218, last_problem = 218, occurrences = 1, teaching_state = "introduced", difficult = false, note = "最大堆按高度维护活动建筑极值，插入与弹出为 O(log n)，堆顶提供当前轮廓高度候选。" }
+"proof.event_coordinates_suffice" = { kind = "proof", first_problem = 218, last_problem = 218, occurrences = 1, teaching_state = "introduced", difficult = true, note = "建筑活动集合只可能在 left 或 right 边界变化，两个相邻边界之间高度恒定，不会产生新的关键点。" }
+"proof.lazy_deletion_extreme_query" = { kind = "proof", first_problem = 218, last_problem = 218, occurrences = 1, teaching_state = "introduced", difficult = true, note = "过期非堆顶元素暂留不会影响最大值；每次极值查询前清理全部过期堆顶即可保持答案正确。" }
+"complexity.heap_push_pop_amortization" = { kind = "complexity", first_problem = 218, last_problem = 218, occurrences = 1, teaching_state = "introduced", difficult = true, note = "每栋建筑入堆一次并最终至多出堆一次，全部堆操作合计 O(n log n)，活动堆峰值 O(n)。" }
