@@ -1,17 +1,17 @@
 [contract]
 schema_version = 2
-batch_id = "historical-review-0167"
+batch_id = "historical-review-0168"
 status = "ready"
 phase = "historical_review"
 kind = "targeted_review"
-scope = [167]
+scope = [168]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
 drift_log = "state/DRIFT_LOG.toml"
 new_problem_generation_paused = true
 completion_count_must_remain_unchanged = true
-next_review_after_batch = 168
+next_review_after_batch = 169
 
 [static_review]
 solution_code_execution = "forbidden"
@@ -23,37 +23,37 @@ repository_structure_state_and_git_checks = "allowed"
 reporting = "只声明实际完成的静态审查；明确未运行、未编译、未测试和剩余风险。"
 
 [budget]
-algorithm_score = 2
+algorithm_score = 1
 proof_risk = "medium"
 language_semantics_risk = "medium"
-platform_type_risk = "medium"
+platform_type_risk = "low"
 output_volume_risk = "low"
 scope_may_shrink = false
-scope_reason = "本批只审查一道 Medium；重点是非递减数组上的端点排除证明、一基返回和历史 concept 连续性，不以扩写正文代替针对性修正。"
+scope_reason = "本批只审查一道 Easy；无零位进制证明与七字符容量需要精确，但不应为满足固定篇幅重写强主体。"
 
 [references]
 style_baselines = [
-  "problems/0001-0100/0001-two-sum.rst",
+  "problems/0001-0100/0050-powx-n.rst",
   "problems/0001-0100/0076-minimum-window-substring.rst",
 ]
 style_roles = [
-  "0001 提供两数和契约、不同下标、C 固定结果分配与十语言索引接口基线",
-  "0076 提供单调指针不变量、排除安全性、终止与真实适配成本基线",
+  "0050 提供整数边界、严格下降循环状态、十语言数值语义和终止证明基线",
+  "0076 提供字符串构造、返回载荷、字符单位与逐语言物化成本基线",
 ]
 fact_sources = [
   "state/PROGRESS.toml",
   "state/REVIEW_INDEX.toml",
   "state/CONCEPT_LEDGER.toml",
-  "state/concepts/0001-0050.toml",
+  "state/concepts/0101-0150.toml",
   "state/concepts/0151-0200.toml",
   "docs/FORWARD_RULES_0151_ONWARD.rst",
   "problems/0101-0200/README.rst",
-  "https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/description/",
+  "https://leetcode.com/problems/excel-sheet-column-title/description/",
 ]
 fact_sources_may_provide = [
-  "0167 的非递减输入、唯一不同下标解、一基返回、值域与常数额外空间合同",
-  "此前两数和、排序双指针、端点单调排除、C 返回数组与索引转换的知识状态",
-  "0219 新题生成暂停和历史审查推进到 0167 的状态事实",
+  "0168 的正整数范围、Excel 标题映射、无零字符语义和官方示例",
+  "此前输出载荷、整数边界、字符串构造和 0171 互逆学习链的知识状态",
+  "0219 新题生成暂停和历史审查推进到 0168 的状态事实",
 ]
 fact_sources_must_not_provide = [
   "章节结构",
@@ -63,35 +63,37 @@ fact_sources_must_not_provide = [
 ]
 
 [problem]
-id = 167
-title = "Two Sum II - Input Array Is Sorted"
-path = "problems/0101-0200/0167-two-sum-ii-input-array-is-sorted.rst"
+id = 168
+title = "Excel Sheet Column Title"
+path = "problems/0101-0200/0168-excel-sheet-column-title.rst"
 review_mode = "preserve_strong_body_and_apply_targeted_fixes"
 primary_risks = [
-  "核对 left<right、非递减而非严格递增、唯一解区间和两种端点排除证明；重复值不得被错误跳过",
-  "核对 C/C++/Python/Java/Rust/Go/TypeScript/C# 的零基内部状态只加一一次，Julia/R 的一基状态不得再次平移",
-  "核对 C 仅在两个结果整数成功分配并写入后设置 returnSize=2，失败保持 0；其余语言固定返回载荷与只读输入一致",
-  "审计 algorithm.sorted_two_pointer_elimination 与既有 algorithm.sorted_anchor_two_pointer_sum、proof.monotone_sum_pointer_elimination 的关系，合并真正近义状态但不混淆算法与证明概念",
-  "把新引入、强化和关联知识分开；0001 已讲解的两数和与固定结果资源不能误标为 0167 首次引入",
+  "核对每轮先减一再取余、0..25 到 A..Z、低位逆序生成与最终反转；26 的倍数不能产生零字符",
+  "核对 N=current*26^k+sum(x_i*26^i) 不变量、欧几里得商余唯一性、商严格下降和整体还原证明",
+  "核对 2^31-1 对应 FXSHRXW 且长度最多 7，C/C#/R 固定容量必须由该上界支撑",
+  "核对 TypeScript/R 在 2^53 内保持整数精确，Rust/Go/Julia 只构造已证明合法的 ASCII 字节",
+  "审计 complexity.title_output_payload 与既有 complexity.output_space_exclusion 的关系；专门状态可以保留，但学习链不能把返回载荷核算误写成 0168 首次出现",
+  "把新引入、强化和关联知识分开，保留 0171 编解码互逆关系但不以最近题结构作为样本",
 ]
 
 minimum_static_review = [
-  "人工推演三个官方示例以及重复值、两元素、负数、答案在首尾和错误移动方向反例",
-  "完整核对和过小时排除左端、和过大时排除右端、唯一解保留、区间严格缩短、终止与不同位置",
-  "逐语言核对公开签名、输入只读、索引单位、和的位宽、固定结果容器与 C 资源路径",
-  "复杂度区分 O(n) 扫描、O(1) 核心状态和固定两个整数的 O(1) 返回载荷；不得引入哈希表",
-  "知识账本只从 state/concepts 的五十题平面状态读取，完成后把下一审查入口推进到 0168",
+  "人工推演 1、26、28、52、701、702、703 与 2^31-1，逐轮记录减一值、余数、字符和高位商",
+  "完整核对合法字符、位值不变量、商严格下降、终止、数值还原与表示唯一性",
+  "逐语言核对公开签名、整数除法、字符码、构建方向、反转、固定容量、C 返回所有权和 R 物化",
+  "复杂度以标题长度 L 报告循环、反转、字符串构造与返回载荷，不能把输出空间写成 O(1)",
+  "知识账本只从 state/concepts 的五十题平面状态读取，完成后把下一审查入口推进到 0169",
 ]
 
 must_preserve = [
-  "精确契约、重复值反例、解法取舍、唯一解区间不变量、两侧排除证明和终止证明",
-  "固定十语言实现、C 失败路径、一基返回差异、静态审查、剩余风险、边界和带答案自检",
+  "精确契约、26 倍数反例、无零位抽象、位值不变量、完整五段证明和输出载荷复杂度",
+  "固定十语言实现、七字符容量、TypeScript/R 精确域、静态审查、剩余风险、边界和带答案自检",
 ]
 
 forbidden = [
   "把最近完成题目作为格式样本",
   "没有确定性问题时整篇重写或压缩强主体",
-  "依赖严格递增、跳过重复值、允许 left==right、返回零基下标或使用 O(n) 哈希空间",
+  "直接用 current%26 映射字母、遗漏先减一、忘记反转或在正输入结束前停止",
+  "忽略固定容量证明、返回字符串载荷或语言字符物化",
   "为同一知识新造近义 concept ID",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试、sanitizer 或目标语言最小程序",
@@ -101,7 +103,7 @@ forbidden = [
 required = [
   "正文只在审查发现明确问题时修改",
   "知识账本保留稳定 concept ID，并准确区分首次引入、强化和关联",
-  "PROGRESS、REVIEW_INDEX 与下一份 BATCH_CONTRACT 同步到 0168",
+  "PROGRESS、REVIEW_INDEX 与下一份 BATCH_CONTRACT 同步到 0169",
   "不修改完成题数和 0219 的生成进度事实",
   "一个原子 main 提交，不创建分支或 PR",
 ]

@@ -1,5 +1,5 @@
 [meta]
-version = 2
+version = 3
 last_problem = 200
 
 # teaching_state: introduced / reinforcing / familiar / refresh / mastered
@@ -72,10 +72,10 @@ last_problem = 200
 "proof.remainder_finite_or_cycle_dichotomy" = { kind = "proof", first_problem = 166, last_problem = 166, occurrences = 1, teaching_state = "introduced", difficult = true, note = "余数为零恰好有限终止；否则非零余数来自有限集合且转移确定，首次重复状态给出函数图的环入口和循环部分。" }
 "resource.c_transactional_builder_and_remainder_hash" = { kind = "language_adapter", first_problem = 166, last_problem = 166, occurrences = 1, teaching_state = "introduced", difficult = false, note = "C 动态字符串检查终止符容量和 realloc，开放寻址表保持二次幂容量并失败清理；成功返回堆字符串所有权。" }
 "adapter.one_based_index_contract" = { kind = "language_adapter", first_problem = 167, last_problem = 167, occurrences = 1, teaching_state = "introduced", difficult = false, note = "C/C++/Python/Java/Rust/Go/TS/C# 内部零基返回前加一；Julia/R 内部已一基，不能重复加一。" }
-"algorithm.sorted_two_pointer_elimination" = { kind = "algorithm", first_problem = 167, last_problem = 167, occurrences = 1, teaching_state = "introduced", difficult = false, note = "在非递减数组两端维护候选区间，和过小时排除左端，和过大时排除右端，命中时返回一基下标。" }
+"algorithm.sorted_anchor_two_pointer_sum" = { kind = "algorithm", first_problem = 15, last_problem = 167, occurrences = 3, teaching_state = "familiar", difficult = true, note = "0015–0016 在固定锚点后的有序后缀使用双指针；0167 直接在完整非递减数组两端排除，不再需要外层锚点。" }
 "invariant.two_sum_solution_interval" = { kind = "invariant", first_problem = 167, last_problem = 167, occurrences = 1, teaching_state = "introduced", difficult = false, note = "尚未返回时唯一解始终位于 [left,right]；区间外端点均已由单调不等式证明不可能参与解。" }
-"proof.monotone_endpoint_exclusion" = { kind = "proof", first_problem = 167, last_problem = 167, occurrences = 1, teaching_state = "introduced", difficult = true, note = "sum<target 时 left 与区间内任意元素配对都过小；sum>target 时 right 与区间内任意元素配对都过大。" }
-"resource.c_fixed_pair_return" = { kind = "resource", first_problem = 167, last_problem = 167, occurrences = 1, teaching_state = "introduced", difficult = false, note = "C 成功时分配两个 int 并设置 returnSize=2；分配失败保持长度 0，返回所有权交给调用者。" }
+"proof.monotone_sum_pointer_elimination" = { kind = "proof", first_problem = 15, last_problem = 167, occurrences = 3, teaching_state = "familiar", difficult = true, note = "0015–0016 与 0167 都用有序端点界证明：和过小时排除左端，和过大时排除右端；重复值不破坏非严格不等式。" }
+"resource.c_fixed_pair_return" = { kind = "resource", first_problem = 1, last_problem = 167, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0001 与 0167 的 C 实现都只在两个 int 成功分配并写入后设置 returnSize=2；失败保持长度 0，成功返回所有权交给调用者。" }
 "algorithm.bijective_base26_decrement" = { kind = "algorithm", first_problem = 168, last_problem = 168, occurrences = 1, teaching_state = "introduced", difficult = false, note = "每轮先 current-1，再以 26 取余映射 A..Z，高位商继续编码，最后反转低位优先字符。" }
 "complexity.title_output_payload" = { kind = "complexity", first_problem = 168, last_problem = 168, occurrences = 1, teaching_state = "introduced", difficult = true, note = "循环、反转和字符串构造均为 O(L)，字符缓冲与返回字符串为 O(L)，不能把返回载荷忽略为常数。" }
 "invariant.column_title_place_value" = { kind = "invariant", first_problem = 168, last_problem = 168, occurrences = 1, teaching_state = "introduced", difficult = false, note = "N=current*26^k+sum(x_i*26^i)，其中已生成 x_i 属于 1..26；每轮由 current=26q+x_k 保持。" }
