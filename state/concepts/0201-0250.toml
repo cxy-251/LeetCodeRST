@@ -1,5 +1,5 @@
 [meta]
-version = 5
+version = 6
 last_problem = 218
 
 # teaching_state: introduced / reinforcing / familiar / refresh / mastered
@@ -7,15 +7,15 @@ last_problem = 218
 [concepts]
 "workflow.targeted_static_review" = { kind = "workflow", first_problem = 134, last_problem = 212, occurrences = 54, teaching_state = "mastered", difficult = false, note = "0134–0212 持续执行人工推演、证明映射、十语言静态语义和仓库一致性检查；未运行、未编译、未测试题解。" }
 "invariant.mark_and_restore_board" = { kind = "invariant", first_problem = 212, last_problem = 212, occurrences = 1, teaching_state = "introduced", difficult = false, note = "0212 进入合法状态后临时标记当前格，探索四邻格，退出前恢复原字符；0200 永久清零访问状态，不属于此 concept。" }
-"adapter.unsigned_prefix_shift" = { kind = "language_adapter", first_problem = 201, last_problem = 201, occurrences = 1, teaching_state = "introduced", difficult = false, note = "C/C++/Rust/Go/C# 使用无符号状态，Java 使用 >>>，TypeScript 使用 >>>0，R 用精确 double 的除二与乘幂恢复。" }
 "algorithm.range_and_common_prefix" = { kind = "algorithm", first_problem = 201, last_problem = 201, occurrences = 1, teaching_state = "introduced", difficult = false, note = "同步逻辑右移区间端点直到相等，得到最长公共二进制前缀，再补回相同数量的低位 0。" }
 "proof.range_and_variable_suffix_zero" = { kind = "proof", first_problem = 201, last_problem = 201, occurrences = 1, teaching_state = "introduced", difficult = true, note = "端点跨越第一个差异位对应的块边界，变化后缀的每一位都在区间内至少出现一次 0，因此按位与全部归零。" }
 "workflow.range_directory_boundary" = { kind = "workflow", first_problem = 201, last_problem = 203, occurrences = 1, teaching_state = "introduced", difficult = false, note = "0201 起题解进入 problems/0201-0300，并创建独立范围 README；0101-0200 目录不再接收新题。" }
-"algorithm.happy_number_floyd" = { kind = "algorithm", first_problem = 202, last_problem = 202, occurrences = 1, teaching_state = "introduced", difficult = false, note = "在平方位和函数图中使用快慢指针；fast 到达 1 表示快乐，slow 与 fast 在非 1 状态相遇表示进入非快乐环。" }
+"algorithm.floyd_cycle_detection" = { kind = "algorithm", first_problem = 141, last_problem = 202, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0141 在显式链表上维护 slow=x(k)、fast=x(2k)；0202 在平方位和函数图中采用 slow=x(t)、fast=x(2t+1)，以到达 1 或非 1 相遇区分两类终态。" }
 "invariant.decimal_digit_square_sum" = { kind = "invariant", first_problem = 202, last_problem = 202, occurrences = 1, teaching_state = "introduced", difficult = false, note = "取余与整除逐个移除十进制低位，累计值始终等于已处理数字的平方和。" }
 "proof.happy_number_finite_state" = { kind = "proof", first_problem = 202, last_problem = 202, occurrences = 1, teaching_state = "introduced", difficult = true, note = "d 位数的平方位和不超过 81d，四位及以上严格下降，最终进入小于 1000 的有限集合并必然到达 1 或形成环。" }
-"algorithm.linked_list_dummy_head_filter" = { kind = "algorithm", first_problem = 203, last_problem = 203, occurrences = 1, teaching_state = "introduced", difficult = false, note = "虚拟头把原头删除转化为普通 next 重接；删除分支不推进前驱，保留分支才推进。" }
-"invariant.mutable_link_slot" = { kind = "invariant", first_problem = 203, last_problem = 203, occurrences = 1, teaching_state = "introduced", difficult = false, note = "已确认前缀全部保留且顺序不变，previous.next 始终是未检查后缀首节点；Rust 直接操作拥有 Option<Box<Node>> 的可变链接槽位。" }
+"technique.dummy_node" = { kind = "algorithm", first_problem = 2, last_problem = 203, occurrences = 7, teaching_state = "familiar", difficult = false, note = "0002–0025 用虚拟头统一结果追加、头删、归并和局部重连；0203 继续把连续头部删除统一为 previous.next 的普通删除。" }
+"rust.mutable_link_slot_deletion" = { kind = "language_boundary", first_problem = 82, last_problem = 203, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0082 与 0203 都用 &mut Option<Box<ListNode>> 表示当前所有权槽位；删除时以后继替换槽位，保留时才把槽位推进到 next。" }
+"interface.linked_list_node_reuse" = { kind = "interface", first_problem = 82, last_problem = 203, occurrences = 5, teaching_state = "reinforcing", difficult = false, note = "0082、0083、0086、0092 与 0203 都重连原节点而不复制保留节点；0203 进一步说明被删除节点的语言相关资源责任和新头返回。" }
 "ownership.removed_list_nodes" = { kind = "ownership", first_problem = 203, last_problem = 203, occurrences = 1, teaching_state = "introduced", difficult = true, note = "C 在明确接收节点所有权的假设下重接后 free；托管语言交给运行时，Rust 通过 Box 移动自动释放被删除节点。" }
 "adapter.sieve_storage_cross_language" = { kind = "language_adapter", first_problem = 204, last_problem = 204, occurrences = 1, teaching_state = "introduced", difficult = false, note = "C/C++/Python/Rust/Go/TypeScript/C# 使用字节状态，Java 使用 boolean[]，Julia 使用 BitVector，R 使用更重的 logical 向量；全部为 O(n) 空间。" }
 "algorithm.sieve_of_eratosthenes" = { kind = "algorithm", first_problem = 204, last_problem = 204, occurrences = 1, teaching_state = "introduced", difficult = false, note = "为 [0,n) 建立合数标记，只让未标记候选 p 从 p*p 开始按步长 p 划去倍数，最后统计 2..n-1 的未标记索引。" }
@@ -108,7 +108,7 @@ last_problem = 218
 "domain.database_problem_registration" = { kind = "domain_policy", first_problem = 175, last_problem = 185, occurrences = 10, teaching_state = "mastered", difficult = false, note = "Database 题不符合固定十语言算法产物合同，只登记 database_skipped，不创建空壳 RST。" }
 "domain.database_skipped" = { kind = "domain_policy", first_problem = 175, last_problem = 197, occurrences = 12, teaching_state = "mastered", difficult = false, note = "新增 0196–0197 Database 登记，不生成固定十语言算法 RST。" }
 "domain.shell_skipped" = { kind = "domain_policy", first_problem = 192, last_problem = 195, occurrences = 4, teaching_state = "familiar", difficult = false, note = "0192–0195 属于 Shell 文本处理域，只登记状态，不生成固定十语言算法空壳。" }
-"adapter.unsigned_32_bit_cross_language" = { kind = "language_adapter", first_problem = 190, last_problem = 191, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0190 建立 Java 补码/逻辑右移、TypeScript >>>0 与 R 精确 double 适配；0191 在置位计数中强化同一无符号 32 位边界。" }
+"adapter.unsigned_32_bit_cross_language" = { kind = "language_adapter", first_problem = 190, last_problem = 201, occurrences = 3, teaching_state = "familiar", difficult = false, note = "0190 建立 Java 逻辑右移、TypeScript >>>0 与 R 精确 double 适配，0191 强化置位计数；0201 再用于同步右移公共前缀和恢复低位零。" }
 "algorithm.house_robber_prefix_dp" = { kind = "algorithm", first_problem = 198, last_problem = 213, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0198 建立线性前缀 DP；0213 把同一 take-or-skip 递推分别应用到排除首屋和排除尾屋的两个线性区间。" }
 "invariant.house_robber_rolling_pair" = { kind = "invariant", first_problem = 198, last_problem = 213, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0198 维护 previous_one=F(i)、previous_two=F(i-1)；0213 在两个线性子区间中继续保持同一滚动状态。" }
 

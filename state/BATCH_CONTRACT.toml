@@ -1,17 +1,17 @@
 [contract]
 schema_version = 2
-batch_id = "historical-review-0201-0203"
+batch_id = "historical-review-0204-0206"
 status = "ready"
 phase = "historical_review"
 kind = "targeted_review"
-scope = [201, 202, 203]
+scope = [204, 205, 206]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
 drift_log = "state/DRIFT_LOG.toml"
 new_problem_generation_paused = true
 completion_count_must_remain_unchanged = true
-next_review_after_batch = 204
+next_review_after_batch = 207
 
 [static_review]
 solution_code_execution = "forbidden"
@@ -31,7 +31,7 @@ language_semantics_risk = "high"
 platform_type_risk = "high"
 output_volume_risk = "high"
 scope_may_shrink = true
-scope_reason = "0201 为 Medium，0202–0203 为 Easy，总分 4；三题依次叠加固定宽位运算、有限函数图 Floyd 状态坐标、链表节点所有权与 Rust 可变链接槽位。主体已存在，可连续审查；若 0202 或 0203 的证明、平台适配或资源语义出现压缩迹象，只提交完整连续前缀并同步下一入口。"
+scope_reason = "0204 为 Medium，0205–0206 为 Easy，总分 4；三题依次涉及筛法边界与动态存储、ASCII 字符双射和原地链表重接所有权。主体已存在，可连续审查；若 0205 或 0206 的字符单位、平台节点或资源语义出现压缩迹象，只提交完整连续前缀并同步下一入口。"
 
 [references]
 style_baselines = [
@@ -40,9 +40,9 @@ style_baselines = [
   "problems/0101-0200/0128-longest-consecutive-sequence.rst",
 ]
 style_roles = [
-  "0050 提供位级滚动状态、固定宽数值边界、循环不变量和终止证明基线",
-  "0100 提供平台节点、空引用、结构保持、对象引用语义和十语言节点接口基线",
-  "0128 提供有限状态覆盖、哈希备选、工作不重复证明和容器最坏成本基线",
+  "0050 提供固定宽数值边界、循环不变量、更新顺序和终止证明基线",
+  "0100 提供平台节点复用、空引用、结构保持和十语言对象接口基线",
+  "0128 提供集合状态、工作量不重复证明、容器真实成本和哈希边界基线",
 ]
 fact_sources = [
   "state/PROGRESS.toml",
@@ -56,19 +56,19 @@ fact_sources = [
   "docs/FORWARD_RULES_0151_ONWARD.rst",
   "problems/0201-0300/README.rst",
   "problems/0001-0100/0082-remove-duplicates-from-sorted-list-ii.rst",
-  "problems/0101-0200/0141-linked-list-cycle.rst",
-  "problems/0101-0200/0190-reverse-bits.rst",
-  "problems/0201-0300/0206-reverse-linked-list.rst",
-  "https://leetcode.com/problems/bitwise-and-of-numbers-range/description/",
-  "https://leetcode.com/problems/happy-number/description/",
-  "https://leetcode.com/problems/remove-linked-list-elements/description/",
+  "problems/0001-0100/0092-reverse-linked-list-ii.rst",
+  "problems/0101-0200/0128-longest-consecutive-sequence.rst",
+  "problems/0201-0300/0203-remove-linked-list-elements.rst",
+  "https://leetcode.com/problems/count-primes/description/",
+  "https://leetcode.com/problems/isomorphic-strings/description/",
+  "https://leetcode.com/problems/reverse-linked-list/description/",
 ]
 fact_sources_may_provide = [
-  "0201 的非负闭区间、32 位上界、区间按位与标量返回和只读输入合同",
-  "0202 的正整数平方位和过程、到达 1 或进入环的判定和布尔返回合同",
-  "0203 的无环单链表、删除全部目标值、保留节点顺序与新头返回合同",
-  "0190 的无符号移位适配、0141 的 Floyd 状态术语、0082/0206 的 ListNode 与 Rust 所有权连续性",
-  "当前完成范围、0219 生成暂停和 0203 后下一公开算法题为 0204 的状态事实",
+  "0204 的非负 n、严格小于 n 的质数数量、标量返回和输入只读合同",
+  "0205 的等长 ASCII 字符串、逐位置替换一致性、目标唯一性和布尔返回合同",
+  "0206 的无环单链表、节点身份保持、全部 next 反转和新头返回合同",
+  "0128 的容器成本术语，0082/0092/0203 的 ListNode、虚拟头、链接槽位与节点复用连续性",
+  "当前完成范围、0219 生成暂停和 0206 后下一公开算法题为 0207 的状态事实",
 ]
 fact_sources_must_not_provide = [
   "章节结构",
@@ -77,81 +77,84 @@ fact_sources_must_not_provide = [
   "静态审查标准",
 ]
 
-[problems."0201"]
-title = "Bitwise AND of Numbers Range"
-path = "problems/0201-0300/0201-bitwise-and-of-numbers-range.rst"
+[problems."0204"]
+title = "Count Primes"
+path = "problems/0201-0300/0204-count-primes.rst"
 difficulty = "Medium"
 review_mode = "preserve_strong_body_and_apply_targeted_fixes"
 primary_risks = [
-  "答案必须是 left 与 right 的最长公共二进制前缀补零；不能只对两个端点求与或枚举整个区间",
-  "证明需说明公共前缀在整个闭区间保持、首个差异位及全部更低位各存在零见证，避免把块边界直觉当证明",
-  "循环每轮同步逻辑右移两个非负端点并记录相同 shift；单点区间 shift=0，恢复左移不得越过官方非负 31 位结果域",
-  "逐语言核对 C/C++/Rust/Go/C# 无符号状态、Java >>>、TypeScript >>>0、Julia/R 非负整除与恢复乘法",
-  "核对 left=0、right=2^31-1 时最多 31 轮，TypeScript/R 精确整数与固定宽返回转换均由约束支撑",
-  "审计公共前缀、逻辑右移和 32 位无符号适配 concept，优先合并到 0190 等稳定 ID",
+  "统计范围必须是 [0,n)，0 和 1 不是质数，n<=2 必须在数组访问前返回，不能把 n 本身计入",
+  "composite 状态只表示已获得合数见证；未标记候选成为质数的结论必须由更小质因子证明支撑",
+  "从 p*p 开始的安全性和最小质因子完备性必须双向证明，不能只把筛法步骤当作结论",
+  "外层用 p<=(n-1)/p 避免比较乘法溢出；内层 p*p、倍数递增、数组长度和索引仍须逐语言独立核对",
+  "C 的容量检查、分配失败域外返回、成功释放与 size_t 索引必须闭合；托管语言不得把分配异常写成正常答案",
+  "核对字节数组、Java boolean[]、Julia BitVector、R logical 与 TypeScript Uint8Array 的真实存储差异",
+  "复杂度必须说明标准 O(n log log n) 标记界、O(n) 计数和 O(n) 筛存储，不得误称线性筛或常数空间",
+  "审计筛法、平方起点、最小质因子和容量安全 concept，强化既有稳定 ID 时不得新造近义项",
 ]
 minimum_static_review = [
-  "人工推演 [5,7]、[26,30]、[0,0]、[1,2]、最大单点与 [0,2^31-1]",
-  "逐轮记录 low/high/shifts，核对第一次相等、最长公共前缀坐标和恢复位数",
-  "完整证明高位不变、全部删除低位归零、循环终止和返回值非负有界",
-  "逐语言核对签名、移位种类、32 位转换、局部输入状态和真实 O(W)/O(1) 成本",
+  "人工推演 n=0、1、2、3、10、20、25、26 与一个较大边界的循环条件",
+  "逐轮记录 p、composite[p]、首个 multiple 和最终计数，核对严格小于 n",
+  "完整证明候选质性、p*p 起点安全、合数全覆盖、不误标质数和终止",
+  "逐语言核对签名、容量、乘法与加法位宽、零基/一基索引、释放责任和真实存储成本",
 ]
 
-[problems."0202"]
-title = "Happy Number"
-path = "problems/0201-0300/0202-happy-number.rst"
+[problems."0205"]
+title = "Isomorphic Strings"
+path = "problems/0201-0300/0205-isomorphic-strings.rst"
 difficulty = "Easy"
 review_mode = "preserve_strong_body_and_apply_targeted_fixes"
 primary_risks = [
-  "平方位和辅助函数必须逐位取余与整除，说明 32 位正整数首轮最多 810，不能误称全部状态单调下降",
-  "有限状态证明必须把大数降阶与有限集合闭包接起来，再推出状态最终到达 1 或进入非 1 环",
-  "Floyd 初始化 slow=x0、fast=x1；每轮后状态坐标与退出条件必须一致，slow==fast 本身不代表快乐",
-  "证明需覆盖快乐不动点、非快乐环相遇、两类退出的充分必要性和终止",
-  "逐语言核对整数除法、取余、平方和位宽、TypeScript Math.floor、R 精确 double 与扩展 n=0 行为",
-  "审计 Floyd 判环 concept，强化 0141 的稳定 ID，避免用 happy-number 近义 ID 替代通用判环知识",
+  "必须同时维护 source->target 与 target->source；单向一致性不能阻止不同源字符占用同一目标",
+  "证明需覆盖函数一致性、单射、对实际出现字符集合的满射、冲突拒绝必要性和双向充要性",
+  "官方 ASCII 域允许字节、UTF-16 单元和码点适配一致；超出 ASCII 时不得混称字符或索引单位",
+  "固定表的空槽哨兵不能与合法代码值冲突；C/C++/Rust/Go 字节索引必须先转为无符号域",
+  "TypeScript/C# 的 65536 项表是固定但较大的适配器空间；Julia collect 与 R utf8ToInt 的 O(n) 物化必须计入",
+  "逐语言核对长度、必要导入、映射缺失与合法零值、输入只读和布尔返回，不能外推一种字符模型",
+  "审计双向映射、字符单位和哈希查询 concept，通用字符边界与映射知识优先沿用稳定 ID",
 ]
 minimum_static_review = [
-  "人工推演 19、2、1、7、100、0 扩展和 32 位最大正整数的首轮上界",
-  "逐轮核对 slow=x_t、fast=x_(2t+1)，分别检查 fast 到 1 与非 1 相遇退出",
-  "完整证明 digit-square 正确、有限状态、Floyd 必相遇、判定双向正确和终止",
-  "逐语言核对签名、整数运算、局部状态、布尔返回与 O(mu+lambda)/O(1) 核心成本",
+  "人工推演 egg/add、paper/title、foo/bar、ab/aa、badc/baba、空扩展、单字符与长度不同",
+  "逐位置记录双向表，分别触发源冲突与目标占用冲突",
+  "完整证明映射合法、单射、满射、失败必要性、算法充要性和终止",
+  "逐语言核对字符单位、无符号表索引、哨兵编码、物化与哈希成本、只读输入和 O(n) 扫描",
 ]
 
-[problems."0203"]
-title = "Remove Linked List Elements"
-path = "problems/0201-0300/0203-remove-linked-list-elements.rst"
+[problems."0206"]
+title = "Reverse Linked List"
+path = "problems/0201-0300/0206-reverse-linked-list.rst"
 difficulty = "Easy"
 review_mode = "preserve_strong_body_and_apply_targeted_fixes"
 primary_risks = [
-  "虚拟头必须统一原头与中间删除；删除分支保持 previous 不动，保留分支才推进，连续目标节点不能跳过",
-  "证明需覆盖全部匹配节点删除、保留节点身份与相对顺序、后缀不丢失、不成环、每节点恰好检查一次",
-  "返回值必须是 dummy.next，可能为空或位于原链表内部；平台 ListNode 类型不得在各题重复定义",
-  "C 的 free 只能建立在显式所有权假设上，必须先保存后继再重接释放；C++ 不得把评测借用误写成拥有",
-  "Rust 必须静态核对 Option<Box<ListNode>> 的 take、放回和可变链接槽位生命周期，不使用 unsafe 或节点克隆",
-  "Julia/R 复用统一共享可变节点模型并返回新头；逐语言核对外部旧 head 引用、垃圾回收与节点可达性",
-  "审计 dummy node、Rust mutable link slot、节点复用和移除所有权 concept，合并既有稳定 ID 与近义记录",
+  "每轮必须先保存 current.next，再令 current.next=previous；覆盖顺序错误会丢失未处理后缀",
+  "不变量需把已反转前缀与原向后缀定义为不交且合并覆盖全部原节点，并映射 previous/current/next_node",
+  "证明需覆盖节点身份与数量守恒、顺序完全反转、原头成为空尾、新头返回、无环和终止",
+  "平台 ListNode 不得重复定义；Julia/R 必须复用统一共享可变节点模型并说明旧 head 引用的可见变化",
+  "C/C++ 只借用并重接，不分配、不释放；Rust 用 Option<Box<ListNode>> 的 take 和移动转交唯一所有权",
+  "返回值必须是 previous；空链、单节点、两节点、重复值和外部仍持有原头引用都要静态核对",
+  "审计链表反转、节点守恒、原地重接、平台节点复用和 Rust Box concept，合并既有稳定 ID 与近义记录",
 ]
 minimum_static_review = [
-  "人工推演普通删除、连续头删、连续中段删除、尾删、全部删除、无匹配和空链表",
-  "逐轮记录 previous/candidate/successor 与返回头，核对删除后不推进前驱",
-  "完整证明虚拟头统一性、删除与保留分支、不重不漏、身份顺序保持、无环和终止",
-  "逐语言核对 ListNode、指针/引用重接、C 释放、Rust 所有权、Julia/R 节点复用与 O(n)/O(1) 核心成本",
+  "人工推演空链、单节点、两节点、五节点和重复值链表",
+  "逐轮记录 previous/current/next_node 和两段可达集合，核对先保存后继",
+  "完整证明后缀不丢失、每轮移动一个节点、节点身份顺序、无环、终态和终止",
+  "逐语言核对 ListNode、指针/引用重接、C/C++ 生命周期、Rust 所有权、Julia/R 共享变异和 O(n)/O(1) 核心成本",
 ]
 
 must_preserve = [
-  "0201 的公共二进制前缀、变化后缀归零证明、同步移位、无符号语义和固定轮数界",
-  "0202 的平方位和状态、有限集合证明、Floyd 状态坐标、两类退出和十进制运算语义",
-  "0203 的虚拟头、连续删除、连接不变量、节点身份、C/Rust 所有权和新头返回",
+  "0204 的半开统计范围、筛数组不变量、p*p 起点、最小质因子证明、溢出与存储成本",
+  "0205 的双向映射、双射充要证明、ASCII 字符单位、哨兵表和物化成本",
+  "0206 的三链接更新、前缀/后缀不变量、节点守恒、无环证明、所有权和新头返回",
   "每题固定十语言完整实现、人工推演、静态语义审查、剩余风险和带答案自检",
 ]
 
 forbidden = [
   "把最近完成题目作为格式样本",
   "没有确定性问题时整篇重写或压缩强主体",
-  "0201 枚举宽区间、只对端点求与、使用错误算术右移或忘记恢复低位零",
-  "0202 把状态写成全程单调下降、相遇即快乐、遗漏有限状态证明或让快指针只走一步",
-  "0203 删除后推进前驱、返回旧 head、复制保留节点、未声明所有权就 free 或重复声明平台节点类型",
-  "把一种语言的位宽、取整、节点所有权或垃圾回收语义外推为十语言一致",
+  "0204 把 n 计入、从错误倍数开始、先做可能溢出的 p*p 比较或把筛法复杂度写错",
+  "0205 只检查单向映射、覆盖既有冲突、混用字符单位或把固定大表写成零成本",
+  "0206 覆盖 next 后才保存后缀、复制节点、返回 current、擅自释放或重复声明平台节点类型",
+  "把一种语言的数组布局、字符模型、节点所有权或垃圾回收语义外推为十语言一致",
   "为同一知识新造近义 concept ID",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试、sanitizer 或目标语言最小程序",
@@ -159,10 +162,10 @@ forbidden = [
 
 [completion]
 required = [
-  "按 0201、0202、0203 顺序逐题审查，出现压缩迹象时只提交完整连续前缀",
+  "按 0204、0205、0206 顺序逐题审查，出现压缩迹象时只提交完整连续前缀",
   "正文只在审查发现明确问题时修改",
   "知识账本保留稳定 concept ID，并准确区分首次引入、强化和关联",
-  "PROGRESS、REVIEW_INDEX 与下一份 BATCH_CONTRACT 同步到下一公开算法题 0204",
+  "PROGRESS、REVIEW_INDEX 与下一份 BATCH_CONTRACT 同步到下一公开算法题 0207",
   "不修改完成题数和 0219 的生成进度事实",
   "一个原子 main 提交，不创建分支或 PR",
 ]
