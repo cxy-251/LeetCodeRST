@@ -1,44 +1,46 @@
 [contract]
 schema_version = 2
-batch_id = "historical-review-0188"
+batch_id = "historical-review-0189-0191"
 status = "ready"
 phase = "historical_review"
 kind = "targeted_review"
-scope = [188]
+scope = [189, 190, 191]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
 drift_log = "state/DRIFT_LOG.toml"
 new_problem_generation_paused = true
 completion_count_must_remain_unchanged = true
-next_review_after_batch = 189
+next_review_after_batch = 198
 
 [static_review]
 solution_code_execution = "forbidden"
 solution_code_compilation = "forbidden"
 differential_exhaustive_property_and_sanitizer = "forbidden"
-example_hand_tracing = "required"
-language_semantics_review = "required"
+example_hand_tracing = "required_per_problem"
+language_semantics_review = "required_per_problem"
 repository_structure_state_and_git_checks = "allowed"
 reporting = "只声明实际完成的静态审查；明确未运行、未编译、未测试和剩余风险。"
 
 [budget]
 algorithm_score = 4
-proof_risk = "high"
+target_min = 4
+target_max = 6
+proof_risk = "medium"
 language_semantics_risk = "high"
 platform_type_risk = "high"
 output_volume_risk = "high"
-scope_may_shrink = false
-scope_reason = "0188 是独立 Hard，精确交易状态、原地依赖顺序、贪心退化、负无穷与十语言实现均为高风险；不能与 0189 合批。"
+scope_may_shrink = true
+scope_reason = "0189 为 Medium 原地数组变换，0190–0191 为连续 Easy 固定宽位题，总分 4；三题共享索引与跨语言数值审查，但原地可见性和无符号适配均为高风险。若后一题开始压缩证明或语言说明，只提交完整连续前缀并同步下一入口。"
 
 [references]
 style_baselines = [
+  "problems/0001-0100/0001-two-sum.rst",
   "problems/0001-0100/0050-powx-n.rst",
-  "problems/0001-0100/0076-minimum-window-substring.rst",
 ]
 style_roles = [
-  "0050 提供固定宽边界、安全哨兵、状态递推、终止和十语言数值语义基线",
-  "0076 提供 Hard 不变量、局部更新安全性、最优性证明和滚动状态成本基线",
+  "0001 提供紧凑数组题仍保留契约、状态、证明、接口和十语言语义的基线",
+  "0050 提供固定宽整数、位级循环状态、终止证明和跨语言数值边界基线",
 ]
 fact_sources = [
   "state/PROGRESS.toml",
@@ -48,12 +50,17 @@ fact_sources = [
   "state/concepts/0151-0200.toml",
   "docs/FORWARD_RULES_0151_ONWARD.rst",
   "problems/0101-0200/README.rst",
-  "https://leetcode.com/problems/best-time-to-buy-and-sell-stock-iv/description/",
+  "problems/0101-0200/0136-single-number.rst",
+  "https://leetcode.com/problems/rotate-array/description/",
+  "https://leetcode.com/problems/reverse-bits/description/",
+  "https://leetcode.com/problems/number-of-1-bits/description/",
 ]
 fact_sources_may_provide = [
-  "0188 的 k、价格范围、一买一卖交易、最多持有一股、至多 k 笔与只读输入合同",
-  "0121–0123 股票状态、滚动 DP、不可达状态、宽整数和正相邻差知识连续性",
-  "0188 完成后的下一公开算法题为 0189，新题生成仍暂停在 0219",
+  "0189 的数组右旋、原地目标、k 规范化、输入范围和语言变异接口",
+  "0190 的固定 32 位无符号输入、位序反转合同和前导零语义",
+  "0191 的 32 位汉明重量、最低有效 1 消除与计数范围",
+  "既有数组索引、固定宽位模式、TypeScript/R 无符号适配和 concept 连续性",
+  "0192–0195 已登记 Shell、0196–0197 已登记 Database，下一公开算法题为 0198",
 ]
 fact_sources_must_not_provide = [
   "章节结构",
@@ -62,44 +69,77 @@ fact_sources_must_not_provide = [
   "静态审查标准",
 ]
 
-[problem]
-id = 188
-title = "Best Time to Buy and Sell Stock IV"
-path = "problems/0101-0200/0188-best-time-to-buy-and-sell-stock-iv.rst"
+[problems."0189"]
+title = "Rotate Array"
+path = "problems/0101-0200/0189-rotate-array.rst"
+difficulty = "Medium"
 review_mode = "preserve_strong_body_and_apply_targeted_fixes"
 primary_risks = [
-  "先修复 C 代码块中重复的 maxProfit 函数签名，随后核对十语言公开接口只有一个有效入口",
-  "核对 cash[t]/hold[t] 表示恰好完成 t 次卖出后的空仓/持仓最大现金，买入不增加 t，卖出才从 t-1 推进到 t",
-  "核对空前缀只有 cash[0]=0 可达，其他状态为安全 NEG；只从可达来源执行价格加减",
-  "证明持股与空仓转移覆盖全部且仅有合法来源，最终对所有 cash[0..limit] 取最大实现至多 k 笔",
-  "证明按 t 递减时 hold[t] 读取旧 cash[t]、cash[t] 读取旧 hold[t-1]，不串联同日新状态",
-  "核对 floor(n/2) 是可完成交易物理上限；k 达到上限时约束失效并可累加全部正相邻差",
-  "分别证明正差和是任意交易集合的上界且可由合法一日交易实现，不能在有限 k 时误用",
-  "推导官方约束下利润上界，核对 64 位中间状态、平台 int 转换、TypeScript/R 精确域与 Rust/Go int 假设",
-  "逐语言核对递减范围、零基/一基状态槽、NEG/Infinity、输入只读、最终空仓和 k<=0 扩展",
-  "核对 C 两数组容量、部分分配失败清理、正常释放和合法答案域外 -1 资源标记",
-  "审计股票状态、正差贪心、逆序滚动、宽状态与 C 资源 concept，优先合并到 0121–0123 的稳定 ID",
+  "右旋 k 步必须先做 k mod n；不能把方向写成左旋，也不能在空扩展、n=1 或 k=0 时构造错误区间",
+  "三次反转顺序应为全数组、前 shift 项、后 n-shift 项；证明需说明每段元素相对顺序如何恢复",
+  "主算法要求 O(1) 核心额外空间；不能复制完整数组后仍宣称所有语言都原地常数空间",
+  "C 至 Julia 应修改调用者可见数组；R 普通向量局部绑定应返回结果，不能宣称调用者绑定原地改变",
+  "逐语言核对取模、闭区间端点、交换类型、一基坐标、空范围、输入可变性和公开返回约定",
+  "审计三次反转、闭区间不变量和数组变异 concept，优先复用既有旋转、原地修改与边界知识",
+]
+minimum_static_review = [
+  "人工推演 [1,2,3,4,5,6,7],k=3、[-1,-100,3,99],k=6、k=0、k>n、n=1、重复元素和空扩展",
+  "证明 rev(A+B)=rev(B)+rev(A) 与两段恢复得到 B+A，并核对每个位置最终归属",
+  "逐语言核对接口、取模、反转端点、交换、原地可见性、R 返回适配和 O(1) 核心空间",
 ]
 
+[problems."0190"]
+title = "Reverse Bits"
+path = "problems/0101-0200/0190-reverse-bits.rst"
+difficulty = "Easy"
+review_mode = "preserve_strong_body_and_apply_targeted_fixes"
+primary_risks = [
+  "必须处理恰好 32 位，包括输入前导零；不能只循环到数值变为 0 而遗漏剩余输出位置",
+  "循环不变量需说明已处理低位如何按反序进入 answer，未处理位仍如何保留在 input 中",
+  "C/C++/Rust/Go/C# 使用无符号 32 位，Java 使用逻辑右移，TypeScript 每轮与返回前规范为无符号",
+  "R 没有直接无符号 32 位整数结果域，应使用精确 double 的除二取余适配，避免 bitw 符号解释",
+  "逐语言核对左移截断、逻辑右移、位模式与显示数值的区别、返回类型和输入是否消费",
+  "审计固定宽反转与既有位模式适配 concept，不为通用 32 位无符号语义新造近义 ID",
+]
 minimum_static_review = [
-  "人工推演 k=2,[2,4,1]、k=2/[1] 对 [3,2,6,5,0,3]、k=0、单日、单调升降和大 k",
-  "逐日记录小例 cash/hold，核对不可达状态、买卖坐标、递减覆盖顺序和最终 max(cash)",
-  "完整复核有限 DP 的来源充分必要性、原地等价性，以及无限分支的上界与可达性",
-  "逐语言核对签名、数组长度、负无穷、递减循环、宽整数、返回转换、输入所有权与 C 失败路径",
-  "知识账本只从 state/concepts 的五十题平面状态读取，完成后把下一审查入口推进到 0189",
+  "人工推演标准位串、全零、最低位 1、最高位 1 和全 1，始终保留完整 32 位位置",
+  "证明 32 轮循环不变量、每个输入位的唯一目标位置和终止后位序完全反转",
+  "逐语言核对逻辑右移、32 位截断、无符号返回解释、TypeScript 规范化和 R 精确域",
+]
+
+[problems."0191"]
+title = "Number of 1 Bits"
+path = "problems/0101-0200/0191-number-of-1-bits.rst"
+difficulty = "Easy"
+review_mode = "preserve_strong_body_and_apply_targeted_fixes"
+primary_risks = [
+  "n & (n-1) 每轮必须恰好清除最低有效 1；证明不能只用样例代替位级必要性",
+  "循环不变量需把已计数置位与 value 剩余置位建立守恒，终止次数恰为汉明重量",
+  "Java/TypeScript 的有符号显示不改变 32 位模式；TypeScript 每轮需保持无符号规范化",
+  "R 的固定 32 轮除二取余是独立适配器，应单独说明状态、正确性和固定常数成本",
+  "不能对最高位为 1 的 Java int 使用算术右移循环并导致永不归零",
+  "审计最低 1 消除、位计数与跨语言无符号 concept，优先强化 0190 的稳定适配 ID",
+]
+minimum_static_review = [
+  "人工推演 11、128、0、2^31 和 2^32-1，核对每轮清除或取余结果",
+  "证明最低有效 1 消除、计数守恒、循环次数、终止和结果范围 0..32",
+  "逐语言核对位模式、溢出语义、无符号规范化、R 特化状态和输入不修改",
 ]
 
 must_preserve = [
-  "精确交易合同、动作次数反例、无限退化阈值、cash/hold 状态、不可达初始化、递减更新和完整双分支证明",
-  "固定十语言实现、宽负无穷、C 资源路径、真实 O(nq)/O(q) 成本、静态审查、剩余风险和带答案自检",
+  "0189 的右旋方向、k 规范化、三次反转证明、原地合同和 R 适配差异",
+  "0190 的固定 32 轮反转、前导零、逻辑右移和跨语言无符号语义",
+  "0191 的最低有效 1 消除证明、计数不变量和 Java/TypeScript/R 特化语义",
+  "每题固定十语言完整实现、人工推演、静态语义审查、剩余风险和带答案自检",
 ]
 
 forbidden = [
   "把最近完成题目作为格式样本",
   "没有确定性问题时整篇重写或压缩强主体",
-  "保留重复 C 函数签名、把买入计为完成交易、把不可达状态置零或返回持仓状态",
-  "按 t 递增原地更新、在有限 k 时无条件累计正差、对类型最小值直接加减价格",
-  "把一种语言的 Infinity、整数位宽、递减范围或数组索引语义外推为十语言一致",
+  "0189 复制完整数组却声明 O(1) 核心空间，或把右旋写成左旋",
+  "0190 只循环到输入变 0，或在 Java 使用算术右移",
+  "0191 对负 Java int 使用算术右移循环，或把位计数解释为数值正负",
+  "把一种语言的无符号、位移、原地修改或返回语义外推为十语言一致",
   "为同一知识新造近义 concept ID",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试、sanitizer 或目标语言最小程序",
@@ -107,10 +147,10 @@ forbidden = [
 
 [completion]
 required = [
-  "删除 C 重复签名并完成对应静态语义复核",
+  "按 0189、0190、0191 顺序逐题审查，后一题出现压缩迹象时只提交完整连续前缀",
   "正文只在审查发现明确问题时修改",
   "知识账本保留稳定 concept ID，并准确区分首次引入、强化和关联",
-  "PROGRESS、REVIEW_INDEX 与下一份 BATCH_CONTRACT 同步到 0189",
+  "PROGRESS、REVIEW_INDEX 与下一份 BATCH_CONTRACT 同步到下一公开算法题 0198",
   "不修改完成题数和 0219 的生成进度事实",
   "一个原子 main 提交，不创建分支或 PR",
 ]

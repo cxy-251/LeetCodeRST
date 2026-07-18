@@ -1,5 +1,5 @@
 [meta]
-version = 8
+version = 9
 last_problem = 200
 
 # teaching_state: introduced / reinforcing / familiar / refresh / mastered
@@ -102,7 +102,7 @@ last_problem = 200
 "algorithm.reverse_minimum_health_dp" = { kind = "algorithm", first_problem = 174, last_problem = 174, occurrences = 1, teaching_state = "introduced", difficult = false, note = "need(i,j) 定义为进入格前完成剩余路径的最小生命，逆向转移 max(1,min(down,right)-cell)。" }
 "boundary.single_virtual_princess_successor" = { kind = "boundary", first_problem = 174, last_problem = 174, occurrences = 1, teaching_state = "introduced", difficult = false, note = "仅公主格下方设置需求 1 的虚拟后继，其他边界为 INF，防止路径从普通边界逃出网格。" }
 "invariant.dungeon_rolling_row" = { kind = "invariant", first_problem = 174, last_problem = 174, occurrences = 1, teaching_state = "introduced", difficult = false, note = "右向左更新前 dp[j] 是下方状态，dp[j+1] 已是当前行右侧状态，更新后 dp[j] 成为当前格状态。" }
-"algorithm.reverse_rolling_update" = { kind = "concept", first_problem = 115, last_problem = 174, occurrences = 3, teaching_state = "familiar", difficult = false, note = "0115 与 0119 逆序覆盖以保护上一轮左邻状态；0174 从右向左更新，使 dp[j] 保留旧下方而 dp[j+1] 已是新右侧状态。" }
+"algorithm.reverse_rolling_update" = { kind = "concept", first_problem = 115, last_problem = 188, occurrences = 4, teaching_state = "familiar", difficult = false, note = "0115 与 0119 逆序保护上一轮左邻状态，0174 保护旧下方状态；0188 按交易数递减，同时保护旧 cash[t] 与旧 hold[t-1]。" }
 "language.julia_r_descending_iteration" = { kind = "language_boundary", first_problem = 115, last_problem = 174, occurrences = 4, teaching_state = "familiar", difficult = false, note = "0115–0120 与 0174 的 Julia/R 逆序 DP 都使用显式递减范围；0174 另核对一基矩阵端点与 R 的 by=-1L。" }
 "technique.infinity_sentinel" = { kind = "algorithm", first_problem = 4, last_problem = 174, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0004 用无穷统一数组分割边界；0174 用正无穷标记不可达后继，并证明每格减法前必选到有限需求。" }
 "numeric.path_sum_widen_before_subtract" = { kind = "numeric", first_problem = 112, last_problem = 174, occurrences = 3, teaching_state = "familiar", difficult = true, note = "0112–0113 在扣除节点值前扩宽；0174 在 64 位需求中扣除格值，并以答案上界 399001 支撑最终平台整数转换。" }
@@ -125,8 +125,12 @@ last_problem = 200
 "boundary.stock_unlimited_transaction_degeneracy" = { kind = "boundary", first_problem = 188, last_problem = 188, occurrences = 1, teaching_state = "introduced", difficult = false, note = "长度 n 最多完成 floor(n/2) 笔交易；k 达到该上限时约束失效，转为累加全部正相邻差。" }
 "invariant.stock_exact_cash_hold_prefix" = { kind = "invariant", first_problem = 188, last_problem = 188, occurrences = 1, teaching_state = "introduced", difficult = false, note = "每个日期前缀后，cash/hold 覆盖对应精确卖出次数和持仓状态的全部合法策略，并保留最大现金。" }
 "numeric.stock_safe_negative_infinity" = { kind = "numeric", first_problem = 188, last_problem = 188, occurrences = 1, teaching_state = "introduced", difficult = true, note = "不可达状态使用远离类型下界的安全负无穷，固定宽语言只在来源可达时执行价格加减，避免最小整数溢出。" }
-"proof.stock_descending_inplace_update" = { kind = "proof", first_problem = 188, last_problem = 188, occurrences = 1, teaching_state = "introduced", difficult = true, note = "交易数递减时 hold[t] 读取未改写的旧 cash[t]，cash[t] 读取尚未轮到的旧 hold[t-1]，等价于前一日双数组。" }
-"proof.stock_positive_difference_optimality" = { kind = "proof", first_problem = 188, last_problem = 188, occurrences = 1, teaching_state = "introduced", difficult = true, note = "任意买卖区间利润是相邻差之和，不超过其中正差之和；逐个执行正差的一日交易达到该上界。" }
+"algorithm.stock_unlimited_positive_deltas" = { kind = "algorithm", first_problem = 122, last_problem = 188, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0122 在无限交易下累加全部正相邻差；0188 先证明 k>=floor(n/2) 使额度失效，再复用同一算法。" }
+"proof.stock_increasing_run_realization" = { kind = "proof", first_problem = 122, last_problem = 188, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "0122 以最大上涨段实现正变化总和；0188 等价地用相邻一日交易构造可达上界，并由大 k 保证额度充足。" }
+"proof.stock_telescoping_upper_bound" = { kind = "proof", first_problem = 122, last_problem = 188, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "0122 与 0188 都把任意交易利润望远镜展开为相邻变化，利用持仓区间不重叠证明总利润不超过全部正差。" }
+"relation.stock_transaction_budget_changes_state" = { kind = "relation", first_problem = 122, last_problem = 188, occurrences = 3, teaching_state = "familiar", difficult = false, note = "0121、0122、0123 分别覆盖一次、无限次、两次交易；0188 以 k 为状态维，并在额度失效时退化回 0122。" }
+"boundary.stock_profit_integer_upper_bound" = { kind = "boundary", first_problem = 121, last_problem = 188, occurrences = 4, teaching_state = "familiar", difficult = false, note = "0121–0123 与 0188 都从交易数和价格范围推导固定宽整数边界；0188 的答案至多 100000，可达状态绝对值至多 201000。" }
+"boundary.stock_zero_profit_option" = { kind = "boundary", first_problem = 121, last_problem = 188, occurrences = 4, teaching_state = "familiar", difficult = false, note = "0121–0123 与 0188 都保留不交易的零利润基线；精确交易状态可为负，但最终对全部空仓状态取最大，不强迫亏损交易。" }
 "resource.c_stock_state_allocation" = { kind = "resource", first_problem = 188, last_problem = 188, occurrences = 1, teaching_state = "introduced", difficult = false, note = "C 分配 cash 与 hold 两组 64 位状态，部分失败释放已分配对象；-1 作为合法非负答案域外的资源失败标记。" }
 "adapter.array_mutation_visibility" = { kind = "language_adapter", first_problem = 189, last_problem = 189, occurrences = 1, teaching_state = "introduced", difficult = false, note = "C 至 Julia 修改调用者可见数组；R 普通向量局部绑定需返回结果，不能宣称调用者绑定原地改变。" }
 "algorithm.rotate_array_three_reversals" = { kind = "algorithm", first_problem = 189, last_problem = 189, occurrences = 1, teaching_state = "introduced", difficult = false, note = "把原数组分成 A 与末尾 B，利用 rev(A+B)=rev(B)+rev(A)，再分别恢复 B 与 A 得到右旋。" }
