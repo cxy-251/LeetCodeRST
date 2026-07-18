@@ -1,10 +1,10 @@
 [meta]
-version = 66
+version = 67
 last_problem = 218
 format = "fifty_problem_ranges"
 segment_size = 50
 active_data_complete = true
-active_data_self_contained = false
+active_data_self_contained = true
 
 [records]
 range_0001_0050 = "state/concepts/0001-0050.toml"
@@ -15,18 +15,17 @@ range_0201_0250 = "state/concepts/0201-0250.toml"
 
 [schemas]
 range_0001_0050 = "concept_state_v1"
-range_0051_0100 = "range_manifest_v1"
-range_0101_0150 = "range_manifest_v1"
-range_0151_0200 = "range_manifest_v1"
-range_0201_0250 = "range_manifest_v1"
+range_0051_0100 = "concept_state_v1"
+range_0101_0150 = "concept_state_v1"
+range_0151_0200 = "concept_state_v1"
+range_0201_0250 = "concept_state_v1"
 
 [policy]
 canonical_range_size = 50
 active_range = "0201-0250"
 archive_dependency_allowed = false
-archive_rule = "archive 只保存迁移前原件与追溯证据；有效数据只能来自 records 指向的活动文件及其 state/concepts/ranges 活动分片。"
-append_rule = "新题更新所属范围 manifest、problem index 与完整知识状态分片；禁止创建只含 concept ID 而没有状态定义的权威账本。"
+archive_rule = "archive 只保存迁移前原件与追溯证据，不参与活动知识账本解析。"
+append_rule = "新题直接更新所属 50 题范围 TOML；禁止创建单题、小批次、manifest、catalog 或 shard 活动账本。"
 
 [resolution]
-statement = "按 records 顺序读取。range_manifest_v1 再按 shards 顺序合并活动分片中的 updates、concepts、problems 与 skipped；后出现的同名键覆盖更早值。"
-legacy_metadata = "活动分片中的旧 meta、inherits、batch 和 resolution 仅保留来源信息，不参与当前路径解析。"
+statement = "按 records 顺序读取五个 concept_state_v1 文件；后续范围中同名 concept 覆盖前面范围的状态。"

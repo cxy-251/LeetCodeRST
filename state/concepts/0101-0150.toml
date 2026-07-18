@@ -1,75 +1,203 @@
 [meta]
-version = 7
-schema = "range_manifest_v1"
-range = "0101-0150"
-first_problem = 101
+version = 1
 last_problem = 150
-inherits = "state/concepts/0051-0100.toml"
-storage = "fifty_problem_range"
-active_data_complete = true
-archive_dependency = false
 
-[resolution]
-mode = "ordered_active_shards"
-statement = "按 shards 顺序读取活动数据分片；只合并 updates、concepts 与 problems，后出现的同名键覆盖更早值。composite 壳不进入活动读取链。"
+# teaching_state: introduced / reinforcing / familiar / refresh / mastered
 
-[[shards]]
-path = "state/concepts/ranges/0101-0150/0101-0104.toml"
-[[shards]]
-path = "state/concepts/ranges/0101-0150/0105-0107.toml"
-[[shards]]
-path = "state/concepts/ranges/0101-0150/0108-0112.toml"
-[[shards]]
-path = "state/concepts/ranges/0101-0150/0113-0114.toml"
-[[shards]]
-path = "state/concepts/ranges/0101-0150/0115-0116.toml"
-[[shards]]
-path = "state/concepts/ranges/0101-0150/0117-0120.toml"
-[[shards]]
-path = "state/concepts/ranges/0101-0150/0121-0122.toml"
-[[shards]]
-path = "state/concepts/ranges/0101-0150/0123.toml"
-[[shards]]
-path = "state/concepts/ranges/0101-0150/0124-0125.toml"
-[[shards]]
-path = "state/concepts/ranges/0101-0150/0126.toml"
-[[shards]]
-path = "state/concepts/ranges/0101-0150/0127-0128.toml"
-[[shards]]
-path = "state/concepts/ranges/0101-0150/0129-0131.toml"
-[[shards]]
-path = "state/concepts/ranges/0101-0150/0132-0133.toml"
-[[shards]]
-path = "state/concepts/ranges/0101-0150/0134.toml"
-[[shards]]
-path = "state/concepts/ranges/0101-0150/0135.toml"
-[[shards]]
-path = "state/concepts/ranges/0101-0150/0136.toml"
-[[shards]]
-path = "state/concepts/ranges/0101-0150/0137.toml"
-[[shards]]
-path = "state/concepts/ranges/0101-0150/0138.toml"
-[[shards]]
-path = "state/concepts/ranges/0101-0150/0139.toml"
-[[shards]]
-path = "state/concepts/ranges/0101-0150/0140.toml"
-[[shards]]
-path = "state/concepts/ranges/0101-0150/0141.toml"
-[[shards]]
-path = "state/concepts/ranges/0101-0150/0142.toml"
-[[shards]]
-path = "state/concepts/ranges/0101-0150/0143.toml"
-[[shards]]
-path = "state/concepts/ranges/0101-0150/0144.toml"
-[[shards]]
-path = "state/concepts/ranges/0101-0150/0145.toml"
-[[shards]]
-path = "state/concepts/ranges/0101-0150/0146.toml"
-[[shards]]
-path = "state/concepts/ranges/0101-0150/0147.toml"
-[[shards]]
-path = "state/concepts/ranges/0101-0150/0148.toml"
-[[shards]]
-path = "state/concepts/ranges/0101-0150/0149.toml"
-[[shards]]
-path = "state/concepts/ranges/0101-0150/0150.toml"
+[concepts]
+"complexity.output_space_exclusion" = { kind = "complexity", first_problem = 52, last_problem = 126, occurrences = 33, teaching_state = "mastered", difficult = false, note = "持续区分工作状态与返回载荷；0101–0126 覆盖布尔/标量返回、二维层序、返回树、路径矩阵、帕斯卡结果、股票状态和最短路径枚举。" }
+"complexity.output_vs_working_space" = { kind = "complexity", first_problem = 54, last_problem = 144, occurrences = 6, teaching_state = "reinforcing", difficult = true, note = "显式 DFS 栈每层至多保存一个待访问兄弟子树根，峰值 O(h)；返回 n 个值是独立 Theta(n) 载荷，R environment 还产生 O(n) 适配器物化。" }
+"complexity.tree_height_stack_space" = { kind = "complexity", first_problem = 94, last_problem = 113, occurrences = 11, teaching_state = "mastered", difficult = true, note = "0094 首次解释树高栈空间；0100–0113 持续区分平衡树与退化树的 O(h) 递归或显式栈，0114 的原地展开改为 O(1) 核心额外空间。" }
+"interface.binary_tree_node_reference_model" = { kind = "interface", first_problem = 94, last_problem = 116, occurrences = 20, teaching_state = "mastered", difficult = false, note = "0094 建立跨语言 TreeNode 引用模型；0101–0116 继续覆盖镜像比较、层序遍历、树深、树构造、平衡判定、路径问题、原地展开与带 next 字段的完美树节点。" }
+"algorithm.symmetric_tree_mirror_pair_recursion" = { kind = "algorithm", first_problem = 101, last_problem = 101, occurrences = 1, teaching_state = "introduced", difficult = false, note = "状态 mirror(a,b) 比较镜像位置，递归交叉处理 a.left 对 b.right、a.right 对 b.left。" }
+"proof.symmetric_tree_cross_direction_induction" = { kind = "proof", first_problem = 101, last_problem = 101, occurrences = 1, teaching_state = "introduced", difficult = true, note = "以子树最大高度归纳，根值相等且外侧、内侧两组交叉子树分别镜像，当且仅当当前子树对镜像。" }
+"r.environment_queue_slots" = { kind = "language_boundary", first_problem = 102, last_problem = 103, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "R 用哈希 environment 保存队列槽位和行表，避免从列表头删除或反复增长列表产生累计复制。" }
+"c.transactional_tree_level_results" = { kind = "language_boundary", first_problem = 102, last_problem = 107, occurrences = 3, teaching_state = "reinforcing", difficult = false, note = "0102、0103、0107 的 C 二维层结果同步维护行指针和列长度，任一失败完整释放。" }
+"interface.two_dimensional_row_independence" = { kind = "interface", first_problem = 102, last_problem = 107, occurrences = 3, teaching_state = "reinforcing", difficult = false, note = "0102、0103、0107 每层使用独立行；外层反转只交换行引用，不修改历史行。" }
+"algorithm.binary_tree_level_order_queue_snapshot" = { kind = "algorithm", first_problem = 102, last_problem = 111, occurrences = 4, teaching_state = "familiar", difficult = false, note = "0102 引入当前层长度快照，0103、0107 强化层序输出，0111 用同一快照寻找首个叶节点。" }
+"complexity.bfs_frontier_width" = { kind = "complexity", first_problem = 102, last_problem = 111, occurrences = 4, teaching_state = "familiar", difficult = true, note = "0102、0103、0107、0111 区分抽象 O(w) 活动前沿、数组队列峰值和二维返回载荷。" }
+"proof.bfs_level_frontier_order" = { kind = "proof", first_problem = 102, last_problem = 111, occurrences = 4, teaching_state = "familiar", difficult = true, note = "当前层父节点从左到右出队并先左后右入队；0107 保持行内顺序，0111 追加首个叶节点最优性。" }
+"algorithm.zigzag_level_target_index" = { kind = "algorithm", first_problem = 103, last_problem = 103, occurrences = 1, teaching_state = "introduced", difficult = false, note = "队列保持自然层序，方向只映射当前行写入位置；零基正向 i、反向 k-1-i。" }
+"julia_r.zigzag_one_based_target" = { kind = "language_boundary", first_problem = 103, last_problem = 103, occurrences = 1, teaching_state = "introduced", difficult = false, note = "Julia 与 R 使用一基位置，反向目标为 k-i+1；不能直接照搬零基 k-1-i。" }
+"proof.zigzag_index_bijection" = { kind = "proof", first_problem = 103, last_problem = 103, occurrences = 1, teaching_state = "introduced", difficult = true, note = "i 到 i 与 i 到 k-1-i 都是层下标集合上的双射，保证每个节点值和每个行槽位一一对应。" }
+"algorithm.binary_tree_max_depth_postorder" = { kind = "algorithm", first_problem = 104, last_problem = 104, occurrences = 1, teaching_state = "introduced", difficult = false, note = "空节点深度为 0，非空节点返回 1+max(left_depth,right_depth)，先计算孩子再汇总当前节点。" }
+"proof.max_depth_structural_induction" = { kind = "proof", first_problem = 104, last_problem = 104, occurrences = 1, teaching_state = "introduced", difficult = true, note = "任意根到叶路径离开当前节点后只能进入一侧子树，选择较深子树并加当前节点得到最长合法向下路径。" }
+"algorithm.preorder_inorder_reconstruction_cursor" = { kind = "algorithm", first_problem = 105, last_problem = 105, occurrences = 1, teaching_state = "introduced", difficult = false, note = "build(in_left,in_right) 以中序半开区间确定节点集合，共享 pre_index 从前序左向右提供根，并按左后右顺序消费。" }
+"proof.preorder_inorder_partition_consumption" = { kind = "proof", first_problem = 105, last_problem = 105, occurrences = 1, teaching_state = "introduced", difficult = true, note = "前序首值唯一给出根，中序唯一位置划分左右集合；左调用恰好消费左子树节点数后，游标自然指向右子树根。" }
+"algorithm.inorder_position_hash_map" = { kind = "algorithm", first_problem = 105, last_problem = 106, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "互异值建立 value 到 inorder 下标表，删除递归层中的重复线性搜索，使重建期望时间从最坏 O(n^2) 降为 O(n)。" }
+"c.transactional_tree_reconstruction" = { kind = "language_boundary", first_problem = 105, last_problem = 106, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "C 使用低装载率开放寻址表和 ok 失败状态；任一分配或区间错误都释放部分子树与索引表，成功树交给调用者。" }
+"algorithm.postorder_inorder_reverse_cursor" = { kind = "algorithm", first_problem = 106, last_problem = 106, occurrences = 1, teaching_state = "introduced", difficult = false, note = "post_index 保存未消费后序前缀长度，非空调用先减一取得根，再按右后左顺序递归中序区间。" }
+"pattern.unsigned_reverse_cursor_as_length" = { kind = "pattern", first_problem = 106, last_problem = 106, occurrences = 1, teaching_state = "introduced", difficult = false, note = "Rust 等无符号索引语言把反向游标表示为未消费长度，非空调用先减一再读取，避免以 -1 表达结束状态。" }
+"proof.postorder_right_before_left" = { kind = "proof", first_problem = 106, last_problem = 106, occurrences = 1, teaching_state = "introduced", difficult = true, note = "后序为左、右、根；从尾部向前消费根后首先到达右子树末尾，右子树必须完整消费后游标才位于左子树末尾。" }
+"algorithm.level_order_bottom_outer_reverse" = { kind = "algorithm", first_problem = 107, last_problem = 107, occurrences = 1, teaching_state = "introduced", difficult = false, note = "先用自然 BFS 生成根到叶各层，再原地反转外层行引用；每层内部顺序与孩子入队顺序保持不变。" }
+"complexity.front_insert_vs_outer_reverse" = { kind = "complexity", first_problem = 107, last_problem = 107, occurrences = 1, teaching_state = "introduced", difficult = true, note = "普通数组每层头插可能累计 Theta(h^2) 行引用搬移；尾插全部行后一次反转只需 O(h) 交换。" }
+"proof.level_order_bottom_order_transform" = { kind = "proof", first_problem = 107, last_problem = 107, occurrences = 1, teaching_state = "introduced", difficult = true, note = "BFS 先证明 answer[d] 等于深度 d 行；外层映射 d 到 h-1-d 是双射，故每层恰好出现一次且行内顺序不变。" }
+"algorithm.sorted_array_midpoint_bst_partition" = { kind = "algorithm", first_problem = 108, last_problem = 108, occurrences = 1, teaching_state = "introduced", difficult = false, note = "对有序数组半开区间选择中点为根，左右区间分别构造左右子树，顺序与平衡同时由区间划分保证。" }
+"interface.nonunique_tree_property_validation" = { kind = "interface", first_problem = 108, last_problem = 108, occurrences = 1, teaching_state = "introduced", difficult = false, note = "偶数长度可选择两个中点之一，验证应检查中序、节点覆盖和高度平衡，不固定唯一序列化树形。" }
+"proof.sorted_array_balance_by_halving" = { kind = "proof", first_problem = 108, last_problem = 108, occurrences = 1, teaching_state = "introduced", difficult = true, note = "每次去掉中点后左右规模至多相差一，递归继续平分，故每个节点左右子树高度至多相差一。" }
+"algorithm.sorted_list_inorder_cursor_construction" = { kind = "algorithm", first_problem = 109, last_problem = 109, occurrences = 1, teaching_state = "introduced", difficult = false, note = "先统计链表长度，build(size) 先构造左子树，再读取共享游标作为根并前进，最后构造右子树，使游标只扫描一次。" }
+"pattern.cross_recursive_shared_cursor" = { kind = "pattern", first_problem = 109, last_problem = 109, occurrences = 1, teaching_state = "introduced", difficult = false, note = "C 指针槽位、C++ 引用、对象字段、闭包、Rust 借用、Julia Ref 和 R environment 都可表达跨递归共享的单向游标。" }
+"proof.sorted_list_exact_consumption" = { kind = "proof", first_problem = 109, last_problem = 109, occurrences = 1, teaching_state = "introduced", difficult = true, note = "每个 build(size) 恰好消费 size 个连续链表节点，调用结束游标指向片段后继，中序序列与原链表片段一致。" }
+"r.environment_recursive_cursor" = { kind = "language_boundary", first_problem = 109, last_problem = 109, occurrences = 1, teaching_state = "introduced", difficult = false, note = "R 用显式 environment 保存 current 槽位，使所有递归调用共享同一游标，不依赖父调用帧局部重绑定或未审计的 superassignment。" }
+"algorithm.balance_height_or_failure" = { kind = "algorithm", first_problem = 110, last_problem = 110, occurrences = 1, teaching_state = "introduced", difficult = false, note = "后序辅助函数返回真实高度或失衡失败状态，任一子树失败或高度差超过一时立即向上传播。" }
+"proof.balance_failure_propagation" = { kind = "proof", first_problem = 110, last_problem = 110, occurrences = 1, teaching_state = "introduced", difficult = true, note = "非负返回值同时证明当前子树平衡并给出精确高度；失败状态证明子树内存在失衡节点，沿祖先链传播不会产生伪阳性。" }
+"algorithm.minimum_depth_bfs_first_leaf" = { kind = "algorithm", first_problem = 111, last_problem = 111, occurrences = 1, teaching_state = "introduced", difficult = false, note = "BFS 按层检查节点，第一次遇到左右孩子都为空的叶节点时返回当前节点数深度。" }
+"proof.minimum_depth_first_leaf_optimality" = { kind = "proof", first_problem = 111, last_problem = 111, occurrences = 1, teaching_state = "introduced", difficult = true, note = "首个叶节点出现前所有更浅层已完整排除，未处理节点只可能同层或更深，因此当前深度全局最小。" }
+"boundary.leaf_requires_two_null_children" = { kind = "boundary", first_problem = 111, last_problem = 113, occurrences = 3, teaching_state = "reinforcing", difficult = false, note = "0111、0112、0113 都要求左右孩子同时为空才是叶节点，用于最短深度、路径和判定与路径提交。" }
+"proof.path_sum_root_to_leaf_induction" = { kind = "proof", first_problem = 112, last_problem = 112, occurrences = 1, teaching_state = "introduced", difficult = true, note = "任意合法根到叶路径在非叶节点后必进入一个孩子；扣除当前值后左右递归完整覆盖全部候选且只在叶节点提交。" }
+"algorithm.path_sum_remaining_target" = { kind = "algorithm", first_problem = 112, last_problem = 113, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0112 判断是否存在路径，0113 枚举全部路径；两者都携带进入当前节点前的剩余目标。" }
+"numeric.path_sum_widen_before_subtract" = { kind = "numeric", first_problem = 112, last_problem = 113, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "0112、0113 的固定宽语言在扣除节点值前扩宽到 64 位。" }
+"algorithm.path_sum_backtracking_snapshot" = { kind = "algorithm", first_problem = 113, last_problem = 113, occurrences = 1, teaching_state = "introduced", difficult = false, note = "DFS 共享当前根到节点路径，进入时追加、离开时恢复，只在叶节点且剩余目标为零时复制有效前缀。" }
+"c.transactional_path_matrix_result" = { kind = "language_boundary", first_problem = 113, last_problem = 113, occurrences = 1, teaching_state = "introduced", difficult = false, note = "C 同步维护外层行指针、列长度、工作路径和失败状态；任一扩容或行复制失败时整体清理已保存结果。" }
+"complexity.output_sensitive_path_total" = { kind = "complexity", first_problem = 113, last_problem = 113, occurrences = 1, teaching_state = "introduced", difficult = true, note = "基础遍历 O(n)，复制答案需要 Theta(L)，总时间 O(n+L)，其中 L 是所有返回路径的元素总数。" }
+"proof.path_sum_snapshot_independence" = { kind = "proof", first_problem = 113, last_problem = 113, occurrences = 1, teaching_state = "introduced", difficult = true, note = "每个答案行由当前工作路径显式复制，后续 push、pop 或兄弟分支覆盖不会修改历史结果。" }
+"r.environment_shared_path_buffer" = { kind = "language_boundary", first_problem = 113, last_problem = 113, occurrences = 1, teaching_state = "introduced", difficult = false, note = "R 用显式 environment 保存工作路径与答案，depth 指定有效前缀，避免依赖递归父调用帧的普通局部重绑定。" }
+"algorithm.flatten_preorder_right_splice" = { kind = "algorithm", first_problem = 114, last_problem = 114, occurrences = 1, teaching_state = "introduced", difficult = false, note = "若 current 有左子树，把原右子树接到左子树沿 right 的最右节点，再把左子树搬到 current.right 并清空 left。" }
+"interface.in_place_tree_topology_mutation" = { kind = "interface", first_problem = 114, last_problem = 114, occurrences = 1, teaching_state = "introduced", difficult = false, note = "公共接口不返回新根，复用原节点并改变调用者可观察的左右链接；外部节点引用仍有效但拓扑已变化。" }
+"proof.flatten_node_identity_topology" = { kind = "proof", first_problem = 114, last_problem = 114, occurrences = 1, teaching_state = "introduced", difficult = true, note = "局部重连只迁移现有边，保持全部节点可达、身份唯一且无环，最终右链等于原树前序。" }
+"proof.flatten_right_edge_amortization" = { kind = "proof", first_problem = 114, last_problem = 114, occurrences = 1, teaching_state = "introduced", difficult = true, note = "每个节点成为一次 current，左子树右边界搜索中的右边不会再次属于后续同类搜索，总扫描 O(n)。" }
+"rust.refcell_short_borrow_rewire" = { kind = "language_boundary", first_problem = 114, last_problem = 114, occurrences = 1, teaching_state = "introduced", difficult = false, note = "Rust 用短作用域结束 RefCell 借用，take 转移左右子引用，Rc clone 只增加引用计数而不复制树节点。" }
+"ownership.in_place_link_rewiring" = { kind = "ownership", first_problem = 114, last_problem = 143, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "修改 next 前保存两段后继，切分时清除跨段旧边；十语言都只移动或引用原节点，不交换 val 或创建替代链。" }
+"algorithm.distinct_subsequence_prefix_count_dp" = { kind = "algorithm", first_problem = 115, last_problem = 115, occurrences = 1, teaching_state = "introduced", difficult = false, note = "count(i,j) 统计来源前 i 个字符形成目标前 j 个字符的方案数，按跳过当前来源字符与匹配后使用当前字符两类相加。" }
+"numeric.monotone_saturation_bounded_answer" = { kind = "numeric", first_problem = 115, last_problem = 115, occurrences = 1, teaching_state = "introduced", difficult = true, note = "所有状态只做非负加法时可保存 min(exact,2^31)；最终答案保证小于饱和值，因此最终结果仍精确且固定宽中间计数不会溢出。" }
+"pattern.one_row_count_dp_reverse_update" = { kind = "pattern", first_problem = 115, last_problem = 115, occurrences = 1, teaching_state = "introduced", difficult = false, note = "一行计数 DP 从目标末尾向前更新，保证 dp[j-1] 仍是上一来源前缀状态，避免同一来源字符在一轮中重复使用。" }
+"proof.distinct_subsequence_last_source_partition" = { kind = "proof", first_problem = 115, last_problem = 115, occurrences = 1, teaching_state = "introduced", difficult = true, note = "任意方案按是否包含当前来源下标划分为两个互斥集合，覆盖全部方案且不会重复。" }
+"algorithm.reverse_rolling_update" = { kind = "concept", first_problem = 115, last_problem = 119, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0115 的一行子序列计数和 0119 的帕斯卡单行都逆序覆盖，保护上一轮左邻状态。" }
+"language.julia_r_descending_iteration" = { kind = "concept", first_problem = 115, last_problem = 120, occurrences = 3, teaching_state = "reinforcing", difficult = false, note = "Julia/R 在逆序 DP 与自底向上循环中使用显式递减范围，证明端点并处理空循环。" }
+"algorithm.perfect_tree_next_chain_constant_space" = { kind = "algorithm", first_problem = 116, last_problem = 116, occurrences = 1, teaching_state = "introduced", difficult = false, note = "外层沿最左节点下降，内层复用当前层已建立的 next 链，分别连接 left->right 与 right->next_parent.left。" }
+"interface.in_place_next_pointer_mutation" = { kind = "interface", first_problem = 116, last_problem = 116, occurrences = 1, teaching_state = "introduced", difficult = false, note = "公共接口返回原根引用，调用后 next 字段对调用者可见；算法不创建替代树，也不修改 left、right 或 val。" }
+"interface.perfect_binary_tree_next_node" = { kind = "interface", first_problem = 116, last_problem = 116, occurrences = 1, teaching_state = "introduced", difficult = false, note = "Node 在 val、left、right 外新增 next；算法复用原节点，只重写 next，不改变左右拓扑和节点身份。" }
+"proof.perfect_tree_two_edge_connections" = { kind = "proof", first_problem = 116, last_problem = 116, occurrences = 1, teaching_state = "introduced", difficult = true, note = "完美树下一层的全部相邻关系由同父边和跨父边交替组成；按层归纳可证明下一层完整且最右节点以空值结束。" }
+"rust.refcell_level_chain_rewire" = { kind = "language_boundary", first_problem = 116, last_problem = 116, occurrences = 1, teaching_state = "introduced", difficult = false, note = "Rust 先在短作用域读取 left、right、parent_next 的 Rc 句柄，结束父节点借用后再可变写入孩子 next，避免 RefCell 借用冲突。" }
+"algorithm.level_next_chain_reuse" = { kind = "concept", first_problem = 116, last_problem = 117, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0116 复用已建当前层 next 链，0117 以 next_head/next_tail 常数空间构造任意形状下一层。" }
+"boundary.explicit_chain_tail_null" = { kind = "concept", first_problem = 116, last_problem = 117, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0116、0117 都显式保证每层最右 next 为空，覆盖旧链接并保证后续导航终止。" }
+"interface.next_node_reference_model" = { kind = "concept", first_problem = 116, last_problem = 117, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0116 建立带 next 字段的完美树节点模型，0117 推广到稀疏树并保持节点身份与左右拓扑。" }
+"algorithm.sparse_level_chain_tail" = { kind = "algorithm", first_problem = 117, last_problem = 117, occurrences = 1, teaching_state = "introduced", difficult = false, note = "沿当前层 next 扫描父节点，按左后右追加非空孩子，用 next_head 与 next_tail 常数空间构造稀疏下一层。" }
+"proof.current_level_read_next_level_write" = { kind = "proof", first_problem = 117, last_problem = 117, occurrences = 1, teaching_state = "introduced", difficult = true, note = "本轮只读取当前层 next 并只写孩子层 next，两层节点集合分离，因此横向导航不会被正在构造的链破坏。" }
+"c.transactional_ragged_matrix_result" = { kind = "language_boundary", first_problem = 118, last_problem = 118, occurrences = 1, teaching_state = "introduced", difficult = false, note = "C 任一行分配失败时释放全部已完成行和元数据，只在整体成功后发布返回行数与列宽。" }
+"interface.ragged_matrix_row_ownership" = { kind = "interface", first_problem = 118, last_problem = 118, occurrences = 1, teaching_state = "introduced", difficult = false, note = "第 row 行长度为 row+1 且拥有独立容器；C 同步返回行目录、列宽和逐行分配结果。" }
+"algorithm.pascal_adjacent_parent_recurrence" = { kind = "algorithm", first_problem = 118, last_problem = 119, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "内部位置等于上一行左上与右上之和；0118 保存全部行，0119 用最终输出数组逆序压缩。" }
+"algorithm.pascal_row_reverse_in_place" = { kind = "algorithm", first_problem = 119, last_problem = 119, occurrences = 1, teaching_state = "introduced", difficult = false, note = "从 current 下降到 1 更新 row[column]+=row[column-1]，保证两个来源都属于上一行且输出数组兼作工作区。" }
+"algorithm.triangle_bottom_up_suffix_dp" = { kind = "algorithm", first_problem = 120, last_problem = 120, occurrences = 1, teaching_state = "introduced", difficult = false, note = "dp[column] 表示下一行对应位置到底部的最小后缀和，当前节点加两个相邻孩子后缀的较小值。" }
+"boundary.readonly_input_working_copy" = { kind = "boundary", first_problem = 120, last_problem = 120, occurrences = 1, teaching_state = "introduced", difficult = false, note = "复制最后一行作为 O(r) 工作数组，避免把 DP 写回调用者三角形并支持调用前后深比较。" }
+"proof.triangle_suffix_optimality" = { kind = "proof", first_problem = 120, last_problem = 120, occurrences = 1, teaching_state = "introduced", difficult = true, note = "任意路径第一步只能进入两个孩子之一，归纳假设提供各孩子完整最优后缀，取较小者覆盖全部合法路径。" }
+"algorithm.stock_single_transaction_prefix_minimum" = { kind = "algorithm", first_problem = 121, last_problem = 121, occurrences = 1, teaching_state = "introduced", difficult = false, note = "固定卖出日后，只需维护严格更早前缀的最低价格，消除对全部买入日的重复枚举。" }
+"proof.fixed_sell_day_best_buy" = { kind = "proof", first_problem = 121, last_problem = 121, occurrences = 1, teaching_state = "introduced", difficult = true, note = "对任意卖出日，利润随买入价降低而增加；前缀最低价既给出该组交易上界，又来自真实更早日期，因此候选可实现。" }
+"boundary.stock_profit_integer_upper_bound" = { kind = "boundary", first_problem = 121, last_problem = 123, occurrences = 3, teaching_state = "reinforcing", difficult = false, note = "0121–0123 分别证明一次、无限次和至多两次交易的固定宽整数边界，并使用宽中间状态。" }
+"boundary.stock_zero_profit_option" = { kind = "boundary", first_problem = 121, last_problem = 123, occurrences = 3, teaching_state = "reinforcing", difficult = false, note = "0121–0123 都保留不交易的零利润基线；下降输入与未完成交易不会发布负利润。" }
+"algorithm.stock_unlimited_positive_deltas" = { kind = "algorithm", first_problem = 122, last_problem = 122, occurrences = 1, teaching_state = "introduced", difficult = false, note = "无限次且最多持有一股时，累加全部正相邻价格变化，等价于依次执行每个最大上涨段的谷底到峰顶交易。" }
+"proof.stock_increasing_run_realization" = { kind = "proof", first_problem = 122, last_problem = 122, occurrences = 1, teaching_state = "introduced", difficult = true, note = "每个最大严格上涨段的一次交易恰好实现该段全部正变化，不同段互不重叠，从而达到正变化总和。" }
+"proof.stock_telescoping_upper_bound" = { kind = "proof", first_problem = 122, last_problem = 122, occurrences = 1, teaching_state = "introduced", difficult = true, note = "任意交易区间利润望远镜展开为相邻变化；合法持仓区间不重叠，每条边最多计入一次，删除非正变化得到全局上界。" }
+"relation.stock_transaction_budget_changes_state" = { kind = "relation", first_problem = 122, last_problem = 123, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0121 一次交易维护前缀最低价，0122 无限交易累加正差分，0123 两次交易恢复交替持仓阶段状态。" }
+"algorithm.stock_two_transaction_four_state" = { kind = "algorithm", first_problem = 123, last_problem = 123, occurrences = 1, teaching_state = "introduced", difficult = false, note = "用 hold1、cash1、hold2、cash2 表达至多两次交易的交替持仓阶段，每天常数转移并压缩为 O(1) 状态。" }
+"boundary.stock_old_state_snapshot" = { kind = "boundary", first_problem = 123, last_problem = 123, occurrences = 1, teaching_state = "introduced", difficult = false, note = "四个新状态统一读取前一天快照，显式保证一天至多一个动作，避免同轮新值混入跨日转移。" }
+"proof.stock_at_most_state_initialization" = { kind = "proof", first_problem = 123, last_problem = 123, occurrences = 1, teaching_state = "introduced", difficult = true, note = "hold2 定义为至多两次买入且持股，因此只做第一次买入的策略也属于该集合，可用 -prices[0] 初始化而无需危险极小值哨兵。" }
+"proof.stock_phase_state_dominance" = { kind = "proof", first_problem = 123, last_problem = 123, occurrences = 1, teaching_state = "introduced", difficult = true, note = "相同交易阶段下现金更大的历史策略支配现金更小者，因此具体买卖日期可被单个最大现金标量安全替代。" }
+"algorithm.tree_max_path_dual_state" = { kind = "algorithm", first_problem = 124, last_problem = 124, occurrences = 1, teaching_state = "introduced", difficult = false, note = "后序遍历向父节点返回单分支最大收益，同时用左右非负收益在当前节点闭合任意端点完整路径。" }
+"boundary.nonempty_negative_answer_initialization" = { kind = "boundary", first_problem = 124, last_problem = 124, occurrences = 1, teaching_state = "introduced", difficult = false, note = "孩子负收益可按零截断，但最终路径必须非空；全局最佳值必须从负无穷或真实节点初始化，不能发布空路径零。" }
+"proof.tree_path_unique_highest_node" = { kind = "proof", first_problem = 124, last_problem = 124, occurrences = 1, teaching_state = "introduced", difficult = true, note = "任意树上简单路径存在唯一最高节点；路径要么位于单个子树，要么由该节点连接左右各一条向下链。" }
+"proof.tree_return_chain_no_branch" = { kind = "proof", first_problem = 124, last_problem = 124, occurrences = 1, teaching_state = "introduced", difficult = true, note = "返回父节点的状态只能选择左右一侧以保持链形；双分支只能在当前节点形成闭合候选，否则继续向上会产生分叉。" }
+"algorithm.ascii_filtered_two_pointer" = { kind = "algorithm", first_problem = 125, last_problem = 125, occurrences = 1, teaching_state = "introduced", difficult = false, note = "左右指针在原字符串上跳过非 ASCII 字母数字字符，比较归一化端点，不构造完整清洗字符串。" }
+"boundary.ascii_character_contract" = { kind = "boundary", first_problem = 125, last_problem = 125, occurrences = 1, teaching_state = "introduced", difficult = false, note = "显式限定 0-9、A-Z、a-z，避免各语言 Unicode 字符分类和区域设置造成语义漂移。" }
+"language.r_ascii_raw_materialization" = { kind = "language_boundary", first_problem = 125, last_problem = 125, occurrences = 1, teaching_state = "introduced", difficult = false, note = "R charToRaw 与整数转换物化 O(n) 字节向量；双指针核心状态为 O(1)，完整适配器额外和峰值空间仍为 O(n)。" }
+"algorithm.shortest_path_predecessor_dag" = { kind = "algorithm", first_problem = 126, last_problem = 126, occurrences = 1, teaching_state = "introduced", difficult = false, note = "BFS 只保存最短距离与同层多前驱，把全部最短序列压缩为前驱 DAG，再按输出规模回溯物化。" }
+"boundary.bfs_finish_target_parent_layer" = { kind = "boundary", first_problem = 126, last_problem = 126, occurrences = 1, teaching_state = "introduced", difficult = false, note = "首次发现终点后仍处理目标上一层全部节点，收齐其他最短前驱；队首进入目标层时停止，避免探索更深路径。" }
+"boundary.word_ladder_same_level_multiple_parents" = { kind = "boundary", first_problem = 126, last_problem = 126, occurrences = 1, teaching_state = "introduced", difficult = false, note = "候选首次发现时入队并记录首个前驱；同一最短层再次发现时追加前驱，较深层到达则忽略。" }
+"proof.distance_strictly_decreases_in_backtracking" = { kind = "proof", first_problem = 126, last_problem = 126, occurrences = 1, teaching_state = "introduced", difficult = true, note = "每条前驱边都使 BFS 距离减一，因此回溯天然无环、终止，并且只生成最短序列。" }
+"proof.bfs_first_discovery_shortest" = { kind = "concept", first_problem = 126, last_problem = 127, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "0126 用距离与前驱 DAG 保存全部最短路径，0127 只求距离并在首次入队时删除未访问节点。" }
+"complexity.enumeration_output_payload" = { kind = "complexity", first_problem = 126, last_problem = 131, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "0126 的最短路径枚举与 0131 的回文分割都必须把全部返回序列的元素或字符载荷计入复杂度。" }
+"algorithm.bfs_delete_on_enqueue" = { kind = "algorithm", first_problem = 127, last_problem = 127, occurrences = 1, teaching_state = "introduced", difficult = false, note = "只求最短距离时，节点首次入队即获得最短距离，可以立即从未访问集合删除，避免同层重复入队。" }
+"boundary.word_ladder_end_must_be_dictionary_word" = { kind = "boundary", first_problem = 127, last_problem = 127, occurrences = 1, teaching_state = "introduced", difficult = false, note = "终点也是一次变换后的节点，必须存在于列表中；先检查终点可直接排除无解输入。" }
+"algorithm.consecutive_sequence_start_filter" = { kind = "algorithm", first_problem = 128, last_problem = 128, occurrences = 1, teaching_state = "introduced", difficult = false, note = "仅当 value-1 缺失时扫描连续段，使每个连续段只被完整遍历一次。" }
+"complexity.hash_expected_linear" = { kind = "complexity", first_problem = 128, last_problem = 128, occurrences = 1, teaching_state = "introduced", difficult = true, note = "哈希成员查询通常是期望 O(1)；完整算法期望 O(n)，对抗性碰撞下最坏界需要单独说明。" }
+"proof.unique_minimum_represents_run" = { kind = "proof", first_problem = 128, last_problem = 128, occurrences = 1, teaching_state = "introduced", difficult = true, note = "任意非空连续整数段有唯一最小值，且只有它缺少集合内前驱，因此起点与连续段一一对应。" }
+"workflow.direct_main_only_atomic_commit" = { kind = "workflow", first_problem = 128, last_problem = 128, occurrences = 1, teaching_state = "mastered", difficult = false, note = "所有生产、审查、修复、归并和归档直接基于最新 main；Codex 显式 git add 本轮文件，使用单个标准 git commit 并非强制 push origin main；禁止分支、PR、git add .、force push 和临时组装工作流。" }
+"algorithm.tree_decimal_prefix_accumulation" = { kind = "algorithm", first_problem = 129, last_problem = 129, occurrences = 1, teaching_state = "introduced", difficult = false, note = "沿根到节点路径维护 prefix*10+digit，使每层只携带一个数值状态。" }
+"boundary.leaf_requires_no_children" = { kind = "boundary", first_problem = 129, last_problem = 129, occurrences = 1, teaching_state = "introduced", difficult = false, note = "只有左右孩子都为空才是叶节点；单侧缺失不能提前结算路径。" }
+"algorithm.boundary_connected_complement" = { kind = "algorithm", first_problem = 130, last_problem = 130, occurrences = 1, teaching_state = "introduced", difficult = false, note = "先标记所有与边界连通的 O，剩余 O 恰好是被包围区域。" }
+"algorithm.grid_mark_on_enqueue" = { kind = "algorithm", first_problem = 130, last_problem = 130, occurrences = 1, teaching_state = "introduced", difficult = false, note = "网格 BFS 在入队时标记，防止同一单元格被多个邻居重复加入队列。" }
+"proof.partition_cut_sequence_unique" = { kind = "proof", first_problem = 131, last_problem = 131, occurrences = 1, teaching_state = "introduced", difficult = true, note = "每个分割由严格递增的片段终点序列唯一确定，因此回溯枚举无重复。" }
+"algorithm.palindrome_interval_dp" = { kind = "algorithm", first_problem = 131, last_problem = 132, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0131 用回文区间表支持枚举全部分割，0132 复用同一状态计算最少切割。" }
+"algorithm.palindrome_min_cut_prefix_dp" = { kind = "algorithm", first_problem = 132, last_problem = 132, occurrences = 1, teaching_state = "introduced", difficult = false, note = "以最后一个回文片段为分界，将最少切割转化为前缀最优值转移。" }
+"boundary.cut_count_not_partition_count" = { kind = "boundary", first_problem = 132, last_problem = 132, occurrences = 1, teaching_state = "introduced", difficult = false, note = "k 个回文片段只需要 k-1 刀；整串回文答案为 0。" }
+"proof.last_palindrome_segment_decomposition" = { kind = "proof", first_problem = 132, last_problem = 132, occurrences = 1, teaching_state = "introduced", difficult = true, note = "任意分割都有唯一最后片段；枚举其起点并组合最优前缀即可覆盖全局最优解。" }
+"algorithm.graph_clone_memo_before_recursion" = { kind = "algorithm", first_problem = 133, last_problem = 133, occurrences = 1, teaching_state = "introduced", difficult = false, note = "创建空副本后立即登记，再递归邻居，才能在有环图中终止并复用同一副本。" }
+"boundary.graph_identity_not_business_value" = { kind = "boundary", first_problem = 133, last_problem = 133, occurrences = 1, teaching_state = "introduced", difficult = false, note = "通用克隆映射应以对象身份为键；C 与 R 仅因题目保证 val 唯一才使用值索引适配。" }
+"proof.graph_clone_identity_bijection" = { kind = "proof", first_problem = 133, last_problem = 133, occurrences = 1, teaching_state = "introduced", difficult = true, note = "原节点身份到唯一副本的映射建立节点双射，并逐邻接项复制全部边。" }
+"language.node_identity_comparison" = { kind = "language_semantics", first_problem = 133, last_problem = 142, occurrences = 4, teaching_state = "familiar", difficult = true, note = "0133 图克隆、0138 随机链表、0141 环检测与 0142 环入口都按对象身份而非业务值比较节点。" }
+"algorithm.gas_station_failed_prefix_elimination" = { kind = "algorithm", first_problem = 134, last_problem = 134, occurrences = 1, teaching_state = "introduced", difficult = false, note = "候选起点到某站的累计净油量为负时，该区间内任一点都不能跨过失败站，下一候选直接移到失败站之后。" }
+"proof.gas_station_total_surplus_feasibility" = { kind = "proof", first_problem = 134, last_problem = 134, occurrences = 1, teaching_state = "introduced", difficult = true, note = "全局 gas-cost 总和为负时任何起点都不可能完成一圈；总和非负时，最后一次失败之后的候选能够完成。" }
+"workflow.targeted_static_review" = { kind = "workflow", first_problem = 134, last_problem = 150, occurrences = 17, teaching_state = "mastered", difficult = false, note = "0134–0150 每题只执行人工示例推演、证明映射、十语言静态语义与仓库一致性检查；未运行、未编译、未测试题解。" }
+"algorithm.candy_two_directional_constraints" = { kind = "algorithm", first_problem = 135, last_problem = 135, occurrences = 1, teaching_state = "introduced", difficult = false, note = "左扫计算只由左邻严格上升链强制出的最小下界 L，右扫合并只由右邻严格下降链强制出的下界 R，最终逐点取 max(L,R)。" }
+"proof.candy_minimum_by_max_lower_bounds" = { kind = "proof", first_problem = 135, last_problem = 135, occurrences = 1, teaching_state = "introduced", difficult = true, note = "任意合法分配逐点不低于 L 和 R；max(L,R) 又能满足两侧全部边约束，因此算法同时达到每个坐标的必要下界，总和全局最小。" }
+"algorithm.xor_pair_cancellation" = { kind = "algorithm", first_problem = 136, last_problem = 136, occurrences = 1, teaching_state = "introduced", difficult = false, note = "异或的单位元、自消去、交换律和结合律让任意距离的相同整数对归零，全部元素异或后只留下唯一元素的位模式。" }
+"language.xor_signed_width_contract" = { kind = "language_boundary", first_problem = 136, last_problem = 136, occurrences = 1, teaching_state = "introduced", difficult = false, note = "TypeScript 与 R 的按位操作使用 32 位有符号语义，Python 负数采用无限符号扩展，Go 与 Julia 使用宿主整数宽度；官方 32 位内值域使十语言适配保持输入值。" }
+"proof.xor_prefix_invariant" = { kind = "proof", first_problem = 136, last_problem = 136, occurrences = 1, teaching_state = "introduced", difficult = true, note = "扫描任意前缀后累加器精确等于该前缀全部元素的异或；结束时按出现次数契约消去每一对重复值，得到唯一元素。" }
+"adapter.r_full_int32_bit_count" = { kind = "language_adapter", first_problem = 137, last_problem = 137, occurrences = 1, teaching_state = "introduced", difficult = false, note = "R 普通 integer 无法无损覆盖官方 -2^31 端点；用精确 double 映射 32 位无符号模式并以 32 个模三计数器保持 O(n) 时间、O(1) 空间。" }
+"algorithm.bitwise_mod_three_fsm" = { kind = "algorithm", first_problem = 137, last_problem = 137, occurrences = 1, teaching_state = "introduced", difficult = false, note = "ones 与 twos 的对应位并行编码计数模三；按 (twos,ones) 记号，合法状态为 00、01、10，输入位为一时依次循环。" }
+"proof.independent_bit_state_transition" = { kind = "proof", first_problem = 137, last_problem = 137, occurrences = 1, teaching_state = "introduced", difficult = true, note = "六行真值表穷尽合法状态与输入位；前缀归纳证明每位余数正确，结束时三次元素逐位归零，唯一元素完整位模式保留在 ones。" }
+"adapter.r_identity_linear_lookup" = { kind = "language_adapter", first_problem = 138, last_problem = 138, occurrences = 1, teaching_state = "introduced", difficult = false, note = "R 基础实现预分配原节点与副本列表，以 identical 比较 environment 身份定位 random 目标；最坏时间 O(n^2)，辅助空间 O(n)。" }
+"algorithm.identity_map_two_pass_clone" = { kind = "algorithm", first_problem = 138, last_problem = 138, occurrences = 1, teaching_state = "introduced", difficult = false, note = "第一遍沿 next 为每个原节点建立身份到独立副本的完整映射，第二遍只从映射值连接 next 与 random，支持前向、后向、自引用和重复节点值。" }
+"language.identity_map_cross_language" = { kind = "language_boundary", first_problem = 138, last_problem = 138, occurrences = 1, teaching_state = "introduced", difficult = false, note = "C 指针表、Python id、Java IdentityHashMap、Rust Rc 地址、C# ReferenceEquals、Julia IdDict 与 R identical 都按节点身份而不是 val 建立映射。" }
+"proof.deep_copy_edge_preservation" = { kind = "proof", first_problem = 138, last_problem = 138, occurrences = 1, teaching_state = "introduced", difficult = true, note = "证明分为节点双射、两类边保持、新旧对象隔离与原输入不变；返回头和全部非空副本边都来自新建映射值。" }
+"resource.clone_partial_failure_ownership" = { kind = "resource", first_problem = 138, last_problem = 138, occurrences = 1, teaching_state = "introduced", difficult = false, note = "C 失败时逐个释放已建副本，C++ 以 unique_ptr 暂存到成功交权；返回图是 Theta(n) 必要载荷，与 O(n) 身份映射工作空间分开报告。" }
+"workflow.risk_triggered_review" = { kind = "workflow", first_problem = 138, last_problem = 138, occurrences = 1, teaching_state = "mastered", difficult = false, note = "取消固定每 50 题全量审核；普通批次自检，只有高风险语义、静态审查异常、规则冲突或用户明确要求时抽查。" }
+"workflow.risk_triggered_sampling" = { kind = "concept", first_problem = 138, last_problem = 149, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0138 建立风险触发抽查；0149 因几何方向规范化、哈希退化和语言键语义风险执行针对性静态审查。" }
+"algorithm.word_break_reachable_prefix" = { kind = "algorithm", first_problem = 139, last_problem = 139, occurrences = 1, teaching_state = "introduced", difficult = false, note = "把 0..n 字符边界视为 DAG 顶点；reachable[i] 表示长度 i 的前缀可由字典词完整覆盖，只从可达起点沿真实匹配边向右传播。" }
+"language.ascii_coordinate_equivalence" = { kind = "language_boundary", first_problem = 139, last_problem = 139, occurrences = 1, teaching_state = "introduced", difficult = false, note = "官方小写英文字母前提使字节、UTF-16 码元和 Unicode 码点边界重合；十语言实现因此等价，但不能无条件推广到任意 Unicode。" }
+"proof.word_break_last_token_completeness" = { kind = "proof", first_problem = 139, last_problem = 139, occurrences = 1, teaching_state = "introduced", difficult = true, note = "合法性按标记来源归纳；完整性按切分词数归纳，去掉最后一个词所得前缀先可达，循环随后必枚举该末词。" }
+"complexity.dictionary_character_budget" = { kind = "complexity", first_problem = 139, last_problem = 140, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "0139 以字典总字符数 C 表达布尔切分匹配成本；0140 在 O(nC) 外加入所有后缀句子字符总量 T。" }
+"algorithm.word_break_suffix_sentence_dp" = { kind = "algorithm", first_problem = 140, last_problem = 140, occurrences = 1, teaching_state = "introduced", difficult = false, note = "sentences[i] 精确保存后缀 s[i:] 的全部句子；从右向左把匹配首词与已完成 end 状态中的每个尾句组合成独立快照。" }
+"complexity.output_sensitive_suffix_materialization" = { kind = "complexity", first_problem = 140, last_problem = 140, occurrences = 1, teaching_state = "introduced", difficult = true, note = "T 是所有后缀状态的句子字符总量，可能大于最终输出 T0；时间 O(nC+T)、空间 O(n+T)，辅助空间还要区分 T-T0。" }
+"proof.empty_sentence_composition_identity" = { kind = "proof", first_problem = 140, last_problem = 140, occurrences = 1, teaching_state = "introduced", difficult = true, note = "终点状态的单个空字符串只表示不再选择词的组合单位元，使最后一个词直接形成句子；公开无解状态仍是空列表。" }
+"proof.word_break_sentence_uniqueness" = { kind = "proof", first_problem = 140, last_problem = 140, occurrences = 1, teaching_state = "introduced", difficult = true, note = "小写词与空格分隔使输出 token 序列唯一；字典互异保证首词只枚举一次，尾状态归纳无重复，因此每条路径只生成一次。" }
+"resource.c_suffix_sentence_ownership" = { kind = "resource", first_problem = 140, last_problem = 140, occurrences = 1, teaching_state = "introduced", difficult = false, note = "C 对容量倍增、句长加法、realloc 失败和部分状态清理逐项设防；成功时只转交状态 0 的 char** 与各句子，释放其余后缀。" }
+"adapter.rust_rc_cyclic_list" = { kind = "language_adapter", first_problem = 141, last_problem = 141, occurrences = 1, teaching_state = "introduced", difficult = false, note = "普通 Option<Box<ListNode>> 不能安全表达回边；循环题以 Rc<RefCell<ListNode>> 适配共享可变节点，并明确强 Rc 输入环不会仅靠引用计数自动回收。" }
+"algorithm.floyd_cycle_detection" = { kind = "algorithm", first_problem = 141, last_problem = 141, occurrences = 1, teaching_state = "introduced", difficult = false, note = "完成 k 轮后 slow=x(k)、fast=x(2k)；无环时两步守卫到空，有环时取不小于尾长 mu 的环长 lambda 倍数即可构造身份相遇。" }
+"proof.relative_speed_cycle_meeting" = { kind = "proof", first_problem = 141, last_problem = 141, occurrences = 1, teaching_state = "introduced", difficult = true, note = "证明同时覆盖真返回意味着不同步数到达同一对象、无环路径节点互异，以及有环时 k≡0(mod lambda) 的有限相遇轮。" }
+"algorithm.floyd_cycle_entry_recovery" = { kind = "algorithm", first_problem = 142, last_problem = 142, occurrences = 1, teaching_state = "introduced", difficult = false, note = "第一阶段保留环内身份相遇点；seeker 回到 head 后与 slow 同步一步，至多走尾长 mu 步在原入口对象首次相遇。" }
+"ownership.original_cycle_entry_reference" = { kind = "ownership", first_problem = 142, last_problem = 142, occurrences = 1, teaching_state = "introduced", difficult = true, note = "返回指针或引用只从 head 沿原 next 获得，不新建同值节点、不修改拓扑；Rust 返回 Rc 句柄仍指向入口原分配。" }
+"proof.cycle_distance_congruence" = { kind = "proof", first_problem = 142, last_problem = 142, occurrences = 1, teaching_state = "introduced", difficult = true, note = "慢指针相遇总步数 t 满足 t≡0(mod lambda)，入口到相遇偏移 r≡t-mu，因此 mu+r≡0；该推导完整保留相遇前可能走过的整圈。" }
+"proof.cycle_entry_first_meeting" = { kind = "proof", first_problem = 142, last_problem = 142, occurrences = 1, teaching_state = "introduced", difficult = true, note = "k<mu 时 seeker 在环外、slow 在环内，不可能提前同一；k=mu 时二者都到入口，mu=0 则第一阶段相遇点已经是 head。" }
+"algorithm.reorder_list_split_reverse_merge" = { kind = "algorithm", first_problem = 143, last_problem = 143, occurrences = 1, teaching_state = "introduced", difficult = false, note = "按 ceil(m/2) 与 floor(m/2) 切成两条终止链，反转后半段，再从前半段与逆序段各取一节点交织成首尾顺序。" }
+"ownership.rust_box_take_tail_slot" = { kind = "ownership", first_problem = 143, last_problem = 143, occurrences = 1, teaching_state = "introduced", difficult = true, note = "Rust 对 Option<Box<ListNode>> 先按长度取得可变链接槽位并 take 断链，再移动原 Box 到结果尾槽位；无 Rc、unsafe、载荷克隆或线性辅助数组。" }
+"proof.reorder_node_partition_preservation" = { kind = "proof", first_problem = 143, last_problem = 143, occurrences = 1, teaching_state = "introduced", difficult = true, note = "反转把已处理逆序链与未处理原序链维持为第二段分区；合并每轮消费 Fi、Ri，最终每个原节点恰好一次且尾 next 为空，因此无环。" }
+"proof.reorder_split_length" = { kind = "proof", first_problem = 143, last_problem = 143, occurrences = 1, teaching_state = "introduced", difficult = true, note = "slow=head、fast=head.next 时，偶数 2q 停在 L(q-1)，奇数 2q+1 停在 L(q)；断开 slow.next 后两段长度正确且互不相交。" }
+"algorithm.iterative_preorder_right_before_left" = { kind = "algorithm", first_problem = 144, last_problem = 144, occurrences = 1, teaching_state = "introduced", difficult = false, note = "由 Pre(u)=[u]+Pre(left)+Pre(right) 推出先压右、后压左，使栈顶到栈底的待访问子树顺序与剩余前序一致。" }
+"ownership.read_only_tree_reference_stack" = { kind = "ownership", first_problem = 144, last_problem = 144, occurrences = 1, teaching_state = "introduced", difficult = true, note = "十语言栈只保存树节点引用并读取字段；Rust Rc 克隆只增加临时强计数，短 RefCell 借用块结束后再操作局部栈。" }
+"proof.preorder_stack_invariant" = { kind = "proof", first_problem = 144, last_problem = 144, occurrences = 1, teaching_state = "introduced", difficult = true, note = "已输出值是完整前序前缀，剩余序列是栈顶到栈底各子树 Pre 的串接；合法树唯一父节点保证每个节点恰好入栈并提交一次。" }
+"adapter.r_repeated_vector_append" = { kind = "language_adapter", first_problem = 145, last_problem = 145, occurrences = 1, teaching_state = "introduced", difficult = false, note = "R 不再以 c 反复扩展结果；environment 通常常数时间写槽，最后在 count>=1 见证下用合法递减 seq.int 一次物化逆序答案。" }
+"algorithm.postorder_reverse_root_right_left" = { kind = "algorithm", first_problem = 145, last_problem = 145, occurrences = 1, teaching_state = "introduced", difficult = false, note = "显式栈先压左、后压右，生成 Mirror(u)=[u]+Mirror(right)+Mirror(left)，再在返回值容器中整体反转。" }
+"proof.postorder_frontier_partition" = { kind = "proof", first_problem = 145, last_problem = 145, occurrences = 1, teaching_state = "introduced", difficult = true, note = "生成阶段的剩余 Mirror 序列是栈顶到栈底子树段串接；唯一父节点使各前沿子树不交且每个节点恰好记录一次。" }
+"proof.postorder_global_reverse_local_order" = { kind = "proof", first_problem = 145, last_problem = 145, occurrences = 1, teaching_state = "introduced", difficult = true, note = "reverse([u]+Mirror(R)+Mirror(L))=reverse(Mirror(L))+reverse(Mirror(R))+[u]；对子树结构归纳后等于 Post(L)+Post(R)+[u]。" }
+"adapter.r_environment_cache_nodes" = { kind = "language_adapter", first_problem = 146, last_problem = 146, occurrences = 1, teaching_state = "introduced", difficult = false, note = "R 用 environment 表达缓存、可变双向节点和哈希映射；整数键显式字符编码，查找禁用继承，victim 改键前删除旧环境名。" }
+"adapter.rust_lru_stable_index_pool" = { kind = "language_adapter", first_problem = 146, last_problem = 146, occurrences = 1, teaching_state = "introduced", difficult = false, note = "Rust HashMap 保存 key 到 usize，Vec 槽保存前后 Option 索引；预留 capacity 后只追加未用槽或复用 LRU 槽，无 unsafe、自引用或悬空地址。" }
+"datastructure.lru_hash_doubly_linked_list" = { kind = "data_structure", first_problem = 146, last_problem = 146, occurrences = 1, teaching_state = "introduced", difficult = false, note = "哈希表按键定位唯一节点，双向链表把当前对象历史压缩为 MRU 到 LRU 全序；已知节点摘除、头插和选尾均只改常数条边。" }
+"invariant.lru_map_list_bijection" = { kind = "invariant", first_problem = 146, last_problem = 146, occurrences = 1, teaching_state = "introduced", difficult = false, note = "映射键集合、真实链表节点键集合与 size 三者一致；移动不改双射，新增同时加一，满容淘汰必须先按 victim 旧键删除再登记新键。" }
+"invariant.lru_sentinel_topology" = { kind = "invariant", first_problem = 146, last_problem = 146, occurrences = 1, teaching_state = "introduced", difficult = false, note = "永久 head/tail 哨兵不入映射且不被淘汰；相邻正反链接一致，空表哨兵直接相邻，非空首尾节点分别连接 head/tail。" }
+"resource.c_lru_preallocated_node_pool" = { kind = "resource", first_problem = 146, last_problem = 146, occurrences = 1, teaching_state = "introduced", difficult = false, note = "C 构造器事务式分配对象、O(capacity) 桶数组和固定节点池；成功后 put 不再分配，满容复用 victim，free 释放三个外层块。" }
+"adapter.rust_ownership_returning_list_insert" = { kind = "language_adapter", first_problem = 147, last_problem = 147, occurrences = 1, teaching_state = "introduced", difficult = false, note = "Rust 逐个 take 原 Box 节点并稳定插入独立 sorted 所有权链，无 unsafe、克隆或递归；其非递减输入需反复扫到尾，达到 Theta(n^2)，不能外推普通版快路径。" }
+"algorithm.linked_list_insertion_sorted_prefix" = { kind = "algorithm", first_problem = 147, last_problem = 147, occurrences = 1, teaching_state = "introduced", difficult = false, note = "last_sorted 把整链分成前 k 个原节点的稳定有序前缀和保持原序的未处理后缀；快路径扩边界，搬移路径保持前缀尾不变。" }
+"complexity.linked_insertion_input_shape" = { kind = "complexity", first_problem = 147, last_problem = 147, occurrences = 1, teaching_state = "introduced", difficult = true, note = "普通优化版本的非递减输入走 O(n) 快路径，严格递减输入也为 O(n) 头插；交错上升且反复近尾插入可使搜索累计 Theta(n^2)。" }
+"invariant.stable_insertion_after_equals" = { kind = "invariant", first_problem = 147, last_problem = 147, occurrences = 1, teaching_state = "introduced", difficult = false, note = "搬移分支先证明 last_sorted.val>current.val，搜索跨过前缀中全部 <= current 的节点并必在 last_sorted 前停止；等值节点按输入次序稳定。" }
+"topology.insertion_three_link_commit" = { kind = "topology", first_problem = 147, last_problem = 147, occurrences = 1, teaching_state = "introduced", difficult = false, note = "依次让 last_sorted 绕过 current、让 current 指向插入点旧后继、再由 position 接入 current；该顺序保存后缀并防止回环。" }
+"adapter.rust_box_list_split_merge" = { kind = "language_adapter", first_problem = 148, last_problem = 148, occurrences = 1, teaching_state = "introduced", difficult = false, note = "Rust 用 source.take 和 tail.next.take 切出独占 Box runs，消费节点后经 Option 空尾槽拼回；无 unsafe、Rc、clone、递归或 dummy Box。" }
+"algorithm.linked_list_bottom_up_merge_sort" = { kind = "algorithm", first_problem = 148, last_problem = 148, occurrences = 1, teaching_state = "introduced", difficult = false, note = "先计数，再按 width=1,2,4 逐轮切出相邻有序 runs 并稳定合并；非递归实现 O(n log n) 时间与 O(1) 核心工作空间。" }
+"complexity.bottom_up_list_merge_passes" = { kind = "complexity", first_problem = 148, last_problem = 148, occurrences = 1, teaching_state = "introduced", difficult = true, note = "每轮切分与合并各线性覆盖节点，width 翻倍产生 ceil(log2 n) 轮；直接交付真实尾避免合并后重复找尾。" }
+"invariant.stable_merge_left_on_equal" = { kind = "invariant", first_problem = 148, last_problem = 148, occurrences = 1, teaching_state = "introduced", difficult = false, note = "两条 run 内部稳定有序；首值相等时优先消费左 run，逐轮归纳保持全链相等节点身份次序。" }
+"ownership.relink_existing_list_nodes" = { kind = "ownership", first_problem = 148, last_problem = 148, occurrences = 1, teaching_state = "reinforcing", difficult = true, note = "每轮每个原节点恰好进入一条输入 run 和一条输出 run；只改 next，固定 dummy 不进入结果，无复制、遗漏、重复或环。" }
+"topology.run_split_output_rest_partition" = { kind = "topology", first_problem = 148, last_problem = 148, occurrences = 1, teaching_state = "introduced", difficult = false, note = "split_run 保存 rest 后清空 run 尾边；一轮中已输出、左右未消费 run 与 rest 两两不交并精确覆盖全部原节点。" }
+"adapter.c_open_addressing_slope_table" = { kind = "language_adapter", first_problem = 149, last_problem = 149, occurrences = 1, teaching_state = "introduced", difficult = false, note = "C 一次分配至少 4n 的二次幂表并逐锚点清零；负载低于 1/4 保证探测终止，完整键判等防碰撞误合并，成功路径统一 free，失败返回域外 0。" }
+"algorithm.anchor_normalized_direction_count" = { kind = "algorithm", first_problem = 149, last_problem = 149, occurrences = 1, teaching_state = "introduced", difficult = false, note = "每个 anchor 只扫描更大下标点，把非零整数差向量映射到本原无向方向键；方向桶最大值加一得到锚点候选。" }
+"complexity.hash_direction_count_expected_bound" = { kind = "complexity", first_problem = 149, last_problem = 149, occurrences = 1, teaching_state = "introduced", difficult = true, note = "点对数为 Theta(n^2)，每对含 O(log C) gcd 与通常 O(1) 哈希；平均/期望 O(n^2 log C)、峰值 O(n)，极端探测可退化到 O(n^3)。" }
+"encoding.exact_normalized_direction_keys" = { kind = "encoding", first_problem = 149, last_problem = 149, occurrences = 1, teaching_state = "introduced", difficult = false, note = "C 保存双分量并碰撞后判等，C++/Java 无碰撞打包两个 32 位模式，其他语言使用 tuple/struct 或带分隔符整数文本，均不依赖浮点斜率。" }
+"invariant.gcd_sign_canonical_direction" = { kind = "invariant", first_problem = 149, last_problem = 149, occurrences = 1, teaching_state = "introduced", difficult = false, note = "方向除以正 gcd 后分量互质，再强制 dx>0 或竖直键 (dy,dx)=(1,0)；两点同键当且仅当与锚点共线。" }
+"proof.anchor_line_global_coverage" = { kind = "proof", first_problem = 149, last_problem = 149, occurrences = 1, teaching_state = "introduced", difficult = true, note = "对任意最优直线选其输入下标最小点为 anchor，线上其余点全部位于 other>anchor 范围并进入同一桶；合法桶又给出不高估见证。" }
+"adapter.c_rpn_stack_resource_path" = { kind = "language_adapter", first_problem = 150, last_problem = 150, occurrences = 1, teaching_state = "introduced", difficult = false, note = "C 以 size_t 计算 t 个 int 的容量，成功路径统一 free；malloc 失败返回 0 与合法答案 0 无法区分，明确为平台 int 接口限制。" }
+"algorithm.reverse_polish_stack_evaluation" = { kind = "algorithm", first_problem = 150, last_problem = 150, occurrences = 1, teaching_state = "introduced", difficult = false, note = "单次从左到右扫描；数字形成新表达式块，运算符先取 right 再取 left，把 left op right 的结果压回。" }
+"complexity.rpn_token_characters_and_stack_depth" = { kind = "complexity", first_problem = 150, last_problem = 150, occurrences = 1, teaching_state = "introduced", difficult = true, note = "以 token 数 t、字符总量 L、最大栈深 s 计，时间 O(t+L)、核心峰值 O(s)；C/Java/C#/R 按 t 预分配，实际空间 O(t)。" }
+"invariant.rpn_prefix_depth_balance" = { kind = "invariant", first_problem = 150, last_problem = 150, occurrences = 1, teaching_state = "introduced", difficult = false, note = "每个前缀的 depth=operands-operators；合法运算符到达前 depth>=2，完整二元 RPN 结束 depth=1，为弹栈和最终读取提供结构见证。" }
+"invariant.rpn_stack_completed_subexpressions" = { kind = "invariant", first_problem = 150, last_problem = 150, occurrences = 1, teaching_state = "introduced", difficult = false, note = "处理任意前缀后，栈从底到顶对应尚未被已处理运算符合并的完整表达式块；块无重叠覆盖整个前缀且栈项等于块值。" }
+"proof.rpn_block_partition_induction" = { kind = "proof", first_problem = 150, last_problem = 150, occurrences = 1, teaching_state = "introduced", difficult = true, note = "数字追加单 token 块；运算符把末尾 left-block、right-block 与自身替换为一个合成块，归纳保持覆盖、次序和值正确性。" }
+"semantics.exact_operator_token_classification" = { kind = "language_semantics", first_problem = 150, last_problem = 150, occurrences = 1, teaching_state = "introduced", difficult = true, note = "只有完整 token 等于 +、-、*、/ 才是运算符；-11 等负数字符串进入整数解析，不能只检查首字符。" }
+"semantics.integer_division_toward_zero" = { kind = "language_semantics", first_problem = 150, last_problem = 150, occurrences = 1, teaching_state = "introduced", difficult = true, note = "C/C++/Java/Rust/Go/C# 使用原生向零整数除法，Python 与 R 对绝对值整除后恢复符号，TypeScript 用 Math.trunc，Julia 显式 RoundToZero。" }
