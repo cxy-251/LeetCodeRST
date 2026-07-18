@@ -1,17 +1,17 @@
 [contract]
 schema_version = 2
-batch_id = "historical-review-0173"
+batch_id = "historical-review-0174"
 status = "ready"
 phase = "historical_review"
 kind = "targeted_review"
-scope = [173]
+scope = [174]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
 drift_log = "state/DRIFT_LOG.toml"
 new_problem_generation_paused = true
 completion_count_must_remain_unchanged = true
-next_review_after_batch = 174
+next_review_after_batch = 179
 
 [static_review]
 solution_code_execution = "forbidden"
@@ -23,22 +23,22 @@ repository_structure_state_and_git_checks = "allowed"
 reporting = "只声明实际完成的静态审查；明确未运行、未编译、未测试和剩余风险。"
 
 [budget]
-algorithm_score = 2
+algorithm_score = 4
 proof_risk = "high"
 language_semantics_risk = "high"
 platform_type_risk = "high"
-output_volume_risk = "low"
+output_volume_risk = "high"
 scope_may_shrink = false
-scope_reason = "0173 单题同时涉及惰性遍历、不摊还复杂度、平台树节点和十语言可变迭代器状态，独立成批。"
+scope_reason = "0174 是独立 Hard，逆向最优状态、边界哨兵、宽整数和十语言二维输入风险叠加，不能与 0179 合批。"
 
 [references]
 style_baselines = [
+  "problems/0001-0100/0050-powx-n.rst",
   "problems/0001-0100/0076-minimum-window-substring.rst",
-  "problems/0001-0100/0100-same-tree.rst",
 ]
 style_roles = [
-  "0076 提供状态不变量、摊还资源核算和逐语言容器语义基线",
-  "0100 提供平台 TreeNode、树结构归纳证明和十语言树节点适配基线",
+  "0050 提供宽整数、哨兵运算、边界推导和十语言数值语义基线",
+  "0076 提供 Hard 最优性、不变量、必要与充分论证和逐语言状态成本基线",
 ]
 fact_sources = [
   "state/PROGRESS.toml",
@@ -48,12 +48,12 @@ fact_sources = [
   "state/concepts/0151-0200.toml",
   "docs/FORWARD_RULES_0151_ONWARD.rst",
   "problems/0101-0200/README.rst",
-  "https://leetcode.com/problems/binary-search-tree-iterator/description/",
+  "https://leetcode.com/problems/dungeon-game/description/",
 ]
 fact_sources_may_provide = [
-  "0173 的 BSTIterator 接口、调用约束、树节点结构和复杂度要求",
-  "既有中序遍历、TreeNode、容器所有权、摊还分析和 C 资源管理知识状态",
-  "0219 新题生成暂停和历史审查推进到 0173 的状态事实",
+  "0174 的非空矩形网格、移动方向、生命下界、只读输入与返回接口",
+  "既有网格滚动 DP、逆序扫描、宽整数、边界哨兵和十语言矩阵适配知识状态",
+  "0175–0178 为 Database 登记，0174 完成后的下一公开算法题是 0179",
 ]
 fact_sources_must_not_provide = [
   "章节结构",
@@ -63,39 +63,41 @@ fact_sources_must_not_provide = [
 ]
 
 [problem]
-id = 173
-title = "Binary Search Tree Iterator"
-path = "problems/0101-0200/0173-binary-search-tree-iterator.rst"
+id = 174
+title = "Dungeon Game"
+path = "problems/0101-0200/0174-dungeon-game.rst"
 review_mode = "preserve_strong_body_and_apply_targeted_fixes"
 primary_risks = [
-  "核对栈保存尚未输出的中序续延，栈顶始终是下一最小节点，不能预先物化完整中序序列",
-  "核对构造、next 和 hasNext 的状态转移；弹出节点后必须压入其右子树完整左链",
-  "证明每个节点不遗漏、不重复且按严格递增次序返回；hasNext 当且仅当续延栈非空",
-  "分别报告构造 O(h)、单次 next 最坏 O(h)、摊还 O(1)、总计 O(n) 与额外空间 O(h)",
-  "逐语言核对 TreeNode 身份和生命周期、可变迭代器状态、空树、栈容器和公开签名",
-  "核对 Rust RefCell 借用在修改迭代器前结束，Julia mutable struct 与 R environment 保留引用语义",
-  "核对 C 动态节点指针栈先扩容后改状态、realloc 临时指针、容量检查、失败路径和销毁责任",
-  "审计惰性中序迭代器与既有中序遍历知识的复用边界，禁止为通用 TreeNode 或遍历概念新造近义 ID",
+  "核对 need(i,j) 表示进入当前格之前完成剩余路径的最小生命，不能改成到达当前格后的最大余额",
+  "核对 max(1,min(down,right)-cell) 同时满足生命下界和最佳后继需求，局部贪心或最大终点总和均不足",
+  "证明转移的必要性、充分性、关于后继需求的单调性、逆拓扑归纳和最终最优性",
+  "核对只在公主格下方设置需求 1 的单个虚拟后继，其他越界方向保持 INF，禁止从普通边界逃出",
+  "核对右向左更新时 dp[j] 仍为下方状态、dp[j+1] 已为右侧状态，更新顺序与二维语义一致",
+  "推导官方约束下答案上界并核对固定宽语言 64 位中间值、INF 距离、减法与最终整数转换",
+  "逐语言核对非空规则矩阵、零基与一基索引、逆序范围、输入只读、Python/TypeScript/R 的 Infinity 仅作未选哨兵",
+  "核对 C 的 columns+1 容量、字节乘法、分配释放和合法答案至少为 1 时平台外 0 错误标记的限制",
+  "审计逆向最低资源状态、滚动行和虚拟后继与既有网格 DP concept 的关系，优先复用稳定 ID",
 ]
 
 minimum_static_review = [
-  "人工推演空树、单节点、全左链、全右链和同时含左右子树的 BST，记录每次调用前后的栈",
-  "完整核对续延栈不变量、下一最小值、无遗漏无重复、有序性、终止和 hasNext 等价关系",
-  "逐语言核对平台签名、节点引用语义、栈顶方向、右子树左链推进和可变状态保存",
-  "按节点入栈和出栈总次数证明摊还 O(1)，同时保留单次最坏 O(h) 与空间 O(h)",
-  "知识账本只从 state/concepts 的五十题平面状态读取，完成后把下一审查入口推进到 0174",
+  "人工逆推标准 3x3 示例、单格正数、单格负数、单行、单列与全正矩阵，记录 dp 每轮含义",
+  "构造只看相邻格或只看终点总和的反例，完整核对必要性、充分性、后继选择和逆向归纳",
+  "逐语言核对公开签名、矩阵形状、索引方向、滚动数组、宽整数、Infinity/INF、输入修改和返回转换",
+  "由 m,n 与格值范围给出最大所需生命上界，确认有限后继总在减法前被选中",
+  "知识账本只从 state/concepts 的五十题平面状态读取，完成后越过 Database 登记把下一审查入口推进到 0179",
 ]
 
 must_preserve = [
-  "精确接口契约、惰性中序抽象、续延栈不变量、完整正确性证明和摊还复杂度证明",
-  "固定十语言实现、平台 TreeNode 约束、C 失败路径、逐语言所有权说明、静态审查和带答案自检",
+  "精确生命合同、贪心与终点总和反例、进入前状态、逆向转移、滚动不变量和完整必要充分证明",
+  "固定十语言实现、单虚拟后继、宽整数哨兵、C 失败路径、静态审查、剩余风险和带答案自检",
 ]
 
 forbidden = [
   "把最近完成题目作为格式样本",
   "没有确定性问题时整篇重写或压缩强主体",
-  "预先生成完整中序序列、遗漏右子树左链、只写摊还 O(1) 而隐藏单次最坏 O(h)",
-  "把一种语言的引用或失败处理外推为十语言均正确",
+  "使用正向局部贪心、只最大化终点余额、把整个右边界或下边界初始化为 1",
+  "让 INF 参与减法、混淆滚动数组新旧行含义或隐藏固定宽转换风险",
+  "把一种语言的矩阵和逆序索引结论外推为十语言均正确",
   "为同一知识新造近义 concept ID",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试、sanitizer 或目标语言最小程序",
@@ -105,7 +107,7 @@ forbidden = [
 required = [
   "正文只在审查发现明确问题时修改",
   "知识账本保留稳定 concept ID，并准确区分首次引入、强化和关联",
-  "PROGRESS、REVIEW_INDEX 与下一份 BATCH_CONTRACT 同步到 0174",
+  "PROGRESS、REVIEW_INDEX 与下一份 BATCH_CONTRACT 同步到 0179",
   "不修改完成题数和 0219 的生成进度事实",
   "一个原子 main 提交，不创建分支或 PR",
 ]

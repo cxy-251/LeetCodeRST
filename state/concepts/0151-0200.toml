@@ -1,5 +1,5 @@
 [meta]
-version = 4
+version = 5
 last_problem = 200
 
 # teaching_state: introduced / reinforcing / familiar / refresh / mastered
@@ -33,12 +33,12 @@ last_problem = 200
 "proof.opposite_direction_equal_comparison_counterexamples" = { kind = "proof", first_problem = 154, last_problem = 154, occurrences = 1, teaching_state = "introduced", difficult = true, note = "两个中点等于右端但最小值分处左右的输入证明等值比较确实无法固定判向。" }
 "semantics.unsigned_right_decrement_guard" = { kind = "language_semantics", first_problem = 154, last_problem = 154, occurrences = 1, teaching_state = "introduced", difficult = true, note = "right 减一只发生在 left<right 的循环内，保证 Rust usize 及一基 Julia/R 边界不会下溢。" }
 "technique.equal_right_endpoint_disambiguation" = { kind = "technique", first_problem = 154, last_problem = 154, occurrences = 1, teaching_state = "introduced", difficult = false, note = "nums[mid]==nums[right] 时令 right-=1；若右端是最小值，仍留在新区间的 mid 提供替代见证。" }
-"adapter.c_min_stack_resource_atomicity" = { kind = "language_adapter", first_problem = 155, last_problem = 155, occurrences = 1, teaching_state = "introduced", difficult = false, note = "C realloc 使用临时指针，失败保持旧栈；void push 无法报告未压入，资源耗尽时无法完全履行抽象更新合同。" }
-"complexity.amortized_dynamic_array_push" = { kind = "complexity", first_problem = 155, last_problem = 155, occurrences = 1, teaching_state = "introduced", difficult = true, note = "前缀最小递推是最坏 O(1)；动态数组个别扩容复制 O(d)，连续 push 摊还 O(1)，不能混写为单次最坏常数。" }
+"adapter.c_min_stack_resource_atomicity" = { kind = "language_adapter", first_problem = 155, last_problem = 173, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0155 与 0173 都用 realloc 临时指针和先扩容后改状态；固定平台方法缺少资源错误通道，正常功能合同以分配成功为前提。" }
+"complexity.amortized_dynamic_array_push" = { kind = "complexity", first_problem = 155, last_problem = 173, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "0155 区分动态数组 push 的单次扩容与摊还成本；0173 的 C 节点栈同样几何扩容，总复制受峰值树高约束。" }
 "data_structure.augmented_stack" = { kind = "data_structure", first_problem = 155, last_problem = 155, occurrences = 1, teaching_state = "introduced", difficult = false, note = "每层保存 (value,prefix_min)，把昂贵的最小值查询提前到 push 时增量计算，并随 pop 回滚。" }
 "invariant.prefix_minimum_per_entry" = { kind = "invariant", first_problem = 155, last_problem = 155, occurrences = 1, teaching_state = "introduced", difficult = false, note = "第 i 层 minimum 等于当前栈底到该层全部值的最小值；末层同时证实 top 与 getMin，重复最小值逐层保留。" }
 "proof.min_stack_operation_sequence_induction" = { kind = "proof", first_problem = 155, last_problem = 155, occurrences = 1, teaching_state = "introduced", difficult = true, note = "构造建立空状态，push 建立新层证书，pop 删除完整末层并恢复旧证书，查询只读不变量；对任意合法操作序列归纳。" }
-"semantics.mutable_stack_object_identity" = { kind = "language_semantics", first_problem = 155, last_problem = 155, occurrences = 1, teaching_state = "introduced", difficult = true, note = "各方法必须修改同一持久对象；Go 用指针接收者，Julia 用 mutable struct，R 用环境节点表达引用语义。" }
+"semantics.mutable_stack_object_identity" = { kind = "language_semantics", first_problem = 155, last_problem = 173, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "0155 与 0173 的方法都必须修改同一持久栈对象；Go 用指针接收者，Julia 用 mutable struct，R 用 environment 保存跨调用状态。" }
 "workflow.premium_skip_progression" = { kind = "workflow", first_problem = 156, last_problem = 186, occurrences = 8, teaching_state = "introduced", difficult = false, note = "0156–0159、0161、0163、0170、0186 按 Premium 登记并保持题号推进。" }
 "adapter.rust_shared_tail_rc" = { kind = "adapter", first_problem = 160, last_problem = 160, occurrences = 1, teaching_state = "introduced", difficult = false, note = "Box 不能被两个头共同拥有；教学适配器用 Rc 表达共享尾链、ptr_eq 比较身份，clone 只调整引用计数。" }
 "contract.linked_list_node_identity" = { kind = "contract", first_problem = 160, last_problem = 160, occurrences = 1, teaching_state = "introduced", difficult = false, note = "相交按节点对象身份判断；值相同或内容相同的独立节点不相交，共享节点后因 next 唯一而共享整条后缀。" }
@@ -92,12 +92,13 @@ last_problem = 200
 "complexity.logarithmic_integer_division_loop" = { kind = "complexity", first_problem = 172, last_problem = 172, occurrences = 1, teaching_state = "introduced", difficult = true, note = "状态每轮除以 5，时间 O(log_5 n)、空间 O(1)，没有阶乘中间值或字符串输出。" }
 "invariant.factor_five_quotient_sum" = { kind = "invariant", first_problem = 172, last_problem = 172, occurrences = 1, teaching_state = "introduced", difficult = false, note = "t 轮后 current=floor(n/5^t)，answer 为前 t 层 floor(n/5^k) 之和。" }
 "proof.prime_factor_layer_counting" = { kind = "proof", first_problem = 172, last_problem = 172, occurrences = 1, teaching_state = "introduced", difficult = true, note = "5^k 的倍数恰贡献第 k 个因子 5；分层计数使每个整数按其 5-adic 指数被统计恰当次数。" }
-"adapter.mutable_iterator_state" = { kind = "language_adapter", first_problem = 173, last_problem = 173, occurrences = 1, teaching_state = "introduced", difficult = false, note = "Julia 用 mutable struct，R 用 environment 和环境栈帧，Rust 缩短 RefCell 借用后再修改迭代器。" }
+"algorithm.binary_tree_inorder_explicit_stack" = { kind = "algorithm", first_problem = 94, last_problem = 173, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0094 用显式栈一次性模拟左根右控制流；0173 把同一左链展开保存为跨 next 调用的惰性对象状态。" }
+"proof.inorder_stack_continuation_invariant" = { kind = "proof", first_problem = 94, last_problem = 173, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "0094 与 0173 的栈都保存左递归完成后尚待 visit 的祖先续点；0173 进一步用该不变量证明栈顶是下一最小节点及 hasNext 等价性。" }
+"interface.binary_tree_node_reference_model" = { kind = "interface", first_problem = 94, last_problem = 173, occurrences = 21, teaching_state = "mastered", difficult = false, note = "0094 建立跨语言 TreeNode 引用模型，0101–0116 持续强化；0173 的迭代器保存节点引用且要求树在对象生命周期内不变。" }
+"ownership.read_only_tree_reference_stack" = { kind = "ownership", first_problem = 144, last_problem = 173, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "0144 与 0173 的显式栈都只保存并读取树节点引用；Rust Rc 克隆不复制子树，C/C++ 栈不拥有节点。" }
 "algorithm.lazy_bst_inorder_iterator" = { kind = "algorithm", first_problem = 173, last_problem = 173, occurrences = 1, teaching_state = "introduced", difficult = false, note = "构造与每次 next 只展开当前子树最左路径，显式栈保存递归中序续点，不预先物化完整序列。" }
 "complexity.bst_iterator_amortized_next" = { kind = "complexity", first_problem = 173, last_problem = 173, occurrences = 1, teaching_state = "introduced", difficult = true, note = "单次 next 最坏沿左链 O(h)，全遍历每节点入栈出栈各一次，总 O(n)，故均摊 O(1)，峰值空间 O(h)。" }
-"invariant.inorder_continuation_stack" = { kind = "invariant", first_problem = 173, last_problem = 173, occurrences = 1, teaching_state = "introduced", difficult = false, note = "栈等价于暂停在 visit 前的递归调用栈；栈顶左侧工作已完成，是下一中序节点。" }
 "proof.bst_iterator_no_skip_no_duplicate" = { kind = "proof", first_problem = 173, last_problem = 173, occurrences = 1, teaching_state = "introduced", difficult = true, note = "根和每个父节点右子树各形成唯一入口，树节点最多压栈一次并由一次 next 弹出，BST 中序保证升序。" }
-"resource.c_iterator_dynamic_stack" = { kind = "resource", first_problem = 173, last_problem = 173, occurrences = 1, teaching_state = "introduced", difficult = false, note = "C 用几何扩容节点指针栈，realloc 临时指针防丢失，构造失败清理，free 只释放迭代器资源；平台 next 无独立 OOM 通道。" }
 "algorithm.reverse_minimum_health_dp" = { kind = "algorithm", first_problem = 174, last_problem = 174, occurrences = 1, teaching_state = "introduced", difficult = false, note = "need(i,j) 定义为进入格前完成剩余路径的最小生命，逆向转移 max(1,min(down,right)-cell)。" }
 "boundary.single_virtual_princess_successor" = { kind = "boundary", first_problem = 174, last_problem = 174, occurrences = 1, teaching_state = "introduced", difficult = false, note = "仅公主格下方设置需求 1 的虚拟后继，其他边界为 INF，防止路径从普通边界逃出网格。" }
 "invariant.dungeon_rolling_row" = { kind = "invariant", first_problem = 174, last_problem = 174, occurrences = 1, teaching_state = "introduced", difficult = false, note = "右向左更新前 dp[j] 是下方状态，dp[j+1] 已是当前行右侧状态，更新后 dp[j] 成为当前格状态。" }
