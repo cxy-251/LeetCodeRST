@@ -73,14 +73,14 @@ summary = "完成 0218 The Skyline Problem：全部边界扫描、活动建筑�
 [last_review_batch]
 status = "completed"
 kind = "targeted_review"
-start = 201
-end = 203
-reviewed_problem_ids = [201, 202, 203]
+start = 204
+end = 206
+reviewed_problem_ids = [204, 205, 206]
 reviewed_problem_count = 3
 body_changed = true
 concept_state_changed = true
 reference_problems = [50, 100, 128]
-summary = "审查 0201–0203 并保留三题算法、证明与十语言主体；补强块边界零见证、C/Python 直接导入、Julia/R 平台节点复用，并把无符号适配、Floyd、虚拟头、链接槽位和节点复用合并回稳定 concept。"
+summary = "审查 0204–0206 并保留三题算法、证明与十语言主体；补齐较大筛边界、C++ 直接导入和 Julia/R 平台节点复用，并把字符单位、原地重接、Box 与共享节点模型合并回稳定 concept。"
 
 [next_batch]
 status = "paused_for_historical_review"
@@ -90,17 +90,17 @@ end = 220
 problem_ids = [219, 220]
 difficulty_budget = 5
 contract = "state/BATCH_CONTRACT.toml"
-purpose = "0219–0220 新题生成暂缓；0166–0169、0171–0174、0179、0187–0191、0198–0203 已审查完成，下一批审查 0204–0206。"
+purpose = "0219–0220 新题生成暂缓；0166–0169、0171–0174、0179、0187–0191、0198–0206 已审查完成，下一批审查 0207–0209。"
 
 [review_queue]
 status = "ready"
 kind = "historical_review"
 start = 166
-current = 204
+current = 207
 ordering = "ascending_public_algorithm_problems"
 contract = "state/BATCH_CONTRACT.toml"
-problem_path = "problems/0201-0300/0204-count-primes.rst"
-purpose = "0166–0169、0171–0174、0179、0187–0191、0198–0203 已完成；下一批审查 0204–0206 的筛法边界、字符双射和链表反转所有权。"
+problem_path = "problems/0201-0300/0207-course-schedule.rst"
+purpose = "0166–0169、0171–0174、0179、0187–0191、0198–0206 已完成；下一批审查 0207–0209 的拓扑判环、Trie 生命周期和正数滑动窗口。"
 
 [review_history]
 status = "completed"
@@ -170,7 +170,7 @@ problem_code_fragments_present = false
 [quality_scope]
 historical_start = 1
 historical_end = 218
-historical_policy = "既有集中质量返工已完成；0166–0169、0171–0174、0179、0187–0191、0198–0203 已完成针对性静态审查，当前从 0204 继续升序推进，未审到的历史题默认不改。"
+historical_policy = "既有集中质量返工已完成；0166–0169、0171–0174、0179、0187–0191、0198–0206 已完成针对性静态审查，当前从 0207 继续升序推进，未审到的历史题默认不改。"
 persistent_rule_start = 151
 persistent_rule = "docs/FORWARD_RULES_0151_ONWARD.rst"
 forward_rule_policy = "0151 起全部后续题目持续执行并原位维护长期前向规则。"
@@ -209,7 +209,7 @@ active_data_self_contained = true
 archive_dependency = false
 
 [next_action]
-summary = "按 BATCH_CONTRACT 审查 0204–0206；0219–0220 新题生成暂停。"
+summary = "按 BATCH_CONTRACT 审查 0207–0209；0219–0220 新题生成暂停。"
 
 [last_update]
-summary = "0201–0203 针对性静态审查完成；低位零见证、直接导入、平台节点复用和稳定 concept 已校正，下一批为 0204–0206。"
+summary = "0204–0206 针对性静态审查完成；筛边界、直接导入、平台节点复用和稳定 concept 已校正，下一批为 0207–0209。"

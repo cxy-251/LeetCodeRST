@@ -1,5 +1,5 @@
 [meta]
-version = 6
+version = 7
 last_problem = 218
 
 # teaching_state: introduced / reinforcing / familiar / refresh / mastered
@@ -15,7 +15,7 @@ last_problem = 218
 "proof.happy_number_finite_state" = { kind = "proof", first_problem = 202, last_problem = 202, occurrences = 1, teaching_state = "introduced", difficult = true, note = "d 位数的平方位和不超过 81d，四位及以上严格下降，最终进入小于 1000 的有限集合并必然到达 1 或形成环。" }
 "technique.dummy_node" = { kind = "algorithm", first_problem = 2, last_problem = 203, occurrences = 7, teaching_state = "familiar", difficult = false, note = "0002–0025 用虚拟头统一结果追加、头删、归并和局部重连；0203 继续把连续头部删除统一为 previous.next 的普通删除。" }
 "rust.mutable_link_slot_deletion" = { kind = "language_boundary", first_problem = 82, last_problem = 203, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0082 与 0203 都用 &mut Option<Box<ListNode>> 表示当前所有权槽位；删除时以后继替换槽位，保留时才把槽位推进到 next。" }
-"interface.linked_list_node_reuse" = { kind = "interface", first_problem = 82, last_problem = 203, occurrences = 5, teaching_state = "reinforcing", difficult = false, note = "0082、0083、0086、0092 与 0203 都重连原节点而不复制保留节点；0203 进一步说明被删除节点的语言相关资源责任和新头返回。" }
+"interface.linked_list_node_reuse" = { kind = "interface", first_problem = 82, last_problem = 206, occurrences = 6, teaching_state = "familiar", difficult = false, note = "0082、0083、0086、0092、0203 与 0206 都复用并重连平台原节点；0206 不重复声明节点类型，并强调反转后必须使用返回的新头。" }
 "ownership.removed_list_nodes" = { kind = "ownership", first_problem = 203, last_problem = 203, occurrences = 1, teaching_state = "introduced", difficult = true, note = "C 在明确接收节点所有权的假设下重接后 free；托管语言交给运行时，Rust 通过 Box 移动自动释放被删除节点。" }
 "adapter.sieve_storage_cross_language" = { kind = "language_adapter", first_problem = 204, last_problem = 204, occurrences = 1, teaching_state = "introduced", difficult = false, note = "C/C++/Python/Rust/Go/TypeScript/C# 使用字节状态，Java 使用 boolean[]，Julia 使用 BitVector，R 使用更重的 logical 向量；全部为 O(n) 空间。" }
 "algorithm.sieve_of_eratosthenes" = { kind = "algorithm", first_problem = 204, last_problem = 204, occurrences = 1, teaching_state = "introduced", difficult = false, note = "为 [0,n) 建立合数标记，只让未标记候选 p 从 p*p 开始按步长 p 划去倍数，最后统计 2..n-1 的未标记索引。" }
@@ -25,10 +25,13 @@ last_problem = 218
 "safety.square_bound_by_division" = { kind = "numeric_safety", first_problem = 204, last_problem = 204, occurrences = 1, teaching_state = "introduced", difficult = true, note = "外层使用 p <= (n-1)/p 表达 p*p<n，在比较前避免固定宽整数平方溢出；内层按语言使用 size_t 或宽整数。" }
 "algorithm.isomorphic_bidirectional_mapping" = { kind = "algorithm", first_problem = 205, last_problem = 205, occurrences = 1, teaching_state = "introduced", difficult = false, note = "同时维护 source->target 与 target->source，前者保证同一源字符映射一致，后者保证目标不被不同源字符重复占用。" }
 "proof.isomorphic_bijection" = { kind = "proof", first_problem = 205, last_problem = 205, occurrences = 1, teaching_state = "introduced", difficult = true, note = "双向冲突检查维护函数与单射；每个实际目标字符都来自一个对应位置，扫描完成后映射对出现字符集合构成双射。" }
-"semantics.string_character_unit" = { kind = "language_semantics", first_problem = 205, last_problem = 205, occurrences = 1, teaching_state = "introduced", difficult = true, note = "官方 ASCII 输入允许字节、UTF-16 单元和 Unicode 码点适配一致；超出 ASCII 时不得混称同一种字符边界。" }
+"string.character_iteration_units" = { kind = "syntax", first_problem = 3, last_problem = 214, occurrences = 17, teaching_state = "familiar", difficult = true, note = "0003–0049 持续区分字符、字节与代码单元；0205 与 0214 再明确官方 ASCII 域使字节、UTF-16 单元和 Unicode 码点一致，超出该域不得混用坐标。" }
 "algorithm.reverse_list_three_links" = { kind = "algorithm", first_problem = 206, last_problem = 206, occurrences = 1, teaching_state = "introduced", difficult = false, note = "先保存 next_node，再把 current.next 指向 previous，最后整体推进 previous/current。" }
 "invariant.reversed_prefix_unprocessed_suffix" = { kind = "invariant", first_problem = 206, last_problem = 206, occurrences = 1, teaching_state = "introduced", difficult = false, note = "previous 是已反转前缀新头，current 是未处理后缀首节点；两部分不交且合并覆盖全部原节点。" }
-"ownership.reverse_list_links" = { kind = "ownership", first_problem = 206, last_problem = 206, occurrences = 1, teaching_state = "introduced", difficult = true, note = "C/C++ 借用并重接指针不释放；Rust 以 Option<Box<Node>> 的 take 和移动转交唯一所有权；R/Julia 修改共享可变节点。" }
+"ownership.in_place_link_rewiring" = { kind = "ownership", first_problem = 114, last_problem = 206, occurrences = 3, teaching_state = "familiar", difficult = true, note = "0114、0143 与 0206 都在覆盖 next 前保存后续可达路径，只重接原节点而不交换 val 或创建替代链；0206 补充 C/C++ 借用、Rust Box 移动及 Julia/R 共享变异。" }
+"rust.option_box_linked_list" = { kind = "syntax", first_problem = 2, last_problem = 206, occurrences = 7, teaching_state = "familiar", difficult = true, note = "0002–0025 使用 take 或链接槽转移 Box 节点所有权；0206 再用 node.next.take() 保存后缀，并把旧反转前缀移动回 next。" }
+"julia.mutable_recursive_node" = { kind = "syntax", first_problem = 2, last_problem = 206, occurrences = 7, teaching_state = "familiar", difficult = false, note = "0002–0025 建立 Julia 统一可变链表节点；0206 直接复用平台 ListNode，并通过 next 字段原地反转。" }
+"r.environment_reference_node" = { kind = "syntax", first_problem = 2, last_problem = 206, occurrences = 7, teaching_state = "familiar", difficult = false, note = "0002–0025 建立 R environment 链表引用模型；0206 直接复用统一节点，通过 node$next 原地重接且共享修改可见。" }
 "proof.reverse_list_node_conservation" = { kind = "proof", first_problem = 206, last_problem = 206, occurrences = 1, teaching_state = "introduced", difficult = true, note = "每轮恰好移动一个节点，保存后继避免丢失，新增边只指向无环前缀，最终 previous 包含全部节点逆序。" }
 "adapter.c_graph_csr_failure" = { kind = "language_adapter", first_problem = 207, last_problem = 207, occurrences = 1, teaching_state = "introduced", difficult = false, note = "C 使用两遍 CSR、完整失败清理；bool 平台接口无法区分有环与资源失败，文档显式保留该风险。" }
 "adapter.graph_duplicate_edges" = { kind = "language_adapter", first_problem = 207, last_problem = 207, occurrences = 1, teaching_state = "introduced", difficult = false, note = "所有实现逐条保留重复边，邻接项和入度次数一致，防止去重失衡。" }
@@ -117,7 +120,6 @@ last_problem = 218
 # Register the first verifiable authoritative state instead of inventing prior counts.
 "algorithm.kmp_prefix_function" = { kind = "algorithm", first_problem = 214, last_problem = 214, occurrences = 1, teaching_state = "introduced", difficult = true, note = "在拼接串上维护最长真前后缀长度；失配时沿 prefix[j-1] 回退，匹配时递增长度，使全部回退总成本保持线性。" }
 "proof.lower_bound_matched_by_construction" = { kind = "proof", first_problem = 214, last_problem = 214, occurrences = 1, teaching_state = "introduced", difficult = true, note = "先证明任意方案至少补 n-L 个字符，再由 reverse(s[L:]) 的构造恰好达到该下界。" }
-"string.ascii_code_unit_contract" = { kind = "string", first_problem = 214, last_problem = 214, occurrences = 1, teaching_state = "introduced", difficult = true, note = "官方 ASCII 输入使字节、UTF-16 code unit 与 Unicode code point 边界一致；超出 ASCII 后不得继续混用这些坐标。" }
 "complexity.output_payload_separation" = { kind = "complexity", first_problem = 214, last_problem = 218, occurrences = 3, teaching_state = "familiar", difficult = true, note = "0214、0216、0218 分别把字符串、二维组合行和轮廓关键点的返回载荷，与核心工作状态及临时物化成本分开报告。" }
 "safety.c_size_arithmetic_and_cleanup" = { kind = "safety", first_problem = 200, last_problem = 218, occurrences = 3, teaching_state = "familiar", difficult = true, note = "0200、0214、0218 的 C 适配器在分配前检查 size_t 加乘；失败时释放已拥有对象，成功时才发布结果或返回正常值。" }
 "algorithm.order_statistics" = { kind = "algorithm", first_problem = 215, last_problem = 215, occurrences = 1, teaching_state = "introduced", difficult = false, note = "只要求第 k 个排序位置时使用选择算法，不必完成全局排序；第 k 大对应升序下标 n-k。" }
