@@ -1,17 +1,17 @@
 [contract]
 schema_version = 2
-batch_id = "historical-review-0189-0191"
+batch_id = "historical-review-0198-0200"
 status = "ready"
 phase = "historical_review"
 kind = "targeted_review"
-scope = [189, 190, 191]
+scope = [198, 199, 200]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
 drift_log = "state/DRIFT_LOG.toml"
 new_problem_generation_paused = true
 completion_count_must_remain_unchanged = true
-next_review_after_batch = 198
+next_review_after_batch = 201
 
 [static_review]
 solution_code_execution = "forbidden"
@@ -23,24 +23,26 @@ repository_structure_state_and_git_checks = "allowed"
 reporting = "只声明实际完成的静态审查；明确未运行、未编译、未测试和剩余风险。"
 
 [budget]
-algorithm_score = 4
+algorithm_score = 6
 target_min = 4
 target_max = 6
-proof_risk = "medium"
+proof_risk = "high"
 language_semantics_risk = "high"
 platform_type_risk = "high"
 output_volume_risk = "high"
 scope_may_shrink = true
-scope_reason = "0189 为 Medium 原地数组变换，0190–0191 为连续 Easy 固定宽位题，总分 4；三题共享索引与跨语言数值审查，但原地可见性和无符号适配均为高风险。若后一题开始压缩证明或语言说明，只提交完整连续前缀并同步下一入口。"
+scope_reason = "0198–0200 均为 Medium，总分 6；依次涉及滚动 DP、平台树节点与动态队列、二维原地洪泛与最坏工作栈。三题主体已存在，可按连续批次审查；若 0199 或 0200 的证明、资源路径或十语言说明出现压缩迹象，只提交完整连续前缀并同步下一入口。"
 
 [references]
 style_baselines = [
-  "problems/0001-0100/0001-two-sum.rst",
   "problems/0001-0100/0050-powx-n.rst",
+  "problems/0001-0100/0100-same-tree.rst",
+  "problems/0101-0200/0128-longest-consecutive-sequence.rst",
 ]
 style_roles = [
-  "0001 提供紧凑数组题仍保留契约、状态、证明、接口和十语言语义的基线",
-  "0050 提供固定宽整数、位级循环状态、终止证明和跨语言数值边界基线",
+  "0050 提供滚动状态、更新顺序、固定宽数值边界和终止证明基线",
+  "0100 提供平台 TreeNode、空树、结构归纳、引用语义和十语言树接口基线",
+  "0128 提供图式集合覆盖、线性工作不重复证明、哈希/容器成本和边界基线",
 ]
 fact_sources = [
   "state/PROGRESS.toml",
@@ -48,19 +50,21 @@ fact_sources = [
   "state/CONCEPT_LEDGER.toml",
   "state/concepts/0101-0150.toml",
   "state/concepts/0151-0200.toml",
+  "state/concepts/0201-0250.toml",
   "docs/FORWARD_RULES_0151_ONWARD.rst",
   "problems/0101-0200/README.rst",
-  "problems/0101-0200/0136-single-number.rst",
-  "https://leetcode.com/problems/rotate-array/description/",
-  "https://leetcode.com/problems/reverse-bits/description/",
-  "https://leetcode.com/problems/number-of-1-bits/description/",
+  "problems/0101-0200/0102-binary-tree-level-order-traversal.rst",
+  "problems/0101-0200/0130-surrounded-regions.rst",
+  "https://leetcode.com/problems/house-robber/description/",
+  "https://leetcode.com/problems/binary-tree-right-side-view/description/",
+  "https://leetcode.com/problems/number-of-islands/description/",
 ]
 fact_sources_may_provide = [
-  "0189 的数组右旋、原地目标、k 规范化、输入范围和语言变异接口",
-  "0190 的固定 32 位无符号输入、位序反转合同和前导零语义",
-  "0191 的 32 位汉明重量、最低有效 1 消除与计数范围",
-  "既有数组索引、固定宽位模式、TypeScript/R 无符号适配和 concept 连续性",
-  "0192–0195 已登记 Shell、0196–0197 已登记 Database，下一公开算法题为 0198",
+  "0198 的非负金额数组、相邻房屋不能同时选择、最大金额和只读输入合同",
+  "0199 的平台二叉树、每层最右非空节点、输出深度顺序和只读树合同",
+  "0200 的矩形 0/1 字符网格、四邻接岛屿、原地访问标记和返回计数合同",
+  "0102 的层队列术语、0130 的四邻接原地标记及现有 concept 连续性",
+  "当前完成范围、0219 生成暂停和 0200 后下一公开算法题为 0201 的状态事实",
 ]
 fact_sources_must_not_provide = [
   "章节结构",
@@ -69,77 +73,85 @@ fact_sources_must_not_provide = [
   "静态审查标准",
 ]
 
-[problems."0189"]
-title = "Rotate Array"
-path = "problems/0101-0200/0189-rotate-array.rst"
+[problems."0198"]
+title = "House Robber"
+path = "problems/0101-0200/0198-house-robber.rst"
 difficulty = "Medium"
 review_mode = "preserve_strong_body_and_apply_targeted_fixes"
 primary_risks = [
-  "右旋 k 步必须先做 k mod n；不能把方向写成左旋，也不能在空扩展、n=1 或 k=0 时构造错误区间",
-  "三次反转顺序应为全数组、前 shift 项、后 n-shift 项；证明需说明每段元素相对顺序如何恢复",
-  "主算法要求 O(1) 核心额外空间；不能复制完整数组后仍宣称所有语言都原地常数空间",
-  "C 至 Julia 应修改调用者可见数组；R 普通向量局部绑定应返回结果，不能宣称调用者绑定原地改变",
-  "逐语言核对取模、闭区间端点、交换类型、一基坐标、空范围、输入可变性和公开返回约定",
-  "审计三次反转、闭区间不变量和数组变异 concept，优先复用既有旋转、原地修改与边界知识",
+  "状态必须精确定义为前 i 间房屋的最大金额；选择当前房屋只能接到 i-2 前缀，不能同时使用 i-1",
+  "证明最后一间不选/选择两类方案互斥且完备，并分别证明上界可达，不能只给递推公式",
+  "滚动变量必须先用两个旧状态计算 current，再整体推进；不能覆盖后把新值当作旧依赖",
+  "非负金额使空策略提供 0 下界；核对空扩展、单房、双房、全零、交替大值和局部贪心反例",
+  "推导官方约束下答案上界，核对 64 位中间状态、平台 int 转换和 TypeScript/R 精确整数域",
+  "逐语言核对输入只读、Rust 按值消费、Julia/R 数值与循环语义，以及没有构造完整 DP 数组",
+  "审计前缀 DP、滚动状态、最后决策二分和宽累加 concept，优先合并到稳定 ID",
 ]
 minimum_static_review = [
-  "人工推演 [1,2,3,4,5,6,7],k=3、[-1,-100,3,99],k=6、k=0、k>n、n=1、重复元素和空扩展",
-  "证明 rev(A+B)=rev(B)+rev(A) 与两段恢复得到 B+A，并核对每个位置最终归属",
-  "逐语言核对接口、取模、反转端点、交换、原地可见性、R 返回适配和 O(1) 核心空间",
+  "人工推演 [1,2,3,1]、[2,7,9,3,1]、单元素、双元素、全零、空扩展与交替大值",
+  "逐轮记录 previous_two/previous_one/current，核对状态坐标和覆盖顺序",
+  "完整证明最后一间二分、递推必要充分性、滚动等价、终止和最终状态",
+  "逐语言核对签名、宽整数、返回转换、输入所有权、空输入与真实 O(n)/O(1) 核心成本",
 ]
 
-[problems."0190"]
-title = "Reverse Bits"
-path = "problems/0101-0200/0190-reverse-bits.rst"
-difficulty = "Easy"
+[problems."0199"]
+title = "Binary Tree Right Side View"
+path = "problems/0101-0200/0199-binary-tree-right-side-view.rst"
+difficulty = "Medium"
 review_mode = "preserve_strong_body_and_apply_targeted_fixes"
 primary_risks = [
-  "必须处理恰好 32 位，包括输入前导零；不能只循环到数值变为 0 而遗漏剩余输出位置",
-  "循环不变量需说明已处理低位如何按反序进入 answer，未处理位仍如何保留在 input 中",
-  "C/C++/Rust/Go/C# 使用无符号 32 位，Java 使用逻辑右移，TypeScript 每轮与返回前规范为无符号",
-  "R 没有直接无符号 32 位整数结果域，应使用精确 double 的除二取余适配，避免 bitw 符号解释",
-  "逐语言核对左移截断、逻辑右移、位模式与显示数值的区别、返回类型和输入是否消费",
-  "审计固定宽反转与既有位模式适配 concept，不为通用 32 位无符号语义新造近义 ID",
+  "结果每个深度恰好一个值，表示该层结构上最右非空节点；不能把节点值最大或只沿 right 指针当作可见性",
+  "BFS 必须在层开始冻结 level_size，只处理这批节点；新入队孩子不得混入当前层",
+  "按左后右入队时提交本层最后出队节点；证明需连接层快照、从左到右顺序和最右可见性",
+  "证明每个节点恰好入队出队一次，报告 O(n) 时间、O(w) 核心队列和 O(h) 输出载荷",
+  "C 动态节点队列与结果数组必须检查容量、使用临时指针扩容、完整失败清理并说明返回所有权",
+  "Rust Rc<RefCell<TreeNode>> 借用必须在可变队列操作前结束；Julia/R 队列不能用反复删除首元素制造平方成本",
+  "逐语言核对空节点、TreeNode 字段、节点引用生命周期、结果容器和输入树只读",
+  "审计层快照、最右节点与树队列 concept，合并到 0102 起稳定 ID",
 ]
 minimum_static_review = [
-  "人工推演标准位串、全零、最低位 1、最高位 1 和全 1，始终保留完整 32 位位置",
-  "证明 32 轮循环不变量、每个输入位的唯一目标位置和终止后位序完全反转",
-  "逐语言核对逻辑右移、32 位截断、无符号返回解释、TypeScript 规范化和 R 精确域",
+  "人工推演标准稀疏树、右分支提前结束、空树、单节点、全左链和全右链",
+  "逐层记录冻结快照、出队顺序、孩子入队顺序和提交节点",
+  "证明层覆盖、左右顺序、最右可见性、节点无遗漏无重复和终止",
+  "逐语言核对 TreeNode、队列头尾、C 资源、Rust 借用、R/Julia 队列和输出载荷",
 ]
 
-[problems."0191"]
-title = "Number of 1 Bits"
-path = "problems/0101-0200/0191-number-of-1-bits.rst"
-difficulty = "Easy"
+[problems."0200"]
+title = "Number of Islands"
+path = "problems/0101-0200/0200-number-of-islands.rst"
+difficulty = "Medium"
 review_mode = "preserve_strong_body_and_apply_targeted_fixes"
 primary_risks = [
-  "n & (n-1) 每轮必须恰好清除最低有效 1；证明不能只用样例代替位级必要性",
-  "循环不变量需把已计数置位与 value 剩余置位建立守恒，终止次数恰为汉明重量",
-  "Java/TypeScript 的有符号显示不改变 32 位模式；TypeScript 每轮需保持无符号规范化",
-  "R 的固定 32 轮除二取余是独立适配器，应单独说明状态、正确性和固定常数成本",
-  "不能对最高位为 1 的 Java int 使用算术右移循环并导致永不归零",
-  "审计最低 1 消除、位计数与跨语言无符号 concept，优先强化 0190 的稳定适配 ID",
+  "岛屿只按上、下、左、右四邻接；对角接触不能合并，矩形和字符域前提必须明确",
+  "外层扫描到仍为 1 的格子时计数一次，洪泛在入栈前立即标 0；延迟标记会重复入栈",
+  "证明每次洪泛完整且仅覆盖当前连通分量，并建立首次发现与岛屿的一一对应",
+  "主解法原地把陆地改为水以省去 visited；逐语言必须说明调用者可见修改、Rust 移动和 R 局部复制",
+  "迭代栈避免递归深度风险，但最坏仍需 O(mn) 工作空间；不能因无 visited 就宣称 O(1)",
+  "C 必须在 size_t 中检查 rows*cols 和字节容量，失败清理单块栈并用合法域外 -1 报告扩展错误",
+  "逐语言核对坐标编码、负邻居、零基/一基边界、字符类型、矩形行宽和空网格扩展",
+  "审计连通分量计数、发现即标记、原地网格变异和 C 容量 concept，优先合并稳定 ID",
 ]
 minimum_static_review = [
-  "人工推演 11、128、0、2^31 和 2^32-1，核对每轮清除或取余结果",
-  "证明最低有效 1 消除、计数守恒、循环次数、终止和结果范围 0..32",
-  "逐语言核对位模式、溢出语义、无符号规范化、R 特化状态和输入不修改",
+  "人工推演单岛、多岛、全水、全陆、单行、单列、对角接触和空网格扩展",
+  "逐格记录首次发现、压栈前标记、栈内容和洪泛后分量状态",
+  "证明计数不重不漏、洪泛边界、每格至多处理一次、终止和 O(mn) 时间/空间界",
+  "逐语言核对网格接口、坐标、字符、输入变异、C 资源、Rust 转换、R/Julia 一基语义",
 ]
 
 must_preserve = [
-  "0189 的右旋方向、k 规范化、三次反转证明、原地合同和 R 适配差异",
-  "0190 的固定 32 轮反转、前导零、逻辑右移和跨语言无符号语义",
-  "0191 的最低有效 1 消除证明、计数不变量和 Java/TypeScript/R 特化语义",
+  "0198 的前缀 DP、最后一间二分、滚动更新顺序、宽整数和完整最优性证明",
+  "0199 的冻结层大小、从左到右队列、最右节点提交、C/R/Rust 资源语义和输出载荷",
+  "0200 的四邻接、发现即计数、入栈前标记、连通分量证明、输入变异和最坏工作栈",
   "每题固定十语言完整实现、人工推演、静态语义审查、剩余风险和带答案自检",
 ]
 
 forbidden = [
   "把最近完成题目作为格式样本",
   "没有确定性问题时整篇重写或压缩强主体",
-  "0189 复制完整数组却声明 O(1) 核心空间，或把右旋写成左旋",
-  "0190 只循环到输入变 0，或在 Java 使用算术右移",
-  "0191 对负 Java int 使用算术右移循环，或把位计数解释为数值正负",
-  "把一种语言的无符号、位移、原地修改或返回语义外推为十语言一致",
+  "0198 使用局部邻居贪心、错误连接 i-1 或覆盖旧滚动状态后再读取",
+  "0199 使用动态增长队列长度处理一层、只沿 right 指针或混淆最右位置与最大值",
+  "0200 把对角线视为连通、延迟标记而不处理重复、修改输入却声称只读或把工作栈写成 O(1)",
+  "把一种语言的节点、队列、网格变异、索引或资源语义外推为十语言一致",
   "为同一知识新造近义 concept ID",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试、sanitizer 或目标语言最小程序",
@@ -147,10 +159,10 @@ forbidden = [
 
 [completion]
 required = [
-  "按 0189、0190、0191 顺序逐题审查，后一题出现压缩迹象时只提交完整连续前缀",
+  "按 0198、0199、0200 顺序逐题审查，出现压缩迹象时只提交完整连续前缀",
   "正文只在审查发现明确问题时修改",
   "知识账本保留稳定 concept ID，并准确区分首次引入、强化和关联",
-  "PROGRESS、REVIEW_INDEX 与下一份 BATCH_CONTRACT 同步到下一公开算法题 0198",
+  "PROGRESS、REVIEW_INDEX 与下一份 BATCH_CONTRACT 同步到下一公开算法题 0201",
   "不修改完成题数和 0219 的生成进度事实",
   "一个原子 main 提交，不创建分支或 PR",
 ]

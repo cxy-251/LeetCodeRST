@@ -1,5 +1,5 @@
 [meta]
-version = 3
+version = 4
 last_problem = 218
 
 # teaching_state: introduced / reinforcing / familiar / refresh / mastered
@@ -108,7 +108,7 @@ last_problem = 218
 "domain.database_problem_registration" = { kind = "domain_policy", first_problem = 175, last_problem = 185, occurrences = 10, teaching_state = "mastered", difficult = false, note = "Database 题不符合固定十语言算法产物合同，只登记 database_skipped，不创建空壳 RST。" }
 "domain.database_skipped" = { kind = "domain_policy", first_problem = 175, last_problem = 197, occurrences = 12, teaching_state = "mastered", difficult = false, note = "新增 0196–0197 Database 登记，不生成固定十语言算法 RST。" }
 "domain.shell_skipped" = { kind = "domain_policy", first_problem = 192, last_problem = 195, occurrences = 4, teaching_state = "familiar", difficult = false, note = "0192–0195 属于 Shell 文本处理域，只登记状态，不生成固定十语言算法空壳。" }
-"adapter.unsigned_32_bit_cross_language" = { kind = "language_adapter", first_problem = 190, last_problem = 191, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "Java 用 32 位补码与逻辑右移，TypeScript 每轮 >>>0，R 用精确 double 的除二取余适配完整无符号域。" }
+"adapter.unsigned_32_bit_cross_language" = { kind = "language_adapter", first_problem = 190, last_problem = 191, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0190 建立 Java 补码/逻辑右移、TypeScript >>>0 与 R 精确 double 适配；0191 在置位计数中强化同一无符号 32 位边界。" }
 "algorithm.house_robber_prefix_dp" = { kind = "algorithm", first_problem = 198, last_problem = 213, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0198 建立线性前缀 DP；0213 把同一 take-or-skip 递推分别应用到排除首屋和排除尾屋的两个线性区间。" }
 "invariant.house_robber_rolling_pair" = { kind = "invariant", first_problem = 198, last_problem = 213, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0198 维护 previous_one=F(i)、previous_two=F(i-1)；0213 在两个线性子区间中继续保持同一滚动状态。" }
 

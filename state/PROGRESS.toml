@@ -73,11 +73,14 @@ summary = "完成 0218 The Skyline Problem：全部边界扫描、活动建筑�
 [last_review_batch]
 status = "completed"
 kind = "targeted_review"
-problem_id = 188
+start = 189
+end = 191
+reviewed_problem_ids = [189, 190, 191]
+reviewed_problem_count = 3
 body_changed = true
 concept_state_changed = true
-reference_problems = [50, 76]
-summary = "保留 0188 算法、证明与十语言代码；确认 C 始终只有一个公开入口，纠正合同误报，补齐利润与可达状态上界、逐日状态证据，并把正差证明、逆序滚动和股票边界合并回稳定 concept。"
+reference_problems = [1, 50]
+summary = "审查 0189–0191 并保留三题算法、证明与十语言主体；补齐 C++ 直接头文件，明确 0189 R 复制成本，拆分新增/强化知识，把原地多重集与无符号适配合并回稳定 concept。"
 
 [next_batch]
 status = "paused_for_historical_review"
@@ -87,17 +90,17 @@ end = 220
 problem_ids = [219, 220]
 difficulty_budget = 5
 contract = "state/BATCH_CONTRACT.toml"
-purpose = "0219–0220 新题生成暂缓；0166–0169、0171–0174、0179、0187–0188 已审查完成，下一批审查 0189–0191。"
+purpose = "0219–0220 新题生成暂缓；0166–0169、0171–0174、0179、0187–0191 已审查完成，下一批审查 0198–0200。"
 
 [review_queue]
 status = "ready"
 kind = "historical_review"
 start = 166
-current = 189
+current = 198
 ordering = "ascending_public_algorithm_problems"
 contract = "state/BATCH_CONTRACT.toml"
-problem_path = "problems/0101-0200/0189-rotate-array.rst"
-purpose = "0166–0169、0171–0174、0179、0187–0188 已完成；下一批审查 0189–0191 的原地旋转、固定 32 位与十语言无符号语义。"
+problem_path = "problems/0101-0200/0198-house-robber.rst"
+purpose = "0166–0169、0171–0174、0179、0187–0191 已完成；下一批审查 0198–0200 的滚动 DP、层队列、网格洪泛及跨语言资源语义。"
 
 [review_history]
 status = "completed"
@@ -167,7 +170,7 @@ problem_code_fragments_present = false
 [quality_scope]
 historical_start = 1
 historical_end = 218
-historical_policy = "既有集中质量返工已完成；0166–0169、0171–0174、0179、0187–0188 已完成针对性静态审查，当前从 0189 继续升序推进，未审到的历史题默认不改。"
+historical_policy = "既有集中质量返工已完成；0166–0169、0171–0174、0179、0187–0191 已完成针对性静态审查，当前从 0198 继续升序推进，未审到的历史题默认不改。"
 persistent_rule_start = 151
 persistent_rule = "docs/FORWARD_RULES_0151_ONWARD.rst"
 forward_rule_policy = "0151 起全部后续题目持续执行并原位维护长期前向规则。"
@@ -206,7 +209,7 @@ active_data_self_contained = true
 archive_dependency = false
 
 [next_action]
-summary = "按 BATCH_CONTRACT 审查 0189–0191；0219–0220 新题生成暂停。"
+summary = "按 BATCH_CONTRACT 审查 0198–0200；0219–0220 新题生成暂停。"
 
 [last_update]
-summary = "0188 针对性静态审查完成；数值上界、逐日状态证据和股票稳定 concept 已校正，下一批为 0189–0191。"
+summary = "0189–0191 针对性静态审查完成；C++ 头文件、R 复制成本、学习链和稳定 concept 已校正，下一批为 0198–0200。"

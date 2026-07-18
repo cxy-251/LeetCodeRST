@@ -1,5 +1,5 @@
 [meta]
-version = 9
+version = 10
 last_problem = 200
 
 # teaching_state: introduced / reinforcing / familiar / refresh / mastered
@@ -135,9 +135,10 @@ last_problem = 200
 "adapter.array_mutation_visibility" = { kind = "language_adapter", first_problem = 189, last_problem = 189, occurrences = 1, teaching_state = "introduced", difficult = false, note = "C 至 Julia 修改调用者可见数组；R 普通向量局部绑定需返回结果，不能宣称调用者绑定原地改变。" }
 "algorithm.rotate_array_three_reversals" = { kind = "algorithm", first_problem = 189, last_problem = 189, occurrences = 1, teaching_state = "introduced", difficult = false, note = "把原数组分成 A 与末尾 B，利用 rev(A+B)=rev(B)+rev(A)，再分别恢复 B 与 A 得到右旋。" }
 "invariant.reverse_closed_interval" = { kind = "invariant", first_problem = 189, last_problem = 189, occurrences = 1, teaching_state = "introduced", difficult = false, note = "闭区间反转中外侧对称位置已就位、未处理元素保持在 left..right，循环内缩直至完成。" }
+"proof.in_place_multiset_conservation" = { kind = "proof", first_problem = 26, last_problem = 189, occurrences = 12, teaching_state = "familiar", difficult = true, note = "0026–0088 的覆盖、交换、逆向合并与链表重排保持目标多重集；0189 的三次区间交换只改变位置，不遗漏、复制或改写元素值。" }
 "algorithm.fixed_width_bit_reversal" = { kind = "algorithm", first_problem = 190, last_problem = 190, occurrences = 1, teaching_state = "introduced", difficult = false, note = "固定执行 32 轮，每轮把输入最低位送入左移后的答案，前导零也占据反转位置。" }
 "invariant.reverse_bits_prefix" = { kind = "invariant", first_problem = 190, last_problem = 190, occurrences = 1, teaching_state = "introduced", difficult = false, note = "t 轮后答案低 t 位从高到低是原输入 b0..b(t-1)，输入为原位模式逻辑右移 t 位。" }
-"adapter.unsigned_32_bit_cross_language" = { kind = "language_adapter", first_problem = 190, last_problem = 191, occurrences = 2, teaching_state = "introduced", difficult = false, note = "Java 用 32 位补码与逻辑右移，TypeScript 每轮 >>>0，R 用精确 double 的除二取余适配完整无符号域。" }
+"adapter.unsigned_32_bit_cross_language" = { kind = "language_adapter", first_problem = 190, last_problem = 191, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0190 建立 Java 补码/逻辑右移、TypeScript >>>0 与 R 精确 double 适配；0191 在置位计数中强化同一无符号 32 位边界。" }
 "algorithm.kernighan_clear_lowest_one" = { kind = "algorithm", first_problem = 191, last_problem = 191, occurrences = 1, teaching_state = "introduced", difficult = false, note = "n&(n-1) 每轮恰好清除最低有效 1，循环次数等于汉明重量。" }
 "proof.lowest_set_bit_elimination" = { kind = "proof", first_problem = 191, last_problem = 191, occurrences = 1, teaching_state = "introduced", difficult = true, note = "n-1 只翻转最低 1 及其低位；按位与保留高位并清除该最低 1。" }
 "domain.shell_skipped" = { kind = "domain_policy", first_problem = 192, last_problem = 195, occurrences = 4, teaching_state = "introduced", difficult = false, note = "0192–0195 属于 Shell 文本处理域，只登记状态，不生成固定十语言算法空壳。" }
