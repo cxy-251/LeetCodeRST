@@ -18,7 +18,8 @@ LeetCode 0201–0300
 #. `0208. Implement Trie (Prefix Tree) <0208-implement-trie-prefix-tree.rst>`_
 #. `0209. Minimum Size Subarray Sum <0209-minimum-size-subarray-sum.rst>`_
 #. `0210. Course Schedule II <0210-course-schedule-ii.rst>`_
-#. `0211. Design Add and Search Words Data Structure <0211-design-add-and-search-words-data-structure.rst>`_
+#. `0211. Design Add and Search Words Data Structure
+   <0211-design-add-and-search-words-data-structure.rst>`_
 #. `0212. Word Search II <0212-word-search-ii.rst>`_
 #. `0213. House Robber II <0213-house-robber-ii.rst>`_
 #. `0214. Shortest Palindrome <0214-shortest-palindrome.rst>`_
@@ -81,6 +82,6 @@ LeetCode 0201–0300
 下一动作
 --------
 
-下一批生成 ``0219–0220``：Contains Duplicate II 与 Contains Duplicate III。重点处理索引距离滑动窗口、
-窗口集合删除语义，以及有序集合或桶方法中的值差边界、负数分桶和宽整数溢出；具体合同见
-``../../state/BATCH_CONTRACT.toml``。
+新题生成入口仍为 ``0219``，但 ``0219–0220`` 当前暂停。项目先从 ``0166`` 起升序审查既有题解；
+``0166`` 已完成，下一题为 ``0167``。当前审查范围、风险和黄金样本见
+``../../state/BATCH_CONTRACT.toml``；历史审查完成后再恢复本目录的新题生成。

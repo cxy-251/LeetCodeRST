@@ -92,3 +92,22 @@ regression_checks = [
   "活动规则不存在允许运行、编译、对拍、穷举、属性测试或 sanitizer 题解代码的条款",
   "题解静态审查记录明确未运行、未编译和剩余风险",
 ]
+
+[[incident]]
+id = "concept-ledger-representation-split-brain"
+status = "controlled"
+range = "cross-conversation"
+problem = "知识账本多次在单题分片、manifest/shard 与五十题平面文件之间迁移，最终活动索引已切换为平面文件，但 schema、README 和 PROGRESS 仍描述旧 manifest/shard，下一对话无法确定写入模型。"
+likely_cause = "表示方式迁移被拆成多个中间提交，最后只修复部分活动数据，没有在同一提交核对所有权威入口与永久文档。"
+permanent_controls = [
+  "活动知识账本只采用 state/CONCEPT_LEDGER.toml 声明的一种表示方式",
+  "当前每五十题只有一个 concept_state_v1 平面文件，后续范围沿用同一模式",
+  "强化既有知识沿用稳定 concept ID，在当前范围写入完整覆盖状态，不新造近义 ID",
+  "任何表示迁移必须原子同步总入口、活动数据、schema、README、PROGRESS 和漂移记录",
+]
+regression_checks = [
+  "全部活动 TOML 可解析，CONCEPT_LEDGER records 与 schemas 一一对应且只指向 state/concepts 下的活动文件",
+  "PROGRESS、README 与 CONCEPT_LEDGER 对活动存储模型的描述一致",
+  "正常读取不依赖 archive，活动目录不存在 manifest、catalog、shard 或单题小批账本",
+  "当前题强化旧知识时搜索近义 ID，并优先合并到较早的稳定 ID",
+]

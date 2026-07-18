@@ -21,7 +21,7 @@ LeetCode 多语言 RST 学习仓库
 
 题号进度为：已完成 ``0001–0155``、``0160``、``0162``、``0164–0169``、``0171–0174``、
 ``0179``、``0187–0191`` 与 ``0198–0218``；``0156–0159``、``0161``、``0163``、``0170`` 与 ``0186``
-已按 Premium 规初登记，``0175–0178``、``0180–0185``、``0196–0197`` 已按 Database 规则登记，
+已按 Premium 规则登记，``0175–0178``、``0180–0185``、``0196–0197`` 已按 Database 规则登记，
 ``0192–0195`` 已按 Shell 规则登记。新题生成进度 ``next_problem`` 仍为 ``0219``。
 
 ``0127`` 起曾有部分题解退化为摘要骨架，现已完成质量返工：
@@ -32,7 +32,7 @@ LeetCode 多语言 RST 学习仓库
 
 上述 32 道公开题均达到冻结教学质量基线，``needs_revision`` 保持为空。
 新题 ``0166–0169``、``0171–0174``、``0179``、``0187–0191`` 与 ``0198–0218`` 已按完整质量门生成。
-当前暂停 ``0219–0220`` 新题生成，从 ``0166`` 开始按题号升序执行历史静态审查；当前合同见
+当前暂停 ``0219–0220`` 新题生成，``0166`` 已完成针对性静态审查，下一题为 ``0167``；当前合同见
 ``state/BATCH_CONTRACT.toml``。
 
 质量控制
@@ -64,10 +64,10 @@ LeetCode 多语言 RST 学习仓库
 * ``docs/FORWARD_RULES_0151_ONWARD.rst``：``0151`` 起长期算法和语言规则；
 * ``docs/AUTOMATION_QUALITY_GATE.rst``：内容、样本隔离、静态审查、漂移和提交质量门；
 * ``docs/SOLUTION_AND_TYPES_POLICY.rst``：解法、平台类型和语言适配器；
-* ``docs/AUTOMATION_DIRECT_MAIN_POLICY.rst``：直接更新 ``main`` 的原子提交流程［
+* ``docs/AUTOMATION_DIRECT_MAIN_POLICY.rst``：直接更新 ``main`` 的原子提交流程；
 * ``docs/CODEX_GIT_WORKFLOW.rst``：Codex 使用标准 ``git add``、``commit``、``push`` 的安全流程；
-* ``state/CONCEPT_LEDGER.toml``：知识账本五十题范围索引与活动 shard 解析入口；
-* ``docs/CONCEPT_LEDGER_SCHEMA.rst``：活动 manifest、完整 concept 状态与历史兼容规则；
+* ``state/CONCEPT_LEDGER.toml``：知识账本五十题平面状态文件的有序索引；
+* ``docs/CONCEPT_LEDGER_SCHEMA.rst``：活动平面状态、稳定 concept ID 与覆盖合并规则；
 * ``problems/0101-0200/README.rst``：已结束的 0101–0200 范围索引与跳过登记；
 * ``problems/0201-0300/README.rst``：新题生成范围索引；生成任务恢复后下一入口仍为 0219。
 
@@ -78,7 +78,7 @@ LeetCode 多语言 RST 学习仓库
 #. ``state/BATCH_CONTRACT.toml``；
 #. ``state/REVIEW_INDEX.toml`` 的 active corrections；
 #. ``docs/TUTORIAL_QUALITY_BASELINE.rst``；
-#. 当前前向规则和质量门［
+#. 当前前向规则和质量门；
 #. 当前范围索引、知识账本和合同列出的事实来源；
 #. 漂移记录、历史归档、提交和对话摘要。
 
@@ -87,12 +87,12 @@ LeetCode 多语言 RST 学习仓库
 
 所有生成、返工、抽查、规则维护和归档由当前对话中的明确指令触发：
 
-#. 读取最新 ``main``、进度、批次合同、冻结基线和 active corrections［
+#. 读取最新 ``main``、进度、批次合同、冻结基线和 active corrections；
 #. 只使用合同选定黄金题学习结构和解释深度；
 #. 最近题目只按合同作为事实来源；
-#. 按风险决定实际连续范围，高风险叠加时缩批［
+#. 按风险决定实际连续范围，高风险叠加时缩批；
 #. 按题号登记非算法与受限题，逐题完成算法内容、十语言代码与必要静态审查；
-#. 把新题写入正确百题目录，并同步所属范围 README［
+#. 把新题写入正确百题目录，并同步所属范围 README；
 #. 执行内容质量门和漂移回归；
 #. 同步根索引、进度、知识账本和下一批合同；
 #. 显式暂存本轮文件，使用标准 ``git commit`` 形成一个原子提交并非强制推送到 ``origin/main``；

@@ -1,5 +1,5 @@
 [meta]
-version = 1
+version = 2
 last_problem = 200
 
 # teaching_state: introduced / reinforcing / familiar / refresh / mastered
@@ -68,7 +68,7 @@ last_problem = 200
 "complexity.output_sensitive_recurring_decimal" = { kind = "complexity", first_problem = 166, last_problem = 166, occurrences = 1, teaching_state = "introduced", difficult = true, note = "以生成位数 L 和不同余数 r 报告期望 O(L) 时间、O(L+r) 空间、一次括号插入 O(L)；哈希极端冲突最坏可达 O(L^2)。" }
 "invariant.exact_fraction_decimal_prefix" = { kind = "invariant", first_problem = 166, last_problem = 166, occurrences = 1, teaching_state = "introduced", difficult = false, note = "生成 k 位后保持 N/D=q+sum(d_i/10^i)+r_k/(D*10^k)，且 0<=r_k<D；每轮 10r=dD+r' 精确延伸一位。" }
 "language.javascript_r_exact_integer_range" = { kind = "language_adapter", first_problem = 166, last_problem = 166, occurrences = 1, teaching_state = "introduced", difficult = false, note = "TypeScript/R 的最大 remainder*10 约 2.15e10，低于 2^53；不使用 JS 32 位位运算，R 用固定槽与 environment 避免逐位向量重建。" }
-"numeric.widen_before_abs_signed_minimum" = { kind = "numeric", first_problem = 166, last_problem = 166, occurrences = 1, teaching_state = "reinforcing", difficult = true, note = "分子分母先从 32 位提升至 64 位，再取绝对值和处理符号，覆盖 -2^31；零分子先返回避免负零。" }
+"numeric.int_min_absolute_value_widening" = { kind = "syntax", first_problem = 29, last_problem = 166, occurrences = 3, teaching_state = "familiar", difficult = true, note = "0029、0050 与 0166 都先提升到 64 位，再处理最小 32 位负整数的绝对值或相反数；0166 同时覆盖分子、分母与负零。" }
 "proof.remainder_finite_or_cycle_dichotomy" = { kind = "proof", first_problem = 166, last_problem = 166, occurrences = 1, teaching_state = "introduced", difficult = true, note = "余数为零恰好有限终止；否则非零余数来自有限集合且转移确定，首次重复状态给出函数图的环入口和循环部分。" }
 "resource.c_transactional_builder_and_remainder_hash" = { kind = "language_adapter", first_problem = 166, last_problem = 166, occurrences = 1, teaching_state = "introduced", difficult = false, note = "C 动态字符串检查终止符容量和 realloc，开放寻址表保持二次幂容量并失败清理；成功返回堆字符串所有权。" }
 "adapter.one_based_index_contract" = { kind = "language_adapter", first_problem = 167, last_problem = 167, occurrences = 1, teaching_state = "introduced", difficult = false, note = "C/C++/Python/Java/Rust/Go/TS/C# 内部零基返回前加一；Julia/R 内部已一基，不能重复加一。" }
