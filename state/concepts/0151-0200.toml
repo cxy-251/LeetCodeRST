@@ -1,12 +1,16 @@
 [meta]
-version = 10
+version = 11
 last_problem = 200
 
 # teaching_state: introduced / reinforcing / familiar / refresh / mastered
 
 [concepts]
-"invariant.level_frontier_snapshot" = { kind = "invariant", first_problem = 102, last_problem = 199, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "每轮开始时队列快照恰好包含当前层全部节点，新入队孩子只属于下一层。" }
-"invariant.mark_before_push" = { kind = "invariant", first_problem = 130, last_problem = 200, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "邻居在压入队列或栈前立即标记，防止被多个相邻格重复发现。" }
+"algorithm.binary_tree_level_order_queue_snapshot" = { kind = "algorithm", first_problem = 102, last_problem = 199, occurrences = 5, teaching_state = "familiar", difficult = false, note = "0102 引入层大小快照，0103、0107、0111 强化；0199 复用同一快照且只提交本层最后节点。" }
+"proof.bfs_level_frontier_order" = { kind = "proof", first_problem = 102, last_problem = 199, occurrences = 5, teaching_state = "familiar", difficult = true, note = "父节点从左到右出队并先左后右入队，保证下一层顺序；0199 据此证明最后节点就是结构上最右节点。" }
+"complexity.bfs_frontier_width" = { kind = "complexity", first_problem = 102, last_problem = 199, occurrences = 5, teaching_state = "familiar", difficult = true, note = "0102–0111 区分活动前沿与树高；0199 继续区分 O(w) 队列、O(h) 输出和 R 结果暂存。" }
+"r.environment_queue_slots" = { kind = "language_boundary", first_problem = 102, last_problem = 199, occurrences = 3, teaching_state = "familiar", difficult = false, note = "0102、0103 与 0199 用哈希 environment 保存队列槽位，弹出即删除；0199 另把结果暂存在环境后一次物化。" }
+"algorithm.grid_mark_on_enqueue" = { kind = "algorithm", first_problem = 130, last_problem = 200, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0130 在入队前、0200 在入栈前立即标记网格单元，防止同一格被多个邻居重复加入搜索前沿。" }
+"interface.r_matrix_copy_return" = { kind = "language_boundary", first_problem = 73, last_problem = 200, occurrences = 3, teaching_state = "familiar", difficult = false, note = "0073、0130 返回修改后的 R 矩阵；0200 只返回计数，但矩阵下标赋值仍只重绑当前调用帧并可能复制输入。" }
 "workflow.targeted_static_review" = { kind = "workflow", first_problem = 134, last_problem = 200, occurrences = 42, teaching_state = "reinforcing", difficult = false, note = "0151–0200 继续执行人工推演、证明映射、逐语言静态语义和仓库一致性检查；未运行、未编译、未测试题解。" }
 "adapter.c_reverse_words_owned_result" = { kind = "language_adapter", first_problem = 151, last_problem = 151, occurrences = 1, teaching_state = "introduced", difficult = false, note = "C 按 n+1 分配返回缓冲，r<=n 保证写入与终止符有界；失败返回 NULL，成功结果由调用者释放。" }
 "algorithm.reverse_word_scan_from_right" = { kind = "algorithm", first_problem = 151, last_problem = 151, occurrences = 1, teaching_state = "introduced", difficult = false, note = "以半开右边界 end 从右向左交替跳过空格、定位 [start,end) 单词并正向写出；每轮越过一个完整单词。" }
@@ -20,8 +24,8 @@ last_problem = 200
 "invariant.nonempty_subarray_initialization" = { kind = "invariant", first_problem = 152, last_problem = 152, occurrences = 1, teaching_state = "introduced", difficult = false, note = "三个状态从 nums[0] 初始化，避免用 0 或 1 引入不存在的空子数组候选。" }
 "numeric.actual_subarray_product_witness" = { kind = "numeric", first_problem = 152, last_problem = 152, occurrences = 1, teaching_state = "introduced", difficult = true, note = "每个 DP 候选都有真实连续子数组见证，因此官方任意子数组乘积适合 32 位的保证覆盖最大、最小和扩展候选。" }
 "proof.product_subarray_right_endpoint_partition" = { kind = "proof", first_problem = 152, last_problem = 152, occurrences = 1, teaching_state = "introduced", difficult = true, note = "每个以 i 结尾的子数组要么单取 i，要么唯一延长一个以 i-1 结尾的子数组；乘以固定数的单调或反单调性使旧两端充分。" }
-"semantics.same_old_state_parallel_update" = { kind = "language_semantics", first_problem = 152, last_problem = 152, occurrences = 1, teaching_state = "introduced", difficult = true, note = "新最大与新最小必须来自同一组三候选；先覆盖最大值再计算最小值会在一轮内重复使用当前元素。" }
-"technique.scalar_dynamic_programming" = { kind = "technique", first_problem = 152, last_problem = 152, occurrences = 1, teaching_state = "introduced", difficult = false, note = "完整 DP 只依赖前一位置双极值，可压缩为常数标量；覆盖前必须先保存同一旧状态的两个扩展候选。" }
+"semantics.same_old_state_parallel_update" = { kind = "language_semantics", first_problem = 152, last_problem = 198, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "0152 的新双极值必须来自同一组旧候选；0198 同样先读取两个旧前缀状态计算 current，再整体推进滚动对。" }
+"technique.scalar_dynamic_programming" = { kind = "technique", first_problem = 152, last_problem = 198, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0152 把双极值 DP 压成标量；0198 只保留下一轮仍需读取的两个前缀最优状态。" }
 "complexity.binary_candidate_length_halving" = { kind = "complexity", first_problem = 153, last_problem = 153, occurrences = 1, teaching_state = "introduced", difficult = true, note = "旧闭区间长度 s>=2 时任一分支新长度至多 ceil(s/2)，由长度递推而非二分外形证明最坏 O(log n)。" }
 "invariant.minimum_index_closed_interval" = { kind = "invariant", first_problem = 153, last_problem = 153, occurrences = 1, teaching_state = "introduced", difficult = false, note = "闭区间始终包含唯一最小值下标；大于分支保留 [mid+1,right]，小于分支保留 [left,mid]。" }
 "proof.rotated_two_segment_exclusion" = { kind = "proof", first_problem = 153, last_problem = 153, occurrences = 1, teaching_state = "introduced", difficult = true, note = "旋转后由较大值段与从最小值开始的较小值段组成；同段严格递增与跨段值序共同证明两个分支的整段排除。" }
@@ -77,7 +81,7 @@ last_problem = 200
 "proof.monotone_sum_pointer_elimination" = { kind = "proof", first_problem = 15, last_problem = 167, occurrences = 3, teaching_state = "familiar", difficult = true, note = "0015–0016 与 0167 都用有序端点界证明：和过小时排除左端，和过大时排除右端；重复值不破坏非严格不等式。" }
 "resource.c_fixed_pair_return" = { kind = "resource", first_problem = 1, last_problem = 167, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0001 与 0167 的 C 实现都只在两个 int 成功分配并写入后设置 returnSize=2；失败保持长度 0，成功返回所有权交给调用者。" }
 "algorithm.bijective_base26_decrement" = { kind = "algorithm", first_problem = 168, last_problem = 168, occurrences = 1, teaching_state = "introduced", difficult = false, note = "每轮先 current-1，再以 26 取余映射 A..Z，高位商继续编码，最后反转低位优先字符。" }
-"complexity.output_space_exclusion" = { kind = "complexity", first_problem = 52, last_problem = 187, occurrences = 36, teaching_state = "mastered", difficult = false, note = "0052–0187 持续区分工作状态、适配器与返回载荷；0187 另报 1 MiB 固定状态表、R 输入物化、Theta(R) 结果和托管子串存储风险。" }
+"complexity.output_space_exclusion" = { kind = "complexity", first_problem = 52, last_problem = 199, occurrences = 37, teaching_state = "mastered", difficult = false, note = "0052–0187 持续区分工作状态、适配器与返回载荷；0199 另报 O(w) 队列、O(h) 右视图结果和 R 暂存物化。" }
 "invariant.column_title_place_value" = { kind = "invariant", first_problem = 168, last_problem = 168, occurrences = 1, teaching_state = "introduced", difficult = false, note = "N=current*26^k+sum(x_i*26^i)，其中已生成 x_i 属于 1..26；每轮由 current=26q+x_k 保持。" }
 "numeric.column_title_32bit_length" = { kind = "numeric", first_problem = 168, last_problem = 168, occurrences = 1, teaching_state = "introduced", difficult = true, note = "2^31-1 对应 FXSHRXW，当前输入域标题最多 7 位；C/C#/R 固定缓冲容量由该上界支撑。" }
 "proof.bijective_base26_uniqueness" = { kind = "proof", first_problem = 168, last_problem = 168, occurrences = 1, teaching_state = "introduced", difficult = true, note = "(current-1) 的欧几里得商余唯一决定最低位与剩余高位，递归应用推出标题表示唯一。" }
@@ -94,7 +98,7 @@ last_problem = 200
 "proof.prime_factor_layer_counting" = { kind = "proof", first_problem = 172, last_problem = 172, occurrences = 1, teaching_state = "introduced", difficult = true, note = "5^k 的倍数恰贡献第 k 个因子 5；分层计数使每个整数按其 5-adic 指数被统计恰当次数。" }
 "algorithm.binary_tree_inorder_explicit_stack" = { kind = "algorithm", first_problem = 94, last_problem = 173, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0094 用显式栈一次性模拟左根右控制流；0173 把同一左链展开保存为跨 next 调用的惰性对象状态。" }
 "proof.inorder_stack_continuation_invariant" = { kind = "proof", first_problem = 94, last_problem = 173, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "0094 与 0173 的栈都保存左递归完成后尚待 visit 的祖先续点；0173 进一步用该不变量证明栈顶是下一最小节点及 hasNext 等价性。" }
-"interface.binary_tree_node_reference_model" = { kind = "interface", first_problem = 94, last_problem = 173, occurrences = 21, teaching_state = "mastered", difficult = false, note = "0094 建立跨语言 TreeNode 引用模型，0101–0116 持续强化；0173 的迭代器保存节点引用且要求树在对象生命周期内不变。" }
+"interface.binary_tree_node_reference_model" = { kind = "interface", first_problem = 94, last_problem = 199, occurrences = 22, teaching_state = "mastered", difficult = false, note = "0094 建立跨语言 TreeNode 引用模型，0101–0116 持续强化；0173 保存节点引用，0199 只读入队并复用 Julia/R 统一节点定义。" }
 "ownership.read_only_tree_reference_stack" = { kind = "ownership", first_problem = 144, last_problem = 173, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "0144 与 0173 的显式栈都只保存并读取树节点引用；Rust Rc 克隆不复制子树，C/C++ 栈不拥有节点。" }
 "algorithm.lazy_bst_inorder_iterator" = { kind = "algorithm", first_problem = 173, last_problem = 173, occurrences = 1, teaching_state = "introduced", difficult = false, note = "构造与每次 next 只展开当前子树最左路径，显式栈保存递归中序续点，不预先物化完整序列。" }
 "complexity.bst_iterator_amortized_next" = { kind = "complexity", first_problem = 173, last_problem = 173, occurrences = 1, teaching_state = "introduced", difficult = true, note = "单次 next 最坏沿左链 O(h)，全遍历每节点入栈出栈各一次，总 O(n)，故均摊 O(1)，峰值空间 O(h)。" }
@@ -132,7 +136,7 @@ last_problem = 200
 "boundary.stock_profit_integer_upper_bound" = { kind = "boundary", first_problem = 121, last_problem = 188, occurrences = 4, teaching_state = "familiar", difficult = false, note = "0121–0123 与 0188 都从交易数和价格范围推导固定宽整数边界；0188 的答案至多 100000，可达状态绝对值至多 201000。" }
 "boundary.stock_zero_profit_option" = { kind = "boundary", first_problem = 121, last_problem = 188, occurrences = 4, teaching_state = "familiar", difficult = false, note = "0121–0123 与 0188 都保留不交易的零利润基线；精确交易状态可为负，但最终对全部空仓状态取最大，不强迫亏损交易。" }
 "resource.c_stock_state_allocation" = { kind = "resource", first_problem = 188, last_problem = 188, occurrences = 1, teaching_state = "introduced", difficult = false, note = "C 分配 cash 与 hold 两组 64 位状态，部分失败释放已分配对象；-1 作为合法非负答案域外的资源失败标记。" }
-"adapter.array_mutation_visibility" = { kind = "language_adapter", first_problem = 189, last_problem = 189, occurrences = 1, teaching_state = "introduced", difficult = false, note = "C 至 Julia 修改调用者可见数组；R 普通向量局部绑定需返回结果，不能宣称调用者绑定原地改变。" }
+"adapter.array_mutation_visibility" = { kind = "language_adapter", first_problem = 189, last_problem = 200, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0189 区分共享可变数组与 R 返回适配；0200 进一步区分可见网格修改、Rust 按值消费及 R 当前调用帧重绑定。" }
 "algorithm.rotate_array_three_reversals" = { kind = "algorithm", first_problem = 189, last_problem = 189, occurrences = 1, teaching_state = "introduced", difficult = false, note = "把原数组分成 A 与末尾 B，利用 rev(A+B)=rev(B)+rev(A)，再分别恢复 B 与 A 得到右旋。" }
 "invariant.reverse_closed_interval" = { kind = "invariant", first_problem = 189, last_problem = 189, occurrences = 1, teaching_state = "introduced", difficult = false, note = "闭区间反转中外侧对称位置已就位、未处理元素保持在 left..right，循环内缩直至完成。" }
 "proof.in_place_multiset_conservation" = { kind = "proof", first_problem = 26, last_problem = 189, occurrences = 12, teaching_state = "familiar", difficult = true, note = "0026–0088 的覆盖、交换、逆向合并与链表重排保持目标多重集；0189 的三次区间交换只改变位置，不遗漏、复制或改写元素值。" }
@@ -145,12 +149,12 @@ last_problem = 200
 "algorithm.house_robber_prefix_dp" = { kind = "algorithm", first_problem = 198, last_problem = 198, occurrences = 1, teaching_state = "introduced", difficult = false, note = "F(i) 表示前 i 间房屋最大金额，递推 max(F(i-1),F(i-2)+nums[i-1])。" }
 "boundary.house_robber_empty_strategy" = { kind = "boundary", first_problem = 198, last_problem = 198, occurrences = 1, teaching_state = "introduced", difficult = false, note = "金额非负使空方案提供 0 下界；实现额外兼容空数组、单房、双房和全零。" }
 "invariant.house_robber_rolling_pair" = { kind = "invariant", first_problem = 198, last_problem = 198, occurrences = 1, teaching_state = "introduced", difficult = false, note = "处理前 i 间后 previous_one=F(i)、previous_two=F(i-1)，先算 current 再整体推进避免覆盖旧依赖。" }
-"numeric.house_robber_wide_accumulator" = { kind = "numeric", first_problem = 198, last_problem = 198, occurrences = 1, teaching_state = "introduced", difficult = true, note = "固定宽语言用 64 位中间状态，最终按官方约束转换到平台返回类型。" }
+"numeric.house_robber_wide_accumulator" = { kind = "numeric", first_problem = 198, last_problem = 198, occurrences = 1, teaching_state = "introduced", difficult = true, note = "固定宽语言用 64 位中间状态，官方 n<=100、金额<=400 推出答案<=20000，支撑最终转换到 32 位平台返回类型。" }
 "proof.house_robber_last_house_partition" = { kind = "proof", first_problem = 198, last_problem = 198, occurrences = 1, teaching_state = "introduced", difficult = true, note = "所有方案按最后一间不选或选择完备且互斥；选择时必须连接到 i-2 前缀。" }
 "state.house_robber_prefix_optimum" = { kind = "state", first_problem = 198, last_problem = 198, occurrences = 1, teaching_state = "introduced", difficult = false, note = "状态只保留前缀最优金额，具体选择路径在相同前缀下被更大金额支配。" }
-"adapter.circular_node_queue" = { kind = "language_adapter", first_problem = 199, last_problem = 199, occurrences = 1, teaching_state = "introduced", difficult = false, note = "C/Go/TypeScript/Julia 使用循环队列保持活动存储与树宽同阶；R 用环境槽位并在弹出后删除。" }
+"adapter.circular_node_queue" = { kind = "language_adapter", first_problem = 199, last_problem = 199, occurrences = 1, teaching_state = "introduced", difficult = false, note = "C/Go/TypeScript/Julia 使用循环队列保持活动存储与树宽同阶；Julia 显式分配 TreeNode/nothing 联合槽，R 用环境槽位并在弹出后删除。" }
 "algorithm.level_bfs_right_view" = { kind = "algorithm", first_problem = 199, last_problem = 199, occurrences = 1, teaching_state = "introduced", difficult = false, note = "冻结当前层大小，按左后右从左到右处理，本层最后出队节点即右侧可见节点。" }
 "proof.rightmost_node_visibility" = { kind = "proof", first_problem = 199, last_problem = 199, occurrences = 1, teaching_state = "introduced", difficult = true, note = "同层队列按从左到右排列，最后节点是最靠右非空节点，每层恰好提交一个值。" }
-"adapter.mutable_grid_cross_language" = { kind = "language_adapter", first_problem = 200, last_problem = 200, occurrences = 1, teaching_state = "introduced", difficult = false, note = "多数语言修改调用者可见网格；Rust 消费拥有值，R 局部矩阵修改可能写时复制，需分别报告。" }
 "algorithm.grid_component_flood_fill" = { kind = "algorithm", first_problem = 200, last_problem = 200, occurrences = 1, teaching_state = "introduced", difficult = false, note = "外层扫描首次发现陆地时计数一次，并用迭代栈清除整个四邻接连通分量。" }
 "proof.component_discovery_bijection" = { kind = "proof", first_problem = 200, last_problem = 200, occurrences = 1, teaching_state = "introduced", difficult = true, note = "每个岛屿的最早扫描陆地恰好触发一次计数，洪泛完整清除该分量，后续同岛格不再计数。" }
+"safety.c_size_arithmetic_and_cleanup" = { kind = "safety", first_problem = 200, last_problem = 200, occurrences = 1, teaching_state = "introduced", difficult = true, note = "0200 的 C 栈容量在 size_t 中检查 rows*cols 与字节乘法，单块分配在成功和全部失败路径上都释放或不发布。" }

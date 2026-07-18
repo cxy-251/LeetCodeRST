@@ -149,10 +149,10 @@ statement = "O(min(m,n)) describes only the rolling Boolean DP array. The C++ si
 [next_action]
 kind = "historical_review"
 status = "ready"
-start = 198
-end = 200
-problem_ids = [198, 199, 200]
-purpose = "暂停 0219–0220 生成；审查 0198 的滚动前缀 DP、0199 的层队列右视图与 0200 的原地四邻接洪泛和资源边界。"
+start = 201
+end = 203
+problem_ids = [201, 202, 203]
+purpose = "暂停 0219–0220 生成；审查 0201 的公共二进制前缀、0202 的有限函数图 Floyd 判环与 0203 的虚拟头链表删除和所有权。"
 
 [artifact_lifecycle]
 policy = "docs/ARTIFACT_LIFECYCLE_POLICY.rst"

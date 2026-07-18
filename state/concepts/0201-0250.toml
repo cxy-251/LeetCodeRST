@@ -1,12 +1,12 @@
 [meta]
-version = 4
+version = 5
 last_problem = 218
 
 # teaching_state: introduced / reinforcing / familiar / refresh / mastered
 
 [concepts]
 "workflow.targeted_static_review" = { kind = "workflow", first_problem = 134, last_problem = 212, occurrences = 54, teaching_state = "mastered", difficult = false, note = "0134–0212 持续执行人工推演、证明映射、十语言静态语义和仓库一致性检查；未运行、未编译、未测试题解。" }
-"invariant.mark_and_restore_board" = { kind = "invariant", first_problem = 200, last_problem = 212, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "进入合法状态后临时标记当前格，探索四邻格，退出前恢复原字符；标记只属于当前递归路径。" }
+"invariant.mark_and_restore_board" = { kind = "invariant", first_problem = 212, last_problem = 212, occurrences = 1, teaching_state = "introduced", difficult = false, note = "0212 进入合法状态后临时标记当前格，探索四邻格，退出前恢复原字符；0200 永久清零访问状态，不属于此 concept。" }
 "adapter.unsigned_prefix_shift" = { kind = "language_adapter", first_problem = 201, last_problem = 201, occurrences = 1, teaching_state = "introduced", difficult = false, note = "C/C++/Rust/Go/C# 使用无符号状态，Java 使用 >>>，TypeScript 使用 >>>0，R 用精确 double 的除二与乘幂恢复。" }
 "algorithm.range_and_common_prefix" = { kind = "algorithm", first_problem = 201, last_problem = 201, occurrences = 1, teaching_state = "introduced", difficult = false, note = "同步逻辑右移区间端点直到相等，得到最长公共二进制前缀，再补回相同数量的低位 0。" }
 "proof.range_and_variable_suffix_zero" = { kind = "proof", first_problem = 201, last_problem = 201, occurrences = 1, teaching_state = "introduced", difficult = true, note = "端点跨越第一个差异位对应的块边界，变化后缀的每一位都在区间内至少出现一次 0，因此按位与全部归零。" }
@@ -119,7 +119,7 @@ last_problem = 218
 "proof.lower_bound_matched_by_construction" = { kind = "proof", first_problem = 214, last_problem = 214, occurrences = 1, teaching_state = "introduced", difficult = true, note = "先证明任意方案至少补 n-L 个字符，再由 reverse(s[L:]) 的构造恰好达到该下界。" }
 "string.ascii_code_unit_contract" = { kind = "string", first_problem = 214, last_problem = 214, occurrences = 1, teaching_state = "introduced", difficult = true, note = "官方 ASCII 输入使字节、UTF-16 code unit 与 Unicode code point 边界一致；超出 ASCII 后不得继续混用这些坐标。" }
 "complexity.output_payload_separation" = { kind = "complexity", first_problem = 214, last_problem = 218, occurrences = 3, teaching_state = "familiar", difficult = true, note = "0214、0216、0218 分别把字符串、二维组合行和轮廓关键点的返回载荷，与核心工作状态及临时物化成本分开报告。" }
-"safety.c_size_arithmetic_and_cleanup" = { kind = "safety", first_problem = 214, last_problem = 218, occurrences = 2, teaching_state = "reinforcing", difficult = true, note = "0214、0218 的 C 适配器在分配前检查 size_t 加乘，任一中途失败释放全部已拥有对象，成功后明确所有权转移。" }
+"safety.c_size_arithmetic_and_cleanup" = { kind = "safety", first_problem = 200, last_problem = 218, occurrences = 3, teaching_state = "familiar", difficult = true, note = "0200、0214、0218 的 C 适配器在分配前检查 size_t 加乘；失败时释放已拥有对象，成功时才发布结果或返回正常值。" }
 "algorithm.order_statistics" = { kind = "algorithm", first_problem = 215, last_problem = 215, occurrences = 1, teaching_state = "introduced", difficult = false, note = "只要求第 k 个排序位置时使用选择算法，不必完成全局排序；第 k 大对应升序下标 n-k。" }
 "proof.strict_interval_shrink" = { kind = "proof", first_problem = 215, last_problem = 215, occurrences = 1, teaching_state = "introduced", difficult = true, note = "未命中等值段时，新闭区间严格落在小值侧或大值侧并至少删除一个位置，因此搜索必然终止。" }
 "array.in_place_partition" = { kind = "array", first_problem = 215, last_problem = 215, occurrences = 1, teaching_state = "introduced", difficult = false, note = "通过交换在原数组中维护分区，不建立元素副本数组；调用契约必须说明输入顺序会被重排。" }
