@@ -1,17 +1,17 @@
 [contract]
 schema_version = 2
-batch_id = "historical-review-0174"
+batch_id = "historical-review-0179"
 status = "ready"
 phase = "historical_review"
 kind = "targeted_review"
-scope = [174]
+scope = [179]
 state_source = "state/PROGRESS.toml"
 baseline_source = "docs/TUTORIAL_QUALITY_BASELINE.rst"
 quality_gate = "docs/AUTOMATION_QUALITY_GATE.rst"
 drift_log = "state/DRIFT_LOG.toml"
 new_problem_generation_paused = true
 completion_count_must_remain_unchanged = true
-next_review_after_batch = 179
+next_review_after_batch = 187
 
 [static_review]
 solution_code_execution = "forbidden"
@@ -23,37 +23,38 @@ repository_structure_state_and_git_checks = "allowed"
 reporting = "只声明实际完成的静态审查；明确未运行、未编译、未测试和剩余风险。"
 
 [budget]
-algorithm_score = 4
+algorithm_score = 2
 proof_risk = "high"
 language_semantics_risk = "high"
 platform_type_risk = "high"
-output_volume_risk = "high"
+output_volume_risk = "medium"
 scope_may_shrink = false
-scope_reason = "0174 是独立 Hard，逆向最优状态、边界哨兵、宽整数和十语言二维输入风险叠加，不能与 0179 合批。"
+scope_reason = "0179 单题的严格弱序证明、十种排序接口、C 资源路径和 R 自定义归并已构成高风险批次；完成后再跳到 0187。"
 
 [references]
 style_baselines = [
-  "problems/0001-0100/0050-powx-n.rst",
+  "problems/0001-0100/0001-two-sum.rst",
   "problems/0001-0100/0076-minimum-window-substring.rst",
 ]
 style_roles = [
-  "0050 提供宽整数、哨兵运算、边界推导和十语言数值语义基线",
-  "0076 提供 Hard 最优性、不变量、必要与充分论证和逐语言状态成本基线",
+  "0001 提供紧凑数组契约、C 返回所有权、十语言容器接口和失败路径基线",
+  "0076 提供全局最优性、不变量、局部安全性证明与字符串适配成本基线",
 ]
 fact_sources = [
   "state/PROGRESS.toml",
   "state/REVIEW_INDEX.toml",
   "state/CONCEPT_LEDGER.toml",
+  "state/concepts/0001-0050.toml",
   "state/concepts/0051-0100.toml",
   "state/concepts/0151-0200.toml",
   "docs/FORWARD_RULES_0151_ONWARD.rst",
   "problems/0101-0200/README.rst",
-  "https://leetcode.com/problems/dungeon-game/description/",
+  "https://leetcode.com/problems/largest-number/description/",
 ]
 fact_sources_may_provide = [
-  "0174 的非空矩形网格、移动方向、生命下界、只读输入与返回接口",
-  "既有网格滚动 DP、逆序扫描、宽整数、边界哨兵和十语言矩阵适配知识状态",
-  "0175–0178 为 Database 登记，0174 完成后的下一公开算法题是 0179",
+  "0179 的非空非负整数数组、十进制拼接、字符串返回、全零规范化与官方约束",
+  "既有排序合同、交换证明、ASCII 扫描、字符串载荷和 C 事务式资源知识状态",
+  "0180–0185 为 Database、0186 为 Premium，0179 完成后的下一公开算法题是 0187",
 ]
 fact_sources_must_not_provide = [
   "章节结构",
@@ -63,41 +64,43 @@ fact_sources_must_not_provide = [
 ]
 
 [problem]
-id = 174
-title = "Dungeon Game"
-path = "problems/0101-0200/0174-dungeon-game.rst"
+id = 179
+title = "Largest Number"
+path = "problems/0101-0200/0179-largest-number.rst"
 review_mode = "preserve_strong_body_and_apply_targeted_fixes"
 primary_risks = [
-  "核对 need(i,j) 表示进入当前格之前完成剩余路径的最小生命，不能改成到达当前格后的最大余额",
-  "核对 max(1,min(down,right)-cell) 同时满足生命下界和最佳后继需求，局部贪心或最大终点总和均不足",
-  "证明转移的必要性、充分性、关于后继需求的单调性、逆拓扑归纳和最终最优性",
-  "核对只在公主格下方设置需求 1 的单个虚拟后继，其他越界方向保持 INF，禁止从普通边界逃出",
-  "核对右向左更新时 dp[j] 仍为下方状态、dp[j+1] 已为右侧状态，更新顺序与二维语义一致",
-  "推导官方约束下答案上界并核对固定宽语言 64 位中间值、INF 距离、减法与最终整数转换",
-  "逐语言核对非空规则矩阵、零基与一基索引、逆序范围、输入只读、Python/TypeScript/R 的 Infinity 仅作未选哨兵",
-  "核对 C 的 columns+1 容量、字节乘法、分配释放和合法答案至少为 1 时平台外 0 错误标记的限制",
-  "审计逆向最低资源状态、滚动行和虚拟后继与既有网格 DP concept 的关系，优先复用稳定 ID",
+  "核对比较器只在 ab>ba 时把 a 放在 b 前，不能按整数值、普通字典序、长度或前缀启发式排序",
+  "核对 ab 与 ba 为等长 ASCII 数字串，字典序等于数值顺序；实现不得解析可能溢出的拼接整数",
+  "核对虚拟拼接的 m+n 个字符映射与首个差异，等价项返回 equal/false 而非强造顺序",
+  "证明有限 ab/ba 比较与无限周期串顺序一致，并由此建立非自反、不对称、传递和等价类传递性",
+  "用相邻交换证明任意排列可不减地转为排序排列，并证明等价项和排序稳定性不影响最终拼接",
+  "核对首项为 0 当且仅当全部输入为 0，返回单个 0；其他结果保留完整 Theta(D) 输出载荷",
+  "逐语言核对 qsort/std::sort/cmp_to_key/List.sort/sort_by/sort.Slice/Array.sort/List.Sort/sort! 的比较方向和等价语义",
+  "核对十语言只比较 ASCII 十进制字节或代码单元，字符串化 10^9、总长度 D、构建器容量和输入不修改",
+  "核对 C 的 calloc、snprintf 两阶段转换、比较器无分配、长度乘加、部分清理、答案终止符和返回所有权",
+  "核对 R 底向上归并覆盖每轮全部槽位、宽度倍增、尾段边界、记录字节物化和 O(n) 工作缓冲",
+  "审计拼接比较器、交换证明、排序合同和输出归一化与既有稳定 concept 的关系，禁止近义重复",
 ]
 
 minimum_static_review = [
-  "人工逆推标准 3x3 示例、单格正数、单格负数、单行、单列与全正矩阵，记录 dp 每轮含义",
-  "构造只看相邻格或只看终点总和的反例，完整核对必要性、充分性、后继选择和逆向归纳",
-  "逐语言核对公开签名、矩阵形状、索引方向、滚动数组、宽整数、Infinity/INF、输入修改和返回转换",
-  "由 m,n 与格值范围给出最大所需生命上界，确认有限后继总在减法前被选中",
-  "知识账本只从 state/concepts 的五十题平面状态读取，完成后越过 Database 登记把下一审查入口推进到 0179",
+  "人工推演 [10,2]、[3,30,34,5,9]、[0,0]、[121,12]、[8308,830] 与等价周期 [12,1212]",
+  "选择三个字符串核对比较传递链，并完整复核周期串严格弱序、相邻交换、等价类和全零证明",
+  "逐语言核对公开签名、排序 API 比较方向、相等返回、ASCII 单位、输入所有权、字符串构建和输出载荷",
+  "纸面推演 R 在奇数 n 和非二次幂 n 下的归并轮次，核对 C 每个分配失败点的清理集合",
+  "知识账本只从 state/concepts 的五十题平面状态读取，完成后越过 Database 与 Premium 登记把入口推进到 0187",
 ]
 
 must_preserve = [
-  "精确生命合同、贪心与终点总和反例、进入前状态、逆向转移、滚动不变量和完整必要充分证明",
-  "固定十语言实现、单虚拟后继、宽整数哨兵、C 失败路径、静态审查、剩余风险和带答案自检",
+  "精确字符串合同、数值与前缀反例、虚拟拼接、周期串严格弱序、相邻交换和全零规范化证明",
+  "固定十语言实现、C 无分配比较器和失败清理、R 自定义归并、真实 D 载荷、静态审查和带答案自检",
 ]
 
 forbidden = [
   "把最近完成题目作为格式样本",
   "没有确定性问题时整篇重写或压缩强主体",
-  "使用正向局部贪心、只最大化终点余额、把整个右边界或下边界初始化为 1",
-  "让 INF 参与减法、混淆滚动数组新旧行含义或隐藏固定宽转换风险",
-  "把一种语言的矩阵和逆序索引结论外推为十语言均正确",
+  "按整数值、普通字典序或长度排序，构造并解析拼接整数，或只凭示例声称比较器可传递",
+  "把一种排序 API 的负值、布尔值或 Ordering 方向外推为十语言一致",
+  "忽略等价项、全零归一化、临时字符串分配、返回载荷或 R 归并工作缓冲",
   "为同一知识新造近义 concept ID",
   "拆分为 inc 或 include",
   "运行、编译、对拍、穷举、属性测试、sanitizer 或目标语言最小程序",
@@ -107,7 +110,7 @@ forbidden = [
 required = [
   "正文只在审查发现明确问题时修改",
   "知识账本保留稳定 concept ID，并准确区分首次引入、强化和关联",
-  "PROGRESS、REVIEW_INDEX 与下一份 BATCH_CONTRACT 同步到 0179",
+  "PROGRESS、REVIEW_INDEX 与下一份 BATCH_CONTRACT 同步到 0187",
   "不修改完成题数和 0219 的生成进度事实",
   "一个原子 main 提交，不创建分支或 PR",
 ]

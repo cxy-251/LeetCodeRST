@@ -1,5 +1,5 @@
 [meta]
-version = 5
+version = 6
 last_problem = 200
 
 # teaching_state: introduced / reinforcing / familiar / refresh / mastered
@@ -102,7 +102,10 @@ last_problem = 200
 "algorithm.reverse_minimum_health_dp" = { kind = "algorithm", first_problem = 174, last_problem = 174, occurrences = 1, teaching_state = "introduced", difficult = false, note = "need(i,j) 定义为进入格前完成剩余路径的最小生命，逆向转移 max(1,min(down,right)-cell)。" }
 "boundary.single_virtual_princess_successor" = { kind = "boundary", first_problem = 174, last_problem = 174, occurrences = 1, teaching_state = "introduced", difficult = false, note = "仅公主格下方设置需求 1 的虚拟后继，其他边界为 INF，防止路径从普通边界逃出网格。" }
 "invariant.dungeon_rolling_row" = { kind = "invariant", first_problem = 174, last_problem = 174, occurrences = 1, teaching_state = "introduced", difficult = false, note = "右向左更新前 dp[j] 是下方状态，dp[j+1] 已是当前行右侧状态，更新后 dp[j] 成为当前格状态。" }
-"numeric.dungeon_wide_need_state" = { kind = "numeric", first_problem = 174, last_problem = 174, occurrences = 1, teaching_state = "introduced", difficult = true, note = "固定宽语言用 64 位需求和远离上界的 INF；扫描保证至少一个有限后继，哨兵不参与减法。" }
+"algorithm.reverse_rolling_update" = { kind = "concept", first_problem = 115, last_problem = 174, occurrences = 3, teaching_state = "familiar", difficult = false, note = "0115 与 0119 逆序覆盖以保护上一轮左邻状态；0174 从右向左更新，使 dp[j] 保留旧下方而 dp[j+1] 已是新右侧状态。" }
+"language.julia_r_descending_iteration" = { kind = "language_boundary", first_problem = 115, last_problem = 174, occurrences = 4, teaching_state = "familiar", difficult = false, note = "0115–0120 与 0174 的 Julia/R 逆序 DP 都使用显式递减范围；0174 另核对一基矩阵端点与 R 的 by=-1L。" }
+"technique.infinity_sentinel" = { kind = "algorithm", first_problem = 4, last_problem = 174, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0004 用无穷统一数组分割边界；0174 用正无穷标记不可达后继，并证明每格减法前必选到有限需求。" }
+"numeric.path_sum_widen_before_subtract" = { kind = "numeric", first_problem = 112, last_problem = 174, occurrences = 3, teaching_state = "familiar", difficult = true, note = "0112–0113 在扣除节点值前扩宽；0174 在 64 位需求中扣除格值，并以答案上界 399001 支撑最终平台整数转换。" }
 "proof.minimum_health_necessity_sufficiency" = { kind = "proof", first_problem = 174, last_problem = 174, occurrences = 1, teaching_state = "introduced", difficult = true, note = "低于状态值时无法满足生命下界或任一后继需求；等于状态值并选择较小需求后继时可由归纳策略存活。" }
 "domain.database_problem_registration" = { kind = "domain_policy", first_problem = 175, last_problem = 185, occurrences = 10, teaching_state = "introduced", difficult = false, note = "Database 题不符合固定十语言算法产物合同，只登记 database_skipped，不创建空壳 RST。" }
 "domain.database_skipped" = { kind = "domain_policy", first_problem = 175, last_problem = 197, occurrences = 12, teaching_state = "introduced", difficult = false, note = "新增 0196–0197 Database 登记，不生成固定十语言算法 RST。" }

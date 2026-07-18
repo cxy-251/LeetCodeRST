@@ -1,5 +1,5 @@
 [meta]
-version = 2
+version = 3
 last_problem = 218
 
 # teaching_state: introduced / reinforcing / familiar / refresh / mastered
@@ -99,8 +99,6 @@ last_problem = 218
 "sweep.boundary_coordinate_compression" = { kind = "algorithm", first_problem = 218, last_problem = 218, occurrences = 1, teaching_state = "introduced", difficult = false, note = "高度只可能在左右边界变化；排序去重后每个横坐标整体处理全部开始与结束，避免重复横坐标和中间伪高度。" }
 
 # Migration corrections: restore effective states lost or malformed during flattening.
-"algorithm.reverse_rolling_update" = { kind = "algorithm", first_problem = 115, last_problem = 119, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0115 的一行子序列计数和 0119 的帕斯卡单行都逆序覆盖，保护上一轮左邻状态。" }
-"language.julia_r_descending_iteration" = { kind = "language_boundary", first_problem = 115, last_problem = 120, occurrences = 3, teaching_state = "reinforcing", difficult = false, note = "Julia/R 在逆序 DP 与自底向上循环中使用显式递减范围，证明端点并处理空循环。" }
 "algorithm.level_next_chain_reuse" = { kind = "algorithm", first_problem = 116, last_problem = 117, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0116 复用已建当前层 next 链，0117 以 next_head/next_tail 常数空间构造任意形状下一层。" }
 "boundary.explicit_chain_tail_null" = { kind = "boundary", first_problem = 116, last_problem = 117, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0116、0117 都显式保证每层最右 next 为空，覆盖旧链接并保证后续导航终止。" }
 "interface.next_node_reference_model" = { kind = "interface", first_problem = 116, last_problem = 117, occurrences = 2, teaching_state = "reinforcing", difficult = false, note = "0116 建立带 next 字段的完美树节点模型，0117 推广到稀疏树并保持节点身份与左右拓扑。" }

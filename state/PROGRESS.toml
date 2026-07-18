@@ -73,11 +73,11 @@ summary = "完成 0218 The Skyline Problem：全部边界扫描、活动建筑�
 [last_review_batch]
 status = "completed"
 kind = "targeted_review"
-problem_id = 173
+problem_id = 174
 body_changed = true
 concept_state_changed = true
-reference_problems = [76, 100]
-summary = "保留 0173 强主体；补齐 C 节点栈 size+count 溢出防护，把中序续点、持久可变栈、只读树引用和 C 扩容失败处理合并回 0094、0144、0155 的稳定 concept。"
+reference_problems = [50, 76]
+summary = "保留 0174 强主体与十语言代码；补入可计算的贪心反例和 399001 返回上界，把逆序滚动、无穷哨兵、宽减法与 Julia/R 递减迭代合并回稳定 concept。"
 
 [next_batch]
 status = "paused_for_historical_review"
@@ -87,17 +87,17 @@ end = 220
 problem_ids = [219, 220]
 difficulty_budget = 5
 contract = "state/BATCH_CONTRACT.toml"
-purpose = "0219–0220 新题生成暂缓；0166–0169、0171–0173 已审查完成，继续从 0174 升序审查历史题和知识账本。"
+purpose = "0219–0220 新题生成暂缓；0166–0169、0171–0174 已审查完成，越过 Database 与 Premium 登记后从 0179 继续审查。"
 
 [review_queue]
 status = "ready"
 kind = "historical_review"
 start = 166
-current = 174
+current = 179
 ordering = "ascending_public_algorithm_problems"
 contract = "state/BATCH_CONTRACT.toml"
-problem_path = "problems/0101-0200/0174-dungeon-game.rst"
-purpose = "0166–0169、0171–0173 已完成；继续审查正文质量、十语言静态语义、学习链与 concept 状态，按风险组织连续批次。"
+problem_path = "problems/0101-0200/0179-largest-number.rst"
+purpose = "0166–0169、0171–0174 已完成；0175–0178 为 Database、0180–0185 为 Database、0186 为 Premium，继续审查下一道公开算法题 0179。"
 
 [review_history]
 status = "completed"
@@ -167,7 +167,7 @@ problem_code_fragments_present = false
 [quality_scope]
 historical_start = 1
 historical_end = 218
-historical_policy = "既有集中质量返工已完成；0166–0169、0171–0173 已完成针对性静态审查，当前从 0174 继续升序推进，未审到的历史题默认不改。"
+historical_policy = "既有集中质量返工已完成；0166–0169、0171–0174 已完成针对性静态审查，当前从 0179 继续升序推进，未审到的历史题默认不改。"
 persistent_rule_start = 151
 persistent_rule = "docs/FORWARD_RULES_0151_ONWARD.rst"
 forward_rule_policy = "0151 起全部后续题目持续执行并原位维护长期前向规则。"
@@ -206,7 +206,7 @@ active_data_self_contained = true
 archive_dependency = false
 
 [next_action]
-summary = "按 BATCH_CONTRACT 审查 0174；0219–0220 新题生成暂停。"
+summary = "按 BATCH_CONTRACT 审查 0179；0219–0220 新题生成暂停。"
 
 [last_update]
-summary = "0173 针对性静态审查完成；C 容量加法和既有中序、对象、所有权与资源 concept 已校正，下一入口为 0174。"
+summary = "0174 针对性静态审查完成；贪心反例、数值上界和既有滚动、哨兵、宽减法 concept 已校正，下一入口为 0179。"
