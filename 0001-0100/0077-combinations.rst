@@ -6,261 +6,154 @@
 
 :题号: 0077
 :难度: Medium
-:主题: 回溯、组合、剪枝
+:主题: 回溯、组合、容量剪枝
 :原题: `LeetCode 0077 <https://leetcode.com/problems/combinations/>`_
-:访问状态: Available
-:教学重点: 严格递增路径、剩余容量剪枝、结果快照、输出复杂度
+:教学重点: 严格递增路径、剩余容量、结果快照、输出规模
 
 题目重述
 --------
 
-给定整数 ``n`` 和 ``k``，返回从 ``1`` 到 ``n`` 中选出恰好 ``k`` 个不同整数的全部组合。组合内部按
-递增顺序保存，结果集合顺序不作要求。
-
-题目保证 ``1 <= n <= 20``、``1 <= k <= n``。输入是标量，不发生修改。每个返回组合必须拥有独立
-快照，后续回溯不能改写已经保存的答案。
+给定 ``n`` 和 ``k``，返回从 ``1..n`` 中选出恰好 ``k`` 个不同整数的全部组合。组合内部顺序不重要，主实现按递增顺序生成，每个结果只出现一次。
 
 自建示例
 --------
 
 .. code-block:: text
 
-   输入：n = 5，k = 3
-   输出：
-   [[1,2,3], [1,2,4], [1,2,5], [1,3,4], [1,3,5],
-    [1,4,5], [2,3,4], [2,3,5], [2,4,5], [3,4,5]]
+   n=5,k=3
+   [1,2,3] [1,2,4] [1,2,5] [1,3,4] [1,3,5]
+   [1,4,5] [2,3,4] [2,3,5] [2,4,5] [3,4,5]
 
-当 ``k = n`` 时只有 ``[1,2,...,n]`` 一个答案；当 ``k = 1`` 时每个单独数字形成一个答案。
-
-问题抽象
+C++ 实现
 --------
-
-回溯路径保存已经选择的严格递增前缀。参数 ``start`` 表示下一项允许选择的最小数字。选择 ``value`` 后
-递归到 ``value + 1``，因此同一集合只会以递增顺序生成一次，不需要额外去重。
-
-若当前还需要 ``needed`` 个数字，候选起点最大只能是：
-
-.. code-block:: text
-
-   last_start = n - needed + 1
-
-从更大的数字开始时，连同它右侧全部数字也不足以填满路径，可以直接剪枝。
-
-解法选择
---------
-
-.. list-table::
-   :header-rows: 1
-
-   * - 方法
-     - 时间复杂度
-     - 额外空间
-     - 定位
-   * - 严格递增回溯并做容量剪枝
-     - ``O(C(n,k) × k)``
-     - ``O(k)`` 工作空间
-     - 主解法；直接生成全部答案
-   * - 枚举 ``2^n`` 个子集后筛选长度
-     - ``O(2^n × n)``
-     - ``O(n)`` 工作空间
-     - 访问大量不可能成为答案的节点
-
-主解法：严格递增回溯
---------------------
-
-状态定义与核心不变量
-~~~~~~~~~~~~~~~~~~~~
-
-递归入口维护：
-
-* ``path`` 长度为 ``depth``，其中数字严格递增且都位于 ``1..n``；
-* ``start`` 大于 ``path`` 最后一个数字，若路径为空则为 1；
-* 所有以更小首个未选数字开头的分支已经完整生成；
-* 尚未生成的答案，若共享当前前缀，其下一项必定位于 ``start..last_start``。
-
-当路径长度达到 ``k`` 时，它已经是一个合法组合，应复制为独立结果。递归返回后撤销最后一次选择，恢复
-父层路径，再探索下一个候选。
-
-容量剪枝为何安全
-~~~~~~~~~~~~~~~~
-
-当前还需 ``needed = k - depth`` 个数字。若选择 ``value``，可使用的数字总数为 ``n - value + 1``。
-合法选择必须满足：
-
-.. code-block:: text
-
-   n - value + 1 >= needed
-   value <= n - needed + 1
-
-因此循环只需要到 ``last_start``。被跳过的更大候选没有足够后继数字，不可能扩展成长度 ``k`` 的组合。
-
-正确性依据
-~~~~~~~~~~
-
-**生成结果合法。** 每次递归只选择至少为 ``start`` 的数字，并把下一层起点设为 ``value + 1``，所以
-路径严格递增、没有重复且位于 ``1..n``。只在长度等于 ``k`` 时保存，故每个结果都是合法组合。
-
-**生成结果完整。** 任意合法组合 ``a1 < a2 < ... < ak``。根层循环包含 ``a1``，进入该分支后下一层
-循环包含 ``a2``，依此类推。容量剪枝不会删除该路径，因为组合自身提供了足够的剩余数字。因此每个合法
-组合都能到达一个叶子。
-
-**不会重复。** 每个组合只有唯一的严格递增排列。递归路径由该排列唯一决定，不同分支在首次不同选择处
-分离，所以同一组合不会被生成两次。
-
-**终止性。** 每次递归路径长度增加一，最大深度为 ``k``；每层候选区间有限，递归树有限。
-
-复杂度
-~~~~~~
-
-共有 ``C(n,k)`` 个答案，每个答案需要复制 ``k`` 个整数，所以不可避免的时间和返回空间均为
-``Theta(C(n,k) × k)``。
-
-除返回结果外：
-
-* 路径和递归栈深度均为 ``O(k)``；
-* 剪枝减少无效内部节点，但不改变输出主导的渐进上界；
-* C 预先计算 ``C(n,k)`` 作为外层容量，并为每个叶子分配独立行；
-* C 任一分配失败时释放已完成的全部行，返回 ``NULL``；资源失败不属于题目输入域。
-
-核心语言实现
-------------
-
-C
-~
-
-.. code-block:: c
-
-   #include <stdbool.h>
-   #include <stddef.h>
-   #include <stdlib.h>
-   #include <string.h>
-
-   typedef struct {
-       int n;
-       int k;
-       int **rows;
-       int *columns;
-       int *path;
-       size_t size;
-       size_t capacity;
-       bool failed;
-   } CombineContext;
-
-   static size_t combination_count(int n, int k) {
-       int choose = k;
-       if (choose > n - choose) {
-           choose = n - choose;
-       }
-
-       size_t count = 1;
-       for (int index = 1; index <= choose; ++index) {
-           count = count * (size_t)(n - choose + index) / (size_t)index;
-       }
-       return count;
-   }
-
-   static void build_combinations(
-       CombineContext *context,
-       int start,
-       int depth
-   ) {
-       if (context->failed) {
-           return;
-       }
-       if (depth == context->k) {
-           int *row = malloc((size_t)context->k * sizeof(*row));
-           if (row == NULL) {
-               context->failed = true;
-               return;
-           }
-           memcpy(row, context->path, (size_t)context->k * sizeof(*row));
-           context->rows[context->size] = row;
-           context->columns[context->size] = context->k;
-           ++context->size;
-           return;
-       }
-
-       const int needed = context->k - depth;
-       const int last_start = context->n - needed + 1;
-       for (int value = start; value <= last_start; ++value) {
-           context->path[depth] = value;
-           build_combinations(context, value + 1, depth + 1);
-       }
-   }
-
-   int **combine(int n, int k, int *returnSize, int **returnColumnSizes) {
-       *returnSize = 0;
-       *returnColumnSizes = NULL;
-
-       const size_t capacity = combination_count(n, k);
-       int **rows = malloc(capacity * sizeof(*rows));
-       int *columns = malloc(capacity * sizeof(*columns));
-       int *path = malloc((size_t)k * sizeof(*path));
-       if (rows == NULL || columns == NULL || path == NULL) {
-           free(rows);
-           free(columns);
-           free(path);
-           return NULL;
-       }
-
-       CombineContext context = {
-           n, k, rows, columns, path, 0, capacity, false
-       };
-       build_combinations(&context, 1, 0);
-       free(path);
-
-       if (context.failed || context.size != context.capacity) {
-           for (size_t index = 0; index < context.size; ++index) {
-               free(rows[index]);
-           }
-           free(rows);
-           free(columns);
-           return NULL;
-       }
-
-       *returnSize = (int)context.size;
-       *returnColumnSizes = columns;
-       return rows;
-   }
-
-C++
-~~~
 
 .. code-block:: cpp
 
    #include <vector>
 
    class Solution {
+   private:
+       std::vector<std::vector<int>> maskEnumeration(int n, int k) {
+           std::vector<std::vector<int>> result;
+           for (int mask = 0; mask < (1 << n); ++mask) {
+               if (__builtin_popcount(static_cast<unsigned>(mask)) != k) continue;
+               std::vector<int> current;
+               for (int bit = 0; bit < n; ++bit)
+                   if (mask & (1 << bit)) current.push_back(bit + 1);
+               result.push_back(current);
+           }
+           return result;
+       }
+
+       void plainDfs(int start, int n, int k, std::vector<int>& path,
+                     std::vector<std::vector<int>>& result) {
+           if (static_cast<int>(path.size()) == k) { result.push_back(path); return; }
+           for (int value = start; value <= n; ++value) {
+               path.push_back(value);
+               plainDfs(value + 1, n, k, path, result);
+               path.pop_back();
+           }
+       }
+
+       void prunedDfs(int start, int n, int k, std::vector<int>& path,
+                      std::vector<std::vector<int>>& result) {
+           if (static_cast<int>(path.size()) == k) { result.push_back(path); return; }
+           int needed = k - path.size();
+           int last_start = n - needed + 1;
+           for (int value = start; value <= last_start; ++value) {
+               path.push_back(value);
+               prunedDfs(value + 1, n, k, path, result);
+               path.pop_back();
+           }
+       }
+
    public:
        std::vector<std::vector<int>> combine(int n, int k) {
            std::vector<std::vector<int>> result;
            std::vector<int> path;
-           backtrack(1, n, k, path, result);
+           prunedDfs(1, n, k, path, result);
            return result;
        }
-
-   private:
-       static void backtrack(
-           int start,
-           int n,
-           int k,
-           std::vector<int>& path,
-           std::vector<std::vector<int>>& result
-       ) {
-           if (static_cast<int>(path.size()) == k) {
-               result.push_back(path);
-               return;
-           }
-
-           const int needed = k - static_cast<int>(path.size());
-           const int lastStart = n - needed + 1;
-           for (int value = start; value <= lastStart; ++value) {
-               path.push_back(value);
-               backtrack(value + 1, n, k, path, result);
-               path.pop_back();
-           }
-       }
    };
+
+题解
+----
+
+枚举所有子集浪费了什么
+~~~~~~~~~~~~~~~~~~~~
+
+``1..n`` 有 ``2^n`` 个子集，位掩码方法生成后再筛选长度 ``k``，会访问大量尺寸不合格的候选。回溯可以在路径达到 ``k`` 时立即提交，不再扩展。
+
+start 如何消除排列重复
+~~~~~~~~~~~~~~~~~~~~~~
+
+路径保存严格递增的已选数字。选择 ``value`` 后只从 ``value+1`` 继续，因此集合 ``{1,3,5}`` 只会以 ``[1,3,5]`` 生成，不会出现 ``[3,1,5]`` 等排列。
+
+选择与撤销
+~~~~~~~~~~
+
+每层先把候选压入路径，递归处理包含它的所有组合，返回后弹出，恢复父层前缀。保存答案时复制当前路径，后续撤销不会修改已提交结果。
+
+剩余容量如何剪枝
+~~~~~~~~~~~~~~~~
+
+当前还需要 ``needed = k-path.size()`` 个数字。若本层从 ``value`` 开始，包含它在内至少要有 ``needed`` 个候选，因此最大起点满足：
+
+.. code-block:: text
+
+   value <= n - needed + 1
+
+更大的起点即使选完右侧全部数字也无法填满路径。
+
+.. list-table::
+   :header-rows: 1
+
+   * - 路径
+     - needed
+     - 允许起点上界
+   * - ``[]``，n=5,k=3
+     - 3
+     - 3
+   * - ``[1]``
+     - 2
+     - 4
+   * - ``[1,4]``
+     - 1
+     - 5
+   * - ``[1,4,5]``
+     - 0
+     - 提交
+
+为什么不会漏解
+~~~~~~~~~~~~~~
+
+任意大小为 ``k`` 的组合都有唯一递增序列。它的每个前缀都拥有足够的剩余数字，因此不会被容量剪枝；算法会按序选择该序列中的每个值并到达叶子。
+
+为什么不会重复
+~~~~~~~~~~~~~~
+
+不同递归路径对应不同严格递增序列。组合的递增表示唯一，因此两个叶子不可能表示同一集合。
+
+输出复杂度为何不可忽略
+~~~~~~~~~~~~~~~~~~~~~~
+
+共有 ``C(n,k)`` 个答案，每个答案需要复制 ``k`` 个整数，任何算法至少需要 ``Theta(C(n,k)*k)`` 时间和输出空间。回溯工作空间只保存长度至多 ``k`` 的路径。
+
+复杂度来源
+~~~~~~~~~~
+
+位掩码筛选为 ``O(2^n*n)``。剪枝回溯的输出主导时间为 ``O(C(n,k)*k)``，不计结果时递归路径空间 ``O(k)``。
+
+九语言实现
+----------
+
+C
+~
+
+.. code-block:: c
+
+   static void dfs(int start,int n,int k,int*path,int depth,int***out,int*size,int*cap){if(depth==k){if(*size==*cap){*cap*=2;*out=realloc(*out,*cap*sizeof(int*));}int*row=malloc(k*sizeof(int));memcpy(row,path,k*sizeof(int));(*out)[(*size)++]=row;return;}int needed=k-depth,last=n-needed+1;for(int v=start;v<=last;v++){path[depth]=v;dfs(v+1,n,k,path,depth+1,out,size,cap);}}
+   int**combine(int n,int k,int*returnSize,int**returnCols){int size=0,cap=4;int**out=malloc(cap*sizeof(int*));int*path=malloc(k*sizeof(int));dfs(1,n,k,path,0,&out,&size,&cap);int*cols=malloc(size*sizeof(int));for(int i=0;i<size;i++)cols[i]=k;free(path);*returnSize=size;*returnCols=cols;return out;}
 
 Python
 ~~~~~~
@@ -269,222 +162,57 @@ Python
 
    class Solution:
        def combine(self, n: int, k: int) -> list[list[int]]:
-           result: list[list[int]] = []
-           path: list[int] = []
-
-           def backtrack(start: int) -> None:
-               if len(path) == k:
-                   result.append(path.copy())
-                   return
-
-               needed = k - len(path)
-               last_start = n - needed + 1
-               for value in range(start, last_start + 1):
-                   path.append(value)
-                   backtrack(value + 1)
-                   path.pop()
-
-           backtrack(1)
-           return result
+           result=[];path=[]
+           def dfs(start):
+               if len(path)==k:result.append(path.copy());return
+               needed=k-len(path)
+               for value in range(start,n-needed+2):path.append(value);dfs(value+1);path.pop()
+           dfs(1);return result
 
 Java
 ~~~~
 
 .. code-block:: java
 
-   import java.util.ArrayList;
-   import java.util.List;
-
-   class Solution {
-       public List<List<Integer>> combine(int n, int k) {
-           List<List<Integer>> result = new ArrayList<>();
-           List<Integer> path = new ArrayList<>(k);
-           backtrack(1, n, k, path, result);
-           return result;
-       }
-
-       private void backtrack(
-           int start,
-           int n,
-           int k,
-           List<Integer> path,
-           List<List<Integer>> result
-       ) {
-           if (path.size() == k) {
-               result.add(new ArrayList<>(path));
-               return;
-           }
-
-           int needed = k - path.size();
-           int lastStart = n - needed + 1;
-           for (int value = start; value <= lastStart; ++value) {
-               path.add(value);
-               backtrack(value + 1, n, k, path, result);
-               path.remove(path.size() - 1);
-           }
-       }
-   }
+   class Solution {List<List<Integer>>out=new ArrayList<>();List<Integer>path=new ArrayList<>();void dfs(int start,int n,int k){if(path.size()==k){out.add(new ArrayList<>(path));return;}int last=n-(k-path.size())+1;for(int v=start;v<=last;v++){path.add(v);dfs(v+1,n,k);path.remove(path.size()-1);}}public List<List<Integer>> combine(int n,int k){dfs(1,n,k);return out;}}
 
 Rust
 ~~~~
 
 .. code-block:: rust
 
-   impl Solution {
-       pub fn combine(n: i32, k: i32) -> Vec<Vec<i32>> {
-           fn backtrack(
-               start: i32,
-               n: i32,
-               k: usize,
-               path: &mut Vec<i32>,
-               result: &mut Vec<Vec<i32>>,
-           ) {
-               if path.len() == k {
-                   result.push(path.clone());
-                   return;
-               }
-
-               let needed = k - path.len();
-               let last_start = n - needed as i32 + 1;
-               for value in start..=last_start {
-                   path.push(value);
-                   backtrack(value + 1, n, k, path, result);
-                   path.pop();
-               }
-           }
-
-           let mut result = Vec::new();
-           let mut path = Vec::with_capacity(k as usize);
-           backtrack(1, n, k as usize, &mut path, &mut result);
-           result
-       }
-   }
+   impl Solution {pub fn combine(n:i32,k:i32)->Vec<Vec<i32>>{fn dfs(start:i32,n:i32,k:usize,path:&mut Vec<i32>,out:&mut Vec<Vec<i32>>){if path.len()==k{out.push(path.clone());return}let last=n-(k-path.len())as i32+1;for v in start..=last{path.push(v);dfs(v+1,n,k,path,out);path.pop();}}let mut out=vec![];dfs(1,n,k as usize,&mut vec![],&mut out);out}}
 
 Go
 ~~
 
 .. code-block:: go
 
-   func combine(n int, k int) [][]int {
-       result := make([][]int, 0)
-       path := make([]int, 0, k)
-
-       var backtrack func(int)
-       backtrack = func(start int) {
-           if len(path) == k {
-               snapshot := append([]int(nil), path...)
-               result = append(result, snapshot)
-               return
-           }
-
-           needed := k - len(path)
-           lastStart := n - needed + 1
-           for value := start; value <= lastStart; value++ {
-               path = append(path, value)
-               backtrack(value + 1)
-               path = path[:len(path)-1]
-           }
-       }
-
-       backtrack(1)
-       return result
-   }
+   func combine(n,k int)[][]int{out:=[][]int{};path:=[]int{};var dfs func(int);dfs=func(start int){if len(path)==k{row:=append([]int(nil),path...);out=append(out,row);return};last:=n-(k-len(path))+1;for v:=start;v<=last;v++{path=append(path,v);dfs(v+1);path=path[:len(path)-1]}};dfs(1);return out}
 
 TypeScript
 ~~~~~~~~~~
 
 .. code-block:: typescript
 
-   function combine(n: number, k: number): number[][] {
-       const result: number[][] = [];
-       const path: number[] = [];
-
-       function backtrack(start: number): void {
-           if (path.length === k) {
-               result.push([...path]);
-               return;
-           }
-
-           const needed = k - path.length;
-           const lastStart = n - needed + 1;
-           for (let value = start; value <= lastStart; value += 1) {
-               path.push(value);
-               backtrack(value + 1);
-               path.pop();
-           }
-       }
-
-       backtrack(1);
-       return result;
-   }
+   function combine(n:number,k:number):number[][]{const out:number[][]=[],path:number[]=[];const dfs=(start:number)=>{if(path.length===k){out.push([...path]);return;}const last=n-(k-path.length)+1;for(let v=start;v<=last;v++){path.push(v);dfs(v+1);path.pop();}};dfs(1);return out;}
 
 C#
 ~~
 
 .. code-block:: csharp
 
-   using System.Collections.Generic;
-
-   public class Solution {
-       public IList<IList<int>> Combine(int n, int k) {
-           var result = new List<IList<int>>();
-           var path = new List<int>(k);
-           Backtrack(1, n, k, path, result);
-           return result;
-       }
-
-       private static void Backtrack(
-           int start,
-           int n,
-           int k,
-           List<int> path,
-           List<IList<int>> result
-       ) {
-           if (path.Count == k) {
-               result.Add(new List<int>(path));
-               return;
-           }
-
-           int needed = k - path.Count;
-           int lastStart = n - needed + 1;
-           for (int value = start; value <= lastStart; ++value) {
-               path.Add(value);
-               Backtrack(value + 1, n, k, path, result);
-               path.RemoveAt(path.Count - 1);
-           }
-       }
-   }
+   public class Solution {List<IList<int>>o=new();List<int>p=new();void Dfs(int start,int n,int k){if(p.Count==k){o.Add(new List<int>(p));return;}int last=n-(k-p.Count)+1;for(int v=start;v<=last;v++){p.Add(v);Dfs(v+1,n,k);p.RemoveAt(p.Count-1);}}public IList<IList<int>> Combine(int n,int k){Dfs(1,n,k);return o;}}
 
 Julia
 ~~~~~
 
 .. code-block:: julia
 
-   function combine(n::Int, k::Int)::Vector{Vector{Int}}
-       result = Vector{Vector{Int}}()
-       path = Int[]
-
-       function backtrack(start::Int)
-           if length(path) == k
-               push!(result, copy(path))
-               return
-           end
-
-           needed = k - length(path)
-           last_start = n - needed + 1
-           if start > last_start
-               return
-           end
-
-           for value in start:last_start
-               push!(path, value)
-               backtrack(value + 1)
-               pop!(path)
-           end
-       end
-
-       backtrack(1)
-       return result
+   function combine(n::Int,k::Int)
+       out=Vector{Vector{Int}}();path=Int[]
+       function dfs(start);length(path)==k&&(push!(out,copy(path));return);last=n-(k-length(path))+1;for v in start:last;push!(path,v);dfs(v+1);pop!(path);end;end
+       dfs(1);out
    end
 
 R
@@ -492,89 +220,4 @@ R
 
 .. code-block:: r
 
-   combine <- function(n, k) {
-     result <- list()
-     path <- integer(k)
-
-     backtrack <- function(start, depth) {
-       if (depth > k) {
-         result[[length(result) + 1L]] <<- as.integer(path)
-         return(invisible(NULL))
-       }
-
-       needed <- k - depth + 1L
-       last_start <- n - needed + 1L
-       if (start > last_start) {
-         return(invisible(NULL))
-       }
-
-       for (value in seq.int(start, last_start)) {
-         path[depth] <<- value
-         backtrack(value + 1L, depth + 1L)
-       }
-       invisible(NULL)
-     }
-
-     backtrack(1L, 1L)
-     result
-   }
-
-验证计划与证据
---------------
-
-* 固定用例覆盖 ``k=1``、``k=n``、一般组合和最大输出附近的规模；
-* Python 将输出规范化为元组集合，与 ``itertools.combinations`` 随机对拍；
-* C、C++、Java、Go、TypeScript 编译并检查数量、递增性、唯一性和快照独立性；
-* Rust、C#、Julia、R 在缺少运行时的环境中执行静态控制流和接口检查。
-
-关键边界
---------
-
-* 路径必须严格递增；否则同一集合会产生多个排列；
-* 保存答案时必须复制路径，不能保存随后会被撤销的共享容器；
-* ``last_start`` 由剩余所需数量推导，不能使用固定 ``n`` 作为所有层上界；
-* C 的 ``C(20,10)=184756``，外层数量和 ``returnSize`` 都在 32 位有符号整数范围内；
-* R 使用固定长度路径并在叶子创建整数快照，避免每层反复拼接路径。
-
-易错点
-------
-
-* 下一层仍从 ``value`` 开始会重复选择同一数字；
-* 用 ``n-k+1`` 作为所有深度的固定上界，会错误删除后续层候选；
-* C 只释放外层数组而遗漏已经分配的结果行，会在失败路径泄漏；
-* 复杂度只写 ``O(C(n,k))`` 会遗漏每个答案复制 ``k`` 个整数的成本。
-
-本题新增知识
-------------
-
-* 严格递增路径与无重复组合之间的一一对应；
-* 根据剩余路径长度计算每层最后合法起点；
-* 用组合数推导输出规模和 C 的精确外层容量。
-
-本题强化知识
-------------
-
-* 可变回溯路径的选择、递归、撤销和答案快照；
-* 按前缀划分搜索树的完整性与无重复证明；
-* 输出敏感复杂度。
-
-关联题目
---------
-
-* `0022. Generate Parentheses <0022-generate-parentheses.rst>`_
-* `0039. Combination Sum <0039-combination-sum.rst>`_
-* `0046. Permutations <0046-permutations.rst>`_
-
-最小自检
---------
-
-#. ``start`` 为什么必须比路径最后一个数字大？
-#. 当前还需要 ``needed`` 个数字时，最大候选为何是 ``n-needed+1``？
-#. 保存答案时为什么必须复制 ``path``？
-#. 准确的输出主导复杂度是什么？
-
-答案要点
-~~~~~~~~
-
-严格递增顺序为每个集合提供唯一表示。若起点超过 ``n-needed+1``，剩余数字数量不足。路径随后会继续
-修改和撤销，所以叶子必须保存快照；时间和返回空间都由 ``Theta(C(n,k) × k)`` 主导。
+   combine_values <- function(n,k){out<-list();path<-integer();dfs<-function(start){if(length(path)==k){out[[length(out)+1L]]<<-path;return()};last<-n-(k-length(path))+1L;if(start<=last)for(v in start:last){path<<-c(path,v);dfs(v+1L);path<<-head(path,-1L)}};dfs(1L);out}
