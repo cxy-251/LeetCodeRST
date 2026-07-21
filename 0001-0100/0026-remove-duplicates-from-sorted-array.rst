@@ -8,201 +8,155 @@
 :难度: Easy
 :主题: 数组、双指针、原地覆盖、有序去重
 :原题: `LeetCode 0026 <https://leetcode.com/problems/remove-duplicates-from-sorted-array/>`_
-:访问状态: Available
-:教学重点: 读写指针分工、保留区间不变量、相邻比较、有效前缀语义
+:教学重点: 连续重复段、读写指针、有效前缀、向前覆盖安全性
 
 题目重述
 --------
 
-给定一个按非递减顺序排列的整数数组 ``nums``，在原数组中删除重复值，使每个不同值只保留
-一次，并返回保留后的元素个数 ``k``。
-
-调用者只检查 ``nums`` 的前 ``k`` 个位置；``k`` 之后的内容没有要求，不需要清零或缩短底层
-数组。
+给定非递减整数数组 ``nums``，原地保留每个不同值的一份并返回数量 ``k``。调用者只检查前 ``k`` 个位置；后面的
+内容没有要求，不必清零，也不必缩短底层数组。
 
 自建示例
 --------
 
-普通重复
-~~~~~~~~
-
 .. code-block:: text
 
-   输入：[1, 1, 2, 2, 3]
-   返回：3
-   有效前缀：[1, 2, 3]
+   输入: [1,1,2,2,2,4,5,5]
+   返回: 4
+   有效前缀: [1,2,4,5]
 
-全部相同
-~~~~~~~~
+空数组返回 0；全部相同的非空数组返回 1。
 
-.. code-block:: text
-
-   输入：[7, 7, 7, 7]
-   返回：1
-   有效前缀：[7]
-
-没有重复
-~~~~~~~~
-
-.. code-block:: text
-
-   输入：[-3, -1, 0, 4]
-   返回：4
-   有效前缀：[-3, -1, 0, 4]
-
-空数组
-~~~~~~
-
-.. code-block:: text
-
-   输入：[]
-   返回：0
-   有效前缀：[]
-
-问题抽象
+C++ 实现
 --------
 
-数组已经有序，因此相同值必然连续出现。扫描到 ``nums[fast]`` 时，只需与最近保留的值
-``nums[slow - 1]`` 比较：
+.. code-block:: cpp
 
-* 相等：当前值是重复项，跳过；
-* 不相等：发现一个新值，把它写入 ``nums[slow]``，再令 ``slow += 1``。
+   #include <vector>
 
-``fast`` 负责读取原数组，``slow`` 既表示有效前缀长度，也指向下一个写入位置。
+   class Solution {
+   private:
+       int eraseDuplicates(std::vector<int>& nums) {
+           for (int i = 1; i < static_cast<int>(nums.size());) {
+               if (nums[i] == nums[i - 1]) nums.erase(nums.begin() + i);
+               else ++i;
+           }
+           return static_cast<int>(nums.size());
+       }
 
-解法选择
---------
+       int copyDistinct(std::vector<int>& nums) {
+           if (nums.empty()) return 0;
+           std::vector<int> distinct{nums[0]};
+           for (int i = 1; i < static_cast<int>(nums.size()); ++i) {
+               if (nums[i] != distinct.back()) distinct.push_back(nums[i]);
+           }
+           for (int i = 0; i < static_cast<int>(distinct.size()); ++i) nums[i] = distinct[i];
+           return static_cast<int>(distinct.size());
+       }
+
+       int twoPointers(std::vector<int>& nums) {
+           if (nums.empty()) return 0;
+           int write = 1;
+           for (int read = 1; read < static_cast<int>(nums.size()); ++read) {
+               if (nums[read] != nums[write - 1]) {
+                   nums[write] = nums[read];
+                   ++write;
+               }
+           }
+           return write;
+       }
+
+   public:
+       int removeDuplicates(std::vector<int>& nums) {
+           return twoPointers(nums);
+       }
+   };
+
+题解
+----
+
+直接删除为什么可能反复移动后缀
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+数组中间删除一个元素需要把后续槽位整体左移。重复值很多时，每次 ``erase`` 都移动长后缀，最坏时间达到
+``O(n^2)``。题目只要求正确的有效前缀，无需真的缩短数组。
+
+有序性如何把全局去重变成相邻段判断
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+非递减数组中，相同值必然形成连续区间。扫描当前值时，只需与最近保留值比较：相等表示仍在同一重复段；不等表示
+进入一个从未保留的新值段。
+
+读写指针分别保存什么
+~~~~~~~~~~~~~~~~~~~~
+
+``read`` 遍历原始元素；``write`` 既是有效前缀长度，也是下一个新值的写入位置。非空数组的第一个值必然保留，
+所以初始 ``write = 1``。发现 ``nums[read] != nums[write-1]`` 时写入并增加 ``write``。
+
+状态演化
+~~~~~~~~
 
 .. list-table::
    :header-rows: 1
 
-   * - 方法
-     - 时间复杂度
-     - 额外空间
-     - 取舍
-   * - 读写双指针原地覆盖
-     - ``O(n)``
-     - ``O(1)``
-     - 主解法；直接利用有序性和有效前缀语义
-   * - 哈希集合记录已见值
-     - ``O(n)``
-     - ``O(n)``
-     - 忽略了输入有序条件，也不满足原地空间目标
-   * - 删除重复元素并移动后缀
-     - 最坏 ``O(n^2)``
-     - ``O(1)``
-     - 频繁移动大量元素，没有必要
+   * - ``read`` 值
+     - 最近保留值
+     - 动作
+     - 有效前缀
+   * - 1
+     - 1
+     - 跳过
+     - 1
+   * - 2
+     - 1
+     - 写入
+     - 1,2
+   * - 2
+     - 2
+     - 跳过
+     - 1,2
+   * - 4
+     - 2
+     - 写入
+     - 1,2,4
+   * - 5
+     - 4
+     - 写入
+     - 1,2,4,5
 
-主解法：读写双指针
-------------------
+为什么向前覆盖不会破坏未来读取
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-状态含义
-~~~~~~~~
+始终有 ``write <= read``。写入位置要么等于当前读取位置，要么位于它之前，从不覆盖 ``read+1`` 之后尚未扫描的
+元素。因此读写指针可以安全共用同一数组。
 
-对于非空数组：
+为什么每个不同值恰好保留一次
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* ``fast``：当前正在检查的原数组位置；
-* ``slow``：当前有效前缀长度，也是下一个新值的写入位置；
-* ``nums[0:slow]``：已经整理好的不重复前缀。
+每个连续值段的第一个元素与最近保留值不同，会被写入；该段其余元素都相等，会被跳过。所有值段按原顺序扫描，
+所以既不漏掉不同值，也不会重复保留。扫描结束时 ``write`` 正好等于值段数量。
 
-初始化 ``slow = 1``，因为第一个元素一定应被保留。随后从第二个元素开始扫描。
-
-核心不变量
+复杂度来源
 ~~~~~~~~~~
 
-每轮处理 ``nums[fast]`` 之前：
+双指针读取每个元素一次，时间 ``O(n)``，额外空间 ``O(1)``。额外数组方法时间 ``O(n)``、空间 ``O(n)``；直接
+删除最坏 ``O(n^2)``。
 
-* ``nums[0:slow]`` 包含已扫描前缀中的所有不同值；
-* 这些值保持原有升序顺序，且没有重复；
-* ``nums[slow - 1]`` 是已扫描前缀中的最大值和最近保留值；
-* ``slow`` 等于已扫描前缀的不同值数量。
-
-若当前值等于 ``nums[slow - 1]``，跳过不会改变不同值集合。若不等，由于数组有序，当前值必然
-大于最近保留值，是一个尚未出现的新值；把它写入 ``nums[slow]`` 后，不变量继续成立。
-
-为什么覆盖尚未读取的元素是安全的
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-始终有 ``slow <= fast``：
-
-* ``slow == fast`` 时是原位写回；
-* ``slow < fast`` 时写入位置位于当前读取位置之前。
-
-因此写入 ``nums[slow]`` 不会覆盖未来尚未扫描的 ``nums[fast + 1:]``，读写指针可以在同一数组
-中安全工作。
-
-正确性依据
-~~~~~~~~~~
-
-数组有序使每个值的所有副本形成连续区间。算法保留每个连续区间的第一个值，并跳过该区间中
-其余相同值，所以不会重复保留同一个值。
-
-当扫描到一个与最近保留值不同的元素时，它必然大于所有已保留值，因此是新的不同值。算法把它
-追加到有效前缀，既不会漏掉不同值，也不会破坏顺序。
-
-扫描结束后，每个不同值恰好被写入一次，``slow`` 等于不同值数量；于是前 ``slow`` 个元素正是
-题目要求的去重结果。
-
-复杂度
-~~~~~~
-
-设数组长度为 ``n``：
-
-* 每个元素只扫描一次，时间复杂度为 ``O(n)``；
-* 固定宽度数组语言只使用两个索引，额外空间复杂度为 ``O(1)``；
-* R 采用值语义，函数返回修改后的向量副本和 ``k``，算法状态仍为常数规模。
-
-核心语言实现
-------------
+九语言实现
+----------
 
 C
 ~
 
 .. code-block:: c
 
-   int removeDuplicates(int *nums, int numsSize) {
-       if (numsSize == 0) {
-           return 0;
-       }
-
-       int slow = 1;
-
-       for (int fast = 1; fast < numsSize; ++fast) {
-           if (nums[fast] != nums[slow - 1]) {
-               nums[slow] = nums[fast];
-               ++slow;
-           }
-       }
-
-       return slow;
+   int removeDuplicates(int* nums, int n) {
+       if (n == 0) return 0;
+       int write = 1;
+       for (int read = 1; read < n; ++read)
+           if (nums[read] != nums[write - 1]) nums[write++] = nums[read];
+       return write;
    }
-
-C++
-~~~
-
-.. code-block:: cpp
-
-   class Solution {
-   public:
-       int removeDuplicates(std::vector<int>& nums) {
-           if (nums.empty()) {
-               return 0;
-           }
-
-           int slow = 1;
-
-           for (int fast = 1;
-                fast < static_cast<int>(nums.size());
-                ++fast) {
-               if (nums[fast] != nums[slow - 1]) {
-                   nums[slow] = nums[fast];
-                   ++slow;
-               }
-           }
-
-           return slow;
-       }
-   };
 
 Python
 ~~~~~~
@@ -211,17 +165,12 @@ Python
 
    class Solution:
        def removeDuplicates(self, nums: list[int]) -> int:
-           if not nums:
-               return 0
-
-           slow = 1
-
-           for fast in range(1, len(nums)):
-               if nums[fast] != nums[slow - 1]:
-                   nums[slow] = nums[fast]
-                   slow += 1
-
-           return slow
+           if not nums: return 0
+           write = 1
+           for read in range(1, len(nums)):
+               if nums[read] != nums[write - 1]:
+                   nums[write] = nums[read]; write += 1
+           return write
 
 Java
 ~~~~
@@ -230,20 +179,10 @@ Java
 
    class Solution {
        public int removeDuplicates(int[] nums) {
-           if (nums.length == 0) {
-               return 0;
-           }
-
-           int slow = 1;
-
-           for (int fast = 1; fast < nums.length; ++fast) {
-               if (nums[fast] != nums[slow - 1]) {
-                   nums[slow] = nums[fast];
-                   ++slow;
-               }
-           }
-
-           return slow;
+           if (nums.length==0) return 0;
+           int write=1;
+           for(int read=1;read<nums.length;read++) if(nums[read]!=nums[write-1]) nums[write++]=nums[read];
+           return write;
        }
    }
 
@@ -254,25 +193,12 @@ Rust
 
    impl Solution {
        pub fn remove_duplicates(nums: &mut Vec<i32>) -> i32 {
-           if nums.is_empty() {
-               return 0;
-           }
-
-           let mut slow: usize = 1;
-
-           for fast in 1..nums.len() {
-               if nums[fast] != nums[slow - 1] {
-                   nums[slow] = nums[fast];
-                   slow += 1;
-               }
-           }
-
-           slow as i32
+           if nums.is_empty(){return 0}
+           let mut write=1usize;
+           for read in 1..nums.len(){if nums[read]!=nums[write-1]{nums[write]=nums[read];write+=1;}}
+           write as i32
        }
    }
-
-Rust 读取 ``nums[fast]`` 得到可复制的 ``i32``，随后写入更靠前的位置；索引关系
-``slow <= fast`` 保证不会影响未来读取。
 
 Go
 ~~
@@ -280,20 +206,9 @@ Go
 .. code-block:: go
 
    func removeDuplicates(nums []int) int {
-       if len(nums) == 0 {
-           return 0
-       }
-
-       slow := 1
-
-       for fast := 1; fast < len(nums); fast++ {
-           if nums[fast] != nums[slow-1] {
-               nums[slow] = nums[fast]
-               slow++
-           }
-       }
-
-       return slow
+       if len(nums)==0{return 0};write:=1
+       for read:=1;read<len(nums);read++{if nums[read]!=nums[write-1]{nums[write]=nums[read];write++}}
+       return write
    }
 
 TypeScript
@@ -301,21 +216,10 @@ TypeScript
 
 .. code-block:: typescript
 
-   function removeDuplicates(nums: number[]): number {
-       if (nums.length === 0) {
-           return 0;
-       }
-
-       let slow = 1;
-
-       for (let fast = 1; fast < nums.length; fast++) {
-           if (nums[fast] !== nums[slow - 1]) {
-               nums[slow] = nums[fast];
-               slow++;
-           }
-       }
-
-       return slow;
+   function removeDuplicates(nums:number[]):number{
+       if(nums.length===0)return 0;let write=1;
+       for(let read=1;read<nums.length;read++)if(nums[read]!==nums[write-1])nums[write++]=nums[read];
+       return write;
    }
 
 C#
@@ -325,20 +229,9 @@ C#
 
    public class Solution {
        public int RemoveDuplicates(int[] nums) {
-           if (nums.Length == 0) {
-               return 0;
-           }
-
-           int slow = 1;
-
-           for (int fast = 1; fast < nums.Length; ++fast) {
-               if (nums[fast] != nums[slow - 1]) {
-                   nums[slow] = nums[fast];
-                   ++slow;
-               }
-           }
-
-           return slow;
+           if(nums.Length==0)return 0;int write=1;
+           for(int read=1;read<nums.Length;read++)if(nums[read]!=nums[write-1])nums[write++]=nums[read];
+           return write;
        }
    }
 
@@ -347,23 +240,14 @@ Julia
 
 .. code-block:: julia
 
-   function remove_duplicates!(nums::Vector{Int})::Int
+   function remove_duplicates!(nums::Vector{Int})
        isempty(nums) && return 0
-
-       # slow 表示有效长度；写入 Julia 数组时需要转换为一基位置。
-       slow = 1
-
-       for fast in 2:length(nums)
-           if nums[fast] != nums[slow]
-               slow += 1
-               nums[slow] = nums[fast]
-           end
+       write=1
+       for read in 2:length(nums)
+           if nums[read]!=nums[write];write+=1;nums[write]=nums[read];end
        end
-
-       return slow
+       write
    end
-
-Julia 中 ``slow`` 直接使用一基有效位置，所以比较 ``nums[slow]``，发现新值后先增加再写入。
 
 R
 ~
@@ -371,81 +255,10 @@ R
 .. code-block:: r
 
    remove_duplicates <- function(nums) {
-     n <- length(nums)
-
-     if (n == 0L) {
-       return(list(k = 0L, nums = nums))
-     }
-
-     slow <- 1L
-
-     if (n >= 2L) {
-       for (fast in 2:n) {
-         if (nums[[fast]] != nums[[slow]]) {
-           slow <- slow + 1L
-           nums[[slow]] <- nums[[fast]]
-         }
+       n <- length(nums); if (n == 0L) return(list(k=0L, nums=nums))
+       write <- 1L
+       if (n >= 2L) for (read in 2:n) if (nums[[read]] != nums[[write]]) {
+           write <- write + 1L; nums[[write]] <- nums[[read]]
        }
-     }
-
-     list(k = slow, nums = nums)
+       list(k=write, nums=nums)
    }
-
-R 向量采用值语义，函数返回 ``k`` 与更新后的 ``nums``。有效结果是
-``result$nums[seq_len(result$k)]``。
-
-关键边界
---------
-
-* 空数组：返回 ``0``，不能先访问第一个元素；
-* 单元素数组：返回 ``1``；
-* 所有元素相同：只保留第一个；
-* 没有重复：``slow`` 最终等于原长度；
-* 负数、零和正数混合：算法只依赖有序性，不依赖数值范围；
-* ``k`` 之后的元素：内容未定义，不应额外整理或清零。
-
-易错点
-------
-
-* 把 ``slow`` 当成最后有效下标和有效长度混用，产生一位偏移；
-* 与 ``nums[fast - 1]`` 比较后又错误修改扫描区间，破坏状态定义；
-* 在空数组上初始化并访问 ``nums[0]``；
-* 返回整个数组的新长度，而不是不同值数量；
-* 试图删除元素并缩短数组，引入不必要的移动成本；
-* 检查 ``k`` 之后的内容并误判答案错误。
-
-新增与强化知识
---------------
-
-新增
-~~~~
-
-* 原地数组题常用“读指针扫描、写指针压缩”的稳定覆盖模型；
-* 返回长度与有效前缀共同定义结果，底层容器不必真正缩短；
-* 有序性把全局去重转化为与最近保留值的局部比较。
-
-强化
-~~~~
-
-* 0003 的滑动窗口和本题都使用两个单调索引，但职责不同；
-* 写入前证明 ``slow <= fast``，可保证原地覆盖不会破坏未来输入；
-* Julia、R 的一基索引需要重新解释“有效长度”和“写入位置”的关系；
-* 正确性证明应明确覆盖“不重复、无遗漏、保持顺序”三项。
-
-最小自检
---------
-
-#. 为什么只比较 ``nums[fast]`` 与 ``nums[slow - 1]`` 就足够？
-#. ``slow`` 同时表示哪两个含义？
-#. 为什么覆盖 ``nums[slow]`` 不会破坏尚未读取的数据？
-#. 返回 ``k = 3`` 后，调用者应该检查数组的哪一部分？
-#. 对 ``[2, 2, 2]``，每轮 ``slow`` 如何变化？
-
-答案要点
-~~~~~~~~
-
-#. 有序数组中相同值连续，最近保留值代表当前重复区间。
-#. 有效前缀长度和下一个写入位置。
-#. 始终有 ``slow <= fast``，写入不会越过当前读取位置。
-#. 只检查前 ``3`` 个位置；其余位置没有要求。
-#. 初始为 ``1``，后续元素都相同，因此始终保持 ``1``。
