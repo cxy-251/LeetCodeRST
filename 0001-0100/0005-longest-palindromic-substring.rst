@@ -6,106 +6,400 @@
 
 :题号: 0005
 :难度: Medium
-:主题: 字符串、回文、中心扩展
+:主题: 字符串、回文、中心扩展、区间动态规划
 :原题: `LeetCode 0005 <https://leetcode.com/problems/longest-palindromic-substring/>`_
-:访问状态: Available
-:教学重点: 奇偶中心统一、向两侧扩展、区间更新、字符单位差异
+:教学重点: 连续子串搜索空间、回文区间状态、奇偶中心统一、双向扩展、最优区间维护
 
 题目重述
 --------
 
-给定一个字符串，返回其中最长的回文连续子串。回文表示从左向右和从右向左读取时
-字符顺序相同。若存在多个同长度答案，返回任意一个即可。
+给定字符串 ``s``，返回其中最长的回文连续子串。回文串从左向右读取与从右向左读取完全相同；
+子串必须对应原字符串中的连续区间。若存在多个长度相同的最长答案，返回其中任意一个即可。
 
 自建示例
 --------
+
+奇数长度回文扩展到字符串边界：
 
 .. code-block:: text
 
    输入：s = "cabacx"
    输出："cabac"
 
-问题抽象
+   中心是下标 2 的字符 b：
+   b -> aba -> cabac
+
+偶数长度回文：
+
+.. code-block:: text
+
+   输入：s = "cbbd"
+   输出："bb"
+
+   中心位于两个 b 之间。
+
+存在多个同长度答案：
+
+.. code-block:: text
+
+   输入：s = "abacdfgdcaba"
+   输出："aba"
+
+字符串首尾各有一个长度为 3 的 ``aba``，返回任意一个都符合要求。
+
+C++ 实现
 --------
 
-任意回文串都围绕一个中心对称。中心可能落在某个字符上，也可能落在两个相邻字符
-之间。枚举所有中心并向两侧扩展，就能覆盖所有奇数长度和偶数长度回文串。
+.. code-block:: cpp
 
-解法选择
---------
+   #include <algorithm>
+   #include <string>
+   #include <utility>
+   #include <vector>
+
+   class Solution {
+   private:
+       bool isPalindrome(
+           const std::string& s,
+           int left,
+           int right
+       ) {
+           while (left < right) {
+               if (s[left] != s[right]) {
+                   return false;
+               }
+               ++left;
+               --right;
+           }
+           return true;
+       }
+
+       std::string enumerateSubstrings(const std::string& s) {
+           int best_start = 0;
+           int best_length = 0;
+
+           for (int left = 0;
+                left < static_cast<int>(s.size());
+                ++left) {
+               for (int right = left;
+                    right < static_cast<int>(s.size());
+                    ++right) {
+                   const int length = right - left + 1;
+                   if (
+                       length > best_length &&
+                       isPalindrome(s, left, right)
+                   ) {
+                       best_start = left;
+                       best_length = length;
+                   }
+               }
+           }
+
+           return s.substr(best_start, best_length);
+       }
+
+       std::string dynamicProgramming(const std::string& s) {
+           const int n = static_cast<int>(s.size());
+           std::vector<std::vector<bool>> dp(
+               n,
+               std::vector<bool>(n, false)
+           );
+
+           int best_start = 0;
+           int best_length = 0;
+
+           for (int right = 0; right < n; ++right) {
+               for (int left = 0; left <= right; ++left) {
+                   const bool inner_is_palindrome =
+                       right - left <= 2 || dp[left + 1][right - 1];
+
+                   dp[left][right] =
+                       s[left] == s[right] && inner_is_palindrome;
+
+                   const int length = right - left + 1;
+                   if (dp[left][right] && length > best_length) {
+                       best_start = left;
+                       best_length = length;
+                   }
+               }
+           }
+
+           return s.substr(best_start, best_length);
+       }
+
+       std::pair<int, int> expand(
+           const std::string& s,
+           int left,
+           int right
+       ) {
+           while (
+               left >= 0 &&
+               right < static_cast<int>(s.size()) &&
+               s[left] == s[right]
+           ) {
+               --left;
+               ++right;
+           }
+
+           // 循环结束时，两端已经越过该中心的最长合法回文。
+           return {left + 1, right - left - 1};
+       }
+
+       std::string expandAroundCenters(const std::string& s) {
+           int best_start = 0;
+           int best_length = 0;
+
+           for (int center = 0;
+                center < static_cast<int>(s.size());
+                ++center) {
+               const auto odd = expand(s, center, center);
+               if (odd.second > best_length) {
+                   best_start = odd.first;
+                   best_length = odd.second;
+               }
+
+               const auto even = expand(s, center, center + 1);
+               if (even.second > best_length) {
+                   best_start = even.first;
+                   best_length = even.second;
+               }
+           }
+
+           return s.substr(best_start, best_length);
+       }
+
+   public:
+       std::string longestPalindrome(std::string s) {
+           return expandAroundCenters(s);
+       }
+   };
+
+题解
+----
+
+原始搜索空间：所有连续子串
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+长度为 ``n`` 的字符串共有 ``n(n + 1) / 2`` 个非空连续子串。最直接的方法是枚举闭区间
+``[left, right]``，再从两端向中间检查字符是否相同。
+
+``enumerateSubstrings`` 对每个候选区间调用 ``isPalindrome``。候选数量是二次数量级，单个区间
+检查最坏需要线性时间，因此这种写法最坏达到 ``O(n³)``。它准确表达了题目要求，但同一个内部
+区间会被不同候选反复验证。
+
+例如判断 ``s[left..right]`` 时，两端字符相同之后，真正需要知道的是内部区间
+``s[left + 1..right - 1]`` 是否为回文。直接检查会重新扫描这个内部区间，而此前其他候选可能
+已经完成了相同工作。
+
+区间动态规划如何复用内部结果
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+定义：
+
+.. code-block:: text
+
+   dp[left][right] = 闭区间 [left, right] 是否为回文
+
+一个区间成为回文需要同时满足：
+
+.. code-block:: text
+
+   s[left] == s[right]
+   内部区间 [left + 1, right - 1] 是回文
+
+长度为 1、2 或 3 的区间可以统一处理。当 ``right - left <= 2`` 且两端字符相同时，内部为空或
+只剩一个字符，天然满足回文条件。因此转移写成：
+
+.. code-block:: text
+
+   dp[left][right] =
+       s[left] == s[right] &&
+       (right - left <= 2 || dp[left + 1][right - 1])
+
+C++ 代码按 ``right`` 从小到大填表。计算 ``dp[left][right]`` 时，依赖的右端点是
+``right - 1``，对应状态已经完成。每个区间只计算一次，把时间降到 ``O(n²)``，代价是保存全部
+区间状态。
+
+从区间状态继续压缩到对称中心
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+动态规划仍然为所有 ``O(n²)`` 个区间保存真假状态，但回文有更强的几何结构：字符关于中心成对
+相等。
+
+长度为奇数的回文以一个字符为中心，例如 ``aba`` 的中心是 ``b``；长度为偶数的回文以两个
+相邻字符之间的空隙为中心，例如 ``bb`` 的中心位于两个 ``b`` 之间。长度为 ``n`` 的字符串共有：
+
+* ``n`` 个字符中心；
+* ``n - 1`` 个字符间隙中心；
+* 合计 ``2n - 1`` 个中心。
+
+固定中心后，候选回文不再是任意区间，而是一组按长度嵌套的对称区间。只要当前两侧字符相同，
+就继续向外扩一层；遇到边界或第一对不同字符时，该中心能够形成的最长回文已经确定。
+
+奇数中心与偶数中心如何统一
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``expand`` 接收两个初始位置：
+
+.. code-block:: text
+
+   expand(center, center)      处理奇数长度回文
+   expand(center, center + 1)  处理偶数长度回文
+
+扩展循环始终维持 ``[left, right]`` 两侧字符相同，并在成功后执行 ``left--``、``right++``。
+循环结束时，``left`` 和 ``right`` 已经位于最长合法区间之外，因此真实结果是：
+
+.. code-block:: text
+
+   start  = left + 1
+   length = right - left - 1
+
+同一个辅助函数由不同初始边界表达两类中心，使主循环只需要为每个 ``center`` 调用两次。
+
+中心扩展状态演化
+~~~~~~~~~~~~~~~~
+
+奇数中心示例 ``s = "cabacx"``，初始中心为 ``(2, 2)``：
+
+.. list-table::
+   :header-rows: 1
+
+   * - 步骤
+     - ``left``
+     - ``right``
+     - 比较
+     - 当前合法区间
+     - 动作
+   * - 1
+     - 2
+     - 2
+     - ``b == b``
+     - ``b``
+     - 向两侧扩展
+   * - 2
+     - 1
+     - 3
+     - ``a == a``
+     - ``aba``
+     - 向两侧扩展
+   * - 3
+     - 0
+     - 4
+     - ``c == c``
+     - ``cabac``
+     - 向两侧扩展
+   * - 4
+     - -1
+     - 5
+     - 左端越界
+     - ``cabac``
+     - 停止并返回 ``start = 0``、``length = 5``
+
+偶数中心示例 ``s = "cbbd"``，初始中心为 ``(1, 2)``：
+
+.. list-table::
+   :header-rows: 1
+
+   * - 步骤
+     - ``left``
+     - ``right``
+     - 比较
+     - 当前合法区间
+     - 动作
+   * - 1
+     - 1
+     - 2
+     - ``b == b``
+     - ``bb``
+     - 向两侧扩展
+   * - 2
+     - 0
+     - 3
+     - ``c != d``
+     - ``bb``
+     - 停止并返回 ``start = 1``、``length = 2``
+
+主算法只在新长度严格大于 ``best_length`` 时更新答案。出现多个同长度最长回文时会保留较早发现
+的一个，这与题目允许返回任意答案的要求一致。
+
+解法对比与主解法选择
+~~~~~~~~~~~~~~~~~~~~
 
 .. list-table::
    :header-rows: 1
 
    * - 方法
      - 时间复杂度
-     - 空间复杂度
-     - 定位
+     - 工作空间
+     - 复用的信息
+   * - 枚举子串并逐个检查
+     - ``O(n³)``
+     - ``O(1)``
+     - 每个候选独立检查
+   * - 区间动态规划
+     - ``O(n²)``
+     - ``O(n²)``
+     - 保存每个内部区间是否回文
    * - 中心扩展
      - ``O(n²)``
      - ``O(1)``
-     - 主解法
-   * - 动态规划
-     - ``O(n²)``
-     - ``O(n²)``
-     - 对照解法
-   * - Manacher 算法
-     - ``O(n)``
-     - ``O(n)``
-     - 高级算法，后续专题复现
+     - 利用固定中心下区间按层嵌套
 
-主解法：中心扩展
-----------------
+中心扩展与动态规划具有相同的最坏时间复杂度，但只维护当前中心边界和全局最优区间，更适合本题
+只返回一个最长回文子串的目标。九语言统一采用中心扩展。
 
-思路
-~~~~
+为什么每个回文都会被某个中心覆盖
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-对每个位置 ``i`` 执行两次扩展：
+任意回文闭区间 ``[left, right]`` 的中心由两端位置唯一确定：
 
-* ``left = i, right = i``，处理奇数长度回文；
-* ``left = i, right = i + 1``，处理偶数长度回文。
+* ``left + right`` 为偶数时，中心落在一个字符上；
+* ``left + right`` 为奇数时，中心落在两个相邻字符之间。
 
-只要左右位置仍在字符串范围内，并且两侧字符相等，就继续扩大区间。每次扩展结束
-后，用得到的长度更新当前最长答案。
+主循环枚举全部字符中心和全部字符间隙中心，因此任意回文对应的中心一定会被访问。该回文两侧
+字符从内到外逐层相等，``expand`` 在到达它的边界之前不会停止。
 
-中心示意
-~~~~~~~~
+为什么一次扩展得到该中心的最长回文
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. mermaid::
+固定中心后，所有回文候选按半径递增。若当前 ``s[left] == s[right]``，把这一对字符加入内部
+回文后仍然是回文；若两侧字符不同，任何更大半径的区间都会包含这对不同字符，不可能成为回文。
+越界同样表示该方向已经没有更多字符。
 
-   flowchart LR
-       L2["更左字符"] --> L1["left"]
-       L1 --> C["中心"]
-       C --> R1["right"]
-       R1 --> R2["更右字符"]
+因此第一次不匹配或越界之前的最后一个区间，就是该中心能够形成的最长回文。辅助函数返回的
+``left + 1`` 和 ``right - left - 1`` 正好排除了停止时的两个无效位置。
 
-扩展过程只比较关于中心对称的两个字符。遇到第一对不相等字符时，当前中心能够
-形成的最长回文已经确定。
+为什么所有中心的最大值就是全局答案
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-核心不变量
+任意回文都属于某个唯一中心，而算法为每个中心取得最长回文。某个中心的较短回文已经包含在该
+中心的最长结果之内，不可能比它更优。比较全部 ``2n - 1`` 个中心的最长长度，就等价于比较全部
+回文子串，最终 ``best_start`` 和 ``best_length`` 必然描述一个全局最长答案。
+
+复杂度来源
 ~~~~~~~~~~
 
-在每次扩展循环开始时，``left + 1`` 到 ``right - 1`` 已经构成回文。若
-``s[left] == s[right]``，加入这一对相同字符后仍然是回文；否则无法继续扩展。
+``enumerateSubstrings`` 枚举 ``O(n²)`` 个区间，每次回文检查最多比较 ``O(n)`` 对字符，时间复杂度
+为 ``O(n³)``，只使用常数状态。
 
-正确性依据
-~~~~~~~~~~
+``dynamicProgramming`` 计算上三角区域中的 ``n(n + 1) / 2`` 个区间状态，每个状态执行常数工作，
+时间和工作空间均为 ``O(n²)``。
 
-每个回文子串都有唯一的几何中心。奇数长度回文的中心是一个字符，偶数长度回文的
-中心是两个字符之间的空隙。算法枚举所有这两类中心，并对每个中心扩展到最大范围，
-因此不会漏掉任何回文子串。所有中心得到的最大长度就是全局答案。
+``expandAroundCenters`` 枚举 ``2n - 1`` 个中心。单个中心最坏扩展 ``O(n)`` 层，例如字符串全部由
+相同字符组成时，总时间为 ``O(n²)``。除返回子串外，只保存边界、长度和少量临时变量，工作空间
+为 ``O(1)``。最终构造返回字符串需要与答案长度成正比的结果空间。
 
-复杂度
-~~~~~~
+九语言实现
+----------
 
-* 时间复杂度：``O(n²)``，最坏情况下每个中心都扩展接近整个字符串；
-* 辅助空间：``O(1)``，不计算返回字符串所占空间。
-
-核心语言实现
-~~~~~~~~~~~~
+题目字符范围允许按单字节或语言基础字符单位执行中心扩展。C、C++、Rust 和 Go 按字节访问；
+Java、TypeScript 和 C# 按 UTF-16 代码单元访问；Python、Julia 与 R 按各自常见字符序列处理。
+九种实现都返回 ``expand`` 停止前的最后一个合法区间。
 
 C
-^
+~
+
+C 版本为返回结果分配独立字符串；成功返回后由调用者或平台负责释放。
 
 .. code-block:: c
 
@@ -120,22 +414,27 @@ C
        int* best_start,
        int* best_length
    ) {
-       while (left >= 0 && right < length && s[left] == s[right]) {
-           const int current_length = right - left + 1;
-           if (current_length > *best_length) {
-               *best_start = left;
-               *best_length = current_length;
-           }
-
+       while (
+           left >= 0 &&
+           right < length &&
+           s[left] == s[right]
+       ) {
            --left;
            ++right;
+       }
+
+       const int start = left + 1;
+       const int current_length = right - left - 1;
+       if (current_length > *best_length) {
+           *best_start = start;
+           *best_length = current_length;
        }
    }
 
    char* longestPalindrome(char* s) {
        const int length = (int)strlen(s);
        int best_start = 0;
-       int best_length = length == 0 ? 0 : 1;
+       int best_length = 0;
 
        for (int center = 0; center < length; ++center) {
            expand(
@@ -166,45 +465,8 @@ C
        return result;
    }
 
-C++
-^^^
-
-.. code-block:: cpp
-
-   class Solution {
-   public:
-       std::string longestPalindrome(std::string s) {
-           int bestStart = 0;
-           int bestLength = s.empty() ? 0 : 1;
-
-           auto expand = [&](int left, int right) {
-               while (
-                   left >= 0 &&
-                   right < static_cast<int>(s.size()) &&
-                   s[left] == s[right]
-               ) {
-                   const int length = right - left + 1;
-                   if (length > bestLength) {
-                       bestStart = left;
-                       bestLength = length;
-                   }
-
-                   --left;
-                   ++right;
-               }
-           };
-
-           for (int center = 0; center < s.size(); ++center) {
-               expand(center, center);
-               expand(center, center + 1);
-           }
-
-           return s.substr(bestStart, bestLength);
-       }
-   };
-
 Python
-^^^^^^
+~~~~~~
 
 .. code-block:: python
 
@@ -213,53 +475,57 @@ Python
            best_start = 0
            best_length = 0
 
-           def expand(left: int, right: int) -> None:
-               nonlocal best_start, best_length
-
+           def expand(left: int, right: int) -> tuple[int, int]:
                while (
                    left >= 0
                    and right < len(s)
                    and s[left] == s[right]
                ):
-                   current_length = right - left + 1
-                   if current_length > best_length:
-                       best_start = left
-                       best_length = current_length
-
                    left -= 1
                    right += 1
 
+               return left + 1, right - left - 1
+
            for center in range(len(s)):
-               expand(center, center)
-               expand(center, center + 1)
+               for left, right in (
+                   (center, center),
+                   (center, center + 1),
+               ):
+                   start, length = expand(left, right)
+                   if length > best_length:
+                       best_start = start
+                       best_length = length
 
            return s[best_start : best_start + best_length]
 
 Java
-^^^^
+~~~~
 
 .. code-block:: java
 
    class Solution {
        public String longestPalindrome(String s) {
            int bestStart = 0;
-           int bestEnd = 0;
+           int bestLength = 0;
 
            for (int center = 0; center < s.length(); center++) {
-               int oddLength = expandLength(s, center, center);
-               int evenLength = expandLength(s, center, center + 1);
-               int length = Math.max(oddLength, evenLength);
+               int[] odd = expand(s, center, center);
+               if (odd[1] > bestLength) {
+                   bestStart = odd[0];
+                   bestLength = odd[1];
+               }
 
-               if (length > bestEnd - bestStart + 1) {
-                   bestStart = center - (length - 1) / 2;
-                   bestEnd = center + length / 2;
+               int[] even = expand(s, center, center + 1);
+               if (even[1] > bestLength) {
+                   bestStart = even[0];
+                   bestLength = even[1];
                }
            }
 
-           return s.substring(bestStart, bestEnd + 1);
+           return s.substring(bestStart, bestStart + bestLength);
        }
 
-       private int expandLength(String s, int left, int right) {
+       private int[] expand(String s, int left, int right) {
            while (
                left >= 0 &&
                right < s.length() &&
@@ -269,13 +535,12 @@ Java
                right++;
            }
 
-           // 循环结束时两端已经各越过一个位置。
-           return right - left - 1;
+           return new int[] {left + 1, right - left - 1};
        }
    }
 
 Rust
-^^^^
+~~~~
 
 .. code-block:: rust
 
@@ -285,7 +550,11 @@ Rust
            let mut best_start = 0usize;
            let mut best_length = 0usize;
 
-           fn expand(bytes: &[u8], mut left: i32, mut right: i32) -> (usize, usize) {
+           fn expand(
+               bytes: &[u8],
+               mut left: i32,
+               mut right: i32,
+           ) -> (usize, usize) {
                while left >= 0
                    && (right as usize) < bytes.len()
                    && bytes[left as usize] == bytes[right as usize]
@@ -294,9 +563,10 @@ Rust
                    right += 1;
                }
 
-               let start = (left + 1) as usize;
-               let length = (right - left - 1) as usize;
-               (start, length)
+               (
+                   (left + 1) as usize,
+                   (right - left - 1) as usize,
+               )
            }
 
            for center in 0..bytes.len() {
@@ -312,13 +582,13 @@ Rust
                }
            }
 
-           // 本题输入字符范围允许按 UTF-8 字节切片。
+           // 题目字符范围允许按 UTF-8 字节边界切片。
            s[best_start..best_start + best_length].to_string()
        }
    }
 
 Go
-^^
+~~
 
 .. code-block:: go
 
@@ -351,7 +621,7 @@ Go
    }
 
 TypeScript
-^^^^^^^^^^
+~~~~~~~~~~
 
 .. code-block:: typescript
 
@@ -359,36 +629,37 @@ TypeScript
        let bestStart = 0;
        let bestLength = 0;
 
-       const expand = (initialLeft: number, initialRight: number): void => {
-           let left = initialLeft;
-           let right = initialRight;
-
+       const expand = (left: number, right: number): [number, number] => {
            while (
                left >= 0 &&
                right < s.length &&
                s[left] === s[right]
            ) {
-               const length = right - left + 1;
-               if (length > bestLength) {
-                   bestStart = left;
-                   bestLength = length;
-               }
-
                left -= 1;
                right += 1;
            }
+
+           return [left + 1, right - left - 1];
        };
 
        for (let center = 0; center < s.length; center += 1) {
-           expand(center, center);
-           expand(center, center + 1);
+           for (const [left, right] of [
+               [center, center],
+               [center, center + 1],
+           ] as Array<[number, number]>) {
+               const [start, length] = expand(left, right);
+               if (length > bestLength) {
+                   bestStart = start;
+                   bestLength = length;
+               }
+           }
        }
 
        return s.slice(bestStart, bestStart + bestLength);
    }
 
 C#
-^^
+~~
 
 .. code-block:: csharp
 
@@ -397,39 +668,48 @@ C#
            int bestStart = 0;
            int bestLength = 0;
 
-           void Expand(int left, int right) {
-               while (
-                   left >= 0 &&
-                   right < s.Length &&
-                   s[left] == s[right]
-               ) {
-                   int length = right - left + 1;
-                   if (length > bestLength) {
-                       bestStart = left;
-                       bestLength = length;
-                   }
-
-                   left--;
-                   right++;
-               }
-           }
-
            for (int center = 0; center < s.Length; center++) {
-               Expand(center, center);
-               Expand(center, center + 1);
+               int[] odd = Expand(s, center, center);
+               if (odd[1] > bestLength) {
+                   bestStart = odd[0];
+                   bestLength = odd[1];
+               }
+
+               int[] even = Expand(s, center, center + 1);
+               if (even[1] > bestLength) {
+                   bestStart = even[0];
+                   bestLength = even[1];
+               }
            }
 
            return s.Substring(bestStart, bestLength);
        }
+
+       private static int[] Expand(string s, int left, int right) {
+           while (
+               left >= 0 &&
+               right < s.Length &&
+               s[left] == s[right]
+           ) {
+               left--;
+               right++;
+           }
+
+           return new int[] {left + 1, right - left - 1};
+       }
    }
 
 Julia
-^^^^^
+~~~~~
 
 .. code-block:: julia
 
    function longest_palindrome(s::String)::String
        chars = collect(s)
+       if isempty(chars)
+           return ""
+       end
+
        best_start = 1
        best_length = 0
 
@@ -447,7 +727,10 @@ Julia
        end
 
        for center in eachindex(chars)
-           for (left, right) in ((center, center), (center, center + 1))
+           for (left, right) in (
+               (center, center),
+               (center, center + 1),
+           )
                start, current_length = expand(left, right)
                if current_length > best_length
                    best_start = start
@@ -456,11 +739,13 @@ Julia
            end
        end
 
-       return String(chars[best_start:best_start + best_length - 1])
+       return join(
+           chars[best_start:best_start + best_length - 1]
+       )
    end
 
 R
-^
+~
 
 .. code-block:: r
 
@@ -471,7 +756,7 @@ R
        }
 
        best_start <- 1L
-       best_length <- 1L
+       best_length <- 0L
 
        expand <- function(left, right) {
            while (
@@ -504,62 +789,3 @@ R
            collapse = ""
        )
    }
-
-字符单位说明
-~~~~~~~~~~~~
-
-C、C++、Rust 和 Go 的实现按字节访问；Java、TypeScript 和 C# 按 UTF-16 代码单元
-访问；Python、Julia 与 R 更接近按 Unicode 字符处理。题目常见字符范围允许这些实现
-保持相同算法语义。
-
-若真实产品要求把组合字符或表情序列视为一个用户可见字符，需要先按字形簇
-（grapheme cluster）切分，再应用相同的中心扩展算法。
-
-对照解法：动态规划
-------------------
-
-定义 ``dp[left][right]`` 表示闭区间 ``[left, right]`` 是否为回文。状态成立需要：
-
-* 两端字符相同；
-* 区间长度不超过 3，或者内部区间 ``dp[left + 1][right - 1]`` 已经是回文。
-
-该方法能清楚展示区间状态依赖，也容易扩展到回文计数等问题。它需要 ``O(n²)``
-额外空间，本题只求最长子串时不如中心扩展直接。
-
-易错点
-------
-
-* 必须同时处理奇数中心和偶数中心；
-* 扩展停止时，``left`` 和 ``right`` 已经位于合法回文之外；
-* 返回的是连续子串，不是可以删除字符得到的回文子序列；
-* C 返回的新字符串由调用者或平台负责释放；
-* Rust 和 Go 的字节索引只适用于题目给定字符范围；
-* 多个最长答案同时存在时，返回任意一个都符合要求。
-
-本题新增知识
-------------
-
-* 回文的对称中心可以是字符，也可以是字符间隙；
-* 中心扩展用局部对称性枚举全部回文子串；
-* 辅助函数返回越界前最后一个合法区间；
-* 区间答案只需保存起点和长度，不必反复创建子串。
-
-本题强化知识
-------------
-
-* 字符串索引单位继续因语言而异；
-* 闭区间长度统一使用 ``right - left + 1``。
-
-最小自检
---------
-
-#. 为什么每个位置都需要执行两次扩展？
-#. 扩展结束后为什么长度是 ``right - left - 1``？
-#. 动态规划和中心扩展的主要空间差异是什么？
-
-答案要点
-~~~~~~~~
-
-#. 分别覆盖奇数长度中心和偶数长度中心；
-#. 两端已经各越过一个不匹配或越界位置，需要排除这两个位置；
-#. 动态规划保存所有区间状态，需要 ``O(n²)`` 空间，中心扩展只保存边界。
