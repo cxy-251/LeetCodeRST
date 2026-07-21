@@ -6,230 +6,143 @@
 
 :题号: 0048
 :难度: Medium
-:主题: 矩阵、原地变换、坐标映射、转置
+:主题: 矩阵、坐标映射、转置、原地变换
 :原题: `LeetCode 0048 <https://leetcode.com/problems/rotate-image/>`_
-:访问状态: Available
-:教学重点: 顺时针坐标映射、主对角线转置、行内反转、原地空间约束
+:教学重点: 顺时针映射、四元环、转置与行反转、覆盖安全性
 
 题目重述
 --------
 
-给定一个 ``n × n`` 方阵 ``matrix``，将图像顺时针旋转 90 度。必须直接修改原矩阵，不能使用
-另一个同规模矩阵保存完整结果。
+给定 ``n × n`` 方阵，将其顺时针旋转 90 度。必须直接修改原矩阵，不能创建另一个同规模矩阵保存完整结果。
 
 自建示例
 --------
 
-三阶矩阵
-~~~~~~~~
-
 .. code-block:: text
 
-   输入：                 输出：
-   1  2  3               7  4  1
-   4  5  6       ->      8  5  2
-   7  8  9               9  6  3
+   1 2 3      7 4 1
+   4 5 6  ->  8 5 2
+   7 8 9      9 6 3
 
-四阶矩阵
-~~~~~~~~
+单元素矩阵旋转后不变。
 
-.. code-block:: text
-
-   输入第一行：[ 1,  2,  3,  4]
-   旋转后第一行：[13,  9,  5,  1]
-
-单元素
-~~~~~~
-
-.. code-block:: text
-
-   输入：[[5]]
-   输出：[[5]]
-
-问题抽象
+C++ 实现
 --------
 
-使用零基坐标时，原位置 ``(row, column)`` 顺时针旋转后应到达：
+.. code-block:: cpp
+
+   #include <algorithm>
+   #include <vector>
+
+   class Solution {
+   private:
+       void extraMatrix(std::vector<std::vector<int>>& matrix) {
+           const int n = static_cast<int>(matrix.size());
+           std::vector<std::vector<int>> rotated(n, std::vector<int>(n));
+           for (int r = 0; r < n; ++r)
+               for (int c = 0; c < n; ++c)
+                   rotated[c][n - 1 - r] = matrix[r][c];
+           matrix = std::move(rotated);
+       }
+
+       void fourWayCycles(std::vector<std::vector<int>>& matrix) {
+           const int n = static_cast<int>(matrix.size());
+           for (int layer = 0; layer < n / 2; ++layer) {
+               int last = n - 1 - layer;
+               for (int offset = 0; offset < last - layer; ++offset) {
+                   int top = matrix[layer][layer + offset];
+                   matrix[layer][layer + offset] = matrix[last - offset][layer];
+                   matrix[last - offset][layer] = matrix[last][last - offset];
+                   matrix[last][last - offset] = matrix[layer + offset][last];
+                   matrix[layer + offset][last] = top;
+               }
+           }
+       }
+
+       void transposeAndReverse(std::vector<std::vector<int>>& matrix) {
+           const int n = static_cast<int>(matrix.size());
+           for (int r = 0; r < n; ++r)
+               for (int c = r + 1; c < n; ++c)
+                   std::swap(matrix[r][c], matrix[c][r]);
+           for (auto& row : matrix) std::reverse(row.begin(), row.end());
+       }
+
+   public:
+       void rotate(std::vector<std::vector<int>>& matrix) {
+           transposeAndReverse(matrix);
+       }
+   };
+
+题解
+----
+
+目标坐标映射是什么
+~~~~~~~~~~~~~~~~~~
+
+零基坐标 ``(r,c)`` 顺时针旋转后位于：
 
 .. code-block:: text
 
-   (row, column) -> (column, n - 1 - row)
+   (r,c) -> (c,n-1-r)
 
-直接按四个位置成环交换可以原地完成，但坐标容易写错。主解法把旋转拆成两个更容易验证的
-可逆变换：
+额外矩阵可直接按该公式写入，但使用 ``O(n²)`` 空间，不满足原地要求。
 
-#. 沿主对角线转置：``(row, column) -> (column, row)``；
-#. 反转每一行：``(column, row) -> (column, n - 1 - row)``。
+四次映射为什么形成一个环
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-两步复合恰好得到顺时针 90 度旋转坐标。
+连续应用旋转映射四次会回到原位置。一个非中心元素属于四元环：上边、右边、下边、左边相互搬运。分层遍历只处理每个环一次，可用一个临时变量完成原地轮换，但四组坐标较容易写错。
 
-解法选择
---------
+旋转如何拆成两个简单变换
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. list-table::
-   :header-rows: 1
-
-   * - 方法
-     - 时间复杂度
-     - 额外空间
-     - 取舍
-   * - 主对角线转置后反转每行
-     - ``O(n²)``
-     - ``O(1)``
-     - 主解法；两个阶段和坐标证明都清晰
-   * - 分层四元环交换
-     - ``O(n²)``
-     - ``O(1)``
-     - 一次移动四个元素，边界和偏移更易出错
-   * - 新矩阵按目标坐标写入
-     - ``O(n²)``
-     - ``O(n²)``
-     - 最直观，但违反原地空间要求
-
-主解法：转置后反转每一行
-------------------------
-
-第一阶段：主对角线转置
-~~~~~~~~~~~~~~~~~~~~~~
-
-只遍历主对角线一侧：
+先沿主对角线转置：
 
 .. code-block:: text
 
-   row = 0..n-1
-   column = row+1..n-1
+   (r,c) -> (c,r)
 
-交换：
-
-.. code-block:: text
-
-   matrix[row][column] <-> matrix[column][row]
-
-不能遍历整个矩阵后都交换，否则每对非对角元素会被交换两次，最终恢复原状。主对角线元素无需
-修改。
-
-第二阶段：反转每一行
-~~~~~~~~~~~~~~~~~~~~
-
-对每一行使用左右指针：
+再反转每一行，把列坐标 ``r`` 变为 ``n-1-r``：
 
 .. code-block:: text
 
-   left = 0
-   right = n - 1
+   (c,r) -> (c,n-1-r)
 
-持续交换 ``matrix[row][left]`` 与 ``matrix[row][right]``，直到左右指针相遇。
+复合映射正是顺时针旋转目标。两个阶段都由成对交换完成，不会丢失尚未读取的值。
 
-坐标复合证明
+三阶矩阵状态
 ~~~~~~~~~~~~
 
-原元素位于 ``(row, column)``：
+.. code-block:: text
 
-* 转置后到 ``(column, row)``；
-* 该行反转后，列坐标 ``row`` 变成 ``n - 1 - row``；
-* 最终位置为 ``(column, n - 1 - row)``。
+   原矩阵          转置后          每行反转后
+   1 2 3           1 4 7           7 4 1
+   4 5 6     ->    2 5 8     ->    8 5 2
+   7 8 9           3 6 9           9 6 3
 
-这与顺时针 90 度旋转公式完全一致。
+转置为何只遍历主对角线上方
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-核心不变量
+交换 ``matrix[r][c]`` 与 ``matrix[c][r]`` 时，若遍历整个矩阵，同一对元素会被交换两次并恢复原状。只取 ``c > r``，每个非对角元素对恰好处理一次；主对角线元素无需移动。
+
+为什么两个阶段都保持原地安全
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+转置使用对称位置互换，交换前同时取得两个值；行反转也只交换行内两端。每个动作是可逆置换，既不覆盖未保存数据，也不创建或删除元素。所有坐标经过复合置换后恰好到达目标位置。
+
+复杂度来源
 ~~~~~~~~~~
 
-转置阶段处理到 ``(row, column)`` 时：
+三个方法都处理 ``n²`` 个矩阵元素，时间 ``O(n²)``。额外矩阵方法空间 ``O(n²)``；四元环和转置加反转仅使用临时变量，额外空间 ``O(1)``。
 
-* 已遍历的上三角位置都已与对应下三角位置交换；
-* 未遍历位置仍保持原值；
-* 每对关于主对角线对称的位置只交换一次。
-
-行反转阶段处理某一行时：
-
-* 左右两端已经移动到旋转后的正确列；
-* 中间未处理区间仍保持转置后的顺序；
-* 已完成行不会再被后续行修改。
-
-正确性依据
-~~~~~~~~~~
-
-转置阶段把每个原元素 ``matrix[row][column]`` 移到 ``matrix[column][row]``。由于只遍历上三角，
-每个非对角元素对恰好交换一次；对角元素位置不变。因此转置结果正确。
-
-随后每一行独立反转。位于转置矩阵 ``(column, row)`` 的元素被移动到
-``(column, n - 1 - row)``，这正是原元素顺时针旋转后的目标位置。每个矩阵位置都属于唯一一行，
-每行反转又是一个双射，因此所有元素恰好到达目标位置，没有丢失或重复。
-
-复杂度
-~~~~~~
-
-* 转置访问约 ``n(n - 1) / 2`` 对元素，行反转访问约 ``n² / 2`` 对元素，时间复杂度为
-  ``O(n²)``；
-* 对原地可变矩阵语言，只使用常数个索引和临时变量，额外空间为 ``O(1)``；
-* R 采用值语义，函数返回修改后的矩阵对象，运行时可能触发写时复制；算法本身没有显式建立
-  第二个同规模结果矩阵。
-
-核心语言实现
-------------
+九语言实现
+----------
 
 C
 ~
 
 .. code-block:: c
 
-   void rotate(
-       int **matrix,
-       int matrixSize,
-       int *matrixColSize
-   ) {
-       (void)matrixColSize;
-
-       for (int row = 0; row < matrixSize; ++row) {
-           for (int column = row + 1;
-                column < matrixSize;
-                ++column) {
-               int temp = matrix[row][column];
-               matrix[row][column] = matrix[column][row];
-               matrix[column][row] = temp;
-           }
-       }
-
-       for (int row = 0; row < matrixSize; ++row) {
-           int left = 0;
-           int right = matrixSize - 1;
-
-           while (left < right) {
-               int temp = matrix[row][left];
-               matrix[row][left] = matrix[row][right];
-               matrix[row][right] = temp;
-               ++left;
-               --right;
-           }
-       }
-   }
-
-``matrixColSize`` 是 LeetCode C 接口提供的每行列数；题目保证方阵，因此主算法只需
-``matrixSize``。
-
-C++
-~~~
-
-.. code-block:: cpp
-
-   class Solution {
-   public:
-       void rotate(vector<vector<int>>& matrix) {
-           int size = static_cast<int>(matrix.size());
-
-           for (int row = 0; row < size; ++row) {
-               for (int column = row + 1;
-                    column < size;
-                    ++column) {
-                   swap(matrix[row][column], matrix[column][row]);
-               }
-           }
-
-           for (vector<int>& row : matrix) {
-               reverse(row.begin(), row.end());
-           }
-       }
-   };
+   void rotate(int **matrix,int n,int *cols){(void)cols;for(int r=0;r<n;r++)for(int c=r+1;c<n;c++){int t=matrix[r][c];matrix[r][c]=matrix[c][r];matrix[c][r]=t;}for(int r=0;r<n;r++)for(int l=0,h=n-1;l<h;l++,h--){int t=matrix[r][l];matrix[r][l]=matrix[r][h];matrix[r][h]=t;}}
 
 Python
 ~~~~~~
@@ -238,271 +151,61 @@ Python
 
    class Solution:
        def rotate(self, matrix: list[list[int]]) -> None:
-           size = len(matrix)
-
-           for row in range(size):
-               for column in range(row + 1, size):
-                   matrix[row][column], matrix[column][row] = (
-                       matrix[column][row],
-                       matrix[row][column],
-                   )
-
-           for row in matrix:
-               row.reverse()
-
-方法按题目要求返回 ``None``，结果通过原矩阵可见。
+           n=len(matrix)
+           for r in range(n):
+               for c in range(r+1,n): matrix[r][c],matrix[c][r]=matrix[c][r],matrix[r][c]
+           for row in matrix: row.reverse()
 
 Java
 ~~~~
 
 .. code-block:: java
 
-   class Solution {
-       public void rotate(int[][] matrix) {
-           int size = matrix.length;
-
-           for (int row = 0; row < size; ++row) {
-               for (int column = row + 1;
-                    column < size;
-                    ++column) {
-                   int temp = matrix[row][column];
-                   matrix[row][column] = matrix[column][row];
-                   matrix[column][row] = temp;
-               }
-           }
-
-           for (int row = 0; row < size; ++row) {
-               int left = 0;
-               int right = size - 1;
-
-               while (left < right) {
-                   int temp = matrix[row][left];
-                   matrix[row][left] = matrix[row][right];
-                   matrix[row][right] = temp;
-                   ++left;
-                   --right;
-               }
-           }
-       }
-   }
+   class Solution {public void rotate(int[][]m){int n=m.length;for(int r=0;r<n;r++)for(int c=r+1;c<n;c++){int t=m[r][c];m[r][c]=m[c][r];m[c][r]=t;}for(int[]row:m)for(int l=0,h=n-1;l<h;l++,h--){int t=row[l];row[l]=row[h];row[h]=t;}}}
 
 Rust
 ~~~~
 
 .. code-block:: rust
 
-   impl Solution {
-       pub fn rotate(matrix: &mut Vec<Vec<i32>>) {
-           let size = matrix.len();
-
-           for row in 0..size {
-               for column in (row + 1)..size {
-                   let temp = matrix[row][column];
-                   matrix[row][column] = matrix[column][row];
-                   matrix[column][row] = temp;
-               }
-           }
-
-           for row in matrix.iter_mut() {
-               row.reverse();
-           }
-       }
-   }
-
-这里先复制 ``i32`` 临时值，再分步写入，避免同时取得 ``matrix[row]`` 与 ``matrix[column]`` 的
-两个重叠可变借用。
+   impl Solution {pub fn rotate(m:&mut Vec<Vec<i32>>){let n=m.len();for r in 0..n{for c in r+1..n{let t=m[r][c];m[r][c]=m[c][r];m[c][r]=t}}for row in m.iter_mut(){row.reverse()}}}
 
 Go
 ~~
 
 .. code-block:: go
 
-   func rotate(matrix [][]int) {
-       size := len(matrix)
-
-       for row := 0; row < size; row++ {
-           for column := row + 1; column < size; column++ {
-               matrix[row][column], matrix[column][row] =
-                   matrix[column][row], matrix[row][column]
-           }
-       }
-
-       for row := 0; row < size; row++ {
-           left, right := 0, size-1
-           for left < right {
-               matrix[row][left], matrix[row][right] =
-                   matrix[row][right], matrix[row][left]
-               left++
-               right--
-           }
-       }
-   }
+   func rotate(m [][]int){n:=len(m);for r:=0;r<n;r++{for c:=r+1;c<n;c++{m[r][c],m[c][r]=m[c][r],m[r][c]}};for _,row:=range m{for l,h:=0,n-1;l<h;l,h=l+1,h-1{row[l],row[h]=row[h],row[l]}}}
 
 TypeScript
 ~~~~~~~~~~
 
 .. code-block:: typescript
 
-   function rotate(matrix: number[][]): void {
-       const size = matrix.length;
-
-       for (let row = 0; row < size; row++) {
-           for (let column = row + 1; column < size; column++) {
-               [matrix[row][column], matrix[column][row]] =
-                   [matrix[column][row], matrix[row][column]];
-           }
-       }
-
-       for (const row of matrix) {
-           row.reverse();
-       }
-   }
+   function rotate(m:number[][]):void{const n=m.length;for(let r=0;r<n;r++)for(let c=r+1;c<n;c++)[m[r][c],m[c][r]]=[m[c][r],m[r][c]];for(const row of m)row.reverse();}
 
 C#
 ~~
 
 .. code-block:: csharp
 
-   public class Solution {
-       public void Rotate(int[][] matrix) {
-           int size = matrix.Length;
-
-           for (int row = 0; row < size; ++row) {
-               for (int column = row + 1;
-                    column < size;
-                    ++column) {
-                   (matrix[row][column], matrix[column][row]) =
-                       (matrix[column][row], matrix[row][column]);
-               }
-           }
-
-           for (int row = 0; row < size; ++row) {
-               Array.Reverse(matrix[row]);
-           }
-       }
-   }
+   public class Solution {public void Rotate(int[][]m){int n=m.Length;for(int r=0;r<n;r++)for(int c=r+1;c<n;c++)(m[r][c],m[c][r])=(m[c][r],m[r][c]);foreach(var row in m)Array.Reverse(row);}}
 
 Julia
 ~~~~~
 
 .. code-block:: julia
 
-   function rotate!(matrix::Matrix{Int})::Nothing
-       dimension = size(matrix, 1)
-
-       for row in 1:dimension
-           if row < dimension
-               for column in (row + 1):dimension
-                   matrix[row, column], matrix[column, row] =
-                       matrix[column, row], matrix[row, column]
-               end
-           end
-       end
-
-       for row in 1:dimension
-           left = 1
-           right = dimension
-           while left < right
-               matrix[row, left], matrix[row, right] =
-                   matrix[row, right], matrix[row, left]
-               left += 1
-               right -= 1
-           end
-       end
-
-       return nothing
+   function rotate!(m::Matrix{Int})
+       n=size(m,1)
+       for r in 1:n,c in r+1:n;m[r,c],m[c,r]=m[c,r],m[r,c];end
+       for r in 1:n;reverse!(@view m[r,:]);end
+       m
    end
-
-Julia 的 ``a:b`` 在 ``a > b`` 时可能形成递减序列，因此最后一行用 ``row < dimension`` 守卫，
-避免产生越界列索引。
 
 R
 ~
 
 .. code-block:: r
 
-   rotate_image <- function(matrix) {
-     dimension <- nrow(matrix)
-
-     if (dimension >= 2L) {
-       for (row in seq_len(dimension - 1L)) {
-         for (column in seq.int(row + 1L, dimension)) {
-           temp <- matrix[row, column]
-           matrix[row, column] <- matrix[column, row]
-           matrix[column, row] <- temp
-         }
-       }
-     }
-
-     for (row in seq_len(dimension)) {
-       left <- 1L
-       right <- dimension
-
-       while (left < right) {
-         temp <- matrix[row, left]
-         matrix[row, left] <- matrix[row, right]
-         matrix[row, right] <- temp
-         left <- left + 1L
-         right <- right - 1L
-       }
-     }
-
-     matrix
-   }
-
-R 函数返回旋转后的矩阵。R 对对象使用值语义，调用者需接收返回值；实现没有显式创建第二个结果
-矩阵，但运行时可能因写时复制分配新存储。
-
-关键边界
---------
-
-* ``1 × 1``：转置和反转都不改变元素；
-* 奇数阶矩阵：中心元素在两步中都保持原位置；
-* 偶数阶矩阵：没有中心格，但每个元素仍按坐标双射移动；
-* 方阵前提：非方阵转置后尺寸会变化，不能使用本题接口；
-* 原地要求：不能创建 ``n × n`` 临时结果矩阵。
-
-易错点
-------
-
-* 先反转每行再转置，得到逆时针旋转而非顺时针；
-* 转置时遍历整个矩阵，导致对称元素被交换两次；
-* 上三角内层从 ``column = row`` 开始虽不错误，但多做无效对角交换；
-* 把目标坐标写成 ``(n - 1 - column, row)``，那是逆时针映射；
-* Julia 或 R 使用递减范围时意外访问越界位置；
-* R 忘记接收返回矩阵，误以为调用者对象一定被原地修改。
-
-新增与强化知识
---------------
-
-新增
-~~~~
-
-* 顺时针 90 度旋转可分解为主对角线转置与水平镜像；
-* 复杂矩阵操作可通过坐标映射复合证明；
-* 只遍历一个三角区域可确保每对对称元素交换一次。
-
-强化
-~~~~
-
-* 复用 0031 中“可逆原地变换”的思想；
-* 原地算法仍可使用常数个临时变量；
-* Julia/R 的一基索引需要重新推导循环边界，而不是机械翻译零基代码。
-
-最小自检
---------
-
-#. 原位置 ``(row, column)`` 顺时针旋转后的零基坐标是什么？
-#. 为什么转置时只遍历主对角线一侧？
-#. 转置后为什么要反转每一行，而不是每一列？
-#. 两步复合怎样得到目标坐标？
-#. 为什么 R 版本需要返回矩阵？
-
-答案要点
-~~~~~~~~
-
-#. ``(column, n - 1 - row)``。
-#. 每对对称位置只应交换一次；遍历两侧会交换两次。
-#. 行反转改变转置后元素的列坐标，得到 ``n - 1 - row``。
-#. ``(row, column) -> (column, row) -> (column, n - 1 - row)``。
-#. R 使用值语义和写时复制，调用者需要接收修改后的对象。
+   rotate_image <- function(m){n<-nrow(m);if(n>=2L)for(r in 1:n)if(r<n)for(c in (r+1L):n){temporary<-m[r,c];m[r,c]<-m[c,r];m[c,r]<-temporary};m[,n:1,drop=FALSE]}
