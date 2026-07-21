@@ -4,27 +4,27 @@
 当前目标
 --------
 
-处理 ``0107. Binary Tree Level Order Traversal II``。
+处理 ``0108. Convert Sorted Array to Binary Search Tree``。
 
-* 目标文件：``0101-0200/0107-binary-tree-level-order-traversal-ii.rst``；
+* 目标文件：``0101-0200/0108-convert-sorted-array-to-binary-search-tree.rst``；
 * 文件类型：公开算法题完整题解；
 * 当前状态：目标文件已存在，执行全文审查与整改；
-* 完成后下一入口：``0108. Convert Sorted Array to Binary Search Tree``。
+* 完成后下一入口：``0109. Convert Sorted List to Binary Search Tree``。
 
 本轮工作
 --------
 
-#. 核对层内从左到右、层间自底向上和空树边界；
-#. 在 C++ 中实现 DFS 按深度、头插层结果和普通 BFS 后反转；
-#. 复用 0102 的自然层序前沿；
-#. 解释为什么只反转外层数组；
-#. 比较头插层与最终反转的移动成本；
-#. 分析树高、层宽和输出成本并完成九语言实现；
+#. 核对有序数组、BST 条件和高度平衡定义；
+#. 在 C++ 中实现复制切片、闭区间分治和半开区间分治；
+#. 推导中点选根与左右规模差；
+#. 说明偶数长度的两种合法中点选择；
+#. 使用递归区间展示树高平衡；
+#. 分析节点构造、递归栈和输入只读语义并完成九语言实现；
 #. 让正文在 R 实现结束。
 
 本轮完成条件
 ------------
 
-#. 第一百零七题形成“普通层序 → 独立层结果 → 外层顺序反转 → 层内顺序保持”的推导链；
-#. 完成后入口推进到 ``0108. Convert Sorted Array to Binary Search Tree``；
-#. 第一百零七题与新的 ``PROGRESS.rst`` 组成一个原子提交。
+#. 第一百零八题形成“有序区间 → 中点选根 → 左右子区间 → 规模差不超过一”的推导链；
+#. 完成后入口推进到 ``0109. Convert Sorted List to Binary Search Tree``；
+#. 第一百零八题与新的 ``PROGRESS.rst`` 组成一个原子提交。
