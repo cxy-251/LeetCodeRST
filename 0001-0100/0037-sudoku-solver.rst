@@ -6,348 +6,226 @@
 
 :题号: 0037
 :难度: Hard
-:主题: 回溯、约束传播、位掩码、最少候选优先
+:主题: 回溯、约束传播、位掩码、MRV
 :原题: `LeetCode 0037 <https://leetcode.com/problems/sudoku-solver/>`_
-:访问状态: Available
-:教学重点: 约束状态、候选集合、递归选择与撤销、MRV 剪枝、可变状态作用域
+:教学重点: 候选集合、最少候选优先、选择与撤销、棋盘和掩码一致性、原地求解
 
 题目重述
 --------
 
-给定一个合法的 ``9 × 9`` 数独棋盘，其中 ``'.'`` 表示空格。需要原地填入字符 ``'1'``
-至 ``'9'``，使每一行、每一列和每个 ``3 × 3`` 宫都恰好包含数字 1 至 9。题目保证存在
-唯一解。
+给定一个合法但未完成的 ``9 × 9`` 数独棋盘，``'.'`` 表示空格。原地填入数字字符，使每行、每列和每个 ``3 × 3`` 宫都包含 1 至 9 且无重复。题目保证存在唯一解。
 
 自建示例
 --------
 
-单空格
-~~~~~~
+某空格所在行已使用 ``1,3,4,5,6,7,8,9``，列和宫也允许 ``2``，则候选掩码只含数字 2，这是强制选择。
 
-若某一行已经包含 1 至 8，唯一空格所在列和宫也允许 9，则该格直接填入 ``'9'``。
+另一个空格可能允许 ``2`` 或 ``6``。尝试 2 后若后续某格候选为空，必须恢复该格为 ``'.'``，并从行、列、宫掩码中同时删除数字 2，再尝试 6。
 
-需要回退的局面
-~~~~~~~~~~~~~~
-
-某个空格可能暂时允许 ``2`` 或 ``6``。先填 ``2`` 后，后续某格没有候选，算法必须撤销
-``2``，恢复行、列、宫状态，再尝试 ``6``。
-
-接近完成的棋盘
-~~~~~~~~~~~~~~
-
-只有几个空格时，候选集合通常很小。优先处理候选最少的格子可显著减少分支。
-
-问题抽象
+C++ 实现
 --------
 
-0036 只回答“当前局面是否冲突”。本题需要在同一约束模型上搜索完整赋值：
+.. code-block:: cpp
 
-* 每个空格是一个待赋值变量；
-* 候选数字由所在行、列、宫尚未使用的数字共同决定；
-* 选择一个候选后更新三类约束；
-* 若后续无解，撤销选择并尝试其他候选。
+   #include <array>
+   #include <bit>
+   #include <vector>
 
-数字范围固定为 1 至 9，可以用一个 9 位整数表示集合。第 ``d`` 位为 1 表示数字
-``d + 1`` 已被占用。空格 ``(r, c)`` 的候选集合为：
+   class Solution {
+   private:
+       bool canPlace(const std::vector<std::vector<char>>& board, int row, int col, char digit) {
+           for (int i = 0; i < 9; ++i) {
+               if (board[row][i] == digit || board[i][col] == digit) return false;
+           }
+           int start_row = row / 3 * 3, start_col = col / 3 * 3;
+           for (int r = start_row; r < start_row + 3; ++r)
+               for (int c = start_col; c < start_col + 3; ++c)
+                   if (board[r][c] == digit) return false;
+           return true;
+       }
+
+       bool directBacktrack(std::vector<std::vector<char>>& board, int position) {
+           if (position == 81) return true;
+           int row = position / 9, col = position % 9;
+           if (board[row][col] != '.') return directBacktrack(board, position + 1);
+           for (char digit = '1'; digit <= '9'; ++digit) {
+               if (!canPlace(board, row, col, digit)) continue;
+               board[row][col] = digit;
+               if (directBacktrack(board, position + 1)) return true;
+               board[row][col] = '.';
+           }
+           return false;
+       }
+
+       bool booleanDfs(
+           std::vector<std::vector<char>>& board,
+           const std::vector<std::pair<int,int>>& spaces,
+           int index,
+           bool rows[9][9], bool cols[9][9], bool boxes[9][9]
+       ) {
+           if (index == static_cast<int>(spaces.size())) return true;
+           auto [row, col] = spaces[index];
+           int box = (row / 3) * 3 + col / 3;
+           for (int digit = 0; digit < 9; ++digit) {
+               if (rows[row][digit] || cols[col][digit] || boxes[box][digit]) continue;
+               board[row][col] = static_cast<char>('1' + digit);
+               rows[row][digit] = cols[col][digit] = boxes[box][digit] = true;
+               if (booleanDfs(board, spaces, index + 1, rows, cols, boxes)) return true;
+               rows[row][digit] = cols[col][digit] = boxes[box][digit] = false;
+               board[row][col] = '.';
+           }
+           return false;
+       }
+
+       bool mrvDfs(
+           std::vector<std::vector<char>>& board,
+           std::array<int,9>& rows,
+           std::array<int,9>& cols,
+           std::array<int,9>& boxes
+       ) {
+           constexpr int full = (1 << 9) - 1;
+           int best_row = -1, best_col = -1, best_mask = 0, best_count = 10;
+
+           for (int row = 0; row < 9; ++row) for (int col = 0; col < 9; ++col) {
+               if (board[row][col] != '.') continue;
+               int box = (row / 3) * 3 + col / 3;
+               int mask = full & ~(rows[row] | cols[col] | boxes[box]);
+               int count = std::popcount(static_cast<unsigned>(mask));
+               if (count == 0) return false;
+               if (count < best_count) {
+                   best_row = row; best_col = col; best_mask = mask; best_count = count;
+                   if (count == 1) break;
+               }
+           }
+
+           if (best_row == -1) return true;
+           int box = (best_row / 3) * 3 + best_col / 3;
+           while (best_mask != 0) {
+               int bit = best_mask & -best_mask;
+               best_mask ^= bit;
+               int digit = std::countr_zero(static_cast<unsigned>(bit));
+               board[best_row][best_col] = static_cast<char>('1' + digit);
+               rows[best_row] |= bit; cols[best_col] |= bit; boxes[box] |= bit;
+               if (mrvDfs(board, rows, cols, boxes)) return true;
+               rows[best_row] ^= bit; cols[best_col] ^= bit; boxes[box] ^= bit;
+               board[best_row][best_col] = '.';
+           }
+           return false;
+       }
+
+       void solveWithMrv(std::vector<std::vector<char>>& board) {
+           std::array<int,9> rows{}, cols{}, boxes{};
+           for (int row = 0; row < 9; ++row) for (int col = 0; col < 9; ++col) {
+               if (board[row][col] == '.') continue;
+               int bit = 1 << (board[row][col] - '1');
+               int box = (row / 3) * 3 + col / 3;
+               rows[row] |= bit; cols[col] |= bit; boxes[box] |= bit;
+           }
+           mrvDfs(board, rows, cols, boxes);
+       }
+
+   public:
+       void solveSudoku(std::vector<std::vector<char>>& board) {
+           solveWithMrv(board);
+       }
+   };
+
+题解
+----
+
+从合法性检查到赋值搜索
+~~~~~~~~~~~~~~~~~~~~~~
+
+第 36 题只登记已出现数字。本题把每个空格看作变量：候选是所在行、列、宫都未使用的数字；选择候选后更新三类状态；若后续无法完成，就撤销并尝试下一个候选。
+
+直接逐格检查为何重复工作
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+最直接回溯每次尝试数字都重新扫描 9 个同行格、9 个同列格和 9 个宫格。搜索树中同一区域被反复查询。布尔表或位掩码把“某数字是否已使用”降为常数时间成员查询。
+
+候选掩码如何得到
+~~~~~~~~~~~~~~~~
+
+每个整数的低 9 位表示数字 1 至 9。空格 ``(r,c)`` 的已用集合为：
 
 .. code-block:: text
 
    used = rows[r] | cols[c] | boxes[box]
-   candidates = (~used) & 0b1_1111_1111
+   candidates = (~used) & 0x1ff
 
-解法选择
---------
+候选位为 1 表示该数字同时未出现在三类区域中。
+
+为什么选择候选最少的空格
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+固定顺序回溯可能先处理有 7 个候选的格子，产生大量分支，而某个只有 1 个候选的格子已经能强制决定路径。MRV（Minimum Remaining Values）每层扫描所有空格，选择候选数最少者：候选为 0 立即失败，候选为 1 直接传播，通常显著缩小搜索树。
+
+最低位如何枚举候选
+~~~~~~~~~~~~~~~~~~
+
+``bit = mask & -mask`` 提取最低位的 1。该位下标对应数字减一；尝试后用 ``mask ^= bit`` 从局部候选集合删除。9 位范围很小，也可以逐位循环，但最低位提取使状态变化更直接。
+
+选择与撤销必须同步哪些状态
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+尝试 ``bit`` 时同时：写入棋盘字符、将位加入行掩码、列掩码和宫掩码。递归失败时必须反向恢复这四处。因为候选位在尝试前确定未被使用，所以登记可用按位或，撤销可用按位异或。
 
 .. list-table::
    :header-rows: 1
 
-   * - 方法
-     - 时间复杂度
-     - 额外空间
-     - 取舍
-   * - 位掩码回溯 + MRV
-     - 最坏 ``O(9^E)``
-     - ``O(E)`` 递归栈
-     - 主解法；约束检查为常数时间，剪枝强
-   * - 固定顺序逐格回溯
-     - 最坏 ``O(9^E)``
-     - ``O(E)``
-     - 实现较短，困难局面可能产生大量无效分支
-   * - 精确覆盖 / Algorithm X
-     - 取决于搜索树
-     - 较高
-     - 通用而强大，超出当前教学主线
+   * - 阶段
+     - 棋盘格
+     - 三类掩码
+   * - 选择前
+     - ``'.'``
+     - 均不含 ``bit``
+   * - 尝试
+     - 写入数字
+     - 三处加入 ``bit``
+   * - 子树失败
+     - 恢复 ``'.'``
+     - 三处删除 ``bit``
 
-主解法：位掩码回溯与 MRV
--------------------------
+为什么回溯安全且完备
+~~~~~~~~~~~~~~~~~~~~
 
-状态含义
-~~~~~~~~
+安全性来自候选定义：被尝试数字不在当前行、列、宫中，因此每次写入都保持约束。没有空格时，81 个格子均已填满且无冲突，得到合法解。
 
-维护：
+完备性来自候选枚举：任意真实解在选中格子的数字一定属于当前候选集合；算法逐个尝试全部候选，不会剪掉真实解分支。失败分支返回前完整撤销，所以不会污染兄弟分支。题目保证唯一解，首次成功即可停止。
 
-* ``rows[r]``：第 ``r`` 行已经使用的数字位集合；
-* ``cols[c]``：第 ``c`` 列已经使用的数字位集合；
-* ``boxes[b]``：第 ``b`` 个宫已经使用的数字位集合；
-* 棋盘本身：已确定字符和未填入的 ``'.'``。
-
-宫编号为 ``(r / 3) * 3 + c / 3``，不同语言根据零基或一基索引调整。
-
-最少候选优先
-~~~~~~~~~~~~
-
-每层递归扫描所有剩余空格，选择候选数量最少的格子。该策略称为 MRV
-（Minimum Remaining Values，最少剩余值）：
-
-* 候选为 0：当前分支立即失败；
-* 候选为 1：形成强制选择；
-* 候选越少，越早暴露冲突，搜索树通常越小。
-
-最低位提取
+复杂度来源
 ~~~~~~~~~~
 
-候选掩码中的每个 1 代表一个数字。表达式 ``mask & -mask`` 可以提取最低位的 1，尝试后
-再用异或从候选集合中删除该位。位的位置就是数字减一。
+设空格数为 ``E``，粗略最坏上界为 ``O(9^E)``，递归深度 ``O(E)``。行列宫查询为常数时间；每层 MRV 扫描最多 81 格，是固定因子。实际搜索量由约束和候选排序大幅缩小。
 
-选择与撤销
-~~~~~~~~~~
-
-尝试某一位 ``bit`` 时：
-
-#. 把对应数字写入棋盘；
-#. 将 ``bit`` 加入行、列、宫掩码；
-#. 递归处理剩余空格；
-#. 若递归失败，从三个掩码删除 ``bit``，并把棋盘恢复为 ``'.'``。
-
-因为该位在进入当前递归前一定未被使用，所以加入可以用按位或，撤销可以用按位异或。
-
-核心不变量
-~~~~~~~~~~
-
-每次递归开始时：
-
-* 棋盘中所有已填格子满足行、列、宫唯一性；
-* 三组掩码与棋盘中的已填数字完全一致；
-* 当前递归只负责为剩余空格寻找合法赋值；
-* 返回失败前会撤销本层造成的全部修改。
-
-正确性依据
-~~~~~~~~~~
-
-**安全性。** 每个候选位都不在对应行、列、宫的占用并集中，因此写入后不会产生重复。
-递归始终保持三类唯一性约束。到达没有空格的状态时，81 个格子均已填入且无冲突，所以
-得到合法数独解。
-
-**完备性。** 对选中的空格，算法枚举其所有当前合法候选。任何完整解在该格上的数字必属于
-这些候选之一。若某候选不能扩展为完整解，回溯后继续枚举下一候选。因此只要解存在，沿着
-真实解中每个空格的数字形成的分支不会被遗漏。
-
-**撤销正确性。** 本层只修改一个格子及其对应的三个掩码位。递归失败后恢复这四处状态，
-父层看到的状态与尝试前完全相同，失败分支不会污染后续分支。
-
-复杂度
-~~~~~~
-
-设初始空格数为 ``E``。最坏情况下每格最多尝试 9 个数字，时间复杂度上界为 ``O(9^E)``。
-行列宫约束与 MRV 会大幅减少实际分支。每层扫描至多 81 个格子，这个固定因子不改变指数
-上界。递归深度最多为 ``E``，三组掩码大小固定，额外空间复杂度为 ``O(E)``。
-
-核心语言实现
-------------
+九语言实现
+----------
 
 C
 ~
 
 .. code-block:: c
 
-   #include <stdbool.h>
-
-   static int popcount9(int value) {
-       int count = 0;
-       while (value != 0) {
-           value &= value - 1;
-           ++count;
+   static int count_bits(int x){int n=0;while(x){x&=x-1;++n;}return n;}
+   static int bit_index(int bit){int d=0;while((1<<d)!=bit)++d;return d;}
+   static bool solve(char **board,int rows[9],int cols[9],int boxes[9]){
+       int br=-1,bc=-1,bm=0,best=10,full=(1<<9)-1;
+       for(int r=0;r<9;r++)for(int c=0;c<9;c++)if(board[r][c]=='.'){
+           int b=(r/3)*3+c/3,mask=full&~(rows[r]|cols[c]|boxes[b]),count=count_bits(mask);
+           if(count==0)return false;if(count<best){br=r;bc=c;bm=mask;best=count;}
        }
-       return count;
-   }
-
-   static int trailing_index(int bit) {
-       int index = 0;
-       while ((1 << index) != bit) {
-           ++index;
-       }
-       return index;
-   }
-
-   static bool solve(
-       char **board,
-       int rows[9],
-       int cols[9],
-       int boxes[9]
-   ) {
-       int best_r = -1;
-       int best_c = -1;
-       int best_mask = 0;
-       int best_count = 10;
-       const int full = (1 << 9) - 1;
-
-       for (int r = 0; r < 9; ++r) {
-           for (int c = 0; c < 9; ++c) {
-               if (board[r][c] != '.') {
-                   continue;
-               }
-
-               int box = (r / 3) * 3 + c / 3;
-               int mask = full & ~(rows[r] | cols[c] | boxes[box]);
-               int count = popcount9(mask);
-
-               if (count == 0) {
-                   return false;
-               }
-               if (count < best_count) {
-                   best_r = r;
-                   best_c = c;
-                   best_mask = mask;
-                   best_count = count;
-               }
-           }
-       }
-
-       if (best_r == -1) {
-           return true;
-       }
-
-       int box = (best_r / 3) * 3 + best_c / 3;
-       while (best_mask != 0) {
-           int bit = best_mask & -best_mask;
-           best_mask ^= bit;
-           int digit = trailing_index(bit);
-
-           board[best_r][best_c] = (char)('1' + digit);
-           rows[best_r] |= bit;
-           cols[best_c] |= bit;
-           boxes[box] |= bit;
-
-           if (solve(board, rows, cols, boxes)) {
-               return true;
-           }
-
-           rows[best_r] ^= bit;
-           cols[best_c] ^= bit;
-           boxes[box] ^= bit;
-           board[best_r][best_c] = '.';
-       }
-
+       if(br<0)return true;int b=(br/3)*3+bc/3;
+       while(bm){int bit=bm&-bm;bm^=bit;int d=bit_index(bit);board[br][bc]=(char)('1'+d);
+           rows[br]|=bit;cols[bc]|=bit;boxes[b]|=bit;if(solve(board,rows,cols,boxes))return true;
+           rows[br]^=bit;cols[bc]^=bit;boxes[b]^=bit;board[br][bc]='.';}
        return false;
    }
-
-   void solveSudoku(char **board, int boardSize, int *boardColSize) {
-       int rows[9] = {0};
-       int cols[9] = {0};
-       int boxes[9] = {0};
-
-       (void)boardSize;
-       (void)boardColSize;
-
-       for (int r = 0; r < 9; ++r) {
-           for (int c = 0; c < 9; ++c) {
-               if (board[r][c] == '.') {
-                   continue;
-               }
-               int bit = 1 << (board[r][c] - '1');
-               int box = (r / 3) * 3 + c / 3;
-               rows[r] |= bit;
-               cols[c] |= bit;
-               boxes[box] |= bit;
-           }
-       }
-
-       solve(board, rows, cols, boxes);
+   void solveSudoku(char **board,int boardSize,int *boardColSize){
+       int rows[9]={0},cols[9]={0},boxes[9]={0};(void)boardSize;(void)boardColSize;
+       for(int r=0;r<9;r++)for(int c=0;c<9;c++)if(board[r][c]!='.'){
+           int bit=1<<(board[r][c]-'1'),b=(r/3)*3+c/3;rows[r]|=bit;cols[c]|=bit;boxes[b]|=bit;}
+       solve(board,rows,cols,boxes);
    }
-
-C++
-~~~
-
-.. code-block:: cpp
-
-   class Solution {
-       int rows[9]{};
-       int cols[9]{};
-       int boxes[9]{};
-
-       bool dfs(vector<vector<char>>& board) {
-           int bestRow = -1;
-           int bestCol = -1;
-           int bestMask = 0;
-           int bestCount = 10;
-
-           for (int row = 0; row < 9; ++row) {
-               for (int col = 0; col < 9; ++col) {
-                   if (board[row][col] != '.') {
-                       continue;
-                   }
-                   int box = (row / 3) * 3 + col / 3;
-                   int mask = 0x1FF &
-                       ~(rows[row] | cols[col] | boxes[box]);
-                   int count = __builtin_popcount(mask);
-                   if (count == 0) {
-                       return false;
-                   }
-                   if (count < bestCount) {
-                       bestRow = row;
-                       bestCol = col;
-                       bestMask = mask;
-                       bestCount = count;
-                   }
-               }
-           }
-
-           if (bestRow == -1) {
-               return true;
-           }
-
-           int box = (bestRow / 3) * 3 + bestCol / 3;
-           while (bestMask != 0) {
-               int bit = bestMask & -bestMask;
-               bestMask ^= bit;
-               int digit = __builtin_ctz(bit);
-
-               board[bestRow][bestCol] =
-                   static_cast<char>('1' + digit);
-               rows[bestRow] |= bit;
-               cols[bestCol] |= bit;
-               boxes[box] |= bit;
-
-               if (dfs(board)) {
-                   return true;
-               }
-
-               rows[bestRow] ^= bit;
-               cols[bestCol] ^= bit;
-               boxes[box] ^= bit;
-               board[bestRow][bestCol] = '.';
-           }
-
-           return false;
-       }
-
-   public:
-       void solveSudoku(vector<vector<char>>& board) {
-           for (int row = 0; row < 9; ++row) {
-               for (int col = 0; col < 9; ++col) {
-                   if (board[row][col] == '.') {
-                       continue;
-                   }
-                   int bit = 1 << (board[row][col] - '1');
-                   int box = (row / 3) * 3 + col / 3;
-                   rows[row] |= bit;
-                   cols[col] |= bit;
-                   boxes[box] |= bit;
-               }
-           }
-           dfs(board);
-       }
-   };
 
 Python
 ~~~~~~
@@ -356,65 +234,29 @@ Python
 
    class Solution:
        def solveSudoku(self, board: list[list[str]]) -> None:
-           rows = [0] * 9
-           cols = [0] * 9
-           boxes = [0] * 9
-
-           for row in range(9):
-               for col in range(9):
-                   if board[row][col] == ".":
-                       continue
-                   bit = 1 << (ord(board[row][col]) - ord("1"))
-                   box = (row // 3) * 3 + col // 3
-                   rows[row] |= bit
-                   cols[col] |= bit
-                   boxes[box] |= bit
-
+           rows, cols, boxes = [0]*9, [0]*9, [0]*9
+           for r in range(9):
+               for c in range(9):
+                   if board[r][c] != ".":
+                       bit = 1 << (ord(board[r][c]) - 49); box = (r//3)*3 + c//3
+                       rows[r] |= bit; cols[c] |= bit; boxes[box] |= bit
+           full = (1 << 9) - 1
            def dfs() -> bool:
-               best: tuple[int, int, int] | None = None
-               best_count = 10
-
-               for row in range(9):
-                   for col in range(9):
-                       if board[row][col] != ".":
-                           continue
-                       box = (row // 3) * 3 + col // 3
-                       mask = 0x1FF & ~(
-                           rows[row] | cols[col] | boxes[box]
-                       )
-                       count = mask.bit_count()
-                       if count == 0:
-                           return False
-                       if count < best_count:
-                           best = (row, col, mask)
-                           best_count = count
-
-               if best is None:
-                   return True
-
-               row, col, mask = best
-               box = (row // 3) * 3 + col // 3
-
+               best = None; best_mask = 0
+               for r in range(9):
+                   for c in range(9):
+                       if board[r][c] == ".":
+                           box = (r//3)*3 + c//3; mask = full & ~(rows[r] | cols[c] | boxes[box])
+                           if mask == 0: return False
+                           if best is None or mask.bit_count() < best_mask.bit_count(): best, best_mask = (r,c,box), mask
+               if best is None: return True
+               r,c,box = best; mask = best_mask
                while mask:
-                   bit = mask & -mask
-                   mask ^= bit
-                   digit = bit.bit_length() - 1
-
-                   board[row][col] = chr(ord("1") + digit)
-                   rows[row] |= bit
-                   cols[col] |= bit
-                   boxes[box] |= bit
-
-                   if dfs():
-                       return True
-
-                   rows[row] ^= bit
-                   cols[col] ^= bit
-                   boxes[box] ^= bit
-                   board[row][col] = "."
-
+                   bit = mask & -mask; mask ^= bit; board[r][c] = str(bit.bit_length())
+                   rows[r] |= bit; cols[c] |= bit; boxes[box] |= bit
+                   if dfs(): return True
+                   rows[r] ^= bit; cols[c] ^= bit; boxes[box] ^= bit; board[r][c] = "."
                return False
-
            dfs()
 
 Java
@@ -423,80 +265,17 @@ Java
 .. code-block:: java
 
    class Solution {
-       private final int[] rows = new int[9];
-       private final int[] cols = new int[9];
-       private final int[] boxes = new int[9];
-
-       public void solveSudoku(char[][] board) {
-           for (int row = 0; row < 9; row++) {
-               for (int col = 0; col < 9; col++) {
-                   if (board[row][col] == '.') {
-                       continue;
-                   }
-                   int bit = 1 << (board[row][col] - '1');
-                   int box = (row / 3) * 3 + col / 3;
-                   rows[row] |= bit;
-                   cols[col] |= bit;
-                   boxes[box] |= bit;
-               }
-           }
-           dfs(board);
-       }
-
-       private boolean dfs(char[][] board) {
-           int bestRow = -1;
-           int bestCol = -1;
-           int bestMask = 0;
-           int bestCount = 10;
-
-           for (int row = 0; row < 9; row++) {
-               for (int col = 0; col < 9; col++) {
-                   if (board[row][col] != '.') {
-                       continue;
-                   }
-                   int box = (row / 3) * 3 + col / 3;
-                   int mask = 0x1FF &
-                       ~(rows[row] | cols[col] | boxes[box]);
-                   int count = Integer.bitCount(mask);
-                   if (count == 0) {
-                       return false;
-                   }
-                   if (count < bestCount) {
-                       bestRow = row;
-                       bestCol = col;
-                       bestMask = mask;
-                       bestCount = count;
-                   }
-               }
-           }
-
-           if (bestRow == -1) {
-               return true;
-           }
-
-           int box = (bestRow / 3) * 3 + bestCol / 3;
-           while (bestMask != 0) {
-               int bit = bestMask & -bestMask;
-               bestMask ^= bit;
-               int digit = Integer.numberOfTrailingZeros(bit);
-
-               board[bestRow][bestCol] = (char) ('1' + digit);
-               rows[bestRow] |= bit;
-               cols[bestCol] |= bit;
-               boxes[box] |= bit;
-
-               if (dfs(board)) {
-                   return true;
-               }
-
-               rows[bestRow] ^= bit;
-               cols[bestCol] ^= bit;
-               boxes[box] ^= bit;
-               board[bestRow][bestCol] = '.';
-           }
-
-           return false;
-       }
+       int[] rows=new int[9],cols=new int[9],boxes=new int[9];char[][] board;final int FULL=(1<<9)-1;
+       boolean dfs(){int br=-1,bc=-1,bm=0,best=10;
+           for(int r=0;r<9;r++)for(int c=0;c<9;c++)if(board[r][c]=='.'){
+               int b=(r/3)*3+c/3,mask=FULL&~(rows[r]|cols[c]|boxes[b]),count=Integer.bitCount(mask);
+               if(count==0)return false;if(count<best){br=r;bc=c;bm=mask;best=count;}}
+           if(br<0)return true;int b=(br/3)*3+bc/3;
+           while(bm!=0){int bit=bm&-bm;bm^=bit;int d=Integer.numberOfTrailingZeros(bit);board[br][bc]=(char)('1'+d);
+               rows[br]|=bit;cols[bc]|=bit;boxes[b]|=bit;if(dfs())return true;
+               rows[br]^=bit;cols[bc]^=bit;boxes[b]^=bit;board[br][bc]='.';}return false;}
+       public void solveSudoku(char[][] board){this.board=board;for(int r=0;r<9;r++)for(int c=0;c<9;c++)if(board[r][c]!='.'){
+           int bit=1<<(board[r][c]-'1'),b=(r/3)*3+c/3;rows[r]|=bit;cols[c]|=bit;boxes[b]|=bit;}dfs();}
    }
 
 Rust
@@ -506,81 +285,12 @@ Rust
 
    impl Solution {
        pub fn solve_sudoku(board: &mut Vec<Vec<char>>) {
-           let mut rows = [0u16; 9];
-           let mut cols = [0u16; 9];
-           let mut boxes = [0u16; 9];
-
-           for row in 0..9 {
-               for col in 0..9 {
-                   if board[row][col] == '.' {
-                       continue;
-                   }
-                   let digit = board[row][col] as u8 - b'1';
-                   let bit = 1u16 << digit;
-                   let box_index = (row / 3) * 3 + col / 3;
-                   rows[row] |= bit;
-                   cols[col] |= bit;
-                   boxes[box_index] |= bit;
-               }
-           }
-
-           fn dfs(
-               board: &mut Vec<Vec<char>>,
-               rows: &mut [u16; 9],
-               cols: &mut [u16; 9],
-               boxes: &mut [u16; 9],
-           ) -> bool {
-               let mut best: Option<(usize, usize, u16)> = None;
-               let mut best_count = 10;
-
-               for row in 0..9 {
-                   for col in 0..9 {
-                       if board[row][col] != '.' {
-                           continue;
-                       }
-                       let box_index = (row / 3) * 3 + col / 3;
-                       let mask = 0x1ffu16 &
-                           !(rows[row] | cols[col] | boxes[box_index]);
-                       let count = mask.count_ones();
-                       if count == 0 {
-                           return false;
-                       }
-                       if count < best_count {
-                           best = Some((row, col, mask));
-                           best_count = count;
-                       }
-                   }
-               }
-
-               let Some((row, col, mut mask)) = best else {
-                   return true;
-               };
-               let box_index = (row / 3) * 3 + col / 3;
-
-               while mask != 0 {
-                   let bit = mask & mask.wrapping_neg();
-                   mask ^= bit;
-                   let digit = bit.trailing_zeros() as u8;
-
-                   board[row][col] = (b'1' + digit) as char;
-                   rows[row] |= bit;
-                   cols[col] |= bit;
-                   boxes[box_index] |= bit;
-
-                   if dfs(board, rows, cols, boxes) {
-                       return true;
-                   }
-
-                   rows[row] ^= bit;
-                   cols[col] ^= bit;
-                   boxes[box_index] ^= bit;
-                   board[row][col] = '.';
-               }
-
-               false
-           }
-
-           dfs(board, &mut rows, &mut cols, &mut boxes);
+           fn dfs(board:&mut Vec<Vec<char>>,rows:&mut [u16;9],cols:&mut [u16;9],boxes:&mut [u16;9])->bool{
+               let(mut br,mut bc,mut bm,mut best)=(9usize,9usize,0u16,10u32);
+               for r in 0..9{for c in 0..9{if board[r][c]=='.'{let b=(r/3)*3+c/3;let mask=0x1ff&!(rows[r]|cols[c]|boxes[b]);let count=mask.count_ones();if count==0{return false}if count<best{br=r;bc=c;bm=mask;best=count;}}}}
+               if br==9{return true}let b=(br/3)*3+bc/3;while bm!=0{let bit=bm&bm.wrapping_neg();bm^=bit;let d=bit.trailing_zeros() as u8;board[br][bc]=(b'1'+d)as char;
+                   rows[br]|=bit;cols[bc]|=bit;boxes[b]|=bit;if dfs(board,rows,cols,boxes){return true}rows[br]^=bit;cols[bc]^=bit;boxes[b]^=bit;board[br][bc]='.';}false}
+           let(mut rows,mut cols,mut boxes)=([0u16;9],[0u16;9],[0u16;9]);for r in 0..9{for c in 0..9{if board[r][c]!='.'{let bit=1u16<<(board[r][c]as u8-b'1');let b=(r/3)*3+c/3;rows[r]|=bit;cols[c]|=bit;boxes[b]|=bit;}}}dfs(board,&mut rows,&mut cols,&mut boxes);
        }
    }
 
@@ -589,90 +299,8 @@ Go
 
 .. code-block:: go
 
-   func solveSudoku(board [][]byte) {
-       rows := [9]int{}
-       cols := [9]int{}
-       boxes := [9]int{}
-
-       for row := 0; row < 9; row++ {
-           for col := 0; col < 9; col++ {
-               if board[row][col] == '.' {
-                   continue
-               }
-               bit := 1 << (board[row][col] - '1')
-               box := (row/3)*3 + col/3
-               rows[row] |= bit
-               cols[col] |= bit
-               boxes[box] |= bit
-           }
-       }
-
-       var bitCount func(int) int
-       bitCount = func(value int) int {
-           count := 0
-           for value != 0 {
-               value &= value - 1
-               count++
-           }
-           return count
-       }
-
-       var dfs func() bool
-       dfs = func() bool {
-           bestRow, bestCol := -1, -1
-           bestMask, bestCount := 0, 10
-
-           for row := 0; row < 9; row++ {
-               for col := 0; col < 9; col++ {
-                   if board[row][col] != '.' {
-                       continue
-                   }
-                   box := (row/3)*3 + col/3
-                   mask := 0x1ff & ^(rows[row] | cols[col] | boxes[box])
-                   count := bitCount(mask)
-                   if count == 0 {
-                       return false
-                   }
-                   if count < bestCount {
-                       bestRow, bestCol = row, col
-                       bestMask, bestCount = mask, count
-                   }
-               }
-           }
-
-           if bestRow == -1 {
-               return true
-           }
-
-           box := (bestRow/3)*3 + bestCol/3
-           for bestMask != 0 {
-               bit := bestMask & -bestMask
-               bestMask ^= bit
-               digit := 0
-               for (1 << digit) != bit {
-                   digit++
-               }
-
-               board[bestRow][bestCol] = byte('1' + digit)
-               rows[bestRow] |= bit
-               cols[bestCol] |= bit
-               boxes[box] |= bit
-
-               if dfs() {
-                   return true
-               }
-
-               rows[bestRow] ^= bit
-               cols[bestCol] ^= bit
-               boxes[box] ^= bit
-               board[bestRow][bestCol] = '.'
-           }
-
-           return false
-       }
-
-       dfs()
-   }
+   func solveSudoku(board [][]byte){rows,cols,boxes:=[9]int{},[9]int{},[9]int{};for r:=0;r<9;r++{for c:=0;c<9;c++{if board[r][c]!='.'{bit:=1<<int(board[r][c]-'1');b:=(r/3)*3+c/3;rows[r]|=bit;cols[c]|=bit;boxes[b]|=bit}}}
+       var dfs func()bool;dfs=func()bool{br,bc,bm,best:=-1,-1,0,10;for r:=0;r<9;r++{for c:=0;c<9;c++{if board[r][c]=='.'{b:=(r/3)*3+c/3;mask:=0x1ff&^(rows[r]|cols[c]|boxes[b]);count:=bits.OnesCount(uint(mask));if count==0{return false};if count<best{br,bc,bm,best=r,c,mask,count}}}};if br<0{return true};b:=(br/3)*3+bc/3;for bm!=0{bit:=bm&-bm;bm^=bit;d:=bits.TrailingZeros(uint(bit));board[br][bc]=byte('1'+d);rows[br]|=bit;cols[bc]|=bit;boxes[b]|=bit;if dfs(){return true};rows[br]^=bit;cols[bc]^=bit;boxes[b]^=bit;board[br][bc]='.'};return false};dfs()}
 
 TypeScript
 ~~~~~~~~~~
@@ -680,91 +308,10 @@ TypeScript
 .. code-block:: typescript
 
    function solveSudoku(board: string[][]): void {
-       const rows = new Array<number>(9).fill(0);
-       const cols = new Array<number>(9).fill(0);
-       const boxes = new Array<number>(9).fill(0);
-
-       for (let row = 0; row < 9; row++) {
-           for (let col = 0; col < 9; col++) {
-               if (board[row][col] === ".") {
-                   continue;
-               }
-               const bit = 1 << (board[row][col].charCodeAt(0) - 49);
-               const box = Math.floor(row / 3) * 3 +
-                   Math.floor(col / 3);
-               rows[row] |= bit;
-               cols[col] |= bit;
-               boxes[box] |= bit;
-           }
-       }
-
-       const bitCount = (value: number): number => {
-           let count = 0;
-           while (value !== 0) {
-               value &= value - 1;
-               count++;
-           }
-           return count;
-       };
-
-       const dfs = (): boolean => {
-           let bestRow = -1;
-           let bestCol = -1;
-           let bestMask = 0;
-           let bestCount = 10;
-
-           for (let row = 0; row < 9; row++) {
-               for (let col = 0; col < 9; col++) {
-                   if (board[row][col] !== ".") {
-                       continue;
-                   }
-                   const box = Math.floor(row / 3) * 3 +
-                       Math.floor(col / 3);
-                   const mask = 0x1ff &
-                       ~(rows[row] | cols[col] | boxes[box]);
-                   const count = bitCount(mask);
-                   if (count === 0) {
-                       return false;
-                   }
-                   if (count < bestCount) {
-                       bestRow = row;
-                       bestCol = col;
-                       bestMask = mask;
-                       bestCount = count;
-                   }
-               }
-           }
-
-           if (bestRow === -1) {
-               return true;
-           }
-
-           const box = Math.floor(bestRow / 3) * 3 +
-               Math.floor(bestCol / 3);
-           while (bestMask !== 0) {
-               const bit = bestMask & -bestMask;
-               bestMask ^= bit;
-               const digit = 31 - Math.clz32(bit);
-
-               board[bestRow][bestCol] = String(digit + 1);
-               rows[bestRow] |= bit;
-               cols[bestCol] |= bit;
-               boxes[box] |= bit;
-
-               if (dfs()) {
-                   return true;
-               }
-
-               rows[bestRow] ^= bit;
-               cols[bestCol] ^= bit;
-               boxes[box] ^= bit;
-               board[bestRow][bestCol] = ".";
-           }
-
-           return false;
-       };
-
-       dfs();
+       const rows=Array(9).fill(0),cols=Array(9).fill(0),boxes=Array(9).fill(0);
+       for(let r=0;r<9;r++)for(let c=0;c<9;c++)if(board[r][c]!=="."){const bit=1<<(board[r][c].charCodeAt(0)-49),b=Math.floor(r/3)*3+Math.floor(c/3);rows[r]|=bit;cols[c]|=bit;boxes[b]|=bit;}
+       const count=(x:number)=>{let n=0;while(x){x&=x-1;n++;}return n;};
+       const dfs=():boolean=>{let br=-1,bc=-1,bm=0,best=10;for(let r=0;r<9;r++)for(let c=0;c<9;c++)if(board[r][c]==="."){const b=Math.floor(r/3)*3+Math.floor(c/3),mask=0x1ff&~(rows[r]|cols[c]|boxes[b]),n=count(mask);if(n===0)return false;if(n<best){br=r;bc=c;bm=mask;best=n;}}if(br<0)return true;const b=Math.floor(br/3)*3+Math.floor(bc/3);while(bm){const bit=bm&-bm;bm^=bit;const d=31-Math.clz32(bit);board[br][bc]=String(d+1);rows[br]|=bit;cols[bc]|=bit;boxes[b]|=bit;if(dfs())return true;rows[br]^=bit;cols[bc]^=bit;boxes[b]^=bit;board[br][bc]=".";}return false;};dfs();
    }
 
 C#
@@ -773,92 +320,9 @@ C#
 .. code-block:: csharp
 
    public class Solution {
-       private readonly int[] rows = new int[9];
-       private readonly int[] cols = new int[9];
-       private readonly int[] boxes = new int[9];
-
-       public void SolveSudoku(char[][] board) {
-           for (int row = 0; row < 9; row++) {
-               for (int col = 0; col < 9; col++) {
-                   if (board[row][col] == '.') {
-                       continue;
-                   }
-                   int bit = 1 << (board[row][col] - '1');
-                   int box = (row / 3) * 3 + col / 3;
-                   rows[row] |= bit;
-                   cols[col] |= bit;
-                   boxes[box] |= bit;
-               }
-           }
-           Dfs(board);
-       }
-
-       private static int BitCount(int value) {
-           int count = 0;
-           while (value != 0) {
-               value &= value - 1;
-               count++;
-           }
-           return count;
-       }
-
-       private bool Dfs(char[][] board) {
-           int bestRow = -1;
-           int bestCol = -1;
-           int bestMask = 0;
-           int bestCount = 10;
-
-           for (int row = 0; row < 9; row++) {
-               for (int col = 0; col < 9; col++) {
-                   if (board[row][col] != '.') {
-                       continue;
-                   }
-                   int box = (row / 3) * 3 + col / 3;
-                   int mask = 0x1FF &
-                       ~(rows[row] | cols[col] | boxes[box]);
-                   int count = BitCount(mask);
-                   if (count == 0) {
-                       return false;
-                   }
-                   if (count < bestCount) {
-                       bestRow = row;
-                       bestCol = col;
-                       bestMask = mask;
-                       bestCount = count;
-                   }
-               }
-           }
-
-           if (bestRow == -1) {
-               return true;
-           }
-
-           int boxIndex = (bestRow / 3) * 3 + bestCol / 3;
-           while (bestMask != 0) {
-               int bit = bestMask & -bestMask;
-               bestMask ^= bit;
-               int digit = 0;
-               while ((1 << digit) != bit) {
-                   digit++;
-               }
-
-               board[bestRow][bestCol] = (char)('1' + digit);
-               rows[bestRow] |= bit;
-               cols[bestCol] |= bit;
-               boxes[boxIndex] |= bit;
-
-               if (Dfs(board)) {
-                   return true;
-               }
-
-               rows[bestRow] ^= bit;
-               cols[bestCol] ^= bit;
-               boxes[boxIndex] ^= bit;
-               board[bestRow][bestCol] = '.';
-           }
-
-           return false;
-       }
+       int[] rows=new int[9],cols=new int[9],boxes=new int[9];char[][] board;
+       bool Dfs(){int br=-1,bc=-1,bm=0,best=10;for(int r=0;r<9;r++)for(int c=0;c<9;c++)if(board[r][c]=='.'){int b=(r/3)*3+c/3,mask=0x1ff&~(rows[r]|cols[c]|boxes[b]),n=System.Numerics.BitOperations.PopCount((uint)mask);if(n==0)return false;if(n<best){br=r;bc=c;bm=mask;best=n;}}if(br<0)return true;int box=(br/3)*3+bc/3;while(bm!=0){int bit=bm&-bm;bm^=bit;int d=System.Numerics.BitOperations.TrailingZeroCount((uint)bit);board[br][bc]=(char)('1'+d);rows[br]|=bit;cols[bc]|=bit;boxes[box]|=bit;if(Dfs())return true;rows[br]^=bit;cols[bc]^=bit;boxes[box]^=bit;board[br][bc]='.';}return false;}
+       public void SolveSudoku(char[][] board){this.board=board;for(int r=0;r<9;r++)for(int c=0;c<9;c++)if(board[r][c]!='.'){int bit=1<<(board[r][c]-'1'),b=(r/3)*3+c/3;rows[r]|=bit;cols[c]|=bit;boxes[b]|=bit;}Dfs();}
    }
 
 Julia
@@ -866,67 +330,14 @@ Julia
 
 .. code-block:: julia
 
-   function solveSudoku(board::Vector{Vector{Char}})::Nothing
-       rows = zeros(Int, 9)
-       cols = zeros(Int, 9)
-       boxes = zeros(Int, 9)
-
-       for row in 1:9, col in 1:9
-           board[row][col] == '.' && continue
-           bit = 1 << Int(board[row][col] - '1')
-           box = div(row - 1, 3) * 3 + div(col - 1, 3) + 1
-           rows[row] |= bit
-           cols[col] |= bit
-           boxes[box] |= bit
-       end
-
-       function dfs()::Bool
-           best_row = 0
-           best_col = 0
-           best_mask = 0
-           best_count = 10
-
-           for row in 1:9, col in 1:9
-               board[row][col] == '.' || continue
-               box = div(row - 1, 3) * 3 + div(col - 1, 3) + 1
-               mask = 0x1ff & ~(rows[row] | cols[col] | boxes[box])
-               count = count_ones(mask)
-               count == 0 && return false
-               if count < best_count
-                   best_row = row
-                   best_col = col
-                   best_mask = mask
-                   best_count = count
-               end
-           end
-
-           best_row == 0 && return true
-           box = div(best_row - 1, 3) * 3 +
-               div(best_col - 1, 3) + 1
-
-           while best_mask != 0
-               bit = best_mask & -best_mask
-               best_mask ⊻= bit
-               digit = trailing_zeros(bit)
-
-               board[best_row][best_col] = Char(Int('1') + digit)
-               rows[best_row] |= bit
-               cols[best_col] |= bit
-               boxes[box] |= bit
-
-               dfs() && return true
-
-               rows[best_row] ⊻= bit
-               cols[best_col] ⊻= bit
-               boxes[box] ⊻= bit
-               board[best_row][best_col] = '.'
-           end
-
-           false
-       end
-
-       dfs()
-       nothing
+   function solve_sudoku!(board)
+       rows=zeros(Int,9);cols=zeros(Int,9);boxes=zeros(Int,9)
+       for r in 1:9,c in 1:9;if board[r][c]!='.';bit=1<<(Int(board[r][c])-Int('1'));b=((r-1)÷3)*3+(c-1)÷3+1;rows[r]|=bit;cols[c]|=bit;boxes[b]|=bit;end;end
+       function dfs();br=0;bc=0;bm=0;best=10
+           for r in 1:9,c in 1:9;if board[r][c]=='.';b=((r-1)÷3)*3+(c-1)÷3+1;mask=0x1ff&~(rows[r]|cols[c]|boxes[b]);n=count_ones(mask);n==0&&return false;if n<best;br=r;bc=c;bm=mask;best=n;end;end;end
+           br==0&&return true;b=((br-1)÷3)*3+(bc-1)÷3+1
+           while bm!=0;bit=bm&-bm;bm⊻=bit;d=trailing_zeros(bit);board[br][bc]=Char(Int('1')+d);rows[br]|=bit;cols[bc]|=bit;boxes[b]|=bit;dfs()&&return true;rows[br]⊻=bit;cols[bc]⊻=bit;boxes[b]⊻=bit;board[br][bc]='.';end;false
+       end;dfs();board
    end
 
 R
@@ -935,167 +346,12 @@ R
 .. code-block:: r
 
    solve_sudoku <- function(board) {
-     # environment 提供引用语义；递归层自己的选择变量仍使用局部 <-。
-     state <- new.env(parent = emptyenv())
-     state$board <- board
-     state$rows <- integer(9)
-     state$cols <- integer(9)
-     state$boxes <- integer(9)
-
-     for (row in 1:9) {
-       for (col in 1:9) {
-         if (state$board[[row]][col] == ".") {
-           next
-         }
-         digit <- as.integer(state$board[[row]][col]) - 1L
-         bit <- bitwShiftL(1L, digit)
-         box <- ((row - 1L) %/% 3L) * 3L +
-           ((col - 1L) %/% 3L) + 1L
-         state$rows[row] <- bitwOr(state$rows[row], bit)
-         state$cols[col] <- bitwOr(state$cols[col], bit)
-         state$boxes[box] <- bitwOr(state$boxes[box], bit)
-       }
-     }
-
-     bit_count <- function(value) {
-       count <- 0L
-       while (value != 0L) {
-         value <- bitwAnd(value, value - 1L)
-         count <- count + 1L
-       }
-       count
-     }
-
-     dfs <- function() {
-       # 这些变量属于当前递归调用，不能使用 <<- 修改父调用。
-       best_row <- 0L
-       best_col <- 0L
-       best_mask <- 0L
-       best_count <- 10L
-
-       for (row in 1:9) {
-         for (col in 1:9) {
-           if (state$board[[row]][col] != ".") {
-             next
-           }
-
-           box <- ((row - 1L) %/% 3L) * 3L +
-             ((col - 1L) %/% 3L) + 1L
-           used <- bitwOr(
-             bitwOr(state$rows[row], state$cols[col]),
-             state$boxes[box]
-           )
-           mask <- bitwAnd(511L, bitwNot(used))
-           count <- bit_count(mask)
-
-           if (count == 0L) {
-             return(FALSE)
-           }
-           if (count < best_count) {
-             best_row <- row
-             best_col <- col
-             best_mask <- mask
-             best_count <- count
-           }
-         }
-       }
-
-       if (best_row == 0L) {
-         return(TRUE)
-       }
-
-       box <- ((best_row - 1L) %/% 3L) * 3L +
-         ((best_col - 1L) %/% 3L) + 1L
-       mask <- best_mask
-
-       while (mask != 0L) {
-         bit <- bitwAnd(mask, -mask)
-         mask <- bitwXor(mask, bit)
-
-         digit <- 0L
-         probe <- bit
-         while (probe > 1L) {
-           probe <- bitwShiftR(probe, 1L)
-           digit <- digit + 1L
-         }
-
-         row_values <- state$board[[best_row]]
-         row_values[best_col] <- as.character(digit + 1L)
-         state$board[[best_row]] <- row_values
-         state$rows[best_row] <- bitwOr(state$rows[best_row], bit)
-         state$cols[best_col] <- bitwOr(state$cols[best_col], bit)
-         state$boxes[box] <- bitwOr(state$boxes[box], bit)
-
-         if (dfs()) {
-           return(TRUE)
-         }
-
-         state$rows[best_row] <- bitwXor(state$rows[best_row], bit)
-         state$cols[best_col] <- bitwXor(state$cols[best_col], bit)
-         state$boxes[box] <- bitwXor(state$boxes[box], bit)
-         row_values <- state$board[[best_row]]
-         row_values[best_col] <- "."
-         state$board[[best_row]] <- row_values
-       }
-
-       FALSE
-     }
-
-     dfs()
-     state$board
+     rows<-integer(9);cols<-integer(9);boxes<-integer(9)
+     for(r in 1:9)for(c in 1:9)if(board[[r]][[c]]!="."){d<-match(board[[r]][[c]],as.character(1:9))-1L;bit<-bitwShiftL(1L,d);b<-((r-1L)%/%3L)*3L+(c-1L)%/%3L+1L;rows[[r]]<-bitwOr(rows[[r]],bit);cols[[c]]<-bitwOr(cols[[c]],bit);boxes[[b]]<-bitwOr(boxes[[b]],bit)}
+     count_bits<-function(x){n<-0L;while(x!=0L){x<-bitwAnd(x,x-1L);n<-n+1L};n}
+     dfs<-function(){br<-0L;bc<-0L;bm<-0L;best<-10L
+       for(r in 1:9)for(c in 1:9)if(board[[r]][[c]]=="."){b<-((r-1L)%/%3L)*3L+(c-1L)%/%3L+1L;mask<-bitwAnd(511L,bitwNot(bitwOr(bitwOr(rows[[r]],cols[[c]]),boxes[[b]])));n<-count_bits(mask);if(n==0L)return(FALSE);if(n<best){br<-r;bc<-c;bm<-mask;best<-n}}
+       if(br==0L)return(TRUE);b<-((br-1L)%/%3L)*3L+(bc-1L)%/%3L+1L
+       while(bm!=0L){bit<-bitwAnd(bm,-bm);bm<-bitwXor(bm,bit);d<-0L;while(bitwShiftL(1L,d)!=bit)d<-d+1L;board[[br]][[bc]]<<-as.character(d+1L);rows[[br]]<<-bitwOr(rows[[br]],bit);cols[[bc]]<<-bitwOr(cols[[bc]],bit);boxes[[b]]<<-bitwOr(boxes[[b]],bit);if(dfs())return(TRUE);rows[[br]]<<-bitwXor(rows[[br]],bit);cols[[bc]]<<-bitwXor(cols[[bc]],bit);boxes[[b]]<<-bitwXor(boxes[[b]],bit);board[[br]][[bc]]<<-"."};FALSE}
+     dfs();board
    }
-
-R 版把真正需要跨递归层共享的棋盘和掩码放入 ``environment``。``best_row``、
-``best_col``、``best_mask``、``best_count`` 属于每次 ``dfs`` 调用自身，使用普通 ``<-``。
-这样子调用不会覆盖父调用正在枚举的格子和候选集合。
-
-关键边界与易错点
-----------------
-
-* 初始化掩码时必须读取所有已填数字，空格不能登记；
-* 候选集合必须限制到低 9 位，按位取反会产生更高位的 1；
-* 写入棋盘、更新三个掩码、递归、撤销四个步骤必须成对出现；
-* 找到完整解后要立即沿递归链返回，不能继续撤销已确认答案；
-* MRV 只改变搜索顺序，不改变候选全集，因此不会损害完备性；
-* R 中递归层的选择变量必须保持局部，只有显式可变状态应跨层共享。
-
-新增与强化知识
---------------
-
-新增
-~~~~
-
-* 9 位掩码表示固定数字集合，最低位提取为 ``mask & -mask``；
-* MRV 用最少候选变量优先暴露矛盾；
-* R 可用 ``environment`` 明确表达递归算法中的共享可变状态。
-
-强化
-~~~~
-
-* 回溯的选择、递归、撤销必须保持状态可逆；
-* 0036 的行列宫验证状态可以直接升级为求解器约束状态；
-* 闭包中的局部搜索变量和跨层共享状态必须严格区分。
-
-关联题目
---------
-
-* `0036. Valid Sudoku <0036-valid-sudoku.rst>`_：只构建并验证三类约束，不执行搜索；
-* `0022. Generate Parentheses <0022-generate-parentheses.rst>`_：较简单的合法前缀回溯。
-
-最小自检
---------
-
-#. 为什么候选掩码需要限制到低 9 位？
-#. MRV 为什么通常比固定顺序更快？
-#. 撤销时漏掉棋盘字符恢复会产生什么后果？
-#. R 版为什么不能对 ``best_row`` 等递归局部变量使用 ``<<-``？
-#. 题目保证唯一解是否是回溯正确性的必要条件？
-
-答案要点
-~~~~~~~~
-
-#. 按位取反会把整数的其他位也变为 1，只有低 9 位代表数字 1 至 9；
-#. 候选少的格子更容易形成强制选择或立即冲突，能提前剪掉大分支；
-#. 后续分支会把失败候选当成已确定数字，棋盘和掩码状态不一致；
-#. ``<<-`` 会向父环境查找并修改绑定，子调用可能覆盖父调用的选择状态；
-#. 不是；存在至少一个解即可找到某个解，唯一性只保证最终答案确定。
