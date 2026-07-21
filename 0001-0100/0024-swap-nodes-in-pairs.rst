@@ -6,204 +6,165 @@
 
 :题号: 0024
 :难度: Medium
-:主题: 单链表、指针重连、哑节点、局部变换
+:主题: 单链表、指针重连、虚拟头节点、局部变换
 :原题: `LeetCode 0024 <https://leetcode.com/problems/swap-nodes-in-pairs/>`_
-:访问状态: Available
-:教学重点: 交换节点而非数值、三段链接重连、哑节点统一头部变化、成对推进
+:教学重点: 交换节点身份、三条链接更新、组前驱推进、奇数后缀保留
 
 题目重述
 --------
 
-给定一条单链表，每两个相邻节点组成一组并交换它们的位置，返回交换后的链表头节点。
-
-必须改变节点之间的链接关系，不能只交换节点中保存的数值。若链表节点数为奇数，最后一个
-没有配对的节点保持原位。
+给定单链表，每两个相邻节点组成一组并交换位置。必须修改链接，不能只交换节点值。节点数为奇数时，最后一个节点
+保持原位；空链表和单节点链表原样返回。
 
 自建示例
 --------
 
-普通偶数长度
-~~~~~~~~~~~~
-
 .. code-block:: text
 
-   输入：1 -> 2 -> 3 -> 4
-   输出：2 -> 1 -> 4 -> 3
+   1 -> 2 -> 3 -> 4 -> 5
+   2 -> 1 -> 4 -> 3 -> 5
 
-奇数长度
-~~~~~~~~
+一组局部结构从 ``prev -> first -> second -> after`` 变为
+``prev -> second -> first -> after``。
 
-.. code-block:: text
-
-   输入：1 -> 2 -> 3 -> 4 -> 5
-   输出：2 -> 1 -> 4 -> 3 -> 5
-
-不足一组
-~~~~~~~~
-
-.. code-block:: text
-
-   输入：7
-   输出：7
-
-   输入：空链表
-   输出：空链表
-
-问题抽象
+C++ 实现
 --------
 
-每轮处理连续的两个节点：
+.. code-block:: cpp
+
+   class Solution {
+   private:
+       ListNode* swapValues(ListNode* head) {
+           for (ListNode* node = head; node != nullptr && node->next != nullptr;
+                node = node->next->next) {
+               std::swap(node->val, node->next->val);
+           }
+           return head; // 仅作错误语义对照：节点身份没有交换。
+       }
+
+       ListNode* recursiveSwap(ListNode* head) {
+           if (head == nullptr || head->next == nullptr) return head;
+           ListNode* second = head->next;
+           head->next = recursiveSwap(second->next);
+           second->next = head;
+           return second;
+       }
+
+       ListNode* iterativeSwap(ListNode* head) {
+           ListNode dummy(0, head);
+           ListNode* prev = &dummy;
+           while (prev->next != nullptr && prev->next->next != nullptr) {
+               ListNode* first = prev->next;
+               ListNode* second = first->next;
+               ListNode* after = second->next;
+
+               first->next = after;
+               second->next = first;
+               prev->next = second;
+
+               prev = first;
+           }
+           return dummy.next;
+       }
+
+   public:
+       ListNode* swapPairs(ListNode* head) {
+           return iterativeSwap(head);
+       }
+   };
+
+题解
+----
+
+为什么交换值不等于交换节点
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+题目操作对象是链表节点。外部代码可能持有某个节点的引用，交换 ``val`` 只改变内容，节点在链中的位置和身份并未
+变化，因此不符合契约。正确方法必须重写 ``next``。
+
+递归如何把首对交换后连接剩余答案
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+若至少有两个节点，第二个节点成为当前结果头，第一个节点成为本组尾。递归先得到从第三个节点开始的交换结果，再
+令第一节点指向它，最后令第二节点指向第一节点。递归代码短，但调用栈为 ``O(n)``。
+
+三条链接为什么必须按可恢复后缀的顺序更新
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+在修改任何链接前保存 ``after = second.next``。随后执行：
 
 .. code-block:: text
 
-   prev -> first -> second -> after
+   first.next = after
+   second.next = first
+   prev.next = second
 
-交换后应变成：
+第一条保证旧组头先连接后缀；第二条完成组内反向；第三条把已处理前缀接到新组头。若未保存 ``after``，修改后可能
+丢失剩余链表。
 
-.. code-block:: text
+虚拟头节点如何统一第一组
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-   prev -> second -> first -> after
+第一组交换会改变真实头节点。虚拟节点让第一组也拥有普通前驱，所有组都通过 ``prev.next`` 重连，最终返回
+``dummy.next``，无需单独处理头部。
 
-因此一轮只需要重写三条链接：
-
-#. ``first.next = after``；
-#. ``second.next = first``；
-#. ``prev.next = second``。
-
-完成后，``first`` 已经成为这一组的尾节点，下一轮的前驱应更新为 ``first``。
-
-解法选择
---------
+状态演化
+~~~~~~~~
 
 .. list-table::
    :header-rows: 1
 
-   * - 方法
-     - 时间复杂度
-     - 额外空间
-     - 取舍
-   * - 迭代重连相邻节点
-     - ``O(n)``
-     - ``O(1)``
-     - 主解法；每轮只改三条链接，状态最直接
-   * - 递归交换首对
-     - ``O(n)``
-     - ``O(n)`` 调用栈
-     - 代码较短，但隐藏了组间连接关系
-   * - 交换节点值
-     - ``O(n)``
-     - ``O(1)``
-     - 不符合题目要求，因为节点身份没有交换
+   * - ``prev`` 后缀
+     - 当前组
+     - 重连后
+     - 新 ``prev``
+   * - 1,2,3,4,5
+     - 1,2
+     - 2,1,3,4,5
+     - 1
+   * - 3,4,5
+     - 3,4
+     - 2,1,4,3,5
+     - 3
+   * - 5
+     - 不足两个
+     - 保持 5
+     - 结束
 
-主解法：哑节点后的成对重连
---------------------------
+为什么每个完整节点对恰好交换一次
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-状态含义
-~~~~~~~~
+循环开始时，``prev`` 之前的前缀已经正确处理，``prev.next`` 是未处理后缀首节点。一次重连只涉及前两个节点，
+完成后 ``prev`` 移到交换后的组尾 ``first``，所以下一轮从原第三个节点开始。各组互不重叠，最后不足两个节点时
+循环停止，后缀链接从未被破坏。
 
-算法维护：
-
-* ``dummy``：固定哑节点，``dummy.next`` 始终是当前结果头；
-* ``prev``：当前待交换节点对之前的节点；
-* ``first``：当前组第一个节点；
-* ``second``：当前组第二个节点；
-* ``after``：当前组之后的未处理后缀。
-
-只有 ``prev.next`` 和 ``prev.next.next`` 都存在时，当前组才完整。
-
-为什么需要哑节点
-~~~~~~~~~~~~~~~~
-
-第一组交换后，原头节点不再是结果头。若直接从 ``head`` 开始，需要单独保存和修改新头。
-哑节点把“修改头指针”转化为普通的 ``dummy.next`` 重连，使第一组和后续各组使用完全相同
-的逻辑。
-
-核心不变量
+复杂度来源
 ~~~~~~~~~~
 
-每轮循环开始时：
+迭代和递归都访问每个节点常数次，时间 ``O(n)``。迭代只使用固定指针，额外空间 ``O(1)``；递归栈为
+``O(n)``。值交换虽也是 ``O(n)``，但语义错误，不能作为答案。
 
-* ``dummy.next`` 指向已经形成的完整结果链表；
-* ``prev`` 之前的节点均已按两两交换规则处理完；
-* ``prev.next`` 是尚未处理后缀的第一个节点；
-* 已处理前缀与未处理后缀之间没有节点丢失或形成环。
-
-一轮重连后，当前两个节点顺序被交换，``prev`` 移到组尾 ``first``，不变量继续成立。
-
-正确性依据
-~~~~~~~~~~
-
-对任意完整节点对 ``first``、``second``，三次重连恰好得到
-``prev -> second -> first -> after``。两个节点都仍在链表中，组前缀和组后缀也仍然连通，
-因此这一轮既不会丢节点，也不会重复节点。
-
-算法按原链表顺序依次处理互不重叠的相邻节点对。每个完整节点对恰好交换一次；若最终只剩
-一个节点，循环条件失败，它已经作为上一组尾部连接的后缀保留原位。因此返回的链表满足题意。
-
-复杂度
-~~~~~~
-
-设链表长度为 ``n``：
-
-* 每个节点只被访问和重连常数次，时间复杂度为 ``O(n)``；
-* 迭代版本只使用固定数量的指针，额外空间复杂度为 ``O(1)``。
-
-核心语言实现
-------------
-
-以下代码复用仓库约定的 ``ListNode`` 类型，不在单题内重复定义。
+九语言实现
+----------
 
 C
 ~
 
 .. code-block:: c
 
-   struct ListNode *swapPairs(struct ListNode *head) {
+   struct ListNode* swapPairs(struct ListNode* head) {
        struct ListNode dummy = {0, head};
-       struct ListNode *prev = &dummy;
-
-       while (prev->next != NULL && prev->next->next != NULL) {
-           struct ListNode *first = prev->next;
-           struct ListNode *second = first->next;
-           struct ListNode *after = second->next;
-
-           first->next = after;
+       struct ListNode* prev = &dummy;
+       while (prev->next && prev->next->next) {
+           struct ListNode* first = prev->next;
+           struct ListNode* second = first->next;
+           first->next = second->next;
            second->next = first;
            prev->next = second;
-
-           /* first 已成为本组尾节点，下一组从它之后开始。 */
            prev = first;
        }
-
        return dummy.next;
    }
-
-C++
-~~~
-
-.. code-block:: cpp
-
-   class Solution {
-   public:
-       ListNode* swapPairs(ListNode* head) {
-           ListNode dummy(0, head);
-           ListNode* prev = &dummy;
-
-           while (prev->next != nullptr &&
-                  prev->next->next != nullptr) {
-               ListNode* first = prev->next;
-               ListNode* second = first->next;
-
-               first->next = second->next;
-               second->next = first;
-               prev->next = second;
-
-               prev = first;
-           }
-
-           return dummy.next;
-       }
-   };
 
 Python
 ~~~~~~
@@ -211,24 +172,16 @@ Python
 .. code-block:: python
 
    class Solution:
-       def swapPairs(
-           self,
-           head: Optional[ListNode],
-       ) -> Optional[ListNode]:
+       def swapPairs(self, head):
            dummy = ListNode(0, head)
            prev = dummy
-
-           while prev.next is not None and prev.next.next is not None:
+           while prev.next and prev.next.next:
                first = prev.next
                second = first.next
-
                first.next = second.next
                second.next = first
                prev.next = second
-
-               # first 已经位于交换后节点对的末尾。
                prev = first
-
            return dummy.next
 
 Java
@@ -238,20 +191,11 @@ Java
 
    class Solution {
        public ListNode swapPairs(ListNode head) {
-           ListNode dummy = new ListNode(0, head);
-           ListNode prev = dummy;
-
-           while (prev.next != null && prev.next.next != null) {
-               ListNode first = prev.next;
-               ListNode second = first.next;
-
-               first.next = second.next;
-               second.next = first;
-               prev.next = second;
-
-               prev = first;
+           ListNode dummy=new ListNode(0,head),prev=dummy;
+           while(prev.next!=null && prev.next.next!=null){
+               ListNode first=prev.next,second=first.next;
+               first.next=second.next;second.next=first;prev.next=second;prev=first;
            }
-
            return dummy.next;
        }
    }
@@ -262,40 +206,20 @@ Rust
 .. code-block:: rust
 
    impl Solution {
-       pub fn swap_pairs(
-           head: Option<Box<ListNode>>,
-       ) -> Option<Box<ListNode>> {
-           let mut dummy = Box::new(ListNode { val: 0, next: head });
-           let mut link = &mut dummy.next;
-
-           while link
-               .as_ref()
-               .and_then(|first| first.next.as_ref())
-               .is_some()
-           {
-               let mut first = link.take().unwrap();
-               let mut second = first.next.take().unwrap();
-
-               first.next = second.next.take();
-               second.next = Some(first);
-               *link = Some(second);
-
-               // link 继续指向交换后 first.next，也就是下一组入口。
-               link = &mut link
-                   .as_mut()
-                   .unwrap()
-                   .next
-                   .as_mut()
-                   .unwrap()
-                   .next;
+       pub fn swap_pairs(head: Option<Box<ListNode>>) -> Option<Box<ListNode>> {
+           let mut dummy=Box::new(ListNode{val:0,next:head});
+           let mut link=&mut dummy.next;
+           while link.as_ref().and_then(|x|x.next.as_ref()).is_some() {
+               let mut first=link.take().unwrap();
+               let mut second=first.next.take().unwrap();
+               first.next=second.next.take();
+               second.next=Some(first);
+               *link=Some(second);
+               link=&mut link.as_mut().unwrap().next.as_mut().unwrap().next;
            }
-
            dummy.next
        }
    }
-
-``link`` 的类型是 ``&mut Option<Box<ListNode>>``。通过 ``take`` 暂时取得节点所有权，完成重连
-后再放回链表，可避免同时持有多个重叠可变借用。
 
 Go
 ~~
@@ -303,20 +227,11 @@ Go
 .. code-block:: go
 
    func swapPairs(head *ListNode) *ListNode {
-       dummy := &ListNode{Next: head}
-       prev := dummy
-
-       for prev.Next != nil && prev.Next.Next != nil {
-           first := prev.Next
-           second := first.Next
-
-           first.Next = second.Next
-           second.Next = first
-           prev.Next = second
-
-           prev = first
+       dummy:=&ListNode{Next:head};prev:=dummy
+       for prev.Next!=nil && prev.Next.Next!=nil {
+           first:=prev.Next;second:=first.Next
+           first.Next=second.Next;second.Next=first;prev.Next=second;prev=first
        }
-
        return dummy.Next
    }
 
@@ -325,21 +240,12 @@ TypeScript
 
 .. code-block:: typescript
 
-   function swapPairs(head: ListNode | null): ListNode | null {
-       const dummy = new ListNode(0, head);
-       let prev: ListNode = dummy;
-
-       while (prev.next !== null && prev.next.next !== null) {
-           const first = prev.next;
-           const second = first.next!;
-
-           first.next = second.next;
-           second.next = first;
-           prev.next = second;
-
-           prev = first;
+   function swapPairs(head: ListNode|null): ListNode|null {
+       const dummy=new ListNode(0,head);let prev=dummy;
+       while(prev.next!==null && prev.next.next!==null){
+           const first=prev.next,second=first.next!;
+           first.next=second.next;second.next=first;prev.next=second;prev=first;
        }
-
        return dummy.next;
    }
 
@@ -350,20 +256,11 @@ C#
 
    public class Solution {
        public ListNode SwapPairs(ListNode head) {
-           ListNode dummy = new ListNode(0, head);
-           ListNode prev = dummy;
-
-           while (prev.next != null && prev.next.next != null) {
-               ListNode first = prev.next;
-               ListNode second = first.next;
-
-               first.next = second.next;
-               second.next = first;
-               prev.next = second;
-
-               prev = first;
+           var dummy=new ListNode(0,head);var prev=dummy;
+           while(prev.next!=null && prev.next.next!=null){
+               var first=prev.next;var second=first.next;
+               first.next=second.next;second.next=first;prev.next=second;prev=first;
            }
-
            return dummy.next;
        }
    }
@@ -373,22 +270,13 @@ Julia
 
 .. code-block:: julia
 
-   function swap_pairs(head::Union{ListNode, Nothing})
-       dummy = ListNode(0, head)
-       prev = dummy
-
-       while prev.next !== nothing && prev.next.next !== nothing
-           first = prev.next
-           second = first.next
-
-           first.next = second.next
-           second.next = first
-           prev.next = second
-
-           prev = first
+   function swap_pairs(head)
+       dummy=ListNode(0,head);prev=dummy
+       while prev.next!==nothing && prev.next.next!==nothing
+           first=prev.next;second=first.next
+           first.next=second.next;second.next=first;prev.next=second;prev=first
        end
-
-       return dummy.next
+       dummy.next
    end
 
 R
@@ -397,72 +285,10 @@ R
 .. code-block:: r
 
    swap_pairs <- function(head) {
-     dummy <- new_list_node(0, head)
-     prev <- dummy
-
-     while (!is.null(prev$next) && !is.null(prev$next$next)) {
-       first <- prev$next
-       second <- first$next
-
-       first$next <- second$next
-       second$next <- first
-       prev$next <- second
-
-       prev <- first
-     }
-
-     dummy$next
+       dummy <- new_list_node(0, head); prev <- dummy
+       while (!is.null(prev$next) && !is.null(prev$next$next)) {
+           first <- prev$next; second <- first$next
+           first$next <- second$next; second$next <- first; prev$next <- second; prev <- first
+       }
+       dummy$next
    }
-
-R 的仓库级链表节点使用 ``environment`` 保存字段，因此修改 ``next`` 具有引用语义。
-
-关键边界
---------
-
-* 空链表或单节点链表：循环不执行，直接返回原链表；
-* 两个节点：只交换一组；
-* 奇数长度：最后一个节点没有配对，保持原位；
-* 节点值相同：仍应交换节点链接，不能依赖值判断；
-* 第一组：必须正确更新结果头，这正是哑节点解决的问题。
-
-易错点
-------
-
-* 先覆盖 ``second.next``，却没有保存组后缀，导致后续节点丢失；
-* 重连顺序错误形成 ``first <-> second`` 环；
-* 一轮结束后把 ``prev`` 移到 ``second``，导致下一轮从错误位置开始；
-* 只交换 ``val``，没有交换节点本身；
-* 循环只检查一个节点存在，访问第二个节点时发生空引用。
-
-新增与强化知识
---------------
-
-新增
-~~~~
-
-* 局部链表变换可拆成“组前链接、组内链接、组后链接”三部分；
-* 哑节点可把结果头变化统一为普通节点的 ``next`` 修改；
-* Rust 可用“可变链接槽位” ``&mut Option<Box<Node>>`` 表达待替换的链表入口。
-
-强化
-~~~~
-
-* 复用 0002、0019、0021、0023 中的单链表与哑节点模型；
-* 指针更新前先保存仍会使用的后缀；
-* 正确性证明应同时说明局部顺序正确和全链表节点守恒。
-
-最小自检
---------
-
-#. 为什么交换第一组时不需要单独修改 ``head``？
-#. 一轮交换完成后，为什么 ``prev`` 必须移动到 ``first``？
-#. 对 ``1 -> 2 -> 3``，三条链接分别怎样变化？
-#. 若节点值都是 ``5``，算法是否仍然需要执行交换？
-
-答案要点
-~~~~~~~~
-
-#. ``dummy.next`` 统一代表结果头，第一组和后续组没有分支差异。
-#. 交换后 ``first`` 是当前组尾节点，它的 ``next`` 指向下一组入口。
-#. 得到 ``dummy -> 2 -> 1 -> 3``，最后一个节点保持原位。
-#. 需要；题目交换的是节点位置，而不是不同数值。
