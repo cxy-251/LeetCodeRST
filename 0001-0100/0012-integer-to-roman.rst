@@ -6,169 +6,175 @@
 
 :题号: 0012
 :难度: Medium
-:主题: 数学、字符串、贪心、罗马数字
+:主题: 字符串、贪心、查表、进制表示
 :原题: `LeetCode 0012 <https://leetcode.com/problems/integer-to-roman/>`_
-:访问状态: Available
-:教学重点: 降序贪心、减法组合、规范表示、增量构造字符串
+:教学重点: 罗马符号单位、减法组合、最大单位优先、规范表示唯一性
 
 题目重述
 --------
 
-给定一个位于 ``1`` 到 ``3999`` 之间的整数 ``num``，把它转换为规范罗马数字。
+给定范围 ``1`` 到 ``3999`` 的整数，将它转换为规范罗马数字。基本符号为
+``I, V, X, L, C, D, M``，分别表示 ``1, 5, 10, 50, 100, 500, 1000``。
 
-罗马数字由 ``I``、``V``、``X``、``L``、``C``、``D``、``M`` 组成。通常从大值到
-小值排列并相加；以下六种减法组合必须作为整体使用：
-
-* ``IV = 4``；
-* ``IX = 9``；
-* ``XL = 40``；
-* ``XC = 90``；
-* ``CD = 400``；
-* ``CM = 900``。
-
-输出必须采用最常见的规范形式，不能用 ``IIII`` 表示 ``4``，也不能用 ``IL`` 表示
-``49``。
+通常从大到小相加；以下六种情况使用减法表示：``IV, IX, XL, XC, CD, CM``。
 
 自建示例
 --------
 
-普通组合
-~~~~~~~~
+.. code-block:: text
+
+   num = 2944
+   2000 -> MM
+    900 -> CM
+     40 -> XL
+      4 -> IV
+   输出：MMCMXLIV
 
 .. code-block:: text
 
-   输入：num = 58
-   分解：50 + 5 + 3
-   输出："LVIII"
+   num = 3888
+   3000 + 800 + 80 + 8
+   输出：MMMDCCCLXXXVIII
 
-包含多个减法组合
-~~~~~~~~~~~~~~~~
-
-.. code-block:: text
-
-   输入：num = 1994
-   分解：1000 + 900 + 90 + 4
-   输出："MCMXCIV"
-
-边界最小值
-~~~~~~~~~~
-
-.. code-block:: text
-
-   输入：num = 1
-   输出："I"
-
-边界最大值
-~~~~~~~~~~
-
-.. code-block:: text
-
-   输入：num = 3999
-   分解：3000 + 900 + 90 + 9
-   输出："MMMCMXCIX"
-
-问题抽象
+C++ 实现
 --------
 
-把所有合法的“原子罗马片段”按数值从大到小排列：
+.. code-block:: cpp
 
-.. code-block:: text
+   #include <array>
+   #include <string>
 
-   1000 M    900 CM    500 D    400 CD
-    100 C     90 XC     50 L     40 XL
-     10 X      9 IX      5 V      4 IV      1 I
+   class Solution {
+   private:
+       std::string byDecimalPlaces(int num) {
+           static const std::array<std::string, 4> thousands{
+               "", "M", "MM", "MMM"
+           };
+           static const std::array<std::string, 10> hundreds{
+               "", "C", "CC", "CCC", "CD", "D",
+               "DC", "DCC", "DCCC", "CM"
+           };
+           static const std::array<std::string, 10> tens{
+               "", "X", "XX", "XXX", "XL", "L",
+               "LX", "LXX", "LXXX", "XC"
+           };
+           static const std::array<std::string, 10> ones{
+               "", "I", "II", "III", "IV", "V",
+               "VI", "VII", "VIII", "IX"
+           };
 
-每次选择不超过当前剩余值的最大片段，把对应符号追加到结果，并从剩余值中减去该片段。
-由于表中已经显式包含六种减法组合，算法不需要在输出后再修正 ``IIII``、``VIIII`` 等
-非规范形式。
+           return thousands[num / 1000] +
+               hundreds[num / 100 % 10] +
+               tens[num / 10 % 10] +
+               ones[num % 10];
+       }
 
-解法选择
---------
+       std::string greedy(int num) {
+           static const std::array<int, 13> values{
+               1000, 900, 500, 400,
+               100, 90, 50, 40,
+               10, 9, 5, 4, 1
+           };
+           static const std::array<std::string, 13> symbols{
+               "M", "CM", "D", "CD",
+               "C", "XC", "L", "XL",
+               "X", "IX", "V", "IV", "I"
+           };
+
+           std::string result;
+           for (int i = 0; i < static_cast<int>(values.size()); ++i) {
+               while (num >= values[i]) {
+                   num -= values[i];
+                   result += symbols[i];
+               }
+           }
+           return result;
+       }
+
+   public:
+       std::string intToRoman(int num) {
+           return greedy(num);
+       }
+   };
+
+题解
+----
+
+按十进制位查表如何直接生成答案
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+输入最多四位。每个十进制位在罗马数字中都有十种规范写法，例如百位 ``0`` 到 ``9`` 对应空串、``C``、
+``CC``、``CCC``、``CD``、``D``、``DC``、``DCC``、``DCCC``、``CM``。分别查出千、百、十、个位文本并连接，
+即可得到答案。这种方法把所有局部规则预先展开，时间和额外工作量都是常数。
+
+为什么减法组合必须作为独立单位
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+若只使用 ``1, 5, 10, 50, 100, 500, 1000``，数字 4 会写成 ``IIII``，数字 9 会写成 ``VIIII``，不符合规范。
+把 ``4, 9, 40, 90, 400, 900`` 与对应文本加入值表后，每一种允许的减法结构都成为可直接选择的单位，算法
+不需要在输出后回头修正。
+
+从大到小选择为什么是自然贪心
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+值表按降序排列。当前剩余值为 ``remaining`` 时，选择不超过它的最大单位 ``value``，追加对应符号并减去
+``value``。任何更小单位组合若表示同样数值，只会使用更多字符，或形成不规范重复。由于值表已经包含全部合法
+减法组合，最大单位就是规范表示在当前位置必须使用的前缀。
+
+贪心状态演化
+~~~~~~~~~~~~
+
+对 ``2944``：
 
 .. list-table::
    :header-rows: 1
 
-   * - 方法
-     - 时间复杂度
-     - 空间复杂度
-     - 取舍
-   * - 降序罗马片段贪心
-     - ``O(k)``
-     - ``O(k)``
-     - 主解法；表驱动、规则集中，直接生成规范表示
-   * - 按千百十个位分别查表
-     - ``O(1)``
-     - ``O(k)``
-     - 同样高效，但把规则拆成四张位置表，泛化性较弱
-   * - 先重复基本符号再做字符串替换
-     - 取决于替换实现
-     - ``O(k)``
-     - 容易产生非法中间形式，规则分散且不必要
+   * - 剩余值
+     - 选择值
+     - 追加符号
+     - 新剩余值
+     - 当前结果
+   * - 2944
+     - 1000
+     - ``M``
+     - 1944
+     - ``M``
+   * - 1944
+     - 1000
+     - ``M``
+     - 944
+     - ``MM``
+   * - 944
+     - 900
+     - ``CM``
+     - 44
+     - ``MMCM``
+   * - 44
+     - 40
+     - ``XL``
+     - 4
+     - ``MMCMXL``
+   * - 4
+     - 4
+     - ``IV``
+     - 0
+     - ``MMCMXLIV``
 
-其中 ``k`` 是输出罗马数字的长度；在 ``1`` 到 ``3999`` 的约束内，``k`` 有固定上界。
+为什么最大单位选择不会破坏后续规范表示
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-主解法：降序片段贪心
---------------------
+罗马数字规范按数值从大到小书写。当前最大可用单位若不选择，只能用更小单位凑出同样或更大的前缀数值；
+这会产生更长表示，或者跨越 ``5``、``10`` 的边界后形成禁止的重复。选择该单位后，剩余值严格减小，且后续
+只能使用当前单位或更小单位，输出顺序持续合法。重复应用直到剩余值为零，得到唯一规范表示。
 
-状态含义
-~~~~~~~~
+解法对比与复杂度
+~~~~~~~~~~~~~~~~
 
-算法维护：
+按位查表执行四次索引和字符串连接，时间 ``O(1)``，表为常量。贪心值表只有 13 项；在题目范围内追加字符
+数量有固定上界，时间和工作空间也可视为 ``O(1)``。若把输入范围推广，时间与输出长度成正比。
 
-* ``remaining``：尚未编码的整数部分；
-* ``index``：当前检查的罗马片段位置；
-* ``result``：已经生成的规范前缀。
-
-对每个片段 ``values[index]``，只要它不大于 ``remaining``，就追加对应符号并做减法：
-
-.. code-block:: text
-
-   result += symbols[index]
-   remaining -= values[index]
-
-当前片段不能继续使用时，才进入下一个更小的片段。
-
-为什么减法组合必须进入表
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-若表中只有 ``I``、``V``、``X``、``L``、``C``、``D``、``M``，贪心会把 ``4`` 写成
-``IIII``、把 ``9`` 写成 ``VIIII``。把 ``IV``、``IX`` 等六个规范减法组合看作不可拆分
-片段后，贪心首先选择 ``4`` 或 ``9``，自然得到规范形式。
-
-核心不变量
-~~~~~~~~~~
-
-每次准备选择片段时：
-
-* ``原始 num = 已输出片段的数值总和 + remaining``；
-* ``result`` 中的片段按非增数值顺序排列；
-* 所有比当前片段更大的片段都已使用到规范表示允许的最大次数；
-* ``remaining`` 始终非负，并在每次追加后严格减小。
-
-正确性依据
-~~~~~~~~~~
-
-片段表包含所有基本符号和所有允许的减法组合，因此任何规范罗马数字都能分解为表中片段，
-并按数值非增顺序排列。
-
-考虑算法当前检查的最大可用片段 ``v``。若 ``v <= remaining``，规范表示必须先消耗一个
-``v``：改用更小片段只能表达同一数值的更长或非规范形式，而且不能在之后再放回更大的片段，
-因为罗马数字要求整体按非增顺序排列。算法追加 ``v`` 后，问题缩小为把
-``remaining - v`` 转换为规范罗马数字。
-
-若 ``v > remaining``，任何规范表示都不能使用该片段，算法跳到下一项不会漏解。不断重复后
-``remaining`` 变为 ``0``，不变量保证输出片段之和等于原整数；每一步又都选择规范片段并保持
-非增顺序，所以结果正是规范罗马表示。
-
-复杂度
-~~~~~~
-
-* 时间复杂度：``O(k)``，每次循环都会追加一个输出片段；
-* 空间复杂度：``O(k)``，用于保存结果字符串；
-* 片段表固定为 ``13`` 项，不随输入增长。
-
-核心语言实现
-------------
+九语言实现
+----------
 
 C
 ~
@@ -176,62 +182,24 @@ C
 .. code-block:: c
 
    #include <stdlib.h>
+   #include <string.h>
 
    char* intToRoman(int num) {
-       static const int values[] = {
-           1000, 900, 500, 400, 100, 90, 50,
-           40, 10, 9, 5, 4, 1
-       };
-       static const char* symbols[] = {
-           "M", "CM", "D", "CD", "C", "XC", "L",
-           "XL", "X", "IX", "V", "IV", "I"
-       };
-
-       // 3999 的规范表示很短；32 字节为结果和结尾零留出充足空间。
+       static const int values[] = {1000,900,500,400,100,90,50,40,10,9,5,4,1};
+       static const char* symbols[] = {"M","CM","D","CD","C","XC","L","XL","X","IX","V","IV","I"};
        char* result = malloc(32);
-       int length = 0;
-
+       int write = 0;
        for (int i = 0; i < 13; ++i) {
            while (num >= values[i]) {
-               const char* symbol = symbols[i];
-               for (int j = 0; symbol[j] != '\0'; ++j) {
-                   result[length++] = symbol[j];
-               }
                num -= values[i];
+               int length = (int)strlen(symbols[i]);
+               memcpy(result + write, symbols[i], (size_t)length);
+               write += length;
            }
        }
-
-       result[length] = '\0';
+       result[write] = '\0';
        return result;
    }
-
-C++
-~~~
-
-.. code-block:: cpp
-
-   class Solution {
-   public:
-       string intToRoman(int num) {
-           static const int values[] = {
-               1000, 900, 500, 400, 100, 90, 50,
-               40, 10, 9, 5, 4, 1
-           };
-           static const string symbols[] = {
-               "M", "CM", "D", "CD", "C", "XC", "L",
-               "XL", "X", "IX", "V", "IV", "I"
-           };
-
-           string result;
-           for (int i = 0; i < 13; ++i) {
-               while (num >= values[i]) {
-                   result += symbols[i];
-                   num -= values[i];
-               }
-           }
-           return result;
-       }
-   };
 
 Python
 ~~~~~~
@@ -240,23 +208,14 @@ Python
 
    class Solution:
        def intToRoman(self, num: int) -> str:
-           values = [
-               1000, 900, 500, 400, 100, 90, 50,
-               40, 10, 9, 5, 4, 1,
-           ]
-           symbols = [
-               "M", "CM", "D", "CD", "C", "XC", "L",
-               "XL", "X", "IX", "V", "IV", "I",
-           ]
-
-           pieces: list[str] = []
-           for value, symbol in zip(values, symbols):
-               while num >= value:
-                   pieces.append(symbol)
-                   num -= value
-
-           # 最后统一连接，避免在循环中反复复制不可变字符串。
-           return "".join(pieces)
+           pairs = [(1000,"M"),(900,"CM"),(500,"D"),(400,"CD"),
+                    (100,"C"),(90,"XC"),(50,"L"),(40,"XL"),
+                    (10,"X"),(9,"IX"),(5,"V"),(4,"IV"),(1,"I")]
+           result = []
+           for value, symbol in pairs:
+               count, num = divmod(num, value)
+               result.append(symbol * count)
+           return "".join(result)
 
 Java
 ~~~~
@@ -265,20 +224,13 @@ Java
 
    class Solution {
        public String intToRoman(int num) {
-           int[] values = {
-               1000, 900, 500, 400, 100, 90, 50,
-               40, 10, 9, 5, 4, 1
-           };
-           String[] symbols = {
-               "M", "CM", "D", "CD", "C", "XC", "L",
-               "XL", "X", "IX", "V", "IV", "I"
-           };
-
+           int[] values = {1000,900,500,400,100,90,50,40,10,9,5,4,1};
+           String[] symbols = {"M","CM","D","CD","C","XC","L","XL","X","IX","V","IV","I"};
            StringBuilder result = new StringBuilder();
-           for (int i = 0; i < values.length; ++i) {
+           for (int i = 0; i < values.length; i++) {
                while (num >= values[i]) {
-                   result.append(symbols[i]);
                    num -= values[i];
+                   result.append(symbols[i]);
                }
            }
            return result.toString();
@@ -292,20 +244,13 @@ Rust
 
    impl Solution {
        pub fn int_to_roman(mut num: i32) -> String {
-           const VALUES: [i32; 13] = [
-               1000, 900, 500, 400, 100, 90, 50,
-               40, 10, 9, 5, 4, 1,
-           ];
-           const SYMBOLS: [&str; 13] = [
-               "M", "CM", "D", "CD", "C", "XC", "L",
-               "XL", "X", "IX", "V", "IV", "I",
-           ];
-
+           let values = [1000,900,500,400,100,90,50,40,10,9,5,4,1];
+           let symbols = ["M","CM","D","CD","C","XC","L","XL","X","IX","V","IV","I"];
            let mut result = String::new();
-           for index in 0..VALUES.len() {
-               while num >= VALUES[index] {
-                   result.push_str(SYMBOLS[index]);
-                   num -= VALUES[index];
+           for i in 0..values.len() {
+               while num >= values[i] {
+                   num -= values[i];
+                   result.push_str(symbols[i]);
                }
            }
            result
@@ -317,23 +262,14 @@ Go
 
 .. code-block:: go
 
-   import "strings"
-
    func intToRoman(num int) string {
-       values := [...]int{
-           1000, 900, 500, 400, 100, 90, 50,
-           40, 10, 9, 5, 4, 1,
-       }
-       symbols := [...]string{
-           "M", "CM", "D", "CD", "C", "XC", "L",
-           "XL", "X", "IX", "V", "IV", "I",
-       }
-
+       values := []int{1000,900,500,400,100,90,50,40,10,9,5,4,1}
+       symbols := []string{"M","CM","D","CD","C","XC","L","XL","X","IX","V","IV","I"}
        var result strings.Builder
        for i, value := range values {
            for num >= value {
-               result.WriteString(symbols[i])
                num -= value
+               result.WriteString(symbols[i])
            }
        }
        return result.String()
@@ -345,23 +281,16 @@ TypeScript
 .. code-block:: typescript
 
    function intToRoman(num: number): string {
-       const values = [
-           1000, 900, 500, 400, 100, 90, 50,
-           40, 10, 9, 5, 4, 1,
-       ];
-       const symbols = [
-           "M", "CM", "D", "CD", "C", "XC", "L",
-           "XL", "X", "IX", "V", "IV", "I",
-       ];
-
-       const pieces: string[] = [];
-       for (let i = 0; i < values.length; i += 1) {
+       const values = [1000,900,500,400,100,90,50,40,10,9,5,4,1];
+       const symbols = ["M","CM","D","CD","C","XC","L","XL","X","IX","V","IV","I"];
+       const result: string[] = [];
+       for (let i = 0; i < values.length; ++i) {
            while (num >= values[i]) {
-               pieces.push(symbols[i]);
                num -= values[i];
+               result.push(symbols[i]);
            }
        }
-       return pieces.join("");
+       return result.join("");
    }
 
 C#
@@ -369,25 +298,13 @@ C#
 
 .. code-block:: csharp
 
-   using System.Text;
-
    public class Solution {
        public string IntToRoman(int num) {
-           int[] values = {
-               1000, 900, 500, 400, 100, 90, 50,
-               40, 10, 9, 5, 4, 1
-           };
-           string[] symbols = {
-               "M", "CM", "D", "CD", "C", "XC", "L",
-               "XL", "X", "IX", "V", "IV", "I"
-           };
-
-           var result = new StringBuilder();
-           for (int i = 0; i < values.Length; ++i) {
-               while (num >= values[i]) {
-                   result.Append(symbols[i]);
-                   num -= values[i];
-               }
+           int[] values = {1000,900,500,400,100,90,50,40,10,9,5,4,1};
+           string[] symbols = {"M","CM","D","CD","C","XC","L","XL","X","IX","V","IV","I"};
+           var result = new System.Text.StringBuilder();
+           for (int i = 0; i < values.Length; i++) {
+               while (num >= values[i]) { num -= values[i]; result.Append(symbols[i]); }
            }
            return result.ToString();
        }
@@ -399,23 +316,16 @@ Julia
 .. code-block:: julia
 
    function int_to_roman(num::Int)::String
-       values = (
-           1000, 900, 500, 400, 100, 90, 50,
-           40, 10, 9, 5, 4, 1,
-       )
-       symbols = (
-           "M", "CM", "D", "CD", "C", "XC", "L",
-           "XL", "X", "IX", "V", "IV", "I",
-       )
-
-       io = IOBuffer()
-       for index in eachindex(values)
-           while num >= values[index]
-               print(io, symbols[index])
-               num -= values[index]
+       values = [1000,900,500,400,100,90,50,40,10,9,5,4,1]
+       symbols = ["M","CM","D","CD","C","XC","L","XL","X","IX","V","IV","I"]
+       result = IOBuffer()
+       for i in eachindex(values)
+           while num >= values[i]
+               num -= values[i]
+               print(result, symbols[i])
            end
        end
-       return String(take!(io))
+       String(take!(result))
    end
 
 R
@@ -424,78 +334,14 @@ R
 .. code-block:: r
 
    intToRoman <- function(num) {
-       values <- c(
-           1000, 900, 500, 400, 100, 90, 50,
-           40, 10, 9, 5, 4, 1
-       )
-       symbols <- c(
-           "M", "CM", "D", "CD", "C", "XC", "L",
-           "XL", "X", "IX", "V", "IV", "I"
-       )
-
-       # 最大输出长度很小，预分配可以避免循环中反复扩展向量。
-       pieces <- character(16)
-       size <- 0
-
+       values <- c(1000,900,500,400,100,90,50,40,10,9,5,4,1)
+       symbols <- c("M","CM","D","CD","C","XC","L","XL","X","IX","V","IV","I")
+       result <- character()
        for (i in seq_along(values)) {
            while (num >= values[[i]]) {
-               size <- size + 1
-               pieces[[size]] <- symbols[[i]]
                num <- num - values[[i]]
+               result <- c(result, symbols[[i]])
            }
        }
-
-       paste0(pieces[seq_len(size)], collapse = "")
+       paste(result, collapse = "")
    }
-
-关键边界与易错点
-----------------
-
-* 必须把 ``4``、``9``、``40``、``90``、``400``、``900`` 六个减法组合放进降序表；
-* 表必须严格按数值降序，否则较小片段会提前消耗剩余值；
-* 同一片段可能连续使用，例如 ``3000`` 需要三个 ``M``，所以每项内部使用 ``while``；
-* C 返回动态分配的字符串，调用方按平台约定接收；
-* 不要把 ``49`` 写成 ``IL``；规范结果是 ``XLIX``；
-* Python、TypeScript 等语言优先收集片段后统一连接，避免循环内反复复制字符串。
-
-新增与强化知识
---------------
-
-新增
-~~~~
-
-* **降序片段贪心**：把基本符号和减法组合统一为带权片段，每次取最大可用项；
-* **规范令牌分解**：先规定合法原子片段，算法只在合法片段集合中组合；
-* **表驱动编码**：数值与符号并列存储，使规则集中而不散落在条件分支中。
-
-强化
-~~~~
-
-* 0005、0006 中的增量字符串构造再次出现；
-* 0011 的贪心排除思想在本题中表现为“最大可用片段必须先使用”；
-* 多语言并行数组必须保持相同长度与相同顺序。
-
-关联题目
---------
-
-* `0013. Roman to Integer <0013-roman-to-integer.rst>`_：执行相反方向的罗马数字解析；
-* `0008. String to Integer (atoi) <0008-string-to-integer-atoi.rst>`_：同样把文本与整数联系起来，
-  但需要处理停止条件和溢出钳制。
-
-最小自检
---------
-
-#. 为什么 ``900`` 必须作为 ``CM`` 整体进入表？
-#. 为什么表必须按数值降序？
-#. ``58`` 的贪心选择顺序是什么？
-#. 为什么当前片段不能使用后，才可以进入更小片段？
-#. 各语言为什么倾向使用可增长缓冲区或片段列表？
-
-答案要点
-~~~~~~~~
-
-#. 否则只用基本符号会产生非规范的重复形式；
-#. 降序保证大值先消耗，输出片段也保持合法顺序；
-#. ``L``、``V``、``I``、``I``、``I``；
-#. 更大片段已超过剩余值，当前片段又已使用到最大次数；
-#. 避免不可变字符串在每次追加时复制已有内容。
