@@ -146,7 +146,7 @@ C
 
 .. code-block:: c
 
-   void merge(int*a,int total,int m,int*b,int n,int bsize){int i=m-1,j=n-1,w=m+n-1;while(j>=0){if(i>=0&&a[i]>b[j])a[w--]=a[i--];else a[w--]=b[j--];}}
+   void merge(int*nums1,int nums1Size,int m,int*nums2,int nums2Size,int n){int i=m-1,j=n-1,w=m+n-1;while(j>=0){if(i>=0&&nums1[i]>nums2[j])nums1[w--]=nums1[i--];else nums1[w--]=nums2[j--];}}
 
 Python
 ~~~~~~

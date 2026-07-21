@@ -61,9 +61,9 @@ C++ 实现
            auto [value, count] = groups[index];
            for (int used = 0; used <= count; ++used) {
                groupedDfs(groups, index + 1, path, result);
-               path.push_back(value);
+               if (used < count) path.push_back(value);
            }
-           for (int used = 0; used <= count; ++used) path.pop_back();
+           for (int used = 0; used < count; ++used) path.pop_back();
        }
 
        void sortedDfs(const std::vector<int>& nums, int start,
@@ -135,7 +135,7 @@ C++ 实现
 频次分组方法如何等价
 ~~~~~~~~~~~~~~~~~~~~
 
-把每个不同值及其出现次数组成 ``(value,count)``，对该值选择 ``0..count`` 个副本，再递归处理下一值组。它直接枚举多重集，但需要额外分组；排序同层去重使用位置回溯，结构更接近第 78 题。
+把每个不同值及其出现次数组成 ``(value,count)``，对该值选择 ``0..count`` 个副本，再递归处理下一值组。每轮递归前路径包含恰好 ``used`` 个当前值；循环结束后弹出 ``count`` 个副本恢复父状态。它直接枚举多重集，但需要额外分组；排序同层去重使用位置回溯，结构更接近第 78 题。
 
 为什么不重不漏
 ~~~~~~~~~~~~~~
