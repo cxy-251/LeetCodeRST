@@ -6,191 +6,153 @@
 
 :题号: 0055
 :难度: Medium
-:主题: 数组、贪心、可达前缀、单调边界
+:主题: 数组、贪心、动态规划、可达前缀
 :原题: `LeetCode 0055 <https://leetcode.com/problems/jump-game/>`_
-:访问状态: Available
-:教学重点: 最远可达边界、不可达断点、前缀闭包、与最少跳数的区别
+:教学重点: 最远可达边界、不可达断点、前缀闭包、反向好位置
 
 题目重述
 --------
 
-给定一个非负整数数组 ``nums``。位于下标 ``i`` 时，最多可以向右跳 ``nums[i]`` 步。判断能否从
-下标 ``0`` 到达最后一个下标。
-
-题目保证 ``1 <= nums.length <= 10000``，``0 <= nums[i] <= 100000``。输入数组不会被修改。
-最大表达式 ``i + nums[i]`` 不超过 ``109999``，32 位有符号整数安全。
+给定非负整数数组 ``nums``。位于下标 ``i`` 时最多向右跳 ``nums[i]`` 步，判断能否从下标 0 到达最后一个下标。单元素数组起点即终点，应返回 ``true``。
 
 自建示例
 --------
 
-可以到达
-~~~~~~~~
+.. code-block:: text
+
+   [2,3,1,1,4] -> true
+   扫描下标 1 后，最远可达位置从 2 扩展到 4。
 
 .. code-block:: text
 
-   输入：[2, 3, 1, 1, 4]
-   输出：true
+   [3,2,1,0,4] -> false
+   可达前缀停在下标 3，无法进入下标 4。
 
-下标 0 最远到 2；扫描下标 1 后，最远可达边界扩展到 4。
-
-被零阻断
-~~~~~~~~
-
-.. code-block:: text
-
-   输入：[3, 2, 1, 0, 4]
-   输出：false
-
-扫描完可达前缀 ``0..3`` 后，最远边界仍为 3，无法进入下标 4。
-
-单元素
-~~~~~~
-
-.. code-block:: text
-
-   输入：[0]
-   输出：true
-
-起点已经是终点。
-
-问题抽象
+C++ 实现
 --------
 
-维护 ``farthest``：当前已经确认可达的位置中，再跳一次能够覆盖的最右下标。
+.. code-block:: cpp
 
-扫描到下标 ``index`` 时：
+   #include <algorithm>
+   #include <vector>
 
-* 若 ``index > farthest``，当前下标不可达；由于所有跳跃只向右，后续下标也无法被处理，答案为
-  ``false``；
-* 否则 ``index`` 可达，可以用 ``index + nums[index]`` 扩展 ``farthest``；
-* 当 ``farthest >= n - 1``，终点已经进入可达前缀，答案为 ``true``。
+   class Solution {
+   private:
+       bool dynamicProgramming(const std::vector<int>& nums) {
+           int n = nums.size();
+           std::vector<char> reachable(n);
+           reachable[0] = true;
+           for (int i = 0; i < n; ++i) {
+               if (!reachable[i]) continue;
+               int end = std::min(n - 1, i + nums[i]);
+               for (int next = i + 1; next <= end; ++next) reachable[next] = true;
+           }
+           return reachable[n - 1];
+       }
 
-解法选择
---------
+       bool reverseGoodPosition(const std::vector<int>& nums) {
+           int goal = nums.size() - 1;
+           for (int i = goal - 1; i >= 0; --i)
+               if (i + nums[i] >= goal) goal = i;
+           return goal == 0;
+       }
+
+       bool farthestReach(const std::vector<int>& nums) {
+           int farthest = 0;
+           for (int i = 0; i < static_cast<int>(nums.size()); ++i) {
+               if (i > farthest) return false;
+               farthest = std::max(farthest, i + nums[i]);
+               if (farthest >= static_cast<int>(nums.size()) - 1) return true;
+           }
+           return true;
+       }
+
+   public:
+       bool canJump(std::vector<int>& nums) {
+           return farthestReach(nums);
+       }
+   };
+
+题解
+----
+
+显式可达状态为何重复扩张
+~~~~~~~~~~~~~~~~~~~~~~
+
+动态规划可令 ``reachable[i]`` 表示下标 ``i`` 是否可达，并从每个可达位置标记它覆盖的后续区间。多个位置的覆盖范围大量重叠，最坏需要 ``O(n²)`` 次写入。
+
+可达位置为什么形成连续前缀
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+从一个可达位置可以跳任意不超过 ``nums[i]`` 的步数，因此它覆盖的是连续区间。若当前已确认 ``0..farthest`` 可达，扫描其中任何位置只会把右边界继续向右扩展，不会在前缀内部留下空洞。
+
+最远边界如何更新
+~~~~~~~~~~~~~~~~
+
+扫描下标 ``i`` 前，``farthest`` 表示此前可达位置能够覆盖的最右端。若 ``i <= farthest``，该位置可达，可用 ``i + nums[i]`` 扩展边界；若 ``i > farthest``，当前下标前出现断点，所有后续下标也无法被访问。
 
 .. list-table::
    :header-rows: 1
 
-   * - 方法
-     - 时间复杂度
-     - 额外空间
-     - 定位
-   * - 最远可达边界贪心
-     - ``O(n)``
-     - ``O(1)``
-     - 主解法；只维护可达前缀的右端
-   * - 从右向左维护好位置
-     - ``O(n)``
-     - ``O(1)``
-     - 等价贪心；反向理解较绕
-   * - 动态规划可达状态
-     - ``O(n²)``
-     - ``O(n)``
-     - 状态直接，没有利用前缀闭包
-   * - 显式图搜索
-     - 最坏 ``O(n²)``
-     - ``O(n)``
-     - 枚举大量连续出边
+   * - 下标
+     - 数值
+     - 旧 ``farthest``
+     - 新 ``farthest``
+   * - 0
+     - 3
+     - 0
+     - 3
+   * - 1
+     - 2
+     - 3
+     - 3
+   * - 2
+     - 1
+     - 3
+     - 3
+   * - 3
+     - 0
+     - 3
+     - 3
+   * - 4
+     - 4
+     - 3
+     - ``4 > 3``，失败
 
-主解法：维护可达前缀
---------------------
+为什么遇到断点可以立即失败
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-核心不变量
+所有边都只向右。若下标 ``i`` 超出当前最远边界，任何更早可达位置都无法跳到 ``i``；更晚位置又必须先经过某个可达起点才能使用，因此后续不可能重新恢复可达性。
+
+反向好位置为何等价
+~~~~~~~~~~~~~~~~~~
+
+从终点开始维护 ``goal``：若下标 ``i`` 能直接到达当前 ``goal``，则把 ``goal`` 左移到 ``i``。最终 ``goal == 0`` 表示存在一条链连接起点与终点。它与前向边界都利用单调可达关系，只是证明方向相反。
+
+与 Jump Game II 的区别
+~~~~~~~~~~~~~~~~~~~~~~
+
+第 45 题要最少跳数，必须区分当前 BFS 层边界和下一层最远边界；本题只问是否可达，所有可达位置可以合并成一个前缀，只保留 ``farthest`` 即可。
+
+为什么不会错误跳过某条路径
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+算法不实际选择落点，而是保留所有已确认可达位置能形成的最远覆盖。任意具体路径上的每个落点都位于这个前缀内；扫描到它时，其跳跃能力已经参与边界扩张。因此只保留最远边界不会丢失路径信息。
+
+复杂度来源
 ~~~~~~~~~~
 
-处理下标 ``index`` 之前：
+显式动态规划最坏 ``O(n²)`` 时间和 ``O(n)`` 空间；前向和反向贪心都只扫描一次，时间 ``O(n)``、额外空间 ``O(1)``。
 
-* ``0..farthest`` 中的每个位置都能从起点到达；
-* ``farthest`` 是已经扫描的可达位置能够覆盖的最右边界；
-* 只有 ``index <= farthest`` 时，才允许使用 ``nums[index]`` 扩展边界；
-* 若 ``index > farthest``，不存在任何更早可达位置能够跨过这个断点。
-
-为什么可达集合是前缀
-~~~~~~~~~~~~~~~~~~~~
-
-若某个可达位置 ``i`` 能跳到 ``i + k``，那么它也能选择更短步数到达
-``i + 1, i + 2, ..., i + k``。因此所有已知可达位置的出边并集仍是一个连续前缀，不需要记录离散
-集合。
-
-正确性依据
-~~~~~~~~~~
-
-**不变量保持。** 当 ``index <= farthest`` 时，``index`` 可达。它可以覆盖到
-``index + nums[index]``，更新最大值后，新的 ``0..farthest`` 仍全部可达。
-
-**失败判定正确。** 若 ``index > farthest``，所有更早的可达位置都已经扫描，其最大覆盖仍小于
-``index``。任何后续位置的使用都要求先到达 ``index`` 或更右位置，因此不存在跨越该断点的路径。
-
-**成功判定正确。** 当 ``farthest >= n-1`` 时，终点属于可达前缀，根据前缀不变量存在一条从起点
-到终点的跳跃序列。
-
-**终止性。** 下标单调递增，每个位置最多处理一次；提前成功或失败都会立即返回。
-
-复杂度
-~~~~~~
-
-* 每个下标最多扫描一次，时间复杂度为 ``O(n)``；
-* 只保存下标和最远边界，算法额外空间为 ``O(1)``；
-* 输入数组不修改，返回值是单个布尔量。
-
-核心语言实现
-------------
+九语言实现
+----------
 
 C
 ~
 
 .. code-block:: c
 
-   #include <stdbool.h>
-
-   bool canJump(int *nums, int numsSize) {
-       int farthest = 0;
-
-       for (int index = 0; index < numsSize; ++index) {
-           if (index > farthest) {
-               return false;
-           }
-
-           int reach = index + nums[index];
-           if (reach > farthest) {
-               farthest = reach;
-           }
-           if (farthest >= numsSize - 1) {
-               return true;
-           }
-       }
-       return true;
-   }
-
-C++
-~~~
-
-.. code-block:: cpp
-
-   #include <vector>
-
-   class Solution {
-   public:
-       bool canJump(const std::vector<int>& nums) {
-           int farthest = 0;
-
-           for (int index = 0;
-                index < static_cast<int>(nums.size());
-                ++index) {
-               if (index > farthest) {
-                   return false;
-               }
-               int reach = index + nums[index];
-               if (reach > farthest) {
-                   farthest = reach;
-               }
-               if (farthest >= static_cast<int>(nums.size()) - 1) {
-                   return true;
-               }
-           }
-           return true;
-       }
-   };
+   bool canJump(int*nums,int n){int farthest=0;for(int i=0;i<n;i++){if(i>farthest)return false;if(i+nums[i]>farthest)farthest=i+nums[i];if(farthest>=n-1)return true;}return true;}
 
 Python
 ~~~~~~
@@ -200,14 +162,10 @@ Python
    class Solution:
        def canJump(self, nums: list[int]) -> bool:
            farthest = 0
-
-           for index, jump in enumerate(nums):
-               if index > farthest:
-                   return False
-               farthest = max(farthest, index + jump)
-               if farthest >= len(nums) - 1:
-                   return True
-
+           for index, length in enumerate(nums):
+               if index > farthest: return False
+               farthest = max(farthest, index + length)
+               if farthest >= len(nums) - 1: return True
            return True
 
 Java
@@ -215,231 +173,54 @@ Java
 
 .. code-block:: java
 
-   class Solution {
-       public boolean canJump(int[] nums) {
-           int farthest = 0;
-
-           for (int index = 0; index < nums.length; ++index) {
-               if (index > farthest) {
-                   return false;
-               }
-               farthest = Math.max(farthest, index + nums[index]);
-               if (farthest >= nums.length - 1) {
-                   return true;
-               }
-           }
-           return true;
-       }
-   }
+   class Solution {public boolean canJump(int[]nums){int farthest=0;for(int i=0;i<nums.length;i++){if(i>farthest)return false;farthest=Math.max(farthest,i+nums[i]);if(farthest>=nums.length-1)return true;}return true;}}
 
 Rust
 ~~~~
 
 .. code-block:: rust
 
-   impl Solution {
-       pub fn can_jump(nums: Vec<i32>) -> bool {
-           let mut farthest = 0_usize;
-
-           for (index, jump) in nums.iter().enumerate() {
-               if index > farthest {
-                   return false;
-               }
-               let reach = index + *jump as usize;
-               farthest = farthest.max(reach);
-               if farthest >= nums.len() - 1 {
-                   return true;
-               }
-           }
-           true
-       }
-   }
-
-``jump`` 由题目保证非负，转换为 ``usize`` 前提明确。
+   impl Solution {pub fn can_jump(nums:Vec<i32>)->bool{let mut farthest=0usize;for(i,&v)in nums.iter().enumerate(){if i>farthest{return false}farthest=farthest.max(i+v as usize);if farthest>=nums.len()-1{return true}}true}}
 
 Go
 ~~
 
 .. code-block:: go
 
-   func canJump(nums []int) bool {
-       farthest := 0
-
-       for index, jump := range nums {
-           if index > farthest {
-               return false
-           }
-           if index+jump > farthest {
-               farthest = index + jump
-           }
-           if farthest >= len(nums)-1 {
-               return true
-           }
-       }
-       return true
-   }
+   func canJump(nums []int)bool{farthest:=0;for i,v:=range nums{if i>farthest{return false};if i+v>farthest{farthest=i+v};if farthest>=len(nums)-1{return true}};return true}
 
 TypeScript
 ~~~~~~~~~~
 
 .. code-block:: typescript
 
-   function canJump(nums: number[]): boolean {
-       let farthest = 0;
-
-       for (let index = 0; index < nums.length; index += 1) {
-           if (index > farthest) {
-               return false;
-           }
-           farthest = Math.max(farthest, index + nums[index]);
-           if (farthest >= nums.length - 1) {
-               return true;
-           }
-       }
-       return true;
-   }
-
-最大到达下标远小于 JavaScript 安全整数上限，且实现不使用 32 位位运算。
+   function canJump(nums:number[]):boolean{let farthest=0;for(let i=0;i<nums.length;i++){if(i>farthest)return false;farthest=Math.max(farthest,i+nums[i]);if(farthest>=nums.length-1)return true;}return true;}
 
 C#
 ~~
 
 .. code-block:: csharp
 
-   public class Solution {
-       public bool CanJump(int[] nums) {
-           int farthest = 0;
-
-           for (int index = 0; index < nums.Length; ++index) {
-               if (index > farthest) {
-                   return false;
-               }
-               farthest = System.Math.Max(
-                   farthest,
-                   index + nums[index]
-               );
-               if (farthest >= nums.Length - 1) {
-                   return true;
-               }
-           }
-           return true;
-       }
-   }
+   public class Solution {public bool CanJump(int[]nums){int farthest=0;for(int i=0;i<nums.Length;i++){if(i>farthest)return false;farthest=Math.Max(farthest,i+nums[i]);if(farthest>=nums.Length-1)return true;}return true;}}
 
 Julia
 ~~~~~
 
 .. code-block:: julia
 
-   function can_jump(nums::Vector{Int})::Bool
-       farthest = 0
-
-       for index in eachindex(nums)
-           position = index - 1
-           if position > farthest
-               return false
-           end
-           farthest = max(farthest, position + nums[index])
-           if farthest >= length(nums) - 1
-               return true
-           end
+   function can_jump(nums::Vector{Int})
+       farthest=0
+       for index in 0:length(nums)-1
+           index>farthest&&return false
+           farthest=max(farthest,index+nums[index+1])
+           farthest>=length(nums)-1&&return true
        end
        true
    end
-
-``farthest`` 保持零基算法坐标，只有访问数组时使用 Julia 的一基 ``index``。
 
 R
 ~
 
 .. code-block:: r
 
-   can_jump <- function(nums) {
-     farthest <- 0L
-
-     for (index in seq_along(nums)) {
-       position <- index - 1L
-       if (position > farthest) {
-         return(FALSE)
-       }
-       farthest <- max(farthest, position + nums[[index]])
-       if (farthest >= length(nums) - 1L) {
-         return(TRUE)
-       }
-     }
-     TRUE
-   }
-
-验证计划与证据
---------------
-
-* 固定用例覆盖可达、零阻断、单元素、连续零和一步直达；
-* 随机短数组与独立 BFS 可达性实现对拍；
-* 检查失败位置必须满足 ``index > farthest``；
-* 检查成功时 ``farthest >= n-1``。
-
-已完成的验证：
-
-* **运行验证：** C、C++、Python、Java、Go、TypeScript 执行可达、断点、单元素和一步直达用例；
-* **随机对拍：** Python 对长度 ``1..19`` 的随机短数组与独立 BFS 可达性实现一致；
-* **编译验证：** C17 ``-Wall -Wextra -Werror``、C++17、``javac -Xlint:all``、
-  TypeScript ``tsc --strict``；
-* **内存验证：** C 使用 AddressSanitizer 与 UndefinedBehaviorSanitizer；
-* **静态验证：** Rust、C#、Julia、R 检查非负转换、零基坐标和提前返回；
-* 当前环境未安装 Rust、C#、Julia、R 运行时，因此不声称运行通过。
-
-关键边界
---------
-
-* ``n = 1`` 时起点就是终点，应返回 ``true``；
-* 只能使用已经可达位置的跳跃长度；
-* 遇到 ``index > farthest`` 立即失败；
-* ``farthest`` 可以超过最后下标，它是覆盖边界，不是数组访问下标；
-* 本题只判断可达性，不统计最少跳数。
-
-易错点
-------
-
-* 无条件扫描不可达位置并使用其跳跃长度；
-* 把当前数组值最大的下标当作贪心落点；
-* 把 0055 与 0045 的“最少跳数”状态混用；
-* 把 ``farthest`` 当作必须访问的真实下标；
-* 从右向左解法中误把局部可达当作全局可达。
-
-本题新增知识
-------------
-
-* 非负跳跃区间使可达位置形成连续前缀；
-* 最远可达边界同时支持提前成功和断点失败；
-* 可达性只需要维护覆盖范围，不需要记录具体路径。
-
-本题强化知识
-------------
-
-* 0045 的 ``farthest`` 边界，但本题不维护 BFS 层和跳数；
-* 0011、0042 的单调边界证明；
-* 数值宽度继续由精确长度与跳跃上界推导。
-
-关联题目
---------
-
-* `0045. Jump Game II <0045-jump-game-ii.rst>`_：相同覆盖边界，目标改为最少跳数；
-* `0053. Maximum Subarray <0053-maximum-subarray.rst>`_：线性扫描中的滚动最优状态。
-
-最小自检
---------
-
-#. 为什么只有 ``index <= farthest`` 时才能使用 ``nums[index]``？
-#. 为什么已知可达位置组成连续前缀？
-#. ``index > farthest`` 为什么能立即判定失败？
-#. 本题与 0045 的状态差异是什么？
-#. ``farthest`` 超过数组末尾是否有问题？
-
-答案要点
-~~~~~~~~
-
-#. 因为不可达位置不能作为跳跃起点。
-#. 每个位置允许选择不超过最大步数的任意短跳，出边覆盖连续区间。
-#. 所有更早可达位置都已扫描，仍无法覆盖该下标，后续也没有入口。
-#. 本题只维护可达边界；0045 还维护当前 BFS 层边界和跳数。
-#. 没有问题；它只表示覆盖范围，不会用于数组访问。
+   can_jump <- function(nums){farthest<-0L;for(index in 0:(length(nums)-1L)){if(index>farthest)return(FALSE);farthest<-max(farthest,index+nums[[index+1L]]);if(farthest>=length(nums)-1L)return(TRUE)};TRUE}
