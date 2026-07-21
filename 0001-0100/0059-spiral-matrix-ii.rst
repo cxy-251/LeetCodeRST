@@ -155,7 +155,7 @@ C++ 实现
 每次边界遍历只写当前剩余矩形的一条尚未处理边，写完后把它移出矩形。所有位置恰好访问一次；``value`` 每次访问后增加 1，从初始 1 到最后 ``n²``，因此每个目标值也恰好写入一次。
 
 为什么最终矩阵满足螺旋顺序
-~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 同一轮四条边按右、下、左、上的方向连接成外圈；下一轮处理严格位于其内部的矩形。外圈先于内圈且每圈内部顺时针，因此整个写入序列正是顺时针螺旋顺序。
 
@@ -251,4 +251,4 @@ R
 
 .. code-block:: r
 
-   generate_matrix <- function(n){a<-matrix(0L,n,n);t<-1L;b<-n;l<-1L;r<-n;v<-1L;while(t<=b&&l<=r){for(c in l:r){a[t,c]<-v;v<-v+1L};t<-t+1L;if(t<=b)for(i in t:b){a[i,r]<-v;v<-v+1L};r<-r-1L;if(t<=b){for(c in r:l){a[b,c]<-v;v<-v+1L};b<-b-1L};if(l<=r){for(i in b:t){a[i,l]<-v;v<-v+1L};l<-l+1L}};a}
+   generate_matrix <- function(n){a<-matrix(0L,n,n);t<-1L;b<-n;l<-1L;r<-n;v<-1L;while(t<=b&&l<=r){for(c in l:r){a[t,c]<-v;v<-v+1L};t<-t+1L;if(t<=b)for(i in t:b){a[i,r]<-v;v<-v+1L};r<-r-1L;if(t<=b&&l<=r){for(c in seq.int(r,l)){a[b,c]<-v;v<-v+1L};b<-b-1L};if(l<=r&&t<=b){for(i in seq.int(b,t)){a[i,l]<-v;v<-v+1L};l<-l+1L}};a}

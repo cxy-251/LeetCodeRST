@@ -245,4 +245,4 @@ R
 
 .. code-block:: r
 
-   spiral_order <- function(a){t<-1L;b<-nrow(a);l<-1L;r<-ncol(a);o<-integer();while(t<=b&&l<=r){o<-c(o,a[t,l:r]);t<-t+1L;if(t<=b)o<-c(o,a[t:b,r]);r<-r-1L;if(t<=b){o<-c(o,a[b,r:l]);b<-b-1L};if(l<=r){o<-c(o,a[b:t,l]);l<-l+1L}};o}
+   spiral_order <- function(a){t<-1L;b<-nrow(a);l<-1L;r<-ncol(a);o<-integer();while(t<=b&&l<=r){o<-c(o,a[t,l:r]);t<-t+1L;if(t<=b)o<-c(o,a[t:b,r]);r<-r-1L;if(t<=b&&l<=r){o<-c(o,a[b,seq.int(r,l)]);b<-b-1L};if(l<=r&&t<=b){o<-c(o,a[seq.int(b,t),l]);l<-l+1L}};o}
