@@ -232,6 +232,7 @@ Julia
 .. code-block:: julia
 
    function jump(nums::Vector{Int})::Int
+       length(nums) <= 1 && return 0
        jumps=endpos=farthest=0
        for index in 0:length(nums)-2
            farthest=max(farthest,index+nums[index+1])
