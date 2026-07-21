@@ -4,27 +4,27 @@
 当前目标
 --------
 
-处理 ``0102. Binary Tree Level Order Traversal``。
+处理 ``0103. Binary Tree Zigzag Level Order Traversal``。
 
-* 目标文件：``0101-0200/0102-binary-tree-level-order-traversal.rst``；
+* 目标文件：``0101-0200/0103-binary-tree-zigzag-level-order-traversal.rst``；
 * 文件类型：公开算法题完整题解；
 * 当前状态：目标文件已存在，执行全文审查与整改；
-* 完成后下一入口：``0103. Binary Tree Zigzag Level Order Traversal``。
+* 完成后下一入口：``0104. Maximum Depth of Binary Tree``。
 
 本轮工作
 --------
 
-#. 核对空树、二维结果和层内从左到右顺序；
-#. 在 C++ 中实现逐深度 DFS、双队列 BFS 和层大小快照 BFS；
-#. 推导队列前沿与当前层边界；
-#. 使用稀疏树展示父节点扩展顺序；
-#. 解释独立行缓冲区和孩子入队顺序；
-#. 分析树高、最大层宽和输出成本并完成九语言实现；
+#. 核对层间方向交替、层内顺序和空树边界；
+#. 在 C++ 中实现普通 BFS 后反转、双端队列和目标位置映射；
+#. 保持下一层队列始终从左到右；
+#. 推导奇数层写入位置 ``size-1-index``；
+#. 使用三层满树展示方向与前沿分离；
+#. 分析树宽和行反转成本并完成九语言实现；
 #. 让正文在 R 实现结束。
 
 本轮完成条件
 ------------
 
-#. 第一百零二题形成“待处理前沿 → 层大小快照 → 当前层出队 → 下一层入队”的推导链；
-#. 完成后入口推进到 ``0103. Binary Tree Zigzag Level Order Traversal``；
-#. 第一百零二题与新的 ``PROGRESS.rst`` 组成一个原子提交。
+#. 第一百零三题形成“稳定 BFS 前沿 → 层方向状态 → 目标下标映射 → 方向切换”的推导链；
+#. 完成后入口推进到 ``0104. Maximum Depth of Binary Tree``；
+#. 第一百零三题与新的 ``PROGRESS.rst`` 组成一个原子提交。
