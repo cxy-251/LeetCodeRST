@@ -8,120 +8,139 @@
 :难度: Medium
 :主题: 矩阵、二分查找、坐标映射
 :原题: `LeetCode 0074 <https://leetcode.com/problems/search-a-2d-matrix/>`_
-:访问状态: Available
-:教学重点: 全局有序、虚拟扁平下标、闭区间二分
+:教学重点: 全局有序、虚拟扁平序列、闭区间二分、坐标恢复
 
 题目重述
 --------
 
-给定非空规则矩阵和整数 ``target``。每行非递减，下一行首元素严格大于上一行末元素。判断目标是否
-存在。``1 <= m,n <= 100``，输入只读。
+给定非空规则矩阵。每行非递减，且下一行首元素严格大于上一行末元素。判断 ``target`` 是否存在；输入矩阵只读。
 
 自建示例
 --------
 
 .. code-block:: text
 
-   matrix = [[1,3,5,7], [10,11,16,20], [23,30,34,60]]
-   target = 16
-   输出：true
+   [[1,3,5,7],[10,11,16,20],[23,30,34,60]], target=16 -> true
+   同一矩阵，target=13 -> false
 
-问题抽象
+C++ 实现
 --------
 
-按行读取可得到整体有序序列。零基扁平位置 ``index`` 映射为 ``row=index/n``、``col=index%n``，
-所以可以二分 ``m*n`` 个虚拟元素，无需复制矩阵。
+.. code-block:: cpp
 
-解法选择
---------
+   #include <algorithm>
+   #include <vector>
 
-主解法为扁平坐标二分，时间 ``O(log(mn))``、空间 ``O(1)``。逐元素扫描需要 ``O(mn)``。
+   class Solution {
+   private:
+       bool linearScan(const std::vector<std::vector<int>>& matrix, int target) {
+           for (const auto& row : matrix)
+               for (int value : row)
+                   if (value == target) return true;
+           return false;
+       }
 
-主解法：扁平坐标二分
---------------------
+       bool rowThenColumnBinary(const std::vector<std::vector<int>>& matrix, int target) {
+           int rows = matrix.size(), cols = matrix[0].size();
+           int low = 0, high = rows - 1, candidate = -1;
+           while (low <= high) {
+               int mid = low + (high - low) / 2;
+               if (matrix[mid][0] <= target) { candidate = mid; low = mid + 1; }
+               else high = mid - 1;
+           }
+           if (candidate < 0) return false;
+           return std::binary_search(matrix[candidate].begin(), matrix[candidate].end(), target);
+       }
 
-维护闭区间 ``[left,right]``。目标若存在，只可能位于该区间。读取
-``matrix[mid/n][mid%n]`` 后，根据比较删除不可能包含目标的一半，相等立即返回真。
+       bool flattenedBinary(const std::vector<std::vector<int>>& matrix, int target) {
+           int rows = matrix.size(), cols = matrix[0].size();
+           int left = 0, right = rows * cols - 1;
+           while (left <= right) {
+               int mid = left + (right - left) / 2;
+               int value = matrix[mid / cols][mid % cols];
+               if (value == target) return true;
+               if (value < target) left = mid + 1;
+               else right = mid - 1;
+           }
+           return false;
+       }
 
-同一行内有序；跨行时下一行首元素严格大于上一行末元素，因此扁平序列整体有序。每个扁平下标与
-一个矩阵坐标一一对应，删除半区不会遗漏目标。区间为空时没有候选；每轮至少删除 ``mid``，循环终止。
+   public:
+       bool searchMatrix(std::vector<std::vector<int>>& matrix, int target) {
+           return flattenedBinary(matrix, target);
+       }
+   };
 
-复杂度
-~~~~~~
+题解
+----
 
-时间 ``O(log(mn))``，额外空间 ``O(1)``。``m*n<=10000``，32 位整数足够。Rust 使用半开
-lower-bound 区间，避免无符号下标执行 ``mid-1``。
+矩阵为什么整体有序
+~~~~~~~~~~~~~~~~
 
-核心语言实现
-------------
+同一行内部有序；每个下一行首元素又严格大于上一行末元素。因此按行连接所有元素后，边界处也保持递增，得到一个全局非递减序列。
+
+为什么无需真的扁平化
+~~~~~~~~~~~~~~~~~~
+
+设列数为 ``cols``。虚拟零基下标 ``index`` 对应：
+
+.. code-block:: text
+
+   row = index / cols
+   col = index % cols
+
+商表示完整跨过多少行，余数表示当前行列位置。每个 ``0..rows*cols-1`` 的下标都与一个格子一一对应。
+
+二分区间保存什么
+~~~~~~~~~~~~~~~~
+
+闭区间 ``[left,right]`` 包含所有尚未排除的虚拟位置。读取中点值后，小于目标则中点及左侧全部过小；大于目标则中点及右侧全部过大。
+
+.. list-table::
+   :header-rows: 1
+
+   * - 区间
+     - 中点值
+     - 动作
+   * - ``0..11``
+     - 下标 5，值 11
+     - ``11 < 16``，左边界变 6
+   * - ``6..11``
+     - 下标 8，值 23
+     - ``23 > 16``，右边界变 7
+   * - ``6..7``
+     - 下标 6，值 16
+     - 命中
+
+两阶段二分与一次二分的关系
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+先按每行首元素寻找可能行，再在该行二分同样是 ``O(log m + log n)``。虚拟扁平二分把两次边界判断统一到一个区间，复杂度为 ``O(log(mn))``，两者数量级相同。
+
+为什么不会遗漏跨行边界
+~~~~~~~~~~~~~~~~~~~~~~
+
+跨行边界满足上一行末值小于下一行首值，因此虚拟序列在边界处没有逆序。普通二分删除半区的依据对跨行位置同样成立。
+
+区间为何一定终止
+~~~~~~~~~~~~~~~~
+
+未命中时每轮把 ``left`` 提升到 ``mid+1``，或把 ``right`` 降到 ``mid-1``，候选数严格减少。``left > right`` 时所有位置已排除。
+
+复杂度来源
+~~~~~~~~~~
+
+线性扫描为 ``O(mn)``。两阶段和扁平二分都为 ``O(log(mn))`` 时间、``O(1)`` 额外空间；扁平方法不创建一维副本。
+
+九语言实现
+----------
 
 C
 ~
 
 .. code-block:: c
 
-   #include <stdbool.h>
-
-   bool searchMatrix(
-       int **matrix,
-       int matrixSize,
-       int *matrixColSize,
-       int target
-   ) {
-       const int cols = matrixColSize[0];
-       int left = 0;
-       int right = matrixSize * cols - 1;
-
-       while (left <= right) {
-           const int mid = left + (right - left) / 2;
-           const int value = matrix[mid / cols][mid % cols];
-
-           if (value == target) {
-               return true;
-           }
-           if (value < target) {
-               left = mid + 1;
-           } else {
-               right = mid - 1;
-           }
-       }
-       return false;
-   }
-
-C++
-~~~
-
-.. code-block:: cpp
-
-   #include <vector>
-
-   class Solution {
-   public:
-       bool searchMatrix(
-           std::vector<std::vector<int>>& matrix,
-           int target
-       ) {
-           const int rows = static_cast<int>(matrix.size());
-           const int cols = static_cast<int>(matrix[0].size());
-           int left = 0;
-           int right = rows * cols - 1;
-
-           while (left <= right) {
-               const int mid = left + (right - left) / 2;
-               const int value = matrix[mid / cols][mid % cols];
-
-               if (value == target) {
-                   return true;
-               }
-               if (value < target) {
-                   left = mid + 1;
-               } else {
-                   right = mid - 1;
-               }
-           }
-           return false;
-       }
-   };
+   bool searchMatrix(int**a,int rows,int*cols,int target){int n=cols[0],l=0,r=rows*n-1;while(l<=r){int mid=l+(r-l)/2,v=a[mid/n][mid%n];if(v==target)return true;if(v<target)l=mid+1;else r=mid-1;}return false;}
 
 Python
 ~~~~~~
@@ -129,26 +148,13 @@ Python
 .. code-block:: python
 
    class Solution:
-       def searchMatrix(
-           self,
-           matrix: list[list[int]],
-           target: int,
-       ) -> bool:
-           rows = len(matrix)
-           cols = len(matrix[0])
-           left = 0
-           right = rows * cols - 1
-
-           while left <= right:
-               mid = left + (right - left) // 2
-               value = matrix[mid // cols][mid % cols]
-
-               if value == target:
-                   return True
-               if value < target:
-                   left = mid + 1
-               else:
-                   right = mid - 1
+       def searchMatrix(self, a: list[list[int]], target: int) -> bool:
+           rows,cols=len(a),len(a[0]);left,right=0,rows*cols-1
+           while left<=right:
+               mid=(left+right)//2;value=a[mid//cols][mid%cols]
+               if value==target:return True
+               if value<target:left=mid+1
+               else:right=mid-1
            return False
 
 Java
@@ -156,169 +162,45 @@ Java
 
 .. code-block:: java
 
-   class Solution {
-       public boolean searchMatrix(int[][] matrix, int target) {
-           int rows = matrix.length;
-           int cols = matrix[0].length;
-           int left = 0;
-           int right = rows * cols - 1;
-
-           while (left <= right) {
-               int mid = left + (right - left) / 2;
-               int value = matrix[mid / cols][mid % cols];
-
-               if (value == target) {
-                   return true;
-               }
-               if (value < target) {
-                   left = mid + 1;
-               } else {
-                   right = mid - 1;
-               }
-           }
-           return false;
-       }
-   }
+   class Solution {public boolean searchMatrix(int[][]a,int target){int n=a[0].length,l=0,r=a.length*n-1;while(l<=r){int mid=l+(r-l)/2,v=a[mid/n][mid%n];if(v==target)return true;if(v<target)l=mid+1;else r=mid-1;}return false;}}
 
 Rust
 ~~~~
 
 .. code-block:: rust
 
-   impl Solution {
-       pub fn search_matrix(matrix: Vec<Vec<i32>>, target: i32) -> bool {
-           let rows = matrix.len();
-           let cols = matrix[0].len();
-           let mut left = 0usize;
-           let mut right = rows * cols;
-
-           while left < right {
-               let mid = left + (right - left) / 2;
-               let value = matrix[mid / cols][mid % cols];
-
-               if value < target {
-                   left = mid + 1;
-               } else {
-                   right = mid;
-               }
-           }
-
-           left < rows * cols
-               && matrix[left / cols][left % cols] == target
-       }
-   }
+   impl Solution {pub fn search_matrix(a:Vec<Vec<i32>>,target:i32)->bool{let n=a[0].len();let(mut l,mut r)=(0,a.len()*n);while l<r{let mid=l+(r-l)/2;let v=a[mid/n][mid%n];if v<target{l=mid+1}else{r=mid}}l<a.len()*n&&a[l/n][l%n]==target}}
 
 Go
 ~~
 
 .. code-block:: go
 
-   func searchMatrix(matrix [][]int, target int) bool {
-       rows := len(matrix)
-       cols := len(matrix[0])
-       left := 0
-       right := rows*cols - 1
-
-       for left <= right {
-           mid := left + (right-left)/2
-           value := matrix[mid/cols][mid%cols]
-
-           if value == target {
-               return true
-           }
-           if value < target {
-               left = mid + 1
-           } else {
-               right = mid - 1
-           }
-       }
-       return false
-   }
+   func searchMatrix(a [][]int,target int)bool{n:=len(a[0]);l,r:=0,len(a)*n-1;for l<=r{mid:=l+(r-l)/2;v:=a[mid/n][mid%n];if v==target{return true};if v<target{l=mid+1}else{r=mid-1}};return false}
 
 TypeScript
 ~~~~~~~~~~
 
 .. code-block:: typescript
 
-   function searchMatrix(
-       matrix: number[][],
-       target: number,
-   ): boolean {
-       const rows = matrix.length;
-       const cols = matrix[0].length;
-       let left = 0;
-       let right = rows * cols - 1;
-
-       while (left <= right) {
-           const mid = left + Math.floor((right - left) / 2);
-           const value = matrix[Math.floor(mid / cols)][mid % cols];
-
-           if (value === target) {
-               return true;
-           }
-           if (value < target) {
-               left = mid + 1;
-           } else {
-               right = mid - 1;
-           }
-       }
-       return false;
-   }
+   function searchMatrix(a:number[][],target:number):boolean{const n=a[0].length;let l=0,r=a.length*n-1;while(l<=r){const mid=l+Math.floor((r-l)/2),v=a[Math.floor(mid/n)][mid%n];if(v===target)return true;if(v<target)l=mid+1;else r=mid-1;}return false;}
 
 C#
 ~~
 
 .. code-block:: csharp
 
-   public class Solution {
-       public bool SearchMatrix(int[][] matrix, int target) {
-           int rows = matrix.Length;
-           int cols = matrix[0].Length;
-           int left = 0;
-           int right = rows * cols - 1;
-
-           while (left <= right) {
-               int mid = left + (right - left) / 2;
-               int value = matrix[mid / cols][mid % cols];
-
-               if (value == target) {
-                   return true;
-               }
-               if (value < target) {
-                   left = mid + 1;
-               } else {
-                   right = mid - 1;
-               }
-           }
-           return false;
-       }
-   }
+   public class Solution {public bool SearchMatrix(int[][]a,int target){int n=a[0].Length,l=0,r=a.Length*n-1;while(l<=r){int mid=l+(r-l)/2,v=a[mid/n][mid%n];if(v==target)return true;if(v<target)l=mid+1;else r=mid-1;}return false;}}
 
 Julia
 ~~~~~
 
 .. code-block:: julia
 
-   function search_matrix(matrix::Matrix{Int}, target::Int)::Bool
-       rows, cols = size(matrix)
-       left = 0
-       right = rows * cols - 1
-
-       while left <= right
-           mid = left + (right - left) ÷ 2
-           row = mid ÷ cols + 1
-           col = mid % cols + 1
-           value = matrix[row, col]
-
-           if value == target
-               return true
-           elseif value < target
-               left = mid + 1
-           else
-               right = mid - 1
-           end
-       end
-       return false
+   function search_matrix(a,target)
+       rows,cols=size(a);l=0;r=rows*cols-1
+       while l<=r;mid=l+(r-l)÷2;v=a[mid÷cols+1,mid%cols+1];v==target&&return true;if v<target;l=mid+1;else;r=mid-1;end;end
+       false
    end
 
 R
@@ -326,73 +208,4 @@ R
 
 .. code-block:: r
 
-   search_matrix <- function(matrix, target) {
-     rows <- nrow(matrix)
-     cols <- ncol(matrix)
-     left <- 0L
-     right <- rows * cols - 1L
-
-     while (left <= right) {
-       mid <- left + (right - left) %/% 2L
-       row <- mid %/% cols + 1L
-       col <- mid %% cols + 1L
-       value <- matrix[row, col]
-
-       if (value == target) {
-         return(TRUE)
-       }
-       if (value < target) {
-         left <- mid + 1L
-       } else {
-         right <- mid - 1L
-       }
-     }
-     FALSE
-   }
-
-验证计划与证据
---------------
-
-覆盖单元素、单行、单列、全局两端、行间空隙和范围外目标；随机生成合法矩阵，与直接遍历对拍，并对
-可用语言执行编译、严格类型检查和运行测试。
-
-关键边界
---------
-
-* 跨行严格边界是扁平二分的必要契约；
-* 矩阵必须非空且规则；
-* Julia、R 访问容器时把零基坐标加一；
-* Rust 半开区间不能混用闭区间终止条件。
-
-易错点
-------
-
-* 写反整数商与余数对应的行列；
-* 把扁平 ``mid`` 当作行号；
-* 闭区间使用 ``left=mid`` 或 ``right=mid``；
-* 对不满足跨行边界的矩阵使用全局二分。
-
-本题新增知识
-------------
-
-* 规则矩阵的虚拟扁平索引；
-* 行内与跨行条件合成全局有序性。
-
-本题强化知识
-------------
-
-二分候选区间、安全中点、TypeScript 整数运算，以及 Julia、R 的零基到一基映射。
-
-关联题目
---------
-
-* `0035. Search Insert Position <0035-search-insert-position.rst>`_：一维二分；
-* `0069. Sqrt(x) <0069-sqrtx.rst>`_：单调边界搜索。
-
-最小自检
---------
-
-#. 为什么仅有行内有序还不够？
-#. ``mid/n`` 与 ``mid%n`` 分别是什么？
-#. 为什么比较后能安全删除半区？
-#. Rust 为什么采用半开区间？
+   search_matrix <- function(a,target){rows<-nrow(a);cols<-ncol(a);l<-0L;r<-rows*cols-1L;while(l<=r){mid<-l+(r-l)%/%2L;v<-a[mid%/%cols+1L,mid%%cols+1L];if(v==target)return(TRUE);if(v<target)l<-mid+1L else r<-mid-1L};FALSE}
