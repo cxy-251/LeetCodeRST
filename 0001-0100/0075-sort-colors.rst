@@ -8,102 +8,54 @@
 :难度: Medium
 :主题: 数组、双指针、原地分区
 :原题: `LeetCode 0075 <https://leetcode.com/problems/sort-colors/>`_
-:访问状态: Available
-:教学重点: 荷兰国旗、四段不变量、交换后复查
+:教学重点: 荷兰国旗、四段不变量、交换后复查、原地排序
 
 题目重述
 --------
 
-给定只含 ``0``、``1``、``2`` 的数组，按非递减顺序原地排序，不能调用通用排序。``1 <= n <= 300``。
-普通平台接口无返回值；R 因值语义返回修改后的向量。
+给定只包含 ``0``、``1``、``2`` 的数组，按非递减顺序原地排序，不能调用通用排序函数。标准接口不返回数组。
 
 自建示例
 --------
 
 .. code-block:: text
 
-   输入：[2,0,2,1,1,0]
-   输出：[0,0,1,1,2,2]
+   [2,0,2,1,1,0] -> [0,0,1,1,2,2]
+   [2,0,1]       -> [0,1,2]
 
-问题抽象
+C++ 实现
 --------
-
-维护四段：``[0,low)`` 全为 0，``[low,current)`` 全为 1，``[current,high]`` 未分类，
-``(high,n)`` 全为 2。每轮只分类 ``nums[current]``。
-
-解法选择
---------
-
-主解法荷兰国旗分区单遍完成，时间 ``O(n)``、空间 ``O(1)``。两遍计数覆盖也为线性，但不能展示单遍
-原地分区状态。
-
-主解法：荷兰国旗分区
---------------------
-
-当前值为 0 时与 ``low`` 交换并推进两个左指针；为 1 时只推进 ``current``；为 2 时与 ``high``
-交换并缩小右边界，不推进 ``current``。
-
-处理 0 后换入值来自已分类前缀，可以同步推进。处理 2 后换入值来自未知区，必须复查。每轮未知区间
-严格缩短；终止时三类区域依次连接。算法只交换已有元素，因此长度和多重集保持不变。
-
-复杂度
-~~~~~~
-
-时间 ``O(n)``，算法额外空间 ``O(1)``。R 返回向量时可能产生接口复制。
-
-核心语言实现
-------------
-
-C
-~
-
-.. code-block:: c
-
-   static void swap_int(int *left, int *right) {
-       const int value = *left;
-       *left = *right;
-       *right = value;
-   }
-
-   void sortColors(int *nums, int numsSize) {
-       int low = 0;
-       int current = 0;
-       int high = numsSize - 1;
-
-       while (current <= high) {
-           if (nums[current] == 0) {
-               swap_int(&nums[low], &nums[current]);
-               ++low;
-               ++current;
-           } else if (nums[current] == 1) {
-               ++current;
-           } else {
-               swap_int(&nums[current], &nums[high]);
-               --high;
-           }
-       }
-   }
-
-C++
-~~~
 
 .. code-block:: cpp
 
-   #include <utility>
+   #include <algorithm>
    #include <vector>
 
    class Solution {
-   public:
-       void sortColors(std::vector<int>& nums) {
-           int low = 0;
-           int current = 0;
-           int high = static_cast<int>(nums.size()) - 1;
+   private:
+       void countingOverwrite(std::vector<int>& nums) {
+           int count[3] = {0,0,0};
+           for (int value : nums) ++count[value];
+           int index = 0;
+           for (int value = 0; value < 3; ++value)
+               while (count[value]-- > 0) nums[index++] = value;
+       }
 
+       void twoPartitions(std::vector<int>& nums) {
+           int zero = 0;
+           for (int i = 0; i < static_cast<int>(nums.size()); ++i)
+               if (nums[i] == 0) std::swap(nums[zero++], nums[i]);
+           int one = zero;
+           for (int i = zero; i < static_cast<int>(nums.size()); ++i)
+               if (nums[i] == 1) std::swap(nums[one++], nums[i]);
+       }
+
+       void dutchFlag(std::vector<int>& nums) {
+           int low = 0, current = 0, high = nums.size() - 1;
            while (current <= high) {
                if (nums[current] == 0) {
                    std::swap(nums[low], nums[current]);
-                   ++low;
-                   ++current;
+                   ++low; ++current;
                } else if (nums[current] == 1) {
                    ++current;
                } else {
@@ -112,7 +64,84 @@ C++
                }
            }
        }
+
+   public:
+       void sortColors(std::vector<int>& nums) {
+           dutchFlag(nums);
+       }
    };
+
+题解
+----
+
+有限值域为何可以计数
+~~~~~~~~~~~~~~~~~~
+
+输入只有三种值，统计各自数量后依次覆盖即可在线性时间排序。它简单稳定，但需要两遍扫描，也没有展示如何在一次扫描中维护原地分区。
+
+四段不变量
+~~~~~~~~~~
+
+维护：``[0,low)`` 全是 0；``[low,current)`` 全是 1；``[current,high]`` 尚未分类；``(high,n)`` 全是 2。每轮只处理 ``nums[current]``。
+
+三种当前值分别做什么
+~~~~~~~~~~~~~~~~~~~~
+
+当前值为 0，与 ``low`` 交换，0 区扩大；为 1，当前位置已经正确，只推进 ``current``；为 2，与 ``high`` 交换，2 区扩大。
+
+为什么交换 0 后可以推进 current
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``low`` 位于 1 区起点。若 ``low < current``，换入当前位置的是已分类的 1；若二者相等，交换不改变值。因此换入元素无需复查，两个指针都可推进。
+
+为什么交换 2 后不能推进 current
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``high`` 来自未知区间，换回的值可能是 0、1 或 2，尚未分类。若立即推进会跳过它，因此只缩小 ``high``，保留 ``current`` 继续判断。
+
+.. list-table::
+   :header-rows: 1
+
+   * - 当前数组
+     - ``low,current,high``
+     - 动作
+   * - ``[2,0,2,1,1,0]``
+     - ``0,0,5``
+     - 2 与右端 0 交换
+   * - ``[0,0,2,1,1,2]``
+     - ``0,0,4``
+     - 当前换入 0，移入左区
+   * - ``[0,0,2,1,1,2]``
+     - ``1,1,4``
+     - 再处理第二个 0
+   * - 后续
+     - 未知区持续缩短
+     - 最终连接 0、1、2 三段
+
+为什么每轮都会终止推进
+~~~~~~~~~~~~~~~~~~~~~~
+
+处理 0 或 1 时 ``current`` 增加；处理 2 时 ``high`` 减少。未知区间长度 ``high-current+1`` 每轮严格减少，因此循环必然结束。
+
+为什么结果保持元素多重集
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+算法只交换原数组元素，不创建或删除值。结束时未知区为空，三个已分类区按 0、1、2 顺序连接，数组有序且元素数量不变。
+
+复杂度来源
+~~~~~~~~~~
+
+计数覆盖、两次分区和荷兰国旗都为 ``O(n)`` 时间、``O(1)`` 额外空间；荷兰国旗只需单次分类扫描。
+
+九语言实现
+----------
+
+C
+~
+
+.. code-block:: c
+
+   void sortColors(int*a,int n){int low=0,i=0,high=n-1;while(i<=high){if(a[i]==0){int t=a[low];a[low++]=a[i];a[i++]=t;}else if(a[i]==1)i++;else{int t=a[high];a[high--]=a[i];a[i]=t;}}}
 
 Python
 ~~~~~~
@@ -120,187 +149,56 @@ Python
 .. code-block:: python
 
    class Solution:
-       def sortColors(self, nums: list[int]) -> None:
-           low = 0
-           current = 0
-           high = len(nums) - 1
-
-           while current <= high:
-               if nums[current] == 0:
-                   nums[low], nums[current] = nums[current], nums[low]
-                   low += 1
-                   current += 1
-               elif nums[current] == 1:
-                   current += 1
-               else:
-                   nums[current], nums[high] = nums[high], nums[current]
-                   high -= 1
+       def sortColors(self, a: list[int]) -> None:
+           low=i=0;high=len(a)-1
+           while i<=high:
+               if a[i]==0:a[low],a[i]=a[i],a[low];low+=1;i+=1
+               elif a[i]==1:i+=1
+               else:a[i],a[high]=a[high],a[i];high-=1
 
 Java
 ~~~~
 
 .. code-block:: java
 
-   class Solution {
-       public void sortColors(int[] nums) {
-           int low = 0;
-           int current = 0;
-           int high = nums.length - 1;
-
-           while (current <= high) {
-               if (nums[current] == 0) {
-                   swap(nums, low, current);
-                   low++;
-                   current++;
-               } else if (nums[current] == 1) {
-                   current++;
-               } else {
-                   swap(nums, current, high);
-                   high--;
-               }
-           }
-       }
-
-       private void swap(int[] nums, int left, int right) {
-           int value = nums[left];
-           nums[left] = nums[right];
-           nums[right] = value;
-       }
-   }
+   class Solution {public void sortColors(int[]a){int low=0,i=0,high=a.length-1;while(i<=high){if(a[i]==0){int t=a[low];a[low++]=a[i];a[i++]=t;}else if(a[i]==1)i++;else{int t=a[high];a[high--]=a[i];a[i]=t;}}}}
 
 Rust
 ~~~~
 
 .. code-block:: rust
 
-   impl Solution {
-       pub fn sort_colors(nums: &mut Vec<i32>) {
-           let mut low = 0usize;
-           let mut current = 0usize;
-           let mut high = nums.len();
-
-           while current < high {
-               match nums[current] {
-                   0 => {
-                       nums.swap(low, current);
-                       low += 1;
-                       current += 1;
-                   }
-                   1 => {
-                       current += 1;
-                   }
-                   _ => {
-                       high -= 1;
-                       nums.swap(current, high);
-                   }
-               }
-           }
-       }
-   }
+   impl Solution {pub fn sort_colors(a:&mut Vec<i32>){let(mut low,mut i,mut high)=(0,0,a.len());while i<high{match a[i]{0=>{a.swap(low,i);low+=1;i+=1},1=>i+=1,_=>{high-=1;a.swap(i,high)}}}}}
 
 Go
 ~~
 
 .. code-block:: go
 
-   func sortColors(nums []int) {
-       low := 0
-       current := 0
-       high := len(nums) - 1
-
-       for current <= high {
-           if nums[current] == 0 {
-               nums[low], nums[current] = nums[current], nums[low]
-               low++
-               current++
-           } else if nums[current] == 1 {
-               current++
-           } else {
-               nums[current], nums[high] = nums[high], nums[current]
-               high--
-           }
-       }
-   }
+   func sortColors(a []int){low,i,high:=0,0,len(a)-1;for i<=high{if a[i]==0{a[low],a[i]=a[i],a[low];low++;i++}else if a[i]==1{i++}else{a[i],a[high]=a[high],a[i];high--}}}
 
 TypeScript
 ~~~~~~~~~~
 
 .. code-block:: typescript
 
-   function sortColors(nums: number[]): void {
-       let low = 0;
-       let current = 0;
-       let high = nums.length - 1;
-
-       while (current <= high) {
-           if (nums[current] === 0) {
-               [nums[low], nums[current]] = [nums[current], nums[low]];
-               low += 1;
-               current += 1;
-           } else if (nums[current] === 1) {
-               current += 1;
-           } else {
-               [nums[current], nums[high]] = [nums[high], nums[current]];
-               high -= 1;
-           }
-       }
-   }
+   function sortColors(a:number[]):void{let low=0,i=0,high=a.length-1;while(i<=high){if(a[i]===0){[a[low],a[i]]=[a[i],a[low]];low++;i++;}else if(a[i]===1)i++;else{[a[i],a[high]]=[a[high],a[i]];high--;}}}
 
 C#
 ~~
 
 .. code-block:: csharp
 
-   public class Solution {
-       public void SortColors(int[] nums) {
-           int low = 0;
-           int current = 0;
-           int high = nums.Length - 1;
-
-           while (current <= high) {
-               if (nums[current] == 0) {
-                   Swap(nums, low, current);
-                   low++;
-                   current++;
-               } else if (nums[current] == 1) {
-                   current++;
-               } else {
-                   Swap(nums, current, high);
-                   high--;
-               }
-           }
-       }
-
-       private static void Swap(int[] nums, int left, int right) {
-           int value = nums[left];
-           nums[left] = nums[right];
-           nums[right] = value;
-       }
-   }
+   public class Solution {public void SortColors(int[]a){int low=0,i=0,high=a.Length-1;while(i<=high){if(a[i]==0){(a[low],a[i])=(a[i],a[low]);low++;i++;}else if(a[i]==1)i++;else{(a[i],a[high])=(a[high],a[i]);high--;}}}}
 
 Julia
 ~~~~~
 
 .. code-block:: julia
 
-   function sort_colors!(nums::Vector{Int})::Nothing
-       low = 1
-       current = 1
-       high = length(nums)
-
-       while current <= high
-           if nums[current] == 0
-               nums[low], nums[current] = nums[current], nums[low]
-               low += 1
-               current += 1
-           elseif nums[current] == 1
-               current += 1
-           else
-               nums[current], nums[high] = nums[high], nums[current]
-               high -= 1
-           end
-       end
-       return nothing
+   function sort_colors!(a)
+       low=1;i=1;high=length(a)
+       while i<=high;if a[i]==0;a[low],a[i]=a[i],a[low];low+=1;i+=1;elseif a[i]==1;i+=1;else;a[i],a[high]=a[high],a[i];high-=1;end;end;a
    end
 
 R
@@ -308,72 +206,4 @@ R
 
 .. code-block:: r
 
-   sort_colors <- function(nums) {
-     low <- 1L
-     current <- 1L
-     high <- length(nums)
-
-     while (current <= high) {
-       if (nums[current] == 0L) {
-         value <- nums[low]
-         nums[low] <- nums[current]
-         nums[current] <- value
-         low <- low + 1L
-         current <- current + 1L
-       } else if (nums[current] == 1L) {
-         current <- current + 1L
-       } else {
-         value <- nums[current]
-         nums[current] <- nums[high]
-         nums[high] <- value
-         high <- high - 1L
-       }
-     }
-     nums
-   }
-
-验证计划与证据
---------------
-
-覆盖单元素、全相同、已排序、逆序和缺少某类值；穷举短数组并用独立排序基准验证，再执行随机对拍、
-编译、严格类型检查和运行测试。
-
-关键边界
---------
-
-* 输入域必须限定为 0、1、2；
-* 处理 2 后不能推进 ``current``；
-* Rust 使用半开未知区间；
-* R 返回修改后的向量，不修改调用者绑定。
-
-易错点
-------
-
-* 与右端交换后直接推进 ``current``；
-* 处理 0 时漏掉一个左指针；
-* 把半开和闭合的 ``high`` 初始化混写；
-* 调用通用排序，绕过分区目标。
-
-本题新增知识
-------------
-
-荷兰国旗三向分区、四段区域不变量、右端交换后的未知值复查。
-
-本题强化知识
-------------
-
-原地交换的多重集守恒、指针跨越前的完成性证明，以及语言值语义与原地接口的区别。
-
-关联题目
---------
-
-* `0027. Remove Element <0027-remove-element.rst>`_：原地有效前缀；
-* `0041. First Missing Positive <0041-first-missing-positive.rst>`_：交换填槽。
-
-最小自检
---------
-
-#. 四个区域分别表示什么？
-#. 为什么处理 2 后不能推进 ``current``？
-#. 为什么处理 0 后可以推进两个指针？
-#. 终止时为什么有序且多重集不变？
+   sort_colors <- function(a){low<-1L;i<-1L;high<-length(a);while(i<=high){if(a[[i]]==0L){tmp<-a[[low]];a[[low]]<-a[[i]];a[[i]]<-tmp;low<-low+1L;i<-i+1L}else if(a[[i]]==1L)i<-i+1L else{tmp<-a[[high]];a[[high]]<-a[[i]];a[[i]]<-tmp;high<-high-1L}};a}
