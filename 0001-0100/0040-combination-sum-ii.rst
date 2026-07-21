@@ -6,284 +6,125 @@
 
 :题号: 0040
 :难度: Medium
-:主题: 回溯、排序、同层去重、一次性选择、组合枚举
+:主题: 回溯、排序、同层去重、一次性选择
 :原题: `LeetCode 0040 <https://leetcode.com/problems/combination-sum-ii/>`_
-:访问状态: Available
-:教学重点: 每个下标只用一次、同层跳过重复值、不同层允许相同值、排序剪枝
+:教学重点: 下标只用一次、同层跳过重复值、不同层允许相同值、排序剪枝
 
 题目重述
 --------
 
-给定正整数数组 ``candidates`` 和正整数 ``target``。数组中可能含重复值，每个数组位置最多使用
-一次。返回所有元素和等于 ``target`` 的不同组合。
-
-组合内部顺序不影响答案。即使两组选择使用了不同下标，只要最终数值序列相同，也只能返回一次。
+给定正整数数组 ``candidates`` 和目标值 ``target``。数组可能包含重复值，但每个数组位置最多使用一次。返回所有和值为目标的不同数值组合；不同下标若形成相同数值序列，也只能保留一个答案。
 
 自建示例
 --------
 
 .. code-block:: text
 
-   candidates = [10, 1, 2, 7, 6, 1, 5], target = 8
-   输出：[[1, 1, 6], [1, 2, 5], [1, 7], [2, 6]]
+   candidates = [1a,1b,1c,2], target = 3
+   数值答案为 [1,1,1] 与 [1,2]
 
-   candidates = [1, 1, 1, 2], target = 3
-   输出：[[1, 1, 1], [1, 2]]
+根层选择 ``1a`` 后，应跳过 ``1b``、``1c`` 启动的等价根分支；进入下一层后 ``1b`` 是新的首个可用 1，仍可选择，从而保留 ``[1,1,1]``。
 
-第二个示例中的三个 ``1`` 来自三个不同下标。数值可以重复，数组位置不能复用。
-
-问题抽象
+C++ 实现
 --------
-
-先把数组升序排列。递归 ``search(start, remaining)`` 只从下标 ``start`` 及之后选择元素：
-
-* 选择 ``index`` 后递归传入 ``index + 1``，保证该位置只使用一次；
-* 若 ``index > start`` 且当前值等于前一个值，则跳过当前值，删除同一递归层的等价分支；
-* 若当前值大于 ``remaining``，后续值只会更大，可结束本层循环。
-
-同层跳过不会禁止组合中出现多个相同值。选择第一个 ``1`` 进入下一层后，新的 ``start`` 已变化，
-下一层仍可选择后面的 ``1``。
-
-解法选择
---------
-
-.. list-table::
-   :header-rows: 1
-
-   * - 方法
-     - 时间复杂度
-     - 额外空间
-     - 取舍
-   * - 排序 + 一次性下标回溯 + 同层去重
-     - ``O(2^n)`` 上界
-     - ``O(n)``
-     - 主解法；搜索阶段直接避免重复答案
-   * - 枚举全部下标子集后集合去重
-     - ``O(2^n × n)``
-     - 很高
-     - 先制造重复，再承担序列哈希或字符串化成本
-   * - 按不同值的频次枚举使用数量
-     - 指数级
-     - ``O(u)``
-     - 可行，建模和实现比本题主线更复杂
-
-主解法：排序后的同层去重回溯
-----------------------------
-
-状态含义
-~~~~~~~~
-
-进入 ``search(start, remaining)`` 时：
-
-* ``path`` 对应一组互不相同的已选下标；
-* ``path`` 数值非递减；
-* ``sum(path) + remaining == target``；
-* 后续只能从 ``start`` 及之后选择；
-* 当前层尚未使用两个相同值启动等价分支。
-
-为什么条件是 index > start
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-考虑排序数组 ``[1a, 1b, 1c, 2]``：
-
-* 根层选择 ``1a`` 后，根层跳过 ``1b`` 和 ``1c``，避免三棵相同的首选子树；
-* 进入下一层后，``start`` 指向 ``1b``，它是该层第一个 ``1``，因此仍可选择；
-* 再下一层可选择 ``1c``，所以 ``[1, 1, 1]`` 不会被漏掉。
-
-若写成 ``index > 0``，所有深层相邻重复值都会被跳过，合法的多重复值组合会消失。
-
-核心不变量
-~~~~~~~~~~
-
-每层循环开始时，已处理的候选要么被完整搜索，要么因与本层前一个值相同而被证明等价。选择一个
-候选后，``remaining`` 减去该正数，递归起点移动到下一位置；撤销后恢复父层路径。
-
-正确性依据
-~~~~~~~~~~
-
-合法性：递归始终传入 ``index + 1``，同一下标不会再次使用；只有 ``remaining == 0`` 时保存，
-所以每个输出组合的和恰好为目标。
-
-无重复：排序后相同值连续。固定路径前缀和递归层时，只保留第一个相同值启动分支。后续等值下标
-启动的分支拥有相同数值选择和更短的可用后缀，不会产生新的数值组合。
-
-完整性：取任意合法答案并按非递减顺序排列。若它在某层使用了后面的某个等值下标，可替换为该层
-最早可用的等值下标；替换后剩余可选后缀不会缩小。因此同层保留的第一个值足以覆盖所有合法
-数值组合，逐层搜索最终会到达该答案。
-
-复杂度
-~~~~~~
-
-设数组长度为 ``n``：
-
-* 下标子集数量上界为 ``2^n``，搜索时间上界为 ``O(2^n)``，复制输出还需答案总长度；
-* 排序为 ``O(n log n)``；
-* 递归深度和路径长度最多 ``n``，不计输出的额外空间为 ``O(n)``。
-
-核心语言实现
-------------
-
-C
-~
-
-.. code-block:: c
-
-   #include <stdlib.h>
-   #include <string.h>
-
-   struct Result {
-       int **rows;
-       int *sizes;
-       int count;
-       int capacity;
-       int *path;
-       int path_length;
-   };
-
-   static int compare_int(const void *left, const void *right) {
-       int a = *(const int *)left;
-       int b = *(const int *)right;
-       return (a > b) - (a < b);
-   }
-
-   static void append_path(struct Result *result) {
-       if (result->count == result->capacity) {
-           result->capacity *= 2;
-           result->rows = realloc(
-               result->rows,
-               (size_t)result->capacity * sizeof(int *)
-           );
-           result->sizes = realloc(
-               result->sizes,
-               (size_t)result->capacity * sizeof(int)
-           );
-       }
-
-       int *copy = malloc(
-           (size_t)result->path_length * sizeof(int)
-       );
-       memcpy(
-           copy,
-           result->path,
-           (size_t)result->path_length * sizeof(int)
-       );
-       result->rows[result->count] = copy;
-       result->sizes[result->count] = result->path_length;
-       ++result->count;
-   }
-
-   static void search(
-       const int *candidates,
-       int candidate_count,
-       int start,
-       int remaining,
-       struct Result *result
-   ) {
-       if (remaining == 0) {
-           append_path(result);
-           return;
-       }
-
-       for (int index = start; index < candidate_count; ++index) {
-           if (index > start &&
-               candidates[index] == candidates[index - 1]) {
-               continue;
-           }
-
-           int value = candidates[index];
-           if (value > remaining) {
-               break;
-           }
-
-           result->path[result->path_length++] = value;
-           search(
-               candidates,
-               candidate_count,
-               index + 1,
-               remaining - value,
-               result
-           );
-           --result->path_length;
-       }
-   }
-
-   int **combinationSum2(
-       int *candidates,
-       int candidatesSize,
-       int target,
-       int *returnSize,
-       int **returnColumnSizes
-   ) {
-       qsort(
-           candidates,
-           (size_t)candidatesSize,
-           sizeof(int),
-           compare_int
-       );
-
-       struct Result result;
-       result.capacity = 16;
-       result.count = 0;
-       result.rows = malloc(
-           (size_t)result.capacity * sizeof(int *)
-       );
-       result.sizes = malloc(
-           (size_t)result.capacity * sizeof(int)
-       );
-       result.path = malloc(
-           (size_t)candidatesSize * sizeof(int)
-       );
-       result.path_length = 0;
-
-       search(
-           candidates,
-           candidatesSize,
-           0,
-           target,
-           &result
-       );
-
-       free(result.path);
-       *returnSize = result.count;
-       *returnColumnSizes = result.sizes;
-       return result.rows;
-   }
-
-C++
-~~~
 
 .. code-block:: cpp
 
-   class Solution {
-       std::vector<std::vector<int>> answers;
-       std::vector<int> path;
+   #include <algorithm>
+   #include <map>
+   #include <set>
+   #include <vector>
 
-       void search(
+   class Solution {
+   private:
+       void subsetDfs(
            const std::vector<int>& candidates,
-           int start,
-           int remaining
+           int index,
+           int remaining,
+           std::vector<int>& path,
+           std::set<std::vector<int>>& unique
        ) {
            if (remaining == 0) {
-               answers.push_back(path);
+               auto canonical = path;
+               std::sort(canonical.begin(), canonical.end());
+               unique.insert(canonical);
                return;
            }
+           if (index == static_cast<int>(candidates.size()) || remaining < 0) return;
+           subsetDfs(candidates, index + 1, remaining, path, unique);
+           path.push_back(candidates[index]);
+           subsetDfs(candidates, index + 1, remaining - candidates[index], path, unique);
+           path.pop_back();
+       }
 
-           for (int index = start;
-                index < static_cast<int>(candidates.size());
-                ++index) {
-               if (index > start &&
-                   candidates[index] == candidates[index - 1]) {
-                   continue;
-               }
+       std::vector<std::vector<int>> enumerateSubsetsThenDeduplicate(
+           const std::vector<int>& candidates,
+           int target
+       ) {
+           std::set<std::vector<int>> unique;
+           std::vector<int> path;
+           subsetDfs(candidates, 0, target, path, unique);
+           return {unique.begin(), unique.end()};
+       }
+
+       void frequencyDfs(
+           const std::vector<std::pair<int,int>>& groups,
+           int group,
+           int remaining,
+           std::vector<int>& path,
+           std::vector<std::vector<int>>& result
+       ) {
+           if (remaining == 0) { result.push_back(path); return; }
+           if (group == static_cast<int>(groups.size())) return;
+           auto [value, count] = groups[group];
+           int maximum = std::min(count, remaining / value);
+           for (int used = 0; used <= maximum; ++used) {
+               for (int k = 0; k < used; ++k) path.push_back(value);
+               frequencyDfs(groups, group + 1, remaining - used * value, path, result);
+               for (int k = 0; k < used; ++k) path.pop_back();
+           }
+       }
+
+       std::vector<std::vector<int>> frequencyGroups(
+           const std::vector<int>& candidates,
+           int target
+       ) {
+           std::map<int,int> counts;
+           for (int value : candidates) ++counts[value];
+           std::vector<std::pair<int,int>> groups(counts.begin(), counts.end());
+           std::vector<std::vector<int>> result;
+           std::vector<int> path;
+           frequencyDfs(groups, 0, target, path, result);
+           return result;
+       }
+
+       void backtrack(
+           const std::vector<int>& candidates,
+           int start,
+           int remaining,
+           std::vector<int>& path,
+           std::vector<std::vector<int>>& result
+       ) {
+           if (remaining == 0) { result.push_back(path); return; }
+           for (int index = start; index < static_cast<int>(candidates.size()); ++index) {
+               if (index > start && candidates[index] == candidates[index - 1]) continue;
                int value = candidates[index];
-               if (value > remaining) {
-                   break;
-               }
-
+               if (value > remaining) break;
                path.push_back(value);
-               search(candidates, index + 1, remaining - value);
+               backtrack(candidates, index + 1, remaining - value, path, result);
                path.pop_back();
            }
+       }
+
+       std::vector<std::vector<int>> sortedSameLevelDedup(
+           std::vector<int> candidates,
+           int target
+       ) {
+           std::sort(candidates.begin(), candidates.end());
+           std::vector<std::vector<int>> result;
+           std::vector<int> path;
+           backtrack(candidates, 0, target, path, result);
+           return result;
        }
 
    public:
@@ -291,13 +132,97 @@ C++
            std::vector<int>& candidates,
            int target
        ) {
-           answers.clear();
-           path.clear();
-           std::sort(candidates.begin(), candidates.end());
-           search(candidates, 0, target);
-           return answers;
+           return sortedSameLevelDedup(candidates, target);
        }
    };
+
+题解
+----
+
+下标子集为何仍产生数值重复
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+每个下标只有“选或不选”，共有最多 ``2^n`` 个子集。重复值来自不同下标时，多组子集可能形成相同数值序列。例如选择 ``1a`` 或 ``1b`` 再选择 2 都得到 ``[1,2]``。事后集合去重正确，但先生成了等价分支。
+
+排序如何让等价分支相邻
+~~~~~~~~~~~~~~~~~~~~~~
+
+排序后相同值连续。固定当前路径和递归起点时，多个相同值作为“本层下一选择”会生成相同的数值前缀。只保留本层第一个相同值即可覆盖这组等价分支。
+
+为什么去重条件必须是 index > start
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+条件：
+
+.. code-block:: text
+
+   index > start 且 candidates[index] == candidates[index-1]
+
+只跳过同一层中第二个及之后的相同值。选择 ``1a`` 进入下一层后，``start`` 移到 ``1b``；此时 ``index == start``，所以 ``1b`` 可以被选择，合法组合中的重复数值得以保留。
+
+若误写为 ``index > 0``，深层的 ``1b``、``1c`` 也会被全局跳过，``[1,1,1]`` 等答案将丢失。
+
+为什么递归传入 index + 1
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+本题限制每个数组位置最多使用一次。选择 ``index`` 后，下一层只能从后续下标开始，因此传入 ``index+1``。第 39 题传入当前 ``index``，代表候选值可无限复用；这是两题最核心的状态差异。
+
+状态演化
+~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+
+   * - 层级
+     - 可选后缀
+     - 选择
+     - 去重行为
+   * - 根层
+     - ``1a,1b,1c,2``
+     - 选择 ``1a``
+     - 跳过 ``1b``、``1c`` 的等价根分支
+   * - 第二层
+     - ``1b,1c,2``
+     - 可选择 ``1b``
+     - ``1b`` 是本层第一个 1
+   * - 第三层
+     - ``1c,2``
+     - 可选择 ``1c``
+     - 得到 ``[1,1,1]``
+
+排序为什么还能提供和值剪枝
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+所有值为正。若当前值已经大于 ``remaining``，后续值只会更大，本层可直接结束。每次选择后剩余量严格减小，搜索不会形成循环。
+
+为什么同层跳过不漏解
+~~~~~~~~~~~~~~~~~~~~
+
+固定路径前缀时，若后面的相同值作为本层首选，得到的数值前缀与第一个相同值完全一致，而且它可使用的后缀更短，不可能产生第一个分支无法产生的新数值组合。任意使用后面等值下标的解，都可把该层选择替换为最早可用等值下标，剩余选择仍然可用。
+
+频次分组方法的取舍
+~~~~~~~~~~~~~~~~~~
+
+把相同值压缩为 ``(value,count)``，每组枚举使用 0 至 ``count`` 次，可从模型上消除重复下标身份。它同样正确，但构造路径时要批量追加和撤销，标准排序回溯更接近常见组合搜索模板。
+
+复杂度来源
+~~~~~~~~~~
+
+排序为 ``O(n log n)``。下标子集上界为 ``2^n``，实际搜索被和值与重复值剪枝缩小；复制答案还需其总长度。递归深度和路径长度最多 ``n``，不计输出的额外空间 ``O(n)``。
+
+九语言实现
+----------
+
+C
+~
+
+.. code-block:: c
+
+   struct Result { int **rows,*sizes,count,capacity,*path,path_len; };
+   static int cmp_int(const void *a,const void *b){int x=*(const int*)a,y=*(const int*)b;return(x>y)-(x<y);}
+   static void save(struct Result *r){if(r->count==r->capacity){r->capacity*=2;r->rows=realloc(r->rows,(size_t)r->capacity*sizeof(int*));r->sizes=realloc(r->sizes,(size_t)r->capacity*sizeof(int));}int *copy=malloc((size_t)r->path_len*sizeof(int));memcpy(copy,r->path,(size_t)r->path_len*sizeof(int));r->rows[r->count]=copy;r->sizes[r->count++]=r->path_len;}
+   static void dfs(int *a,int n,int start,int remain,struct Result *r){if(remain==0){save(r);return;}for(int i=start;i<n;i++){if(i>start&&a[i]==a[i-1])continue;if(a[i]>remain)break;r->path[r->path_len++]=a[i];dfs(a,n,i+1,remain-a[i],r);r->path_len--;}}
+   int **combinationSum2(int *a,int n,int target,int *returnSize,int **returnColumnSizes){qsort(a,(size_t)n,sizeof(int),cmp_int);struct Result r={0};r.capacity=16;r.rows=malloc(16*sizeof(int*));r.sizes=malloc(16*sizeof(int));r.path=malloc((size_t)n*sizeof(int));dfs(a,n,0,target,&r);free(r.path);*returnSize=r.count;*returnColumnSizes=r.sizes;return r.rows;}
 
 Python
 ~~~~~~
@@ -305,401 +230,84 @@ Python
 .. code-block:: python
 
    class Solution:
-       def combinationSum2(
-           self,
-           candidates: list[int],
-           target: int,
-       ) -> list[list[int]]:
-           candidates.sort()
-           answers: list[list[int]] = []
-           path: list[int] = []
-
-           def search(start: int, remaining: int) -> None:
+       def combinationSum2(self, candidates: list[int], target: int) -> list[list[int]]:
+           candidates.sort(); result, path = [], []
+           def dfs(start: int, remaining: int) -> None:
                if remaining == 0:
-                   answers.append(path.copy())
-                   return
-
+                   result.append(path.copy()); return
                for index in range(start, len(candidates)):
                    if index > start and candidates[index] == candidates[index - 1]:
                        continue
                    value = candidates[index]
-                   if value > remaining:
-                       break
-
-                   path.append(value)
-                   search(index + 1, remaining - value)
-                   path.pop()
-
-           search(0, target)
-           return answers
+                   if value > remaining: break
+                   path.append(value); dfs(index + 1, remaining - value); path.pop()
+           dfs(0, target); return result
 
 Java
 ~~~~
 
 .. code-block:: java
 
-   class Solution {
-       private final List<List<Integer>> answers = new ArrayList<>();
-       private final List<Integer> path = new ArrayList<>();
-
-       public List<List<Integer>> combinationSum2(
-           int[] candidates,
-           int target
-       ) {
-           answers.clear();
-           path.clear();
-           Arrays.sort(candidates);
-           search(candidates, 0, target);
-           return answers;
-       }
-
-       private void search(
-           int[] candidates,
-           int start,
-           int remaining
-       ) {
-           if (remaining == 0) {
-               answers.add(new ArrayList<>(path));
-               return;
-           }
-
-           for (int index = start; index < candidates.length; ++index) {
-               if (index > start &&
-                   candidates[index] == candidates[index - 1]) {
-                   continue;
-               }
-               int value = candidates[index];
-               if (value > remaining) {
-                   break;
-               }
-
-               path.add(value);
-               search(candidates, index + 1, remaining - value);
-               path.remove(path.size() - 1);
-           }
-       }
-   }
+   class Solution {List<List<Integer>> result=new ArrayList<>();List<Integer> path=new ArrayList<>();int[] values;
+       void dfs(int start,int remain){if(remain==0){result.add(new ArrayList<>(path));return;}for(int i=start;i<values.length;i++){if(i>start&&values[i]==values[i-1])continue;if(values[i]>remain)break;path.add(values[i]);dfs(i+1,remain-values[i]);path.remove(path.size()-1);}}
+       public List<List<Integer>> combinationSum2(int[] candidates,int target){Arrays.sort(candidates);values=candidates;dfs(0,target);return result;}}
 
 Rust
 ~~~~
 
 .. code-block:: rust
 
-   impl Solution {
-       pub fn combination_sum2(
-           mut candidates: Vec<i32>,
-           target: i32,
-       ) -> Vec<Vec<i32>> {
-           fn search(
-               candidates: &[i32],
-               start: usize,
-               remaining: i32,
-               path: &mut Vec<i32>,
-               answers: &mut Vec<Vec<i32>>,
-           ) {
-               if remaining == 0 {
-                   answers.push(path.clone());
-                   return;
-               }
-
-               for index in start..candidates.len() {
-                   if index > start &&
-                       candidates[index] == candidates[index - 1]
-                   {
-                       continue;
-                   }
-                   let value = candidates[index];
-                   if value > remaining {
-                       break;
-                   }
-
-                   path.push(value);
-                   search(
-                       candidates,
-                       index + 1,
-                       remaining - value,
-                       path,
-                       answers,
-                   );
-                   path.pop();
-               }
-           }
-
-           candidates.sort_unstable();
-           let mut answers = Vec::new();
-           let mut path = Vec::new();
-           search(
-               &candidates,
-               0,
-               target,
-               &mut path,
-               &mut answers,
-           );
-           answers
-       }
-   }
+   impl Solution {pub fn combination_sum2(mut a:Vec<i32>,target:i32)->Vec<Vec<i32>>{
+       fn dfs(a:&[i32],start:usize,remain:i32,path:&mut Vec<i32>,out:&mut Vec<Vec<i32>>){if remain==0{out.push(path.clone());return}for i in start..a.len(){if i>start&&a[i]==a[i-1]{continue}if a[i]>remain{break}path.push(a[i]);dfs(a,i+1,remain-a[i],path,out);path.pop();}}
+       a.sort();let mut out=vec![];dfs(&a,0,target,&mut vec![],&mut out);out}}
 
 Go
 ~~
 
 .. code-block:: go
 
-   import "sort"
-
-   func combinationSum2(candidates []int, target int) [][]int {
-       sort.Ints(candidates)
-       answers := make([][]int, 0)
-       path := make([]int, 0)
-
-       var search func(int, int)
-       search = func(start int, remaining int) {
-           if remaining == 0 {
-               copyOfPath := append([]int(nil), path...)
-               answers = append(answers, copyOfPath)
-               return
-           }
-
-           for index := start; index < len(candidates); index++ {
-               if index > start &&
-                   candidates[index] == candidates[index-1] {
-                   continue
-               }
-               value := candidates[index]
-               if value > remaining {
-                   break
-               }
-
-               path = append(path, value)
-               search(index+1, remaining-value)
-               path = path[:len(path)-1]
-           }
-       }
-
-       search(0, target)
-       return answers
-   }
+   func combinationSum2(a []int,target int)[][]int{sort.Ints(a);result:=[][]int{};path:=[]int{};var dfs func(int,int);dfs=func(start,remain int){if remain==0{result=append(result,append([]int(nil),path...));return};for i:=start;i<len(a);i++{if i>start&&a[i]==a[i-1]{continue};if a[i]>remain{break};path=append(path,a[i]);dfs(i+1,remain-a[i]);path=path[:len(path)-1]}};dfs(0,target);return result}
 
 TypeScript
 ~~~~~~~~~~
 
 .. code-block:: typescript
 
-   function combinationSum2(
-       candidates: number[],
-       target: number,
-   ): number[][] {
-       candidates.sort((left, right) => left - right);
-       const answers: number[][] = [];
-       const path: number[] = [];
-
-       const search = (start: number, remaining: number): void => {
-           if (remaining === 0) {
-               answers.push([...path]);
-               return;
-           }
-
-           for (let index = start; index < candidates.length; index++) {
-               if (index > start &&
-                   candidates[index] === candidates[index - 1]) {
-                   continue;
-               }
-               const value = candidates[index];
-               if (value > remaining) {
-                   break;
-               }
-
-               path.push(value);
-               search(index + 1, remaining - value);
-               path.pop();
-           }
-       };
-
-       search(0, target);
-       return answers;
-   }
+   function combinationSum2(a:number[],target:number):number[][]{a.sort((x,y)=>x-y);const result:number[][]=[],path:number[]=[];const dfs=(start:number,remain:number):void=>{if(remain===0){result.push([...path]);return;}for(let i=start;i<a.length;i++){if(i>start&&a[i]===a[i-1])continue;if(a[i]>remain)break;path.push(a[i]);dfs(i+1,remain-a[i]);path.pop();}};dfs(0,target);return result;}
 
 C#
 ~~
 
 .. code-block:: csharp
 
-   public class Solution {
-       private readonly IList<IList<int>> answers =
-           new List<IList<int>>();
-       private readonly List<int> path = new List<int>();
-
-       public IList<IList<int>> CombinationSum2(
-           int[] candidates,
-           int target
-       ) {
-           answers.Clear();
-           path.Clear();
-           System.Array.Sort(candidates);
-           Search(candidates, 0, target);
-           return answers;
-       }
-
-       private void Search(
-           int[] candidates,
-           int start,
-           int remaining
-       ) {
-           if (remaining == 0) {
-               answers.Add(new List<int>(path));
-               return;
-           }
-
-           for (int index = start; index < candidates.Length; ++index) {
-               if (index > start &&
-                   candidates[index] == candidates[index - 1]) {
-                   continue;
-               }
-               int value = candidates[index];
-               if (value > remaining) {
-                   break;
-               }
-
-               path.Add(value);
-               Search(candidates, index + 1, remaining - value);
-               path.RemoveAt(path.Count - 1);
-           }
-       }
-   }
+   public class Solution {List<IList<int>> result=new();List<int> path=new();int[] values;
+       void Dfs(int start,int remain){if(remain==0){result.Add(new List<int>(path));return;}for(int i=start;i<values.Length;i++){if(i>start&&values[i]==values[i-1])continue;if(values[i]>remain)break;path.Add(values[i]);Dfs(i+1,remain-values[i]);path.RemoveAt(path.Count-1);}}
+       public IList<IList<int>> CombinationSum2(int[] candidates,int target){System.Array.Sort(candidates);values=candidates;Dfs(0,target);return result;}}
 
 Julia
 ~~~~~
 
 .. code-block:: julia
 
-   function combination_sum_ii(
-       candidates::Vector{Int},
-       target::Int,
-   )::Vector{Vector{Int}}
-       sort!(candidates)
-       answers = Vector{Vector{Int}}()
-       path = Int[]
-
-       function search(start::Int, remaining::Int)
-           if remaining == 0
-               push!(answers, copy(path))
-               return
-           end
-
-           for index in start:length(candidates)
-               if index > start &&
-                  candidates[index] == candidates[index - 1]
-                   continue
-               end
-               value = candidates[index]
-               value > remaining && break
-
-               push!(path, value)
-               search(index + 1, remaining - value)
-               pop!(path)
+   function combination_sum2(a::Vector{Int},target::Int)
+       sort!(a);result=Vector{Vector{Int}}();path=Int[]
+       function dfs(start,remain)
+           if remain==0;push!(result,copy(path));return;end
+           for i in start:length(a)
+               i>start&&a[i]==a[i-1]&&continue
+               a[i]>remain&&break
+               push!(path,a[i]);dfs(i+1,remain-a[i]);pop!(path)
            end
        end
-
-       search(1, target)
-       return answers
+       dfs(1,target);result
    end
-
-Julia 的空 ``UnitRange`` 不会产生元素，因此起点越过末尾时循环自然结束。
 
 R
 ~
 
 .. code-block:: r
 
-   combination_sum_ii <- function(candidates, target) {
-     candidates <- sort(candidates)
-     answers <- list()
-     path <- integer(0)
-
-     search <- function(start, remaining) {
-       if (remaining == 0L) {
-         answers[[length(answers) + 1L]] <<- path
-         return(invisible(NULL))
-       }
-       if (start > length(candidates)) {
-         return(invisible(NULL))
-       }
-
-       for (index in start:length(candidates)) {
-         if (index > start &&
-             candidates[[index]] == candidates[[index - 1L]]) {
-           next
-         }
-         value <- candidates[[index]]
-         if (value > remaining) {
-           break
-         }
-
-         path <<- c(path, value)
-         search(index + 1L, remaining - value)
-         path <<- path[-length(path)]
-       }
-
-       invisible(NULL)
-     }
-
-     search(1L, target)
-     answers
+   combination_sum2 <- function(a,target){a<-sort(a);result<-list();path<-integer()
+     dfs<-function(start,remain){if(remain==0L){result[[length(result)+1L]]<<-path;return()};if(start<=length(a))for(i in start:length(a)){if(i>start&&a[[i]]==a[[i-1L]])next;if(a[[i]]>remain)break;path<<-c(path,a[[i]]);dfs(i+1L,remain-a[[i]]);path<<-path[-length(path)]}}
+     dfs(1L,target);result
    }
-
-R 的 ``(n + 1):n`` 会生成反向序列，因此必须在进入循环前显式检查后缀是否已耗尽。
-
-关键边界
---------
-
-* 多个相同值可同时使用，只要来自不同下标；
-* 某个值在同层只启动一次分支，在更深层仍可再次出现；
-* 数组全部由相同值组成时，答案至多有一种对应长度；
-* 候选大于剩余值时，排序保证后续全部不可选；
-* 每个下标只能一次，递归深度不超过数组长度。
-
-易错点
-------
-
-* 像 0039 一样递归传入 ``index``，错误复用同一下标；
-* 使用 ``index > 0`` 而不是 ``index > start``，漏掉 ``[1, 1]``；
-* 未排序便跳过相邻值或按剩余值 ``break``；
-* 保存路径时没有复制；
-* 先生成重复组合再用集合去重，隐藏重复产生的真正原因；
-* 在 R 中未处理起点越过数组末尾，错误访问反向下标序列。
-
-新增与强化知识
---------------
-
-新增
-~~~~
-
-* 同层去重删除等价决策，不同层保留重复值；
-* 数组位置的一次性使用由 ``index + 1`` 表达；
-* 去重条件必须同时依赖值相等和递归层起点；
-* 完整性可用“最早可用等值下标”证明。
-
-强化
-~~~~
-
-* 0039 与本题只改变两个局部规则，却对应不同选择语义；
-* 排序同时服务于组合规范化、重复值相邻和剩余值剪枝；
-* 回溯继续遵守选择、递归、撤销的对称结构；
-* 正确性证明继续覆盖合法性、无重复和不遗漏。
-
-最小自检
---------
-
-#. 为什么选择后递归传入 ``index + 1``？
-#. 为什么跳过条件必须是 ``index > start``？
-#. ``[1a, 1b, 2]`` 中如何生成 ``[1, 1]``？
-#. 为什么根层可以跳过 ``1b`` 启动的分支？
-#. 排序同时承担哪三项作用？
-
-答案要点
-~~~~~~~~
-
-#. 当前数组位置只能使用一次，下一层只能看其后缀。
-#. 只删除同层等价首选；更深层仍需允许后续相同值。
-#. 根层选择 ``1a``，下一层选择 ``1b``。
-#. 它能生成的数值组合都可由 ``1a`` 分支生成。
-#. 统一组合顺序、让重复值相邻、支持按剩余值停止循环。
