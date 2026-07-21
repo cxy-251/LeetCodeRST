@@ -6,261 +6,216 @@
 
 :题号: 0065
 :难度: Hard
-:主题: 字符串、有限状态扫描、语法验证
+:主题: 字符串、语法解析、有限状态机、扫描见证
 :原题: `LeetCode 0065 <https://leetcode.com/problems/valid-number/>`_
-:访问状态: Available
-:教学重点: 局部语法约束、扫描状态、指数后的数字见证、ASCII 边界
+:教学重点: 符号位置、底数数字、小数点、指数后数字见证
 
 题目重述
 --------
 
-给定一个非空字符串 ``s``，判断它是否完整表示一个合法十进制数。字符串只能由数字、正负号、
-小数点以及字母 ``e`` 或 ``E`` 组成；不能忽略前导或尾随字符，也不接受空格。
-
-合法形式由两部分组成：
-
-* 底数可以是整数或小数，前面允许一个符号；
-* 指数部分可选，以 ``e`` 或 ``E`` 开始，后面允许一个符号，但必须至少包含一个数字；
-* 小数点只能出现在底数中，并且整个底数至少包含一个数字；
-* 指数部分不允许小数点。
-
-题目保证 ``1 <= s.length <= 20``。字符集合是 ASCII 子集，因此各语言可以按字节、UTF-16 代码单元
-或字符扫描，位置与字符判断保持一致。
+判断非空字符串是否完整表示合法十进制数。底数可带一个前导符号，可为整数或小数；指数部分可选，以 ``e`` 或 ``E`` 开始，指数可带符号但必须是整数且至少包含一个数字。字符串不接受空格或其他字符。
 
 自建示例
 --------
 
-合法小数与指数
-~~~~~~~~~~~~~~
+.. code-block:: text
+
+   "-3.5E+2" -> true
+   ".8"       -> true
+   "7."       -> true
 
 .. code-block:: text
 
-   输入：s = "-3.5E+2"
-   输出：true
-   解释：底数 -3.5 合法，指数 +2 也包含数字。
+   "12e-" -> false
+   "."    -> false
+   "4-2"  -> false
+   "1e2.3"-> false
 
-小数点两侧只需一侧有数字
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-.. code-block:: text
-
-   输入：s = ".8"
-   输出：true
-
-   输入：s = "7."
-   输出：true
-
-指数缺少数字
-~~~~~~~~~~~~
-
-.. code-block:: text
-
-   输入：s = "12e-"
-   输出：false
-
-符号位置错误
-~~~~~~~~~~~~
-
-.. code-block:: text
-
-   输入：s = "4-2"
-   输出：false
-
-问题抽象
+C++ 实现
 --------
 
-不需要构造数值，也不需要处理浮点舍入。只需验证字符序列是否满足语法。扫描过程中维护四个布尔状态：
+.. code-block:: cpp
 
-``seen_digit``
-   到当前位置为止，底数或指数中是否已经见过数字。
+   #include <cctype>
+   #include <string>
 
-``seen_dot``
-   底数中是否已经见过小数点。
+   class Solution {
+   private:
+       bool parseDigits(const std::string& s, int& index) {
+           int start = index;
+           while (index < static_cast<int>(s.size()) && std::isdigit(static_cast<unsigned char>(s[index]))) ++index;
+           return index > start;
+       }
 
-``seen_exp``
-   是否已经进入指数部分。
+       bool grammarParser(const std::string& s) {
+           int index = 0, n = s.size();
+           if (index < n && (s[index] == '+' || s[index] == '-')) ++index;
+           bool integer_digits = parseDigits(s, index);
+           bool fraction_digits = false;
+           if (index < n && s[index] == '.') {
+               ++index;
+               fraction_digits = parseDigits(s, index);
+           }
+           if (!integer_digits && !fraction_digits) return false;
+           if (index < n && (s[index] == 'e' || s[index] == 'E')) {
+               ++index;
+               if (index < n && (s[index] == '+' || s[index] == '-')) ++index;
+               if (!parseDigits(s, index)) return false;
+           }
+           return index == n;
+       }
 
-``digit_after_exp``
-   若出现过指数标记，其后是否已经见过数字。没有指数时初始化为 ``true``。
+       enum class State { Start, Sign, Integer, PointOnly, Point, Fraction, Exp, ExpSign, ExpInteger, Invalid };
 
-每种字符的合法条件如下：
+       bool finiteStateMachine(const std::string& s) {
+           State state = State::Start;
+           for (char ch : s) {
+               bool digit = ch >= '0' && ch <= '9';
+               switch (state) {
+                   case State::Start:
+                       state = digit ? State::Integer : (ch=='+'||ch=='-') ? State::Sign : ch=='.' ? State::PointOnly : State::Invalid; break;
+                   case State::Sign:
+                       state = digit ? State::Integer : ch=='.' ? State::PointOnly : State::Invalid; break;
+                   case State::Integer:
+                       state = digit ? State::Integer : ch=='.' ? State::Point : (ch=='e'||ch=='E') ? State::Exp : State::Invalid; break;
+                   case State::PointOnly:
+                       state = digit ? State::Fraction : State::Invalid; break;
+                   case State::Point:
+                   case State::Fraction:
+                       state = digit ? State::Fraction : (ch=='e'||ch=='E') ? State::Exp : State::Invalid; break;
+                   case State::Exp:
+                       state = digit ? State::ExpInteger : (ch=='+'||ch=='-') ? State::ExpSign : State::Invalid; break;
+                   case State::ExpSign:
+                   case State::ExpInteger:
+                       state = digit ? State::ExpInteger : State::Invalid; break;
+                   default: return false;
+               }
+               if (state == State::Invalid) return false;
+           }
+           return state == State::Integer || state == State::Point ||
+                  state == State::Fraction || state == State::ExpInteger;
+       }
 
-* 数字始终可以读取，并更新数字见证；
-* 正负号只允许出现在字符串开头，或紧跟 ``e`` / ``E``；
-* 小数点只允许出现一次，并且必须位于指数之前；
-* ``e`` / ``E`` 只允许出现一次，且它之前必须已经有数字；进入指数后，把
-  ``digit_after_exp`` 设为 ``false``，等待后续数字恢复；
-* 其他情况立即返回 ``false``。
+       bool witnessScan(const std::string& s) {
+           bool seen_digit = false;
+           bool seen_dot = false;
+           bool seen_exp = false;
+           bool digit_after_exp = true;
+           for (int i = 0; i < static_cast<int>(s.size()); ++i) {
+               char ch = s[i];
+               if (ch >= '0' && ch <= '9') {
+                   seen_digit = true;
+                   if (seen_exp) digit_after_exp = true;
+               } else if (ch == '+' || ch == '-') {
+                   if (i > 0 && s[i - 1] != 'e' && s[i - 1] != 'E') return false;
+               } else if (ch == '.') {
+                   if (seen_dot || seen_exp) return false;
+                   seen_dot = true;
+               } else if (ch == 'e' || ch == 'E') {
+                   if (seen_exp || !seen_digit) return false;
+                   seen_exp = true;
+                   digit_after_exp = false;
+               } else {
+                   return false;
+               }
+           }
+           return seen_digit && digit_after_exp;
+       }
 
-解法选择
---------
+   public:
+       bool isNumber(std::string s) {
+           return witnessScan(s);
+       }
+   };
+
+题解
+----
+
+为什么不能依赖浮点解析库
+~~~~~~~~~~~~~~~~~~~~~~
+
+库函数可能接受空格、特殊值、十六进制、区域格式或溢出表示，其语法不一定与题目一致。题目只要求判断字符结构，不需要实际计算数值，也不存在舍入问题。
+
+数字语法如何拆分
+~~~~~~~~~~~~~~~~
+
+完整形式可以写成：
+
+.. code-block:: text
+
+   [sign] (digits[.digits] | .digits | digits.) [e/E [sign] digits]
+
+底数至少有一个数字；小数点只能位于底数；指数若出现，其前后都必须存在数字见证。
+
+四个扫描状态分别证明什么
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+``seen_digit`` 证明指数标记之前已有合法底数数字；``seen_dot`` 防止第二个小数点；``seen_exp`` 防止第二个指数并禁止指数中的点；``digit_after_exp`` 在读到指数时重置为假，只有后续数字才能恢复。
+
+字符约束为何是局部的
+~~~~~~~~~~~~~~~~~~~~
+
+符号只合法于下标 0 或紧跟 ``e/E``；点只要求此前没点且尚未进入指数；指数要求此前见过数字且尚未出现指数。每个条件只依赖当前字符、前一字符和累计见证，因此一次扫描足够。
+
+合法样例状态跟踪
+~~~~~~~~~~~~~~~~
 
 .. list-table::
    :header-rows: 1
 
-   * - 方法
-     - 时间复杂度
-     - 额外空间
-     - 定位
-   * - 单向状态扫描
-     - ``O(n)``
-     - ``O(1)``
-     - 主解法；状态直接对应语法约束
-   * - 显式确定有限自动机
-     - ``O(n)``
-     - ``O(1)``
-     - 状态表更形式化，但简单条件被拆成较多节点
-   * - 正则表达式
-     - 取决于引擎
-     - 取决于引擎
-     - 写法短，但隐藏状态与完整匹配边界
-   * - 浮点解析 API
-     - 取决于运行时
-     - 取决于运行时
-     - 各语言接受 NaN、Infinity、空白或后缀的规则不同
+   * - 字符
+     - 状态变化
+     - 作用
+   * - ``-``
+     - 位于开头
+     - 合法底数符号
+   * - ``3``
+     - ``seen_digit=true``
+     - 建立底数数字见证
+   * - ``.5``
+     - ``seen_dot=true``
+     - 合法小数部分
+   * - ``E``
+     - ``seen_exp=true``、``digit_after_exp=false``
+     - 等待指数数字
+   * - ``+2``
+     - 符号紧跟 E，随后数字恢复见证
+     - 最终接受
 
-主解法：单向状态扫描
---------------------
+指数缺数字为什么必须在结尾拒绝
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-核心不变量
+读到 ``e`` 时前缀可能完全合法，无法立即知道后面是否会出现数字。把 ``digit_after_exp`` 置为假，若扫描结束仍未恢复，就能拒绝 ``"1e"``、``"1e+"`` 等未完成形式。
+
+点两侧为何只需一侧有数字
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+``.8`` 的数字在点后，``7.`` 的数字在点前，都满足底数至少一个数字。单独的 ``.`` 没有任何数字，因此最终 ``seen_digit`` 为假。
+
+有限状态机与见证扫描的关系
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+状态机显式列出所有语法阶段，便于验证转移完整性；见证扫描把若干状态合并为布尔约束，代码更短。两者接受的终态都只有合法整数、小数和完整指数整数。
+
+为什么完整字符串都被验证
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+任何不属于数字、符号、点或指数标记的字符立即失败；每个合法字符又必须满足当前位置约束。扫描不跳过前后缀，结尾还检查底数与指数数字见证，因此只有完整合法字符串被接受。
+
+复杂度来源
 ~~~~~~~~~~
 
-处理下标 ``index`` 之前：
+三种方法都只扫描字符串常数遍，时间 ``O(n)``、额外空间 ``O(1)``。状态机的状态数固定，分段解析也只维护索引。
 
-* 已扫描前缀中的每个字符都位于其允许位置；
-* ``seen_dot`` 与 ``seen_exp`` 准确记录相应标记是否出现；
-* 若尚未出现指数，``seen_digit`` 表示底数已经拥有数字；
-* 若已经出现指数，``digit_after_exp`` 表示指数部分已经拥有数字；
-* 下标只向右移动，每个字符恰好检查一次。
-
-为什么局部条件足够
-~~~~~~~~~~~~~~~~~~
-
-合法数字语法中，字符之间的依赖只有有限种：符号依赖前一个字符，小数点依赖是否出现过点和指数，
-指数标记依赖此前数字以及是否已经出现过指数。无需保存完整前缀，只需保存这些有限状态。
-
-扫描结束时同时要求 ``seen_digit`` 与 ``digit_after_exp`` 为真：前者排除 ``"."``、``"+"``、
-``"e1"`` 等没有合法底数数字的输入；后者排除 ``"1e"`` 和 ``"1e-"`` 等指数未完成的输入。
-
-正确性依据
-~~~~~~~~~~
-
-**合法性。** 算法只在规定位置接受符号，只在底数中接受至多一个小数点，只在已有底数数字后接受
-至多一个指数标记，并要求指数后最终出现数字。因此返回 ``true`` 的字符串满足全部语法规则。
-
-**完整性。** 任意合法字符串中的数字都会进入数字分支；底数的可选符号位于开头，指数符号紧跟
-``e`` / ``E``；小数点至多一个且位于指数前；指数标记之前已有数字。每个合法字符都会通过对应条件，
-扫描最终拥有底数数字和指数数字见证，因此算法不会拒绝合法字符串。
-
-**终止性。** 下标每轮增加一次，输入长度有限，扫描必然结束。
-
-复杂度
-~~~~~~
-
-设字符串长度为 ``n``：
-
-* 每个字符执行常数次分类与状态更新，时间复杂度为 ``O(n)``；
-* 只维护固定数量的布尔值和下标，算法额外空间为 ``O(1)``；
-* Julia 和 R 的实现先取得 ASCII 码点或字节视图，需要 ``O(n)`` 辅助存储；其他实现直接扫描原字符串；
-* 返回值是标量布尔值，不存在与输入规模相关的输出空间。
-
-核心语言实现
-------------
+九语言实现
+----------
 
 C
 ~
 
 .. code-block:: c
 
-   #include <stdbool.h>
-   #include <stddef.h>
-
-   bool isNumber(char *s) {
-       bool seen_digit = false;
-       bool seen_dot = false;
-       bool seen_exp = false;
-       bool digit_after_exp = true;
-
-       for (size_t index = 0; s[index] != '\0'; ++index) {
-           const char current = s[index];
-
-           if (current >= '0' && current <= '9') {
-               seen_digit = true;
-               if (seen_exp) {
-                   digit_after_exp = true;
-               }
-           } else if (current == '+' || current == '-') {
-               // 符号只能位于开头，或紧跟指数标记。
-               if (index != 0 && s[index - 1] != 'e' &&
-                   s[index - 1] != 'E') {
-                   return false;
-               }
-           } else if (current == '.') {
-               if (seen_dot || seen_exp) {
-                   return false;
-               }
-               seen_dot = true;
-           } else if (current == 'e' || current == 'E') {
-               if (seen_exp || !seen_digit) {
-                   return false;
-               }
-               seen_exp = true;
-               digit_after_exp = false;
-           } else {
-               return false;
-           }
-       }
-
-       return seen_digit && digit_after_exp;
-   }
-
-C++
-~~~
-
-.. code-block:: cpp
-
-   #include <string>
-
-   class Solution {
-   public:
-       bool isNumber(const std::string& s) {
-           bool seenDigit = false;
-           bool seenDot = false;
-           bool seenExp = false;
-           bool digitAfterExp = true;
-
-           for (std::size_t index = 0; index < s.size(); ++index) {
-               const char current = s[index];
-
-               if (current >= '0' && current <= '9') {
-                   seenDigit = true;
-                   if (seenExp) {
-                       digitAfterExp = true;
-                   }
-               } else if (current == '+' || current == '-') {
-                   if (index != 0 && s[index - 1] != 'e' &&
-                       s[index - 1] != 'E') {
-                       return false;
-                   }
-               } else if (current == '.') {
-                   if (seenDot || seenExp) {
-                       return false;
-                   }
-                   seenDot = true;
-               } else if (current == 'e' || current == 'E') {
-                   if (seenExp || !seenDigit) {
-                       return false;
-                   }
-                   seenExp = true;
-                   digitAfterExp = false;
-               } else {
-                   return false;
-               }
-           }
-
-           return seenDigit && digitAfterExp;
-       }
-   };
+   bool isNumber(char*s){bool digit=false,dot=false,exp=false,after=true;for(int i=0;s[i];i++){char ch=s[i];if(ch>='0'&&ch<='9'){digit=true;if(exp)after=true;}else if(ch=='+'||ch=='-'){if(i>0&&s[i-1]!='e'&&s[i-1]!='E')return false;}else if(ch=='.'){if(dot||exp)return false;dot=true;}else if(ch=='e'||ch=='E'){if(exp||!digit)return false;exp=true;after=false;}else return false;}return digit&&after;}
 
 Python
 ~~~~~~
@@ -269,420 +224,69 @@ Python
 
    class Solution:
        def isNumber(self, s: str) -> bool:
-           seen_digit = False
-           seen_dot = False
-           seen_exp = False
-           digit_after_exp = True
-
-           for index, current in enumerate(s):
-               if "0" <= current <= "9":
-                   seen_digit = True
-                   if seen_exp:
-                       digit_after_exp = True
-               elif current in "+-":
-                   if index != 0 and s[index - 1] not in "eE":
-                       return False
-               elif current == ".":
-                   if seen_dot or seen_exp:
-                       return False
-                   seen_dot = True
-               elif current in "eE":
-                   if seen_exp or not seen_digit:
-                       return False
-                   seen_exp = True
-                   digit_after_exp = False
-               else:
-                   return False
-
-           return seen_digit and digit_after_exp
+           digit = dot = exp = False; after = True
+           for i, ch in enumerate(s):
+               if ch.isdigit(): digit = True; after = True if exp else after
+               elif ch in "+-":
+                   if i > 0 and s[i-1] not in "eE": return False
+               elif ch == ".":
+                   if dot or exp: return False
+                   dot = True
+               elif ch in "eE":
+                   if exp or not digit: return False
+                   exp, after = True, False
+               else: return False
+           return digit and after
 
 Java
 ~~~~
 
 .. code-block:: java
 
-   class Solution {
-       public boolean isNumber(String s) {
-           boolean seenDigit = false;
-           boolean seenDot = false;
-           boolean seenExp = false;
-           boolean digitAfterExp = true;
-
-           for (int index = 0; index < s.length(); ++index) {
-               char current = s.charAt(index);
-
-               if (current >= '0' && current <= '9') {
-                   seenDigit = true;
-                   if (seenExp) {
-                       digitAfterExp = true;
-                   }
-               } else if (current == '+' || current == '-') {
-                   if (index != 0 && s.charAt(index - 1) != 'e' &&
-                       s.charAt(index - 1) != 'E') {
-                       return false;
-                   }
-               } else if (current == '.') {
-                   if (seenDot || seenExp) {
-                       return false;
-                   }
-                   seenDot = true;
-               } else if (current == 'e' || current == 'E') {
-                   if (seenExp || !seenDigit) {
-                       return false;
-                   }
-                   seenExp = true;
-                   digitAfterExp = false;
-               } else {
-                   return false;
-               }
-           }
-
-           return seenDigit && digitAfterExp;
-       }
-   }
+   class Solution {public boolean isNumber(String s){boolean digit=false,dot=false,exp=false,after=true;for(int i=0;i<s.length();i++){char ch=s.charAt(i);if(Character.isDigit(ch)){digit=true;if(exp)after=true;}else if(ch=='+'||ch=='-'){if(i>0&&s.charAt(i-1)!='e'&&s.charAt(i-1)!='E')return false;}else if(ch=='.'){if(dot||exp)return false;dot=true;}else if(ch=='e'||ch=='E'){if(exp||!digit)return false;exp=true;after=false;}else return false;}return digit&&after;}}
 
 Rust
 ~~~~
 
 .. code-block:: rust
 
-   impl Solution {
-       pub fn is_number(s: String) -> bool {
-           let bytes = s.as_bytes();
-           let mut seen_digit = false;
-           let mut seen_dot = false;
-           let mut seen_exp = false;
-           let mut digit_after_exp = true;
-
-           for (index, &current) in bytes.iter().enumerate() {
-               match current {
-                   b'0'..=b'9' => {
-                       seen_digit = true;
-                       if seen_exp {
-                           digit_after_exp = true;
-                       }
-                   }
-                   b'+' | b'-' => {
-                       if index != 0 && bytes[index - 1] != b'e' &&
-                           bytes[index - 1] != b'E'
-                       {
-                           return false;
-                       }
-                   }
-                   b'.' => {
-                       if seen_dot || seen_exp {
-                           return false;
-                       }
-                       seen_dot = true;
-                   }
-                   b'e' | b'E' => {
-                       if seen_exp || !seen_digit {
-                           return false;
-                       }
-                       seen_exp = true;
-                       digit_after_exp = false;
-                   }
-                   _ => return false,
-               }
-           }
-
-           seen_digit && digit_after_exp
-       }
-   }
+   impl Solution {pub fn is_number(s:String)->bool{let b=s.as_bytes();let(mut digit,mut dot,mut exp,mut after)=(false,false,false,true);for(i,&ch)in b.iter().enumerate(){if ch.is_ascii_digit(){digit=true;if exp{after=true}}else if ch==b'+'||ch==b'-'{if i>0&&b[i-1]!=b'e'&&b[i-1]!=b'E'{return false}}else if ch==b'.'{if dot||exp{return false}dot=true}else if ch==b'e'||ch==b'E'{if exp||!digit{return false}exp=true;after=false}else{return false}}digit&&after}}
 
 Go
 ~~
 
 .. code-block:: go
 
-   func isNumber(s string) bool {
-       seenDigit := false
-       seenDot := false
-       seenExp := false
-       digitAfterExp := true
-
-       for index := 0; index < len(s); index++ {
-           current := s[index]
-
-           if current >= '0' && current <= '9' {
-               seenDigit = true
-               if seenExp {
-                   digitAfterExp = true
-               }
-           } else if current == '+' || current == '-' {
-               if index != 0 && s[index-1] != 'e' && s[index-1] != 'E' {
-                   return false
-               }
-           } else if current == '.' {
-               if seenDot || seenExp {
-                   return false
-               }
-               seenDot = true
-           } else if current == 'e' || current == 'E' {
-               if seenExp || !seenDigit {
-                   return false
-               }
-               seenExp = true
-               digitAfterExp = false
-           } else {
-               return false
-           }
-       }
-
-       return seenDigit && digitAfterExp
-   }
+   func isNumber(s string)bool{digit,dot,exp,after:=false,false,false,true;for i:=0;i<len(s);i++{ch:=s[i];if ch>='0'&&ch<='9'{digit=true;if exp{after=true}}else if ch=='+'||ch=='-'{if i>0&&s[i-1]!='e'&&s[i-1]!='E'{return false}}else if ch=='.'{if dot||exp{return false};dot=true}else if ch=='e'||ch=='E'{if exp||!digit{return false};exp,after=true,false}else{return false}};return digit&&after}
 
 TypeScript
 ~~~~~~~~~~
 
 .. code-block:: typescript
 
-   function isNumber(s: string): boolean {
-       let seenDigit = false;
-       let seenDot = false;
-       let seenExp = false;
-       let digitAfterExp = true;
-
-       for (let index = 0; index < s.length; index += 1) {
-           const current = s[index];
-
-           if (current >= "0" && current <= "9") {
-               seenDigit = true;
-               if (seenExp) {
-                   digitAfterExp = true;
-               }
-           } else if (current === "+" || current === "-") {
-               if (index !== 0 && s[index - 1] !== "e" &&
-                   s[index - 1] !== "E") {
-                   return false;
-               }
-           } else if (current === ".") {
-               if (seenDot || seenExp) {
-                   return false;
-               }
-               seenDot = true;
-           } else if (current === "e" || current === "E") {
-               if (seenExp || !seenDigit) {
-                   return false;
-               }
-               seenExp = true;
-               digitAfterExp = false;
-           } else {
-               return false;
-           }
-       }
-
-       return seenDigit && digitAfterExp;
-   }
+   function isNumber(s:string):boolean{let digit=false,dot=false,exp=false,after=true;for(let i=0;i<s.length;i++){const ch=s[i];if(ch>="0"&&ch<="9"){digit=true;if(exp)after=true;}else if(ch==="+"||ch==="-"){if(i>0&&s[i-1]!=="e"&&s[i-1]!=="E")return false;}else if(ch==="."){if(dot||exp)return false;dot=true;}else if(ch==="e"||ch==="E"){if(exp||!digit)return false;exp=true;after=false;}else return false;}return digit&&after;}
 
 C#
 ~~
 
 .. code-block:: csharp
 
-   public class Solution {
-       public bool IsNumber(string s) {
-           bool seenDigit = false;
-           bool seenDot = false;
-           bool seenExp = false;
-           bool digitAfterExp = true;
-
-           for (int index = 0; index < s.Length; ++index) {
-               char current = s[index];
-
-               if (current >= '0' && current <= '9') {
-                   seenDigit = true;
-                   if (seenExp) {
-                       digitAfterExp = true;
-                   }
-               } else if (current == '+' || current == '-') {
-                   if (index != 0 && s[index - 1] != 'e' &&
-                       s[index - 1] != 'E') {
-                       return false;
-                   }
-               } else if (current == '.') {
-                   if (seenDot || seenExp) {
-                       return false;
-                   }
-                   seenDot = true;
-               } else if (current == 'e' || current == 'E') {
-                   if (seenExp || !seenDigit) {
-                       return false;
-                   }
-                   seenExp = true;
-                   digitAfterExp = false;
-               } else {
-                   return false;
-               }
-           }
-
-           return seenDigit && digitAfterExp;
-       }
-   }
+   public class Solution {public bool IsNumber(string s){bool digit=false,dot=false,exp=false,after=true;for(int i=0;i<s.Length;i++){char ch=s[i];if(char.IsDigit(ch)){digit=true;if(exp)after=true;}else if(ch=='+'||ch=='-'){if(i>0&&s[i-1]!='e'&&s[i-1]!='E')return false;}else if(ch=='.'){if(dot||exp)return false;dot=true;}else if(ch=='e'||ch=='E'){if(exp||!digit)return false;exp=true;after=false;}else return false;}return digit&&after;}}
 
 Julia
 ~~~~~
 
 .. code-block:: julia
 
-   function isNumber(s::String)::Bool
-       bytes = codeunits(s)
-       seen_digit = false
-       seen_dot = false
-       seen_exp = false
-       digit_after_exp = true
-
-       for index in eachindex(bytes)
-           current = bytes[index]
-
-           if UInt8('0') <= current <= UInt8('9')
-               seen_digit = true
-               if seen_exp
-                   digit_after_exp = true
-               end
-           elseif current == UInt8('+') || current == UInt8('-')
-               if index != firstindex(bytes) &&
-                   bytes[index - 1] != UInt8('e') &&
-                   bytes[index - 1] != UInt8('E')
-                   return false
-               end
-           elseif current == UInt8('.')
-               if seen_dot || seen_exp
-                   return false
-               end
-               seen_dot = true
-           elseif current == UInt8('e') || current == UInt8('E')
-               if seen_exp || !seen_digit
-                   return false
-               end
-               seen_exp = true
-               digit_after_exp = false
-           else
-               return false
-           end
-       end
-
-       return seen_digit && digit_after_exp
+   function is_number(s::String)
+       chars=collect(s);digit=false;dot=false;exp=false;after=true
+       for i in eachindex(chars);ch=chars[i];if isdigit(ch);digit=true;exp&&(after=true);elseif ch=='+'||ch=='-';i>1&&!(chars[i-1] in ('e','E'))&&return false;elseif ch=='.';(dot||exp)&&return false;dot=true;elseif ch=='e'||ch=='E';(exp||!digit)&&return false;exp=true;after=false;else;return false;end;end
+       digit&&after
    end
-
-``codeunits`` 返回字符串的 UTF-8 代码单元视图；题目字符域是 ASCII，因此每个语法字符占一个字节，
-``index - 1`` 不会落入多字节字符内部。
 
 R
 ~
 
 .. code-block:: r
 
-   isNumber <- function(s) {
-     bytes <- utf8ToInt(s)
-     seen_digit <- FALSE
-     seen_dot <- FALSE
-     seen_exp <- FALSE
-     digit_after_exp <- TRUE
-
-     for (index in seq_along(bytes)) {
-       current <- bytes[index]
-
-       if (current >= utf8ToInt("0") && current <= utf8ToInt("9")) {
-         seen_digit <- TRUE
-         if (seen_exp) {
-           digit_after_exp <- TRUE
-         }
-       } else if (current == utf8ToInt("+") || current == utf8ToInt("-")) {
-         if (index != 1L && bytes[index - 1L] != utf8ToInt("e") &&
-             bytes[index - 1L] != utf8ToInt("E")) {
-           return(FALSE)
-         }
-       } else if (current == utf8ToInt(".")) {
-         if (seen_dot || seen_exp) {
-           return(FALSE)
-         }
-         seen_dot <- TRUE
-       } else if (current == utf8ToInt("e") || current == utf8ToInt("E")) {
-         if (seen_exp || !seen_digit) {
-           return(FALSE)
-         }
-         seen_exp <- TRUE
-         digit_after_exp <- FALSE
-       } else {
-         return(FALSE)
-       }
-     }
-
-     seen_digit && digit_after_exp
-   }
-
-R 的 ``utf8ToInt`` 创建码点向量，因此空间为 ``O(n)``。输入只含 ASCII，码点判断与其他语言的字节判断
-等价。
-
-对照解法：显式有限状态机
-------------------------
-
-可以把“开始、符号、整数、小数点、小数、指数、指数符号、指数数字”建成显式状态表，并按字符类别转移。
-该方法适合语法继续扩展时统一管理；当前规则使用四个布尔状态更紧凑，且每条约束直接出现在代码中。
-
-验证计划与证据
---------------
-
-* 正常用例覆盖整数、小数、带符号底数和带符号指数；
-* 边界用例覆盖 ``"."``、``"3."``、``".3"``、``"1e"``、``"1e+"``、重复点和重复指数；
-* Python 使用独立正则完整匹配器枚举短字符串对拍；
-* C、C++、Java、Go 和 TypeScript 执行固定用例；
-* Rust、C#、Julia、R 在缺少运行时时进行接口、索引与状态静态检查。
-
-关键边界
---------
-
-* ``"+"`` 和 ``"."`` 都没有数字，必须拒绝；
-* ``"3."`` 与 ``".3"`` 合法，小数点两侧不要求同时有数字；
-* 指数之前必须已有数字，指数之后也必须最终出现数字；
-* 指数符号只能紧跟 ``e`` / ``E``，不能出现在指数数字之间；
-* 输入不包含可忽略空格，算法要求完整消费整个字符串。
-
-易错点
-------
-
-* 只记录“见过数字”却不重置指数后的数字见证，会错误接受 ``"1e"``；
-* 允许小数点出现在指数后，会错误接受 ``"1e2.3"``；
-* 用语言浮点解析 API 代替语法验证，可能接受题目之外的表示；
-* 正则表达式若缺少完整匹配锚点，会把非法后缀忽略。
-
-本题新增知识
-------------
-
-* 用有限布尔状态表达数字字面量语法；
-* 指数标记将“后续必须出现数字”转化为待满足见证；
-* 从局部字符位置约束证明完整语法。
-
-本题强化知识
-------------
-
-* ASCII 字符域使字节、UTF-16 代码单元和码点扫描等价；
-* 单向扫描的不变量与终止性；
-* 不使用通用解析 API 代替题目专属契约。
-
-关联题目
---------
-
-* `0008. String to Integer (atoi) <0008-string-to-integer-atoi.rst>`_：两题都按阶段扫描数字字符串；
-  0008 构造并钳制整数，本题只验证更丰富的语法。
-* `0058. Length of Last Word <0058-length-of-last-word.rst>`_：两题都依赖精确 ASCII 字符契约，
-  但本题需要维护跨字符的语法状态。
-
-最小自检
---------
-
-#. 为什么 ``seen_digit`` 不能替代 ``digit_after_exp``？
-#. 小数点为什么不允许出现在指数之后？
-#. 符号的两个合法位置分别是什么？
-#. 哪些语言实现因预先转换字符序列而使用 ``O(n)`` 空间？
-#. 哪些验证属于运行、对拍和静态检查？
-
-答案要点
-~~~~~~~~
-
-#. ``"1e"`` 已见过底数数字，但指数部分没有数字，因此必须单独维护指数后的数字见证。
-#. 指数被定义为整数，小数点只属于底数。
-#. 字符串开头，以及紧跟 ``e`` / ``E``。
-#. Julia 的 ``codeunits`` 是视图，不复制；R 的 ``utf8ToInt`` 创建 ``O(n)`` 向量。
-#. 可用运行时执行固定用例，Python 与独立正则对拍，缺失运行时的语言只做静态检查。
+   is_number <- function(s){ch<-strsplit(s,"",fixed=TRUE)[[1L]];digit<-FALSE;dot<-FALSE;exp<-FALSE;after<-TRUE;for(i in seq_along(ch)){x<-ch[[i]];if(x>="0"&&x<="9"){digit<-TRUE;if(exp)after<-TRUE}else if(x%in%c("+","-")){if(i>1L&&!(ch[[i-1L]]%in%c("e","E")))return(FALSE)}else if(x=="."){if(dot||exp)return(FALSE);dot<-TRUE}else if(x%in%c("e","E")){if(exp||!digit)return(FALSE);exp<-TRUE;after<-FALSE}else return(FALSE)};digit&&after}
