@@ -8,343 +8,69 @@
 :难度: Hard
 :主题: 单链表、最小堆、K 路归并、分治
 :原题: `LeetCode 0023 <https://leetcode.com/problems/merge-k-sorted-lists/>`_
-:访问状态: Available
-:教学重点: 候选头节点集合、堆不变量、节点复用、总节点数复杂度、K 路与双路归并关系
+:教学重点: 当前头节点候选集、堆顶全局最小性、后继入堆、归并树、总节点数复杂度
 
 题目重述
 --------
 
-给定 ``k`` 条按非递减顺序排列的单链表，把所有节点合并为一条同样按非递减顺序排列的
-链表并返回头节点。
-
-设所有链表的节点总数为 ``N``。主解法使用最小堆保存每条尚未耗尽链表的当前头节点，每次
-取出全局最小节点接到结果末尾，再把该节点原链表中的后继加入堆。
-
-主解法复用输入节点，只重新连接 ``next``，不会为每个值创建新节点。
+给定 ``k`` 条按非递减顺序排列的单链表，合并全部节点并返回一条非递减链表。主解法复用输入节点。设总节点数为
+``N``，空链表不进入候选集合。
 
 自建示例
 --------
 
-三路交错
-~~~~~~~~
-
 .. code-block:: text
 
-   lists[0]：1 -> 4 -> 7
-   lists[1]：2 -> 5 -> 8
-   lists[2]：3 -> 6 -> 9
+   L0: 1 -> 4 -> 7
+   L1: 2 -> 5 -> 8
+   L2: 3 -> 6 -> 9
+   初始候选: 1, 2, 3
+   弹出顺序: 1, 2, 3, 4, 5, 6, 7, 8, 9
 
-   初始堆候选：[1, 2, 3]
-   依次弹出：1, 2, 3, 4, 5, 6, 7, 8, 9
-   输出：1 -> 2 -> 3 -> 4 -> 5 -> 6 -> 7 -> 8 -> 9
+包含空链表时只加入非空头节点；相等值可按任意来源顺序输出，题目只要求值有序。
 
-包含空链表
-~~~~~~~~~~
-
-.. code-block:: text
-
-   lists：[空, 1 -> 2, 空, 0 -> 3]
-   初始堆只放入非空头节点 1 和 0
-   输出：0 -> 1 -> 2 -> 3
-
-相等值来自多条链表
-~~~~~~~~~~~~~~~~~~
-
-.. code-block:: text
-
-   lists[0]：1 -> 1
-   lists[1]：1
-   lists[2]：1 -> 2
-   输出值：1 -> 1 -> 1 -> 1 -> 2
-
-题目只要求值有序。若堆比较只看节点值，相等节点之间的来源顺序可以任意。
-
-只有一条链表
-~~~~~~~~~~~~
-
-.. code-block:: text
-
-   lists：[2 -> 4 -> 6]
-   输出：2 -> 4 -> 6
-
-算法仍可执行；每次弹出一个节点后加入它的后继，堆大小始终不超过 1。
-
-问题抽象
+C++ 实现
 --------
-
-每条链表内部有序，所以一条链表尚未输出节点中的最小值一定是它的当前头节点。全局下一个
-最小节点因此只可能出现在最多 ``k`` 个当前头节点中。
-
-问题可以抽象为重复执行：
-
-#. 在所有非空链表的当前头节点中找最小值；
-#. 输出该节点；
-#. 用它的后继替换该链表的候选头节点。
-
-若每次线性扫描 ``k`` 个头节点，时间复杂度为 ``O(Nk)``。最小堆把“找最小值”和“加入新
-候选”都降为 ``O(log k)``，得到 ``O(N log k)``。
-
-解法选择
---------
-
-.. list-table::
-   :header-rows: 1
-
-   * - 方法
-     - 时间复杂度
-     - 额外空间
-     - 取舍
-   * - 当前头节点最小堆
-     - ``O(N log k)``
-     - ``O(k)``
-     - 主解法；在线输出，候选集合语义直接
-   * - 两两分治归并
-     - ``O(N log k)``
-     - ``O(log k)`` 递归栈或 ``O(1)`` 迭代状态
-     - 复用 0021；常数小，适合强调归并树
-   * - 每次扫描所有链表头
-     - ``O(Nk)``
-     - ``O(k)`` 或 ``O(1)``
-     - 实现简单，``k`` 较大时重复比较过多
-   * - 收集所有值后排序重建
-     - ``O(N log N)``
-     - ``O(N)``
-     - 丢失每条输入链表已排序的信息，并创建不必要节点
-
-主解法：最小堆维护当前头节点
-----------------------------
-
-状态含义
-~~~~~~~~
-
-算法维护：
-
-* ``heap``：每条尚未耗尽链表至多一个当前头节点；
-* ``dummy``：结果链表前的固定哑节点；
-* ``tail``：结果链表最后一个已确认节点。
-
-初始化时，把每条非空链表的头节点放入堆。之后重复：
-
-.. code-block:: text
-
-   node = 弹出堆顶最小节点
-   next_node = node.next
-   tail.next = node
-   tail = node
-   若 next_node 非空：压入堆
-
-保存 ``next_node`` 或先把它从 ``node`` 中取出很重要，因为接入结果时会改写节点链接，不能
-丢失原链表剩余部分。
-
-为什么堆中每条链表只需一个节点
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-一条链表内部有序。若当前头节点为 ``x``，它后面的任何节点都不小于 ``x``。在 ``x`` 尚未
-输出前，后继不可能成为全局最小值，因此无需提前加入堆。
-
-当 ``x`` 被弹出后，它的后继才成为该链表新的最小未处理节点。此时把后继加入堆，候选集合
-重新覆盖所有尚未耗尽链表。
-
-为什么堆顶是全局最小未处理节点
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-对每条非空链表，堆保存其最小未处理节点。任意未处理节点都位于某条链表中，并且不小于该
-链表保存在堆中的头节点。
-
-堆顶又是所有候选头节点中的最小者，所以没有任何未处理节点能比堆顶更小。把堆顶接到结果
-尾部不会破坏有序性。
-
-堆大小为什么不超过 ``k``
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-每条链表在堆中至多贡献一个节点。弹出一个节点后，最多加入同一条链表的一个后继，所以堆中
-候选数量始终等于尚未耗尽链表数，最大为 ``k``。
-
-这也是每次堆操作为 ``O(log k)`` 而不是 ``O(log N)`` 的原因。
-
-节点复用与链接安全
-~~~~~~~~~~~~~~~~~~
-
-主解法直接把弹出的节点接到结果链表。对拥有显式所有权的 Rust，应先执行：
-
-.. code-block:: text
-
-   next = node.next.take()
-   把 node 接到结果
-   把 next 加入堆
-
-``take`` 让弹出节点暂时成为独立节点，避免一个节点同时通过原链表和结果链表被拥有。
-
-对 C、C++、Java、Go 等引用或指针实现，可以先保存 ``next = node->next``，再把节点接到结果。
-最终每个节点只出现一次，结果尾部链接会覆盖旧链接。为使终点明确，循环结束后可以设置
-``tail.next = null``；在正确输入中最后节点原本也没有后继。
-
-核心不变量
-~~~~~~~~~~
-
-每次弹出堆顶前：
-
-* 结果链表从 ``dummy.next`` 到 ``tail`` 已经按非递减顺序排列；
-* 结果恰好包含所有已弹出的节点，每个节点出现一次；
-* 每条尚未耗尽链表的最小未处理节点恰好在堆中一次；
-* 堆外的任何未处理节点都不小于其所在链表的堆中候选；
-* ``tail`` 的值不大于堆中任何候选值；
-* 堆大小不超过 ``k``。
-
-正确性依据
-~~~~~~~~~~
-
-初始化时结果为空，每条非空链表的头节点进入堆。头节点是该链表最小节点，因此候选覆盖和
-堆大小不变量成立。
-
-假设某轮前不变量成立。堆顶是所有候选头节点中的最小值；每个其他未处理节点又不小于它所在
-链表的候选，因此堆顶是全局最小未处理节点。把它接到结果尾部保持结果有序，也不会遗漏更小
-节点。
-
-弹出节点后，若它存在后继，该后继是原链表新的最小未处理节点，将其加入堆即可恢复候选覆盖；
-若没有后继，该链表已经耗尽，不再需要候选。节点从堆转移到结果恰好一次，因此节点集合和
-唯一性不变量保持。
-
-堆为空时所有链表都已耗尽，否则某条非空链表应当仍有候选在堆中。于是所有 ``N`` 个节点都
-已按全局非递减顺序接入结果，算法正确。
-
-复杂度
-~~~~~~
-
-设链表数量为 ``k``，总节点数为 ``N``：
-
-* 初始化最多压入 ``k`` 个头节点，时间为 ``O(k log k)``，也可用建堆降为 ``O(k)``；
-* 每个节点恰好弹出一次，并且除各链表末节点外会触发一次后继压入；
-* 堆大小始终不超过 ``k``，每次压入或弹出为 ``O(log k)``；
-* 总时间复杂度为 ``O(N log k)``；
-* 堆额外空间为 ``O(k)``，迭代结果链接只需 ``O(1)`` 其他指针；
-* 当 ``k = 0`` 或 ``N = 0`` 时直接返回空链表。
-
-核心语言实现
-------------
-
-以下实现默认平台提供 ``ListNode``。堆中只比较节点值；相等值无需稳定来源顺序。
-
-C
-~
-
-.. code-block:: c
-
-   #include <stdlib.h>
-
-   static void heap_swap(struct ListNode** a, struct ListNode** b) {
-       struct ListNode* temp = *a;
-       *a = *b;
-       *b = temp;
-   }
-
-   static void heap_push(
-       struct ListNode** heap,
-       int* size,
-       struct ListNode* node
-   ) {
-       int index = (*size)++;
-       heap[index] = node;
-
-       while (index > 0) {
-           int parent = (index - 1) / 2;
-           if (heap[parent]->val <= heap[index]->val) {
-               break;
-           }
-           heap_swap(&heap[parent], &heap[index]);
-           index = parent;
-       }
-   }
-
-   static struct ListNode* heap_pop(
-       struct ListNode** heap,
-       int* size
-   ) {
-       struct ListNode* root = heap[0];
-       heap[0] = heap[--(*size)];
-       int index = 0;
-
-       while (1) {
-           int left = index * 2 + 1;
-           int right = left + 1;
-           int smallest = index;
-
-           if (left < *size &&
-               heap[left]->val < heap[smallest]->val) {
-               smallest = left;
-           }
-           if (right < *size &&
-               heap[right]->val < heap[smallest]->val) {
-               smallest = right;
-           }
-           if (smallest == index) {
-               break;
-           }
-           heap_swap(&heap[index], &heap[smallest]);
-           index = smallest;
-       }
-       return root;
-   }
-
-   struct ListNode* mergeKLists(
-       struct ListNode** lists,
-       int listsSize
-   ) {
-       if (listsSize == 0) {
-           return NULL;
-       }
-
-       struct ListNode** heap = malloc(
-           sizeof(struct ListNode*) * listsSize
-       );
-       int heap_size = 0;
-       for (int i = 0; i < listsSize; ++i) {
-           if (lists[i] != NULL) {
-               heap_push(heap, &heap_size, lists[i]);
-           }
-       }
-
-       struct ListNode dummy = {0, NULL};
-       struct ListNode* tail = &dummy;
-
-       while (heap_size > 0) {
-           struct ListNode* node = heap_pop(heap, &heap_size);
-           struct ListNode* next = node->next;
-           tail->next = node;
-           tail = node;
-
-           if (next != NULL) {
-               heap_push(heap, &heap_size, next);
-           }
-       }
-
-       tail->next = NULL;
-       free(heap);
-       return dummy.next;
-   }
-
-C++
-~~~
 
 .. code-block:: cpp
 
-   class Solution {
-   public:
-       ListNode* mergeKLists(vector<ListNode*>& lists) {
-           auto greater_node = [](ListNode* left, ListNode* right) {
-               return left->val > right->val;
-           };
-           priority_queue<
-               ListNode*,
-               vector<ListNode*>,
-               decltype(greater_node)
-           > heap(greater_node);
+   #include <queue>
+   #include <vector>
 
-           for (ListNode* head : lists) {
-               if (head != nullptr) {
-                   heap.push(head);
+   class Solution {
+   private:
+       ListNode* mergeTwo(ListNode* a, ListNode* b) {
+           ListNode dummy(0);
+           ListNode* tail = &dummy;
+           while (a != nullptr && b != nullptr) {
+               if (a->val <= b->val) { tail->next = a; a = a->next; }
+               else { tail->next = b; b = b->next; }
+               tail = tail->next;
+           }
+           tail->next = a != nullptr ? a : b;
+           return dummy.next;
+       }
+
+       ListNode* sequential(std::vector<ListNode*> lists) {
+           ListNode* merged = nullptr;
+           for (ListNode* head : lists) merged = mergeTwo(merged, head);
+           return merged;
+       }
+
+       ListNode* divideAndConquer(std::vector<ListNode*> lists) {
+           if (lists.empty()) return nullptr;
+           for (int interval = 1; interval < static_cast<int>(lists.size()); interval *= 2) {
+               for (int i = 0; i + interval < static_cast<int>(lists.size()); i += 2 * interval) {
+                   lists[i] = mergeTwo(lists[i], lists[i + interval]);
                }
            }
+           return lists[0];
+       }
+
+       ListNode* heapMerge(const std::vector<ListNode*>& lists) {
+           auto greater = [](ListNode* a, ListNode* b) { return a->val > b->val; };
+           std::priority_queue<ListNode*, std::vector<ListNode*>, decltype(greater)> heap(greater);
+           for (ListNode* head : lists) if (head != nullptr) heap.push(head);
 
            ListNode dummy(0);
            ListNode* tail = &dummy;
@@ -352,57 +78,135 @@ C++
                ListNode* node = heap.top();
                heap.pop();
                ListNode* next = node->next;
-
                tail->next = node;
                tail = node;
-               if (next != nullptr) {
-                   heap.push(next);
-               }
+               if (next != nullptr) heap.push(next);
            }
-
            tail->next = nullptr;
            return dummy.next;
        }
+
+   public:
+       ListNode* mergeKLists(std::vector<ListNode*>& lists) {
+           return heapMerge(lists);
+       }
    };
+
+题解
+----
+
+顺序两两归并为什么会重复搬运早期节点
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+先合并前两条，再把结果与第三条合并，会让早期进入结果的节点在后续每次归并中再次被扫描。链表长度相近时，最坏
+时间可接近 ``O(Nk)``。
+
+归并树如何让每个节点只经历对数层
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+把链表两两配对形成归并树，每层所有归并处理的节点总数为 ``N``，层数为 ``ceil(log2 k)``，因此时间为
+``O(N log k)``。它直接复用 0021 的双路归并。
+
+为什么全局下一个节点只需在 k 个表头中寻找
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+每条链表内部有序，尚未输出部分的最小值必然是当前头节点。任何更深节点都不小于本链表头，所以全局最小未处理
+节点一定属于最多 ``k`` 个当前头节点。最小堆正好维护这个候选集合。
+
+堆顶弹出与后继入堆如何恢复候选覆盖
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+弹出某条链表的头节点后，它的后继才成为该链表新的最小未处理节点。提前把后继放入堆没有必要；不把后继加入又会
+失去该链表候选。每次弹出一个节点、加入至多一个后继，使每条未耗尽链表在堆中始终恰有一个候选。
+
+主解法状态演化
+~~~~~~~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+
+   * - 弹出
+     - 加入后继
+     - 堆中候选值
+     - 结果尾部
+   * - 1
+     - 4
+     - 2, 3, 4
+     - 1
+   * - 2
+     - 5
+     - 3, 4, 5
+     - 2
+   * - 3
+     - 6
+     - 4, 5, 6
+     - 3
+   * - 4
+     - 7
+     - 5, 6, 7
+     - 4
+
+为什么堆顶是全局最小未处理节点
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+堆保存每条链表的最小未处理节点。任意未处理节点都不小于其所在链表的候选，而堆顶又不大于所有候选，因此没有
+任何未处理节点小于堆顶。把堆顶追加到结果不会破坏非递减顺序。
+
+节点链接与所有权
+~~~~~~~~~~~~~~~~
+
+在复用节点时先保存 ``next``，再把当前节点接到结果尾部，避免丢失原链表后缀。Rust 实现让堆只保存链表编号与
+头值，实际节点仍在 ``lists[index]`` 中；弹出编号后用 ``take`` 取得节点所有权并放入结果。
+
+复杂度来源
+~~~~~~~~~~
+
+每个节点恰好入堆、出堆一次，堆大小不超过 ``k``，时间 ``O(N log k)``，堆空间 ``O(k)``。分治方法时间相同；
+顺序归并最坏 ``O(Nk)``。输出链表复用原节点，不计为额外空间。
+
+九语言实现
+----------
+
+C
+~
+
+.. code-block:: c
+
+   static void swap_node(struct ListNode** a, struct ListNode** b) { struct ListNode* t=*a; *a=*b; *b=t; }
+   static void push(struct ListNode** h,int* n,struct ListNode* x) {
+       int i=(*n)++; h[i]=x;
+       while(i>0){int p=(i-1)/2;if(h[p]->val<=h[i]->val)break;swap_node(&h[p],&h[i]);i=p;}
+   }
+   static struct ListNode* pop(struct ListNode** h,int* n) {
+       struct ListNode* root=h[0]; h[0]=h[--(*n)]; int i=0;
+       for(;;){int l=2*i+1,r=l+1,s=i;if(l<*n&&h[l]->val<h[s]->val)s=l;if(r<*n&&h[r]->val<h[s]->val)s=r;if(s==i)break;swap_node(&h[i],&h[s]);i=s;}
+       return root;
+   }
+   struct ListNode* mergeKLists(struct ListNode** lists,int k) {
+       struct ListNode** heap=malloc((size_t)(k?k:1)*sizeof(*heap));int size=0;
+       for(int i=0;i<k;++i)if(lists[i])push(heap,&size,lists[i]);
+       struct ListNode dummy={0,NULL},*tail=&dummy;
+       while(size){struct ListNode* x=pop(heap,&size);struct ListNode* next=x->next;tail->next=x;tail=x;if(next)push(heap,&size,next);}
+       tail->next=NULL;free(heap);return dummy.next;
+   }
 
 Python
 ~~~~~~
 
 .. code-block:: python
 
-   import heapq
-   from typing import Optional
-
-
    class Solution:
-       def mergeKLists(
-           self,
-           lists: list[Optional[ListNode]],
-       ) -> Optional[ListNode]:
-           heap: list[tuple[int, int, ListNode]] = []
-           serial = 0
-
-           for head in lists:
-               if head is not None:
-                   # serial 避免值相等时让 heapq 比较 ListNode 对象。
-                   heapq.heappush(heap, (head.val, serial, head))
-                   serial += 1
-
-           dummy = ListNode()
-           tail = dummy
+       def mergeKLists(self, lists):
+           import heapq
+           heap = []
+           for index, node in enumerate(lists):
+               if node: heapq.heappush(heap, (node.val, index, node))
+           dummy = tail = ListNode()
            while heap:
-               _, _, node = heapq.heappop(heap)
+               _, index, node = heapq.heappop(heap)
                next_node = node.next
-               tail.next = node
-               tail = node
-
-               if next_node is not None:
-                   heapq.heappush(
-                       heap,
-                       (next_node.val, serial, next_node),
-                   )
-                   serial += 1
-
+               tail.next = node; tail = node
+               if next_node: heapq.heappush(heap, (next_node.val, index, next_node))
            tail.next = None
            return dummy.next
 
@@ -413,31 +217,11 @@ Java
 
    class Solution {
        public ListNode mergeKLists(ListNode[] lists) {
-           PriorityQueue<ListNode> heap = new PriorityQueue<>(
-               (left, right) -> Integer.compare(left.val, right.val)
-           );
-
-           for (ListNode head : lists) {
-               if (head != null) {
-                   heap.offer(head);
-               }
-           }
-
-           ListNode dummy = new ListNode(0);
-           ListNode tail = dummy;
-           while (!heap.isEmpty()) {
-               ListNode node = heap.poll();
-               ListNode next = node.next;
-               tail.next = node;
-               tail = node;
-
-               if (next != null) {
-                   heap.offer(next);
-               }
-           }
-
-           tail.next = null;
-           return dummy.next;
+           PriorityQueue<ListNode> heap=new PriorityQueue<>((a,b)->Integer.compare(a.val,b.val));
+           for(ListNode node:lists) if(node!=null) heap.offer(node);
+           ListNode dummy=new ListNode(0),tail=dummy;
+           while(!heap.isEmpty()){ListNode node=heap.poll(),next=node.next;tail.next=node;tail=node;if(next!=null)heap.offer(next);}
+           tail.next=null;return dummy.next;
        }
    }
 
@@ -447,72 +231,16 @@ Rust
 .. code-block:: rust
 
    impl Solution {
-       fn heap_push(heap: &mut Vec<Box<ListNode>>, node: Box<ListNode>) {
-           heap.push(node);
-           let mut index = heap.len() - 1;
-
-           while index > 0 {
-               let parent = (index - 1) / 2;
-               if heap[parent].val <= heap[index].val {
-                   break;
-               }
-               heap.swap(parent, index);
-               index = parent;
+       pub fn merge_k_lists(mut lists: Vec<Option<Box<ListNode>>>) -> Option<Box<ListNode>> {
+           use std::cmp::Reverse; use std::collections::BinaryHeap;
+           let mut heap: BinaryHeap<Reverse<(i32,usize)>>=BinaryHeap::new();
+           for (i,node) in lists.iter().enumerate(){if let Some(x)=node.as_ref(){heap.push(Reverse((x.val,i)));}}
+           let mut dummy=Box::new(ListNode::new(0)); let mut tail=&mut dummy;
+           while let Some(Reverse((_,i)))=heap.pop(){
+               let mut node=lists[i].take().unwrap(); lists[i]=node.next.take();
+               if let Some(next)=lists[i].as_ref(){heap.push(Reverse((next.val,i)));}
+               tail.next=Some(node); tail=tail.next.as_mut().unwrap();
            }
-       }
-
-       fn heap_pop(heap: &mut Vec<Box<ListNode>>) -> Box<ListNode> {
-           let last = heap.pop().unwrap();
-           if heap.is_empty() {
-               return last;
-           }
-
-           let root = std::mem::replace(&mut heap[0], last);
-           let mut index = 0;
-           loop {
-               let left = index * 2 + 1;
-               let right = left + 1;
-               let mut smallest = index;
-
-               if left < heap.len() &&
-                   heap[left].val < heap[smallest].val {
-                   smallest = left;
-               }
-               if right < heap.len() &&
-                   heap[right].val < heap[smallest].val {
-                   smallest = right;
-               }
-               if smallest == index {
-                   break;
-               }
-               heap.swap(index, smallest);
-               index = smallest;
-           }
-           root
-       }
-
-       pub fn merge_k_lists(
-           lists: Vec<Option<Box<ListNode>>>,
-       ) -> Option<Box<ListNode>> {
-           let mut heap: Vec<Box<ListNode>> = Vec::new();
-           for node in lists.into_iter().flatten() {
-               Self::heap_push(&mut heap, node);
-           }
-
-           let mut dummy = Box::new(ListNode::new(0));
-           let mut tail = &mut dummy;
-
-           while !heap.is_empty() {
-               let mut node = Self::heap_pop(&mut heap);
-               let next = node.next.take();
-               tail.next = Some(node);
-               tail = tail.next.as_mut().unwrap();
-
-               if let Some(next_node) = next {
-                   Self::heap_push(&mut heap, next_node);
-               }
-           }
-
            dummy.next
        }
    }
@@ -522,51 +250,15 @@ Go
 
 .. code-block:: go
 
-   import "container/heap"
-
    type nodeHeap []*ListNode
-
-   func (heap nodeHeap) Len() int { return len(heap) }
-   func (heap nodeHeap) Less(i int, j int) bool {
-       return heap[i].Val < heap[j].Val
-   }
-   func (heap nodeHeap) Swap(i int, j int) {
-       heap[i], heap[j] = heap[j], heap[i]
-   }
-   func (heap *nodeHeap) Push(value any) {
-       *heap = append(*heap, value.(*ListNode))
-   }
-   func (heap *nodeHeap) Pop() any {
-       old := *heap
-       last := old[len(old)-1]
-       *heap = old[:len(old)-1]
-       return last
-   }
-
-   func mergeKLists(lists []*ListNode) *ListNode {
-       candidates := &nodeHeap{}
-       heap.Init(candidates)
-       for _, head := range lists {
-           if head != nil {
-               heap.Push(candidates, head)
-           }
-       }
-
-       dummy := &ListNode{}
-       tail := dummy
-       for candidates.Len() > 0 {
-           node := heap.Pop(candidates).(*ListNode)
-           next := node.Next
-           tail.Next = node
-           tail = node
-
-           if next != nil {
-               heap.Push(candidates, next)
-           }
-       }
-
-       tail.Next = nil
-       return dummy.Next
+   func (h nodeHeap) Len() int{return len(h)}; func(h nodeHeap)Less(i,j int)bool{return h[i].Val<h[j].Val}
+   func(h nodeHeap)Swap(i,j int){h[i],h[j]=h[j],h[i]};func(h *nodeHeap)Push(x any){*h=append(*h,x.(*ListNode))}
+   func(h *nodeHeap)Pop()any{old:=*h;n:=len(old);x:=old[n-1];*h=old[:n-1];return x}
+   func mergeKLists(lists []*ListNode)*ListNode{
+       h:=&nodeHeap{};heap.Init(h);for _,x:=range lists{if x!=nil{heap.Push(h,x)}}
+       dummy:=&ListNode{};tail:=dummy
+       for h.Len()>0{x:=heap.Pop(h).(*ListNode);next:=x.Next;tail.Next=x;tail=x;if next!=nil{heap.Push(h,next)}}
+       tail.Next=nil;return dummy.Next
    }
 
 TypeScript
@@ -574,72 +266,13 @@ TypeScript
 
 .. code-block:: typescript
 
-   function mergeKLists(lists: Array<ListNode | null>): ListNode | null {
-       const heap: ListNode[] = [];
-
-       function push(node: ListNode): void {
-           heap.push(node);
-           let index = heap.length - 1;
-           while (index > 0) {
-               const parent = Math.floor((index - 1) / 2);
-               if (heap[parent].val <= heap[index].val) {
-                   break;
-               }
-               [heap[parent], heap[index]] = [heap[index], heap[parent]];
-               index = parent;
-           }
-       }
-
-       function pop(): ListNode {
-           const root = heap[0];
-           const last = heap.pop()!;
-           if (heap.length > 0) {
-               heap[0] = last;
-               let index = 0;
-               while (true) {
-                   const left = index * 2 + 1;
-                   const right = left + 1;
-                   let smallest = index;
-
-                   if (left < heap.length &&
-                       heap[left].val < heap[smallest].val) {
-                       smallest = left;
-                   }
-                   if (right < heap.length &&
-                       heap[right].val < heap[smallest].val) {
-                       smallest = right;
-                   }
-                   if (smallest === index) {
-                       break;
-                   }
-                   [heap[index], heap[smallest]] =
-                       [heap[smallest], heap[index]];
-                   index = smallest;
-               }
-           }
-           return root;
-       }
-
-       for (const head of lists) {
-           if (head !== null) {
-               push(head);
-           }
-       }
-
-       const dummy = new ListNode();
-       let tail = dummy;
-       while (heap.length > 0) {
-           const node = pop();
-           const next = node.next;
-           tail.next = node;
-           tail = node;
-           if (next !== null) {
-               push(next);
-           }
-       }
-
-       tail.next = null;
-       return dummy.next;
+   function mergeKLists(lists: Array<ListNode|null>): ListNode|null {
+       const heap: ListNode[]=[];
+       const push=(x:ListNode)=>{heap.push(x);for(let i=heap.length-1;i>0;){let p=(i-1)>>1;if(heap[p].val<=heap[i].val)break;[heap[p],heap[i]]=[heap[i],heap[p]];i=p;}};
+       const pop=()=>{const root=heap[0],last=heap.pop()!;if(heap.length){heap[0]=last;for(let i=0;;){let l=i*2+1,r=l+1,s=i;if(l<heap.length&&heap[l].val<heap[s].val)s=l;if(r<heap.length&&heap[r].val<heap[s].val)s=r;if(s===i)break;[heap[i],heap[s]]=[heap[s],heap[i]];i=s;}}return root;};
+       for(const x of lists)if(x)push(x);const dummy=new ListNode(),tailRef={node:dummy};
+       while(heap.length){const x=pop(),next=x.next;tailRef.node.next=x;tailRef.node=x;if(next)push(next);}
+       tailRef.node.next=null;return dummy.next;
    }
 
 C#
@@ -649,28 +282,11 @@ C#
 
    public class Solution {
        public ListNode MergeKLists(ListNode[] lists) {
-           var heap = new PriorityQueue<ListNode, int>();
-           foreach (ListNode head in lists) {
-               if (head != null) {
-                   heap.Enqueue(head, head.val);
-               }
-           }
-
-           ListNode dummy = new ListNode();
-           ListNode tail = dummy;
-           while (heap.Count > 0) {
-               ListNode node = heap.Dequeue();
-               ListNode next = node.next;
-               tail.next = node;
-               tail = node;
-
-               if (next != null) {
-                   heap.Enqueue(next, next.val);
-               }
-           }
-
-           tail.next = null;
-           return dummy.next;
+           var heap=new PriorityQueue<ListNode,int>();
+           foreach(var x in lists) if(x!=null) heap.Enqueue(x,x.val);
+           var dummy=new ListNode();var tail=dummy;
+           while(heap.Count>0){var x=heap.Dequeue();var next=x.next;tail.next=x;tail=x;if(next!=null)heap.Enqueue(next,next.val);}
+           tail.next=null;return dummy.next;
        }
    }
 
@@ -680,61 +296,14 @@ Julia
 .. code-block:: julia
 
    function merge_k_lists(lists)
-       heap = Any[]
-
-       function heap_push!(node)
-           push!(heap, node)
-           index = length(heap)
-           while index > 1
-               parent = index ÷ 2
-               heap[parent].val <= heap[index].val && break
-               heap[parent], heap[index] = heap[index], heap[parent]
-               index = parent
-           end
-       end
-
-       function heap_pop!()
-           root = heap[1]
-           last = pop!(heap)
-           if !isempty(heap)
-               heap[1] = last
-               index = 1
-               while true
-                   left = index * 2
-                   right = left + 1
-                   smallest = index
-                   if left <= length(heap) &&
-                      heap[left].val < heap[smallest].val
-                       smallest = left
-                   end
-                   if right <= length(heap) &&
-                      heap[right].val < heap[smallest].val
-                       smallest = right
-                   end
-                   smallest == index && break
-                   heap[index], heap[smallest] = heap[smallest], heap[index]
-                   index = smallest
-               end
-           end
-           return root
-       end
-
-       for head in lists
-           head !== nothing && heap_push!(head)
-       end
-
-       dummy = ListNode(0, nothing)
-       tail = dummy
+       heap=Tuple{Int,Int}[]
+       for (i,x) in pairs(lists); x!==nothing && push!(heap,(x.val,i)); end
+       dummy=ListNode(0,nothing);tail=dummy
        while !isempty(heap)
-           node = heap_pop!()
-           next_node = node.next
-           tail.next = node
-           tail = node
-           next_node !== nothing && heap_push!(next_node)
+           sort!(heap,by=first,rev=true);_,i=pop!(heap);x=lists[i];lists[i]=x.next
+           tail.next=x;tail=x;lists[i]!==nothing && push!(heap,(lists[i].val,i))
        end
-
-       tail.next = nothing
-       return dummy.next
+       tail.next=nothing;dummy.next
    end
 
 R
@@ -742,123 +311,14 @@ R
 
 .. code-block:: r
 
-   mergeKLists <- function(lists) {
+   merge_k_lists <- function(lists) {
        heap <- list()
-
-       heap_push <- function(node) {
-           heap[[length(heap) + 1]] <<- node
-           index <- length(heap)
-           while (index > 1) {
-               parent <- index %/% 2
-               if (heap[[parent]]$val <= heap[[index]]$val) break
-               temp <- heap[[parent]]
-               heap[[parent]] <<- heap[[index]]
-               heap[[index]] <<- temp
-               index <- parent
-           }
+       for (i in seq_along(lists)) if (!is.null(lists[[i]])) heap[[length(heap)+1L]] <- c(lists[[i]]$val,i)
+       dummy <- new_list_node(0,NULL); tail <- dummy
+       while (length(heap)>0L) {
+           order_index <- which.min(vapply(heap,`[[`,numeric(1),1L)); entry <- heap[[order_index]]; heap[[order_index]] <- NULL
+           i <- as.integer(entry[[2L]]); node <- lists[[i]]; lists[[i]] <- node$next; tail$next <- node; tail <- node
+           if (!is.null(lists[[i]])) heap[[length(heap)+1L]] <- c(lists[[i]]$val,i)
        }
-
-       heap_pop <- function() {
-           root <- heap[[1]]
-           last <- heap[[length(heap)]]
-           heap[[length(heap)]] <<- NULL
-           if (length(heap) > 0) {
-               heap[[1]] <<- last
-               index <- 1
-               repeat {
-                   left <- index * 2
-                   right <- left + 1
-                   smallest <- index
-                   if (left <= length(heap) &&
-                       heap[[left]]$val < heap[[smallest]]$val) {
-                       smallest <- left
-                   }
-                   if (right <= length(heap) &&
-                       heap[[right]]$val < heap[[smallest]]$val) {
-                       smallest <- right
-                   }
-                   if (smallest == index) break
-                   temp <- heap[[index]]
-                   heap[[index]] <<- heap[[smallest]]
-                   heap[[smallest]] <<- temp
-                   index <- smallest
-               }
-           }
-           root
-       }
-
-       for (head in lists) {
-           if (!is.null(head)) heap_push(head)
-       }
-
-       dummy <- new_list_node(0)
-       tail <- dummy
-       while (length(heap) > 0) {
-           node <- heap_pop()
-           next_node <- node$next
-           tail$next <- node
-           tail <- node
-           if (!is.null(next_node)) heap_push(next_node)
-       }
-
-       tail$next <- NULL
-       dummy$next
+       tail$next <- NULL; dummy$next
    }
-
-关键边界与易错点
-----------------
-
-* 初始化时只能压入非空头节点，不能把 ``null`` 放入比较堆；
-* 堆中每条链表只保留当前头节点，提前压入整条链表会增加空间且破坏候选语义；
-* 弹出节点后必须保存或取出 ``next``，再改写结果链接；
-* Python 堆元素需要额外序号，避免值相等时比较没有顺序定义的 ``ListNode``；
-* C/C++/Java 比较整数值时应使用安全比较，Java 不要用 ``left.val - right.val`` 防止溢出；
-* Rust 不能把借用的节点放进结果，应移动 ``Box<ListNode>`` 所有权并用 ``take`` 分离后继；
-* 堆操作复杂度是 ``O(log k)``，因为堆大小受链表数限制，不是总节点数；
-* ``k = 0``、所有链表为空、只有一条链表都应自然得到正确结果；
-* 若使用分治替代方案，必须保证每层链表两两归并且每个节点每层只处理一次。
-
-新增与强化知识
---------------
-
-新增
-~~~~
-
-* **K 路候选头集合**：每条有序来源只暴露当前最小未处理元素；
-* **最小堆归并不变量**：堆顶是所有未处理节点的全局最小值；
-* **总节点数分析**：用 ``N`` 表示所有链表节点总数，避免误写成 ``k*n``；
-* **堆大小界限**：每条链表至多一个候选，因此额外空间为 ``O(k)``。
-
-强化
-~~~~
-
-* 0021 的哑节点、尾指针和节点复用继续用于结果链表；
-* 0004 的多有序来源思想在这里变成显式 K 路归并；
-* Rust 的 ``Option<Box<ListNode>>`` 再次要求明确移动节点和后继所有权；
-* 自定义二叉堆使用父子下标和局部交换维持完全二叉树顺序。
-
-关联题目
---------
-
-* `0021. Merge Two Sorted Lists <0021-merge-two-sorted-lists.rst>`_：K 路归并的双路基础；
-* `0002. Add Two Numbers <0002-add-two-numbers.rst>`_：使用哑节点和尾指针构造链表结果；
-* `0019. Remove Nth Node From End of List <0019-remove-nth-node-from-end-of-list.rst>`_：
-  继续训练单链表链接与所有权处理。
-
-最小自检
---------
-
-#. 为什么全局最小未处理节点一定在各链表当前头节点中？
-#. 一条链表的后继为什么要等当前头节点弹出后才进入堆？
-#. 为什么时间复杂度是 ``O(N log k)``，不是 ``O(N log N)``？
-#. Python 堆中的 ``serial`` 解决了什么问题？
-#. Rust 实现为什么在把节点接入结果前执行 ``node.next.take()``？
-
-答案要点
-~~~~~~~~
-
-#. 每条链表有序，任何后继都不小于它的当前头节点；
-#. 当前头未输出前，后继不可能优先于它成为全局最小值；
-#. 每个节点执行常数次堆操作，堆大小始终不超过链表数量 ``k``；
-#. 值相等时元组继续比较第二项，避免比较不支持大小关系的节点对象；
-#. 它把后继所有权从当前节点移出，使当前节点可独立进入结果，后继再作为新候选进入堆。
