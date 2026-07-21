@@ -8,123 +8,360 @@
 :难度: Medium
 :主题: 字符串、哈希表、滑动窗口
 :原题: `LeetCode 0003 <https://leetcode.com/problems/longest-substring-without-repeating-characters/>`_
-:访问状态: Available
-:教学重点: 滑动窗口、最后出现位置、左边界单调移动
+:教学重点: 连续子串搜索空间、合法窗口、最后位置索引、左边界单调跳跃
 
 题目重述
 --------
 
-给定一个字符串，求其中不含重复字符的最长连续子串长度。子串必须在原字符串中
-连续，不能跳过中间字符。
+给定字符串 ``s``，返回其中不包含重复字符的最长连续子串长度。子串必须对应原字符串中的
+连续区间。字符串长度位于 ``[0, 5 * 10^4]``，字符来自英文字母、数字、符号和空格，因此
+本文实现可以按单字节 ASCII 字符处理。
 
 自建示例
 --------
 
+窗口内重复、窗口外旧位置与连续跳跃：
+
 .. code-block:: text
 
-   输入：s = "abcaef"
+   输入：s = "abcbadeaf"
    输出：5
-   解释：最长无重复子串是 "bcaef"
+   解释：最长无重复子串是 "cbade"。
 
-问题抽象
+扫描到第二个 ``b`` 时，左边界从 0 跳到 2；随后遇到 ``a`` 时，它的旧位置 0 已经位于
+窗口外，左边界保持不变；扫描到后一个 ``a`` 时，左边界再从 2 跳到 5。
+
+空字符串：
+
+.. code-block:: text
+
+   输入：s = ""
+   输出：0
+
+C++ 实现
 --------
 
-维护一个窗口 ``[left, right]``，要求窗口中的字符互不重复。右端点逐个向右扩展；
-如果当前字符曾经出现在现有窗口中，左端点直接跳到该字符旧位置的下一位。
+.. code-block:: cpp
 
-解法选择
---------
+   #include <algorithm>
+   #include <array>
+   #include <string>
+
+   class Solution {
+   private:
+       int enumerateStarts(const std::string& s) {
+           int best = 0;
+
+           for (int left = 0;
+                left < static_cast<int>(s.size());
+                ++left) {
+               std::array<bool, 256> used{};
+
+               for (int right = left;
+                    right < static_cast<int>(s.size());
+                    ++right) {
+                   const auto ch =
+                       static_cast<unsigned char>(s[right]);
+
+                   if (used[ch]) {
+                       break;  // 固定左端后，继续扩展只会保留该重复字符
+                   }
+
+                   used[ch] = true;
+                   best = std::max(best, right - left + 1);
+               }
+           }
+
+           return best;
+       }
+
+       int shrinkWithSet(const std::string& s) {
+           std::array<bool, 256> in_window{};
+           int left = 0;
+           int best = 0;
+
+           for (int right = 0;
+                right < static_cast<int>(s.size());
+                ++right) {
+               const auto ch =
+                   static_cast<unsigned char>(s[right]);
+
+               while (in_window[ch]) {
+                   const auto removed =
+                       static_cast<unsigned char>(s[left]);
+                   in_window[removed] = false;
+                   ++left;  // 逐个移除失效前缀，直到当前字符可以进入窗口
+               }
+
+               in_window[ch] = true;
+               best = std::max(best, right - left + 1);
+           }
+
+           return best;
+       }
+
+       int jumpWithLastPosition(const std::string& s) {
+           std::array<int, 256> last;
+           last.fill(-1);
+
+           int left = 0;
+           int best = 0;
+
+           for (int right = 0;
+                right < static_cast<int>(s.size());
+                ++right) {
+               const auto ch =
+                   static_cast<unsigned char>(s[right]);
+
+               left = std::max(
+                   left,
+                   last[ch] + 1
+               );  // 旧位置在窗口内时，直接跳到它的下一位
+
+               last[ch] = right;
+               best = std::max(best, right - left + 1);
+           }
+
+           return best;
+       }
+
+   public:
+       int lengthOfLongestSubstring(std::string s) {
+           return jumpWithLastPosition(s);
+       }
+   };
+
+题解
+----
+
+原始搜索空间：所有连续子串
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+长度为 ``n`` 的字符串共有：
+
+.. math::
+
+   \frac{n(n + 1)}{2}
+
+个非空连续子串。最直接的方法是固定左端点 ``left``，再向右扩展 ``right``，用字符集合
+判断当前区间是否出现重复。
+
+``enumerateStarts`` 对每个左端点重新建立 ``used``。一旦扩展到重复字符，所有具有相同
+左端点且右端更远的子串仍然包含这两个重复字符，因此可以停止当前内层循环。该方法已经利用了
+“重复后无需继续扩展”的信息，但相邻左端点仍会反复检查大量相同字符，最坏需要二次时间。
+
+从反复检查子串到维护一个合法窗口
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+右端点从左到右扫描时，相邻候选区间共享大部分字符。与其为每个左端点重新检查，不如维护一个
+始终无重复的连续窗口 ``[left, right]``：
+
+* ``right`` 每轮加入一个新字符；
+* 若加入后产生重复，移动 ``left``，删除使窗口失效的前缀；
+* 窗口恢复合法后，``right - left + 1`` 就是当前右端对应的候选长度。
+
+新字符加入之前，窗口已经无重复，因此本轮唯一可能新增的冲突来自 ``s[right]`` 本身。算法只
+需要找到并排除它在当前窗口中的旧位置，不必重新检查其他字符之间的关系。
+
+集合窗口：逐个移除失效前缀
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``shrinkWithSet`` 使用 ``in_window`` 记录当前窗口中有哪些字符。若 ``s[right]`` 已经存在，
+就从 ``s[left]`` 开始逐个删除字符并右移 ``left``，直到旧的同字符也被移出窗口，然后再加入
+当前字符。
+
+这个方案已经是线性算法。``right`` 只向右走一遍；每个字符进入窗口一次，并且最多从左端移出
+一次。它只知道“字符当前是否在窗口中”，所以恢复合法性时必须逐个删除。
+
+最后位置索引：一次跳到最早合法左边界
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+主解法进一步保存：
+
+.. code-block:: text
+
+   last[ch] = 字符 ch 在已扫描前缀中的最近下标
+
+处理 ``right`` 处字符 ``ch`` 时，设它的旧位置为 ``p = last[ch]``：
+
+* 若 ``p < left``，旧字符已经在当前窗口之外，不会造成窗口内重复，``left`` 保持不变；
+* 若 ``p >= left``，任何左端点不超过 ``p`` 的区间都会同时包含旧字符和当前字符，必须把
+  ``left`` 移到 ``p + 1``；
+* 两种情况统一写成 ``left = max(left, p + 1)``。
+
+``last`` 不只回答字符是否出现，还指出失效前缀的精确终点，因此能够一次跳过集合方案中需要
+逐个删除的区间。更新 ``left`` 后再执行 ``last[ch] = right``，让当前字符成为后续扫描使用的
+最近位置。
+
+主解法状态演化
+~~~~~~~~~~~~~~
+
+使用自建示例 ``s = "abcbadeaf"``：
+
+.. list-table::
+   :header-rows: 1
+
+   * - ``right``
+     - 字符
+     - 旧位置
+     - 更新前 ``left``
+     - 更新后 ``left``
+     - 当前窗口
+     - ``best``
+   * - 0
+     - ``a``
+     - -1
+     - 0
+     - 0
+     - ``a``
+     - 1
+   * - 1
+     - ``b``
+     - -1
+     - 0
+     - 0
+     - ``ab``
+     - 2
+   * - 2
+     - ``c``
+     - -1
+     - 0
+     - 0
+     - ``abc``
+     - 3
+   * - 3
+     - ``b``
+     - 1
+     - 0
+     - 2
+     - ``cb``
+     - 3
+   * - 4
+     - ``a``
+     - 0
+     - 2
+     - 2
+     - ``cba``
+     - 3
+   * - 5
+     - ``d``
+     - -1
+     - 2
+     - 2
+     - ``cbad``
+     - 4
+   * - 6
+     - ``e``
+     - -1
+     - 2
+     - 2
+     - ``cbade``
+     - 5
+   * - 7
+     - ``a``
+     - 4
+     - 2
+     - 5
+     - ``dea``
+     - 5
+   * - 8
+     - ``f``
+     - -1
+     - 5
+     - 5
+     - ``deaf``
+     - 5
+
+``right = 4`` 时，字符 ``a`` 的旧位置为 0，但当前窗口从 2 开始，所以旧 ``a`` 已经被排除。
+这里使用 ``max(left, old + 1)`` 才能保持左边界为 2。``right = 7`` 时，旧 ``a`` 位于当前
+窗口内，左边界直接跳到 5。
+
+解法对比与主解法选择
+~~~~~~~~~~~~~~~~~~~~
 
 .. list-table::
    :header-rows: 1
 
    * - 方法
      - 时间复杂度
-     - 空间复杂度
-     - 定位
-   * - 记录最后位置并跳跃左边界
+     - 工作空间
+     - 状态提供的信息
+   * - 固定左端逐步扩展
+     - ``O(n²)``
+     - ``O(1)``
+     - 为每个左端重新记录已见字符
+   * - 集合滑动窗口
      - ``O(n)``
-     - ``O(k)``
-     - 主解法
-   * - 集合窗口逐个删除左端字符
+     - ``O(1)``
+     - 只记录字符是否在当前窗口中
+   * - 最后位置跳跃
      - ``O(n)``
-     - ``O(k)``
-     - 对照解法
-   * - 枚举所有子串
-     - ``O(n²)`` 或更高
-     - ``O(k)``
-     - 只用于说明优化来源
+     - ``O(1)``
+     - 记录失效前缀的精确终点，可直接跳跃
 
-其中 ``k`` 是字符种类数量。
+空间复杂度按题目固定 ASCII 字符域计算，因此两个数组都只有 256 项。推广到任意字符集合并使用
+哈希表时，工作空间为 ``O(k)``，其中 ``k`` 是已记录的不同字符数量。
 
-主解法：最后位置滑动窗口
-------------------------
+九语言统一采用最后位置跳跃。它与集合窗口具有相同的渐进时间复杂度，同时减少了恢复窗口时的
+逐步删除操作。
 
-思路
-~~~~
+为什么更新后窗口仍然无重复
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-哈希表 ``last`` 保存每个字符最近一次出现的位置。处理 ``right`` 处的字符时：
+处理 ``right`` 之前，窗口 ``[left, right - 1]`` 已经无重复。加入 ``s[right]`` 后，旧窗口
+中只有与当前字符相同的那个位置可能形成新冲突。
 
-#. 若旧位置在当前窗口左边界之前，它不会影响当前窗口；
-#. 若旧位置仍在窗口中，把 ``left`` 移到旧位置的下一位；
-#. 更新当前字符的最后位置和窗口最大长度。
+若最近旧位置 ``p`` 位于窗口内，把 ``left`` 移到 ``p + 1`` 会删除旧字符；旧窗口中的其他
+字符原本互不重复，删除一段前缀也不会制造新的重复。若 ``p`` 位于窗口外，当前窗口中本来就没有
+该字符。两种情况下，更新后的 ``[left, right]`` 都保持无重复。
 
-左边界只能向右移动，绝不能退回更小的位置。
+为什么每个右端都得到最长合法窗口
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-状态图
-~~~~~~
+若当前字符的旧位置 ``p`` 位于窗口内，任何起点 ``start <= p`` 的区间 ``[start, right]``
+都会同时包含两次当前字符，因此不合法；``p + 1`` 是能够排除这次冲突的最小新起点。
 
-.. mermaid::
+若 ``p < left``，本轮没有产生窗口内冲突，而当前 ``left`` 已经是此前字符约束允许的最小起点。
+让左边界退回会重新引入之前排除的重复字符。因此 ``left`` 只能保持或右移，并且每轮得到的
+``[left, right]`` 正是以 ``right`` 结尾的最长无重复子串。
 
-   flowchart LR
-       L["左边界 left"] --> W["当前无重复窗口"]
-       W --> R["右边界 right"]
-       P["当前字符旧位置 p"] -. "若 p 在窗口内" .-> M["left = p + 1"]
-       M --> L
+任意合法子串都有唯一的右端点。算法计算了每个右端点对应的最长合法子串长度，``best`` 取这些
+长度的最大值，所以覆盖了全局最优答案。
 
-需要观察的是：遇到重复字符时只移动左边界，右边界仍然继续向前。旧位置位于窗口
-之外时，``left`` 保持不变。
-
-核心不变量
+复杂度来源
 ~~~~~~~~~~
 
-每轮更新完成后：
+``enumerateStarts`` 最多为每个左端点扫描到字符串末尾，检查次数为二次数量级，时间复杂度
+``O(n²)``。固定字符表占用 ``O(1)`` 工作空间。
 
-* 窗口 ``[left, right]`` 内没有重复字符；
-* ``last`` 保存已经扫描字符的最近位置；
-* ``left`` 从不向左移动；
-* ``best`` 是所有已处理窗口中的最大长度。
+``shrinkWithSet`` 中，每个字符被右端加入一次，并且最多被左端删除一次，两个边界的总移动次数
+为 ``O(n)``，时间复杂度 ``O(n)``，工作空间 ``O(1)``。
 
-正确性依据
-~~~~~~~~~~
+``jumpWithLastPosition`` 对每个字符执行一次旧位置读取、一次左边界更新、一次位置写入和一次长度
+更新，时间复杂度 ``O(n)``。固定 256 项位置表占用 ``O(1)`` 空间。使用哈希表适配更大字符域时，
+工作空间为 ``O(k)``。
 
-若当前字符在窗口内上次出现于 ``p``，任何包含 ``p`` 和 ``right`` 的窗口都会重复，
-所以新左边界至少是 ``p + 1``。移动到 ``p + 1`` 后，当前字符在窗口中只保留
-最新一次出现，其他字符仍保持唯一。若 ``p < left``，旧字符已在窗口外，无需移动。
-因此每一步得到的都是以 ``right`` 结尾的最长合法窗口，所有 ``right`` 的最大值
-就是答案。
+九语言实现
+----------
 
-复杂度
-~~~~~~
+题目字符域可以按 ASCII 处理。C、Rust、Go 和 Julia 使用 256 项字节位置表；Python、Java、
+TypeScript、C# 和 R 使用各语言常见的映射结构。所有实现都维护同一状态和更新顺序：
 
-* 时间复杂度：``O(n)``，每个字符只被右端点处理一次；
-* 空间复杂度：``O(k)``；
-* C、C++、Rust 和 Go 按本题字符范围使用 256 项字节位置表。
+.. code-block:: text
 
-核心语言实现
-~~~~~~~~~~~~
+   left = max(left, last[current] + 1)
+   last[current] = right
+   best = max(best, right - left + 1)
 
 C
-^
+~
 
 .. code-block:: c
 
-   #include <string.h>
-
    int lengthOfLongestSubstring(char* s) {
        int last[256];
-       for (int i = 0; i < 256; ++i) {
-           last[i] = -1;
+       for (int index = 0; index < 256; ++index) {
+           last[index] = -1;
        }
 
        int left = 0;
@@ -132,8 +369,10 @@ C
 
        for (int right = 0; s[right] != '\0'; ++right) {
            const unsigned char ch = (unsigned char)s[right];
-           if (last[ch] >= left) {
-               left = last[ch] + 1;
+           const int next_left = last[ch] + 1;
+
+           if (next_left > left) {
+               left = next_left;  // 旧位置位于窗口内时才推进左边界
            }
 
            last[ch] = right;
@@ -146,35 +385,8 @@ C
        return best;
    }
 
-C++
-^^^
-
-.. code-block:: cpp
-
-   class Solution {
-   public:
-       int lengthOfLongestSubstring(const std::string& s) {
-           std::array<int, 256> last;
-           last.fill(-1);
-
-           int left = 0;
-           int best = 0;
-
-           for (int right = 0;
-                right < static_cast<int>(s.size());
-                ++right) {
-               const auto ch = static_cast<unsigned char>(s[right]);
-               left = std::max(left, last[ch] + 1);
-               last[ch] = right;
-               best = std::max(best, right - left + 1);
-           }
-
-           return best;
-       }
-   };
-
 Python
-^^^^^^
+~~~~~~
 
 .. code-block:: python
 
@@ -185,19 +397,19 @@ Python
            best = 0
 
            for right, char in enumerate(s):
-               old_index = last.get(char, -1)
-               if old_index >= left:
-                   left = old_index + 1
-
-               last[char] = right
+               left = max(left, last.get(char, -1) + 1)
+               last[char] = right  # 当前字符成为最近位置
                best = max(best, right - left + 1)
 
            return best
 
 Java
-^^^^
+~~~~
 
 .. code-block:: java
+
+   import java.util.HashMap;
+   import java.util.Map;
 
    class Solution {
        public int lengthOfLongestSubstring(String s) {
@@ -207,13 +419,10 @@ Java
 
            for (int right = 0; right < s.length(); right++) {
                char current = s.charAt(right);
-               int oldIndex = last.getOrDefault(current, -1);
+               int nextLeft = last.getOrDefault(current, -1) + 1;
 
-               if (oldIndex >= left) {
-                   left = oldIndex + 1;
-               }
-
-               last.put(current, right);
+               left = Math.max(left, nextLeft);
+               last.put(current, right);  // 当前字符成为最近位置
                best = Math.max(best, right - left + 1);
            }
 
@@ -222,7 +431,7 @@ Java
    }
 
 Rust
-^^^^
+~~~~
 
 .. code-block:: rust
 
@@ -234,13 +443,8 @@ Rust
 
            for (right, byte) in s.bytes().enumerate() {
                let right = right as i32;
-               let old_index = last[byte as usize];
-
-               if old_index >= left {
-                   left = old_index + 1;
-               }
-
-               last[byte as usize] = right;
+               left = left.max(last[byte as usize] + 1);
+               last[byte as usize] = right; // 当前字节成为最近位置
                best = best.max(right - left + 1);
            }
 
@@ -249,7 +453,7 @@ Rust
    }
 
 Go
-^^
+~~
 
 .. code-block:: go
 
@@ -261,9 +465,9 @@ Go
 
        left, best := 0, 0
        for right, value := range []byte(s) {
-           oldIndex := last[value]
-           if oldIndex >= left {
-               left = oldIndex + 1
+           nextLeft := last[value] + 1
+           if nextLeft > left {
+               left = nextLeft // 旧位置位于窗口内时才推进左边界
            }
 
            last[value] = right
@@ -277,7 +481,7 @@ Go
    }
 
 TypeScript
-^^^^^^^^^^
+~~~~~~~~~~
 
 .. code-block:: typescript
 
@@ -288,13 +492,10 @@ TypeScript
 
        for (let right = 0; right < s.length; right += 1) {
            const char = s[right];
-           const oldIndex = last.get(char);
+           const nextLeft = (last.get(char) ?? -1) + 1;
 
-           if (oldIndex !== undefined && oldIndex >= left) {
-               left = oldIndex + 1;
-           }
-
-           last.set(char, right);
+           left = Math.max(left, nextLeft);
+           last.set(char, right); // 当前字符成为最近位置
            best = Math.max(best, right - left + 1);
        }
 
@@ -302,9 +503,12 @@ TypeScript
    }
 
 C#
-^^
+~~
 
 .. code-block:: csharp
+
+   using System;
+   using System.Collections.Generic;
 
    public class Solution {
        public int LengthOfLongestSubstring(string s) {
@@ -314,13 +518,13 @@ C#
 
            for (int right = 0; right < s.Length; right++) {
                char current = s[right];
+               int oldIndex = last.TryGetValue(
+                   current,
+                   out int found
+               ) ? found : -1;
 
-               if (last.TryGetValue(current, out int oldIndex) &&
-                   oldIndex >= left) {
-                   left = oldIndex + 1;
-               }
-
-               last[current] = right;
+               left = Math.Max(left, oldIndex + 1);
+               last[current] = right; // 当前字符成为最近位置
                best = Math.Max(best, right - left + 1);
            }
 
@@ -329,23 +533,19 @@ C#
    }
 
 Julia
-^^^^^
+~~~~~
 
 .. code-block:: julia
 
    function length_of_longest_substring(s::AbstractString)::Int
-       last = Dict{Char, Int}()
+       last = fill(0, 256)
        left = 1
        best = 0
 
-       # enumerate 提供连续计数，不依赖字符串内部的字节索引。
-       for (right, char) in enumerate(s)
-           old_index = get(last, char, 0)
-           if old_index >= left
-               left = old_index + 1
-           end
-
-           last[char] = right
+       for (right, byte) in enumerate(codeunits(s))
+           slot = Int(byte) + 1
+           left = max(left, last[slot] + 1)
+           last[slot] = right # 当前字节成为最近位置
            best = max(best, right - left + 1)
        end
 
@@ -353,7 +553,7 @@ Julia
    end
 
 R
-^
+~
 
 .. code-block:: r
 
@@ -365,94 +565,21 @@ R
 
        for (right in seq_along(chars)) {
            char <- chars[[right]]
-           # 加前缀避免特殊字符直接成为环境绑定名。
-           key <- paste0("u", utf8ToInt(char))
-           old_index <- 0L
-
-           if (exists(key, envir = last, inherits = FALSE)) {
-               old_index <- get(key, envir = last, inherits = FALSE)
+           key <- paste0("c", utf8ToInt(char))
+           old_index <- if (exists(
+               key,
+               envir = last,
+               inherits = FALSE
+           )) {
+               get(key, envir = last, inherits = FALSE)
+           } else {
+               0L
            }
 
-           if (old_index >= left) {
-               left <- old_index + 1L
-           }
-
-           assign(key, right, envir = last)
+           left <- max(left, old_index + 1L)
+           assign(key, right, envir = last) # 当前字符成为最近位置
            best <- max(best, right - left + 1L)
        }
 
        as.integer(best)
    }
-
-字符单位说明
-~~~~~~~~~~~~
-
-本题的常见测试字符可以直接按字节或语言的基础字符单位处理。上述 C、C++、Rust
-和 Go 实现按字节计数；Java、TypeScript 和 C# 按 UTF-16 代码单元处理；Python、
-Julia 与 R 的写法更接近 Unicode 字符遍历。
-
-若工程需求要求把组合字符或表情序列视为一个用户可见字符，需要使用字形簇
-（grapheme cluster）分割库。这属于字符串国际化问题，不是本题算法核心。
-
-对照解法：集合窗口
-------------------
-
-另一种滑动窗口只保存窗口中的字符集合。右端字符重复时，不断删除左端字符并让
-``left`` 加一，直到重复消失。每个字符至多进入和离开集合一次，所以仍是
-``O(n)``，只是不能像主解法一样直接跳过一段窗口。
-
-.. code-block:: text
-
-   创建空集合 window
-   对每个 right：
-       当 s[right] 已经在 window 中：
-           从 window 删除 s[left]
-           left 向右移动一位
-       把 s[right] 加入 window
-       更新最大长度
-
-主解法额外保存最后位置，用更多状态换取更直接的左边界跳跃。
-
-易错点
-------
-
-* 左边界必须使用 ``max(left, oldIndex + 1)`` 的语义，不能向左退回；
-* 求的是连续子串（substring），不是可以跳过字符的子序列；
-* TypeScript 查询结果 ``0`` 合法，仍需显式判断 ``undefined``；
-* 不同语言的“字符”可能表示字节、代码单元、码点或字形簇；
-* R 的环境键需要编码，避免空白和特殊符号带来绑定名问题。
-
-本题新增知识
-------------
-
-* 滑动窗口（sliding window）通过两个边界维护连续区间；
-* 最近出现位置允许左边界跨越无效区间；
-* 窗口合法性是本题的核心不变量；
-* 多语言字符串索引单位存在差异。
-
-本题强化知识
-------------
-
-* 哈希表继续保存“值到位置”的映射，基础容器语法不再逐项重复解释；
-* TypeScript、Java 和 C# 再次练习安全读取映射中的可选结果。
-
-关联题目
---------
-
-* `0001. Two Sum <0001-two-sum.rst>`_：两题都保存元素到最近位置的映射；
-* `0002. Add Two Numbers <0002-add-two-numbers.rst>`_：上一题按节点推进，
-  本题按区间边界推进。
-
-最小自检
---------
-
-#. 为什么旧位置小于 ``left`` 时不能修改左边界？
-#. 为什么左边界在整个算法中只能向右移动？
-#. “最后出现位置”方案比字符集合方案多保存了什么信息？
-
-答案要点
-~~~~~~~~
-
-#. 该次出现已经位于当前窗口之外，不会造成窗口内重复；
-#. 已经排除的前缀不可能重新加入以当前右端点结尾的合法窗口；
-#. 它不仅记录字符是否存在，还记录字符最近一次出现的具体位置。
