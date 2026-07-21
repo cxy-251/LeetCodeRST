@@ -237,4 +237,4 @@ R
 
 .. code-block:: r
 
-   generate_pascal <- function(num_rows){out<-vector("list",num_rows);for(r in 0:(num_rows-1L)){row<-rep(1L,r+1L);if(r>0L)for(c in 2L:r)row[[c]]<-out[[r]][[c-1L]]+out[[r]][[c]];out[[r+1L]]<-row};out}
+   generate_pascal <- function(num_rows){out<-vector("list",num_rows);for(r in 0:(num_rows-1L)){row<-rep(1L,r+1L);if(r>1L)for(c in 2L:r)row[[c]]<-out[[r]][[c-1L]]+out[[r]][[c]];out[[r+1L]]<-row};out}
