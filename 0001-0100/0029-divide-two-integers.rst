@@ -6,211 +6,188 @@
 
 :题号: 0029
 :难度: Medium
-:主题: 整数、二进制倍增、贪心、溢出边界
+:主题: 整数、加法倍增、贪心、二进制商、溢出边界
 :原题: `LeetCode 0029 <https://leetcode.com/problems/divide-two-integers/>`_
-:访问状态: Available
-:教学重点: 禁用乘除取模、倍增表、从大到小消去、向零截断、INT_MIN 特例
+:教学重点: 禁用乘除取模、负数域、倍增表、降序消去、向零截断、``INT_MIN``
 
 题目重述
 --------
 
-给定两个 32 位有符号整数 ``dividend`` 和 ``divisor``，计算整数商。不能使用乘法、除法和
-取模运算符。
-
-结果按“向零截断”处理：正数商向下取整，负数商向上取整。例如 ``7 / -3`` 返回 ``-2``。
-若数学结果超过 32 位有符号整数上界，只返回 ``2147483647``。题目保证 ``divisor != 0``。
+给定两个 32 位有符号整数 ``dividend`` 和 ``divisor``，在不使用乘法、除法和取模运算符的前提下返回整数商。
+结果向零截断；除数保证非零。若数学结果超过 ``INT_MAX``，返回 ``INT_MAX``。
 
 自建示例
 --------
 
-正数除法
-~~~~~~~~
-
 .. code-block:: text
 
-   dividend = 43, divisor = 5
-   返回 8
-   因为 43 = 5 × 8 + 3
+   43 / 5 = 8，余数 3
+   -43 / 5 = -8，向零截断
+   4 / 9 = 0
+   INT_MIN / -1 = 2147483648，钳制为 INT_MAX
 
-负数且向零截断
-~~~~~~~~~~~~~~
-
-.. code-block:: text
-
-   dividend = -43, divisor = 5
-   返回 -8
-
-被除数绝对值更小
-~~~~~~~~~~~~~~~~
-
-.. code-block:: text
-
-   dividend = 4, divisor = 9
-   返回 0
-
-唯一正向溢出
-~~~~~~~~~~~~
-
-.. code-block:: text
-
-   dividend = -2147483648, divisor = -1
-   数学结果 = 2147483648
-   返回 2147483647
-
-问题抽象
+C++ 实现
 --------
 
-逐次减去 ``divisor`` 可以得到商，但 ``2147483648 / 1`` 需要二十多亿次循环。
+.. code-block:: cpp
 
-改为不断执行加法倍增：
+   #include <climits>
+   #include <vector>
 
-.. code-block:: text
+   class Solution {
+   private:
+       void toNegative(int dividend, int divisor,
+                       int& remaining, int& base, bool& negative) {
+           negative = (dividend < 0) != (divisor < 0);
+           remaining = dividend > 0 ? -dividend : dividend;
+           base = divisor > 0 ? -divisor : divisor;
+       }
 
-   divisor, divisor + divisor, 4 × divisor, 8 × divisor, ...
+       int repeatedSubtraction(int dividend, int divisor) {
+           if (dividend == INT_MIN && divisor == -1) return INT_MAX;
+           int remaining, base; bool negative;
+           toNegative(dividend, divisor, remaining, base, negative);
+           int quotient = 0;
+           while (remaining <= base) {
+               remaining -= base;
+               --quotient;
+           }
+           return negative ? quotient : -quotient;
+       }
 
-同时保存每个倍增值对应的商贡献：
+       int doublingEveryRound(int dividend, int divisor) {
+           if (dividend == INT_MIN && divisor == -1) return INT_MAX;
+           int remaining, base; bool negative;
+           toNegative(dividend, divisor, remaining, base, negative);
+           int quotient = 0;
+           const int half_min = INT_MIN / 2;
+           while (remaining <= base) {
+               int value = base;
+               int contribution = -1;
+               while (value >= half_min && remaining <= value + value) {
+                   value += value;
+                   contribution += contribution;
+               }
+               remaining -= value;
+               quotient += contribution;
+           }
+           return negative ? quotient : -quotient;
+       }
 
-.. code-block:: text
+       int doublingTable(int dividend, int divisor) {
+           if (dividend == INT_MIN && divisor == -1) return INT_MAX;
+           int remaining, base; bool negative;
+           toNegative(dividend, divisor, remaining, base, negative);
 
-   值：      5, 10, 20, 40
-   商贡献：  1,  2,  4,  8
+           std::vector<int> values;
+           std::vector<int> contributions;
+           int value = base;
+           int contribution = -1;
+           const int half_min = INT_MIN / 2;
+           while (value >= remaining) {
+               values.push_back(value);
+               contributions.push_back(contribution);
+               if (value < half_min || value + value < remaining) break;
+               value += value;
+               contribution += contribution;
+           }
 
-对 ``43 / 5``，从最大倍增值向下选择：
+           int quotient = 0;
+           for (int i = static_cast<int>(values.size()) - 1; i >= 0; --i) {
+               if (values[i] >= remaining) {
+                   remaining -= values[i];
+                   quotient += contributions[i];
+               }
+           }
+           return negative ? quotient : -quotient;
+       }
 
-.. code-block:: text
+   public:
+       int divide(int dividend, int divisor) {
+           return doublingTable(dividend, divisor);
+       }
+   };
 
-   43 - 40 = 3，商累加 8
-   3 小于其余所有倍增值
-   最终商为 8
+题解
+----
 
-这本质上是在构造商的二进制展开。实现只使用比较、加法和减法；“二倍”通过 ``value += value``
-完成，没有使用乘法运算符。
+逐次减法为什么无法处理极端商
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-解法选择
---------
+整数除法可以理解为不断从被除数绝对值中减去除数绝对值，并统计成功次数。``INT_MAX / 1`` 需要约二十亿次循环，
+时间 ``O(|q|)``，必须一次消去多个除数。
 
-.. list-table::
-   :header-rows: 1
+为什么统一使用负数域
+~~~~~~~~~~~~~~~~~~~~
 
-   * - 方法
-     - 时间复杂度
-     - 额外空间
-     - 取舍
-   * - 预计算倍增表后降序消去
-     - ``O(log |q|)``
-     - ``O(log |q|)``
-     - 主解法；边界明确，十种语言都容易保持一致
-   * - 每轮重新寻找最大倍数
-     - ``O(log² |q|)``
-     - ``O(1)``
-     - 不存表，但重复构造相同倍数
-   * - 逐次减去除数
-     - ``O(|q|)``
-     - ``O(1)``
-     - 极端输入不可接受
-   * - 位移长除法
-     - 固定 32 轮
-     - ``O(1)``
-     - 高效，但 JavaScript 的 32 位有符号位运算需额外处理
+32 位范围为 ``[-2147483648, 2147483647]``。``abs(INT_MIN)`` 无法存入正数域，而任意正数都能安全转成负数。因此
+把两个输入都转为非正数，商也先用负数累计，整个过程无需构造 ``2147483648``。
 
-主解法：倍增表与降序消去
-------------------------
+加法倍增如何构造二进制商位
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-符号与绝对值
-~~~~~~~~~~~~
-
-结果为负，当且仅当两个输入符号不同。算法先记录符号，再在更宽的数值域中处理绝对值。
-
-不能先在 32 位类型中计算 ``abs(INT_MIN)``。因为：
-
-.. code-block:: text
-
-   INT_MIN = -2147483648
-   INT_MAX =  2147483647
-
-正数 ``2147483648`` 无法放进 32 位有符号整数。固定宽度语言必须先提升到 64 位，再取相反数
-或绝对值。
-
-构建倍增表
-~~~~~~~~~~
-
-从 ``value = |divisor|``、``multiple = 1`` 开始。只要 ``value <= |dividend|``，保存这一对，
-然后执行：
+从负数 ``base`` 和贡献 ``-1`` 开始，每次执行：
 
 .. code-block:: text
 
    value += value
-   multiple += multiple
+   contribution += contribution
 
-为了避免“下一次倍增”越过当前被除数范围，使用：
+得到 ``base`` 的 1、2、4、8 倍。对 ``43 / 5``，负数表为：
 
-.. code-block:: text
+.. list-table::
+   :header-rows: 1
 
-   value <= dividend_magnitude - value
+   * - ``value``
+     - 商贡献
+     - 是否选入 -43
+   * - -5
+     - -1
+     - 最后判断
+   * - -10
+     - -2
+     - 未选
+   * - -20
+     - -4
+     - 未选
+   * - -40
+     - -8
+     - 选入，剩余 -3
 
-它等价于 ``value + value <= dividend_magnitude``，同时避免先计算可能越界的和。
+从最大倍数向下扫描，相当于从商的最高二进制位到最低位确定是否为 1。
 
-降序选择
-~~~~~~~~
+为什么倍增前需要 ``half_min`` 边界
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-从最大倍增值向下遍历。若当前 ``value`` 不超过剩余被除数：
+计算 ``value + value`` 前必须保证 ``value >= INT_MIN / 2``，否则加法会低于 ``INT_MIN``。另一个停止条件
+``value + value < remaining`` 表示下一倍数的绝对值已经超过当前被除数，不需要保存。
 
-.. code-block:: text
+降序选择为什么得到最大合法商
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   remainder -= value
-   quotient += multiple
+若某个倍增值 ``value`` 满足 ``value >= remaining``，它的绝对值不超过剩余量，可以安全减去并加入对应商贡献。
+若不满足，该二进制位取 1 会使除数倍数超过被除数，必须为 0。降序贪心逐位得到最大不超过被除数绝对值的倍数。
 
-每个倍增值最多选择一次，因为它代表商二进制表示中的一个位。
+为什么结果是向零截断
+~~~~~~~~~~~~~~~~~~~~
 
-核心不变量
+算法在绝对值意义上得到 ``floor(|dividend| / |divisor|)``，余数不足再减一次。最后只根据输入符号决定正负，不因
+余数继续远离零调整，因此异号结果也是向零方向截断。
+
+唯一正向溢出为什么可提前处理
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+最大绝对值商只会出现在 ``INT_MIN / -1``，数学结果为 ``2147483648``，超过 ``INT_MAX``。其他输入的商均在
+32 位范围内。入口提前返回 ``INT_MAX`` 后，负数累计结果可安全取反。
+
+复杂度来源
 ~~~~~~~~~~
 
-降序遍历每轮开始时：
+逐次减法 ``O(|q|)``。每轮重新倍增最多 ``O(log^2 |q|)``。倍增表长度最多 32，构建与降序扫描均为
+``O(log |q|)``，空间 ``O(log |q|)``；对固定 32 位整数也可视为常数上界。
 
-* 原被除数绝对值等于 ``quotient × divisor_magnitude + remainder``；
-* ``remainder >= 0``；
-* 已处理的更大倍增值不可能再放入 ``remainder``；
-* ``quotient`` 是已经确定的高位商贡献之和；
-* 尚未处理的倍增值覆盖所有更低二进制位。
-
-若当前倍增值可放入，减去它并累加对应商贡献，等式仍成立；若不可放入，该商位必须为零。
-
-为何得到向零截断
-~~~~~~~~~~~~~~~~
-
-算法对绝对值计算非负整数商 ``floor(|dividend| / |divisor|)``，余数保持非负且小于除数。
-最后只给整数商附加符号，没有根据余数继续远离零调整，因此：
-
-* 同号时得到向下取整的正商；
-* 异号时得到对应负值，也就是向零方向截断。
-
-正确性依据
-~~~~~~~~~~
-
-倍增表第 ``i`` 项由前一项加自身得到，因此其值等于 ``|divisor|`` 的 ``2^i`` 倍，对应商贡献
-也是 ``2^i``。降序遍历时，若某倍增值不超过剩余量，任何合法最大商都必须包含该二进制位；
-否则舍弃它才不会让乘积超过被除数。
-
-每次选择都保持
-``|dividend| = quotient × |divisor| + remainder``。遍历结束后，所有正倍增值都大于
-``remainder``，特别是最小倍增值 ``|divisor|`` 也大于余数。因此
-``0 <= remainder < |divisor|``，``quotient`` 正是绝对值整数商。
-
-最后根据输入符号决定正负，得到向零截断结果。唯一超过 ``INT_MAX`` 的合法数学结果是
-``INT_MIN / -1``，显式钳制后满足题目接口。
-
-复杂度
-~~~~~~
-
-设绝对值整数商为 ``q``：
-
-* 倍增表长度为 ``O(log |q|)``；
-* 构建和降序扫描各遍历一次，时间复杂度为 ``O(log |q|)``；
-* 倍增表额外空间为 ``O(log |q|)``；
-* 对 32 位输入，表长最多 32 项。
-
-核心语言实现
-------------
+九语言实现
+----------
 
 C
 ~
@@ -218,102 +195,20 @@ C
 .. code-block:: c
 
    int divide(int dividend, int divisor) {
-       if (dividend == INT_MIN && divisor == -1) {
-           return INT_MAX;
+       if (dividend == INT_MIN && divisor == -1) return INT_MAX;
+       int negative = (dividend < 0) != (divisor < 0);
+       int remaining = dividend > 0 ? -dividend : dividend;
+       int base = divisor > 0 ? -divisor : divisor;
+       int values[32], parts[32], count=0, value=base, part=-1;
+       while (value >= remaining) {
+           values[count]=value;parts[count++]=part;
+           if (value < INT_MIN/2 || value+value < remaining) break;
+           value+=value;part+=part;
        }
-
-       bool negative = (dividend < 0) != (divisor < 0);
-       int64_t remaining = dividend < 0
-           ? -(int64_t)dividend
-           : (int64_t)dividend;
-       int64_t base = divisor < 0
-           ? -(int64_t)divisor
-           : (int64_t)divisor;
-
-       int64_t values[32];
-       int64_t multiples[32];
-       int count = 0;
-       int64_t value = base;
-       int64_t multiple = 1;
-
-       while (value <= remaining) {
-           values[count] = value;
-           multiples[count] = multiple;
-           ++count;
-
-           if (value > remaining - value) {
-               break;
-           }
-
-           value += value;
-           multiple += multiple;
-       }
-
-       int64_t quotient = 0;
-
-       for (int i = count - 1; i >= 0; --i) {
-           if (values[i] <= remaining) {
-               remaining -= values[i];
-               quotient += multiples[i];
-           }
-       }
-
-       return negative ? (int)(-quotient) : (int)quotient;
+       int quotient=0;
+       for(int i=count-1;i>=0;--i) if(values[i]>=remaining){remaining-=values[i];quotient+=parts[i];}
+       return negative ? quotient : -quotient;
    }
-
-C 需要 ``<stdint.h>``、``<stdbool.h>`` 和 ``<limits.h>``。先转换为 ``int64_t`` 再取相反数，
-避免在 32 位范围中处理 ``INT_MIN`` 的绝对值。
-
-C++
-~~~
-
-.. code-block:: cpp
-
-   class Solution {
-   public:
-       int divide(int dividend, int divisor) {
-           if (dividend == INT_MIN && divisor == -1) {
-               return INT_MAX;
-           }
-
-           bool negative = (dividend < 0) != (divisor < 0);
-           long long remaining = std::llabs(
-               static_cast<long long>(dividend)
-           );
-           long long base = std::llabs(
-               static_cast<long long>(divisor)
-           );
-
-           std::vector<long long> values;
-           std::vector<long long> multiples;
-
-           for (long long value = base, multiple = 1;
-                value <= remaining;) {
-               values.push_back(value);
-               multiples.push_back(multiple);
-
-               if (value > remaining - value) {
-                   break;
-               }
-
-               value += value;
-               multiple += multiple;
-           }
-
-           long long quotient = 0;
-
-           for (int i = static_cast<int>(values.size()) - 1;
-                i >= 0;
-                --i) {
-               if (values[i] <= remaining) {
-                   remaining -= values[i];
-                   quotient += multiples[i];
-               }
-           }
-
-           return static_cast<int>(negative ? -quotient : quotient);
-       }
-   };
 
 Python
 ~~~~~~
@@ -322,43 +217,19 @@ Python
 
    class Solution:
        def divide(self, dividend: int, divisor: int) -> int:
-           int_min = -(1 << 31)
-           int_max = (1 << 31) - 1
-
-           if dividend == int_min and divisor == -1:
-               return int_max
-
+           int_min, int_max = -(1 << 31), (1 << 31) - 1
+           if dividend == int_min and divisor == -1: return int_max
            negative = (dividend < 0) != (divisor < 0)
-           remaining = abs(dividend)
-           base = abs(divisor)
-           values: list[int] = []
-           multiples: list[int] = []
-           value = base
-           multiple = 1
-
-           while value <= remaining:
-               values.append(value)
-               multiples.append(multiple)
-
-               if value > remaining - value:
-                   break
-
-               value += value
-               multiple += multiple
-
+           remaining = -abs(dividend); base = -abs(divisor)
+           values, parts, value, part = [], [], base, -1
+           while value >= remaining:
+               values.append(value); parts.append(part)
+               if value + value < remaining: break
+               value += value; part += part
            quotient = 0
-
-           for value, multiple in zip(
-               reversed(values),
-               reversed(multiples),
-           ):
-               if value <= remaining:
-                   remaining -= value
-                   quotient += multiple
-
-           return -quotient if negative else quotient
-
-Python 整数没有固定宽度溢出，但仍保留 32 位接口钳制规则，便于与其他语言对齐。
+           for value, part in zip(reversed(values), reversed(parts)):
+               if value >= remaining: remaining -= value; quotient += part
+           return quotient if negative else -quotient
 
 Java
 ~~~~
@@ -366,48 +237,15 @@ Java
 .. code-block:: java
 
    class Solution {
-       public int divide(int dividend, int divisor) {
-           if (dividend == Integer.MIN_VALUE && divisor == -1) {
-               return Integer.MAX_VALUE;
-           }
-
-           boolean negative = (dividend < 0) != (divisor < 0);
-           long remaining = Math.abs((long) dividend);
-           long base = Math.abs((long) divisor);
-           long[] values = new long[32];
-           long[] multiples = new long[32];
-           int count = 0;
-           long value = base;
-           long multiple = 1;
-
-           while (value <= remaining) {
-               values[count] = value;
-               multiples[count] = multiple;
-               ++count;
-
-               if (value > remaining - value) {
-                   break;
-               }
-
-               value += value;
-               multiple += multiple;
-           }
-
-           long quotient = 0;
-
-           for (int i = count - 1; i >= 0; --i) {
-               if (values[i] <= remaining) {
-                   remaining -= values[i];
-                   quotient += multiples[i];
-               }
-           }
-
-           return (int) (negative ? -quotient : quotient);
+       public int divide(int dividend,int divisor){
+           if(dividend==Integer.MIN_VALUE&&divisor==-1)return Integer.MAX_VALUE;
+           boolean negative=(dividend<0)!=(divisor<0);int remaining=dividend>0?-dividend:dividend;int base=divisor>0?-divisor:divisor;
+           int[] values=new int[32],parts=new int[32];int count=0,value=base,part=-1;
+           while(value>=remaining){values[count]=value;parts[count++]=part;if(value<Integer.MIN_VALUE/2||value+value<remaining)break;value+=value;part+=part;}
+           int quotient=0;for(int i=count-1;i>=0;i--)if(values[i]>=remaining){remaining-=values[i];quotient+=parts[i];}
+           return negative?quotient:-quotient;
        }
    }
-
-``Math.abs((long) dividend)`` 的转换顺序不能颠倒。若先对 ``int`` 调用 ``Math.abs``，
-``Integer.MIN_VALUE`` 仍会溢出并保持负数。
 
 Rust
 ~~~~
@@ -415,45 +253,13 @@ Rust
 .. code-block:: rust
 
    impl Solution {
-       pub fn divide(dividend: i32, divisor: i32) -> i32 {
-           if dividend == i32::MIN && divisor == -1 {
-               return i32::MAX;
-           }
-
-           let negative = (dividend < 0) != (divisor < 0);
-           let mut remaining = (dividend as i64).abs();
-           let base = (divisor as i64).abs();
-           let mut values: Vec<i64> = Vec::new();
-           let mut multiples: Vec<i64> = Vec::new();
-           let mut value = base;
-           let mut multiple = 1i64;
-
-           while value <= remaining {
-               values.push(value);
-               multiples.push(multiple);
-
-               if value > remaining - value {
-                   break;
-               }
-
-               value += value;
-               multiple += multiple;
-           }
-
-           let mut quotient = 0i64;
-
-           for index in (0..values.len()).rev() {
-               if values[index] <= remaining {
-                   remaining -= values[index];
-                   quotient += multiples[index];
-               }
-           }
-
-           if negative {
-               (-quotient) as i32
-           } else {
-               quotient as i32
-           }
+       pub fn divide(dividend:i32,divisor:i32)->i32{
+           if dividend==i32::MIN&&divisor==-1{return i32::MAX}
+           let negative=(dividend<0)!=(divisor<0);let mut remaining=if dividend>0{-dividend}else{dividend};let base=if divisor>0{-divisor}else{divisor};
+           let(mut values,mut parts)=(Vec::new(),Vec::new());let(mut value,mut part)=(base,-1);
+           while value>=remaining{values.push(value);parts.push(part);if value<i32::MIN/2||value+value<remaining{break}value+=value;part+=part;}
+           let mut quotient=0;for i in (0..values.len()).rev(){if values[i]>=remaining{remaining-=values[i];quotient+=parts[i];}}
+           if negative{quotient}else{-quotient}
        }
    }
 
@@ -462,55 +268,13 @@ Go
 
 .. code-block:: go
 
-   func divide(dividend int, divisor int) int {
-       const intMin = -1 << 31
-       const intMax = 1<<31 - 1
-
-       if dividend == intMin && divisor == -1 {
-           return intMax
-       }
-
-       negative := (dividend < 0) != (divisor < 0)
-       remaining := int64(dividend)
-       base := int64(divisor)
-
-       if remaining < 0 {
-           remaining = -remaining
-       }
-       if base < 0 {
-           base = -base
-       }
-
-       values := make([]int64, 0, 32)
-       multiples := make([]int64, 0, 32)
-       value := base
-       multiple := int64(1)
-
-       for value <= remaining {
-           values = append(values, value)
-           multiples = append(multiples, multiple)
-
-           if value > remaining-value {
-               break
-           }
-
-           value += value
-           multiple += multiple
-       }
-
-       quotient := int64(0)
-
-       for i := len(values) - 1; i >= 0; i-- {
-           if values[i] <= remaining {
-               remaining -= values[i]
-               quotient += multiples[i]
-           }
-       }
-
-       if negative {
-           quotient = -quotient
-       }
-       return int(quotient)
+   func divide(dividend,divisor int)int{
+       const min=-1<<31;const max=1<<31-1;if dividend==min&&divisor==-1{return max}
+       negative:=(dividend<0)!=(divisor<0);remaining:=dividend;if remaining>0{remaining=-remaining};base:=divisor;if base>0{base=-base}
+       values,parts:=[]int{},[]int{};value,part:=base,-1
+       for value>=remaining{values=append(values,value);parts=append(parts,part);if value<min/2||value+value<remaining{break};value+=value;part+=part}
+       quotient:=0;for i:=len(values)-1;i>=0;i--{if values[i]>=remaining{remaining-=values[i];quotient+=parts[i]}}
+       if negative{return quotient};return -quotient
    }
 
 TypeScript
@@ -518,48 +282,14 @@ TypeScript
 
 .. code-block:: typescript
 
-   function divide(dividend: number, divisor: number): number {
-       const intMin = -2147483648;
-       const intMax = 2147483647;
-
-       if (dividend === intMin && divisor === -1) {
-           return intMax;
-       }
-
-       const negative = (dividend < 0) !== (divisor < 0);
-       let remaining = Math.abs(dividend);
-       const base = Math.abs(divisor);
-       const values: number[] = [];
-       const multiples: number[] = [];
-       let value = base;
-       let multiple = 1;
-
-       while (value <= remaining) {
-           values.push(value);
-           multiples.push(multiple);
-
-           if (value > remaining - value) {
-               break;
-           }
-
-           value += value;
-           multiple += multiple;
-       }
-
-       let quotient = 0;
-
-       for (let i = values.length - 1; i >= 0; i--) {
-           if (values[i] <= remaining) {
-               remaining -= values[i];
-               quotient += multiples[i];
-           }
-       }
-
-       return negative ? -quotient : quotient;
+   function divide(dividend:number,divisor:number):number{
+       const min=-(2**31),max=2**31-1;if(dividend===min&&divisor===-1)return max;
+       const negative=(dividend<0)!==(divisor<0);let remaining=dividend>0?-dividend:dividend;const base=divisor>0?-divisor:divisor;
+       const values:number[]=[],parts:number[]=[];let value=base,part=-1;
+       while(value>=remaining){values.push(value);parts.push(part);if(value<min/2||value+value<remaining)break;value+=value;part+=part;}
+       let quotient=0;for(let i=values.length-1;i>=0;i--)if(values[i]>=remaining){remaining-=values[i];quotient+=parts[i];}
+       return negative?quotient:-quotient;
    }
-
-JavaScript ``number`` 能精确表示所有 32 位整数及其倍增中间值。本实现避免 ``<< 31``，因为
-JavaScript 位运算会先把操作数压缩成 32 位有符号整数。
 
 C#
 ~~
@@ -567,43 +297,13 @@ C#
 .. code-block:: csharp
 
    public class Solution {
-       public int Divide(int dividend, int divisor) {
-           if (dividend == int.MinValue && divisor == -1) {
-               return int.MaxValue;
-           }
-
-           bool negative = (dividend < 0) != (divisor < 0);
-           long remaining = Math.Abs((long) dividend);
-           long baseValue = Math.Abs((long) divisor);
-           long[] values = new long[32];
-           long[] multiples = new long[32];
-           int count = 0;
-           long value = baseValue;
-           long multiple = 1;
-
-           while (value <= remaining) {
-               values[count] = value;
-               multiples[count] = multiple;
-               ++count;
-
-               if (value > remaining - value) {
-                   break;
-               }
-
-               value += value;
-               multiple += multiple;
-           }
-
-           long quotient = 0;
-
-           for (int i = count - 1; i >= 0; --i) {
-               if (values[i] <= remaining) {
-                   remaining -= values[i];
-                   quotient += multiples[i];
-               }
-           }
-
-           return (int) (negative ? -quotient : quotient);
+       public int Divide(int dividend,int divisor){
+           if(dividend==int.MinValue&&divisor==-1)return int.MaxValue;
+           bool negative=(dividend<0)!=(divisor<0);int remaining=dividend>0?-dividend:dividend;int baseValue=divisor>0?-divisor:divisor;
+           var values=new List<int>();var parts=new List<int>();int value=baseValue,part=-1;
+           while(value>=remaining){values.Add(value);parts.Add(part);if(value<int.MinValue/2||value+value<remaining)break;value+=value;part+=part;}
+           int quotient=0;for(int i=values.Count-1;i>=0;i--)if(values[i]>=remaining){remaining-=values[i];quotient+=parts[i];}
+           return negative?quotient:-quotient;
        }
    }
 
@@ -612,40 +312,13 @@ Julia
 
 .. code-block:: julia
 
-   function divide(dividend::Int, divisor::Int)::Int
-       int_min = -2147483648
-       int_max = 2147483647
-
-       dividend == int_min && divisor == -1 && return int_max
-
-       negative = (dividend < 0) != (divisor < 0)
-       remaining = abs(Int64(dividend))
-       base = abs(Int64(divisor))
-       values = Int64[]
-       multiples = Int64[]
-       value = base
-       multiple = Int64(1)
-
-       while value <= remaining
-           push!(values, value)
-           push!(multiples, multiple)
-
-           value > remaining - value && break
-
-           value += value
-           multiple += multiple
-       end
-
-       quotient = Int64(0)
-
-       for index in length(values):-1:1
-           if values[index] <= remaining
-               remaining -= values[index]
-               quotient += multiples[index]
-           end
-       end
-
-       return Int(negative ? -quotient : quotient)
+   function divide_integers(dividend::Int32, divisor::Int32)::Int32
+       dividend==typemin(Int32)&&divisor==-1 && return typemax(Int32)
+       negative=(dividend<0)!=(divisor<0);remaining=dividend>0 ? -dividend : dividend;base=divisor>0 ? -divisor : divisor
+       values=Int32[];parts=Int32[];value=base;part=Int32(-1)
+       while value>=remaining;push!(values,value);push!(parts,part);if value<typemin(Int32)÷2||value+value<remaining;break;end;value+=value;part+=part;end
+       quotient=Int32(0);for i in reverse(eachindex(values));if values[i]>=remaining;remaining-=values[i];quotient+=parts[i];end;end
+       negative ? quotient : -quotient
    end
 
 R
@@ -654,103 +327,14 @@ R
 .. code-block:: r
 
    divide_integers <- function(dividend, divisor) {
-     int_min <- -2147483648
-     int_max <- 2147483647
-
-     if (dividend == int_min && divisor == -1) {
-       return(int_max)
-     }
-
-     negative <- xor(dividend < 0, divisor < 0)
-     remaining <- abs(as.numeric(dividend))
-     base <- abs(as.numeric(divisor))
-     values <- numeric(0)
-     multiples <- numeric(0)
-     value <- base
-     multiple <- 1
-
-     while (value <= remaining) {
-       values <- c(values, value)
-       multiples <- c(multiples, multiple)
-
-       if (value > remaining - value) {
-         break
-       }
-
-       value <- value + value
-       multiple <- multiple + multiple
-     }
-
-     quotient <- 0
-
-     if (length(values) > 0L) {
-       for (index in rev(seq_along(values))) {
-         if (values[[index]] <= remaining) {
-           remaining <- remaining - values[[index]]
-           quotient <- quotient + multiples[[index]]
-         }
-       }
-     }
-
-     if (negative) -quotient else quotient
+       int_min <- -(2^31); int_max <- 2^31-1
+       if (dividend == int_min && divisor == -1) return(int_max)
+       negative <- xor(dividend < 0, divisor < 0)
+       remaining <- if (dividend > 0) -dividend else dividend
+       base <- if (divisor > 0) -divisor else divisor
+       values <- numeric(); parts <- numeric(); value <- base; part <- -1
+       while (value >= remaining) { values<-c(values,value);parts<-c(parts,part);if(value<int_min/2||value+value<remaining)break;value<-value+value;part<-part+part }
+       quotient <- 0
+       for (i in rev(seq_along(values))) if (values[[i]] >= remaining) { remaining<-remaining-values[[i]];quotient<-quotient+parts[[i]] }
+       if (negative) quotient else -quotient
    }
-
-R 的整数最小值与 ``NA_integer_`` 表示有关，因此接口使用可精确容纳 32 位整数的双精度数值。
-在 ``2^53`` 以内，R 的双精度整数运算仍然精确。
-
-关键边界
---------
-
-* ``INT_MIN / -1``：唯一正向溢出，必须返回 ``INT_MAX``；
-* ``INT_MIN / 1``：结果正好是 ``INT_MIN``，不能误钳制；
-* 除数为 ``INT_MIN``：只有被除数也为 ``INT_MIN`` 时商为 ``1``，其他情况为 ``0``；
-* 被除数绝对值小于除数：倍增表为空，返回 ``0``；
-* 除数为 ``1`` 或 ``-1``：表可能达到最大长度；
-* 异号且存在余数：只附加负号，得到向零截断结果。
-
-易错点
-------
-
-* 在 32 位类型中调用 ``abs(INT_MIN)``，结果溢出或仍为负数；
-* 用 ``value + value <= remaining`` 判断后再发生窄类型溢出；
-* 对负商根据余数再减一，错误地实现成向负无穷取整；
-* JavaScript 使用 ``1 << 31`` 表示正数 ``2147483648``，实际得到负数；
-* 倍增阶段没有限制上界，固定宽度语言中不断翻倍；
-* 忘记显式处理唯一溢出组合；
-* 使用了 ``/``、``%`` 或 ``*``，违反题目限制。
-
-新增与强化知识
---------------
-
-新增
-~~~~
-
-* 加法倍增表把整数商拆成二进制位贡献；
-* 从最大倍数降序选择等价于贪心确定商的高位；
-* ``value <= remaining - value`` 是“先判断、后倍增”的安全边界式；
-* 向零截断可以通过先算绝对值整数商、最后附加符号得到。
-
-强化
-~~~~
-
-* 0007、0008 的 32 位边界处理再次出现，但本题必须先提升类型再取绝对值；
-* 0011、0015、0016 中“先扩宽再运算”的规则继续适用；
-* 二进制分解并不要求直接使用位移，重复加法也能构造相同权重。
-
-最小自检
---------
-
-#. 为什么 ``abs(INT_MIN)`` 不能在 32 位有符号整数中计算？
-#. 倍增表中的 ``multiple`` 表示什么？
-#. 为什么从最大倍增值向下选择不会错过更大的商？
-#. ``-7 / 3`` 为什么返回 ``-2`` 而不是 ``-3``？
-#. 除 ``INT_MIN / -1`` 外，为什么不需要其他上界钳制？
-
-答案要点
-~~~~~~~~
-
-#. ``2147483648`` 超过 ``INT_MAX``，必须先提升到更宽类型。
-#. 当前倍增值等于多少份原除数，也就是该项对商的贡献。
-#. 当前值可放入时，高位必须为一；不可放入时，高位只能为零，剩余低位继续精确表示余量。
-#. 绝对值商是 ``2``，最后只附加负号，实现向零截断。
-#. 32 位输入的其他商都落在 ``[-2147483648, 2147483647]`` 范围内。
