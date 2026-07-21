@@ -8,214 +8,396 @@
 :难度: Easy
 :主题: 数学、十进制数字、回文、半反转
 :原题: `LeetCode 0009 <https://leetcode.com/problems/palindrome-number/>`_
-:访问状态: Available
-:教学重点: 快速排除、只反转后一半、停止条件、奇数位中间数字、溢出规避
+:教学重点: 快速排除、完整反转与半反转、数字中点、奇偶统一比较、结构性溢出规避
 
 题目重述
 --------
 
 给定一个整数 ``x``，判断它的十进制表示从左向右和从右向左读取时是否相同。
 
-负号属于表示的一部分，因此负数不是回文数。除 ``0`` 外，末位为 ``0`` 的整数也不是
-回文数：若它是回文，首位也必须是 ``0``，而普通十进制整数没有前导零。
+负号属于十进制表示的一部分，因此负数不是回文数。除 ``0`` 外，末位为 ``0`` 的整数也不是回文数：
+若左右字符镜像相等，它的首位也必须为 ``0``，而普通整数表示没有前导零。
 
-本题要求直接处理整数，不把它转换为字符串。
+字符串比较可以直接表达回文关系，但本文的主解法直接处理整数。它只反转数字的后一半，避免构造完整
+反转值。
 
 自建示例
 --------
 
-偶数位回文
-~~~~~~~~~~
+偶数位回文在两半相等时交汇：
 
 .. code-block:: text
 
-   输入：1221
-   逐步把右半部分反转到 reversed_half：1 -> 12
-   剩余左半部分 x：1221 -> 122
-   此时 12 == 12
-   输出：true
+   输入：x = 4554
 
-奇数位回文
-~~~~~~~~~~
+   剩余前缀：4554 -> 455 -> 45
+   反转后缀：   0 ->   4 -> 45
 
-.. code-block:: text
+   最终 45 == 45，输出：true
 
-   输入：12321
-   reversed_half：1 -> 12 -> 123
-   剩余 x：12321 -> 1232 -> 123
-   中间数字 3 不需要配对，因此比较 123 / 10 与 12
-   输出：true
-
-末尾零
-~~~~~~
+奇数位回文会让反转后缀多出中间数字：
 
 .. code-block:: text
 
-   输入：120
-   若从右侧读取，会得到 021；首位不可能是 0。
+   输入：x = 12321
+
+   剩余前缀：12321 -> 1232 -> 123 -> 12
+   反转后缀：    0 ->    1 ->  12 -> 123
+
+   反转后缀末位 3 是中间数字。
+   比较 12 == 123 / 10，输出：true
+
+非回文数也会在数字中点停止：
+
+.. code-block:: text
+
+   输入：x = 12341
+
+   停止时：剩余前缀 = 12，反转后缀 = 143
+   12 既不等于 143，也不等于 143 / 10。
    输出：false
 
-单个数字
-~~~~~~~~
+可以立即排除的输入：
 
 .. code-block:: text
 
-   输入：7
-   循环无需执行，7 / 10 == 0。
-   输出：true
+   x = -1221  -> false，负号没有右侧镜像
+   x = 120    -> false，反转表示会以 0 开头
+   x = 0      -> true，单个数字本身是回文
 
-问题抽象
+C++ 实现
 --------
 
-回文要求左半部分与右半部分镜像相等。无需反转整个整数，只需反复从原数末尾弹出一位，
-并把它压入 ``reversed_half``，直到后者的位数达到或超过剩余部分。
+.. code-block:: cpp
 
-每轮执行：
+   #include <algorithm>
+   #include <string>
+
+   class Solution {
+   private:
+       bool compareAsString(int x) {
+           if (x < 0) {
+               return false;
+           }
+
+           const std::string text = std::to_string(x);
+           int left = 0;
+           int right = static_cast<int>(text.size()) - 1;
+
+           while (left < right) {
+               if (text[left] != text[right]) {
+                   return false;
+               }
+               ++left;
+               --right;
+           }
+           return true;
+       }
+
+       bool reverseEntireNumber(int x) {
+           if (x < 0) {
+               return false;
+           }
+
+           const int original = x;
+           long long reversed = 0;
+
+           while (x > 0) {
+               reversed = reversed * 10 + x % 10;
+               x /= 10;
+           }
+
+           return reversed == original;
+       }
+
+       bool reverseSecondHalf(int x) {
+           if (x < 0 || (x != 0 && x % 10 == 0)) {
+               return false;
+           }
+
+           int reversed_half = 0;
+           while (x > reversed_half) {
+               const int digit = x % 10;
+               reversed_half = reversed_half * 10 + digit;
+               x /= 10;
+           }
+
+           // 偶数位直接比较；奇数位删除 reversed_half 中的中间数字。
+           return x == reversed_half || x == reversed_half / 10;
+       }
+
+   public:
+       bool isPalindrome(int x) {
+           return reverseSecondHalf(x);
+       }
+   };
+
+题解
+----
+
+回文关系首先表现为首尾镜像比较
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+把整数转换成十进制字符串后，问题变成标准的双指针判断：``left`` 从首字符向右移动，``right`` 从末字符
+向左移动，每轮比较一对镜像字符。任意一对不同即可返回 ``false``，全部镜像对相同则返回 ``true``。
+
+``compareAsString`` 的时间复杂度是 ``O(d)``，其中 ``d`` 是十进制位数；字符串保存 ``d`` 个字符，工作空间
+为 ``O(d)``。这种方法清楚展示了回文定义，却没有利用整数的十进制结构，也没有满足直接处理整数的目标。
+
+完整反转如何把镜像比较变成整数比较
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+十进制整数的末位可以通过 ``x % 10`` 取得，删除末位可以执行 ``x /= 10``。把弹出的数字追加到另一个整数
+末尾时执行：
 
 .. math::
 
-   digit = x \bmod 10
+   reversed_{next} = 10 \cdot reversed + x \bmod 10
+
+持续到输入被清空，就得到了完整反转值。于是非负整数是回文数，当且仅当完整反转值与原数相等。
+
+``reverseEntireNumber`` 使用 ``long long`` 保存反转结果，避免 32 位乘十时溢出。它消除了字符串空间，却仍然
+做了两件超过实际需要的工作：
+
+* 把全部数字都移动到反转结果中；
+* 为可能超过 32 位范围的完整反转值选择更宽类型。
+
+判断回文只需要确认左右两半是否镜像相等。处理到数字中点后，剩余数字已经没有新的镜像对需要检查，因此
+可以停止完整反转。
+
+为什么负数与非零末位零可以直接排除
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+负数的十进制表示以负号开头，末尾没有对应负号，所以任何负数都不满足首尾镜像关系。
+
+对非零整数，若末位是 ``0``，从右向左读取时第一个字符就是 ``0``。回文要求从左向右读取时第一个字符
+也为 ``0``，这需要一个不存在的前导零。因此条件
+``x != 0 && x % 10 == 0`` 可以直接判定为 ``false``。
+
+``0`` 需要单独保留。它只有一个数字，左右读取结果相同，所以末位零判断必须包含 ``x != 0``。
+
+半反转状态如何保存尚未比较的两侧
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+通过快速排除后，算法只处理末位非零的非负整数。维护两个状态：
+
+.. code-block:: text
+
+   x              尚未移动的原数字前缀
+   reversed_half  已经从原数右侧弹出的后缀，并按反向顺序重新组成
+
+每轮先取得 ``x`` 的末位 ``digit``，再完成：
 
 .. math::
 
-   reversed\_half = reversed\_half \times 10 + digit
+   reversed\_half_{next}
+   = 10 \cdot reversed\_half + digit
 
 .. math::
 
-   x = \left\lfloor x / 10 \right\rfloor
+   x_{next} = \left\lfloor x / 10 \right\rfloor
 
-因为快速排除后只处理非负整数，各语言的整数除法与余数语义一致。
+输入前缀减少一位，反转后缀增加一位。经过 ``k`` 轮后：
 
-解法选择
---------
+* ``x`` 等于原数删除最后 ``k`` 位后的前缀；
+* ``reversed_half`` 等于原数最后 ``k`` 位的逆序；
+* 两个状态之间没有遗漏或重复任何十进制位。
+
+停止条件为什么能恰好到达数字中点
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+循环条件是 ``x > reversed_half``。它并不是提前判断两半是否相等，而是利用两个状态位数的相反变化定位
+中点。
+
+快速排除保证原数末位非零，因此第一次压入后，``reversed_half`` 不会出现前导零。此后每轮都让它增加
+一个十进制位，同时让 ``x`` 删除一个十进制位。
+
+当 ``x > reversed_half`` 仍成立时，尚未处理的前缀在数值规模上仍然长于或大于已反转后缀，右侧还没有
+覆盖到数字中点。第一次出现 ``x <= reversed_half`` 时，已经移动至少一半数字：
+
+* 偶数位整数中，两侧各包含一半数字；
+* 奇数位整数中，``reversed_half`` 比左侧多包含一个中间数字。
+
+即使两部分位数相同但 ``x`` 数值较大，循环可能再移动一位。此时 ``reversed_half`` 会比 ``x`` 多一位，
+循环必然停止，最终比较仍按奇数形式删除多出的中间位。因此该条件不需要预先计算数字位数。
+
+偶数位回文如何在两半相等时停止
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+使用 ``x = 4554``：
+
+.. list-table::
+   :header-rows: 1
+
+   * - 轮次
+     - 更新前 ``x``
+     - 弹出 ``digit``
+     - 更新后 ``x``
+     - 更新后 ``reversed_half``
+     - 是否继续
+   * - 初始
+     - 4554
+     - —
+     - 4554
+     - 0
+     - ``4554 > 0``
+   * - 1
+     - 4554
+     - 4
+     - 455
+     - 4
+     - ``455 > 4``
+   * - 2
+     - 455
+     - 5
+     - 45
+     - 45
+     - ``45 > 45`` 不成立
+
+原数左半部分是 ``45``，右半部分 ``54`` 被反转为 ``45``。偶数位回文因此满足：
+
+.. math::
+
+   x = reversed\_half
+
+奇数位回文为什么只需删除一个中间数字
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+使用 ``x = 12321``：
+
+.. list-table::
+   :header-rows: 1
+
+   * - 轮次
+     - 更新前 ``x``
+     - 弹出 ``digit``
+     - 更新后 ``x``
+     - 更新后 ``reversed_half``
+   * - 初始
+     - 12321
+     - —
+     - 12321
+     - 0
+   * - 1
+     - 12321
+     - 1
+     - 1232
+     - 1
+   * - 2
+     - 1232
+     - 2
+     - 123
+     - 12
+   * - 3
+     - 123
+     - 3
+     - 12
+     - 123
+
+停止时，``reversed_half`` 的最低位 ``3`` 来自原数中间位置。中间数字没有镜像配对要求，把它删除后，
+右半部分的逆序值为 ``123 / 10 = 12``。奇数位回文因此满足：
+
+.. math::
+
+   x = \left\lfloor reversed\_half / 10 \right\rfloor
+
+两个条件合并为：
+
+.. code-block:: text
+
+   x == reversed_half || x == reversed_half / 10
+
+非回文数在中点如何被拒绝
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+对 ``x = 12341``，状态变化为：
+
+.. list-table::
+   :header-rows: 1
+
+   * - 轮次
+     - 更新后 ``x``
+     - 更新后 ``reversed_half``
+   * - 1
+     - 1234
+     - 1
+   * - 2
+     - 123
+     - 14
+   * - 3
+     - 12
+     - 143
+
+停止时 ``12 != 143``，并且 ``12 != 143 / 10``。算法只比较真正可能互为镜像的两半，不需要恢复或反转
+剩余数字。
+
+解法对比与主解法选择
+~~~~~~~~~~~~~~~~~~~~
 
 .. list-table::
    :header-rows: 1
 
    * - 方法
      - 时间复杂度
-     - 空间复杂度
-     - 取舍
-   * - 只反转数字后一半
-     - ``O(log x)``
+     - 工作空间
+     - 实际处理范围
+   * - 字符串双指针
+     - ``O(d)``
+     - ``O(d)``
+     - 比较全部镜像字符
+   * - 完整整数反转
+     - ``O(d)``
      - ``O(1)``
-     - 主解法；只处理一半数字，并自然规避完整反转的溢出
-   * - 完整反转后比较
-     - ``O(log x)``
+     - 移动全部数字，并依赖更宽中间类型或溢出判断
+   * - 后一半反转
+     - ``O(d)``
      - ``O(1)``
-     - 代码直观，但必须额外处理完整反转溢出
-   * - 转换为字符串后双指针
-     - ``O(log x)``
-     - ``O(log x)``
-     - 工程上简单，但隐藏了十进制逐位处理，并使用额外存储
+     - 只移动到数字中点
 
-主解法：只反转数字后一半
---------------------------
+半反转保持常数工作空间，只处理约一半数字，并从算法结构上避免完整反转溢出，因此作为标准入口和九语言
+统一主解法。
 
-快速排除
-~~~~~~~~
+为什么半反转不会构造出 32 位溢出值
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-开始循环前先处理两类必然失败的输入：
+32 位正整数最多有 10 个十进制数字。``reversed_half`` 每轮增加一位，``x`` 每轮减少一位；当反转部分比
+剩余部分多一位后，``x > reversed_half`` 必然不成立。
 
-* ``x < 0``：负号只在左侧出现；
-* ``x != 0 && x % 10 == 0``：末位为零却没有对应的前导零。
+因此最多只会构造约一半数字，极端情况下在两部分同位数但 ``x`` 较大时多移动一位。对 10 位输入，
+``reversed_half`` 最多包含 6 位，最大不超过 ``999999``，远小于 ``INT_MAX``。主解法无需像完整反转那样
+增加乘十前溢出分支。
 
-``0`` 必须保留为回文数，因此末尾零判断不能直接写成 ``x % 10 == 0``。
+为什么最终比较恰好覆盖全部回文情况
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-状态含义
-~~~~~~~~
+任意非负且末位非零的整数，位数只有奇数或偶数两种情况。半反转循环结束时：
 
-算法维护两个非负整数：
+* 偶数位时，左右镜像部分长度相同，回文当且仅当 ``x == reversed_half``；
+* 奇数位时，反转部分包含一个不需要配对的中间数字，回文当且仅当
+  ``x == reversed_half / 10``。
 
-* ``x``：尚未处理的左侧部分；
-* ``reversed_half``：已经从原数右侧取出的数字，按反向顺序重新组成的整数。
+快速排除已经正确处理负数和非零末位零；循环每轮又恰好移动一个数字。因此两个最终比较覆盖所有剩余
+输入，并且只有镜像两半相等时才返回 ``true``。
 
-例如原数 ``12321``：
-
-.. code-block:: text
-
-   初始：x = 12321, reversed_half = 0
-   一轮：x = 1232,  reversed_half = 1
-   二轮：x = 123,   reversed_half = 12
-   三轮：x = 12,    reversed_half = 123
-
-停止条件为什么是 ``x > reversed_half``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-每轮让 ``x`` 少一位，让 ``reversed_half`` 多一位。当 ``x <= reversed_half`` 时，右侧
-已经取出至少一半数字：
-
-* 偶数位数时，两边位数相同；
-* 奇数位数时，``reversed_half`` 比 ``x`` 多一位，多出的正是中间数字。
-
-因此循环条件使用 ``x > reversed_half``。它不是在比较两半的最终大小，而是借助位数变化
-判断何时已经处理到中间。
-
-最终比较
-~~~~~~~~
-
-偶数位回文满足：
-
-.. math::
-
-   x = reversed\_half
-
-奇数位回文的中间数字无需配对，它位于 ``reversed_half`` 的末位。整数除以 ``10`` 删除它：
-
-.. math::
-
-   x = \left\lfloor reversed\_half / 10 \right\rfloor
-
-因此统一返回：
-
-.. code-block:: text
-
-   x == reversed_half 或 x == reversed_half / 10
-
-核心不变量
+复杂度来源
 ~~~~~~~~~~
 
-每轮循环开始时：
+设输入绝对值共有 ``d`` 个十进制数字。
 
-* 原始整数的尚未处理前缀保存在 ``x`` 中；
-* 已处理后缀的逆序值保存在 ``reversed_half`` 中；
-* 把 ``reversed_half`` 的数字再次反转并接到 ``x`` 右侧，可恢复原始数字序列；
-* 每轮恰好移动一位，因此不会跳过或重复处理任何数字。
+字符串方法创建并比较 ``d`` 个字符，时间和工作空间分别为 ``O(d)``、``O(d)``。完整整数反转执行 ``d``
+轮末位提取和压入，时间为 ``O(d)``，工作空间为 ``O(1)``。
 
-正确性依据
-~~~~~~~~~~
+半反转最多执行约 ``d / 2`` 轮，每轮进行常数次除法、取余、乘法与比较，时间仍记为 ``O(d)``，等价于
+``O(log x)``；只保存 ``x`` 与 ``reversed_half`` 等固定变量，工作空间为 ``O(1)``。
 
-快速排除首先删除所有不可能成为回文的负数和非零末尾零整数，同时保留 ``0``。
+九语言实现
+----------
 
-循环每次从 ``x`` 的末尾取出一位，并把它追加到 ``reversed_half``。由十进制位值定义，
-经过 ``k`` 轮后，``reversed_half`` 恰好是原数最后 ``k`` 位的逆序，``x`` 恰好是删除这
-``k`` 位后的前缀，因此不变量成立。
-
-当 ``x <= reversed_half`` 时，右侧已取出至少一半数字。若原数位数为偶数，两部分位数
-相同，回文当且仅当二者相等。若位数为奇数，``reversed_half`` 多出的最低位来自原数
-中间位置，删除它后，两侧镜像部分必须相等。最终两个比较恰好覆盖这两种情况，所以算法
-返回 ``true`` 当且仅当原数是回文数。
-
-为什么不会溢出
-~~~~~~~~~~~~~~
-
-完整反转最多构造与原数位数相同的整数，可能超过 32 位范围。半反转只处理约一半数字。
-对于 32 位输入，``reversed_half`` 最多约为五到六位；即使循环在交叉处多处理一位，仍远小于
-32 位有符号整数上限。于是主解法无需额外溢出分支。
-
-复杂度
-~~~~~~
-
-设输入绝对值的十进制位数为 ``d``。
-
-* 时间复杂度：``O(d)``，等价于 ``O(log x)``，实际只处理约一半数字；
-* 空间复杂度：``O(1)``，只维护固定数量的整数。
-
-核心语言实现
-~~~~~~~~~~~~
+九语言统一使用半反转。快速排除后 ``x`` 为非负整数，各语言的除以 10 和取余都可以直接表示删除末位与
+取得末位。TypeScript 需要使用 ``Math.trunc`` 删除十进制末位；Julia 和 R 使用各自的整数商操作。
 
 C
-^
+~
 
 .. code-block:: c
 
@@ -228,39 +410,16 @@ C
 
        int reversed_half = 0;
        while (x > reversed_half) {
-           // 每轮把 x 的末位移动到 reversed_half 末尾。
-           reversed_half = reversed_half * 10 + x % 10;
+           const int digit = x % 10;
+           reversed_half = reversed_half * 10 + digit;
            x /= 10;
        }
 
-       // 奇数位时，/ 10 去掉 reversed_half 中的中间数字。
        return x == reversed_half || x == reversed_half / 10;
    }
 
-C++
-^^^
-
-.. code-block:: cpp
-
-   class Solution {
-   public:
-       bool isPalindrome(int x) {
-           if (x < 0 || (x != 0 && x % 10 == 0)) {
-               return false;
-           }
-
-           int reversedHalf = 0;
-           while (x > reversedHalf) {
-               reversedHalf = reversedHalf * 10 + x % 10;
-               x /= 10;
-           }
-
-           return x == reversedHalf || x == reversedHalf / 10;
-       }
-   };
-
 Python
-^^^^^^
+~~~~~~
 
 .. code-block:: python
 
@@ -271,14 +430,14 @@ Python
 
            reversed_half = 0
            while x > reversed_half:
-               reversed_half = reversed_half * 10 + x % 10
-               # 此时 x 非负，// 10 等价于删除十进制末位。
+               digit = x % 10
+               reversed_half = reversed_half * 10 + digit
                x //= 10
 
            return x == reversed_half or x == reversed_half // 10
 
 Java
-^^^^
+~~~~
 
 .. code-block:: java
 
@@ -290,7 +449,8 @@ Java
 
            int reversedHalf = 0;
            while (x > reversedHalf) {
-               reversedHalf = reversedHalf * 10 + x % 10;
+               int digit = x % 10;
+               reversedHalf = reversedHalf * 10 + digit;
                x /= 10;
            }
 
@@ -299,7 +459,7 @@ Java
    }
 
 Rust
-^^^^
+~~~~
 
 .. code-block:: rust
 
@@ -311,7 +471,8 @@ Rust
 
            let mut reversed_half = 0_i32;
            while x > reversed_half {
-               reversed_half = reversed_half * 10 + x % 10;
+               let digit = x % 10;
+               reversed_half = reversed_half * 10 + digit;
                x /= 10;
            }
 
@@ -320,7 +481,7 @@ Rust
    }
 
 Go
-^^
+~~
 
 .. code-block:: go
 
@@ -331,7 +492,8 @@ Go
 
        reversedHalf := 0
        for x > reversedHalf {
-           reversedHalf = reversedHalf*10 + x%10
+           digit := x % 10
+           reversedHalf = reversedHalf*10 + digit
            x /= 10
        }
 
@@ -339,7 +501,7 @@ Go
    }
 
 TypeScript
-^^^^^^^^^^
+~~~~~~~~~~
 
 .. code-block:: typescript
 
@@ -350,8 +512,8 @@ TypeScript
 
        let reversedHalf = 0;
        while (x > reversedHalf) {
-           reversedHalf = reversedHalf * 10 + x % 10;
-           // number 除法会产生小数，Math.trunc 才是删除末位。
+           const digit = x % 10;
+           reversedHalf = reversedHalf * 10 + digit;
            x = Math.trunc(x / 10);
        }
 
@@ -360,7 +522,7 @@ TypeScript
    }
 
 C#
-^^
+~~
 
 .. code-block:: csharp
 
@@ -372,7 +534,8 @@ C#
 
            int reversedHalf = 0;
            while (x > reversedHalf) {
-               reversedHalf = reversedHalf * 10 + x % 10;
+               int digit = x % 10;
+               reversedHalf = reversedHalf * 10 + digit;
                x /= 10;
            }
 
@@ -381,19 +544,19 @@ C#
    }
 
 Julia
-^^^^^
+~~~~~
 
 .. code-block:: julia
 
    function is_palindrome(x::Int)::Bool
-       if x < 0 || (x != 0 && x % 10 == 0)
+       if x < 0 || (x != 0 && rem(x, 10) == 0)
            return false
        end
 
        reversed_half = 0
        while x > reversed_half
-           reversed_half = reversed_half * 10 + x % 10
-           # div 执行整数除法；输入已保证非负。
+           digit = rem(x, 10)
+           reversed_half = reversed_half * 10 + digit
            x = div(x, 10)
        end
 
@@ -401,7 +564,7 @@ Julia
    end
 
 R
-^
+~
 
 .. code-block:: r
 
@@ -412,64 +575,10 @@ R
 
        reversed_half <- 0
        while (x > reversed_half) {
-           reversed_half <- reversed_half * 10 + x %% 10
-           # %/% 是整数商；本题输入在 32 位范围内，可由 double 精确表示。
+           digit <- x %% 10
+           reversed_half <- reversed_half * 10 + digit
            x <- x %/% 10
        }
 
        x == reversed_half || x == reversed_half %/% 10
    }
-
-关键边界与易错点
-----------------
-
-* 忘记排除负数，会把 ``-121`` 的数字部分误判为回文；
-* 把所有末位零都排除，会错误拒绝 ``0``；
-* 循环条件写成固定次数，需要先计算位数，状态更复杂；
-* 奇数位比较时忘记 ``reversed_half / 10``，会错误拒绝 ``121``；
-* TypeScript 直接使用 ``x / 10`` 会保留小数，必须 ``Math.trunc``；
-* 不要在循环中修改原始值后再尝试与完整反转比较；主解法比较的是两半状态；
-* 完整反转方案若使用 32 位整数，必须额外处理溢出，半反转无需承担该风险。
-
-新增与强化知识
---------------
-
-新增
-~~~~
-
-* **半反转停止法**：让剩余前缀递减、已反转后缀递增，以 ``x > reversed_half`` 判断交叉点；
-* **奇数位中心消除**：用 ``reversed_half / 10`` 去掉无需配对的中间数字；
-* **结构性溢出规避**：通过不构造完整反转值，从算法设计层面消除溢出风险。
-
-强化
-~~~~
-
-* 0007 的十进制“弹出末位、压入结果”再次出现，但本题只移动一半数字；
-* 非负整数上的整除和余数语义在十种语言中保持一致；
-* 快速排除条件必须明确保留合法特例 ``0``。
-
-关联题目
---------
-
-* `0005. Longest Palindromic Substring <0005-longest-palindromic-substring.rst>`_：同样利用回文
-  对称性，但处理对象从整数数字变为字符串区间；
-* `0007. Reverse Integer <0007-reverse-integer.rst>`_：复用逐位弹出与压入，本题通过只反转
-  一半避免完整反转溢出。
-
-最小自检
---------
-
-#. 为什么 ``10`` 一定不是回文，而 ``0`` 是回文？
-#. ``12321`` 循环结束时，为什么比较 ``x == reversed_half / 10``？
-#. ``x > reversed_half`` 如何同时适用于奇数位和偶数位整数？
-#. 半反转为什么不需要 0007 那样的完整溢出判断？
-#. TypeScript 中为什么不能直接写 ``x = x / 10``？
-
-答案要点
-~~~~~~~~
-
-#. 非零末位零要求不存在的前导零；``0`` 本身左右读取相同；
-#. ``reversed_half`` 多出的最低位是中间数字，除以 ``10`` 后再比较镜像两侧；
-#. 两个状态每轮一减一增，交叉时已经处理至少一半数字；
-#. 32 位输入只构造约一半位数的反转值，不会接近 32 位上限；
-#. TypeScript 的 ``number`` 除法产生浮点结果，``Math.trunc`` 才表示删除末位。
