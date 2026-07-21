@@ -28,11 +28,25 @@ C++ 实现
 .. code-block:: cpp
 
    #include <array>
-   #include <bit>
    #include <vector>
 
    class Solution {
    private:
+       int countBits(int value) {
+           int count = 0;
+           while (value != 0) {
+               value &= value - 1;
+               ++count;
+           }
+           return count;
+       }
+
+       int trailingIndex(int bit) {
+           int index = 0;
+           while ((1 << index) != bit) ++index;
+           return index;
+       }
+
        bool canPlace(const std::vector<std::vector<char>>& board, int row, int col, char digit) {
            for (int i = 0; i < 9; ++i) {
                if (board[row][i] == digit || board[i][col] == digit) return false;
@@ -64,7 +78,8 @@ C++ 实现
            bool rows[9][9], bool cols[9][9], bool boxes[9][9]
        ) {
            if (index == static_cast<int>(spaces.size())) return true;
-           auto [row, col] = spaces[index];
+           int row = spaces[index].first;
+           int col = spaces[index].second;
            int box = (row / 3) * 3 + col / 3;
            for (int digit = 0; digit < 9; ++digit) {
                if (rows[row][digit] || cols[col][digit] || boxes[box][digit]) continue;
@@ -83,18 +98,22 @@ C++ 实现
            std::array<int,9>& cols,
            std::array<int,9>& boxes
        ) {
-           constexpr int full = (1 << 9) - 1;
+           const int full = (1 << 9) - 1;
            int best_row = -1, best_col = -1, best_mask = 0, best_count = 10;
 
-           for (int row = 0; row < 9; ++row) for (int col = 0; col < 9; ++col) {
-               if (board[row][col] != '.') continue;
-               int box = (row / 3) * 3 + col / 3;
-               int mask = full & ~(rows[row] | cols[col] | boxes[box]);
-               int count = std::popcount(static_cast<unsigned>(mask));
-               if (count == 0) return false;
-               if (count < best_count) {
-                   best_row = row; best_col = col; best_mask = mask; best_count = count;
-                   if (count == 1) break;
+           for (int row = 0; row < 9; ++row) {
+               for (int col = 0; col < 9; ++col) {
+                   if (board[row][col] != '.') continue;
+                   int box = (row / 3) * 3 + col / 3;
+                   int mask = full & ~(rows[row] | cols[col] | boxes[box]);
+                   int count = countBits(mask);
+                   if (count == 0) return false;
+                   if (count < best_count) {
+                       best_row = row;
+                       best_col = col;
+                       best_mask = mask;
+                       best_count = count;
+                   }
                }
            }
 
@@ -103,11 +122,15 @@ C++ 实现
            while (best_mask != 0) {
                int bit = best_mask & -best_mask;
                best_mask ^= bit;
-               int digit = std::countr_zero(static_cast<unsigned>(bit));
+               int digit = trailingIndex(bit);
                board[best_row][best_col] = static_cast<char>('1' + digit);
-               rows[best_row] |= bit; cols[best_col] |= bit; boxes[box] |= bit;
+               rows[best_row] |= bit;
+               cols[best_col] |= bit;
+               boxes[box] |= bit;
                if (mrvDfs(board, rows, cols, boxes)) return true;
-               rows[best_row] ^= bit; cols[best_col] ^= bit; boxes[box] ^= bit;
+               rows[best_row] ^= bit;
+               cols[best_col] ^= bit;
+               boxes[box] ^= bit;
                board[best_row][best_col] = '.';
            }
            return false;
@@ -115,11 +138,15 @@ C++ 实现
 
        void solveWithMrv(std::vector<std::vector<char>>& board) {
            std::array<int,9> rows{}, cols{}, boxes{};
-           for (int row = 0; row < 9; ++row) for (int col = 0; col < 9; ++col) {
-               if (board[row][col] == '.') continue;
-               int bit = 1 << (board[row][col] - '1');
-               int box = (row / 3) * 3 + col / 3;
-               rows[row] |= bit; cols[col] |= bit; boxes[box] |= bit;
+           for (int row = 0; row < 9; ++row) {
+               for (int col = 0; col < 9; ++col) {
+                   if (board[row][col] == '.') continue;
+                   int bit = 1 << (board[row][col] - '1');
+                   int box = (row / 3) * 3 + col / 3;
+                   rows[row] |= bit;
+                   cols[col] |= bit;
+                   boxes[box] |= bit;
+               }
            }
            mrvDfs(board, rows, cols, boxes);
        }
@@ -300,7 +327,8 @@ Go
 .. code-block:: go
 
    func solveSudoku(board [][]byte){rows,cols,boxes:=[9]int{},[9]int{},[9]int{};for r:=0;r<9;r++{for c:=0;c<9;c++{if board[r][c]!='.'{bit:=1<<int(board[r][c]-'1');b:=(r/3)*3+c/3;rows[r]|=bit;cols[c]|=bit;boxes[b]|=bit}}}
-       var dfs func()bool;dfs=func()bool{br,bc,bm,best:=-1,-1,0,10;for r:=0;r<9;r++{for c:=0;c<9;c++{if board[r][c]=='.'{b:=(r/3)*3+c/3;mask:=0x1ff&^(rows[r]|cols[c]|boxes[b]);count:=bits.OnesCount(uint(mask));if count==0{return false};if count<best{br,bc,bm,best=r,c,mask,count}}}};if br<0{return true};b:=(br/3)*3+bc/3;for bm!=0{bit:=bm&-bm;bm^=bit;d:=bits.TrailingZeros(uint(bit));board[br][bc]=byte('1'+d);rows[br]|=bit;cols[bc]|=bit;boxes[b]|=bit;if dfs(){return true};rows[br]^=bit;cols[bc]^=bit;boxes[b]^=bit;board[br][bc]='.'};return false};dfs()}
+       countBits:=func(x int)int{count:=0;for x!=0{x&=x-1;count++};return count};bitIndex:=func(bit int)int{d:=0;for 1<<d!=bit{d++};return d}
+       var dfs func()bool;dfs=func()bool{br,bc,bm,best:=-1,-1,0,10;for r:=0;r<9;r++{for c:=0;c<9;c++{if board[r][c]=='.'{b:=(r/3)*3+c/3;mask:=0x1ff&^(rows[r]|cols[c]|boxes[b]);count:=countBits(mask);if count==0{return false};if count<best{br,bc,bm,best=r,c,mask,count}}}};if br<0{return true};b:=(br/3)*3+bc/3;for bm!=0{bit:=bm&-bm;bm^=bit;d:=bitIndex(bit);board[br][bc]=byte('1'+d);rows[br]|=bit;cols[bc]|=bit;boxes[b]|=bit;if dfs(){return true};rows[br]^=bit;cols[bc]^=bit;boxes[b]^=bit;board[br][bc]='.'};return false};dfs()}
 
 TypeScript
 ~~~~~~~~~~
@@ -336,7 +364,7 @@ Julia
        function dfs();br=0;bc=0;bm=0;best=10
            for r in 1:9,c in 1:9;if board[r][c]=='.';b=((r-1)÷3)*3+(c-1)÷3+1;mask=0x1ff&~(rows[r]|cols[c]|boxes[b]);n=count_ones(mask);n==0&&return false;if n<best;br=r;bc=c;bm=mask;best=n;end;end;end
            br==0&&return true;b=((br-1)÷3)*3+(bc-1)÷3+1
-           while bm!=0;bit=bm&-bm;bm⊻=bit;d=trailing_zeros(bit);board[br][bc]=Char(Int('1')+d);rows[br]|=bit;cols[bc]|=bit;boxes[b]|=bit;dfs()&&return true;rows[br]⊻=bit;cols[bc]⊻=bit;boxes[b]⊻=bit;board[br][bc]='.';end;false
+           while bm!=0;bit=bm&-bm;bm=xor(bm,bit);d=trailing_zeros(bit);board[br][bc]=Char(Int('1')+d);rows[br]|=bit;cols[bc]|=bit;boxes[b]|=bit;dfs()&&return true;rows[br]=xor(rows[br],bit);cols[bc]=xor(cols[bc],bit);boxes[b]=xor(boxes[b],bit);board[br][bc]='.';end;false
        end;dfs();board
    end
 
