@@ -13,7 +13,7 @@
 题目重述
 --------
 
-给定按非递减顺序排列的单链表，构造高度平衡的二叉搜索树。链表可为空并允许重复值；中序遍历必须恢复原值序列。主实现不修改链表链接，树节点全部新建。
+给定按非递减顺序排列的单链表，构造高度平衡的二叉搜索树。链表可为空并允许重复值；中序遍历必须恢复原值序列。主实现不修改链表链接，树节点全部新建。Rust 平台按值接收链表，语言实现会顺序取得其所有权节点，但使用相同的中序构造状态。
 
 自建示例
 --------
@@ -124,7 +124,7 @@ BST 的中序遍历应按链表顺序消费值。先统计节点总数，再令�
      - 0
 
 为什么树保持平衡
-~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~
 
 每个状态将 ``count`` 拆为 ``floor(count/2)`` 和 ``count-floor(count/2)-1``，两侧规模差最多 1。按规模归纳，子树平衡且高度差不超过 1，因此当前节点也平衡。
 
@@ -134,14 +134,14 @@ BST 的中序遍历应按链表顺序消费值。先统计节点总数，再令�
 构造顺序正是左子树、根、右子树；链表游标只向前移动，并且每创建一个树节点消费一个链表值。因此树的中序遍历与原链表值序列完全相同。
 
 三种方法的取舍
-~~~~~~~~~~~~~~
+~~~~~~~~~~~~~
 
 转数组后调用第 108 题需要 ``O(n)`` 数组空间；快慢指针不需要数组，但重复扫描；中序模拟仅使用递归栈和一个顺序游标，达到线性时间。
 
 复杂度来源
 ~~~~~~~~~~
 
-长度统计和构造各扫描一次，时间 ``O(n)``。递归深度 ``O(log n)``，不计返回树时额外空间 ``O(log n)``。输入链表链接保持不变。
+长度统计和构造各扫描一次，时间 ``O(n)``。递归深度 ``O(log n)``，不计返回树时额外空间 ``O(log n)``。引用语义语言保持输入链表链接不变；Rust 按值入口顺序消费拥有的节点。
 
 九语言实现
 ----------
@@ -183,7 +183,7 @@ Rust
 
 .. code-block:: rust
 
-   impl Solution {pub fn sorted_list_to_bst(head:Option<Box<ListNode>>)->Option<Rc<RefCell<TreeNode>>>{fn build(values:&[i32])->Option<Rc<RefCell<TreeNode>>>{if values.is_empty(){return None}let m=values.len()/2;let mut x=TreeNode::new(values[m]);x.left=build(&values[..m]);x.right=build(&values[m+1..]);Some(Rc::new(RefCell::new(x)))}let mut values=vec![];let mut cursor=head.as_ref();while let Some(x)=cursor{values.push(x.val);cursor=x.next.as_ref()}build(&values)}}
+   impl Solution {pub fn sorted_list_to_bst(mut head:Option<Box<ListNode>>)->Option<Rc<RefCell<TreeNode>>>{fn length(mut x:&Option<Box<ListNode>>)->usize{let mut n=0;while let Some(node)=x{n+=1;x=&node.next}n}fn build(cursor:&mut Option<Box<ListNode>>,size:usize)->Option<Rc<RefCell<TreeNode>>>{if size==0{return None}let left=build(cursor,size/2);let mut list_node=cursor.take().unwrap();let value=list_node.val;*cursor=list_node.next.take();let mut root=TreeNode::new(value);root.left=left;root.right=build(cursor,size-size/2-1);Some(Rc::new(RefCell::new(root)))}let n=length(&head);build(&mut head,n)}}
 
 Go
 ~~
