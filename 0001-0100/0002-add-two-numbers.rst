@@ -6,129 +6,337 @@
 
 :题号: 0002
 :难度: Medium
-:主题: 链表、模拟、进位
+:主题: 链表、模拟、进位、节点构造
 :原题: `LeetCode 0002 <https://leetcode.com/problems/add-two-numbers/>`_
-:访问状态: Available
-:教学重点: 单链表、哑节点、逐位加法、进位状态
+:教学重点: 逆序数位表示、逐位竖式加法、进位状态、哑节点、节点复用与新建
 
 题目重述
 --------
 
-两个非空单链表分别表示两个非负整数。每个节点保存一位数字，最低位位于链表头部。
-需要按相同的逆序形式返回两数之和。除数字 0 本身外，输入不会以多余的高位 0
-结束。
+两个非空单链表 ``l1`` 和 ``l2`` 分别表示两个非负整数。每个节点保存一位十进制数字，
+链表头部是最低位，沿 ``next`` 方向依次走向更高位。需要返回一个同样按低位到高位排列的
+链表，表示两数之和。
+
+每个输入链表包含 ``1`` 至 ``100`` 个节点，节点值位于 ``[0, 9]``。除数字 ``0`` 本身外，
+输入表示的整数没有多余高位零。输入节点类型由 LeetCode 平台提供。
 
 自建示例
 --------
 
+长度不同且连续进位：
+
 .. code-block:: text
 
-   输入：l1 = [7, 1, 6], l2 = [5, 9, 2]
-   表示：617 + 295
-   输出：[2, 1, 9]
-   表示：912
+   输入：l1 = [8, 9, 9], l2 = [7]
+   表示：998 + 7
+   输出：[5, 0, 0, 1]
+   表示：1005
 
-基础类型约定
-------------
+该示例同时展示较短链表结束后的补零、连续进位以及最终新增最高位节点。
 
-LeetCode 在 C、C++、Python、Java、Rust、Go、TypeScript 和 C# 中提供链表节点
-类型。代码只标注其来源，不在每种语言里重复声明。
+没有最终进位：
 
-节点包含当前数字 ``val`` 和指向后继节点的 ``next``。Julia 与 R 不属于平台
-运行时，因此本题首次给出仓库统一节点约定；后续链表题直接复用。
+.. code-block:: text
 
-.. mermaid::
+   输入：l1 = [3, 4], l2 = [6, 5, 9]
+   表示：43 + 956
+   输出：[9, 9, 9]
+   表示：999
 
-   flowchart LR
-       A["节点 val"] -->|"next"| B["后继节点"]
-       B -->|"next"| C["后继节点"]
-       C --> N["空引用"]
+该示例展示某一侧结束后，另一侧节点仍需继续参与计算。
 
-图中每个节点只保存一位数字。链表方向从低位走向高位，所以遍历顺序正好等于
-手算加法从个位向高位推进的顺序。
-
-解法选择
+C++ 实现
 --------
+
+.. code-block:: cpp
+
+   #include <algorithm>
+   #include <utility>
+
+   // ListNode 由 LeetCode 平台提供。
+   class Solution {
+   private:
+       ListNode* buildNewList(ListNode* l1, ListNode* l2) {
+           ListNode dummy(0);
+           ListNode* tail = &dummy;
+           int carry = 0;
+
+           while (l1 != nullptr || l2 != nullptr || carry != 0) {
+               const int x = l1 == nullptr ? 0 : l1->val;
+               const int y = l2 == nullptr ? 0 : l2->val;
+               const int total = x + y + carry;
+
+               tail->next = new ListNode(total % 10);
+               tail = tail->next;
+               carry = total / 10;  // 当前列产生的进位交给下一列
+
+               if (l1 != nullptr) {
+                   l1 = l1->next;
+               }
+               if (l2 != nullptr) {
+                   l2 = l2->next;
+               }
+           }
+
+           return dummy.next;
+       }
+
+       int length(ListNode* node) {
+           int result = 0;
+           while (node != nullptr) {
+               ++result;
+               node = node->next;
+           }
+           return result;
+       }
+
+       ListNode* reuseLongerList(ListNode* l1, ListNode* l2) {
+           if (length(l1) < length(l2)) {
+               std::swap(l1, l2);  // 让 l1 提供足够的结果节点
+           }
+
+           ListNode* const head = l1;
+           ListNode* previous = nullptr;
+           int carry = 0;
+
+           while (l1 != nullptr) {
+               const int y = l2 == nullptr ? 0 : l2->val;
+               const int total = l1->val + y + carry;
+
+               l1->val = total % 10;  // 复用较长链表的当前节点
+               carry = total / 10;
+               previous = l1;
+               l1 = l1->next;
+
+               if (l2 != nullptr) {
+                   l2 = l2->next;
+               }
+           }
+
+           if (carry != 0) {
+               previous->next = new ListNode(carry);
+           }
+
+           return head;
+       }
+
+   public:
+       ListNode* addTwoNumbers(ListNode* l1, ListNode* l2) {
+           return buildNewList(l1, l2);  // 主解法保留两个输入链表
+       }
+   };
+
+题解
+----
+
+为什么逆序链表可以直接模拟竖式加法
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+十进制竖式加法从最低位开始：先计算个位，再把进位传给十位，随后继续向更高位推进。题目把
+最低位放在链表头部，因此链表的自然遍历顺序与竖式加法的计算顺序完全一致：
+
+.. code-block:: text
+
+   l1: 个位 -> 十位 -> 百位 -> ...
+   l2: 个位 -> 十位 -> 百位 -> ...
+   计算: 当前列 -> 下一列 -> 更高列 -> ...
+
+若最高位放在链表头部，就需要先走到链表末尾、反转链表或借助栈才能从最低位开始。本题的逆序
+表示省去了这一步，使每个输入指针都只向前移动。
+
+从整数字面值到逐节点状态
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+直接把链表还原成普通整数再相加，会受固定宽度整数范围限制。每个链表最多包含 100 位数字，
+远超常见 ``32`` 位或 ``64`` 位整数能够表示的范围。逐节点模拟只处理当前两位和一个进位，
+所需数值始终很小。
+
+处理某一列时，状态只有：
+
+.. code-block:: text
+
+   x      = l1 当前节点的数字，节点缺失时取 0
+   y      = l2 当前节点的数字，节点缺失时取 0
+   carry  = 前一列传来的进位
+   total  = x + y + carry
+   digit  = total % 10
+   carry' = total / 10 的整数部分
+
+节点值最大为 9，旧进位最大为 1，所以 ``total <= 19``，新进位仍然只可能是 0 或 1。
+这说明跨列传递的全部历史信息可以压缩为一个整数 ``carry``。
+
+为什么缺失节点可以按零处理
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+两个数字位数不同时，较短链表会先到达空指针。竖式加法中，缺失的高位等价于该位置数字为零。
+因此代码使用：
+
+.. code-block:: text
+
+   x = l1 为空 ? 0 : l1.val
+   y = l2 为空 ? 0 : l2.val
+
+这样，同一个循环既能处理两侧都有节点的列，也能处理只剩一侧节点的列。输入指针只在对应节点
+存在时向后移动，较长链表的剩余节点会继续逐个参与计算。
+
+主解法状态演化
+~~~~~~~~~~~~~~
+
+使用自建示例 ``l1 = [8, 9, 9]``、``l2 = [7]``：
+
+.. list-table::
+   :header-rows: 1
+
+   * - 当前列
+     - ``x``
+     - ``y``
+     - 旧 ``carry``
+     - ``total``
+     - 结果位
+     - 新 ``carry``
+     - 已构造结果
+   * - 个位
+     - 8
+     - 7
+     - 0
+     - 15
+     - 5
+     - 1
+     - ``5``
+   * - 十位
+     - 9
+     - 0
+     - 1
+     - 10
+     - 0
+     - 1
+     - ``5 -> 0``
+   * - 百位
+     - 9
+     - 0
+     - 1
+     - 10
+     - 0
+     - 1
+     - ``5 -> 0 -> 0``
+   * - 千位
+     - 0
+     - 0
+     - 1
+     - 1
+     - 1
+     - 0
+     - ``5 -> 0 -> 0 -> 1``
+
+前三轮分别消费输入节点。两条输入链表都结束后，``carry`` 仍为 1，因此循环继续一轮，把进位
+写成新的最高位节点。若循环条件只检查两个输入指针，结果会错误地变成 ``[5, 0, 0]``。
+
+哑节点如何统一结果链表构造
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+结果链表开始时还没有真实节点。若直接维护结果头指针，创建第一个节点时需要单独设置头部，
+后续节点则追加到尾部。哑节点提供一个固定的前驱：
+
+.. code-block:: text
+
+   dummy -> 第一个结果节点 -> 第二个结果节点 -> ...
+              ^
+             tail 最终沿结果链表向后移动
+
+每轮都执行同一组操作：
+
+.. code-block:: text
+
+   tail.next = 新节点
+   tail = tail.next
+
+哑节点本身不属于答案，最终返回 ``dummy.next``。它只存在于函数内部；C++ 主解法中的哑节点
+位于栈上，而所有结果节点由 ``new`` 创建并通过 ``dummy.next`` 连成返回链表。
+
+新建结果节点与复用输入节点
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``buildNewList`` 为每一位结果创建独立节点。两个输入链表的节点值和链接保持原状，返回链表与
+输入没有共享节点。这种对象语义最清晰，也是九语言统一采用的主解法。
+
+``reuseLongerList`` 先计算两条链表长度，让较长链表承担结果存储。它逐位覆盖该链表节点的
+``val``，并在最终仍有进位时追加一个节点。由于结果最多比较长输入多一位，较长链表提供的节点
+数量足够。该方案把除最终进位节点外的额外节点分配降为零，但会修改其中一条输入链表，并且
+为了选择较长链表需要先遍历两次长度。
 
 .. list-table::
    :header-rows: 1
 
    * - 方法
      - 时间复杂度
-     - 空间复杂度
-     - 定位
-   * - 同步遍历并维护进位
+     - 除结果外空间
+     - 节点分配
+     - 输入状态
+   * - 新建结果链表
      - ``O(max(m, n))``
-     - ``O(max(m, n))``
-     - 主解法
-   * - 先转整数再相加
-     - 依赖整数位数
-     - 依赖表示
-     - 不适合任意长输入
+     - ``O(1)``
+     - ``max(m, n)`` 或 ``max(m, n) + 1`` 个
+     - 两个输入保持原状
+   * - 复用较长输入
+     - ``O(m + n)``
+     - ``O(1)``
+     - 至多一个最终进位节点
+     - 较长输入被改写为结果
 
-主解法：同步遍历并维护进位
---------------------------
+主解法选择新建结果链表，因为它保持输入结构、节点身份和返回所有权清晰，能够直接映射到九种
+语言。复用方案适合接口允许修改输入且需要减少节点分配的场景。
 
-思路
-~~~~
+为什么每轮生成的节点就是对应数位
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-同时读取两个链表的当前数字。缺失节点按 0 处理，再加上上一位产生的进位
-``carry``。当前结果位是 ``sum % 10``，新进位是 ``sum / 10`` 的整数部分。
+进入某轮时，结果链表已经保存所有处理完成的低位，``carry`` 等于这些低位向当前列产生的进位，
+两个输入指针分别指向尚未处理的最低位节点。
 
-使用哑节点（dummy node）作为结果链表的固定起点。它不属于答案，只负责统一
-“创建第一个节点”和“追加后续节点”两种情况，最终返回 ``dummy.next``。
+当前列的真实和值只能由 ``x``、``y`` 和旧 ``carry`` 组成。``total % 10`` 是该列十进制结果位，
+``total / 10`` 是唯一需要传给下一列的进位。追加结果节点后再推进输入指针，结果链表就多保存了
+一个正确低位，新的 ``carry`` 也正好对应下一列，所以上述状态在下一轮继续成立。
 
-状态变化
-~~~~~~~~
+循环条件包含 ``l1``、``l2`` 和 ``carry``。只要还有输入位或未写出的最高位进位，算法就继续；
+三者都结束时，所有输入数位和最终进位均已写入结果。因此返回链表既没有遗漏数位，也不会添加
+多余高位零。
 
-.. mermaid::
-
-   flowchart LR
-       X["l1 当前位 x"] --> S["sum = x + y + carry"]
-       Y["l2 当前位 y"] --> S
-       C["旧进位 carry"] --> S
-       S --> D["结果位 sum % 10"]
-       S --> NC["新进位 sum / 10"]
-
-每次循环消费两个链表中至多一个节点，并生成一个结果节点。输入都结束后仍要检查
-``carry``，因为最高位可能产生额外节点。
-
-核心不变量
+复杂度来源
 ~~~~~~~~~~
 
-进入每轮循环时：
+设两个输入链表长度分别为 ``m`` 和 ``n``。
 
-* 结果链表已经保存所有处理完成的低位；
-* ``carry`` 是这些低位向当前位传递的唯一未处理信息；
-* ``l1`` 和 ``l2`` 指向下一对尚未计算的数字。
+``buildNewList`` 每轮至少消费一个输入节点，输入结束后最多再处理一次最终进位，因此循环次数为
+``max(m, n)`` 或 ``max(m, n) + 1``。每轮只执行常数次读取、加法、除余、节点创建和指针更新，
+时间复杂度为 ``O(max(m, n))``。
 
-正确性依据
-~~~~~~~~~~
+返回链表包含 ``max(m, n)`` 或 ``max(m, n) + 1`` 个节点，结果空间为 ``O(max(m, n))``。
+除返回节点外，只维护两个输入指针、一个尾指针、哑节点和 ``carry``，辅助空间为 ``O(1)``。
 
-十进制加法中，某一位只依赖该位的两个数字和低一位传来的进位。算法按照从低位
-到高位的顺序处理节点，生成的结果位与手算加法完全一致。循环结束时两个输入均已
-消费，若仍有进位则追加为最高位，因此结果没有遗漏。
+``reuseLongerList`` 先分别扫描两条链表求长度，再覆盖较长链表，访问节点总数仍为 ``O(m + n)``；
+除可能追加的最终进位节点外只使用常数状态。
 
-复杂度
-~~~~~~
-
-设两个链表长度分别为 ``m`` 和 ``n``：
-
-* 时间复杂度：``O(max(m, n))``；
-* 结果链表空间：``O(max(m, n))``；
-* 除返回结果外，辅助空间为 ``O(1)``。
-
-核心语言实现
-~~~~~~~~~~~~
+九语言实现
+----------
 
 C
-^
+~
+
+C 版本创建独立结果节点。``free_list`` 只用于内存分配失败时回收本函数已经创建的部分结果；
+成功返回后，结果链表由调用者或平台负责释放。
 
 .. code-block:: c
 
    #include <stdlib.h>
 
-   // struct ListNode 由平台提供。
+   // struct ListNode 由 LeetCode 平台提供。
+   static void free_list(struct ListNode* head) {
+       while (head != NULL) {
+           struct ListNode* next = head->next;
+           free(head);
+           head = next;
+       }
+   }
+
    struct ListNode* addTwoNumbers(
        struct ListNode* l1,
        struct ListNode* l2
@@ -140,18 +348,19 @@ C
        while (l1 != NULL || l2 != NULL || carry != 0) {
            const int x = l1 == NULL ? 0 : l1->val;
            const int y = l2 == NULL ? 0 : l2->val;
-           const int sum = x + y + carry;
+           const int total = x + y + carry;
 
            struct ListNode* node = malloc(sizeof(struct ListNode));
            if (node == NULL) {
-               return dummy.next;  // 题目环境通常不模拟分配失败
+               free_list(dummy.next);
+               return NULL;
            }
 
-           node->val = sum % 10;
+           node->val = total % 10;
            node->next = NULL;
            tail->next = node;
            tail = node;
-           carry = sum / 10;
+           carry = total / 10;  // 把当前列进位交给下一列
 
            if (l1 != NULL) {
                l1 = l1->next;
@@ -164,43 +373,12 @@ C
        return dummy.next;
    }
 
-C++
-^^^
-
-.. code-block:: cpp
-
-   class Solution {
-   public:
-       ListNode* addTwoNumbers(ListNode* l1, ListNode* l2) {
-           ListNode dummy(0);  // ListNode 由平台提供
-           ListNode* tail = &dummy;
-           int carry = 0;
-
-           while (l1 != nullptr || l2 != nullptr || carry != 0) {
-               const int x = l1 == nullptr ? 0 : l1->val;
-               const int y = l2 == nullptr ? 0 : l2->val;
-               const int sum = x + y + carry;
-
-               tail->next = new ListNode(sum % 10);
-               tail = tail->next;
-               carry = sum / 10;
-
-               if (l1 != nullptr) {
-                   l1 = l1->next;
-               }
-               if (l2 != nullptr) {
-                   l2 = l2->next;
-               }
-           }
-
-           return dummy.next;
-       }
-   };
-
 Python
-^^^^^^
+~~~~~~
 
 .. code-block:: python
+
+   from typing import Optional
 
    class Solution:
        def addTwoNumbers(
@@ -208,19 +386,18 @@ Python
            l1: Optional[ListNode],
            l2: Optional[ListNode],
        ) -> Optional[ListNode]:
-           # ListNode 由平台提供；哑节点统一处理首次追加。
            dummy = ListNode(0)
            tail = dummy
            carry = 0
 
-           while l1 is not None or l2 is not None or carry:
+           while l1 is not None or l2 is not None or carry != 0:
                x = 0 if l1 is None else l1.val
                y = 0 if l2 is None else l2.val
                total = x + y + carry
 
                tail.next = ListNode(total % 10)
                tail = tail.next
-               carry = total // 10  # // 是向下取整除法
+               carry = total // 10  # 当前列产生的新进位
 
                if l1 is not None:
                    l1 = l1.next
@@ -230,24 +407,24 @@ Python
            return dummy.next
 
 Java
-^^^^
+~~~~
 
 .. code-block:: java
 
    class Solution {
        public ListNode addTwoNumbers(ListNode l1, ListNode l2) {
-           ListNode dummy = new ListNode(0);  // ListNode 由平台提供
+           ListNode dummy = new ListNode(0);
            ListNode tail = dummy;
            int carry = 0;
 
            while (l1 != null || l2 != null || carry != 0) {
                int x = l1 == null ? 0 : l1.val;
                int y = l2 == null ? 0 : l2.val;
-               int sum = x + y + carry;
+               int total = x + y + carry;
 
-               tail.next = new ListNode(sum % 10);
+               tail.next = new ListNode(total % 10);
                tail = tail.next;
-               carry = sum / 10;
+               carry = total / 10;  // Java 整数除法保留商的整数部分
 
                if (l1 != null) {
                    l1 = l1.next;
@@ -262,41 +439,35 @@ Java
    }
 
 Rust
-^^^^
+~~~~
+
+Rust 的平台签名把两个输入链表的所有权传入函数。下面只借用输入节点读取数字，并为结果创建新的
+``Box<ListNode>``，因此结果节点与输入节点没有共享所有权。
 
 .. code-block:: rust
 
    impl Solution {
        pub fn add_two_numbers(
-           mut l1: Option<Box<ListNode>>,
-           mut l2: Option<Box<ListNode>>,
+           l1: Option<Box<ListNode>>,
+           l2: Option<Box<ListNode>>,
        ) -> Option<Box<ListNode>> {
-           // ListNode 由平台提供；Box 表示节点拥有后继节点。
+           let mut p1 = l1.as_ref();
+           let mut p2 = l2.as_ref();
            let mut dummy = Box::new(ListNode::new(0));
            let mut tail = &mut dummy;
            let mut carry = 0;
 
-           while l1.is_some() || l2.is_some() || carry != 0 {
-               let x = match l1.take() {
-                   Some(mut node) => {
-                       l1 = node.next.take();
-                       node.val
-                   }
-                   None => 0,
-               };
+           while p1.is_some() || p2.is_some() || carry != 0 {
+               let x = p1.map_or(0, |node| node.val);
+               let y = p2.map_or(0, |node| node.val);
+               let total = x + y + carry;
 
-               let y = match l2.take() {
-                   Some(mut node) => {
-                       l2 = node.next.take();
-                       node.val
-                   }
-                   None => 0,
-               };
-
-               let sum = x + y + carry;
-               tail.next = Some(Box::new(ListNode::new(sum % 10)));
+               tail.next = Some(Box::new(ListNode::new(total % 10)));
                tail = tail.next.as_mut().unwrap();
-               carry = sum / 10;
+               carry = total / 10;  // 当前列产生的新进位
+
+               p1 = p1.and_then(|node| node.next.as_ref());
+               p2 = p2.and_then(|node| node.next.as_ref());
            }
 
            dummy.next
@@ -304,12 +475,12 @@ Rust
    }
 
 Go
-^^
+~~
 
 .. code-block:: go
 
    func addTwoNumbers(l1 *ListNode, l2 *ListNode) *ListNode {
-       dummy := &ListNode{} // ListNode 由平台提供
+       dummy := &ListNode{}
        tail := dummy
        carry := 0
 
@@ -324,17 +495,17 @@ Go
                l2 = l2.Next
            }
 
-           sum := x + y + carry
-           tail.Next = &ListNode{Val: sum % 10}
+           total := x + y + carry
+           tail.Next = &ListNode{Val: total % 10}
            tail = tail.Next
-           carry = sum / 10
+           carry = total / 10 // 当前列产生的新进位
        }
 
        return dummy.Next
    }
 
 TypeScript
-^^^^^^^^^^
+~~~~~~~~~~
 
 .. code-block:: typescript
 
@@ -342,18 +513,18 @@ TypeScript
        l1: ListNode | null,
        l2: ListNode | null,
    ): ListNode | null {
-       const dummy = new ListNode(0); // ListNode 由平台提供
+       const dummy = new ListNode(0);
        let tail = dummy;
        let carry = 0;
 
        while (l1 !== null || l2 !== null || carry !== 0) {
            const x = l1 === null ? 0 : l1.val;
            const y = l2 === null ? 0 : l2.val;
-           const sum = x + y + carry;
+           const total = x + y + carry;
 
-           tail.next = new ListNode(sum % 10);
+           tail.next = new ListNode(total % 10);
            tail = tail.next;
-           carry = Math.floor(sum / 10);
+           carry = Math.floor(total / 10); // 当前列产生的新进位
 
            if (l1 !== null) {
                l1 = l1.next;
@@ -367,24 +538,24 @@ TypeScript
    }
 
 C#
-^^
+~~
 
 .. code-block:: csharp
 
    public class Solution {
        public ListNode AddTwoNumbers(ListNode l1, ListNode l2) {
-           var dummy = new ListNode(0); // ListNode 由平台提供
+           var dummy = new ListNode(0);
            ListNode tail = dummy;
            int carry = 0;
 
            while (l1 != null || l2 != null || carry != 0) {
                int x = l1 == null ? 0 : l1.val;
                int y = l2 == null ? 0 : l2.val;
-               int sum = x + y + carry;
+               int total = x + y + carry;
 
-               tail.next = new ListNode(sum % 10);
+               tail.next = new ListNode(total % 10);
                tail = tail.next;
-               carry = sum / 10;
+               carry = total / 10; // 当前列产生的新进位
 
                if (l1 != null) {
                    l1 = l1.next;
@@ -399,7 +570,10 @@ C#
    }
 
 Julia
-^^^^^
+~~~~~
+
+Julia 没有 LeetCode 的统一节点接口，因此显式定义可变节点。``next`` 使用
+``Union{Nothing, ListNode}`` 表达链表末尾。
 
 .. code-block:: julia
 
@@ -425,7 +599,7 @@ Julia
 
            tail.next = ListNode(total % 10)
            tail = something(tail.next)
-           carry = total ÷ 10  # ÷ 是整数除法运算符
+           carry = total ÷ 10  # 当前列产生的新进位
 
            if l1 !== nothing
                l1 = l1.next
@@ -439,7 +613,10 @@ Julia
    end
 
 R
-^
+~
+
+R 使用环境表示带引用语义的可变节点。``assign`` 可以把 ``NULL`` 保存为 ``next`` 字段值；
+直接使用 ``node$next <- NULL`` 会删除该绑定。
 
 .. code-block:: r
 
@@ -459,7 +636,6 @@ R
    }
 
    add_two_numbers <- function(l1, l2) {
-       # environment 提供链表节点需要的引用语义。
        dummy <- new_list_node(0L)
        tail <- dummy
        carry <- 0L
@@ -469,10 +645,10 @@ R
            y <- if (is.null(l2)) 0L else l2$val
            total <- x + y + carry
 
-           next_node <- new_list_node(total %% 10L)
-           set_node_next(tail, next_node)
-           tail <- next_node
-           carry <- total %/% 10L
+           node <- new_list_node(total %% 10L)
+           set_node_next(tail, node)
+           tail <- node
+           carry <- total %/% 10L # 当前列产生的新进位
 
            if (!is.null(l1)) {
                l1 <- node_next(l1)
@@ -484,54 +660,3 @@ R
 
        node_next(dummy)
    }
-
-对照思路：先转成整数
---------------------
-
-可以先把两个链表还原为整数，相加后再拆成链表。这种方法受固定宽度整数上限限制，
-也会掩盖链表逐节点处理和进位状态，因此不作为实现方案。大整数库虽然能绕过溢出，
-仍然把题目核心工作交给了现成轮子。
-
-易错点
-------
-
-* 循环条件必须包含 ``carry != 0``，否则可能丢失最高位；
-* 两个链表长度不同时，缺失位置按 0 处理；
-* 哑节点不属于答案，返回的是 ``dummy.next``；
-* Rust 需要显式移动节点所有权，并用 ``take`` 取走后继；
-* R 使用 ``assign`` 保存值为 ``NULL`` 的 ``next`` 绑定，避免 ``$<- NULL`` 删除绑定；
-* C 版本创建的结果节点由调用者或平台负责释放。
-
-本题新增知识
-------------
-
-* 单链表节点的字段、引用方向和遍历方式；
-* 哑节点用于消除结果链表首次插入的分支；
-* ``carry`` 是跨节点传递的最小状态；
-* Rust 的 ``Option<Box<ListNode>>`` 所有权移动；
-* Julia 的递归可变结构与 R 的环境引用语义。
-
-本题强化知识
-------------
-
-* 条件表达式用于把缺失节点映射为数字 0；
-* 整数取余得到当前位，整数除法得到下一位进位。
-
-关联题目
---------
-
-* `0001. Two Sum <0001-two-sum.rst>`_：上一题保存过去元素，本题保存跨位进位。
-
-最小自检
---------
-
-#. 为什么输入链表的逆序存储反而方便逐位加法？
-#. 哑节点解决了结果链表构造中的哪个特殊分支？
-#. 两个输入节点都为空时，为什么循环仍可能需要继续？
-
-答案要点
-~~~~~~~~
-
-#. 手算加法从最低位开始，链表头部正好就是最低位；
-#. 它让第一个结果节点和后续节点都通过 ``tail.next`` 追加；
-#. 最高位计算后可能仍有进位，需要为该进位创建最后一个节点。
