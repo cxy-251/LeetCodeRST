@@ -189,7 +189,7 @@ Rust
 
 .. code-block:: rust
 
-   impl Solution {pub fn build_tree(preorder:Vec<i32>,inorder:Vec<i32>)->Option<Rc<RefCell<TreeNode>>>{fn build(pre:&[i32],cursor:&mut usize,l:i32,r:i32,pos:&HashMap<i32,i32>)->Option<Rc<RefCell<TreeNode>>>{if l>r{return None}let v=pre[*cursor];*cursor+=1;let m=pos[&v];let mut x=TreeNode::new(v);x.left=build(pre,cursor,l,m-1,pos);x.right=build(pre,cursor,m+1,r,pos);Some(Rc::new(RefCell::new(x)))}let pos=inorder.iter().enumerate().map(|(i,&v)|(v,i as i32)).collect();build(&preorder,&mut 0,0,inorder.len()as i32-1,&pos)}}
+   impl Solution {pub fn build_tree(preorder:Vec<i32>,inorder:Vec<i32>)->Option<Rc<RefCell<TreeNode>>>{fn build(pre:&[i32],cursor:&mut usize,l:i32,r:i32,pos:&HashMap<i32,i32>)->Option<Rc<RefCell<TreeNode>>>{if l>r{return None}let v=pre[*cursor];*cursor+=1;let m=pos[&v];let mut x=TreeNode::new(v);x.left=build(pre,cursor,l,m-1,pos);x.right=build(pre,cursor,m+1,r,pos);Some(Rc::new(RefCell::new(x)))}let pos=inorder.iter().enumerate().map(|(i,&v)|(v,i as i32)).collect();let mut cursor=0usize;build(&preorder,&mut cursor,0,inorder.len()as i32-1,&pos)}}
 
 Go
 ~~
