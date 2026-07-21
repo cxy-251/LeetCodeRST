@@ -8,123 +8,154 @@
 :难度: Easy
 :主题: 单链表、有序去重、原地断链
 :原题: `LeetCode 0083 <https://leetcode.com/problems/remove-duplicates-from-sorted-list/>`_
-:访问状态: Available
-:教学重点: 每值保留一个、相邻比较、连续删除、节点顺序
+:教学重点: 每值保留一次、值段代表、连续删除、节点顺序
 
 题目重述
 --------
 
-给定一条按非递减顺序排列的单链表，删除重复节点，使每个不同值只保留第一次出现的节点，并返回头节点。
-节点数 ``0..300``，值位于 ``[-100, 100]``。算法重连原节点，不创建结果数据节点。
+给定非递减单链表，删除重复节点，使每个不同值只保留第一次出现的原节点。返回原地重连后的头节点；空链表直接返回空。
 
 自建示例
 --------
 
 .. code-block:: text
 
-   输入：1 -> 1 -> 2 -> 3 -> 3
-   输出：1 -> 2 -> 3
+   1 -> 1 -> 2 -> 3 -> 3
+   结果：1 -> 2 -> 3
 
-若全部节点值相同，结果只保留原链表的第一个节点。
+   4 -> 4 -> 4
+   结果：4
 
-问题抽象
+C++ 实现
 --------
 
-有序性保证相同值连续。让 ``current`` 指向每个值段的第一个节点：
+.. code-block:: cpp
 
-* 当后继与当前值相同，令 ``current.next = current.next.next``，删除一个重复副本；
-* 只要新后继仍相同就继续删除；
-* 后继值不同后，当前值段已经压缩为一个节点，再推进到下一值段。
+   #include <unordered_set>
 
-解法选择
---------
+   class Solution {
+   private:
+       ListNode* setBased(ListNode* head) {
+           std::unordered_set<int> seen;
+           ListNode dummy(0), *tail = &dummy;
+           for (ListNode* node = head; node; ) {
+               ListNode* next = node->next;
+               if (seen.insert(node->val).second) {
+                   tail->next = node;
+                   tail = node;
+                   tail->next = nullptr;
+               }
+               node = next;
+           }
+           return dummy.next;
+       }
 
-主解法单遍重连，时间 ``O(n)``、额外空间 ``O(1)``。使用集合记录已见值需要 ``O(n)`` 空间，也浪费了
-输入有序条件。
+       ListNode* recursiveCompress(ListNode* head) {
+           if (!head) return nullptr;
+           head->next = recursiveCompress(head->next);
+           while (head->next && head->next->val == head->val)
+               head->next = head->next->next;
+           return head;
+       }
 
-基础类型约定
-------------
+       ListNode* adjacentScan(ListNode* head) {
+           ListNode* current = head;
+           while (current) {
+               while (current->next && current->next->val == current->val)
+                   current->next = current->next->next;
+               current = current->next;
+           }
+           return head;
+       }
 
-``ListNode`` 由平台提供。Julia 使用可变节点，R 使用 ``environment`` 节点。Rust 使用
-``Option<Box<ListNode>>``，通过 ``take`` 转移后继所有权并自动释放被删除节点。
+   public:
+       ListNode* deleteDuplicates(ListNode* head) {
+           return adjacentScan(head);
+       }
+   };
 
-主解法：保留每个值段的首节点
-----------------------------
+题解
+----
 
-核心不变量
+有序性如何定义值段
+~~~~~~~~~~~~~~~~
+
+相同值连续出现，因此链表可视为若干连续值段。每段的第一个节点作为该值唯一代表；段内其余节点全部删除，随后进入更大的下一值段。
+
+current 保存什么
+~~~~~~~~~~~~~~~~
+
+每轮外层循环开始时，``current`` 指向当前值段保留的第一个节点。从头到 ``current`` 的结果前缀已经去重且顺序正确；``current.next`` 开始仍是未压缩后缀。
+
+为什么必须连续删除后继
+~~~~~~~~~~~~~~~~~~~~
+
+删除一个同值后继后，新 ``current.next`` 可能仍然同值，因此需要内层循环持续执行：
+
+.. code-block:: text
+
+   current.next = current.next.next
+
+直到后继为空或值不同，当前段才真正压缩为一个节点。
+
+.. list-table::
+   :header-rows: 1
+
+   * - current
+     - 后继
+     - 动作
+   * - 第一个 1
+     - 第二个 1
+     - 绕过第二个 1
+   * - 第一个 1
+     - 2
+     - 当前段完成，推进到 2
+   * - 2
+     - 第一个 3
+     - 2 段长度为 1，推进
+   * - 第一个 3
+     - 第二个 3
+     - 绕过第二个 3
+
+为什么不同值不会被误删
+~~~~~~~~~~~~~~~~~~~~~~
+
+删除条件要求后继值与 ``current.val`` 完全相同。遇到第一个更大值时内层循环停止，该节点仍保留在 ``current.next``，随后成为下一轮值段代表。
+
+为何不需要哨兵节点
+~~~~~~~~~~~~~~~~~~
+
+本题永远保留头部值段的第一个节点，结果头不会因为去重而改变。第 82 题可能删除整个头部重复段，所以需要哨兵；本题只修改保留节点的后继链接即可。
+
+递归方法的取舍
+~~~~~~~~~~~~~~
+
+递归先压缩后缀，再消除头节点后的同值节点，语义直接，但调用栈为 ``O(n)``。迭代方法只保存一个节点引用，更符合本题常数空间目标。
+
+节点身份为何保持
+~~~~~~~~~~~~~~~~
+
+算法不交换数值，也不新建结果数据节点。每个值保留原链表中最先出现的节点，结果中的节点相对顺序与输入一致。
+
+为什么最终每值恰好一次
+~~~~~~~~~~~~~~~~~~~~~~
+
+每个值段的首节点从不被删除，段内其余节点都被连续绕过。各值段按原顺序依次处理，因此每个输入不同值恰好留下一个节点。
+
+复杂度来源
 ~~~~~~~~~~
 
-每轮外层循环开始时：
+每个节点被访问或删除一次，时间 ``O(n)``。迭代主解法额外空间 ``O(1)``；集合方法 ``O(n)``，递归方法使用 ``O(n)`` 栈。
 
-* 从头到 ``current`` 的链表已经去重且保持原顺序；
-* ``current`` 是其值段中保留的第一个原节点；
-* ``current.next`` 之后仍是尚未处理的有序后缀。
-
-内层循环删除所有与 ``current.val`` 相同的连续后继。完成后，``current.next`` 为空或指向更大的新值，
-推进 ``current`` 后不变量继续成立。
-
-正确性依据
-~~~~~~~~~~
-
-**不会重复保留。** 每个值段的第一个节点成为 ``current``，同值后继全部被绕过，因此结果中该值只出现
-一次。
-
-**不会遗漏不同值。** 只删除与当前值相同的后继。第一个不同值节点始终保留在 ``current.next``，随后
-成为下一轮 ``current``。
-
-**顺序与节点身份保持。** 算法只删除链接，不交换节点。保留节点按原遍历顺序连接，并且都是原链表节点。
-
-**终止性。** 每次内层循环删除一个节点，或外层循环推进到下一个值段；链表有限，所以算法终止。
-
-复杂度
-~~~~~~
-
-每个节点只被访问常数次，时间 ``O(n)``；只保存一个当前节点引用，算法额外空间 ``O(1)``。返回结果复用
-原节点，不计新的结果节点空间。
-
-核心语言实现
-------------
+九语言实现
+----------
 
 C
 ~
 
 .. code-block:: c
 
-   #include <stddef.h>
-
-   struct ListNode *deleteDuplicates(struct ListNode *head) {
-       struct ListNode *current = head;
-
-       while (current != NULL) {
-           while (current->next != NULL &&
-                  current->val == current->next->val) {
-               current->next = current->next->next;
-           }
-           current = current->next;
-       }
-       return head;
-   }
-
-C++
-~~~
-
-.. code-block:: cpp
-
-   class Solution {
-   public:
-       ListNode* deleteDuplicates(ListNode* head) {
-           ListNode* current = head;
-
-           while (current != nullptr) {
-               while (current->next != nullptr &&
-                      current->val == current->next->val) {
-                   current->next = current->next->next;
-               }
-               current = current->next;
-           }
-           return head;
-       }
-   };
+   struct ListNode*deleteDuplicates(struct ListNode*head){for(struct ListNode*cur=head;cur;cur=cur->next)while(cur->next&&cur->next->val==cur->val)cur->next=cur->next->next;return head;}
 
 Python
 ~~~~~~
@@ -132,20 +163,11 @@ Python
 .. code-block:: python
 
    class Solution:
-       def deleteDuplicates(
-           self,
-           head: Optional[ListNode],
-       ) -> Optional[ListNode]:
-           current = head
-
-           while current is not None:
-               while (
-                   current.next is not None
-                   and current.val == current.next.val
-               ):
-                   current.next = current.next.next
-               current = current.next
-
+       def deleteDuplicates(self, head):
+           current=head
+           while current:
+               while current.next and current.next.val==current.val:current.next=current.next.next
+               current=current.next
            return head
 
 Java
@@ -153,119 +175,47 @@ Java
 
 .. code-block:: java
 
-   class Solution {
-       public ListNode deleteDuplicates(ListNode head) {
-           ListNode current = head;
-
-           while (current != null) {
-               while (current.next != null &&
-                      current.val == current.next.val) {
-                   current.next = current.next.next;
-               }
-               current = current.next;
-           }
-           return head;
-       }
-   }
+   class Solution {public ListNode deleteDuplicates(ListNode head){for(ListNode cur=head;cur!=null;cur=cur.next)while(cur.next!=null&&cur.next.val==cur.val)cur.next=cur.next.next;return head;}}
 
 Rust
 ~~~~
 
 .. code-block:: rust
 
-   impl Solution {
-       pub fn delete_duplicates(
-           mut head: Option<Box<ListNode>>,
-       ) -> Option<Box<ListNode>> {
-           let mut current = head.as_mut();
-
-           while let Some(node) = current {
-               let value = node.val;
-               while node
-                   .next
-                   .as_ref()
-                   .map_or(false, |next| next.val == value)
-               {
-                   let after = node.next.as_mut().unwrap().next.take();
-                   node.next = after;
-               }
-               current = node.next.as_mut();
-           }
-
-           head
-       }
-   }
+   impl Solution {pub fn delete_duplicates(mut head:Option<Box<ListNode>>)->Option<Box<ListNode>>{let mut cur=head.as_mut();while let Some(node)=cur{while node.next.as_ref().map_or(false,|next|next.val==node.val){let next_next=node.next.as_mut().unwrap().next.take();node.next=next_next;}cur=node.next.as_mut();}head}}
 
 Go
 ~~
 
 .. code-block:: go
 
-   func deleteDuplicates(head *ListNode) *ListNode {
-       current := head
-
-       for current != nil {
-           for current.Next != nil && current.Val == current.Next.Val {
-               current.Next = current.Next.Next
-           }
-           current = current.Next
-       }
-       return head
-   }
+   func deleteDuplicates(head *ListNode)*ListNode{for cur:=head;cur!=nil;cur=cur.Next{for cur.Next!=nil&&cur.Next.Val==cur.Val{cur.Next=cur.Next.Next}};return head}
 
 TypeScript
 ~~~~~~~~~~
 
 .. code-block:: typescript
 
-   function deleteDuplicates(head: ListNode | null): ListNode | null {
-       let current = head;
-
-       while (current !== null) {
-           while (current.next !== null && current.val === current.next.val) {
-               current.next = current.next.next;
-           }
-           current = current.next;
-       }
-       return head;
-   }
+   function deleteDuplicates(head:ListNode|null):ListNode|null{for(let current=head;current;current=current.next)while(current.next&&current.next.val===current.val)current.next=current.next.next;return head;}
 
 C#
 ~~
 
 .. code-block:: csharp
 
-   public class Solution {
-       public ListNode DeleteDuplicates(ListNode head) {
-           ListNode current = head;
-
-           while (current != null) {
-               while (current.next != null &&
-                      current.val == current.next.val) {
-                   current.next = current.next.next;
-               }
-               current = current.next;
-           }
-           return head;
-       }
-   }
+   public class Solution {public ListNode DeleteDuplicates(ListNode head){for(var current=head;current!=null;current=current.next)while(current.next!=null&&current.next.val==current.val)current.next=current.next.next;return head;}}
 
 Julia
 ~~~~~
 
 .. code-block:: julia
 
-   function delete_duplicates(head::Union{ListNode, Nothing})
-       current = head
-
-       while current !== nothing
-           while current.next !== nothing &&
-                 current.val == current.next.val
-               current.next = current.next.next
-           end
-           current = current.next
-       end
-       return head
+   function delete_duplicates_once(head)
+       current=head
+       while current!==nothing
+           while current.next!==nothing&&current.next.val==current.val;current.next=current.next.next;end
+           current=current.next
+       end;head
    end
 
 R
@@ -273,69 +223,4 @@ R
 
 .. code-block:: r
 
-   delete_duplicates <- function(head) {
-     current <- head
-
-     while (!is.null(current)) {
-       while (!is.null(current$next) && current$val == current$next$val) {
-         current$next <- current$next$next
-       }
-       current <- current$next
-     }
-     head
-   }
-
-验证计划与证据
---------------
-
-覆盖空链表、单节点、全部唯一、全部相同、多个重复段和负数值。随机生成有序值数组，以连续分组后每组
-保留第一个值作为独立基准，并检查结果无环、值序列正确、保留节点身份为每段首节点。
-
-关键边界
---------
-
-* 空链表直接返回；
-* 连续三个以上重复节点需要内层循环全部绕过；
-* 结果保留每段第一个节点，不是新建节点；
-* C/C++ 不负责释放被移出链表的节点。
-
-易错点
-------
-
-* 每个值段只删除一个重复节点，留下第三个副本；
-* 删除后立即推进 ``current``，没有继续检查新的后继；
-* 把本题误写成 0082，连第一个副本也删除；
-* 遍历时交换节点，破坏稳定顺序。
-
-本题新增知识
-------------
-
-* 用当前节点固定值段首节点，并连续绕过相同后继。
-
-本题强化知识
-------------
-
-* 有序链表相邻重复检测；
-* 原地断链、节点身份与顺序守恒。
-
-关联题目
---------
-
-* :doc:`0082-remove-duplicates-from-sorted-list-ii`
-* :doc:`0026-remove-duplicates-from-sorted-array`
-
-最小自检
---------
-
-#. 为什么删除一个重复后不能立即推进 ``current``？
-#. 结果保留每个值段的哪个节点？
-#. 为什么相邻比较足够？
-#. 本题与 0082 的差异是什么？
-
-答案要点
-~~~~~~~~
-
-#. 新后继仍可能与当前值相同。
-#. 原值段的第一个节点。
-#. 有序性使所有相同值连续。
-#. 本题每值保留一个；0082 删除所有出现重复的值。
+   delete_duplicates_once <- function(head){current<-head;while(!is.null(current)){while(!is.null(current$next)&&current$next$val==current$val)current$next<-current$next$next;current<-current$next};head}
