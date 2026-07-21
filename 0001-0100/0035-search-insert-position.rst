@@ -8,224 +8,152 @@
 :难度: Easy
 :主题: 数组、二分查找、插入位置、lower bound
 :原题: `LeetCode 0035 <https://leetcode.com/problems/search-insert-position/>`_
-:访问状态: Available
-:教学重点: 第一个大于等于目标的位置、半开区间、不命中也返回边界、末尾插入
+:教学重点: 第一个大于等于目标的位置、半开区间、命中与缺失统一、末尾插入
 
 题目重述
 --------
 
-给定一个严格递增的整数数组 ``nums`` 和目标值 ``target``：
-
-* 若目标已经存在，返回它的零基下标；
-* 若目标不存在，返回把它插入后仍保持数组递增的下标。
-
-要求使用 ``O(log n)`` 时间复杂度。
+给定严格递增数组 ``nums`` 和目标值 ``target``。目标存在时返回其零基下标；不存在时返回插入后仍保持递增的下标。要求 ``O(log n)`` 时间。
 
 自建示例
 --------
 
-目标已存在
-~~~~~~~~~~
-
 .. code-block:: text
 
-   nums = [1, 3, 5, 8]
-   target = 5
-   返回 2
+   [1,3,5,8], target = 5 -> 2
+   [1,3,5,8], target = 4 -> 2
+   [2,4,6],   target = 9 -> 3
 
-插入数组中间
-~~~~~~~~~~~~
+三个答案都可解释为“第一个大于等于目标的位置”；若没有这样的元素，边界就是数组长度。
 
-.. code-block:: text
-
-   nums = [1, 3, 5, 8]
-   target = 4
-   返回 2
-
-插入数组开头
-~~~~~~~~~~~~
-
-.. code-block:: text
-
-   nums = [2, 4, 6]
-   target = 1
-   返回 0
-
-插入数组末尾
-~~~~~~~~~~~~
-
-.. code-block:: text
-
-   nums = [2, 4, 6]
-   target = 9
-   返回 3
-
-空数组
-~~~~~~
-
-.. code-block:: text
-
-   nums = []
-   target = 7
-   返回 0
-
-问题抽象
+C++ 实现
 --------
 
-题目要求的位置正是：
+.. code-block:: cpp
+
+   #include <vector>
+
+   class Solution {
+   private:
+       int linearScan(const std::vector<int>& nums, int target) {
+           for (int i = 0; i < static_cast<int>(nums.size()); ++i)
+               if (nums[i] >= target) return i;
+           return static_cast<int>(nums.size());
+       }
+
+       int closedInterval(const std::vector<int>& nums, int target) {
+           int left = 0, right = static_cast<int>(nums.size()) - 1;
+           int answer = static_cast<int>(nums.size());
+           while (left <= right) {
+               int mid = left + (right - left) / 2;
+               if (nums[mid] >= target) {
+                   answer = mid;
+                   right = mid - 1;
+               } else {
+                   left = mid + 1;
+               }
+           }
+           return answer;
+       }
+
+       int lowerBound(const std::vector<int>& nums, int target) {
+           int left = 0, right = static_cast<int>(nums.size());
+           while (left < right) {
+               int mid = left + (right - left) / 2;
+               if (nums[mid] < target) left = mid + 1;
+               else right = mid;
+           }
+           return left;
+       }
+
+   public:
+       int searchInsert(std::vector<int>& nums, int target) {
+           return lowerBound(nums, target);
+       }
+   };
+
+题解
+----
+
+线性扫描已经暴露答案语义
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+从左向右第一个不小于目标的元素就是插入边界；若扫描到末尾仍未找到，目标应插入下标 ``n``。线性方法为 ``O(n)``，但这个单调判定正适合二分。
+
+为什么目标存在与不存在不需要分支
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+答案定义为：
 
 .. code-block:: text
 
-   第一个满足 nums[index] >= target 的下标
+   min index，使 nums[index] >= target
 
-若不存在这样的元素，答案是 ``n``，表示插入到数组末尾。
+目标存在时，严格递增保证该位置就是唯一目标下标；目标不存在时，左侧全部小于目标，当前位置及右侧全部大于目标，把目标插在这里保持顺序。二分始终返回边界，不需要“找不到”状态。
 
-这就是 0034 中的 ``lower_bound(target)``。目标存在时，由于数组严格递增，第一个大于等于目标
-的位置就是目标下标；目标不存在时，该位置左右满足：
+半开区间保存什么不变量
+~~~~~~~~~~~~~~~~~~~~~~
 
-.. code-block:: text
+维护 ``[left,right)``：
 
-   左侧所有值 < target
-   当前位置及右侧所有值 > target
+* ``[0,left)`` 中所有值都小于目标；
+* ``[right,n)`` 中所有值都大于等于目标；
+* 正确边界仍位于 ``[left,right]``；
+* ``right`` 可以等于 ``n``，表示末尾插入。
 
-因此把目标插在这个边界上可以保持递增顺序。
+若 ``nums[mid] < target``，中点及左侧都必须位于边界左边，令 ``left = mid+1``；否则中点已满足条件，但更早位置可能也满足，令 ``right = mid``。
 
-解法选择
---------
+边界演化
+~~~~~~~~
 
 .. list-table::
    :header-rows: 1
 
-   * - 方法
-     - 时间复杂度
-     - 额外空间
-     - 取舍
-   * - 半开区间 lower bound
-     - ``O(log n)``
-     - ``O(1)``
-     - 主解法；存在与不存在使用同一个返回语义
-   * - 普通二分命中后单独推导插入点
-     - ``O(log n)``
-     - ``O(1)``
-     - 可行，但分支比直接寻找边界更多
-   * - 从左到右扫描
-     - ``O(n)``
-     - ``O(1)``
-     - 未满足对数复杂度要求
+   * - 输入
+     - 最终左侧性质
+     - 返回
+   * - ``target = 4``
+     - ``[1,3] < 4``
+     - 2
+   * - ``target = 1``
+     - 左侧为空
+     - 0
+   * - ``target = 9``
+     - 全部元素 ``< 9``
+     - ``n``
 
-主解法：寻找第一个大于等于目标的位置
-------------------------------------
+为什么循环结束位置唯一
+~~~~~~~~~~~~~~~~~~~~~~
 
-状态含义
-~~~~~~~~
+每轮都保持左侧严格小于目标、右侧大于等于目标，并严格缩短区间。当 ``left == right`` 时，这个位置左侧全部不满足条件，从该位置开始全部满足，因此它恰好是第一个大于等于目标的位置。
 
-维护半开区间 ``[left, right)``，初始为 ``[0, n)``：
+闭区间版本与半开区间版本的差异
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-* 所有下标小于 ``left`` 的元素都严格小于 ``target``；
-* 所有下标大于等于 ``right`` 的元素都大于等于 ``target``；
-* 正确插入边界始终位于 ``[left, right]``；
-* ``right`` 可以等于 ``n``，表示答案可能在数组末尾之后。
+闭区间版本需要额外变量保存当前候选答案，并允许搜索区间变空；半开区间版本把候选答案直接编码为右边界，循环结束直接返回 ``left``。两者都为 ``O(log n)``，主解法选择状态更少的半开区间形式。
 
-区间更新
-~~~~~~~~
-
-取 ``mid = left + (right - left) / 2``：
-
-* 若 ``nums[mid] < target``，中点及其左侧都应位于插入点左边，令 ``left = mid + 1``；
-* 否则中点已经可以作为插入位置，但可能还有更早位置，令 ``right = mid``。
-
-当 ``left == right`` 时，左侧全部小于目标，当前位置及右侧全部大于等于目标，因此 ``left``
-就是答案。
-
-为什么不需要单独检查命中
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-本题的返回值不是“找到则返回，否则返回失败”，而是始终返回边界位置。目标存在时，边界自然停在
-目标位置；目标不存在时，边界自然停在插入位置。二者完全使用同一个循环和返回语句。
-
-核心不变量
+复杂度来源
 ~~~~~~~~~~
 
-每轮开始时：
+每轮把候选区间缩小约一半，时间 ``O(log n)``；只使用三个下标，额外空间 ``O(1)``。
 
-* ``[0, left)`` 中所有元素都小于目标；
-* ``[right, n)`` 中所有元素都大于等于目标；
-* 第一个大于等于目标的位置没有被排除；
-* 搜索区间长度为 ``right - left``，每轮严格缩小。
-
-正确性依据
-~~~~~~~~~~
-
-若 ``nums[mid] < target``，由于数组严格递增，所有下标不超过 ``mid`` 的元素都小于目标，因此
-它们不可能是第一个大于等于目标的位置，移动 ``left`` 是安全的。
-
-若 ``nums[mid] >= target``，中点满足边界条件，但更左位置可能也满足，因此不能排除中点，只把
-``right`` 收缩到 ``mid``。两种更新都保持不变量。
-
-循环结束时 ``left == right``。根据不变量，左侧所有元素小于目标，右侧从该位置开始所有元素
-大于等于目标，因此该位置是唯一正确插入边界。目标存在时它就是目标下标；不存在时插入该位置
-仍保持数组严格递增。
-
-复杂度
-~~~~~~
-
-设数组长度为 ``n``：
-
-* 每轮把候选区间缩小约一半，时间复杂度为 ``O(log n)``；
-* 只使用两个边界和一个中点，额外空间复杂度为 ``O(1)``。
-
-核心语言实现
-------------
+九语言实现
+----------
 
 C
 ~
 
 .. code-block:: c
 
-   int searchInsert(int *nums, int numsSize, int target) {
-       int left = 0;
-       int right = numsSize;
-
+   int searchInsert(int *nums, int n, int target) {
+       int left = 0, right = n;
        while (left < right) {
            int mid = left + (right - left) / 2;
-
-           if (nums[mid] < target) {
-               left = mid + 1;
-           } else {
-               right = mid;
-           }
+           if (nums[mid] < target) left = mid + 1;
+           else right = mid;
        }
-
        return left;
    }
-
-C++
-~~~
-
-.. code-block:: cpp
-
-   class Solution {
-   public:
-       int searchInsert(
-           const std::vector<int>& nums,
-           int target
-       ) {
-           int left = 0;
-           int right = static_cast<int>(nums.size());
-
-           while (left < right) {
-               int mid = left + (right - left) / 2;
-
-               if (nums[mid] < target) {
-                   left = mid + 1;
-               } else {
-                   right = mid;
-               }
-           }
-
-           return left;
-       }
-   };
 
 Python
 ~~~~~~
@@ -234,17 +162,13 @@ Python
 
    class Solution:
        def searchInsert(self, nums: list[int], target: int) -> int:
-           left = 0
-           right = len(nums)
-
+           left, right = 0, len(nums)
            while left < right:
                mid = left + (right - left) // 2
-
                if nums[mid] < target:
                    left = mid + 1
                else:
                    right = mid
-
            return left
 
 Java
@@ -254,19 +178,12 @@ Java
 
    class Solution {
        public int searchInsert(int[] nums, int target) {
-           int left = 0;
-           int right = nums.length;
-
+           int left = 0, right = nums.length;
            while (left < right) {
                int mid = left + (right - left) / 2;
-
-               if (nums[mid] < target) {
-                   left = mid + 1;
-               } else {
-                   right = mid;
-               }
+               if (nums[mid] < target) left = mid + 1;
+               else right = mid;
            }
-
            return left;
        }
    }
@@ -278,24 +195,14 @@ Rust
 
    impl Solution {
        pub fn search_insert(nums: Vec<i32>, target: i32) -> i32 {
-           let mut left: usize = 0;
-           let mut right: usize = nums.len();
-
+           let (mut left, mut right) = (0usize, nums.len());
            while left < right {
                let mid = left + (right - left) / 2;
-
-               if nums[mid] < target {
-                   left = mid + 1;
-               } else {
-                   right = mid;
-               }
+               if nums[mid] < target { left = mid + 1; } else { right = mid; }
            }
-
            left as i32
        }
    }
-
-半开区间从不需要 ``-1``，因此 Rust 可以全程使用 ``usize``，最终再转换为题目要求的 ``i32``。
 
 Go
 ~~
@@ -304,17 +211,10 @@ Go
 
    func searchInsert(nums []int, target int) int {
        left, right := 0, len(nums)
-
        for left < right {
            mid := left + (right-left)/2
-
-           if nums[mid] < target {
-               left = mid + 1
-           } else {
-               right = mid
-           }
+           if nums[mid] < target { left = mid+1 } else { right = mid }
        }
-
        return left
    }
 
@@ -324,19 +224,12 @@ TypeScript
 .. code-block:: typescript
 
    function searchInsert(nums: number[], target: number): number {
-       let left = 0;
-       let right = nums.length;
-
+       let left = 0, right = nums.length;
        while (left < right) {
            const mid = left + Math.floor((right - left) / 2);
-
-           if (nums[mid] < target) {
-               left = mid + 1;
-           } else {
-               right = mid;
-           }
+           if (nums[mid] < target) left = mid + 1;
+           else right = mid;
        }
-
        return left;
    }
 
@@ -347,19 +240,12 @@ C#
 
    public class Solution {
        public int SearchInsert(int[] nums, int target) {
-           int left = 0;
-           int right = nums.Length;
-
+           int left = 0, right = nums.Length;
            while (left < right) {
                int mid = left + (right - left) / 2;
-
-               if (nums[mid] < target) {
-                   left = mid + 1;
-               } else {
-                   right = mid;
-               }
+               if (nums[mid] < target) left = mid + 1;
+               else right = mid;
            }
-
            return left;
        }
    }
@@ -369,24 +255,14 @@ Julia
 
 .. code-block:: julia
 
-   function search_insert(nums::Vector{Int}, target::Int)::Int
-       left = 1
-       right = length(nums) + 1
-
+   function search_insert(nums::Vector{Int}, target::Int)
+       left, right = 1, length(nums) + 1
        while left < right
            mid = left + (right - left) ÷ 2
-
-           if nums[mid] < target
-               left = mid + 1
-           else
-               right = mid
-           end
+           nums[mid] < target ? (left = mid + 1) : (right = mid)
        end
-
-       return left - 1  # 一基插入位置转换为零基下标。
+       left - 1
    end
-
-当答案是一基末尾插入位置 ``n + 1`` 时，减一后恰好得到零基答案 ``n``。
 
 R
 ~
@@ -394,74 +270,10 @@ R
 .. code-block:: r
 
    search_insert <- function(nums, target) {
-     left <- 1L
-     right <- length(nums) + 1L
-
+     left <- 1L; right <- length(nums) + 1L
      while (left < right) {
        mid <- left + (right - left) %/% 2L
-
-       if (nums[[mid]] < target) {
-         left <- mid + 1L
-       } else {
-         right <- mid
-       }
+       if (nums[[mid]] < target) left <- mid + 1L else right <- mid
      }
-
      left - 1L
    }
-
-R 与 Julia 相同，内部维护一基半开边界，对外返回零基插入下标。
-
-关键边界
---------
-
-* 空数组：初始 ``left == right == 0``，直接返回 0；
-* 目标小于首元素：边界收敛到 0；
-* 目标大于尾元素：所有元素都被归入左侧，返回 ``n``；
-* 目标等于某个元素：收敛到该元素位置；
-* 单元素数组：根据比较结果返回 0 或 1；
-* 数组严格递增：目标存在时位置唯一，不需要处理重复值右边界。
-
-易错点
-------
-
-* 把 ``right`` 初始化为 ``n - 1``，却仍使用半开区间更新 ``right = mid``；
-* 遇到 ``nums[mid] == target`` 立即返回虽然正确，却掩盖了 lower bound 的统一边界语义；
-* 使用 ``left <= right`` 配合 ``right = mid``，在单元素区间可能死循环；
-* 目标大于所有元素时返回 ``n - 1``，忘记末尾插入位置是 ``n``；
-* Julia/R 内部一基位置直接返回，导致结果整体多一。
-
-新增与强化知识
---------------
-
-新增
-~~~~
-
-* “查找已有值”和“寻找插入位置”可以统一为第一个满足单调谓词的位置；
-* 二分返回值可以是数组之外的边界 ``n``，不一定是有效元素下标；
-* 题目语义直接对应 lower bound 时，不需要额外命中分支。
-
-强化
-~~~~
-
-* 复用 0034 的 lower bound，并去掉 upper bound 与存在性验证；
-* 继续区分闭区间命中搜索和半开区间边界搜索；
-* 通过不变量解释比较符号，而不是机械记忆模板。
-
-最小自检
---------
-
-#. 本题寻找的单调边界是什么？
-#. 为什么目标存在时不需要单独返回命中位置？
-#. 为什么 ``right`` 可以取 ``nums.length``？
-#. ``nums = [2, 4, 6]``、``target = 7`` 时，边界如何收敛？
-#. ``while left < right`` 与 ``right = mid`` 为什么能够终止？
-
-答案要点
-~~~~~~~~
-
-#. 第一个满足 ``nums[index] >= target`` 的位置。
-#. 目标位置本身就是第一个大于等于目标的位置。
-#. 答案可能是末尾插入位置 ``n``。
-#. 所有中点值都小于目标，``left`` 最终推进到 3。
-#. 每轮 ``mid < right``，令 ``right = mid`` 会缩短区间；另一分支令 ``left = mid + 1`` 也会缩短。
