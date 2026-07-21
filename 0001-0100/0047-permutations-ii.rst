@@ -6,320 +6,168 @@
 
 :题号: 0047
 :难度: Medium
-:主题: 回溯、排序、重复值去重、排列
+:主题: 回溯、排序、重复值、同层去重
 :原题: `LeetCode 0047 <https://leetcode.com/problems/permutations-ii/>`_
-:访问状态: Available
-:教学重点: 同层等值分支去重、used 状态、排序后相邻判断、唯一排列证明
+:教学重点: 等值分支、used 状态、同层跳过、唯一排列证明
 
 题目重述
 --------
 
-给定一个可能包含重复值的整数数组 ``nums``，返回所有不同的排列。每个排列必须使用数组中的
-全部元素，并且每个输入下标最多使用一次。结果中不能出现两个内容完全相同的排列。
+给定可能含重复值的整数数组，返回所有不同排列。每个输入下标在一个排列中恰好使用一次；来自不同下标但数值序列相同的排列只能输出一次。
 
 自建示例
 --------
 
-包含一个重复值
-~~~~~~~~~~~~~~
-
 .. code-block:: text
 
-   输入：[1, 1, 2]
-   输出：
-   [1, 1, 2]
-   [1, 2, 1]
-   [2, 1, 1]
+   [1,1,2] -> [1,1,2] [1,2,1] [2,1,1]
+   [5,5,5] -> [5,5,5]
 
-全部相同
-~~~~~~~~
+把两个 1 标记为 ``1a``、``1b`` 时，根层分别选择它们会得到等价子树；但选择 ``1a`` 后，下一层仍必须允许选择 ``1b``。
 
-.. code-block:: text
-
-   输入：[5, 5, 5]
-   输出：[[5, 5, 5]]
-
-多个重复组
-~~~~~~~~~~
-
-.. code-block:: text
-
-   输入：[1, 1, 2, 2]
-   不同排列数量：6
-
-没有重复
-~~~~~~~~
-
-.. code-block:: text
-
-   输入：[1, 2, 3]
-   输出数量：6
-
-问题抽象
+C++ 实现
 --------
 
-与 0046 一样，本题逐个决定排列位置。差别在于相同数值可能来自不同输入下标。若在同一递归层
-分别选择两个相同值作为当前位置，它们形成的后续候选多重集合完全相同，会生成重复子树。
+.. code-block:: cpp
 
-主解法先排序，使相同值相邻，并维护 ``used[index]``：
+   #include <algorithm>
+   #include <set>
+   #include <unordered_set>
+   #include <vector>
 
-* ``used[index] = true`` 表示该输入下标已出现在当前路径中；
-* 当前层扫描所有未使用下标；
-* 当 ``nums[index] == nums[index - 1]`` 且前一个相同值尚未使用时，跳过当前下标。
+   class Solution {
+   private:
+       void allDfs(std::vector<int>& nums, int position, std::set<std::vector<int>>& unique) {
+           if (position == static_cast<int>(nums.size())) { unique.insert(nums); return; }
+           for (int i = position; i < static_cast<int>(nums.size()); ++i) {
+               std::swap(nums[position], nums[i]);
+               allDfs(nums, position + 1, unique);
+               std::swap(nums[position], nums[i]);
+           }
+       }
 
-去重条件写成：
+       std::vector<std::vector<int>> generateThenDeduplicate(std::vector<int> nums) {
+           std::set<std::vector<int>> unique;
+           allDfs(nums, 0, unique);
+           return {unique.begin(), unique.end()};
+       }
+
+       void levelSetDfs(std::vector<int>& nums, int position, std::vector<std::vector<int>>& result) {
+           if (position == static_cast<int>(nums.size())) { result.push_back(nums); return; }
+           std::unordered_set<int> chosen;
+           for (int i = position; i < static_cast<int>(nums.size()); ++i) {
+               if (!chosen.insert(nums[i]).second) continue;
+               std::swap(nums[position], nums[i]);
+               levelSetDfs(nums, position + 1, result);
+               std::swap(nums[position], nums[i]);
+           }
+       }
+
+       void sortedDfs(
+           const std::vector<int>& nums,
+           std::vector<char>& used,
+           std::vector<int>& path,
+           std::vector<std::vector<int>>& result
+       ) {
+           if (path.size() == nums.size()) { result.push_back(path); return; }
+           for (int i = 0; i < static_cast<int>(nums.size()); ++i) {
+               if (used[i]) continue;
+               if (i > 0 && nums[i] == nums[i - 1] && !used[i - 1]) continue;
+               used[i] = true; path.push_back(nums[i]);
+               sortedDfs(nums, used, path, result);
+               path.pop_back(); used[i] = false;
+           }
+       }
+
+       std::vector<std::vector<int>> sortedUsed(std::vector<int> nums) {
+           std::sort(nums.begin(), nums.end());
+           std::vector<std::vector<int>> result;
+           std::vector<int> path;
+           std::vector<char> used(nums.size(), false);
+           sortedDfs(nums, used, path, result);
+           return result;
+       }
+
+   public:
+       std::vector<std::vector<int>> permuteUnique(std::vector<int>& nums) {
+           return sortedUsed(nums);
+       }
+   };
+
+题解
+----
+
+为什么普通排列会生成重复叶子
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+若相同值来自不同下标，搜索树把它们视为不同候选。例如根层选择 ``1a`` 或 ``1b``，剩余多重集合完全相同，最终数值排列重复。事后使用集合能去重，却仍遍历了所有 ``n!`` 个下标排列。
+
+同层集合如何直接删除等价分支
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+固定当前位置和前缀时，只要某个数值已经被本层选过，另一个相同值交换到当前位置会产生同样的数值前缀和同样的剩余多重集合。每层维护 ``chosen`` 即可跳过重复值，但每层额外创建哈希集合。
+
+排序与 used 如何表达候选身份
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+排序使相同值相邻，``used[i]`` 表示输入下标 ``i`` 是否已在当前路径中。去重条件为：
 
 .. code-block:: text
 
-   index > 0
-   nums[index] == nums[index - 1]
-   used[index - 1] == false
+   i > 0
+   nums[i] == nums[i-1]
+   used[i-1] == false
 
-解法选择
---------
+前一个等值下标尚未使用，说明它仍与当前下标同属本层候选；本层应只允许较早下标代表这个数值。
+
+为什么前一个等值下标已使用时不能跳过
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+若 ``used[i-1]`` 为真，前一个副本已经位于路径更高层。当前层选择后一个副本是在组合多个相同值，而不是启动等价同层分支。对 ``[1a,1b,2]``，选择 ``1a`` 后必须允许 ``1b``，才能生成 ``[1,1,2]``。
+
+状态演化
+~~~~~~~~
 
 .. list-table::
    :header-rows: 1
 
-   * - 方法
-     - 时间复杂度
-     - 额外状态
-     - 取舍
-   * - 排序、used 与同层跳过
-     - ``O(n × U)``
-     - ``O(n)``
-     - 主解法；去重规则局部且易证明
-   * - 每层哈希集合记录已选值
-     - ``O(n × U)`` 期望
-     - 每层集合
-     - 不必排序，但常数和实现复杂度更高
-   * - 生成全部 ``n!`` 排列后放集合
-     - ``O(n × n!)``
-     - ``O(n × n!)``
-     - 先制造重复再去重，浪费搜索和内存
-   * - 排序后不断调用 next permutation
-     - ``O(n × U)``
-     - ``O(1)`` 不含输出
-     - 可按字典序生成，教学重点不同
+   * - 层级
+     - 路径
+     - 候选
+     - 去重判断
+   * - 根层
+     - ``[]``
+     - ``1a,1b,2``
+     - 选 1a 后跳过 1b
+   * - 第二层
+     - ``[1a]``
+     - ``1b,2``
+     - ``used[1a]=true``，允许 1b
+   * - 第三层
+     - ``[1a,1b]``
+     - ``2``
+     - 生成 ``[1,1,2]``
 
-其中 ``U`` 是不同排列数量：
+为什么不会遗漏唯一排列
+~~~~~~~~~~~~~~~~~~~~~~
 
-.. code-block:: text
+任意数值排列都可把相同值的下标按升序分配到它们出现的位置。该规范下标序列永远不会触发“前一个等值下标未使用”的跳过条件，因此对应路径保留。其他下标分配只会生成相同数值排列，被安全删除。
 
-   U = n! / (count_1! × count_2! × ...)
-
-主解法：排序后按下标回溯
-------------------------
-
-状态含义
-~~~~~~~~
-
-递归函数维护：
-
-* ``path``：当前已确定的排列前缀；
-* ``used``：每个排序后下标是否已进入当前路径；
-* ``answers``：已经完成的不同排列；
-* 当前递归深度等于 ``path`` 长度，也就是下一待填位置。
-
-每层扫描所有下标，只有满足以下条件的元素可以选择：
-
-#. 当前下标尚未使用；
-#. 若它与前一个值相同，则前一个相同值必须已经在当前路径中。
-
-为什么 used[index - 1] 为 false 表示同层重复
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-设排序后相邻两个值相同：``nums[i - 1] == nums[i]``。
-
-* 若 ``used[i - 1] == false``，前一个相同值还在本层候选集合中。选择 ``i`` 与选择 ``i - 1``
-  放到当前位置，留下的值多重集合相同。前一个分支已经覆盖这棵子树，所以必须跳过 ``i``。
-* 若 ``used[i - 1] == true``，前一个相同值已被祖先层使用。此时选择 ``i`` 是在更深位置再次
-  放置同值，代表排列中合法的重复元素，不能跳过。
-
-因此该条件只删除同一层的等价选择，不会禁止不同深度使用多个相同值。
-
-核心不变量
+复杂度来源
 ~~~~~~~~~~
 
-进入任意递归层时：
+若不同排列数为 ``P``，复制输出需要 ``O(Pn)``。排序为 ``O(n log n)``，递归栈、路径和 ``used`` 为 ``O(n)``。全部不同值时 ``P=n!``；重复值会减少叶子数。
 
-* ``path`` 中每个元素对应一个不同输入下标；
-* ``used`` 与 ``path`` 精确一致，真值数量等于路径长度；
-* 排序后的每组相同值，在当前层只允许最靠前的未使用下标作为代表；
-* 每个尚未使用的数值副本仍有机会在后续位置被选择；
-* 返回父层前，当前选择会从 ``path`` 和 ``used`` 中同步撤销。
-
-正确性依据
-~~~~~~~~~~
-
-**合法性：** 每次只选择 ``used[index] == false`` 的下标，并在返回后撤销，因此一条完整路径恰好
-使用每个输入下标一次。叶子路径长度为 ``n``，形成输入多重集合的一个排列。
-
-**无重复：** 假设两个不同搜索路径生成相同数值排列。观察它们最早分歧的层。两条路径在该位置
-必须选择相同数值但不同下标。排序使这些相同值相邻；在该层，较靠后的相同下标被选择时，较靠前
-的等值下标仍未使用，因此触发跳过条件，矛盾。故不会生成重复排列。
-
-**完整性：** 任取一个不同排列。从左到右构造它时，对当前所需数值，总可以选择该数值中最靠前
-且尚未使用的下标。该下标不会被去重条件跳过；若它不是组内第一个，则前面的相同值一定已经被
-更早位置使用。于是存在一条合法路径生成该排列，不会漏解。
-
-复杂度
-~~~~~~
-
-设 ``U`` 为不同排列数量：
-
-* 每个输出需要复制 ``n`` 个元素，时间复杂度为 ``O(n × U)``，另有排序 ``O(n log n)``；
-* ``path``、``used`` 和递归栈均为 ``O(n)``；
-* 输出占用 ``O(n × U)`` 空间。
-
-核心语言实现
-------------
+九语言实现
+----------
 
 C
 ~
 
 .. code-block:: c
 
-   #include <stdbool.h>
-   #include <stdlib.h>
-   #include <string.h>
-
-   static int compare_ints(const void *left, const void *right) {
-       int a = *(const int *)left;
-       int b = *(const int *)right;
-       return (a > b) - (a < b);
-   }
-
-   static void generate_unique(
-       const int *nums,
-       int nums_size,
-       bool *used,
-       int *path,
-       int depth,
-       int **answers,
-       int *answer_count
-   ) {
-       if (depth == nums_size) {
-           int *copy = malloc((size_t)nums_size * sizeof(int));
-           memcpy(copy, path, (size_t)nums_size * sizeof(int));
-           answers[*answer_count] = copy;
-           ++(*answer_count);
-           return;
-       }
-
-       for (int index = 0; index < nums_size; ++index) {
-           if (used[index]) {
-               continue;
-           }
-           if (index > 0 && nums[index] == nums[index - 1] &&
-               !used[index - 1]) {
-               continue;
-           }
-
-           used[index] = true;
-           path[depth] = nums[index];
-           generate_unique(
-               nums,
-               nums_size,
-               used,
-               path,
-               depth + 1,
-               answers,
-               answer_count
-           );
-           used[index] = false;
-       }
-   }
-
-   int **permuteUnique(
-       int *nums,
-       int numsSize,
-       int *returnSize,
-       int **returnColumnSizes
-   ) {
-       qsort(nums, (size_t)numsSize, sizeof(int), compare_ints);
-
-       int capacity = 1;
-       for (int value = 2; value <= numsSize; ++value) {
-           capacity *= value;
-       }
-
-       int **answers = malloc((size_t)capacity * sizeof(int *));
-       int *columns = malloc((size_t)capacity * sizeof(int));
-       bool *used = calloc((size_t)numsSize, sizeof(bool));
-       int *path = malloc((size_t)numsSize * sizeof(int));
-       int answer_count = 0;
-
-       generate_unique(
-           nums,
-           numsSize,
-           used,
-           path,
-           0,
-           answers,
-           &answer_count
-       );
-
-       for (int index = 0; index < answer_count; ++index) {
-           columns[index] = numsSize;
-       }
-
-       free(path);
-       free(used);
-       *returnSize = answer_count;
-       *returnColumnSizes = columns;
-       return answers;
-   }
-
-外层容量使用 ``n!`` 作为安全上界；有重复值时实际答案更少。排序会修改输入数组顺序。
-
-C++
-~~~
-
-.. code-block:: cpp
-
-   class Solution {
-   public:
-       vector<vector<int>> permuteUnique(vector<int>& nums) {
-           sort(nums.begin(), nums.end());
-           vector<vector<int>> answers;
-           vector<int> path;
-           vector<bool> used(nums.size(), false);
-           backtrack(nums, used, path, answers);
-           return answers;
-       }
-
-   private:
-       void backtrack(
-           const vector<int>& nums,
-           vector<bool>& used,
-           vector<int>& path,
-           vector<vector<int>>& answers
-       ) {
-           if (path.size() == nums.size()) {
-               answers.push_back(path);
-               return;
-           }
-
-           for (int index = 0;
-                index < static_cast<int>(nums.size());
-                ++index) {
-               if (used[index]) {
-                   continue;
-               }
-               if (index > 0 && nums[index] == nums[index - 1] &&
-                   !used[index - 1]) {
-                   continue;
-               }
-
-               used[index] = true;
-               path.push_back(nums[index]);
-               backtrack(nums, used, path, answers);
-               path.pop_back();
-               used[index] = false;
-           }
-       }
-   };
+   static int cmp(const void*a,const void*b){int x=*(const int*)a,y=*(const int*)b;return(x>y)-(x<y);}static void dfs(int*a,int n,bool*used,int*path,int depth,int***rows,int*count,int*cap){if(depth==n){if(*count==*cap){*cap*=2;*rows=realloc(*rows,(size_t)*cap*sizeof(int*));}int*copy=malloc((size_t)n*sizeof(int));memcpy(copy,path,(size_t)n*sizeof(int));(*rows)[(*count)++]=copy;return;}for(int i=0;i<n;i++){if(used[i])continue;if(i>0&&a[i]==a[i-1]&&!used[i-1])continue;used[i]=true;path[depth]=a[i];dfs(a,n,used,path,depth+1,rows,count,cap);used[i]=false;}}
+   int**permuteUnique(int*a,int n,int*returnSize,int**returnColumnSizes){qsort(a,(size_t)n,sizeof(int),cmp);bool*used=calloc((size_t)n,sizeof(bool));int*path=malloc((size_t)n*sizeof(int));int cap=16,count=0;int**rows=malloc(16*sizeof(int*));dfs(a,n,used,path,0,&rows,&count,&cap);int*sizes=malloc((size_t)count*sizeof(int));for(int i=0;i<count;i++)sizes[i]=n;free(used);free(path);*returnSize=count;*returnColumnSizes=sizes;return rows;}
 
 Python
 ~~~~~~
@@ -328,286 +176,58 @@ Python
 
    class Solution:
        def permuteUnique(self, nums: list[int]) -> list[list[int]]:
-           nums.sort()
-           answers: list[list[int]] = []
-           path: list[int] = []
-           used = [False] * len(nums)
-
-           def backtrack() -> None:
-               if len(path) == len(nums):
-                   answers.append(path.copy())
-                   return
-
-               for index, value in enumerate(nums):
-                   if used[index]:
-                       continue
-                   if (
-                       index > 0
-                       and value == nums[index - 1]
-                       and not used[index - 1]
-                   ):
-                       continue
-
-                   used[index] = True
-                   path.append(value)
-                   backtrack()
-                   path.pop()
-                   used[index] = False
-
-           backtrack()
-           return answers
+           nums.sort(); used=[False]*len(nums); path=[]; result=[]
+           def dfs():
+               if len(path)==len(nums): result.append(path.copy()); return
+               for i,value in enumerate(nums):
+                   if used[i] or (i>0 and value==nums[i-1] and not used[i-1]): continue
+                   used[i]=True;path.append(value);dfs();path.pop();used[i]=False
+           dfs();return result
 
 Java
 ~~~~
 
 .. code-block:: java
 
-   class Solution {
-       public List<List<Integer>> permuteUnique(int[] nums) {
-           Arrays.sort(nums);
-           List<List<Integer>> answers = new ArrayList<>();
-           List<Integer> path = new ArrayList<>();
-           boolean[] used = new boolean[nums.length];
-           backtrack(nums, used, path, answers);
-           return answers;
-       }
-
-       private void backtrack(
-           int[] nums,
-           boolean[] used,
-           List<Integer> path,
-           List<List<Integer>> answers
-       ) {
-           if (path.size() == nums.length) {
-               answers.add(new ArrayList<>(path));
-               return;
-           }
-
-           for (int index = 0; index < nums.length; ++index) {
-               if (used[index]) {
-                   continue;
-               }
-               if (index > 0 && nums[index] == nums[index - 1] &&
-                   !used[index - 1]) {
-                   continue;
-               }
-
-               used[index] = true;
-               path.add(nums[index]);
-               backtrack(nums, used, path, answers);
-               path.remove(path.size() - 1);
-               used[index] = false;
-           }
-       }
-   }
+   class Solution {List<List<Integer>>out=new ArrayList<>();List<Integer>path=new ArrayList<>();int[]a;boolean[]used;void dfs(){if(path.size()==a.length){out.add(new ArrayList<>(path));return;}for(int i=0;i<a.length;i++){if(used[i]||(i>0&&a[i]==a[i-1]&&!used[i-1]))continue;used[i]=true;path.add(a[i]);dfs();path.remove(path.size()-1);used[i]=false;}}public List<List<Integer>> permuteUnique(int[]nums){Arrays.sort(nums);a=nums;used=new boolean[nums.length];dfs();return out;}}
 
 Rust
 ~~~~
 
 .. code-block:: rust
 
-   impl Solution {
-       pub fn permute_unique(mut nums: Vec<i32>) -> Vec<Vec<i32>> {
-           nums.sort_unstable();
-           let mut answers = Vec::new();
-           let mut path = Vec::with_capacity(nums.len());
-           let mut used = vec![false; nums.len()];
-           Self::backtrack(&nums, &mut used, &mut path, &mut answers);
-           answers
-       }
-
-       fn backtrack(
-           nums: &[i32],
-           used: &mut [bool],
-           path: &mut Vec<i32>,
-           answers: &mut Vec<Vec<i32>>,
-       ) {
-           if path.len() == nums.len() {
-               answers.push(path.clone());
-               return;
-           }
-
-           for index in 0..nums.len() {
-               if used[index] {
-                   continue;
-               }
-               if index > 0 && nums[index] == nums[index - 1] &&
-                   !used[index - 1]
-               {
-                   continue;
-               }
-
-               used[index] = true;
-               path.push(nums[index]);
-               Self::backtrack(nums, used, path, answers);
-               path.pop();
-               used[index] = false;
-           }
-       }
-   }
+   impl Solution {pub fn permute_unique(mut a:Vec<i32>)->Vec<Vec<i32>>{fn dfs(a:&[i32],used:&mut Vec<bool>,path:&mut Vec<i32>,out:&mut Vec<Vec<i32>>){if path.len()==a.len(){out.push(path.clone());return}for i in 0..a.len(){if used[i]||(i>0&&a[i]==a[i-1]&&!used[i-1]){continue}used[i]=true;path.push(a[i]);dfs(a,used,path,out);path.pop();used[i]=false}}a.sort();let mut out=vec![];dfs(&a,&mut vec![false;a.len()],&mut vec![],&mut out);out}}
 
 Go
 ~~
 
 .. code-block:: go
 
-   func permuteUnique(nums []int) [][]int {
-       sort.Ints(nums)
-       answers := make([][]int, 0)
-       path := make([]int, 0, len(nums))
-       used := make([]bool, len(nums))
-
-       var backtrack func()
-       backtrack = func() {
-           if len(path) == len(nums) {
-               copyOfPath := append([]int(nil), path...)
-               answers = append(answers, copyOfPath)
-               return
-           }
-
-           for index, value := range nums {
-               if used[index] {
-                   continue
-               }
-               if index > 0 && value == nums[index-1] &&
-                   !used[index-1] {
-                   continue
-               }
-
-               used[index] = true
-               path = append(path, value)
-               backtrack()
-               path = path[:len(path)-1]
-               used[index] = false
-           }
-       }
-
-       backtrack()
-       return answers
-   }
-
-需要导入 ``sort``。路径保存时必须复制切片。
+   func permuteUnique(a []int)[][]int{sort.Ints(a);used:=make([]bool,len(a));path:=[]int{};out:=[][]int{};var dfs func();dfs=func(){if len(path)==len(a){out=append(out,append([]int(nil),path...));return};for i,v:=range a{if used[i]||(i>0&&v==a[i-1]&&!used[i-1]){continue};used[i]=true;path=append(path,v);dfs();path=path[:len(path)-1];used[i]=false}};dfs();return out}
 
 TypeScript
 ~~~~~~~~~~
 
 .. code-block:: typescript
 
-   function permuteUnique(nums: number[]): number[][] {
-       nums.sort((left, right) => left - right);
-       const answers: number[][] = [];
-       const path: number[] = [];
-       const used = new Array<boolean>(nums.length).fill(false);
-
-       function backtrack(): void {
-           if (path.length === nums.length) {
-               answers.push([...path]);
-               return;
-           }
-
-           for (let index = 0; index < nums.length; index++) {
-               if (used[index]) {
-                   continue;
-               }
-               if (
-                   index > 0 &&
-                   nums[index] === nums[index - 1] &&
-                   !used[index - 1]
-               ) {
-                   continue;
-               }
-
-               used[index] = true;
-               path.push(nums[index]);
-               backtrack();
-               path.pop();
-               used[index] = false;
-           }
-       }
-
-       backtrack();
-       return answers;
-   }
+   function permuteUnique(a:number[]):number[][]{a.sort((x,y)=>x-y);const used=Array(a.length).fill(false),path:number[]=[],out:number[][]=[];const dfs=()=>{if(path.length===a.length){out.push([...path]);return;}for(let i=0;i<a.length;i++){if(used[i]||(i>0&&a[i]===a[i-1]&&!used[i-1]))continue;used[i]=true;path.push(a[i]);dfs();path.pop();used[i]=false;}};dfs();return out;}
 
 C#
 ~~
 
 .. code-block:: csharp
 
-   public class Solution {
-       public IList<IList<int>> PermuteUnique(int[] nums) {
-           Array.Sort(nums);
-           IList<IList<int>> answers = new List<IList<int>>();
-           List<int> path = new List<int>();
-           bool[] used = new bool[nums.Length];
-           Backtrack(nums, used, path, answers);
-           return answers;
-       }
-
-       private void Backtrack(
-           int[] nums,
-           bool[] used,
-           List<int> path,
-           IList<IList<int>> answers
-       ) {
-           if (path.Count == nums.Length) {
-               answers.Add(new List<int>(path));
-               return;
-           }
-
-           for (int index = 0; index < nums.Length; ++index) {
-               if (used[index]) {
-                   continue;
-               }
-               if (index > 0 && nums[index] == nums[index - 1] &&
-                   !used[index - 1]) {
-                   continue;
-               }
-
-               used[index] = true;
-               path.Add(nums[index]);
-               Backtrack(nums, used, path, answers);
-               path.RemoveAt(path.Count - 1);
-               used[index] = false;
-           }
-       }
-   }
+   public class Solution {IList<IList<int>>out=new List<IList<int>>();List<int>path=new();int[]a;bool[]used;void Dfs(){if(path.Count==a.Length){out.Add(new List<int>(path));return;}for(int i=0;i<a.Length;i++){if(used[i]||(i>0&&a[i]==a[i-1]&&!used[i-1]))continue;used[i]=true;path.Add(a[i]);Dfs();path.RemoveAt(path.Count-1);used[i]=false;}}public IList<IList<int>> PermuteUnique(int[]nums){Array.Sort(nums);a=nums;used=new bool[a.Length];Dfs();return out;}}
 
 Julia
 ~~~~~
 
 .. code-block:: julia
 
-   function permute_unique(nums::Vector{Int})::Vector{Vector{Int}}
-       sort!(nums)
-       answers = Vector{Vector{Int}}()
-       path = Int[]
-       used = falses(length(nums))
-
-       function backtrack()
-           if length(path) == length(nums)
-               push!(answers, copy(path))
-               return
-           end
-
-           for index in eachindex(nums)
-               used[index] && continue
-               if index > firstindex(nums) &&
-                  nums[index] == nums[index - 1] &&
-                  !used[index - 1]
-                   continue
-               end
-
-               used[index] = true
-               push!(path, nums[index])
-               backtrack()
-               pop!(path)
-               used[index] = false
-           end
-       end
-
-       backtrack()
-       return answers
+   function unique_permutations(a::Vector{Int})
+       sort!(a);used=falses(length(a));path=Int[];out=Vector{Vector{Int}}()
+       function dfs();length(path)==length(a)&&(push!(out,copy(path));return);for i in eachindex(a);(used[i]||(i>1&&a[i]==a[i-1]&&!used[i-1]))&&continue;used[i]=true;push!(path,a[i]);dfs();pop!(path);used[i]=false;end;end
+       dfs();out
    end
 
 R
@@ -615,95 +235,4 @@ R
 
 .. code-block:: r
 
-   permute_unique <- function(nums) {
-     nums <- sort(nums)
-     answers <- list()
-     path <- numeric(0)
-     used <- rep(FALSE, length(nums))
-
-     backtrack <- function() {
-       if (length(path) == length(nums)) {
-         answers[[length(answers) + 1L]] <<- path
-         return(invisible(NULL))
-       }
-
-       for (index in seq_along(nums)) {
-         if (used[[index]]) {
-           next
-         }
-         if (
-           index > 1L &&
-           nums[[index]] == nums[[index - 1L]] &&
-           !used[[index - 1L]]
-         ) {
-           next
-         }
-
-         used[[index]] <<- TRUE
-         path <<- c(path, nums[[index]])
-         backtrack()
-         path <<- path[-length(path)]
-         used[[index]] <<- FALSE
-       }
-     }
-
-     backtrack()
-     answers
-   }
-
-``path`` 与 ``used`` 位于外层函数环境，由递归函数通过 ``<<-`` 更新。保存到答案列表时 R 使用
-值语义，不会被后续撤销修改。
-
-关键边界
---------
-
-* 全部元素相同：每层只有第一个未使用副本能作为代表，最终只有一个答案；
-* 没有重复：去重条件从不触发，退化为普通排列回溯；
-* 多组重复值：每组分别应用“最靠前未使用副本”规则；
-* 负数和零：排序与相等判断同样适用；
-* 叶子复制：路径是可变对象，必须复制后保存。
-
-易错点
-------
-
-* 忘记先排序，使相同值不相邻，去重条件失效；
-* 把条件写成 ``used[index - 1] == true``，错误删除深层合法重复值；
-* 无论前一个相同值是否使用都跳过，导致 ``[1, 1, 2]`` 无法生成包含两个 ``1`` 的排列；
-* 只按数值维护一个全局 ``used`` 集合，无法区分多个相同副本；
-* 返回前只弹出路径却忘记恢复 ``used``；
-* 先生成全部排列再用集合去重，造成不必要的阶乘级重复工作。
-
-新增与强化知识
---------------
-
-新增
-~~~~
-
-* 重复值排列需要区分“相同数值”和“不同输入下标”；
-* 排序把等价候选聚集在一起，使同层去重变成局部相邻判断；
-* ``!used[index - 1]`` 表示前一个相同值仍属于当前层候选。
-
-强化
-~~~~
-
-* 复用 0040 的同层重复跳过思想，但本题通过 ``used`` 判断前一个等值副本是否属于当前层；
-* 复用 0046 的位置决策树，并增加规范代表选择；
-* 正确性证明要分别说明无重复与不漏解。
-
-最小自检
---------
-
-#. 为什么排序是相邻去重条件的前提？
-#. ``used[index - 1] == false`` 为什么表示同层重复？
-#. ``used[index - 1] == true`` 时为什么不能跳过当前相同值？
-#. 对 ``[1, 1, 2]``，第二个 ``1`` 在什么情况下可以被选择？
-#. 为什么不同输入下标仍需要 ``used``，即使它们数值相同？
-
-答案要点
-~~~~~~~~
-
-#. 排序保证相同值连续，当前值只需检查前一个相同副本。
-#. 前一个副本尚未被祖先使用，仍是本层的等价候选，较前分支已经覆盖相同子树。
-#. 前一个副本已在更早位置，当前副本代表在更深位置再次使用同值，是合法选择。
-#. 当第一个 ``1`` 已经被当前路径使用时。
-#. 每个输入下标最多使用一次；数值相同不代表是同一个副本。
+   unique_permutations <- function(a){a<-sort(a);used<-rep(FALSE,length(a));path<-integer();out<-list();dfs<-function(){if(length(path)==length(a)){out[[length(out)+1L]]<<-path;return()};for(i in seq_along(a)){if(used[[i]]||(i>1L&&a[[i]]==a[[i-1L]]&&!used[[i-1L]]))next;used[[i]]<<-TRUE;path<<-c(path,a[[i]]);dfs();path<<-path[-length(path)];used[[i]]<<-FALSE}};dfs();out}
