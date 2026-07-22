@@ -33,7 +33,6 @@ C++ 实现
 .. code-block:: cpp
 
    #include <unordered_map>
-   #include <vector>
 
    class LRUCache {
        struct Node {
@@ -117,20 +116,15 @@ C++ 实现
 
 两个哨兵之间保存全部缓存项：``head.next`` 是最近使用项，``tail.previous`` 是最久未使用项。每个缓存键在哈希表和链表中各出现一次，二者形成一一对应。
 
-刷新为何是常数时间
-~~~~~~~~~~~~~~~~~~
+刷新与淘汰
+~~~~~~~~~~
 
-哈希表先得到节点地址；双向链表已知节点时可以同时访问前驱和后继，四次指针更新即可摘除，再把节点插到表头。失败的 ``get`` 不触碰任何节点。
-
-淘汰为何选择表尾
-~~~~~~~~~~~~~~~~
-
-所有成功访问都把目标移到表头，因此表尾之前的节点在当前集合中最久没有被使用。插入新键导致容量超限时，删除该节点即可。
+哈希表先得到节点地址；双向链表已知节点时可以常数时间摘除，再插到表头。所有成功访问都刷新表头，因此容量超限时删除 ``tail.previous`` 即可。失败的 ``get`` 不改变顺序。
 
 复杂度来源
 ~~~~~~~~~~
 
-哈希查找平均 ``O(1)``，链表摘除、插入和表尾定位都是 ``O(1)``；空间 ``O(capacity)``。线性数组基准的访问或刷新为 ``O(capacity)``，时间戳方案淘汰时也需扫描全部键。
+哈希查找平均 ``O(1)``，链表摘除、插入和表尾定位都是 ``O(1)``；空间 ``O(capacity)``。线性序列或时间戳基准在刷新或淘汰时需要扫描缓存。
 
 九语言实现
 ----------
@@ -163,7 +157,7 @@ Java
 
 .. code-block:: java
 
-   class LRUCache extends LinkedHashMap<Integer,Integer>{private final int cap;LRUCache(int capacity){super(capacity,0.75f,true);cap=capacity;}public int get(int key){return super.getOrDefault(key,-1);}public void put(int key,int value){super.put(key,value);}protected boolean removeEldestEntry(Map.Entry<Integer,Integer>e){return size()>cap;}}
+   class LRUCache {private final int cap;private final LinkedHashMap<Integer,Integer>data=new LinkedHashMap<>(16,0.75f,true);LRUCache(int capacity){cap=capacity;}public int get(int key){return data.getOrDefault(key,-1);}public void put(int key,int value){data.put(key,value);if(data.size()>cap){Iterator<Integer>it=data.keySet().iterator();it.next();it.remove();}}}
 
 Rust
 ~~~~
@@ -177,7 +171,7 @@ Go
 
 .. code-block:: go
 
-   type entry struct{key,value int;prev,next *entry}type LRUCache struct{cap int;items map[int]*entry;head,tail *entry}func Constructor(capacity int)LRUCache{h,t:=&entry{},&entry{};h.next=t;t.prev=h;return LRUCache{capacity,map[int]*entry{},h,t}}func(c *LRUCache)detach(n *entry){n.prev.next=n.next;n.next.prev=n.prev}func(c *LRUCache)front(n *entry){n.next=c.head.next;n.prev=c.head;c.head.next.prev=n;c.head.next=n}func(c *LRUCache)Get(key int)int{n:=c.items[key];if n==nil{return -1};c.detach(n);c.front(n);return n.value}func(c *LRUCache)Put(key,value int){if n:=c.items[key];n!=nil{n.value=value;c.detach(n);c.front(n);return};n:=&entry{key:key,value:value};c.items[key]=n;c.front(n);if len(c.items)>c.cap{v:=c.tail.prev;c.detach(v);delete(c.items,v.key)}}
+   type entry struct{key,value int;prev,next *entry};type LRUCache struct{cap int;items map[int]*entry;head,tail *entry};func Constructor(capacity int)LRUCache{h,t:=&entry{},&entry{};h.next=t;t.prev=h;return LRUCache{capacity,map[int]*entry{},h,t}};func(c *LRUCache)detach(n *entry){n.prev.next=n.next;n.next.prev=n.prev};func(c *LRUCache)front(n *entry){n.next=c.head.next;n.prev=c.head;c.head.next.prev=n;c.head.next=n};func(c *LRUCache)Get(key int)int{n:=c.items[key];if n==nil{return -1};c.detach(n);c.front(n);return n.value};func(c *LRUCache)Put(key,value int){if n:=c.items[key];n!=nil{n.value=value;c.detach(n);c.front(n);return};n:=&entry{key:key,value:value};c.items[key]=n;c.front(n);if len(c.items)>c.cap{v:=c.tail.prev;c.detach(v);delete(c.items,v.key)}}
 
 TypeScript
 ~~~~~~~~~~
