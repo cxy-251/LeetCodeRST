@@ -1,0 +1,8 @@
+0907. Sum of Subarray Minimums
+==============================
+
+:题号: 0907
+:题名: Sum of Subarray Minimums
+:类型: Algorithms（题面待核实）
+:原题: `LeetCode 0907 <https://leetcode.com/problems/sum-of-subarray-minimums/>`_
+:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。

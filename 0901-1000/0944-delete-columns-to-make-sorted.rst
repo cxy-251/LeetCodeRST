@@ -1,0 +1,8 @@
+0944. Delete Columns to Make Sorted
+===================================
+
+:题号: 0944
+:题名: Delete Columns to Make Sorted
+:类型: Algorithms（题面待核实）
+:原题: `LeetCode 0944 <https://leetcode.com/problems/delete-columns-to-make-sorted/>`_
+:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
