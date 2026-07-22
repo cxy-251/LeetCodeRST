@@ -1,0 +1,100 @@
+name: Apply review 0001-0100
+
+on:
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  apply:
+    if: github.head_ref == 'agent/review-0001-0100' && github.actor != 'github-actions[bot]'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: agent/review-0001-0100
+          fetch-depth: 0
+      - name: Apply selective review edits
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import re
+
+          changed = []
+          for path in sorted(Path('0001-0100').glob('*.rst')):
+              number = path.name[:4]
+              if not number.isdigit() or not (1 <= int(number) <= 100):
+                  continue
+              text = path.read_text(encoding='utf-8')
+              original = text
+              first_line = text.splitlines()[0]
+              title = first_line.split('. ', 1)[1]
+
+              intro_end = text.find('\n题目重述\n--------\n')
+              if intro_end < 0:
+                  continue
+              intro = text[:intro_end]
+              tail = text[intro_end:]
+
+              if ':题名:' not in intro:
+                  intro = re.sub(
+                      rf'(:题号:\s*{number}\n)',
+                      rf'\1:题名: {title}\n',
+                      intro,
+                      count=1,
+                  )
+              if ':类型:' not in intro:
+                  intro = re.sub(
+                      r'(:难度:\s*[^\n]+\n)',
+                      r'\1:类型: Algorithms\n',
+                      intro,
+                      count=1,
+                  )
+
+              text = intro + tail
+
+              if number == '0040':
+                  old = '''.. code-block:: text
+
+   candidates = [1a,1b,1c,2], target = 3
+   数值答案为 [1,1,1] 与 [1,2]
+
+根层选择 ``1a`` 后，应跳过 ``1b``、``1c`` 启动的等价根分支；进入下一层后 ``1b`` 是新的首个可用 1，仍可选择，从而保留 ``[1,1,1]``。
+'''
+                  new = '''.. code-block:: text
+
+   输入：candidates = [1,1,1,2], target = 3
+   输出：[[1,1,1],[1,2]]
+
+三个值为 1 的元素来自不同下标。根层只保留一个以 1 开始的分支，避免重复输出 ``[1,2]``；进入下一层后仍可继续选择后续的 1，因此 ``[1,1,1]`` 不会被错误删除。
+'''
+                  if old not in text:
+                      raise SystemExit('0040 expected example block not found')
+                  text = text.replace(old, new, 1)
+
+              if text != original:
+                  path.write_text(text, encoding='utf-8')
+                  changed.append(str(path))
+
+          if not changed:
+              raise SystemExit('no numbered files changed')
+
+          for path in sorted(Path('0001-0100').glob('*.rst')):
+              number = path.name[:4]
+              if not number.isdigit() or not (1 <= int(number) <= 100):
+                  continue
+              text = path.read_text(encoding='utf-8')
+              intro = text.split('\n题目重述\n--------\n', 1)[0]
+              assert ':题名:' in intro, path
+              assert ':类型:' in intro, path
+
+          print('\n'.join(changed))
+          PY
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add 0001-0100/*.rst
+          git commit -m 'docs: review problem introductions 0001-0100'
+          git push
