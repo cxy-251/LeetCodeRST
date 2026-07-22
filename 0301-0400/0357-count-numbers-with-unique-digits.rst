@@ -1,8 +1,21 @@
 0357. Count Numbers with Unique Digits
-=====================================
+======================================
+
+题目信息
+--------
 
 :题号: 0357
-:题名: Count Numbers with Unique Digits
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0357 <https://leetcode.com/problems/count-numbers-with-unique-digits/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Medium
+:主题: 数学、动态规划、回溯
+:原题: `LeetCode 357 <https://leetcode.com/problems/count-numbers-with-unique-digits/>`_
+:教学重点: 按数字长度计算首位与后续位的可选数量，并累加所有长度的结果。
+
+题目重述
+--------
+
+给定整数 ``n``，统计区间 ``[0, 10^n)`` 中十进制表示的各位数字互不重复的整数数量。
+
+自建示例
+--------
+
+``n = 2`` 时答案为 ``91``：共有 ``100`` 个数，其中除去 ``11,22,...,99`` 这九个重复数字的数。

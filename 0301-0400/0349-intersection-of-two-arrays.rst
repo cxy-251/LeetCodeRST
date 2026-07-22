@@ -1,8 +1,21 @@
 0349. Intersection of Two Arrays
 ================================
 
+题目信息
+--------
+
 :题号: 0349
-:题名: Intersection of Two Arrays
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0349 <https://leetcode.com/problems/intersection-of-two-arrays/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Easy
+:主题: 数组、哈希表、双指针、排序
+:原题: `LeetCode 349 <https://leetcode.com/problems/intersection-of-two-arrays/>`_
+:教学重点: 使用集合去重并判断两个数组共同包含的元素。
+
+题目重述
+--------
+
+给定两个整数数组，返回它们的交集。结果中的每个元素只能出现一次，顺序不限。
+
+自建示例
+--------
+
+``nums1 = [1,2,2,1]``，``nums2 = [2,2,3]``，返回 ``[2]``。

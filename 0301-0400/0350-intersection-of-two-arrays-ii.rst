@@ -1,8 +1,21 @@
 0350. Intersection of Two Arrays II
 ===================================
 
+题目信息
+--------
+
 :题号: 0350
-:题名: Intersection of Two Arrays II
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0350 <https://leetcode.com/problems/intersection-of-two-arrays-ii/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Easy
+:主题: 数组、哈希表、双指针、排序
+:原题: `LeetCode 350 <https://leetcode.com/problems/intersection-of-two-arrays-ii/>`_
+:教学重点: 交集中每个值的出现次数应等于它在两个数组中的较小频率。
+
+题目重述
+--------
+
+给定两个整数数组，返回它们的多重集交集。某个值在结果中可以重复出现，但次数不能超过它在任一输入数组中的出现次数。
+
+自建示例
+--------
+
+``nums1 = [4,9,5,4]``，``nums2 = [9,4,9,8,4]``，可返回 ``[4,4,9]``。

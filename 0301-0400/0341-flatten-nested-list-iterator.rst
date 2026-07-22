@@ -1,8 +1,21 @@
 0341. Flatten Nested List Iterator
 =================================
 
+题目信息
+--------
+
 :题号: 0341
-:题名: Flatten Nested List Iterator
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0341 <https://leetcode.com/problems/flatten-nested-list-iterator/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Medium
+:主题: 栈、设计、迭代器、递归
+:原题: `LeetCode 341 <https://leetcode.com/problems/flatten-nested-list-iterator/>`_
+:教学重点: 延迟展开嵌套结构，并让 ``next`` 与 ``hasNext`` 保持正确的迭代器语义。
+
+题目重述
+--------
+
+给定一个由整数和嵌套列表组成的结构，实现迭代器，使它能够按从左到右的顺序逐个返回所有整数。调用者可以反复使用 ``hasNext`` 判断是否还有元素，并用 ``next`` 取得下一个整数。
+
+自建示例
+--------
+
+嵌套列表 ``[1,[2,[3]],4]`` 依次调用迭代器后得到 ``1, 2, 3, 4``。
