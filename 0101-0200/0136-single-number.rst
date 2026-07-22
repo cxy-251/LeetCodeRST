@@ -6,133 +6,110 @@
 
 :题号: 0136
 :难度: Easy
-:主题: 数组、位运算、异或、代数不变量
+:主题: 数组、位运算、异或
 :原题: `LeetCode 0136 <https://leetcode.com/problems/single-number/>`_
-:访问状态: Available
-:教学重点: 把“成对出现”映射为异或中的自消去，并处理十语言的有符号位宽语义
+:教学重点: 异或单位元、自反消去、顺序无关
 
 题目重述
 --------
 
-给定一个非空整数数组，恰好有一个整数只出现一次，其余每个整数都恰好出现两次。找出只出现一次的整数。
-
-题目要求算法具有线性时间复杂度，并且除少量标量状态外不再使用随输入规模增长的额外空间。
-
-精确契约
-~~~~~~~~
-
-* 数组长度至少为 ``1``；根据出现次数条件，它一定是奇数。
-* 恰有一个值出现一次，所有其他不同值各出现两次；重复值不保证相邻。
-* 官方输入值位于 ``[-3 * 10^4, 3 * 10^4]``，属于有符号 32 位整数域。
-* 返回唯一出现的整数。算法只读取输入数组。
-* 目标复杂度是 ``O(n)`` 时间和 ``O(1)`` 算法额外空间。
+非空整数数组中恰有一个值出现一次，其余每个值恰好出现两次。在线性时间、常数额外空间内返回唯一值。
 
 自建示例
-~~~~~~~~
-
-对 ``nums = [7, -4, 9, 7, 9]``，从 ``0`` 开始依次异或：
+--------
 
 .. code-block:: text
 
-   0 ^ 7 ^ (-4) ^ 9 ^ 7 ^ 9
-   = (7 ^ 7) ^ (9 ^ 9) ^ (-4)
-   = 0 ^ 0 ^ (-4)
-   = -4
+   [7,-4,9,7,9] -> -4
+   [5,0,5] -> 0
 
-重复元素虽然不相邻，但交换律允许只在证明中把它们重排；实现仍按原顺序扫描。
-
-若 ``nums = [5, 0, 5]``，答案是 ``0``。这也说明状态初值 ``0`` 与“唯一元素恰好为零”并不冲突：
-初值是异或的单位元，不是表示“尚未找到答案”的哨兵。
-
-问题抽象
+C++ 实现
 --------
 
-把每个机器整数看成固定宽度的比特向量。逐位异或满足四条性质：
+.. code-block:: cpp
 
-.. math::
+   #include <algorithm>
+   #include <unordered_map>
+   #include <vector>
 
-   x \oplus 0 = x,\qquad
-   x \oplus x = 0,
+   class Solution {
+   private:
+       int sorting(std::vector<int> nums) {
+           std::sort(nums.begin(), nums.end());
+           for (int i = 0; i + 1 < static_cast<int>(nums.size()); i += 2)
+               if (nums[i] != nums[i + 1]) return nums[i];
+           return nums.back();
+       }
 
-.. math::
+       int counting(const std::vector<int>& nums) {
+           std::unordered_map<int,int> count;
+           for (int value : nums) ++count[value];
+           for (auto [value, frequency] : count) if (frequency == 1) return value;
+           return 0;
+       }
 
-   x \oplus y = y \oplus x,\qquad
-   (x \oplus y) \oplus z = x \oplus (y \oplus z).
+       int xorReduction(const std::vector<int>& nums) {
+           int answer = 0;
+           for (int value : nums) answer ^= value;
+           return answer;
+       }
 
-因此，每个出现两次的值都是自己的逆元，能够完全抵消；只出现一次的值没有配对，最终被保留下来。
-数组顺序、重复值之间的距离以及整数的正负都不会改变这个结论。
+   public:
+       int singleNumber(std::vector<int>& nums) {
+           return xorReduction(nums);
+       }
+   };
 
-解法取舍
---------
+题解
+----
 
-**排序后检查相邻对** 需要 ``O(n log n)`` 时间；若原地排序，还会修改输入。
-
-**哈希集合或频次表** 可以在线性时间内找到答案，但最坏需要 ``O(n)`` 额外空间，不符合题目要求。
-
-**求和公式** ``2 * sum(distinct) - sum(all)`` 同样需要保存不同值，还引入算术溢出风险。
-
-**逐项异或** 只维护一个整数状态，一次扫描完成，正好利用“其余值出现两次”的契约，是同时满足两个复杂度要求的
-直接解法。
-
-状态、转移与循环不变量
-----------------------
-
-令 ``answer`` 为当前状态，初始化为 ``0``。读取 ``value`` 后执行：
-
-.. math::
-
-   answer \leftarrow answer \oplus value.
-
-处理完前 ``k`` 个元素时维持不变量：
-
-.. math::
-
-   answer = nums_0 \oplus nums_1 \oplus \cdots \oplus nums_{k-1}.
-
-这里不需要记录哪些值已经出现过。若某个值暂时只出现了一次，它的比特仍留在状态中；第二次出现时，相同的比特
-自动抵消。这个状态既是已经读取前缀的完整异或摘要，也是后续证明所需的全部信息。
-
-正确性证明
-----------
-
-引理一：每次循环结束后，前缀异或不变量成立。
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-初始化时尚未处理元素，空前缀的异或是单位元 ``0``，不变量成立。假设处理前 ``k`` 个元素后不变量成立，
-下一步执行 ``answer ^= nums[k]``，状态就变为前 ``k+1`` 个元素的异或。因此由归纳法，不变量在整个扫描中
-始终成立。
-
-引理二：数组中每个出现两次的值对最终状态的贡献为 ``0``。
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-异或满足交换律和结合律，所以可以在代数表达式中把两个相同值放到一起，而不必改变实际数组：
-``x ^ x = 0``。单位元 ``0`` 不影响其他项，因此每一对重复值都可以从最终表达式中消去。
-
-定理：算法返回唯一出现一次的整数。
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-扫描结束后，由引理一，``answer`` 等于全部数组元素的异或。根据题目契约，除目标值 ``u`` 外的每个值都出现
-两次；由引理二，这些值全部抵消为 ``0``。最终只剩 ``0 ^ u = u``，所以返回值恰好是唯一元素。
-
-负数为什么仍然成立
+异或为何适配成对出现
 ~~~~~~~~~~~~~~~~~~
 
-证明作用于整数的位模式，而不是作用于十进制正负号。一个负数的两次出现具有完全相同的位模式，逐位异或后
-每一位都是 ``0``；唯一负数留下的仍是它原来的位模式。Python 虽然使用任意精度整数并把负数位运算解释为无限
-符号扩展，``x ^ x = 0`` 和 ``x ^ 0 = x`` 仍然成立。其余实现则在平台整数位宽内做同样的消去。
+固定宽机器整数逐位异或满足：
 
-复杂度与最优性
---------------
+.. code-block:: text
 
-数组只扫描一次，时间复杂度为 ``O(n)``；只保存 ``answer`` 和循环变量，算法额外空间为 ``O(1)``。
+   x ^ 0 = x
+   x ^ x = 0
+   x ^ y = y ^ x
+   (x ^ y) ^ z = x ^ (y ^ z)
 
-任何正确算法都必须检查每个输入位置：如果某个位置完全未被读取，就无法排除该位置参与决定唯一元素的合法输入。
-因此本题有 ``Omega(n)`` 的读取下界，主解的 ``Theta(n)`` 时间已经渐近最优。
+因此全部输入可在证明中任意重排，把每对相同值放在一起消成 0，最后只剩唯一值。
 
-异或不是加法，不产生算术进位或加法溢出。需要关注的不是“和是否越界”，而是不同语言把输入映射到多少位的
-整数。官方值域处于有符号 32 位范围内，下面所有适配器都能保持值不变。
+负数为何同样成立
+~~~~~~~~~~~~~~~~
 
-十语言实现
+异或操作处理的是固定宽比特模式。负数的补码表示也满足相同代数性质，``x ^ x`` 仍然逐位归零，不需要单独处理符号位。
+
+状态演化
+~~~~~~~~
+
+.. list-table::
+   :header-rows: 1
+
+   * - 读入值
+     - 累计异或
+   * - 7
+     - 7
+   * - -4
+     - ``7 ^ -4``
+   * - 9
+     - ``7 ^ -4 ^ 9``
+   * - 7,9
+     - 两对消去，剩 -4
+
+为什么初值 0 不会丢失答案 0
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+0 是异或单位元，不是“未找到”的哨兵。唯一值为 0 时，其他成对值仍全部消去，最终自然得到 0。
+
+复杂度来源
+~~~~~~~~~~
+
+排序为 ``O(n log n)``；哈希计数为 ``O(n)`` 空间；异或归约扫描一次，时间 ``O(n)``、额外空间 ``O(1)``。
+
+九语言实现
 ----------
 
 C
@@ -140,31 +117,7 @@ C
 
 .. code-block:: c
 
-   int singleNumber(int *nums, int numsSize) {
-       int answer = 0;
-       for (int index = 0; index < numsSize; ++index) {
-           answer ^= nums[index];
-       }
-       return answer;
-   }
-
-C++
-~~~
-
-.. code-block:: cpp
-
-   #include <vector>
-
-   class Solution {
-   public:
-       int singleNumber(std::vector<int>& nums) {
-           int answer = 0;
-           for (int value : nums) {
-               answer ^= value;
-           }
-           return answer;
-       }
-   };
+   int singleNumber(int*nums,int n){int answer=0;for(int i=0;i<n;i++)answer^=nums[i];return answer;}
 
 Python
 ~~~~~~
@@ -173,9 +126,8 @@ Python
 
    class Solution:
        def singleNumber(self, nums: list[int]) -> int:
-           answer = 0
-           for value in nums:
-               answer ^= value
+           answer=0
+           for value in nums: answer ^= value
            return answer
 
 Java
@@ -183,165 +135,46 @@ Java
 
 .. code-block:: java
 
-   class Solution {
-       public int singleNumber(int[] nums) {
-           int answer = 0;
-           for (int value : nums) {
-               answer ^= value;
-           }
-           return answer;
-       }
-   }
+   class Solution {public int singleNumber(int[]nums){int answer=0;for(int value:nums)answer^=value;return answer;}}
 
 Rust
 ~~~~
 
 .. code-block:: rust
 
-   impl Solution {
-       pub fn single_number(nums: Vec<i32>) -> i32 {
-           let mut answer = 0_i32;
-           for value in nums {
-               answer ^= value;
-           }
-           answer
-       }
-   }
+   impl Solution {pub fn single_number(nums:Vec<i32>)->i32{nums.into_iter().fold(0,|a,x|a^x)}}
 
 Go
 ~~
 
 .. code-block:: go
 
-   func singleNumber(nums []int) int {
-       answer := 0
-       for _, value := range nums {
-           answer ^= value
-       }
-       return answer
-   }
+   func singleNumber(nums []int)int{answer:=0;for _,value:=range nums{answer^=value};return answer}
 
 TypeScript
 ~~~~~~~~~~
 
 .. code-block:: typescript
 
-   function singleNumber(nums: number[]): number {
-       let answer = 0;
-       for (const value of nums) {
-           answer ^= value;
-       }
-       return answer;
-   }
+   function singleNumber(nums:number[]):number{let answer=0;for(const value of nums)answer^=value;return answer;}
 
 C#
 ~~
 
 .. code-block:: csharp
 
-   public class Solution {
-       public int SingleNumber(int[] nums) {
-           int answer = 0;
-           foreach (int value in nums) {
-               answer ^= value;
-           }
-           return answer;
-       }
-   }
+   public class Solution {public int SingleNumber(int[]nums){int answer=0;foreach(int value in nums)answer^=value;return answer;}}
 
 Julia
 ~~~~~
 
 .. code-block:: julia
 
-   function single_number(nums::Vector{Int})::Int
-       answer = 0
-       for value in nums
-           answer = xor(answer, value)
-       end
-       return answer
-   end
+   single_number(nums)=foldl(xor,nums;init=0)
 
 R
 ~
 
 .. code-block:: r
 
-   single_number <- function(nums) {
-     answer <- 0L
-     for (value in nums) {
-       answer <- bitwXor(answer, as.integer(value))
-     }
-     answer
-   }
-
-语言适配与位宽语义
-------------------
-
-* **C、C++**：平台的 ``int`` 保存输入，``^`` 对整数位模式逐位运算；代码不修改数组。C++ 接口沿用
-  LeetCode 的非常量引用签名，但函数体仍只读。
-* **Python**：整数没有固定 32 位上限；负数位运算采用无限符号扩展语义，但异或的单位元、自消去、交换律和
-  结合律不变。
-* **Java、C#、Rust**：分别使用固定 32 位的 ``int``、``int``、``i32``，与题目值域直接对应。
-* **Go**：``int`` 的位宽依目标平台为 32 或 64 位；输入在 32 位范围内，同一 ``int`` 类型中的成对异或仍会
-  完全抵消。
-* **TypeScript**：``^`` 会先把 ``number`` 转为有符号 32 位整数，再把结果存回 ``number``。官方输入在
-  32 位域内，所以转换保持值；若擅自把题目扩展到 32 位以外，这份适配器会截断高位。
-* **Julia**：``Int`` 使用主机字长，``xor`` 的两个操作数类型一致；官方值域在常见 32/64 位目标上均安全。
-* **R**：``bitwXor`` 使用 32 位整数语义，循环中的标量先由 ``as.integer`` 适配。官方较小值域避免转换成
-  ``NA``；这也是不能把结论无条件外推到任意大 R 数值向量的原因。
-
-静态审查记录
-------------
-
-本题遵循仓库当前的静态审查策略：
-
-* 人工推演题目页面示例，以及单元素、唯一值为零、唯一值为负数、重复元素不相邻等情况；
-* 逐语言确认初值为整数零、每个元素恰好进入一次异或、返回状态未被额外转换；
-* 专项核对 TypeScript 的 ``ToInt32`` 行为、R 的 ``as.integer``/``bitwXor``、Go/Julia 的目标字长和
-  Python 的负数语义；
-* 核对平台方法名、参数类型和“只读输入、常量算法空间”的实现事实。
-
-本轮没有运行或编译任何题解代码，没有进行跨语言对拍、穷举或属性测试。剩余风险是各平台真实编译器、运行时和
-提交模板未被动态确认；文中只记录静态核对结果，不宣称十语言运行通过。
-
-关键边界与易错点
-----------------
-
-* 单元素数组直接返回该元素；循环初值和一次转移即可覆盖该情况。
-* 唯一元素可以是 ``0``，不能把 ``answer == 0`` 当成“没有答案”。
-* 唯一元素和重复元素都可以是负数；不要改用只适合非负数的位计数解释。
-* 重复元素不需要相邻，排序或寻找相邻对都不是必要步骤。
-* ``+``、逻辑异或和按位异或不是同一运算；实现必须使用各语言的按位异或操作。
-* 该解法严格依赖“其他值恰好出现两次”。若改为出现三次，应使用逐位计数或有限状态位运算，不能直接套用。
-
-学习链
-------
-
-本题是“选择一个运算，使无关元素成为单位元”的典型例子。理解异或的代数结构后，可以继续学习：
-
-* ``0137. Single Number II``：重复次数从两次改为三次，需要追踪每一位模 ``3`` 的状态；
-* ``0260. Single Number III``：有两个唯一元素，需要先异或再按一个区分位分组；
-* 前缀异或问题：用同一个前缀不变量回答区间异或查询。
-
-带答案自检
-----------
-
-**问：重复元素不相邻，为什么仍能抵消？**
-
-答：交换律和结合律允许在代数表达式中任意重排与加括号；实现不需要真的移动数组元素。
-
-**问：循环不变量为什么足以证明最终答案？**
-
-答：它把实现状态精确连接到“所有已读元素的异或”。扫描结束后前缀就是整个数组，再用出现次数契约消去每一对
-重复值，便只剩目标值。
-
-**问：为什么哈希集合不是同等合格的主解？**
-
-答：集合虽然可做到期望 ``O(n)`` 时间，却可能保存与不同元素个数同阶的内容，额外空间为 ``O(n)``，违反题目
-要求的常量额外空间。
-
-**问：TypeScript 版本对任意安全整数都正确吗？**
-
-答：不正确。TypeScript 按位运算会压缩到有符号 32 位；它对本题官方值域正确，但对超出该位宽的自定义输入可能
-丢失高位。
+   single_number <- function(nums){answer<-0L;for(value in nums)answer<-bitwXor(answer,as.integer(value));answer}
