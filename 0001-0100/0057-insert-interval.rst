@@ -15,7 +15,7 @@
 题目重述
 --------
 
-给定按起点递增且彼此不重叠的闭区间数组，以及一个新闭区间。插入并合并所有重叠区间，返回仍有序且互不重叠的结果。主实现不修改 ``newInterval``，返回独立区间。
+给定一个按起点升序排列、区间之间互不重叠的闭区间数组 ``intervals``，以及一个新的闭区间 ``newInterval``。将新区间插入数组；若它与一个或多个原区间重叠，需要将这些区间合并。返回插入后仍按起点升序排列且互不重叠的区间数组。
 
 自建示例
 --------
@@ -255,5 +255,3 @@ R
 ~
 
 .. code-block:: r
-
-   insert_interval <- function(a,v){out<-list();i<-1L;s<-v[[1L]];e<-v[[2L]];n<-if(is.null(dim(a)))0L else nrow(a);while(i<=n&&a[i,2]<s){out[[length(out)+1L]]<-a[i,];i<-i+1L};while(i<=n&&a[i,1]<=e){s<-min(s,a[i,1]);e<-max(e,a[i,2]);i<-i+1L};out[[length(out)+1L]]<-c(s,e);while(i<=n){out[[length(out)+1L]]<-a[i,];i<-i+1L};do.call(rbind,out)}
