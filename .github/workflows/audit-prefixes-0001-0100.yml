@@ -49,12 +49,12 @@ jobs:
           git push
 
   apply:
-    if: github.head_ref == 'agent/review-0001-0100' && github.actor != 'github-actions[bot]'
+    if: startsWith(github.head_ref, 'agent/review-0001-0100') && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: agent/review-0001-0100
+          ref: ${{ github.head_ref }}
           fetch-depth: 0
       - name: Apply selective review edits
         run: |
