@@ -5,28 +5,31 @@
 --------
 
 :题号: 0030
+:题名: Substring with Concatenation of All Words
 :难度: Hard
-:主题: 字符串、哈希计数、固定步长滑动窗口、多偏移扫描
+:类型: Algorithms
+:主题: 字符串、哈希表、滑动窗口
 :原题: `LeetCode 0030 <https://leetcode.com/problems/substring-with-concatenation-of-all-words/>`_
-:教学重点: 等长单词分块、需求频次、余数类扫描、超量收缩、重复单词、重叠答案
 
 题目重述
 --------
 
-给定字符串 ``s`` 和等长单词数组 ``words``，找出所有起点，使从该位置开始的连续子串恰好由全部单词各使用一次
-拼接而成。单词顺序任意，重复单词必须满足对应次数。结果下标为零基，顺序不限。
+给定字符串 ``s`` 和字符串数组 ``words``，其中所有单词长度相同。找出所有起始下标，使从该位置开始的连续子串可以由 ``words`` 中的全部单词各使用一次、按任意顺序首尾连接而成。``words`` 中的重复单词必须按出现次数使用，答案顺序不作要求。
 
 自建示例
 --------
 
 .. code-block:: text
 
-   s = "wordgoodgoodgoodbestword"
-   words = ["word", "good", "best", "good"]
-   返回 [8]
+   输入：s = "catdogcatdog", words = ["cat", "dog"]
+   输出：[0, 3, 6]
+   解释：对应子串依次为 "catdog"、"dogcat"、"catdog"。
 
-起点 8 的分块为 ``good, good, best, word``。第三个连续 ``good`` 会让窗口中的 ``good`` 超量，必须从左侧收缩到
-需求频次重新合法。
+.. code-block:: text
+
+   输入：s = "aaaaaa", words = ["aa", "aa"]
+   输出：[0, 1, 2]
+   解释：每个长度为 4 的 "aaaa" 都能拆成两个 "aa"。
 
 C++ 实现
 --------
