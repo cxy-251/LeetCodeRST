@@ -1,16 +1,16 @@
 name: Audit prefixes 0001-0100
 
 on:
-  push:
+  pull_request:
     branches:
-      - agent/audit-0001-0100
+      - main
 
 permissions:
   contents: write
 
 jobs:
   audit:
-    if: github.actor != 'github-actions[bot]'
+    if: github.head_ref == 'agent/audit-0001-0100' && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
