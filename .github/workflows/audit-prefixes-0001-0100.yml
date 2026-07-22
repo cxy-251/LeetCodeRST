@@ -1,16 +1,16 @@
 name: Apply reviewed introductions 0001-0100
 
 on:
-  push:
+  pull_request:
     branches:
-      - agent/audit-0001-0100
+      - main
 
 permissions:
   contents: write
 
 jobs:
-  apply:
-    if: github.actor != 'github-actions[bot]'
+  audit:
+    if: github.head_ref == 'agent/audit-0001-0100' && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -31,7 +31,6 @@ jobs:
               text = path.read_text(encoding='utf-8')
               original = text
               title = text.splitlines()[0].split('. ', 1)[1]
-
               intro_end = text.find('\n题目重述\n--------\n')
               if intro_end < 0:
                   continue
@@ -54,7 +53,6 @@ jobs:
                   )
 
               text = intro + tail
-
               if number == '0040':
                   old = '''.. code-block:: text
 
@@ -88,8 +86,6 @@ jobs:
               intro = path.read_text(encoding='utf-8').split('\n题目重述\n--------\n', 1)[0]
               assert ':题名:' in intro, path
               assert ':类型:' in intro, path
-
-          print('\n'.join(changed))
           PY
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
