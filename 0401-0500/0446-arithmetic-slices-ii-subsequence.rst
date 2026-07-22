@@ -1,0 +1,8 @@
+0446. Arithmetic Slices II - Subsequence
+========================================================================================================================
+
+:题号: 0446
+:题名: Arithmetic Slices II - Subsequence
+:类型: Algorithms（题面待核实）
+:原题: `LeetCode 0446 <https://leetcode.com/problems/arithmetic-slices-ii-subsequence/>`_
+:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
