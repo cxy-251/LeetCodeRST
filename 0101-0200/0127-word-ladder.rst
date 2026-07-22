@@ -239,28 +239,28 @@ Rust
 
 .. code-block:: rust
 
-   impl Solution {pub fn ladder_length(begin:String,end:String,list:Vec<String>)->i32{use std::collections::{HashSet,VecDeque};let mut unused:HashSet<String>=list.into_iter().collect();if !unused.contains(&end){return 0}let mut q=VecDeque::from([begin.clone()]);unused.remove(&begin);let mut length=1;while !q.is_empty(){for _ in 0..q.len(){let w=q.pop_front().unwrap();if w==end{return length}let mut a=w.into_bytes();for i in 0..a.len(){let old=a[i];for c in b'a'..=b'z'{if c==old{continue}a[i]=c;let n=String::from_utf8(a.clone()).unwrap();if unused.remove(&n){q.push_back(n)}}a[i]=old;}}length+=1;}0}}
+   impl Solution {pub fn ladder_length(begin:String,end:String,list:Vec<String>)->i32{use std::collections::{HashSet,VecDeque};let mut unused:HashSet<String>=list.into_iter().collect();if !unused.contains(&end){return 0}let mut q=VecDeque::from([begin.clone()]);unused.remove(&begin);let mut steps=1;while !q.is_empty(){for _ in 0..q.len(){let w=q.pop_front().unwrap();if w==end{return steps}let mut a=w.into_bytes();for i in 0..a.len(){let old=a[i];for c in b'a'..=b'z'{if c==old{continue}a[i]=c;let n=String::from_utf8(a.clone()).unwrap();if unused.remove(&n){q.push_back(n)}}a[i]=old;}}steps+=1;}0}}
 
 Go
 ~~
 
 .. code-block:: go
 
-   func ladderLength(begin,end string,list []string)int{unused:=map[string]bool{};for _,w:=range list{unused[w]=true};if !unused[end]{return 0};q:=[]string{begin};delete(unused,begin);length:=1;for h:=0;h<len(q);length++{count:=len(q)-h;for ;count>0;count--{w:=q[h];h++;if w==end{return length};a:=[]byte(w);for i,old:=range a{for c:=byte('a');c<='z';c++{if c==old{continue};a[i]=c;n:=string(a);if unused[n]{delete(unused,n);q=append(q,n)}};a[i]=old}}};return 0}
+   func ladderLength(begin,end string,list []string)int{unused:=map[string]bool{};for _,w:=range list{unused[w]=true};if !unused[end]{return 0};q:=[]string{begin};delete(unused,begin);steps:=1;for h:=0;h<len(q);steps++{count:=len(q)-h;for ;count>0;count--{w:=q[h];h++;if w==end{return steps};a:=[]byte(w);for i,old:=range a{for c:=byte('a');c<='z';c++{if c==old{continue};a[i]=c;n:=string(a);if unused[n]{delete(unused,n);q=append(q,n)}};a[i]=old}}};return 0}
 
 TypeScript
 ~~~~~~~~~~
 
 .. code-block:: typescript
 
-   function ladderLength(begin:string,end:string,list:string[]):number{const unused=new Set(list);if(!unused.has(end))return 0;const q=[begin];unused.delete(begin);let head=0,length=1;while(head<q.length){let count=q.length-head;while(count--){const w=q[head++];if(w===end)return length;for(let i=0;i<w.length;i++)for(let k=0;k<26;k++){const c=String.fromCharCode(97+k);if(c===w[i])continue;const n=w.slice(0,i)+c+w.slice(i+1);if(unused.delete(n))q.push(n);}}length++;}return 0;}
+   function ladderLength(begin:string,end:string,list:string[]):number{const unused=new Set(list);if(!unused.has(end))return 0;const q=[begin];unused.delete(begin);let head=0,steps=1;while(head<q.length){let count=q.length-head;while(count--){const w=q[head++];if(w===end)return steps;for(let i=0;i<w.length;i++)for(let k=0;k<26;k++){const c=String.fromCharCode(97+k);if(c===w[i])continue;const n=w.slice(0,i)+c+w.slice(i+1);if(unused.delete(n))q.push(n);}}steps++;}return 0;}
 
 C#
 ~~
 
 .. code-block:: csharp
 
-   public class Solution {public int LadderLength(string b,string e,IList<string>list){var u=new HashSet<string>(list);if(!u.Contains(e))return 0;var q=new Queue<string>();q.Enqueue(b);u.Remove(b);int len=1;while(q.Count>0){for(int count=q.Count;count>0;count--){var w=q.Dequeue();if(w==e)return len;var a=w.ToCharArray();for(int i=0;i<a.Length;i++){char old=a[i];for(char c='a';c<='z';c++){if(c==old)continue;a[i]=c;var n=new string(a);if(u.Remove(n))q.Enqueue(n);}a[i]=old;}}len++;}return 0;}}
+   public class Solution {public int LadderLength(string b,string e,IList<string>list){var u=new HashSet<string>(list);if(!u.Contains(e))return 0;var q=new Queue<string>();q.Enqueue(b);u.Remove(b);int steps=1;while(q.Count>0){for(int count=q.Count;count>0;count--){var w=q.Dequeue();if(w==e)return steps;var a=w.ToCharArray();for(int i=0;i<a.Length;i++){char old=a[i];for(char c='a';c<='z';c++){if(c==old)continue;a[i]=c;var n=new string(a);if(u.Remove(n))q.Enqueue(n);}a[i]=old;}}steps++;}return 0;}}
 
 Julia
 ~~~~~
@@ -268,8 +268,8 @@ Julia
 .. code-block:: julia
 
    function ladder_length(begin_word,end_word,word_list)
-       unused=Set(word_list);end_word in unused||return 0;q=[begin_word];delete!(unused,begin_word);head=1;length=1
-       while head<=length(q);count=length(q)-head+1;for _ in 1:count;w=q[head];head+=1;w==end_word&&return length;a=collect(codeunits(w));for i in eachindex(a);old=a[i];for c in UInt8('a'):UInt8('z');c==old&&continue;a[i]=c;n=String(copy(a));if n in unused;delete!(unused,n);push!(q,n);end;end;a[i]=old;end;end;length+=1;end;0
+       unused=Set(word_list);end_word in unused||return 0;q=[begin_word];delete!(unused,begin_word);head=1;steps=1
+       while head<=length(q);count=length(q)-head+1;for _ in 1:count;w=q[head];head+=1;w==end_word&&return steps;a=collect(codeunits(w));for i in eachindex(a);old=a[i];for c in UInt8('a'):UInt8('z');c==old&&continue;a[i]=c;n=String(copy(a));if n in unused;delete!(unused,n);push!(q,n);end;end;a[i]=old;end;end;steps+=1;end;0
    end
 
 R
