@@ -1,0 +1,252 @@
+name: One-shot complete LeetCode catalog v2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/one-shot-complete-catalog-v2.yml
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate complete catalog
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import re
+          import time
+          import urllib.parse
+          import urllib.request
+          from pathlib import Path
+
+          ROOT = Path('.')
+
+          def get_text(url, timeout=60):
+              req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+              with urllib.request.urlopen(req, timeout=timeout) as r:
+                  return r.read().decode('utf-8')
+
+          def get_json(url, payload=None, timeout=60):
+              data = None if payload is None else json.dumps(payload).encode('utf-8')
+              req = urllib.request.Request(url, data=data, headers={
+                  'User-Agent': 'Mozilla/5.0',
+                  'Content-Type': 'application/json',
+                  'Referer': 'https://leetcode.com/problemset/',
+              })
+              with urllib.request.urlopen(req, timeout=timeout) as r:
+                  return json.load(r)
+
+          def official_numeric():
+              query = '''
+              query problemsetQuestionList($categorySlug: String, $limit: Int, $skip: Int, $filters: QuestionListFilterInput) {
+                problemsetQuestionList: questionList(categorySlug: $categorySlug, limit: $limit, skip: $skip, filters: $filters) {
+                  total: totalNum
+                  questions: data {
+                    frontendQuestionId: questionFrontendId
+                    paidOnly: isPaidOnly
+                    difficulty
+                    title
+                    titleSlug
+                    topicTags { name slug }
+                  }
+                }
+              }
+              '''
+              rows, skip = [], 0
+              while True:
+                  payload = {'query': query, 'variables': {
+                      'categorySlug': '', 'skip': skip, 'limit': 100,
+                      'filters': {'orderBy': 'FRONTEND_ID', 'sortOrder': 'ASCENDING'},
+                  }}
+                  page = get_json('https://leetcode.com/graphql', payload)['data']['problemsetQuestionList']
+                  batch = page.get('questions') or []
+                  rows.extend(batch)
+                  skip += len(batch)
+                  if not batch or skip >= int(page.get('total') or 0):
+                      break
+                  time.sleep(0.1)
+              if len(rows) < 3000:
+                  raise RuntimeError(f'incomplete numeric list: {len(rows)}')
+              return rows
+
+          def existing_numeric_ids():
+              out = set()
+              for p in ROOT.glob('[0-9]*-[0-9]*/*.rst'):
+                  m = re.match(r'^(\d+)-', p.name)
+                  if m:
+                      out.add(int(m.group(1)))
+              return out
+
+          def numeric_type(row):
+              tags = {str(x.get('name') or '').lower() for x in row.get('topicTags') or []}
+              if 'database' in tags: return 'Database'
+              if 'shell' in tags: return 'Shell'
+              if 'concurrency' in tags: return 'Concurrency'
+              if row.get('paidOnly'): return 'Premium'
+              return 'Algorithms'
+
+          def create_numeric(rows):
+              by_id = {}
+              for row in rows:
+                  raw = str(row.get('frontendQuestionId') or '').strip()
+                  if raw.isdigit():
+                      by_id[int(raw)] = row
+              existing = existing_numeric_ids()
+              made = 0
+              for qid, row in sorted(by_id.items()):
+                  if qid in existing:
+                      continue
+                  title = str(row.get('title') or '').strip()
+                  slug = str(row.get('titleSlug') or '').strip()
+                  if not title or not slug:
+                      continue
+                  q = f'{qid:04d}'
+                  start = ((qid - 1) // 100) * 100 + 1
+                  end = start + 99
+                  directory = ROOT / f'{start:04d}-{end:04d}'
+                  directory.mkdir(parents=True, exist_ok=True)
+                  path = directory / f'{q}-{slug}.rst'
+                  head = f'{q}. {title}'
+                  path.write_text(
+                      f'{head}\n{"=" * len(head)}\n\n'
+                      f':题号: {q}\n:题名: {title}\n'
+                      f':类型: {numeric_type(row)}（元数据占位）\n'
+                      f':难度: {row.get("difficulty") or "Unknown"}\n'
+                      f':原题: `LeetCode {q} <https://leetcode.com/problems/{slug}/>`_\n'
+                      f':数据源: LeetCode GraphQL\n'
+                      f':处理状态: 题目文件已建立；题目信息、题目重述与自建示例待后续补充。\n',
+                      encoding='utf-8')
+                  existing.add(qid)
+                  made += 1
+              return by_id, made
+
+          SERIES_INDEXES = [
+              ('LCP', 'LCP', 'https://raw.githubusercontent.com/doocs/leetcode/main/lcp/README.md'),
+              ('LCCI', '面试题', 'https://raw.githubusercontent.com/doocs/leetcode/main/lcci/README.md'),
+              ('Offer', '剑指 Offer', 'https://raw.githubusercontent.com/doocs/leetcode/main/lcof/README.md'),
+              ('Offer-II', '剑指 Offer II', 'https://raw.githubusercontent.com/doocs/leetcode/main/lcof2/README.md'),
+              ('LCS', 'LCS', 'https://raw.githubusercontent.com/doocs/leetcode/main/lcs/README.md'),
+          ]
+
+          def parse_table_index(text, series_dir, prefix):
+              out = []
+              pattern = re.compile(r'^\|\s*\[([^\]]+)\]\((https?://[^)]+)\)\s*\|\s*\[\s*([^\]]+?)\s*\]\([^)]+\)\s*\|.*\|\s*([^|]+?)\s*\|\s*$')
+              for line in text.splitlines():
+                  m = pattern.match(line)
+                  if not m:
+                      continue
+                  raw_id, url, title, difficulty = [x.strip() for x in m.groups()]
+                  if prefix == 'LCP' or prefix == 'LCS':
+                      canonical = raw_id
+                      number = re.sub(r'^[A-Z]+\s*', '', raw_id)
+                  else:
+                      canonical = f'{prefix} {raw_id}'
+                      number = raw_id
+                  out.append((series_dir, prefix, canonical, number, title, url, difficulty))
+              return out
+
+          def lcr_records():
+              repo = get_json('https://api.github.com/repos/QuBenhao/LeetCode')
+              branch = repo.get('default_branch') or 'master'
+              tree = get_json(f'https://api.github.com/repos/QuBenhao/LeetCode/git/trees/{branch}?recursive=1')
+              paths = []
+              for item in tree.get('tree') or []:
+                  m = re.match(r'problems/problems_LCR_(\d+)/problem_zh\.md$', item.get('path') or '')
+                  if m:
+                      paths.append((int(m.group(1)), item['path']))
+              out = []
+              for number, path in sorted(paths):
+                  raw_url = f'https://raw.githubusercontent.com/QuBenhao/LeetCode/{branch}/{path}'
+                  first = get_text(raw_url).splitlines()[0].lstrip('#').strip()
+                  m = re.match(r'LCR\s+(\d+)\.\s*(.+)', first)
+                  title = m.group(2).strip() if m else first
+                  num = f'{number:03d}'
+                  source = f'https://github.com/QuBenhao/LeetCode/blob/{branch}/{path}'
+                  out.append(('LCR', 'LCR', f'LCR {num}', num, title, source, '未知'))
+              return out
+
+          def safe_key(prefix, number):
+              return (prefix.lower().replace(' ', '-') + '-' + re.sub(r'[^0-9A-Za-z]+', '-', number).strip('-').lower() + '.rst')
+
+          def create_special(records):
+              counts, made = {}, 0
+              seen = set()
+              for series_dir, prefix, canonical, number, title, url, difficulty in records:
+                  key = (series_dir, canonical)
+                  if key in seen:
+                      continue
+                  seen.add(key)
+                  counts[series_dir] = counts.get(series_dir, 0) + 1
+                  directory = ROOT / 'special' / series_dir
+                  directory.mkdir(parents=True, exist_ok=True)
+                  path = directory / safe_key(prefix, number)
+                  if path.exists():
+                      continue
+                  head = f'{canonical}. {title}'
+                  path.write_text(
+                      f'{head}\n{"=" * len(head)}\n\n'
+                      f':题号: {canonical}\n:题名: {title}\n:系列: {prefix}\n'
+                      f':类型: Algorithms（元数据占位）\n:难度: {difficulty}\n'
+                      f':原题或资料: `{canonical} <{url}>`_\n'
+                      f':处理状态: 题目文件已建立；题目信息、题目重述与自建示例待后续补充。\n',
+                      encoding='utf-8')
+                  made += 1
+              return counts, made, len(seen)
+
+          numeric_rows = official_numeric()
+          numeric, numeric_made = create_numeric(numeric_rows)
+
+          special = []
+          for series_dir, prefix, url in SERIES_INDEXES:
+              try:
+                  special.extend(parse_table_index(get_text(url), series_dir, prefix))
+              except Exception as exc:
+                  print(f'skip {series_dir}: {exc}')
+          special.extend(lcr_records())
+          special_counts, special_made, special_total = create_special(special)
+
+          catalog = {
+              'ordinary_question_count': len(numeric),
+              'ordinary_max_frontend_id': max(numeric, default=None),
+              'ordinary_files_created': numeric_made,
+              'special_question_count': special_total,
+              'special_files_created': special_made,
+              'special_series': special_counts,
+          }
+          cat = ROOT / '_catalog'
+          cat.mkdir(exist_ok=True)
+          (cat / 'catalog.json').write_text(json.dumps(catalog, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
+          title = 'LeetCode 完整题库'
+          lines = [title, '=' * len(title), '',
+                   f':普通数字题数量: {len(numeric)}',
+                   f':普通数字题最大编号: {max(numeric, default="无")}',
+                   f':特殊题号数量: {special_total}', '', '特殊题号系列', '------------', '']
+          for name, count in sorted(special_counts.items()):
+              lines.append(f'* {name}: {count}')
+          lines += ['', '说明', '----', '',
+                    '普通数字题按每 100 题一个目录组织；特殊题号位于 ``special/``。',
+                    '本索引由 LeetCode 当前题库接口及公开专项题库索引生成。', '']
+          (cat / 'README.rst').write_text('\n'.join(lines), encoding='utf-8')
+          print(json.dumps(catalog, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Commit catalog
+        shell: bash
+        run: |
+          rm -f .github/workflows/one-shot-complete-catalog.yml
+          rm -f .github/workflows/one-shot-complete-catalog-v2.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "docs: establish complete LeetCode catalog [skip ci]"
+          git pull --rebase origin main
+          git push origin HEAD:main
