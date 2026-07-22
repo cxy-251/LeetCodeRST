@@ -5,7 +5,9 @@
 --------
 
 :题号: 0033
+:题名: Search in Rotated Sorted Array
 :难度: Medium
+:类型: Algorithms
 :主题: 数组、二分查找、旋转数组、区间排除
 :原题: `LeetCode 0033 <https://leetcode.com/problems/search-in-rotated-sorted-array/>`_
 :教学重点: 局部有序半区、目标值域、闭区间收缩、无重复前提

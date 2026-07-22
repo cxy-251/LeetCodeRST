@@ -5,7 +5,9 @@
 --------
 
 :题号: 0041
+:题名: First Missing Positive
 :难度: Hard
+:类型: Algorithms
 :主题: 数组、原地哈希、循环置换、鸽巢原理
 :原题: `LeetCode 0041 <https://leetcode.com/problems/first-missing-positive/>`_
 :教学重点: 答案范围、值到槽位映射、重复值停止条件、交换摊还分析

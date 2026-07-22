@@ -5,7 +5,9 @@
 --------
 
 :题号: 0061
+:题名: Rotate List
 :难度: Medium
+:类型: Algorithms
 :主题: 单链表、模运算、临时成环、断链
 :原题: `LeetCode 0061 <https://leetcode.com/problems/rotate-list/>`_
 :教学重点: 有效旋转次数、新尾位置、节点守恒、链接更新顺序

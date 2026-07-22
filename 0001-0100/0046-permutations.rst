@@ -5,7 +5,9 @@
 --------
 
 :题号: 0046
+:题名: Permutations
 :难度: Medium
+:类型: Algorithms
 :主题: 回溯、排列、原地交换、搜索树
 :原题: `LeetCode 0046 <https://leetcode.com/problems/permutations/>`_
 :教学重点: 位置决策、候选集合、交换与撤销、输出敏感复杂度

@@ -5,7 +5,9 @@
 --------
 
 :题号: 0078
+:题名: Subsets
 :难度: Medium
+:类型: Algorithms
 :主题: 回溯、位掩码、迭代扩展、幂集
 :原题: `LeetCode 0078 <https://leetcode.com/problems/subsets/>`_
 :教学重点: 节点即答案、递增下标、结果翻倍、输出规模

@@ -5,7 +5,9 @@
 --------
 
 :题号: 0054
+:题名: Spiral Matrix
 :难度: Medium
+:类型: Algorithms
 :主题: 矩阵、边界模拟、方向状态、分层遍历
 :原题: `LeetCode 0054 <https://leetcode.com/problems/spiral-matrix/>`_
 :教学重点: 剩余矩形、四边界收缩、单行单列守卫、元素唯一输出

@@ -5,7 +5,9 @@
 --------
 
 :题号: 0052
+:题名: N-Queens II
 :难度: Hard
+:类型: Algorithms
 :主题: 回溯、位掩码、计数搜索、对称性
 :原题: `LeetCode 0052 <https://leetcode.com/problems/n-queens-ii/>`_
 :教学重点: 当前行攻击掩码、最低位提取、对角线位移、只计数不构造

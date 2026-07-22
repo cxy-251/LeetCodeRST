@@ -5,7 +5,9 @@
 --------
 
 :题号: 0090
+:题名: Subsets II
 :难度: Medium
+:类型: Algorithms
 :主题: 数组、回溯、排序、同层去重
 :原题: `LeetCode 0090 <https://leetcode.com/problems/subsets-ii/>`_
 :教学重点: 排序聚类、同层代表、重复副本深层选择、结果快照

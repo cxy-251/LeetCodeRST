@@ -5,7 +5,9 @@
 --------
 
 :题号: 0074
+:题名: Search a 2D Matrix
 :难度: Medium
+:类型: Algorithms
 :主题: 矩阵、二分查找、坐标映射
 :原题: `LeetCode 0074 <https://leetcode.com/problems/search-a-2d-matrix/>`_
 :教学重点: 全局有序、虚拟扁平序列、闭区间二分、坐标恢复

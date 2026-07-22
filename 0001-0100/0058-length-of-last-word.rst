@@ -5,7 +5,9 @@
 --------
 
 :题号: 0058
+:题名: Length of Last Word
 :难度: Easy
+:类型: Algorithms
 :主题: 字符串、反向扫描、边界跳过
 :原题: `LeetCode 0058 <https://leetcode.com/problems/length-of-last-word/>`_
 :教学重点: 尾部空格、最后非空片段、正反向状态、字符单位

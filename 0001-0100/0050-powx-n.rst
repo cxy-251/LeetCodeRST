@@ -5,7 +5,9 @@
 --------
 
 :题号: 0050
+:题名: Pow(x, n)
 :难度: Medium
+:类型: Algorithms
 :主题: 数学、快速幂、二进制分解、整数边界
 :原题: `LeetCode 0050 <https://leetcode.com/problems/powx-n/>`_
 :教学重点: 指数折半、平方倍增、负指数倒数、最小整数提升

@@ -5,7 +5,9 @@
 --------
 
 :题号: 0086
+:题名: Partition List
 :难度: Medium
+:类型: Algorithms
 :主题: 单链表、稳定分区、双链拼接
 :原题: `LeetCode 0086 <https://leetcode.com/problems/partition-list/>`_
 :教学重点: 稳定尾插、节点断开、双链不变量、所有权适配

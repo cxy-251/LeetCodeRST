@@ -5,7 +5,9 @@
 --------
 
 :题号: 0096
+:题名: Unique Binary Search Trees
 :难度: Medium
+:类型: Algorithms
 :主题: 动态规划、Catalan 数、二叉搜索树
 :原题: `LeetCode 0096 <https://leetcode.com/problems/unique-binary-search-trees/>`_
 :教学重点: 节点数状态、根位置划分、左右计数乘法、空树单位元

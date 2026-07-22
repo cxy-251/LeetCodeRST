@@ -5,7 +5,9 @@
 --------
 
 :题号: 0065
+:题名: Valid Number
 :难度: Hard
+:类型: Algorithms
 :主题: 字符串、语法解析、有限状态机、扫描见证
 :原题: `LeetCode 0065 <https://leetcode.com/problems/valid-number/>`_
 :教学重点: 符号位置、底数数字、小数点、指数后数字见证

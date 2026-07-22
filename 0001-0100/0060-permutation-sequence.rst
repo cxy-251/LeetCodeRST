@@ -5,7 +5,9 @@
 --------
 
 :题号: 0060
+:题名: Permutation Sequence
 :难度: Hard
+:类型: Algorithms
 :主题: 排列、字典序、阶乘数制、秩选择
 :原题: `LeetCode 0060 <https://leetcode.com/problems/permutation-sequence/>`_
 :教学重点: 一基转零基、阶乘分组、按块排除、候选删除成本

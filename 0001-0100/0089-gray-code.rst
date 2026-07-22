@@ -5,7 +5,9 @@
 --------
 
 :题号: 0089
+:题名: Gray Code
 :难度: Medium
+:类型: Algorithms
 :主题: 位运算、构造、二进制反射
 :原题: `LeetCode 0089 <https://leetcode.com/problems/gray-code/>`_
 :教学重点: 反射构造、Gray 闭式、相邻一位差、首尾循环

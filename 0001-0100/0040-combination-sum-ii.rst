@@ -5,7 +5,9 @@
 --------
 
 :题号: 0040
+:题名: Combination Sum II
 :难度: Medium
+:类型: Algorithms
 :主题: 回溯、排序、同层去重、一次性选择
 :原题: `LeetCode 0040 <https://leetcode.com/problems/combination-sum-ii/>`_
 :教学重点: 下标只用一次、同层跳过重复值、不同层允许相同值、排序剪枝
