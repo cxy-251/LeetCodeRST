@@ -168,8 +168,8 @@ C
 
 .. code-block:: c
 
-   static void addCell(char**board,int r,int c,int*qr,int*qc,int*tail){if(board[r][c]=='O'){board[r][c]='#';qr[*tail]=r;qc[*tail]=c;(*tail)++;}}
-   void solve(char**board,int rows,int*columnSizes){if(!rows||!columnSizes[0])return;int cols=columnSizes[0],cap=rows*cols,*qr=malloc((size_t)cap*sizeof(int)),*qc=malloc((size_t)cap*sizeof(int)),head=0,tail=0;for(int r=0;r<rows;r++){addCell(board,r,0,qr,qc,&tail);addCell(board,r,cols-1,qr,qc,&tail);}for(int c=0;c<cols;c++){addCell(board,0,c,qr,qc,&tail);addCell(board,rows-1,c,qr,qc,&tail);}int dr[4]={1,-1,0,0},dc[4]={0,0,1,-1};while(head<tail){int r=qr[head],c=qc[head++];for(int k=0;k<4;k++){int nr=r+dr[k],nc=c+dc[k];if(nr>=0&&nr<rows&&nc>=0&&nc<cols)addCell(board,nr,nc,qr,qc,&tail);}}for(int r=0;r<rows;r++)for(int c=0;c<cols;c++)board[r][c]=board[r][c]=='#'?'O':'X';free(qr);free(qc);}
+   static void addSafe(char**board,int r,int c,int*qr,int*qc,int*tail){if(board[r][c]=='O'){board[r][c]='#';qr[*tail]=r;qc[*tail]=c;(*tail)++;}}
+   void solve(char**board,int rows,int*columnSizes){if(!rows||!columnSizes[0])return;int cols=columnSizes[0],cap=rows*cols,*qr=malloc((size_t)cap*sizeof(int)),*qc=malloc((size_t)cap*sizeof(int)),head=0,tail=0;for(int r=0;r<rows;r++){addSafe(board,r,0,qr,qc,&tail);addSafe(board,r,cols-1,qr,qc,&tail);}for(int c=0;c<cols;c++){addSafe(board,0,c,qr,qc,&tail);addSafe(board,rows-1,c,qr,qc,&tail);}int dr[4]={1,-1,0,0},dc[4]={0,0,1,-1};while(head<tail){int r=qr[head],c=qc[head++];for(int k=0;k<4;k++){int nr=r+dr[k],nc=c+dc[k];if(nr>=0&&nr<rows&&nc>=0&&nc<cols)addSafe(board,nr,nc,qr,qc,&tail);}}for(int r=0;r<rows;r++)for(int c=0;c<cols;c++)board[r][c]=board[r][c]=='#'?'O':'X';free(qr);free(qc);}
 
 Python
 ~~~~~~
