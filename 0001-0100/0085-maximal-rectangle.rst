@@ -15,7 +15,7 @@
 题目重述
 --------
 
-给定只包含字符 ``'0'`` 和 ``'1'`` 的矩阵，返回全部由 ``'1'`` 组成的最大轴对齐矩形面积。空矩阵返回 0，输入只读。
+给定一个只包含字符 ``'0'`` 和 ``'1'`` 的二维矩阵 ``matrix``，找出其中只包含 ``'1'`` 的最大轴对齐矩形，并返回它的面积。
 
 自建示例
 --------
@@ -214,7 +214,7 @@ C#
 
 .. code-block:: csharp
 
-   public class Solution {public int MaximalRectangle(char[][]a){if(a.Length==0)return 0;int[]h=new int[a[0].Length];int best=0;foreach(var row in a){for(int c=0;c<h.Length;c++)h[c]=row[c]=='1'?h[c]+1:0;var st=new List<int>{-1};for(int r=0;r<=h.Length;r++){int cur=r==h.Length?0:h[r];while(st[^1]!=-1&&h[st[^1]]>cur){int m=st[^1];st.RemoveAt(st.Count-1);best=Math.Max(best,h[m]*(r-st[^1]-1));}st.Add(r);}}return best;}}
+   public class Solution {public int MaximalRectangle(char[][]a){if(a.Length==0)return 0;int[]h=new int[a[0].Length];int best=0;foreach(var row:a){for(int c=0;c<h.Length;c++)h[c]=row[c]=='1'?h[c]+1:0;var st=new List<int>{-1};for(int r=0;r<=h.Length;r++){int cur=r==h.Length?0:h[r];while(st[^1]!=-1&&h[st[^1]]>cur){int m=st[^1];st.RemoveAt(st.Count-1);best=Math.Max(best,h[m]*(r-st[^1]-1));}st.Add(r);}}return best;}}
 
 Julia
 ~~~~~
