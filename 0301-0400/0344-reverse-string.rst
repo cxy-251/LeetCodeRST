@@ -1,8 +1,21 @@
 0344. Reverse String
 ====================
 
+题目信息
+--------
+
 :题号: 0344
-:题名: Reverse String
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0344 <https://leetcode.com/problems/reverse-string/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Easy
+:主题: 双指针、字符串
+:原题: `LeetCode 344 <https://leetcode.com/problems/reverse-string/>`_
+:教学重点: 使用左右指针原地交换字符，避免额外构造同长度数组。
+
+题目重述
+--------
+
+给定字符数组 ``s``，要求原地将字符顺序反转，只能使用常数级额外空间。
+
+自建示例
+--------
+
+输入 ``["h","e","l","l","o"]``，修改后为 ``["o","l","l","e","h"]``。

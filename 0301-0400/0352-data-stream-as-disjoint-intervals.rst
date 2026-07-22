@@ -1,8 +1,21 @@
 0352. Data Stream as Disjoint Intervals
 =======================================
 
+题目信息
+--------
+
 :题号: 0352
-:题名: Data Stream as Disjoint Intervals
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0352 <https://leetcode.com/problems/data-stream-as-disjoint-intervals/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Hard
+:主题: 设计、有序集合、二分查找
+:原题: `LeetCode 352 <https://leetcode.com/problems/data-stream-as-disjoint-intervals/>`_
+:教学重点: 插入新值时识别与左右区间的相邻关系，并完成合并或新建区间。
+
+题目重述
+--------
+
+设计一个数据结构，持续接收非负整数，并随时返回当前所有已接收整数能够组成的互不重叠、按起点升序排列的闭区间。
+
+自建示例
+--------
+
+依次加入 ``1, 3, 7, 2, 6`` 后，当前区间集合为 ``[[1,3],[6,7]]``。

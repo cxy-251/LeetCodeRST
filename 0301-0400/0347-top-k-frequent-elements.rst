@@ -1,8 +1,21 @@
 0347. Top K Frequent Elements
 =============================
 
+题目信息
+--------
+
 :题号: 0347
-:题名: Top K Frequent Elements
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0347 <https://leetcode.com/problems/top-k-frequent-elements/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Medium
+:主题: 哈希表、堆、桶排序、快速选择
+:原题: `LeetCode 347 <https://leetcode.com/problems/top-k-frequent-elements/>`_
+:教学重点: 先统计频率，再根据 ``k`` 选择堆、桶或快速选择完成筛选。
+
+题目重述
+--------
+
+给定整数数组和整数 ``k``，返回出现次数最多的 ``k`` 个不同元素。答案顺序不限。
+
+自建示例
+--------
+
+``nums = [1,1,1,2,2,3]``，``k = 2``，可返回 ``[1,2]``。
