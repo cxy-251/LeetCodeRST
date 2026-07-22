@@ -1,0 +1,10 @@
+LCR 105. 岛屿的最大面积
+================
+
+:题号: LCR 105
+:题名: 岛屿的最大面积
+:系列: LCR
+:类型: Algorithms（元数据占位）
+:难度: 未知
+:原题或资料: `LCR 105 <https://github.com/QuBenhao/LeetCode/blob/master/problems/problems_LCR_105/problem_zh.md>`_
+:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待后续补充。

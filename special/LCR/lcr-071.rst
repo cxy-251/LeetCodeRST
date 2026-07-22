@@ -1,0 +1,10 @@
+LCR 071. 按权重随机选择
+================
+
+:题号: LCR 071
+:题名: 按权重随机选择
+:系列: LCR
+:类型: Algorithms（元数据占位）
+:难度: 未知
+:原题或资料: `LCR 071 <https://github.com/QuBenhao/LeetCode/blob/master/problems/problems_LCR_071/problem_zh.md>`_
+:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待后续补充。

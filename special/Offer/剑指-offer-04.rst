@@ -1,0 +1,10 @@
+剑指 Offer 04. 二维数组中的查找
+=====================
+
+:题号: 剑指 Offer 04
+:题名: 二维数组中的查找
+:系列: 剑指 Offer
+:类型: Algorithms（元数据占位）
+:难度: 中等
+:原题或资料: `剑指 Offer 04 <https://leetcode.cn/problems/er-wei-shu-zu-zhong-de-cha-zhao-lcof>`_
+:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待后续补充。

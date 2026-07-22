@@ -1,0 +1,10 @@
+LCR 047. 二叉树剪枝
+==============
+
+:题号: LCR 047
+:题名: 二叉树剪枝
+:系列: LCR
+:类型: Algorithms（元数据占位）
+:难度: 未知
+:原题或资料: `LCR 047 <https://github.com/QuBenhao/LeetCode/blob/master/problems/problems_LCR_047/problem_zh.md>`_
+:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待后续补充。
