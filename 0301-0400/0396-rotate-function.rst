@@ -1,8 +1,21 @@
 0396. Rotate Function
 =====================
 
+题目信息
+--------
+
 :题号: 0396
-:题名: Rotate Function
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0396 <https://leetcode.com/problems/rotate-function/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Medium
+:主题: 数组、数学、动态规划
+:原题: `LeetCode 396 <https://leetcode.com/problems/rotate-function/>`_
+:教学重点: 推导相邻旋转函数之间的递推关系，把每次重新计算降为常数时间更新。
+
+题目重述
+--------
+
+对长度为 ``n`` 的数组进行循环旋转。每种旋转数组 ``arr`` 的得分定义为 ``F = 0*arr[0] + 1*arr[1] + ... + (n-1)*arr[n-1]``。返回所有旋转中的最大得分。
+
+自建示例
+--------
+
+``nums = [4,3,2,6]`` 的最大旋转得分为 ``26``。

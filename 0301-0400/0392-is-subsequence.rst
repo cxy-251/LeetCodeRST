@@ -1,8 +1,21 @@
 0392. Is Subsequence
 ====================
 
+题目信息
+--------
+
 :题号: 0392
-:题名: Is Subsequence
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0392 <https://leetcode.com/problems/is-subsequence/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Easy
+:主题: 双指针、字符串、动态规划
+:原题: `LeetCode 392 <https://leetcode.com/problems/is-subsequence/>`_
+:教学重点: 用双指针按顺序匹配；大量查询时可预处理目标字符串中各字符的位置。
+
+题目重述
+--------
+
+给定字符串 ``s`` 和 ``t``，判断能否从 ``t`` 中删除若干字符而不改变其余字符顺序，得到 ``s``。
+
+自建示例
+--------
+
+``s = "abc"``，``t = "ahbgdc"``，返回 ``true``。

@@ -1,8 +1,21 @@
 0398. Random Pick Index
 =======================
 
+题目信息
+--------
+
 :题号: 0398
-:题名: Random Pick Index
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0398 <https://leetcode.com/problems/random-pick-index/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Medium
+:主题: 哈希表、水塘抽样、随机化
+:原题: `LeetCode 398 <https://leetcode.com/problems/random-pick-index/>`_
+:教学重点: 在同一目标值的所有下标之间进行等概率选择，可预存下标或使用水塘抽样。
+
+题目重述
+--------
+
+给定可能含重复元素的数组，实现 ``pick(target)``，随机返回一个值等于 ``target`` 的下标。目标值存在多个下标时，每个下标必须等概率被选中。
+
+自建示例
+--------
+
+``nums = [1,2,3,3,3]``，调用 ``pick(3)`` 时应在下标 ``2、3、4`` 中等概率返回一个。

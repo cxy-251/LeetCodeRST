@@ -1,8 +1,21 @@
 0386. Lexicographical Numbers
-============================
+=============================
+
+题目信息
+--------
 
 :题号: 0386
-:题名: Lexicographical Numbers
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0386 <https://leetcode.com/problems/lexicographical-numbers/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Medium
+:主题: 深度优先搜索、字典树、迭代
+:原题: `LeetCode 386 <https://leetcode.com/problems/lexicographical-numbers/>`_
+:教学重点: 把数字前缀视为十叉树，并按先序遍历顺序生成答案。
+
+题目重述
+--------
+
+给定整数 ``n``，按十进制字符串的字典序返回 ``1`` 到 ``n`` 的所有整数，要求使用线性时间和常数级额外空间。
+
+自建示例
+--------
+
+``n = 13`` 时返回 ``[1,10,11,12,13,2,3,4,5,6,7,8,9]``。

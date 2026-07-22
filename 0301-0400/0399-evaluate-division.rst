@@ -1,8 +1,21 @@
 0399. Evaluate Division
 =======================
 
+题目信息
+--------
+
 :题号: 0399
-:题名: Evaluate Division
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0399 <https://leetcode.com/problems/evaluate-division/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Medium
+:主题: 图、并查集、深度优先搜索、广度优先搜索
+:原题: `LeetCode 399 <https://leetcode.com/problems/evaluate-division/>`_
+:教学重点: 把变量视为图节点、比值视为带权边，通过路径乘积回答查询。
+
+题目重述
+--------
+
+给定若干方程 ``a / b = value``，回答一组变量除法查询。无法根据已知关系推导的查询返回 ``-1.0``。
+
+自建示例
+--------
+
+已知 ``a / b = 2``、``b / c = 3``，则 ``a / c = 6``，``c / a = 1/6``，未知变量相关查询返回 ``-1``。

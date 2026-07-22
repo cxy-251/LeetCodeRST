@@ -1,8 +1,21 @@
 0381. Insert Delete GetRandom O(1) - Duplicates allowed
-======================================================
+=======================================================
+
+题目信息
+--------
 
 :题号: 0381
-:题名: Insert Delete GetRandom O(1) - Duplicates allowed
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0381 <https://leetcode.com/problems/insert-delete-getrandom-o1-duplicates-allowed/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Hard
+:主题: 设计、数组、哈希表、随机化
+:原题: `LeetCode 381 <https://leetcode.com/problems/insert-delete-getrandom-o1-duplicates-allowed/>`_
+:教学重点: 用数组保存所有实例，用哈希表维护每个值对应的下标集合，并通过末尾交换完成常数时间删除。
+
+题目重述
+--------
+
+设计一个允许重复元素的随机集合，支持平均 ``O(1)`` 时间插入、删除一个指定值的实例，以及随机返回一个当前元素。随机结果应按元素实例等概率，因此重复次数越多，被返回的概率越高。
+
+自建示例
+--------
+
+依次执行 ``insert(1)``、``insert(1)``、``insert(2)`` 后，集合含两个 ``1`` 和一个 ``2``；此时 ``getRandom()`` 返回 ``1`` 的概率为 ``2/3``。

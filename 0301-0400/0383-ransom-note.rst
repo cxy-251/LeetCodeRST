@@ -1,8 +1,21 @@
 0383. Ransom Note
 =================
 
+题目信息
+--------
+
 :题号: 0383
-:题名: Ransom Note
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0383 <https://leetcode.com/problems/ransom-note/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Easy
+:主题: 哈希表、字符串、计数
+:原题: `LeetCode 383 <https://leetcode.com/problems/ransom-note/>`_
+:教学重点: 比较两个字符串中每个字符的可用次数，确保杂志字符只能使用一次。
+
+题目重述
+--------
+
+给定字符串 ``ransomNote`` 和 ``magazine``，判断能否从 ``magazine`` 中取出字符拼成 ``ransomNote``。每个字符实例最多使用一次。
+
+自建示例
+--------
+
+``ransomNote = "aa"``，``magazine = "aab"``，返回 ``true``。

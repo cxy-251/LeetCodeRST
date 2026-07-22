@@ -1,8 +1,21 @@
 0394. Decode String
 ===================
 
+题目信息
+--------
+
 :题号: 0394
-:题名: Decode String
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0394 <https://leetcode.com/problems/decode-string/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Medium
+:主题: 栈、递归、字符串
+:原题: `LeetCode 394 <https://leetcode.com/problems/decode-string/>`_
+:教学重点: 在遇到括号时保存外层字符串与重复次数，并在闭括号处合并当前片段。
+
+题目重述
+--------
+
+解码形如 ``k[encoded_string]`` 的字符串，表示括号内字符串重复 ``k`` 次。编码可以多层嵌套，返回完整解码结果。
+
+自建示例
+--------
+
+输入 ``"3[a2[c]]"``，返回 ``"accaccacc"``。

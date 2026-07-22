@@ -1,8 +1,21 @@
 0384. Shuffle an Array
 ======================
 
+题目信息
+--------
+
 :题号: 0384
-:题名: Shuffle an Array
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0384 <https://leetcode.com/problems/shuffle-an-array/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Medium
+:主题: 数组、随机化
+:原题: `LeetCode 384 <https://leetcode.com/problems/shuffle-an-array/>`_
+:教学重点: 使用 Fisher-Yates 洗牌，使所有排列等概率出现，并保留原数组供重置。
+
+题目重述
+--------
+
+为一个整数数组实现两个操作：``reset`` 恢复初始顺序；``shuffle`` 返回数组的随机排列，并保证每种排列出现的概率相同。
+
+自建示例
+--------
+
+初始数组为 ``[1,2,3]``，``shuffle`` 可以返回任意一种排列；随后调用 ``reset`` 必须返回 ``[1,2,3]``。

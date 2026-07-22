@@ -1,8 +1,21 @@
 0382. Linked List Random Node
-============================
+=============================
+
+题目信息
+--------
 
 :题号: 0382
-:题名: Linked List Random Node
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0382 <https://leetcode.com/problems/linked-list-random-node/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Medium
+:主题: 链表、水塘抽样、随机化
+:原题: `LeetCode 382 <https://leetcode.com/problems/linked-list-random-node/>`_
+:教学重点: 在未知链表长度或不能额外存储全部节点时，用水塘抽样保证每个节点等概率被选中。
+
+题目重述
+--------
+
+给定一个非空单链表，实现 ``getRandom``，使链表中的每个节点值都以相同概率被返回。
+
+自建示例
+--------
+
+链表 ``10 -> 20 -> 30`` 中，长期重复调用 ``getRandom`` 时，三个值各自被选中的概率都应为 ``1/3``。

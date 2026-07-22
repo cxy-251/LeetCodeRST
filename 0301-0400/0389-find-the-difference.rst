@@ -1,8 +1,21 @@
 0389. Find the Difference
 =========================
 
+题目信息
+--------
+
 :题号: 0389
-:题名: Find the Difference
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0389 <https://leetcode.com/problems/find-the-difference/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Easy
+:主题: 哈希表、字符串、位运算、排序
+:原题: `LeetCode 389 <https://leetcode.com/problems/find-the-difference/>`_
+:教学重点: 利用频率差、字符码求和或异或抵消找出新增字符。
+
+题目重述
+--------
+
+字符串 ``t`` 由字符串 ``s`` 的字符重新排列后，再额外加入一个字符得到。返回这个新增字符。
+
+自建示例
+--------
+
+``s = "abcd"``，``t = "abcde"``，返回 ``"e"``。
