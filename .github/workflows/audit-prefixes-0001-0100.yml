@@ -1,16 +1,16 @@
 name: Apply reviewed introductions 0001-0100
 
 on:
-  pull_request:
+  push:
     branches:
-      - main
+      - agent/audit-0001-0100
 
 permissions:
   contents: write
 
 jobs:
   apply:
-    if: github.head_ref == 'agent/audit-0001-0100' && github.actor != 'github-actions[bot]'
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
