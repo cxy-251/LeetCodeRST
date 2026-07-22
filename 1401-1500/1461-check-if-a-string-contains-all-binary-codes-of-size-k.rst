@@ -1,0 +1,10 @@
+1461. Check If a String Contains All Binary Codes of Size K
+===========================================================
+
+:题号: 1461
+:题名: Check If a String Contains All Binary Codes of Size K
+:类型: Algorithms（元数据占位）
+:难度: Medium
+:原题: `LeetCode 1461 <https://leetcode.com/problems/check-if-a-string-contains-all-binary-codes-of-size-k/>`_
+:数据源: LeetCode GraphQL
+:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。

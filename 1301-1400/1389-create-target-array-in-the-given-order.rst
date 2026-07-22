@@ -1,0 +1,10 @@
+1389. Create Target Array in the Given Order
+============================================
+
+:题号: 1389
+:题名: Create Target Array in the Given Order
+:类型: Algorithms（元数据占位）
+:难度: Easy
+:原题: `LeetCode 1389 <https://leetcode.com/problems/create-target-array-in-the-given-order/>`_
+:数据源: LeetCode GraphQL
+:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
