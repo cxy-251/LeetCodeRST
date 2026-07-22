@@ -4,12 +4,12 @@
 当前目标
 --------
 
-处理 ``0156. Binary Tree Upside Down``。
+处理 ``0157. Read N Characters Given Read4``。
 
-* 目标文件：``0101-0200/0156-binary-tree-upside-down.rst``；
+* 目标文件：``0101-0200/0157-read-n-characters-given-read4.rst``；
 * 文件类型：状态记录；
 * 当前状态：目标文件已存在，执行全文审查与整改；
-* 完成后下一入口：``0157. Read N Characters Given Read4``。
+* 完成后下一入口：``0158. Read N Characters Given Read4 II - Call Multiple Times``。
 
 本轮工作
 --------
@@ -21,6 +21,6 @@
 本轮完成条件
 ------------
 
-#. 第156题形成“题目信息 → 类型确认 → 状态说明”的清晰结构；
-#. 完成后入口推进到 ``0157. Read N Characters Given Read4``；
-#. 第156题与新的 ``PROGRESS.rst`` 组成一个原子提交。
+#. 第157题形成“题目信息 → 类型确认 → 状态说明”的清晰结构；
+#. 完成后入口推进到 ``0158. Read N Characters Given Read4 II - Call Multiple Times``；
+#. 第157题与新的 ``PROGRESS.rst`` 组成一个原子提交。
