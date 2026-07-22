@@ -1,8 +1,21 @@
 0329. Longest Increasing Path in a Matrix
-========================================
+=========================================
+
+题目信息
+--------
 
 :题号: 0329
-:题名: Longest Increasing Path in a Matrix
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0329 <https://leetcode.com/problems/longest-increasing-path-in-a-matrix/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Hard
+:主题: 矩阵、深度优先搜索、记忆化搜索、拓扑排序
+:原题: `LeetCode 329 <https://leetcode.com/problems/longest-increasing-path-in-a-matrix/>`_
+:教学重点: 把每个格子视为有向无环图节点，缓存从该点出发的最长路径。
+
+题目重述
+--------
+
+在整数矩阵中，可以从一个格子移动到上下左右相邻格子，但下一格的数值必须严格更大。返回任意起点能够形成的最长递增路径长度。
+
+自建示例
+--------
+
+矩阵 ``[[9,9,4],[6,6,8],[2,1,1]]`` 的答案为 ``4``，例如路径 ``1 -> 2 -> 6 -> 9``。

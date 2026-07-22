@@ -1,8 +1,21 @@
 0336. Palindrome Pairs
 ======================
 
+题目信息
+--------
+
 :题号: 0336
-:题名: Palindrome Pairs
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0336 <https://leetcode.com/problems/palindrome-pairs/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Hard
+:主题: 字符串、哈希表、字典树
+:原题: `LeetCode 336 <https://leetcode.com/problems/palindrome-pairs/>`_
+:教学重点: 枚举字符串切分点，利用回文前后缀和反转字符串查找匹配单词。
+
+题目重述
+--------
+
+给定互不相同的字符串数组，返回所有下标对 ``[i,j]``，其中 ``i != j`` 且 ``words[i] + words[j]`` 是回文串。
+
+自建示例
+--------
+
+输入 ``["abcd","dcba","lls","s","sssll"]``，有效下标对包括 ``[0,1]、[1,0]、[3,2]、[2,4]``。

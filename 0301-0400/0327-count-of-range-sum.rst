@@ -1,8 +1,21 @@
 0327. Count of Range Sum
 ========================
 
+题目信息
+--------
+
 :题号: 0327
-:题名: Count of Range Sum
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0327 <https://leetcode.com/problems/count-of-range-sum/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Hard
+:主题: 前缀和、归并排序、树状数组
+:原题: `LeetCode 327 <https://leetcode.com/problems/count-of-range-sum/>`_
+:教学重点: 将子数组和转化为两个前缀和之差，并高效统计差值落入区间的有序对。
+
+题目重述
+--------
+
+给定整数数组以及边界 ``lower``、``upper``，统计所有连续子数组中，元素和位于闭区间 ``[lower, upper]`` 的子数组数量。
+
+自建示例
+--------
+
+``nums = [-2,5,-1]``，``lower = -2``，``upper = 2``，返回 ``3``。

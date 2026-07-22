@@ -1,8 +1,21 @@
 0332. Reconstruct Itinerary
 ===========================
 
+题目信息
+--------
+
 :题号: 0332
-:题名: Reconstruct Itinerary
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0332 <https://leetcode.com/problems/reconstruct-itinerary/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Hard
+:主题: 图、欧拉路径、深度优先搜索、堆
+:原题: `LeetCode 332 <https://leetcode.com/problems/reconstruct-itinerary/>`_
+:教学重点: 在有向多重图中寻找使用全部边的欧拉路径，并满足字典序最小。
+
+题目重述
+--------
+
+每张机票给出一个出发机场和到达机场。要求从 ``JFK`` 出发，恰好使用每张机票一次，重建完整行程；存在多个结果时返回字典序最小者。
+
+自建示例
+--------
+
+机票 ``[["MUC","LHR"],["JFK","MUC"],["SFO","SJC"],["LHR","SFO"]]`` 对应行程 ``["JFK","MUC","LHR","SFO","SJC"]``。

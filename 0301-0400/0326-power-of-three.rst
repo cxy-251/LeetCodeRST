@@ -1,8 +1,21 @@
 0326. Power of Three
 ====================
 
+题目信息
+--------
+
 :题号: 0326
-:题名: Power of Three
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0326 <https://leetcode.com/problems/power-of-three/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Easy
+:主题: 数学、递归
+:原题: `LeetCode 326 <https://leetcode.com/problems/power-of-three/>`_
+:教学重点: 通过连续整除或最大三次幂整除判断一个正整数是否为三的幂。
+
+题目重述
+--------
+
+给定整数 ``n``，判断是否存在整数 ``x``，使 ``n = 3^x``。只有正整数可能满足条件。
+
+自建示例
+--------
+
+``n = 27`` 返回 ``true``；``n = 45`` 返回 ``false``。
