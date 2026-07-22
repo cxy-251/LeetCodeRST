@@ -1,10 +1,32 @@
 0193. Valid Phone Numbers
 =========================
 
+题目信息
+--------
+
 :题号: 0193
-:题名: Valid Phone Numbers
-:类型: Shell（元数据占位）
 :难度: Easy
-:原题: `LeetCode 0193 <https://leetcode.com/problems/valid-phone-numbers/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待后续补充。
+:类型: Shell
+:主题: Shell、正则表达式、整行匹配
+:原题: `LeetCode 193 <https://leetcode.com/problems/valid-phone-numbers/>`_
+:教学重点: 正则必须锚定行首和行尾，避免只匹配某一段合法子串。
+
+题目重述
+--------
+
+读取 ``file.txt``，只输出格式严格合法的电话号码行。合法形式只有 ``(xxx) xxx-xxxx`` 或 ``xxx-xxx-xxxx``，其中 ``x`` 为数字；整行不能有额外字符。
+
+自建示例
+--------
+
+.. code-block:: text
+
+   file.txt:
+   987-123-4567
+   123 456 7890
+   (123) 456-7890
+   (123)-456-7890
+
+   输出:
+   987-123-4567
+   (123) 456-7890

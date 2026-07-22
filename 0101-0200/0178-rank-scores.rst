@@ -1,10 +1,31 @@
 0178. Rank Scores
 =================
 
+题目信息
+--------
+
 :题号: 0178
-:题名: Rank Scores
-:类型: Database（元数据占位）
 :难度: Medium
-:原题: `LeetCode 0178 <https://leetcode.com/problems/rank-scores/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待后续补充。
+:类型: Database
+:主题: SQL、窗口函数、稠密排名
+:原题: `LeetCode 178 <https://leetcode.com/problems/rank-scores/>`_
+:教学重点: 使用稠密排名语义，而不是会在并列后跳号的普通排名。
+
+题目重述
+--------
+
+按分数从高到低输出 ``Scores`` 表中的全部记录，并为每个分数计算稠密排名。相同分数排名相同，后续排名连续递增，不产生空缺。
+
+自建示例
+--------
+
+.. code-block:: text
+
+   Scores.score = [4.00, 4.00, 3.50, 3.00]
+
+   结果:
+   score | rank
+   4.00  | 1
+   4.00  | 1
+   3.50  | 2
+   3.00  | 3
