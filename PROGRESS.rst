@@ -4,25 +4,25 @@
 当前目标
 --------
 
-处理 ``0165. Compare Version Numbers``。
+处理 ``0166. Fraction to Recurring Decimal``。
 
-* 目标文件：``0101-0200/0165-compare-version-numbers.rst``；
+* 目标文件：``0101-0200/0166-fraction-to-recurring-decimal.rst``；
 * 文件类型：公开算法题完整 C++ 题解；
 * 当前状态：目标文件已存在，执行全文审查与整改；
-* 完成后下一入口：``0166. Fraction to Recurring Decimal``。
+* 完成后下一入口：``0167. Two Sum II - Input Array Is Sorted``。
 
 本轮工作
 --------
 
 #. 核对题目契约、边界和平台接口；
 #. 在 C++ 中保留具有独立思想价值的代表性解法；
-#. 围绕“逐段比较、前导零、缺失段视为零”建立推导链；
+#. 围绕“余数位置映射、循环节插入、符号与溢出”建立推导链；
 #. 补全状态演化、正确性依据和复杂度来源；
 #. 让正文在题解结束，不再追加多语言实现；
 
 本轮完成条件
 ------------
 
-#. 第165题形成“逐段比较 → 前导零 → 缺失段视为零”的清晰结构；
-#. 完成后入口推进到 ``0166. Fraction to Recurring Decimal``；
-#. 第165题与新的 ``PROGRESS.rst`` 组成一个原子提交。
+#. 第166题形成“余数位置映射 → 循环节插入 → 符号与溢出”的清晰结构；
+#. 完成后入口推进到 ``0167. Two Sum II - Input Array Is Sorted``；
+#. 第166题与新的 ``PROGRESS.rst`` 组成一个原子提交。
