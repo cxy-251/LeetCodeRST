@@ -1,8 +1,21 @@
 0303. Range Sum Query - Immutable
-================================
+=================================
+
+题目信息
+--------
 
 :题号: 0303
-:题名: Range Sum Query - Immutable
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0303 <https://leetcode.com/problems/range-sum-query-immutable/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Easy
+:主题: 数组、前缀和、设计
+:原题: `LeetCode 303 <https://leetcode.com/problems/range-sum-query-immutable/>`_
+:教学重点: 用一次预处理将多次区间求和查询降为常数时间。
+
+题目重述
+--------
+
+实现一个只读数组类。构造时接收整数数组，之后需要多次回答闭区间 ``[left, right]`` 内所有元素的和。数组在构造后不会修改。
+
+自建示例
+--------
+
+数组为 ``[2, -1, 4, 0]``，查询 ``sumRange(1, 3)``，返回 ``3``，因为 ``-1 + 4 + 0 = 3``。

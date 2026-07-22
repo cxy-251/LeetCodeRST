@@ -1,8 +1,21 @@
 0307. Range Sum Query - Mutable
-==============================
+===============================
+
+题目信息
+--------
 
 :题号: 0307
-:题名: Range Sum Query - Mutable
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0307 <https://leetcode.com/problems/range-sum-query-mutable/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Medium
+:主题: 数组、树状数组、线段树、设计
+:原题: `LeetCode 307 <https://leetcode.com/problems/range-sum-query-mutable/>`_
+:教学重点: 同时支持单点修改与区间求和，理解树状数组或线段树的维护方式。
+
+题目重述
+--------
+
+实现一个可修改数组类，支持把指定下标的元素更新为新值，并多次查询闭区间 ``[left, right]`` 的元素和。
+
+自建示例
+--------
+
+初始数组 ``[1,3,5]``，查询 ``sumRange(0,2)`` 得到 ``9``；执行 ``update(1,2)`` 后数组变为 ``[1,2,5]``，再次查询得到 ``8``。

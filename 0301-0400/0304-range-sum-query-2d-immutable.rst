@@ -1,8 +1,21 @@
 0304. Range Sum Query 2D - Immutable
-===================================
+====================================
+
+题目信息
+--------
 
 :题号: 0304
-:题名: Range Sum Query 2D - Immutable
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0304 <https://leetcode.com/problems/range-sum-query-2d-immutable/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Medium
+:主题: 矩阵、二维前缀和、设计
+:原题: `LeetCode 304 <https://leetcode.com/problems/range-sum-query-2d-immutable/>`_
+:教学重点: 使用二维前缀和与容斥关系回答矩形区域求和。
+
+题目重述
+--------
+
+实现一个只读矩阵类。构造后需要多次查询由左上角 ``(row1, col1)`` 和右下角 ``(row2, col2)`` 确定的闭合矩形区域元素总和，矩阵不会被修改。
+
+自建示例
+--------
+
+矩阵为 ``[[1,2,3],[4,5,6]]``，查询 ``sumRegion(0, 1, 1, 2)``，返回 ``16``，对应元素为 ``2、3、5、6``。

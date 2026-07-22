@@ -1,8 +1,21 @@
 0315. Count of Smaller Numbers After Self
-========================================
+=========================================
+
+题目信息
+--------
 
 :题号: 0315
-:题名: Count of Smaller Numbers After Self
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0315 <https://leetcode.com/problems/count-of-smaller-numbers-after-self/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Hard
+:主题: 数组、归并排序、树状数组、离散化
+:原题: `LeetCode 315 <https://leetcode.com/problems/count-of-smaller-numbers-after-self/>`_
+:教学重点: 在排序或维护频率结构的同时统计每个元素右侧更小元素数量。
+
+题目重述
+--------
+
+给定整数数组，对每个位置 ``i``，统计其右侧严格小于 ``nums[i]`` 的元素个数，并按原下标返回统计数组。
+
+自建示例
+--------
+
+输入 ``[5,2,6,1]``，输出 ``[2,1,1,0]``。例如 ``5`` 的右侧有 ``2`` 和 ``1`` 两个更小值。

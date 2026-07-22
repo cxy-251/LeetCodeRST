@@ -1,8 +1,21 @@
 0309. Best Time to Buy and Sell Stock with Cooldown
 ===================================================
 
+题目信息
+--------
+
 :题号: 0309
-:题名: Best Time to Buy and Sell Stock with Cooldown
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0309 <https://leetcode.com/problems/best-time-to-buy-and-sell-stock-with-cooldown/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Medium
+:主题: 数组、动态规划、状态机
+:原题: `LeetCode 309 <https://leetcode.com/problems/best-time-to-buy-and-sell-stock-with-cooldown/>`_
+:教学重点: 区分持股、卖出冷冻和空仓可买三个状态，并写出状态转移。
+
+题目重述
+--------
+
+给定每天的股票价格，可以进行任意多次买卖，但同一时间最多持有一股。卖出股票后的第二天不能买入。计算能够获得的最大利润。
+
+自建示例
+--------
+
+价格 ``[1,2,3,0,2]`` 的最大利润为 ``3``：先在 ``1`` 买入、``2`` 卖出，冷冻一天后在 ``0`` 买入、``2`` 卖出。

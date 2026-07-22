@@ -1,8 +1,21 @@
 0316. Remove Duplicate Letters
 ==============================
 
+题目信息
+--------
+
 :题号: 0316
-:题名: Remove Duplicate Letters
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0316 <https://leetcode.com/problems/remove-duplicate-letters/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Medium
+:主题: 字符串、贪心、单调栈
+:原题: `LeetCode 316 <https://leetcode.com/problems/remove-duplicate-letters/>`_
+:教学重点: 在每个字符只保留一次的约束下，用剩余出现次数判断栈顶字符能否安全弹出。
+
+题目重述
+--------
+
+删除字符串中的部分字符，使每种不同字符恰好保留一次，并且在所有可行结果中返回字典序最小的字符串。保留下来的字符相对顺序不能改变。
+
+自建示例
+--------
+
+``s = "bcabc"`` 返回 ``"abc"``；``s = "cbacdcbc"`` 返回 ``"acdb"``。
