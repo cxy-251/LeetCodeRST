@@ -4,25 +4,25 @@
 当前目标
 --------
 
-处理 ``0153. Find Minimum in Rotated Sorted Array``。
+处理 ``0154. Find Minimum in Rotated Sorted Array II``。
 
-* 目标文件：``0101-0200/0153-find-minimum-in-rotated-sorted-array.rst``；
+* 目标文件：``0101-0200/0154-find-minimum-in-rotated-sorted-array-ii.rst``；
 * 文件类型：公开算法题完整 C++ 题解；
 * 当前状态：目标文件已存在，执行全文审查与整改；
-* 完成后下一入口：``0154. Find Minimum in Rotated Sorted Array II``。
+* 完成后下一入口：``0155. Min Stack``。
 
 本轮工作
 --------
 
 #. 核对题目契约、边界和平台接口；
 #. 在 C++ 中保留具有独立思想价值的代表性解法；
-#. 围绕“与右端比较、最小值所在半区、无重复收缩”建立推导链；
+#. 围绕“端点相等消歧、安全收缩、最坏线性退化”建立推导链；
 #. 补全状态演化、正确性依据和复杂度来源；
 #. 让正文在题解结束，不再追加多语言实现；
 
 本轮完成条件
 ------------
 
-#. 第153题形成“与右端比较 → 最小值所在半区 → 无重复收缩”的清晰结构；
-#. 完成后入口推进到 ``0154. Find Minimum in Rotated Sorted Array II``；
-#. 第153题与新的 ``PROGRESS.rst`` 组成一个原子提交。
+#. 第154题形成“端点相等消歧 → 安全收缩 → 最坏线性退化”的清晰结构；
+#. 完成后入口推进到 ``0155. Min Stack``；
+#. 第154题与新的 ``PROGRESS.rst`` 组成一个原子提交。
