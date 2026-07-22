@@ -1,16 +1,16 @@
 name: Apply reviewed introductions 0001-0100
 
 on:
-  pull_request:
+  push:
     branches:
-      - main
+      - agent/audit-0001-0100
 
 permissions:
   contents: write
 
 jobs:
   audit:
-    if: github.head_ref == 'agent/audit-0001-0100' && github.actor != 'github-actions[bot]'
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -38,19 +38,9 @@ jobs:
               tail = text[intro_end:]
 
               if ':题名:' not in intro:
-                  intro = re.sub(
-                      rf'(:题号:\s*{number}\n)',
-                      rf'\1:题名: {title}\n',
-                      intro,
-                      count=1,
-                  )
+                  intro = re.sub(rf'(:题号:\s*{number}\n)', rf'\1:题名: {title}\n', intro, count=1)
               if ':类型:' not in intro:
-                  intro = re.sub(
-                      r'(:难度:\s*[^\n]+\n)',
-                      r'\1:类型: Algorithms\n',
-                      intro,
-                      count=1,
-                  )
+                  intro = re.sub(r'(:难度:\s*[^\n]+\n)', r'\1:类型: Algorithms\n', intro, count=1)
 
               text = intro + tail
               if number == '0040':
