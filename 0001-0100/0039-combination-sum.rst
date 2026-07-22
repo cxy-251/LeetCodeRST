@@ -5,7 +5,9 @@
 --------
 
 :题号: 0039
+:题名: Combination Sum
 :难度: Medium
+:类型: Algorithms
 :主题: 回溯、组合枚举、排序、可重复选择
 :原题: `LeetCode 0039 <https://leetcode.com/problems/combination-sum/>`_
 :教学重点: 非递减路径、递归起点、当前元素复用、正数剪枝、组合去重

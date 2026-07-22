@@ -5,7 +5,9 @@
 --------
 
 :题号: 0079
+:题名: Word Search
 :难度: Medium
+:类型: Algorithms
 :主题: 矩阵、深度优先搜索、回溯
 :原题: `LeetCode 0079 <https://leetcode.com/problems/word-search/>`_
 :教学重点: 路径前缀、格子占用、四方向扩展、严格恢复、频次预检

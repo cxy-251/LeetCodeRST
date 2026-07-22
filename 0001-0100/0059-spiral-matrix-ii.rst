@@ -5,7 +5,9 @@
 --------
 
 :题号: 0059
+:题名: Spiral Matrix II
 :难度: Medium
+:类型: Algorithms
 :主题: 矩阵、边界模拟、螺旋构造、坐标状态
 :原题: `LeetCode 0059 <https://leetcode.com/problems/spiral-matrix-ii/>`_
 :教学重点: 递增写入、剩余矩形、四边界收缩、中心点处理

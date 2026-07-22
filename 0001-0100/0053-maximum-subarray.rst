@@ -5,7 +5,9 @@
 --------
 
 :题号: 0053
+:题名: Maximum Subarray
 :难度: Medium
+:类型: Algorithms
 :主题: 数组、动态规划、前缀和、分治
 :原题: `LeetCode 0053 <https://leetcode.com/problems/maximum-subarray/>`_
 :教学重点: 非空连续区间、右端点状态、负贡献前缀、全负数组

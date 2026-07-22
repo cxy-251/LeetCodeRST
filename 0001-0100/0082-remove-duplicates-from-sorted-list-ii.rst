@@ -5,7 +5,9 @@
 --------
 
 :题号: 0082
+:题名: Remove Duplicates from Sorted List II
 :难度: Medium
+:类型: Algorithms
 :主题: 单链表、哨兵节点、有序重复段、原地重连
 :原题: `LeetCode 0082 <https://leetcode.com/problems/remove-duplicates-from-sorted-list-ii/>`_
 :教学重点: 删除整个重复段、前驱保持、头部统一处理、节点身份

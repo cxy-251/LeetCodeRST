@@ -5,7 +5,9 @@
 --------
 
 :题号: 0072
+:题名: Edit Distance
 :难度: Medium
+:类型: Algorithms
 :主题: 字符串、动态规划、状态压缩
 :原题: `LeetCode 0072 <https://leetcode.com/problems/edit-distance/>`_
 :教学重点: 前缀状态、三种编辑转移、空串边界、旧对角值

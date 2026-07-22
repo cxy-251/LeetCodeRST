@@ -5,7 +5,9 @@
 --------
 
 :题号: 0094
+:题名: Binary Tree Inorder Traversal
 :难度: Easy
+:类型: Algorithms
 :主题: 二叉树、深度优先遍历、显式栈、Morris 遍历
 :原题: `LeetCode 0094 <https://leetcode.com/problems/binary-tree-inorder-traversal/>`_
 :教学重点: 左链入栈、延迟访问、右子树切换、临时线索恢复

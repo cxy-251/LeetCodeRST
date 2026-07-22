@@ -5,7 +5,9 @@
 --------
 
 :题号: 0069
+:题名: Sqrt(x)
 :难度: Easy
+:类型: Algorithms
 :主题: 数学、二分查找、牛顿迭代、整数边界
 :原题: `LeetCode 0069 <https://leetcode.com/problems/sqrtx/>`_
 :教学重点: 下取整语义、最后真值、除法防溢出、区间不变量

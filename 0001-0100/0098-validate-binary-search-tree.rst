@@ -5,7 +5,9 @@
 --------
 
 :题号: 0098
+:题名: Validate Binary Search Tree
 :难度: Medium
+:类型: Algorithms
 :主题: 二叉搜索树、中序遍历、递归边界、显式栈
 :原题: `LeetCode 0098 <https://leetcode.com/problems/validate-binary-search-tree/>`_
 :教学重点: 全局严格约束、中序递增、前驱状态、整数边界

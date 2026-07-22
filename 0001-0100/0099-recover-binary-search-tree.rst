@@ -5,7 +5,9 @@
 --------
 
 :题号: 0099
+:题名: Recover Binary Search Tree
 :难度: Medium
+:类型: Algorithms
 :主题: 二叉搜索树、中序遍历、逆序下降、原地修复
 :原题: `LeetCode 0099 <https://leetcode.com/problems/recover-binary-search-tree/>`_
 :教学重点: 一次或两次下降、首尾错误节点、只交换值、Morris 线索恢复

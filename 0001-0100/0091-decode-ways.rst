@@ -5,7 +5,9 @@
 --------
 
 :题号: 0091
+:题名: Decode Ways
 :难度: Medium
+:类型: Algorithms
 :主题: 字符串、动态规划、记忆化搜索、滚动状态
 :原题: `LeetCode 0091 <https://leetcode.com/problems/decode-ways/>`_
 :教学重点: 前缀方案数、一位与两位贡献、零的强制约束、空前缀基准

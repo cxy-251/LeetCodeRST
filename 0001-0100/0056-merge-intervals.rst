@@ -5,7 +5,9 @@
 --------
 
 :题号: 0056
+:题名: Merge Intervals
 :难度: Medium
+:类型: Algorithms
 :主题: 区间、排序、贪心、扫描线
 :原题: `LeetCode 0056 <https://leetcode.com/problems/merge-intervals/>`_
 :教学重点: 起点排序、闭区间重叠、当前覆盖段、结果提交

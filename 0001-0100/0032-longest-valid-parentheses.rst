@@ -5,7 +5,9 @@
 --------
 
 :题号: 0032
+:题名: Longest Valid Parentheses
 :难度: Hard
+:类型: Algorithms
 :主题: 字符串、动态规划、栈、双向扫描
 :原题: `LeetCode 0032 <https://leetcode.com/problems/longest-valid-parentheses/>`_
 :教学重点: 连续区间、结尾状态、匹配前驱、失效边界、双向计数

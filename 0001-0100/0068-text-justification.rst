@@ -5,7 +5,9 @@
 --------
 
 :题号: 0068
+:题名: Text Justification
 :难度: Hard
+:类型: Algorithms
 :主题: 字符串、贪心、文本排版、商余分配
 :原题: `LeetCode 0068 <https://leetcode.com/problems/text-justification/>`_
 :教学重点: 最大装行、普通行两端对齐、左侧优先、末行特例

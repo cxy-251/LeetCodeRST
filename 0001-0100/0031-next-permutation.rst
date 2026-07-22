@@ -5,7 +5,9 @@
 --------
 
 :题号: 0031
+:题名: Next Permutation
 :难度: Medium
+:类型: Algorithms
 :主题: 数组、字典序、排列、原地反转
 :原题: `LeetCode 0031 <https://leetcode.com/problems/next-permutation/>`_
 :教学重点: 最长非递增后缀、枢轴、最小更大后继、后缀最小化、原地修改

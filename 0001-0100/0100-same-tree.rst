@@ -5,7 +5,9 @@
 --------
 
 :题号: 0100
+:题名: Same Tree
 :难度: Easy
+:类型: Algorithms
 :主题: 二叉树、递归、结构比较、成对遍历
 :原题: `LeetCode 0100 <https://leetcode.com/problems/same-tree/>`_
 :教学重点: 成对递归状态、空节点结构检查、同方向孩子、短路终止

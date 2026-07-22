@@ -5,7 +5,9 @@
 --------
 
 :题号: 0081
+:题名: Search in Rotated Sorted Array II
 :难度: Medium
+:类型: Algorithms
 :主题: 数组、二分查找、旋转有序数组、重复值
 :原题: `LeetCode 0081 <https://leetcode.com/problems/search-in-rotated-sorted-array-ii/>`_
 :教学重点: 重复端点消歧、有序半区判断、值域排除、最坏线性退化
