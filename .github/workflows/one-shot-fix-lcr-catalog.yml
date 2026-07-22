@@ -1,0 +1,156 @@
+name: One-shot fix complete LCR catalog
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/workflows/one-shot-fix-lcr-catalog.yml
+
+permissions:
+  contents: write
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Add all LCR 001-194 files
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          import re
+          import urllib.parse
+          import urllib.request
+          from pathlib import Path
+
+          ROOT = Path('.')
+          REPO = 'LetMeFly666/LeetCode'
+
+          def get_json(url):
+              req = urllib.request.Request(url, headers={
+                  'User-Agent': 'Mozilla/5.0',
+                  'Accept': 'application/vnd.github+json',
+              })
+              with urllib.request.urlopen(req, timeout=120) as response:
+                  return json.load(response)
+
+          metadata = get_json(f'https://api.github.com/repos/{REPO}')
+          branch = metadata.get('default_branch') or 'master'
+          tree = get_json(f'https://api.github.com/repos/{REPO}/git/trees/{branch}?recursive=1')
+
+          records = {}
+          pattern = re.compile(r'^AllProblems/LCR\s+(\d{3})[.．](.+?)/(.+\.md)$')
+          for item in tree.get('tree') or []:
+              path = item.get('path') or ''
+              match = pattern.match(path)
+              if not match:
+                  continue
+              number, title, filename = match.groups()
+              if not filename.startswith(f'LCR {number}.'):
+                  continue
+              records[int(number)] = {
+                  'number': number,
+                  'title': title.strip(),
+                  'path': path,
+              }
+
+          missing_source = [n for n in range(1, 195) if n not in records]
+          if missing_source:
+              raise RuntimeError('LCR source missing IDs: ' + ','.join(map(str, missing_source)))
+
+          target = ROOT / 'special' / 'LCR'
+          target.mkdir(parents=True, exist_ok=True)
+          created = 0
+          for n in range(1, 195):
+              row = records[n]
+              number = row['number']
+              title = row['title']
+              path = target / f'lcr-{number}.rst'
+              if path.exists():
+                  continue
+              source_url = (
+                  f'https://github.com/{REPO}/blob/{branch}/'
+                  + urllib.parse.quote(row['path'], safe='/')
+              )
+              canonical = f'LCR {number}'
+              heading = f'{canonical}. {title}'
+              path.write_text(
+                  f'{heading}\n{"=" * len(heading)}\n\n'
+                  f':题号: {canonical}\n'
+                  f':题名: {title}\n'
+                  f':系列: LCR\n'
+                  f':类型: Algorithms（元数据占位）\n'
+                  f':难度: 未知\n'
+                  f':原题或资料: `{canonical} <{source_url}>`_\n'
+                  f':处理状态: 题目文件已建立；题目信息、题目重述与自建示例待后续补充。\n',
+                  encoding='utf-8',
+              )
+              created += 1
+
+          catalog_path = ROOT / '_catalog' / 'catalog.json'
+          catalog = json.loads(catalog_path.read_text(encoding='utf-8'))
+          series_dirs = {
+              'LCP': 'LCP',
+              'LCCI': 'LCCI',
+              'Offer': 'Offer',
+              'Offer-II': 'Offer-II',
+              'LCS': 'LCS',
+              'LCR': 'LCR',
+          }
+          counts = {
+              name: len(list((ROOT / 'special' / directory).glob('*.rst')))
+              for name, directory in series_dirs.items()
+          }
+          catalog['special_series'] = counts
+          catalog['special_question_count'] = sum(counts.values())
+          catalog['special_files_created'] = catalog.get('special_files_created', 0) + created
+          catalog_path.write_text(
+              json.dumps(catalog, ensure_ascii=False, indent=2) + '\n',
+              encoding='utf-8',
+          )
+
+          readme = ROOT / '_catalog' / 'README.rst'
+          title = 'LeetCode 完整题库'
+          lines = [
+              title,
+              '=' * len(title),
+              '',
+              f':普通数字题数量: {catalog["ordinary_question_count"]}',
+              f':普通数字题最大编号: {catalog["ordinary_max_frontend_id"]}',
+              f':特殊题号数量: {catalog["special_question_count"]}',
+              '',
+              '特殊题号系列',
+              '------------',
+              '',
+          ]
+          for name, count in counts.items():
+              lines.append(f'* {name}: {count}')
+          lines.extend([
+              '',
+              '说明',
+              '----',
+              '',
+              '普通数字题按每 100 题一个目录组织；特殊题号位于 ``special/``。',
+              '本索引由 LeetCode 当前题库接口及公开专项题库索引生成。',
+              '',
+          ])
+          readme.write_text('\n'.join(lines), encoding='utf-8')
+          print(json.dumps({'lcr_created': created, 'catalog': catalog}, ensure_ascii=False, indent=2))
+          PY
+
+      - name: Commit corrected catalog
+        shell: bash
+        run: |
+          rm -f .github/workflows/one-shot-complete-catalog.yml
+          rm -f .github/workflows/one-shot-complete-catalog-v2.yml
+          rm -f .github/workflows/one-shot-fix-lcr-catalog.yml
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "docs: complete LCR 001-194 catalog [skip ci]"
+          git pull --rebase origin main
+          git push origin HEAD:main
