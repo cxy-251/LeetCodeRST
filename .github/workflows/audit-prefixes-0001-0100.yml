@@ -1,4 +1,4 @@
-name: Review prefixes 0001-0100
+name: Apply reviewed introductions 0001-0100
 
 on:
   pull_request:
@@ -9,52 +9,13 @@ permissions:
   contents: write
 
 jobs:
-  audit:
+  apply:
     if: github.head_ref == 'agent/audit-0001-0100' && github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           ref: agent/audit-0001-0100
-          fetch-depth: 0
-      - name: Extract introductory sections
-        run: |
-          python - <<'PY'
-          from pathlib import Path
-          import json
-
-          records = []
-          for path in sorted(Path('0001-0100').glob('*.rst')):
-              number = path.name[:4]
-              if not number.isdigit() or not (1 <= int(number) <= 100):
-                  continue
-              text = path.read_text(encoding='utf-8')
-              marker = '\nC++ 实现\n--------\n'
-              cut = text.find(marker)
-              if cut < 0:
-                  for alt in ('\n题解\n----\n', '\n处理状态\n--------\n'):
-                      cut = text.find(alt)
-                      if cut >= 0:
-                          break
-              prefix = text if cut < 0 else text[:cut].rstrip() + '\n'
-              records.append({'number': number, 'path': str(path), 'prefix': prefix})
-
-          out = Path('.github/audit-prefixes-0001-0100.json')
-          out.write_text(json.dumps(records, ensure_ascii=False, indent=2) + '\n', encoding='utf-8')
-          PY
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
-          git add .github/audit-prefixes-0001-0100.json
-          git commit -m 'chore: extract prefixes 0001-0100'
-          git push
-
-  apply:
-    if: startsWith(github.head_ref, 'agent/review-0001-0100') && github.actor != 'github-actions[bot]'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.head_ref }}
           fetch-depth: 0
       - name: Apply selective review edits
         run: |
@@ -69,8 +30,7 @@ jobs:
                   continue
               text = path.read_text(encoding='utf-8')
               original = text
-              first_line = text.splitlines()[0]
-              title = first_line.split('. ', 1)[1]
+              title = text.splitlines()[0].split('. ', 1)[1]
 
               intro_end = text.find('\n题目重述\n--------\n')
               if intro_end < 0:
@@ -125,8 +85,7 @@ jobs:
               number = path.name[:4]
               if not number.isdigit() or not (1 <= int(number) <= 100):
                   continue
-              text = path.read_text(encoding='utf-8')
-              intro = text.split('\n题目重述\n--------\n', 1)[0]
+              intro = path.read_text(encoding='utf-8').split('\n题目重述\n--------\n', 1)[0]
               assert ':题名:' in intro, path
               assert ':类型:' in intro, path
 
