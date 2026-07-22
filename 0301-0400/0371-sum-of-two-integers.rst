@@ -1,8 +1,21 @@
 0371. Sum of Two Integers
 =========================
 
+题目信息
+--------
+
 :题号: 0371
-:题名: Sum of Two Integers
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0371 <https://leetcode.com/problems/sum-of-two-integers/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Medium
+:主题: 位运算、数学
+:原题: `LeetCode 371 <https://leetcode.com/problems/sum-of-two-integers/>`_
+:教学重点: 用异或计算无进位和，用按位与和左移计算进位，并处理有符号整数表示。
+
+题目重述
+--------
+
+给定两个整数 ``a`` 和 ``b``，在不使用加法运算符和减法运算符的情况下返回它们的和。
+
+自建示例
+--------
+
+``a = 7``，``b = -3``，返回 ``4``。

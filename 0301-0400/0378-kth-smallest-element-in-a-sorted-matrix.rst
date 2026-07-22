@@ -1,8 +1,21 @@
 0378. Kth Smallest Element in a Sorted Matrix
-============================================
+=============================================
+
+题目信息
+--------
 
 :题号: 0378
-:题名: Kth Smallest Element in a Sorted Matrix
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0378 <https://leetcode.com/problems/kth-smallest-element-in-a-sorted-matrix/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Medium
+:主题: 数组、二分查找、矩阵、堆
+:原题: `LeetCode 378 <https://leetcode.com/problems/kth-smallest-element-in-a-sorted-matrix/>`_
+:教学重点: 对答案值域二分，并在线性时间内统计矩阵中不大于候选值的元素数量。
+
+题目重述
+--------
+
+给定一个每行和每列都按非递减顺序排列的方阵，返回按整体大小排序后的第 ``k`` 小元素。重复值需要分别计数。
+
+自建示例
+--------
+
+矩阵 ``[[1,5,9],[10,11,13],[12,13,15]]``，``k = 8``，返回 ``13``。

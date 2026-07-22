@@ -1,8 +1,21 @@
 0380. Insert Delete GetRandom O(1)
 =================================
 
+题目信息
+--------
+
 :题号: 0380
-:题名: Insert Delete GetRandom O(1)
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0380 <https://leetcode.com/problems/insert-delete-getrandom-o1/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Medium
+:主题: 设计、数组、哈希表、随机化
+:原题: `LeetCode 380 <https://leetcode.com/problems/insert-delete-getrandom-o1/>`_
+:教学重点: 用动态数组保存元素，并用哈希表记录下标，通过末尾交换实现常数时间删除。
+
+题目重述
+--------
+
+设计集合结构，支持平均 ``O(1)`` 时间插入、删除和随机返回一个现有元素。插入已存在值或删除不存在值时应返回 ``false``，否则返回 ``true``。
+
+自建示例
+--------
+
+依次执行 ``insert(1)``、``insert(2)``、``remove(1)`` 后，集合只剩 ``2``，此时 ``getRandom()`` 必须返回 ``2``。

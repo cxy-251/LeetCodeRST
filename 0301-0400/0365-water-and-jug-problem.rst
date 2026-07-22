@@ -1,8 +1,21 @@
 0365. Water and Jug Problem
 ===========================
 
+题目信息
+--------
+
 :题号: 0365
-:题名: Water and Jug Problem
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0365 <https://leetcode.com/problems/water-and-jug-problem/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Medium
+:主题: 数学、深度优先搜索、广度优先搜索、数论
+:原题: `LeetCode 365 <https://leetcode.com/problems/water-and-jug-problem/>`_
+:教学重点: 使用贝祖定理判断目标容量是否能由两个水壶容量的整数线性组合得到。
+
+题目重述
+--------
+
+有两个容量分别为 ``x`` 和 ``y`` 的水壶，可以装满、倒空或互相倒水。判断能否通过这些操作使两个水壶中的总水量恰好等于 ``targetCapacity``。
+
+自建示例
+--------
+
+``x = 3``，``y = 5``，``targetCapacity = 4``，返回 ``true``，例如先装满 5 升壶，再通过倒水留下 4 升。

@@ -1,8 +1,21 @@
 0375. Guess Number Higher or Lower II
 ====================================
 
+题目信息
+--------
+
 :题号: 0375
-:题名: Guess Number Higher or Lower II
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0375 <https://leetcode.com/problems/guess-number-higher-or-lower-ii/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Medium
+:主题: 数学、动态规划、博弈
+:原题: `LeetCode 375 <https://leetcode.com/problems/guess-number-higher-or-lower-ii/>`_
+:教学重点: 用区间动态规划计算每次猜测后的最坏成本，并在所有猜测点中取最小值。
+
+题目重述
+--------
+
+系统从 ``1`` 到 ``n`` 中选择一个整数。猜错数字 ``x`` 时需要支付 ``x`` 元，并得到目标更大或更小的提示。求一种保证最终猜中的策略所需的最少资金。
+
+自建示例
+--------
+
+``n = 10`` 时，保证获胜所需的最少资金为 ``16``。

@@ -1,8 +1,21 @@
 0368. Largest Divisible Subset
 ==============================
 
+题目信息
+--------
+
 :题号: 0368
-:题名: Largest Divisible Subset
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0368 <https://leetcode.com/problems/largest-divisible-subset/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Medium
+:主题: 数组、数学、动态规划、排序
+:原题: `LeetCode 368 <https://leetcode.com/problems/largest-divisible-subset/>`_
+:教学重点: 排序后使用最长路径式动态规划，并记录前驱以恢复具体子集。
+
+题目重述
+--------
+
+给定一组互不相同的正整数，寻找元素数量最多的子集，使子集中任意两个元素 ``a`` 和 ``b`` 都满足 ``a`` 能整除 ``b`` 或 ``b`` 能整除 ``a``。返回任意一个最大子集。
+
+自建示例
+--------
+
+输入 ``[1,2,4,8]``，可以返回 ``[1,2,4,8]``，因为任意较小元素都能整除较大元素。

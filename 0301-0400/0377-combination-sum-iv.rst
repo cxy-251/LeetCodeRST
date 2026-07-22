@@ -1,8 +1,21 @@
 0377. Combination Sum IV
 ========================
 
+题目信息
+--------
+
 :题号: 0377
-:题名: Combination Sum IV
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0377 <https://leetcode.com/problems/combination-sum-iv/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Medium
+:主题: 数组、动态规划
+:原题: `LeetCode 377 <https://leetcode.com/problems/combination-sum-iv/>`_
+:教学重点: 顺序不同视为不同方案，因此目标和应作为外层状态进行完全背包式递推。
+
+题目重述
+--------
+
+给定一组互不相同的正整数和目标值 ``target``，统计有多少个有序序列的元素和恰好等于 ``target``。每个数字可以使用任意次。
+
+自建示例
+--------
+
+``nums = [1,2,3]``，``target = 4``，共有 ``7`` 种有序组合，因此返回 ``7``。

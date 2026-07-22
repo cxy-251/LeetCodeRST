@@ -1,8 +1,21 @@
 0373. Find K Pairs with Smallest Sums
-====================================
+=====================================
+
+题目信息
+--------
 
 :题号: 0373
-:题名: Find K Pairs with Smallest Sums
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0373 <https://leetcode.com/problems/find-k-pairs-with-smallest-sums/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Medium
+:主题: 数组、堆、优先队列
+:原题: `LeetCode 373 <https://leetcode.com/problems/find-k-pairs-with-smallest-sums/>`_
+:教学重点: 把每个固定首元素对应的配对序列视为有序链，并用最小堆进行多路归并。
+
+题目重述
+--------
+
+给定两个非递减整数数组，从两个数组中各选一个元素组成数对。返回元素和最小的 ``k`` 个数对。
+
+自建示例
+--------
+
+``nums1 = [1,7,11]``，``nums2 = [2,4,6]``，``k = 3``，返回 ``[[1,2],[1,4],[1,6]]``。

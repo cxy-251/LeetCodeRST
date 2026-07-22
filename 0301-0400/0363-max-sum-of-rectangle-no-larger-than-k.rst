@@ -1,8 +1,21 @@
 0363. Max Sum of Rectangle No Larger Than K
 ==========================================
 
+题目信息
+--------
+
 :题号: 0363
-:题名: Max Sum of Rectangle No Larger Than K
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0363 <https://leetcode.com/problems/max-sum-of-rectangle-no-larger-than-k/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Hard
+:主题: 数组、二分查找、动态规划、前缀和、有序集合、矩阵
+:原题: `LeetCode 363 <https://leetcode.com/problems/max-sum-of-rectangle-no-larger-than-k/>`_
+:教学重点: 压缩二维区间后，把问题转化为寻找不超过 ``k`` 的最大连续子数组和。
+
+题目重述
+--------
+
+给定整数矩阵和整数 ``k``，从矩阵中选择一个非空、边与矩阵边界平行的矩形区域，使区域内元素和不超过 ``k``。返回所有合法矩形中的最大元素和。
+
+自建示例
+--------
+
+``matrix = [[1,0,1],[0,-2,3]]``，``k = 2``，返回 ``2``，可以选择第一行的整个区间 ``[1,0,1]``。

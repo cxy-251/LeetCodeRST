@@ -1,8 +1,21 @@
 0374. Guess Number Higher or Lower
 =================================
 
+题目信息
+--------
+
 :题号: 0374
-:题名: Guess Number Higher or Lower
-:类型: Algorithms（题面待核实）
-:原题: `LeetCode 0374 <https://leetcode.com/problems/guess-number-higher-or-lower/>`_
-:处理状态: 公开算法题元数据已登记；完整题目重述与自建示例待后续扩写。
+:难度: Easy
+:主题: 二分查找、交互
+:原题: `LeetCode 374 <https://leetcode.com/problems/guess-number-higher-or-lower/>`_
+:教学重点: 根据交互接口返回的大小关系不断缩小闭区间。
+
+题目重述
+--------
+
+系统在 ``1`` 到 ``n`` 中选择一个整数。每次调用 ``guess(num)`` 会告知猜测值偏大、偏小或正确。返回被选择的整数。
+
+自建示例
+--------
+
+``n = 10``，系统选择 ``6``，通过二分猜测最终返回 ``6``。
