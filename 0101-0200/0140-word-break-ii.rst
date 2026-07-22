@@ -201,7 +201,7 @@ Go
 
 .. code-block:: go
 
-   func wordBreak(s string,words []string)[]string{memo:=map[int][]string{len(s):{"")};var dfs func(int)[]string;dfs=func(st int)[]string{if v,ok:=memo[st];ok{return v};o:=[]string{};for _,w:=range words{if st+len(w)<=len(s)&&s[st:st+len(w)]==w{for _,tail:=range dfs(st+len(w)){if tail==""{o=append(o,w)}else{o=append(o,w+" "+tail)}}}};memo[st]=o;return o};return dfs(0)}
+   func wordBreak(s string,words []string)[]string{memo:=map[int][]string{len(s):[]string{""}};var dfs func(int)[]string;dfs=func(st int)[]string{if v,ok:=memo[st];ok{return v};o:=[]string{};for _,w:=range words{if st+len(w)<=len(s)&&s[st:st+len(w)]==w{for _,tail:=range dfs(st+len(w)){if tail==""{o=append(o,w)}else{o=append(o,w+" "+tail)}}}};memo[st]=o;return o};return dfs(0)}
 
 TypeScript
 ~~~~~~~~~~
@@ -215,7 +215,7 @@ C#
 
 .. code-block:: csharp
 
-   public class Solution {Dictionary<int,IList<string>>memo=new();public IList<string> WordBreak(string s,IList<string>w){memo[s.Length]=new List<string>{""};return Dfs(s,0,w);}IList<string>Dfs(string s,int st,IList<string>w){if(memo.TryGetValue(st,out var seen))return seen;var o=new List<string>();foreach(var x in w)if(st+x.Length<=s.Length&&s.AsSpan(st,x.Length).SequenceEqual(x))foreach(var tail in Dfs(s,st+x.Length,w))o.Add(tail.Length==0?x:x+" "+tail);memo[st]=o;return o;}}
+   public class Solution {Dictionary<int,IList<string>>memo=new();public IList<string> WordBreak(string s,IList<string>w){memo[s.Length]=new List<string>{""};return Dfs(s,0,w);}IList<string>Dfs(string s,int st,IList<string>w){if(memo.TryGetValue(st,out var seen))return seen;var o=new List<string>();foreach(var x in w)if(st+x.Length<=s.Length&&s.AsSpan(st,x.Length).SequenceEqual(x.AsSpan()))foreach(var tail in Dfs(s,st+x.Length,w))o.Add(tail.Length==0?x:x+" "+tail);memo[st]=o;return o;}}
 
 Julia
 ~~~~~
