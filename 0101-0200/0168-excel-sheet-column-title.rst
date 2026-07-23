@@ -8,23 +8,29 @@
 :难度: Easy
 :主题: 数学、进制转换、字符串
 :原题: `LeetCode 0168 <https://leetcode.com/problems/excel-sheet-column-title/>`_
-:重点: 无零二十六进制、先减一再取模、逆序构造
+:重点: 一基列号、A 到 Z 映射、无零二十六进制、字符串返回
 
 题目重述
 --------
 
-给定正整数 ``columnNumber``，返回它在 Excel 表格中对应的列标题。列号从 1 开始：1 对应 ``A``，26 对应 ``Z``，27 对应 ``AA``，之后按相同规则继续。
+给定正整数 ``columnNumber``，返回 Excel 工作表中对应的列标题。列号从 ``1`` 开始：``1..26`` 分别对应 ``A..Z``；超过 ``Z`` 后继续使用多字符标题，例如 ``27`` 对应 ``AA``。
+
+该表示法没有单独表示零的字符，因此不能直接按普通二十六进制处理。``columnNumber`` 在 ``1..2^31 - 1`` 范围内，返回值只由大写英文字母组成。
 
 自建示例
 --------
 
 .. code-block:: text
 
-   columnNumber = 1   -> "A"
-   columnNumber = 26  -> "Z"
-   columnNumber = 27  -> "AA"
-   columnNumber = 28  -> "AB"
-   columnNumber = 701 -> "ZY"
+   输入：columnNumber = 52
+   输出："AZ"
+   解释：第一轮完整覆盖 A 到 Z，第二组中第 26 个标题是 AZ。
+
+.. code-block:: text
+
+   输入：columnNumber = 703
+   输出："AAA"
+   解释：702 对应 ZZ，下一列进入三位标题并从 AAA 开始。
 
 C++ 实现
 --------
