@@ -8,22 +8,33 @@
 :难度: Hard
 :主题: 图、广度优先搜索、最短路径 DAG、回溯
 :原题: `LeetCode 0126 <https://leetcode.com/problems/word-ladder-ii/>`_
-:重点: 最短层 BFS、同层多前驱、目标层收尾、输出敏感复杂度
+:重点: 所有最短序列、单字符变换、同层多前驱、结果顺序不限
 
 题目重述
 --------
 
-给定起始单词 ``beginWord``、目标单词 ``endWord`` 和字典 ``wordList``。每次变换只能修改一个字母，并且变换后的单词必须存在于字典中。返回从起始单词到目标单词的所有最短变换序列；若无法完成变换，则返回空数组。
+给定起始单词 ``beginWord``、目标单词 ``endWord`` 和字典 ``wordList``，返回从 ``beginWord`` 变换到 ``endWord`` 的所有最短单词序列。每一步必须恰好修改一个字母，修改后的单词必须出现在 ``wordList`` 中；``beginWord`` 本身可以不在字典中。每条序列都包含起点和终点，若无法到达则返回空数组，多个最短序列的返回顺序不限。
+
+所有单词长度相同且只包含小写英文字母。单词长度在 ``1..5`` 范围内，``wordList`` 长度在 ``1..500`` 范围内，字典中的单词互不相同，且 ``beginWord != endWord``。
 
 自建示例
 --------
 
 .. code-block:: text
 
-   hit -> hot -> dot -> dog -> cog
-   hit -> hot -> lot -> log -> cog
+   输入：beginWord = "red", endWord = "tax"
+         wordList = ["ted","tex","red","tax","tad","den","rex","pee"]
+   输出：[["red","ted","tad","tax"],
+         ["red","ted","tex","tax"],
+         ["red","rex","tex","tax"]]
+   解释：三条序列都只在相邻单词间改变一个字母，长度均为 4，并且不存在更短的合法序列；结果顺序可以不同。
 
-两条答案共享前缀并在终点汇合，必须保留同层产生的多个前驱。
+.. code-block:: text
+
+   输入：beginWord = "abc", endWord = "xyz"
+         wordList = ["xbc","xyc","ayz"]
+   输出：[]
+   解释：虽然字典中存在若干局部变换，但无法形成从 abc 到 xyz 的连续路径。
 
 C++ 实现
 --------
