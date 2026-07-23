@@ -8,21 +8,25 @@
 :难度: Medium
 :主题: 栈、设计、状态同步
 :原题: `LeetCode 0155 <https://leetcode.com/problems/min-stack/>`_
-:教学重点: 主栈与最小值栈、重复最小值、常数时间操作
+:重点: 主栈与最小值栈、重复最小值、常数时间操作
 
 题目重述
 --------
 
-设计支持 push、pop、top 和 getMin 且全部为常数时间的栈。
+设计一个支持以下操作的栈：``push(val)`` 把元素压入栈顶，``pop()`` 删除栈顶元素，``top()`` 返回栈顶元素，``getMin()`` 返回当前栈中的最小元素。所有操作都必须在 ``O(1)`` 时间内完成。
 
 自建示例
 --------
 
 .. code-block:: text
 
-   push(-2), push(0), push(-3)
+   push(-2)
+   push(0)
+   push(-3)
    getMin() -> -3
-   pop(); top() -> 0; getMin() -> -2
+   pop()
+   top()    -> 0
+   getMin() -> -2
 
 C++ 实现
 --------
