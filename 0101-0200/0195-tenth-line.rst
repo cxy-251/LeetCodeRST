@@ -6,10 +6,9 @@
 
 :题号: 0195
 :难度: Easy
-:类型: Shell
 :主题: Shell、行号定位、流式读取
 :原题: `LeetCode 195 <https://leetcode.com/problems/tenth-line/>`_
-:教学重点: 只定位第 10 行即可，无需读取后续内容。
+:重点: 只定位第 10 行即可，无需读取后续内容。
 
 题目重述
 --------
