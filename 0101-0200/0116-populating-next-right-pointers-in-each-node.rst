@@ -8,7 +8,7 @@
 :难度: Medium
 :主题: 完美二叉树、层级链接、原地修改、常数空间遍历
 :原题: `LeetCode 0116 <https://leetcode.com/problems/populating-next-right-pointers-in-each-node/>`_
-:教学重点: 同父连接、跨父连接、已建 next 链、层级不变量
+:重点: 同父连接、跨父连接、已建 next 链、层级不变量
 
 题目重述
 --------
