@@ -6,10 +6,9 @@
 
 :题号: 0176
 :难度: Medium
-:类型: Database
 :主题: SQL、去重、排序、空结果
 :原题: `LeetCode 176 <https://leetcode.com/problems/second-highest-salary/>`_
-:教学重点: 先按薪资去重，再定位第二个降序薪资；没有第二级时仍需产生一行空值。
+:重点: 先按薪资去重，再定位第二个降序薪资；没有第二级时仍需产生一行空值。
 
 题目重述
 --------
