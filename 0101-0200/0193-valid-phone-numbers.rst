@@ -6,10 +6,9 @@
 
 :题号: 0193
 :难度: Easy
-:类型: Shell
 :主题: Shell、正则表达式、整行匹配
 :原题: `LeetCode 193 <https://leetcode.com/problems/valid-phone-numbers/>`_
-:教学重点: 正则必须锚定行首和行尾，避免只匹配某一段合法子串。
+:重点: 正则必须锚定行首和行尾，避免只匹配某一段合法子串。
 
 题目重述
 --------
