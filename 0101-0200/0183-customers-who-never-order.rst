@@ -6,10 +6,9 @@
 
 :题号: 0183
 :难度: Easy
-:类型: Database
 :主题: SQL、反连接、NOT EXISTS
 :原题: `LeetCode 183 <https://leetcode.com/problems/customers-who-never-order/>`_
-:教学重点: 使用反连接或 ``NOT EXISTS``，判断客户是否完全没有匹配订单。
+:重点: 使用反连接或 ``NOT EXISTS``，判断客户是否完全没有匹配订单。
 
 题目重述
 --------
