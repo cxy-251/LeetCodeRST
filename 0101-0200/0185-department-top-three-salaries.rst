@@ -6,10 +6,9 @@
 
 :题号: 0185
 :难度: Hard
-:类型: Database
 :主题: SQL、分区稠密排名、并列保留
 :原题: `LeetCode 185 <https://leetcode.com/problems/department-top-three-salaries/>`_
-:教学重点: 按部门分区对薪资做降序稠密排名，并筛选排名不超过三的记录。
+:重点: 按部门分区对薪资做降序稠密排名，并筛选排名不超过三的记录。
 
 题目重述
 --------
