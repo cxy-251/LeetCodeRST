@@ -8,7 +8,7 @@
 :难度: Easy
 :主题: 字符串、子串匹配、前缀函数、KMP
 :原题: `LeetCode 0028 <https://leetcode.com/problems/find-the-index-of-the-first-occurrence-in-a-string/>`_
-:教学重点: 候选起点、重复比较、最长相等前后缀、失配回退、最早匹配
+:重点: 候选起点、重复比较、最长相等前后缀、失配回退、最早匹配
 
 题目重述
 --------

@@ -8,7 +8,7 @@
 :难度: Medium
 :主题: 数组、二分查找、边界定位、重复元素
 :原题: `LeetCode 0034 <https://leetcode.com/problems/find-first-and-last-position-of-element-in-sorted-array/>`_
-:教学重点: lower bound、upper bound、半开区间、存在性验证、重复值边界
+:重点: lower bound、upper bound、半开区间、存在性验证、重复值边界
 
 题目重述
 --------

@@ -8,7 +8,7 @@
 :难度: Easy
 :主题: 单链表、有序去重、原地断链
 :原题: `LeetCode 0083 <https://leetcode.com/problems/remove-duplicates-from-sorted-list/>`_
-:教学重点: 每值保留一次、值段代表、连续删除、节点顺序
+:重点: 每值保留一次、值段代表、连续删除、节点顺序
 
 题目重述
 --------

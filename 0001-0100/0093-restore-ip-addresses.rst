@@ -8,7 +8,7 @@
 :难度: Medium
 :主题: 字符串、回溯、固定分段、长度剪枝
 :原题: `LeetCode 0093 <https://leetcode.com/problems/restore-ip-addresses/>`_
-:教学重点: 四段状态、剩余长度上下界、前导零、增量数值构造
+:重点: 四段状态、剩余长度上下界、前导零、增量数值构造
 
 题目重述
 --------

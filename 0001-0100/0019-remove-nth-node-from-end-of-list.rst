@@ -8,7 +8,7 @@
 :难度: Medium
 :主题: 链表、快慢指针、虚拟头节点、节点删除
 :原题: `LeetCode 0019 <https://leetcode.com/problems/remove-nth-node-from-end-of-list/>`_
-:教学重点: 倒数位置转换、固定指针间距、删除前驱、头节点统一处理、所有权
+:重点: 倒数位置转换、固定指针间距、删除前驱、头节点统一处理、所有权
 
 题目重述
 --------

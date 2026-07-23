@@ -8,7 +8,7 @@
 :难度: Hard
 :主题: 字符串、哈希计数、固定步长滑动窗口、多偏移扫描
 :原题: `LeetCode 0030 <https://leetcode.com/problems/substring-with-concatenation-of-all-words/>`_
-:教学重点: 等长单词分块、需求频次、余数类扫描、超量收缩、重复单词、重叠答案
+:重点: 等长单词分块、需求频次、余数类扫描、超量收缩、重复单词、重叠答案
 
 题目重述
 --------

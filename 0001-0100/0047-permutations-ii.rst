@@ -8,7 +8,7 @@
 :难度: Medium
 :主题: 回溯、排序、重复值、同层去重
 :原题: `LeetCode 0047 <https://leetcode.com/problems/permutations-ii/>`_
-:教学重点: 等值分支、used 状态、同层跳过、唯一排列证明
+:重点: 等值分支、used 状态、同层跳过、唯一排列证明
 
 题目重述
 --------

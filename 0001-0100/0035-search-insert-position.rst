@@ -8,7 +8,7 @@
 :难度: Easy
 :主题: 数组、二分查找、插入位置、lower bound
 :原题: `LeetCode 0035 <https://leetcode.com/problems/search-insert-position/>`_
-:教学重点: 第一个大于等于目标的位置、半开区间、命中与缺失统一、末尾插入
+:重点: 第一个大于等于目标的位置、半开区间、命中与缺失统一、末尾插入
 
 题目重述
 --------

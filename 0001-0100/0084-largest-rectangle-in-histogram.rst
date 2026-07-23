@@ -8,7 +8,7 @@
 :难度: Hard
 :主题: 数组、单调栈、区间边界
 :原题: `LeetCode 0084 <https://leetcode.com/problems/largest-rectangle-in-histogram/>`_
-:教学重点: 固定限制高度、首个更矮位置、弹栈结算、尾部哨兵
+:重点: 固定限制高度、首个更矮位置、弹栈结算、尾部哨兵
 
 题目重述
 --------

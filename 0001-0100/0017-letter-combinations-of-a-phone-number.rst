@@ -8,7 +8,7 @@
 :难度: Medium
 :主题: 字符串、回溯、笛卡尔积
 :原题: `LeetCode 0017 <https://leetcode.com/problems/letter-combinations-of-a-phone-number/>`_
-:教学重点: 按键映射、递归层、路径状态、选择与撤销、输出规模
+:重点: 按键映射、递归层、路径状态、选择与撤销、输出规模
 
 题目重述
 --------

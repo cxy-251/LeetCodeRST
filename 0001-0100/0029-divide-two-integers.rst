@@ -8,7 +8,7 @@
 :难度: Medium
 :主题: 整数、加法倍增、贪心、二进制商、溢出边界
 :原题: `LeetCode 0029 <https://leetcode.com/problems/divide-two-integers/>`_
-:教学重点: 禁用乘除取模、负数域、倍增表、降序消去、向零截断、``INT_MIN``
+:重点: 禁用乘除取模、负数域、倍增表、降序消去、向零截断、``INT_MIN``
 
 题目重述
 --------

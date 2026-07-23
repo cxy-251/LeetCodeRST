@@ -8,7 +8,7 @@
 :难度: Medium
 :主题: 字符串、动态规划、记忆化搜索、滚动数组
 :原题: `LeetCode 0097 <https://leetcode.com/problems/interleaving-string/>`_
-:教学重点: 双前缀状态、来源二选一、长度守恒、左到右覆盖
+:重点: 双前缀状态、来源二选一、长度守恒、左到右覆盖
 
 题目重述
 --------

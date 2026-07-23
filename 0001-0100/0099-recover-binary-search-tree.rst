@@ -8,7 +8,7 @@
 :难度: Medium
 :主题: 二叉搜索树、中序遍历、逆序下降、原地修复
 :原题: `LeetCode 0099 <https://leetcode.com/problems/recover-binary-search-tree/>`_
-:教学重点: 一次或两次下降、首尾错误节点、只交换值、Morris 线索恢复
+:重点: 一次或两次下降、首尾错误节点、只交换值、Morris 线索恢复
 
 题目重述
 --------

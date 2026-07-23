@@ -8,7 +8,7 @@
 :难度: Easy
 :主题: 数组、双指针、原地覆盖、有序去重
 :原题: `LeetCode 0026 <https://leetcode.com/problems/remove-duplicates-from-sorted-array/>`_
-:教学重点: 连续重复段、读写指针、有效前缀、向前覆盖安全性
+:重点: 连续重复段、读写指针、有效前缀、向前覆盖安全性
 
 题目重述
 --------

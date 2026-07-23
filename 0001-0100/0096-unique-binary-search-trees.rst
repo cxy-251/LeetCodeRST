@@ -8,7 +8,7 @@
 :难度: Medium
 :主题: 动态规划、Catalan 数、二叉搜索树
 :原题: `LeetCode 0096 <https://leetcode.com/problems/unique-binary-search-trees/>`_
-:教学重点: 节点数状态、根位置划分、左右计数乘法、空树单位元
+:重点: 节点数状态、根位置划分、左右计数乘法、空树单位元
 
 题目重述
 --------

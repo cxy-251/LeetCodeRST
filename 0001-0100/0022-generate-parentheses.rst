@@ -8,7 +8,7 @@
 :难度: Medium
 :主题: 回溯、括号序列、前缀约束、Catalan 数
 :原题: `LeetCode 0022 <https://leetcode.com/problems/generate-parentheses/>`_
-:教学重点: 合法前缀、选择与撤销、不可恢复分支剪枝、完整性与唯一性、输出规模
+:重点: 合法前缀、选择与撤销、不可恢复分支剪枝、完整性与唯一性、输出规模
 
 题目重述
 --------

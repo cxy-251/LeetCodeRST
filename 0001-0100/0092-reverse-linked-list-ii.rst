@@ -8,7 +8,7 @@
 :难度: Medium
 :主题: 单链表、区间反转、哨兵节点、原地重连
 :原题: `LeetCode 0092 <https://leetcode.com/problems/reverse-linked-list-ii/>`_
-:教学重点: 区间前驱、固定区间尾、逐节点头插、节点守恒
+:重点: 区间前驱、固定区间尾、逐节点头插、节点守恒
 
 题目重述
 --------

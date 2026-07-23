@@ -8,7 +8,7 @@
 :难度: Hard
 :主题: 字符串、递归、记忆化、动态规划
 :原题: `LeetCode 0010 <https://leetcode.com/problems/regular-expression-matching/>`_
-:教学重点: 完整匹配、后缀状态、点号单字符匹配、星号零次或多次、依赖顺序
+:重点: 完整匹配、后缀状态、点号单字符匹配、星号零次或多次、依赖顺序
 
 题目重述
 --------

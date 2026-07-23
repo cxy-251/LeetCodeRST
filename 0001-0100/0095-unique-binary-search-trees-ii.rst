@@ -8,7 +8,7 @@
 :难度: Medium
 :主题: 二叉搜索树、分治、Catalan 结构、树构造
 :原题: `LeetCode 0095 <https://leetcode.com/problems/unique-binary-search-trees-ii/>`_
-:教学重点: 根值分治、左右区间笛卡尔积、空树占位、结果节点独立性
+:重点: 根值分治、左右区间笛卡尔积、空树占位、结果节点独立性
 
 题目重述
 --------

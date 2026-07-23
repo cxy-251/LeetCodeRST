@@ -8,7 +8,7 @@
 :难度: Hard
 :主题: 字符串、滑动窗口、频次计数
 :原题: `LeetCode 0076 <https://leetcode.com/problems/minimum-window-substring/>`_
-:教学重点: 重复字符需求、缺口计数、可行窗口收缩、最短区间提交
+:重点: 重复字符需求、缺口计数、可行窗口收缩、最短区间提交
 
 题目重述
 --------

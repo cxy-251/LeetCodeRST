@@ -8,7 +8,7 @@
 :难度: Medium
 :主题: 字符串、哈希表、滑动窗口
 :原题: `LeetCode 0003 <https://leetcode.com/problems/longest-substring-without-repeating-characters/>`_
-:教学重点: 连续子串搜索空间、合法窗口、最后位置索引、左边界单调跳跃
+:重点: 连续子串搜索空间、合法窗口、最后位置索引、左边界单调跳跃
 
 题目重述
 --------

@@ -8,7 +8,7 @@
 :难度: Easy
 :主题: 字符串、纵向扫描、候选收缩、排序
 :原题: `LeetCode 0014 <https://leetcode.com/problems/longest-common-prefix/>`_
-:教学重点: 前缀连续性、逐列验证、首次冲突、排序端点
+:重点: 前缀连续性、逐列验证、首次冲突、排序端点
 
 题目重述
 --------

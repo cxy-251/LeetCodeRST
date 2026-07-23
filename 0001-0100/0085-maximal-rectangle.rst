@@ -8,7 +8,7 @@
 :难度: Hard
 :主题: 矩阵、动态柱高、单调栈
 :原题: `LeetCode 0085 <https://leetcode.com/problems/maximal-rectangle/>`_
-:教学重点: 固定底边、连续 1 高度、柱状图复用、二维覆盖
+:重点: 固定底边、连续 1 高度、柱状图复用、二维覆盖
 
 题目重述
 --------

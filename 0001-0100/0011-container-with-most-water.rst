@@ -8,7 +8,7 @@
 :难度: Medium
 :主题: 数组、双指针、贪心、上界排除
 :原题: `LeetCode 0011 <https://leetcode.com/problems/container-with-most-water/>`_
-:教学重点: 面积公式、短板效应、两端指针、整批候选排除、乘积类型
+:重点: 面积公式、短板效应、两端指针、整批候选排除、乘积类型
 
 题目重述
 --------
