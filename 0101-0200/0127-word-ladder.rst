@@ -8,24 +8,31 @@
 :难度: Hard
 :主题: 图、广度优先搜索、哈希集合、字符串
 :原题: `LeetCode 0127 <https://leetcode.com/problems/word-ladder/>`_
-:重点: 隐式图、BFS 分层、入队即标记、单词数与边数
+:重点: 最短序列长度、单字符变换、起点计入长度、不可达返回零
 
 题目重述
 --------
 
-给定起始单词 ``beginWord``、目标单词 ``endWord`` 和字典 ``wordList``。每次变换只能修改一个字母，并且变换后的单词必须存在于字典中。返回最短变换序列包含的单词数量；若无法完成变换，则返回 0。
+给定起始单词 ``beginWord``、目标单词 ``endWord`` 和字典 ``wordList``。每一步必须恰好修改一个字母，并且修改后的单词必须存在于 ``wordList`` 中；``beginWord`` 本身可以不在字典中。返回从起点到终点的最短变换序列所包含的单词数量，起点和终点都计入长度；若无法到达 ``endWord``，返回 ``0``。
+
+所有单词长度相同且只包含小写英文字母。单词长度在 ``1..10`` 范围内，``wordList`` 长度在 ``1..5000`` 范围内，字典中的单词互不相同，且 ``beginWord != endWord``。
 
 自建示例
 --------
 
 .. code-block:: text
 
-   hit -> hot -> dot -> dog -> cog
-   边数为 4，序列单词数为 5。
+   输入：beginWord = "cold", endWord = "warm"
+         wordList = ["cord","card","ward","warm","bold","bald"]
+   输出：5
+   解释：最短序列之一是 cold -> cord -> card -> ward -> warm，共包含 5 个单词。
 
 .. code-block:: text
 
-   endWord 不在字典 -> 0
+   输入：beginWord = "abc", endWord = "xyz"
+         wordList = ["xbc","xyc","ayz"]
+   输出：0
+   解释：字典中的单词无法连成一条从 abc 到 xyz 的完整变换路径。
 
 C++ 实现
 --------
