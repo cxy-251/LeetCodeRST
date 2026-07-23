@@ -6,10 +6,9 @@
 
 :题号: 0181
 :难度: Easy
-:类型: Database
 :主题: SQL、自连接、层级关系
 :原题: `LeetCode 181 <https://leetcode.com/problems/employees-earning-more-than-their-managers/>`_
-:教学重点: 将员工行与经理行按 ``managerId = id`` 自连接，再比较两者薪资。
+:重点: 将员工行与经理行按 ``managerId = id`` 自连接，再比较两者薪资。
 
 题目重述
 --------
