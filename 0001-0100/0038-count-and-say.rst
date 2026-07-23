@@ -6,24 +6,45 @@
 
 :题号: 0038
 :难度: Medium
-:主题: 字符串、游程编码、迭代生成、输出敏感复杂度
+:主题: 字符串、游程编码、递推
 :原题: `LeetCode 0038 <https://leetcode.com/problems/count-and-say/>`_
-:重点: 最大连续段、双指针扫描、计数文本拼接、逐项归纳
+:重点: 相邻相同字符分组、数量后接字符、逐项递推
 
 题目重述
 --------
 
-序列第 1 项为 ``"1"``。第 ``k+1`` 项通过从左到右描述第 ``k`` 项中每个最大连续相同数字段得到。给定正整数 ``n``，返回第 ``n`` 项。
+定义字符串序列 ``countAndSay``：第一项为 ``"1"``；从第二项开始，每一项都是对前一项进行游程描述得到的字符串。
+
+描述时从左向右把连续相同字符分成若干组，并对每组依次写出“该字符连续出现的次数”和“该字符本身”。给定整数 ``n``，返回序列的第 ``n`` 项。
+
+``n`` 位于 ``[1, 30]``。
 
 自建示例
 --------
 
+第六项：
+
 .. code-block:: text
 
-   "111211" 分组为 "111"、"2"、"11"
-   描述为 "31" + "12" + "21" = "311221"
+   输入：n = 6
+   输出："312211"
+   解释：序列依次为 "1"、"11"、"21"、"1211"、"111221"、"312211"。第五项包含三个 1、两个 2、一个 1，所以描述为 "312211"。
 
-两个由其他数字隔开的 ``1`` 段不能合并统计；规则描述的是连续段，不是全局频次。
+第一项：
+
+.. code-block:: text
+
+   输入：n = 1
+   输出："1"
+   解释：第一项由定义直接给出，不需要描述前一项。
+
+连续组必须分别描述：
+
+.. code-block:: text
+
+   输入：n = 5
+   输出："111221"
+   解释：第四项 "1211" 应分成 "1"、"2"、"11" 三个连续组，分别描述为 "11"、"12"、"21"。
 
 C++ 实现
 --------
@@ -34,6 +55,11 @@ C++ 实现
 
    class Solution {
    private:
+       std::string recursive(int n) {
+           if (n == 1) return "1";
+           return describe(recursive(n - 1));
+       }
+
        std::string describe(const std::string& current) {
            std::string next;
            for (int start = 0; start < static_cast<int>(current.size());) {
@@ -46,97 +72,81 @@ C++ 实现
            return next;
        }
 
-       std::string recursiveGenerate(int n) {
-           if (n == 1) return "1";
-           return describe(recursiveGenerate(n - 1));
-       }
-
-       std::string manualBuffer(int n) {
+       std::string iterative(int n) {
            std::string current = "1";
-           for (int step = 1; step < n; ++step) {
-               std::string next;
-               int start = 0;
-               while (start < static_cast<int>(current.size())) {
-                   int end = start;
-                   while (end < static_cast<int>(current.size()) && current[end] == current[start]) ++end;
-                   next.append(std::to_string(end - start));
-                   next.push_back(current[start]);
-                   start = end;
-               }
-               current.swap(next);
-           }
-           return current;
-       }
-
-       std::string iterativeDescribe(int n) {
-           std::string current = "1";
-           for (int step = 1; step < n; ++step) current = describe(current);
+           for (int term = 2; term <= n; ++term) current = describe(current);
            return current;
        }
 
    public:
        std::string countAndSay(int n) {
-           return iterativeDescribe(n);
+           return iterative(n);
        }
    };
 
 题解
 ----
 
-单次变换为什么是游程编码
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-输入字符串被唯一划分为若干最大连续相同字符段。每段由字符和长度确定，编码为 ``十进制长度 + 字符``。例如连续三个 ``'1'`` 写成 ``"31"``。段必须最大化，否则同一输入会产生多种错误描述。
-
-双指针如何划分连续段
+序列递推依赖什么信息
 ~~~~~~~~~~~~~~~~~~~~
 
-``start`` 指向未编码段首，``end`` 向右越过所有与 ``current[start]`` 相同的字符。半开区间 ``[start,end)`` 长度为 ``end-start``。追加计数和段字符后令 ``start=end``，因此每个输入字符恰好属于一个段。
+第 ``n`` 项只依赖第 ``n-1`` 项，不需要保存更早字符串。无论递归还是迭代，核心子过程都是对一个字符串进行游程编码：
+把最大连续相同字符段转换成“长度 + 字符”。
+
+为什么必须按连续段计数
+~~~~~~~~~~~~~~~~~~~~
+
+描述的是读取顺序中的相邻重复，不是全局字符频率。例如 ``1211`` 中三个字符 ``1`` 分属首部单个 1 和末尾两个 1，
+不能合并成“3 个 1”，因为中间有字符 2 分隔。
+
+双指针如何找到一个完整字符段
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``start`` 指向当前段首，``end`` 从下一位置向右移动，直到越界或字符改变。此时半开区间 ``[start,end)`` 恰好是一个
+最大连续段，长度为 ``end-start``。写入描述后令 ``start=end``，继续处理下一段。
+
+状态演化
+~~~~~~~~
+
+描述 ``111221``：
 
 .. list-table::
    :header-rows: 1
 
-   * - ``start``
-     - ``end``
-     - 段
-     - 输出追加
-   * - 0
+   * - 连续段
+     - 长度
+     - 输出片段
+     - 累计结果
+   * - ``111``
      - 3
-     - ``111``
      - ``31``
-   * - 3
-     - 4
-     - ``2``
-     - ``12``
-   * - 4
-     - 6
+     - ``31``
+   * - ``22``
+     - 2
+     - ``22``
+     - ``3122``
+   * - ``1``
+     - 1
      - ``11``
-     - ``21``
+     - ``312211``
 
-为什么不能统计整个字符串的频次
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+为什么每轮描述结果唯一
+~~~~~~~~~~~~~~~~~~~~~~
 
-``"121"`` 中虽然有两个 ``1``，它们不连续，正确描述是 ``"11" + "12" + "11"``。若使用全局哈希频次，会丢失段顺序与分隔关系，生成错误结果。
+任意字符串都能唯一划分为最大连续相同字符段：段首从第一个字符开始，段尾由第一个不同字符唯一确定。每段的字符和长度
+也随之唯一，因此下一项没有歧义。
 
-递归与迭代如何对应序列定义
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+递归与迭代的取舍
+~~~~~~~~~~~~~~~~
 
-递归版本先求第 ``n-1`` 项，再执行一次 ``describe``，形式接近数学定义，但调用栈为 ``O(n)``。迭代从 ``"1"`` 开始，每轮只保留当前项和下一项，执行 ``n-1`` 次变换，状态更直接。
-
-为什么迭代结果正确
-~~~~~~~~~~~~~~~~~~
-
-对项编号归纳：初始 ``current="1"`` 正确表示第 1 项。假设某轮开始时 ``current`` 是第 ``k`` 项；双指针把它完整且唯一地划分为最大连续段，并对每段追加准确长度与字符，所以 ``describe(current)`` 正是第 ``k+1`` 项。执行 ``n-1`` 轮后得到第 ``n`` 项。
-
-缓冲区更新为什么不能原地覆盖当前项
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-输出长度与输入长度不同，且生成前部输出可能破坏后续尚未读取字符。使用独立 ``next`` 缓冲区完成整轮编码，再交换为 ``current``，能保证读取项在本轮保持不变。
+递归定义最贴近数学序列，但需要 ``O(n)`` 调用栈，并在回溯时构造每一项。迭代只维护当前项，逐轮替换，控制流更直接，
+标准入口采用迭代。
 
 复杂度来源
 ~~~~~~~~~~
 
-设第 ``k`` 项长度为 ``L_k``。每次变换线性扫描当前项并写出下一项，总时间为 ``O(L_1+...+L_n)``；每轮只保存当前和下一字符串，工作空间 ``O(L_n)``。递归版本额外使用 ``O(n)`` 调用栈。
+设第 ``i`` 项长度为 ``L_i``，生成第 ``n`` 项的总时间为 ``O(\sum_{i=1}^{n} L_i)``；最后一轮与返回字符串空间为
+``O(L_n)``。迭代除当前项和下一项外不保存历史序列。
 
 九语言实现
 ----------
@@ -146,18 +156,11 @@ C
 
 .. code-block:: c
 
-   char *countAndSay(int n) {
-       char *current = malloc(2); strcpy(current, "1");
-       for (int step = 1; step < n; ++step) {
-           int length = (int)strlen(current), capacity = length * 3 + 16, used = 0;
-           char *next = malloc((size_t)capacity);
-           for (int start = 0; start < length;) {
-               int end = start + 1; while (end < length && current[end] == current[start]) ++end;
-               used += snprintf(next + used, (size_t)(capacity - used), "%d%c", end - start, current[start]);
-               start = end;
-           }
-           next[used] = '\0'; free(current); current = next;
-       }
+   char* countAndSay(int n){
+       char* current=malloc(2);strcpy(current,"1");
+       for(int term=2;term<=n;term++){int len=(int)strlen(current);char* next=malloc((size_t)(2*len+16));int write=0;
+           for(int start=0;start<len;){int end=start+1;while(end<len&&current[end]==current[start])end++;write+=sprintf(next+write,"%d%c",end-start,current[start]);start=end;}
+           next[write]='\0';free(current);current=next;}
        return current;
    }
 
@@ -168,17 +171,14 @@ Python
 
    class Solution:
        def countAndSay(self, n: int) -> str:
-           current = "1"
-           for _ in range(n - 1):
-               parts = []
-               start = 0
-               while start < len(current):
-                   end = start + 1
-                   while end < len(current) and current[end] == current[start]:
-                       end += 1
-                   parts.append(str(end - start)); parts.append(current[start])
-                   start = end
-               current = "".join(parts)
+           current="1"
+           for _ in range(2,n+1):
+               pieces=[];start=0
+               while start<len(current):
+                   end=start+1
+                   while end<len(current) and current[end]==current[start]:end+=1
+                   pieces.append(str(end-start));pieces.append(current[start]);start=end
+               current="".join(pieces)
            return current
 
 Java
@@ -187,20 +187,7 @@ Java
 .. code-block:: java
 
    class Solution {
-       public String countAndSay(int n) {
-           String current = "1";
-           for (int step = 1; step < n; step++) {
-               StringBuilder next = new StringBuilder();
-               for (int start = 0; start < current.length();) {
-                   int end = start + 1;
-                   while (end < current.length() && current.charAt(end) == current.charAt(start)) end++;
-                   next.append(end - start).append(current.charAt(start));
-                   start = end;
-               }
-               current = next.toString();
-           }
-           return current;
-       }
+       public String countAndSay(int n){String current="1";for(int term=2;term<=n;term++){StringBuilder next=new StringBuilder();for(int start=0;start<current.length();){int end=start+1;while(end<current.length()&&current.charAt(end)==current.charAt(start))end++;next.append(end-start).append(current.charAt(start));start=end;}current=next.toString();}return current;}
    }
 
 Rust
@@ -209,17 +196,8 @@ Rust
 .. code-block:: rust
 
    impl Solution {
-       pub fn count_and_say(n: i32) -> String {
-           let mut current = String::from("1");
-           for _ in 1..n {
-               let bytes = current.as_bytes(); let mut next = String::new(); let mut start = 0;
-               while start < bytes.len() {
-                   let mut end = start + 1; while end < bytes.len() && bytes[end] == bytes[start] { end += 1; }
-                   next.push_str(&(end - start).to_string()); next.push(bytes[start] as char); start = end;
-               }
-               current = next;
-           }
-           current
+       pub fn count_and_say(n:i32)->String{
+           let mut current=String::from("1");for _ in 2..=n{let b=current.as_bytes();let mut next=String::new();let mut start=0;while start<b.len(){let mut end=start+1;while end<b.len()&&b[end]==b[start]{end+=1;}next.push_str(&(end-start).to_string());next.push(b[start] as char);start=end;}current=next;}current
        }
    }
 
@@ -228,18 +206,8 @@ Go
 
 .. code-block:: go
 
-   func countAndSay(n int) string {
-       current := "1"
-       for step := 1; step < n; step++ {
-           var next strings.Builder
-           for start := 0; start < len(current); {
-               end := start + 1
-               for end < len(current) && current[end] == current[start] { end++ }
-               next.WriteString(strconv.Itoa(end-start)); next.WriteByte(current[start]); start = end
-           }
-           current = next.String()
-       }
-       return current
+   func countAndSay(n int)string{
+       current:="1";for term:=2;term<=n;term++{var next strings.Builder;for start:=0;start<len(current);{end:=start+1;for end<len(current)&&current[end]==current[start]{end++};next.WriteString(strconv.Itoa(end-start));next.WriteByte(current[start]);start=end};current=next.String()};return current
    }
 
 TypeScript
@@ -247,18 +215,8 @@ TypeScript
 
 .. code-block:: typescript
 
-   function countAndSay(n: number): string {
-       let current = "1";
-       for (let step = 1; step < n; step++) {
-           const parts: string[] = [];
-           for (let start = 0; start < current.length;) {
-               let end = start + 1;
-               while (end < current.length && current[end] === current[start]) end++;
-               parts.push(String(end - start), current[start]); start = end;
-           }
-           current = parts.join("");
-       }
-       return current;
+   function countAndSay(n:number):string{
+       let current="1";for(let term=2;term<=n;term++){let next="";for(let start=0;start<current.length;){let end=start+1;while(end<current.length&&current[end]===current[start])end++;next+=String(end-start)+current[start];start=end;}current=next;}return current;
    }
 
 C#
@@ -267,19 +225,7 @@ C#
 .. code-block:: csharp
 
    public class Solution {
-       public string CountAndSay(int n) {
-           string current = "1";
-           for (int step = 1; step < n; step++) {
-               var next = new System.Text.StringBuilder();
-               for (int start = 0; start < current.Length;) {
-                   int end = start + 1;
-                   while (end < current.Length && current[end] == current[start]) end++;
-                   next.Append(end - start).Append(current[start]); start = end;
-               }
-               current = next.ToString();
-           }
-           return current;
-       }
+       public string CountAndSay(int n){string current="1";for(int term=2;term<=n;term++){var next=new StringBuilder();for(int start=0;start<current.Length;){int end=start+1;while(end<current.Length&&current[end]==current[start])end++;next.Append(end-start).Append(current[start]);start=end;}current=next.ToString();}return current;}
    }
 
 Julia
@@ -288,19 +234,7 @@ Julia
 .. code-block:: julia
 
    function count_and_say(n::Int)
-       current = "1"
-       for _ in 2:n
-           chars = collect(current); io = IOBuffer(); start = 1
-           while start <= length(chars)
-               stop = start + 1
-               while stop <= length(chars) && chars[stop] == chars[start]
-                   stop += 1
-               end
-               print(io, stop - start, chars[start]); start = stop
-           end
-           current = String(take!(io))
-       end
-       current
+       current="1";for _ in 2:n;chars=collect(current);io=IOBuffer();start=1;while start<=length(chars);stop=start+1;while stop<=length(chars)&&chars[stop]==chars[start];stop+=1;end;print(io,stop-start,chars[start]);start=stop;end;current=String(take!(io));end;current
    end
 
 R
@@ -309,15 +243,6 @@ R
 .. code-block:: r
 
    count_and_say <- function(n) {
-     current <- "1"
-     if (n >= 2L) for (step in 2:n) {
-       chars <- strsplit(current, "", fixed = TRUE)[[1]]; parts <- character(); start <- 1L
-       while (start <= length(chars)) {
-         stop <- start + 1L
-         while (stop <= length(chars) && chars[[stop]] == chars[[start]]) stop <- stop + 1L
-         parts <- c(parts, as.character(stop - start), chars[[start]]); start <- stop
-       }
-       current <- paste(parts, collapse = "")
-     }
-     current
+       current<-"1";if(n>=2L)for(term in 2:n){chars<-strsplit(current,"",fixed=TRUE)[[1]];parts<-character();start<-1L
+           while(start<=length(chars)){end<-start+1L;while(end<=length(chars)&&chars[[end]]==chars[[start]])end<-end+1L;parts<-c(parts,as.character(end-start),chars[[start]]);start<-end};current<-paste(parts,collapse="")};current
    }
