@@ -27,7 +27,7 @@
 .. code-block:: text
 
    调用：inc("apple"), inc("pear"), inc("apple"), getMaxKey(), getMinKey()
-   输出：true 状态后的查询依次返回 "apple"、"pear"
+   查询输出："apple"、"pear"
    解释：apple 的计数为 2，pear 的计数为 1，因此最大键和最小键分别唯一确定。
 
 计数降到零后删除：
@@ -35,5 +35,5 @@
 .. code-block:: text
 
    调用：inc("x"), dec("x"), getMaxKey(), getMinKey()
-   输出：""、""
+   查询输出：""、""
    解释：dec 后 x 的计数变为 0 并被删除，结构重新为空。
