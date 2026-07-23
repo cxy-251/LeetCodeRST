@@ -8,7 +8,7 @@
 :难度: Hard
 :主题: 数组、有限交易次数、动态规划、状态机
 :原题: `LeetCode 0123 <https://leetcode.com/problems/best-time-to-buy-and-sell-stock-iii/>`_
-:教学重点: 两次交易阶段、持仓与空仓、旧状态快照、常数空间压缩
+:重点: 两次交易阶段、持仓与空仓、旧状态快照、常数空间压缩
 
 题目重述
 --------
