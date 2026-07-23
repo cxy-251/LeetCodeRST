@@ -8,7 +8,7 @@
 :难度: Hard
 :主题: 字符串、动态规划、组合计数、滚动数组
 :原题: `LeetCode 0115 <https://leetcode.com/problems/distinct-subsequences/>`_
-:教学重点: 使用或跳过、前缀计数、逆序覆盖、中间计数饱和
+:重点: 使用或跳过、前缀计数、逆序覆盖、中间计数饱和
 
 题目重述
 --------
