@@ -1,32 +1,50 @@
 0034. Find First and Last Position of Element in Sorted Array
-=============================================================
+============================================================
 
 题目信息
 --------
 
 :题号: 0034
 :难度: Medium
-:主题: 数组、二分查找、边界定位、重复元素
+:主题: 数组、二分查找、边界定位
 :原题: `LeetCode 0034 <https://leetcode.com/problems/find-first-and-last-position-of-element-in-sorted-array/>`_
-:重点: lower bound、upper bound、半开区间、存在性验证、重复值边界
+:重点: 非递减数组、目标值连续区间、首尾零基下标、对数时间要求
 
 题目重述
 --------
 
-给定非递减数组 ``nums`` 和目标值 ``target``，返回目标第一次与最后一次出现的零基下标。目标不存在时返回 ``[-1,-1]``，整体时间必须是 ``O(log n)``。
+给定按非递减顺序排列的整数数组 ``nums`` 和整数 ``target``，返回目标值在数组中第一次和最后一次出现的零基下标 ``[first, last]``。
+
+若数组中不存在目标值，返回 ``[-1, -1]``。要求算法的时间复杂度为 ``O(log n)``。
+
+``nums`` 的长度位于 ``[0, 10^5]``，数组元素和 ``target`` 均位于 ``[-10^9, 10^9]``。
 
 自建示例
 --------
 
-.. code-block:: text
-
-   nums = [1,2,2,2,4,7], target = 2
-   lower_bound = 1，upper_bound = 4，答案 [1,3]。
+目标值连续出现多次：
 
 .. code-block:: text
 
-   nums = [1,2,4,6], target = 3
-   lower_bound = 2，但 nums[2] = 4，因此目标不存在。
+   输入：nums = [1, 2, 2, 2, 2, 5, 8], target = 2
+   输出：[1, 4]
+   解释：值 2 第一次出现在下标 1，最后一次出现在下标 4。
+
+目标只出现一次：
+
+.. code-block:: text
+
+   输入：nums = [-3, 0, 4, 7], target = 4
+   输出：[2, 2]
+   解释：目标值只位于下标 2，因此左右边界相同。
+
+目标不存在：
+
+.. code-block:: text
+
+   输入：nums = [1, 3, 5, 7], target = 4
+   输出：[-1, -1]
+   解释：数组中没有值 4。
 
 C++ 实现
 --------
@@ -48,119 +66,97 @@ C++ 实现
            return {first, last};
        }
 
-       int findAny(const std::vector<int>& nums, int target) {
-           int left = 0, right = static_cast<int>(nums.size()) - 1;
-           while (left <= right) {
-               int mid = left + (right - left) / 2;
-               if (nums[mid] == target) return mid;
-               if (nums[mid] < target) left = mid + 1;
-               else right = mid - 1;
+       int lowerBound(const std::vector<int>& nums, long long value) {
+           int low = 0, high = static_cast<int>(nums.size());
+           while (low < high) {
+               int mid = low + (high - low) / 2;
+               if (nums[mid] < value) low = mid + 1;
+               else high = mid;
            }
-           return -1;
+           return low;
        }
 
-       std::vector<int> binaryThenExpand(const std::vector<int>& nums, int target) {
-           int hit = findAny(nums, target);
-           if (hit == -1) return {-1, -1};
-           int first = hit, last = hit;
-           while (first > 0 && nums[first - 1] == target) --first;
-           while (last + 1 < static_cast<int>(nums.size()) && nums[last + 1] == target) ++last;
-           return {first, last};
-       }
-
-       int lowerBound(const std::vector<int>& nums, int target) {
-           int left = 0, right = static_cast<int>(nums.size());
-           while (left < right) {
-               int mid = left + (right - left) / 2;
-               if (nums[mid] < target) left = mid + 1;
-               else right = mid;
-           }
-           return left;
-       }
-
-       int upperBound(const std::vector<int>& nums, int target) {
-           int left = 0, right = static_cast<int>(nums.size());
-           while (left < right) {
-               int mid = left + (right - left) / 2;
-               if (nums[mid] <= target) left = mid + 1;
-               else right = mid;
-           }
-           return left;
-       }
-
-       std::vector<int> twoBounds(const std::vector<int>& nums, int target) {
+       std::vector<int> twoBoundaries(const std::vector<int>& nums, int target) {
            int first = lowerBound(nums, target);
            if (first == static_cast<int>(nums.size()) || nums[first] != target) return {-1, -1};
-           return {first, upperBound(nums, target) - 1};
+           int after = lowerBound(nums, static_cast<long long>(target) + 1);
+           return {first, after - 1};
        }
 
    public:
        std::vector<int> searchRange(std::vector<int>& nums, int target) {
-           return twoBounds(nums, target);
+           return twoBoundaries(nums, target);
        }
    };
 
 题解
 ----
 
-任意命中为什么还不够
-~~~~~~~~~~~~~~~~~~~~
+普通二分命中为何不能直接返回
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-普通二分只保证找到某一个目标位置。若命中后向左右扩展，在数组全部等于目标时仍要扫描 ``O(n)`` 个元素。要保持对数复杂度，左右边界本身也必须通过二分定位。
+普通二分找到的任意一个目标位置未必是首尾边界。命中后向两侧线性扩展最坏仍会遍历全部重复段，无法满足
+``O(log n)``。需要把“找到目标”改为“找到满足条件的第一个位置”。
 
-边界如何改写成插入位置
-~~~~~~~~~~~~~~~~~~~~~~
+下界函数维护什么搜索语义
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-定义：
+``lowerBound(value)`` 返回第一个满足 ``nums[index] >= value`` 的下标，搜索半开区间 ``[low, high)``：
 
-* ``lower_bound(target)``：第一个满足 ``nums[i] >= target`` 的位置；
-* ``upper_bound(target)``：第一个满足 ``nums[i] > target`` 的位置。
+* ``nums[mid] < value`` 时，``mid`` 及左侧都不可能是答案，令 ``low = mid + 1``；
+* 否则 ``mid`` 可能就是第一个满足位置，保留到右边界，令 ``high = mid``。
 
-目标存在时，它的所有副本连续排列，因此首位置等于下界，末位置等于上界减一。
+循环结束时区间收缩为一个插入位置，即第一个不小于 ``value`` 的位置。
 
-半开区间为何允许返回 n
-~~~~~~~~~~~~~~~~~~~~~~
+如何用两个下界得到闭区间答案
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-两个函数都维护 ``[left,right)``，初始 ``[0,n)``。``right`` 可以等于 ``n``，表示边界位于数组末尾之后。当 ``left == right`` 时，左侧元素均不满足边界条件，当前位置及右侧满足，返回值自然兼容空数组和末尾插入。
+第一次计算 ``first = lowerBound(target)``。若越界或 ``nums[first] != target``，目标不存在。
 
-相等值在两个边界中如何归类
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-求下界时，``nums[mid] == target`` 已满足“大于等于”，但可能不是第一个，因此令 ``right = mid``。求上界时，相等值仍属于边界左侧，必须令 ``left = mid + 1``。唯一差异是比较条件 ``<`` 与 ``<=``，它决定相等元素被保留在哪一侧。
+目标存在时，再求第一个严格大于目标的位置。整数数组中可写为 ``lowerBound(target + 1)``，记为 ``after``；最后一个
+目标位置就是 ``after - 1``。代码把边界值提升为 ``long long``，避免 ``target + 1`` 在整数上界溢出。
 
 状态演化
 ~~~~~~~~
 
+对 ``[1,2,2,2,2,5,8]`` 查找下界 2：
+
 .. list-table::
    :header-rows: 1
 
-   * - 搜索
-     - 条件
-     - 左侧已排除元素
-     - 右侧保证
-   * - lower bound
-     - ``nums[mid] < target`` 才右移
-     - 全部 ``< target``
-     - 全部 ``>= target``
-   * - upper bound
-     - ``nums[mid] <= target`` 才右移
-     - 全部 ``<= target``
-     - 全部 ``> target``
+   * - ``low``
+     - ``mid``
+     - ``high``
+     - ``nums[mid]``
+     - 更新
+   * - 0
+     - 3
+     - 7
+     - 2
+     - ``high = 3``
+   * - 0
+     - 1
+     - 3
+     - 2
+     - ``high = 1``
+   * - 0
+     - 0
+     - 1
+     - 1
+     - ``low = 1``
 
-为什么还要验证目标存在
-~~~~~~~~~~~~~~~~~~~~~~
+得到首位置 1。对值 3 求下界得到 5，因此末位置为 4。
 
-下界始终返回合法插入位置，即使目标不存在也如此。例如在 ``[1,2,4]`` 中查找 3，下界为 2，但该位置值为 4。因此必须验证 ``first < n`` 且 ``nums[first] == target``；失败时返回 ``[-1,-1]``。
+为什么两个边界不会遗漏重复值
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-为什么两个边界准确
-~~~~~~~~~~~~~~~~~~
-
-下界循环结束时，``first`` 左侧全部小于目标，``first`` 及右侧全部大于等于目标，所以它是第一个可能等于目标的位置。上界左侧全部小于等于目标，右侧全部严格大于目标，所以 ``upper-1`` 是最后一个可能等于目标的位置。目标存在时连续重复段正好夹在这两个边界之间。
+有序性保证所有等于目标的元素形成一个连续区间。第一个不小于目标的位置若确实等于目标，就是区间左端；第一个大于
+目标的位置之前，所有不小于目标的值只能等于目标，因此其前一位就是区间右端。
 
 复杂度来源
 ~~~~~~~~~~
 
-两次边界二分各为 ``O(log n)``，总时间仍为 ``O(log n)``，额外空间 ``O(1)``。命中后扩展最坏退化为 ``O(n)``。
+两次二分各为 ``O(log n)``，总时间仍为 ``O(log n)``，额外空间 ``O(1)``。线性扫描为 ``O(n)``，仅作基准。
 
 九语言实现
 ----------
@@ -170,21 +166,13 @@ C
 
 .. code-block:: c
 
-   static int bound(int *nums, int n, int target, int upper) {
-       int left = 0, right = n;
-       while (left < right) {
-           int mid = left + (right - left) / 2;
-           if (nums[mid] < target || (upper && nums[mid] == target)) left = mid + 1;
-           else right = mid;
-       }
-       return left;
+   static int lower_bound_value(int* nums,int n,long long value){
+       int low=0,high=n;while(low<high){int mid=low+(high-low)/2;if(nums[mid]<value)low=mid+1;else high=mid;}return low;
    }
-   int *searchRange(int *nums, int n, int target, int *returnSize) {
-       int *answer = malloc(2 * sizeof(int)); *returnSize = 2;
-       int first = bound(nums, n, target, 0);
-       if (first == n || nums[first] != target) answer[0] = answer[1] = -1;
-       else { answer[0] = first; answer[1] = bound(nums, n, target, 1) - 1; }
-       return answer;
+   int* searchRange(int* nums,int n,int target,int* returnSize){
+       int* result=malloc(2*sizeof(int));*returnSize=2;int first=lower_bound_value(nums,n,target);
+       if(first==n||nums[first]!=target){result[0]=result[1]=-1;return result;}
+       int after=lower_bound_value(nums,n,(long long)target+1);result[0]=first;result[1]=after-1;return result;
    }
 
 Python
@@ -194,19 +182,16 @@ Python
 
    class Solution:
        def searchRange(self, nums: list[int], target: int) -> list[int]:
-           def bound(upper: bool) -> int:
-               left, right = 0, len(nums)
-               while left < right:
-                   mid = left + (right - left) // 2
-                   if nums[mid] < target or (upper and nums[mid] == target):
-                       left = mid + 1
-                   else:
-                       right = mid
-               return left
-           first = bound(False)
-           if first == len(nums) or nums[first] != target:
-               return [-1, -1]
-           return [first, bound(True) - 1]
+           def lower(value: int) -> int:
+               low, high = 0, len(nums)
+               while low < high:
+                   mid = low + (high - low) // 2
+                   if nums[mid] < value: low = mid + 1
+                   else: high = mid
+               return low
+           first = lower(target)
+           if first == len(nums) or nums[first] != target: return [-1, -1]
+           return [first, lower(target + 1) - 1]
 
 Java
 ~~~~
@@ -214,20 +199,8 @@ Java
 .. code-block:: java
 
    class Solution {
-       private int bound(int[] nums, int target, boolean upper) {
-           int left = 0, right = nums.length;
-           while (left < right) {
-               int mid = left + (right - left) / 2;
-               if (nums[mid] < target || (upper && nums[mid] == target)) left = mid + 1;
-               else right = mid;
-           }
-           return left;
-       }
-       public int[] searchRange(int[] nums, int target) {
-           int first = bound(nums, target, false);
-           if (first == nums.length || nums[first] != target) return new int[]{-1, -1};
-           return new int[]{first, bound(nums, target, true) - 1};
-       }
+       private int lower(int[] nums,long value){int low=0,high=nums.length;while(low<high){int mid=low+(high-low)/2;if(nums[mid]<value)low=mid+1;else high=mid;}return low;}
+       public int[] searchRange(int[] nums,int target){int first=lower(nums,target);if(first==nums.length||nums[first]!=target)return new int[]{-1,-1};return new int[]{first,lower(nums,(long)target+1)-1};}
    }
 
 Rust
@@ -236,19 +209,9 @@ Rust
 .. code-block:: rust
 
    impl Solution {
-       pub fn search_range(nums: Vec<i32>, target: i32) -> Vec<i32> {
-           fn bound(nums: &[i32], target: i32, upper: bool) -> usize {
-               let (mut left, mut right) = (0usize, nums.len());
-               while left < right {
-                   let mid = left + (right - left) / 2;
-                   if nums[mid] < target || (upper && nums[mid] == target) { left = mid + 1; }
-                   else { right = mid; }
-               }
-               left
-           }
-           let first = bound(&nums, target, false);
-           if first == nums.len() || nums[first] != target { return vec![-1, -1]; }
-           vec![first as i32, bound(&nums, target, true) as i32 - 1]
+       pub fn search_range(nums:Vec<i32>,target:i32)->Vec<i32>{
+           fn lower(nums:&[i32],value:i64)->usize{let(mut low,mut high)=(0,nums.len());while low<high{let mid=low+(high-low)/2;if (nums[mid] as i64)<value{low=mid+1}else{high=mid}}low}
+           let first=lower(&nums,target as i64);if first==nums.len()||nums[first]!=target{return vec![-1,-1]}vec![first as i32,lower(&nums,target as i64+1) as i32-1]
        }
    }
 
@@ -257,18 +220,9 @@ Go
 
 .. code-block:: go
 
-   func searchRange(nums []int, target int) []int {
-       bound := func(upper bool) int {
-           left, right := 0, len(nums)
-           for left < right {
-               mid := left + (right-left)/2
-               if nums[mid] < target || (upper && nums[mid] == target) { left = mid+1 } else { right = mid }
-           }
-           return left
-       }
-       first := bound(false)
-       if first == len(nums) || nums[first] != target { return []int{-1, -1} }
-       return []int{first, bound(true)-1}
+   func searchRange(nums []int,target int)[]int{
+       lower:=func(value int64)int{low,high:=0,len(nums);for low<high{mid:=low+(high-low)/2;if int64(nums[mid])<value{low=mid+1}else{high=mid}};return low}
+       first:=lower(int64(target));if first==len(nums)||nums[first]!=target{return []int{-1,-1}};return []int{first,lower(int64(target)+1)-1}
    }
 
 TypeScript
@@ -276,18 +230,9 @@ TypeScript
 
 .. code-block:: typescript
 
-   function searchRange(nums: number[], target: number): number[] {
-       const bound = (upper: boolean): number => {
-           let left = 0, right = nums.length;
-           while (left < right) {
-               const mid = left + Math.floor((right - left) / 2);
-               if (nums[mid] < target || (upper && nums[mid] === target)) left = mid + 1;
-               else right = mid;
-           }
-           return left;
-       };
-       const first = bound(false);
-       return first === nums.length || nums[first] !== target ? [-1, -1] : [first, bound(true) - 1];
+   function searchRange(nums:number[],target:number):number[]{
+       const lower=(value:number)=>{let low=0,high=nums.length;while(low<high){const mid=low+Math.floor((high-low)/2);if(nums[mid]<value)low=mid+1;else high=mid;}return low;};
+       const first=lower(target);if(first===nums.length||nums[first]!==target)return[-1,-1];return[first,lower(target+1)-1];
    }
 
 C#
@@ -296,19 +241,8 @@ C#
 .. code-block:: csharp
 
    public class Solution {
-       private int Bound(int[] nums, int target, bool upper) {
-           int left = 0, right = nums.Length;
-           while (left < right) {
-               int mid = left + (right - left) / 2;
-               if (nums[mid] < target || (upper && nums[mid] == target)) left = mid + 1;
-               else right = mid;
-           }
-           return left;
-       }
-       public int[] SearchRange(int[] nums, int target) {
-           int first = Bound(nums, target, false);
-           return first == nums.Length || nums[first] != target ? new int[]{-1,-1} : new int[]{first, Bound(nums,target,true)-1};
-       }
+       private int Lower(int[] nums,long value){int low=0,high=nums.Length;while(low<high){int mid=low+(high-low)/2;if(nums[mid]<value)low=mid+1;else high=mid;}return low;}
+       public int[] SearchRange(int[] nums,int target){int first=Lower(nums,target);if(first==nums.Length||nums[first]!=target)return new[]{-1,-1};return new[]{first,Lower(nums,(long)target+1)-1};}
    }
 
 Julia
@@ -316,21 +250,9 @@ Julia
 
 .. code-block:: julia
 
-   function search_range(nums::Vector{Int}, target::Int)
-       function bound(upper)
-           left, right = 1, length(nums) + 1
-           while left < right
-               mid = left + (right - left) ÷ 2
-               if nums[mid] < target || (upper && nums[mid] == target)
-                   left = mid + 1
-               else
-                   right = mid
-               end
-           end
-           left
-       end
-       first = bound(false)
-       first > length(nums) || nums[first] != target ? [-1,-1] : [first-1, bound(true)-2]
+   function search_range(nums::Vector{Int},target::Int)
+       lower(value)=begin;low=1;high=length(nums)+1;while low<high;mid=low+(high-low)÷2;if nums[mid]<value;low=mid+1;else;high=mid;end;end;low;end
+       first=lower(target);if first>length(nums)||nums[first]!=target;return[-1,-1];end;[first-1,lower(target+1)-2]
    end
 
 R
@@ -338,15 +260,7 @@ R
 
 .. code-block:: r
 
-   search_range <- function(nums, target) {
-     bound <- function(upper) {
-       left <- 1L; right <- length(nums) + 1L
-       while (left < right) {
-         mid <- left + (right - left) %/% 2L
-         if (nums[[mid]] < target || (upper && nums[[mid]] == target)) left <- mid + 1L else right <- mid
-       }
-       left
-     }
-     first <- bound(FALSE)
-     if (first > length(nums) || nums[[first]] != target) c(-1L, -1L) else c(first - 1L, bound(TRUE) - 2L)
+   search_range <- function(nums,target) {
+       lower<-function(value){low<-1L;high<-length(nums)+1L;while(low<high){mid<-low+(high-low)%/%2L;if(mid<=length(nums)&&nums[[mid]]<value)low<-mid+1L else high<-mid};low}
+       first<-lower(target);if(first>length(nums)||nums[[first]]!=target)return(c(-1L,-1L));c(first-1L,lower(target+1)-2L)
    }
