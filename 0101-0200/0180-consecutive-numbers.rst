@@ -6,10 +6,9 @@
 
 :题号: 0180
 :难度: Medium
-:类型: Database
 :主题: SQL、自连接、窗口函数、连续记录
 :原题: `LeetCode 180 <https://leetcode.com/problems/consecutive-numbers/>`_
-:教学重点: 必须依据相邻 ``id`` 记录判断连续性，并对最终数字去重。
+:重点: 必须依据相邻 ``id`` 记录判断连续性，并对最终数字去重。
 
 题目重述
 --------
