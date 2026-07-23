@@ -6,10 +6,9 @@
 
 :题号: 0175
 :难度: Easy
-:类型: Database
 :主题: SQL、LEFT JOIN、空值保留
 :原题: `LeetCode 175 <https://leetcode.com/problems/combine-two-tables/>`_
-:教学重点: 以人员表为主表执行左连接，避免丢失没有地址记录的人。
+:重点: 以人员表为主表执行左连接，避免丢失没有地址记录的人。
 
 题目重述
 --------
