@@ -70,10 +70,11 @@ jobs:
           unexpected = actual - expected
           if unexpected:
               raise RuntimeError(f"unexpected changed paths: {sorted(unexpected)}")
-          missing = {"PROGRESS.rst"} | temporary - actual
+          missing = ({"PROGRESS.rst"} | temporary) - actual
           if missing:
               raise RuntimeError(f"required changes missing: {sorted(missing)}")
-          print(f"reviewed={len(heads)} problem_files_changed={len(actual - temporary - {'PROGRESS.rst'})}")
+          changed_problem_files = actual - temporary - {"PROGRESS.rst"}
+          print(f"reviewed={len(heads)} problem_files_changed={len(changed_problem_files)}")
           PY
 
           git diff --check
