@@ -8,23 +8,29 @@
 :难度: Easy
 :主题: 数学、进制转换、字符串
 :原题: `LeetCode 0171 <https://leetcode.com/problems/excel-sheet-column-number/>`_
-:重点: 二十六进制累积、字符映射、溢出边界
+:重点: 大写列标题、A 到 Z 映射、从左累积、32 位结果
 
 题目重述
 --------
 
-给定由大写英文字母组成的 Excel 列标题 ``columnTitle``，返回对应的正整数列号。字母 ``A`` 到 ``Z`` 分别表示数位 1 到 26，例如 ``A`` 对应 1，``Z`` 对应 26，``AA`` 对应 27。
+给定合法的 Excel 列标题 ``columnTitle``，返回它对应的正整数列号。标题只由大写英文字母组成，每个字符 ``A..Z`` 分别代表数值 ``1..26``；例如单字符 ``A`` 对应列 1，多字符标题按相同位置规则继续累积。
+
+``columnTitle`` 的长度在 ``1..7`` 范围内，且对应列号保证在 ``1..2^31 - 1`` 范围内。输入不包含空格、小写字母或其他字符。
 
 自建示例
 --------
 
 .. code-block:: text
 
-   columnTitle = "A"  -> 1
-   columnTitle = "Z"  -> 26
-   columnTitle = "AA" -> 27
-   columnTitle = "AB" -> 28
-   columnTitle = "ZY" -> 701
+   输入：columnTitle = "BC"
+   输出：55
+   解释：B 表示 2，C 表示 3，因此列号为 2 * 26 + 3 = 55。
+
+.. code-block:: text
+
+   输入：columnTitle = "AAA"
+   输出：703
+   解释：列号为 1 * 26^2 + 1 * 26 + 1 = 703。
 
 C++ 实现
 --------
