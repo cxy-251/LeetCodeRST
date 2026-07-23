@@ -6,10 +6,9 @@
 
 :题号: 0177
 :难度: Medium
-:类型: Database
 :主题: SQL 函数、去重、排序、分页
 :原题: `LeetCode 177 <https://leetcode.com/problems/nth-highest-salary/>`_
-:教学重点: 将一基排名转换为查询偏移量，并确保重复薪资不会占用多个名次。
+:重点: 将一基排名转换为查询偏移量，并确保重复薪资不会占用多个名次。
 
 题目重述
 --------
