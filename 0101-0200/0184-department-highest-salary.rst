@@ -6,10 +6,9 @@
 
 :题号: 0184
 :难度: Medium
-:类型: Database
 :主题: SQL、分组最大值、并列保留
 :原题: `LeetCode 184 <https://leetcode.com/problems/department-highest-salary/>`_
-:教学重点: 先确定各部门最高薪资，再回到员工记录保留所有并列者。
+:重点: 先确定各部门最高薪资，再回到员工记录保留所有并列者。
 
 题目重述
 --------
