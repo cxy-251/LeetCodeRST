@@ -6,24 +6,36 @@
 
 :题号: 0195
 :难度: Easy
-:主题: Shell、行号定位、流式读取
+:主题: Shell、行号定位、文本读取
 :原题: `LeetCode 195 <https://leetcode.com/problems/tenth-line/>`_
-:重点: 只定位第 10 行即可，无需读取后续内容。
+:重点: file.txt 输入、一基行号、仅输出第十行、不足十行无输出
 
 题目重述
 --------
 
-读取 ``file.txt`` 并输出第 10 行。若文件不足 10 行，不输出任何内容。
+编写 Bash 脚本读取 ``file.txt``，并只输出文件中的第 ``10`` 行。行号从 ``1`` 开始计算，文件开头第一行是第 1 行。
+
+输出必须保留第 10 行本身的文本内容，不输出其他行或附加说明。若文件总行数不足 10 行，则脚本不应输出任何内容。
 
 自建示例
 --------
 
 .. code-block:: text
 
-   file.txt 的第 9 至 11 行:
-   line9
-   target line
-   line11
+   file.txt:
+   alpha
+   beta
+   gamma
+   delta
+   epsilon
+   zeta
+   eta
+   theta
+   iota
+   selected text
+   omega
 
-   输出:
-   target line
+   输出：
+   selected text
+
+   解释：selected text 位于文件的一基第 10 行；第 11 行 omega 不应输出。
