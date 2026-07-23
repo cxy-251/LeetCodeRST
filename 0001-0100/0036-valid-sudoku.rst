@@ -6,25 +6,57 @@
 
 :题号: 0036
 :难度: Medium
-:主题: 矩阵、约束验证、集合、位掩码
+:主题: 矩阵、哈希集合、位掩码
 :原题: `LeetCode 0036 <https://leetcode.com/problems/valid-sudoku/>`_
-:重点: 行列宫三类约束、只验证已填数字、宫编号、固定范围状态压缩
+:重点: 只检查已填数字、行列与九宫格唯一性、有效不等于可解
 
 题目重述
 --------
 
-给定固定 ``9 × 9`` 棋盘，格子为 ``'1'`` 至 ``'9'`` 或空格 ``'.'``。判断当前已填数字是否满足：同一行、同一列、同一 ``3 × 3`` 宫内均无重复。本题不要求判断棋盘能否最终解出。
+给定一个 ``9 x 9`` 的数独棋盘 ``board``，判断当前已填写的数字是否满足数独规则：
+
+#. 每一行中，数字 ``1`` 到 ``9`` 不能重复；
+#. 每一列中，数字 ``1`` 到 ``9`` 不能重复；
+#. 每个 ``3 x 3`` 九宫格中，数字 ``1`` 到 ``9`` 不能重复。
+
+字符 ``'.'`` 表示空格，只检查已经填写的格子。棋盘满足以上局部规则即可判为有效，并不要求证明它一定能够补全为完整数独。棋盘中的字符只可能是 ``'.'`` 或 ``'1'`` 到 ``'9'``。
 
 自建示例
 --------
 
+以下坐标均使用零基下标，未特别列出的格子都为 ``'.'``。
+
+同一行重复：
+
 .. code-block:: text
 
-   (0,0) = '5'，(0,7) = '5'：同行重复，立即失败。
-   (1,1) = '4'，(7,1) = '4'：同列重复，立即失败。
-   (0,0) = '9'，(2,2) = '9'：同行列都不同，但同属左上宫，仍失败。
+   输入：board[0][1] = '5'，board[0][7] = '5'
+   输出：false
+   解释：第 0 行中数字 5 出现两次。
 
-全空棋盘没有已填数字冲突，应返回 ``true``。
+同一列重复：
+
+.. code-block:: text
+
+   输入：board[1][3] = '7'，board[8][3] = '7'
+   输出：false
+   解释：第 3 列中数字 7 出现两次。
+
+同一九宫格重复：
+
+.. code-block:: text
+
+   输入：board[0][0] = '4'，board[2][2] = '4'
+   输出：false
+   解释：两个数字 4 都位于左上角的 3 x 3 九宫格内。
+
+全空棋盘：
+
+.. code-block:: text
+
+   输入：所有格子均为 '.'
+   输出：true
+   解释：没有已填数字违反行、列或九宫格规则。
 
 C++ 实现
 --------
@@ -32,48 +64,76 @@ C++ 实现
 .. code-block:: cpp
 
    #include <array>
+   #include <unordered_set>
    #include <vector>
 
    class Solution {
    private:
-       bool repeatedScan(const std::vector<std::vector<char>>& board) {
-           for (int r = 0; r < 9; ++r) {
-               for (int c = 0; c < 9; ++c) {
-                   char value = board[r][c];
-                   if (value == '.') continue;
-                   for (int k = c + 1; k < 9; ++k)
-                       if (board[r][k] == value) return false;
-                   for (int k = r + 1; k < 9; ++k)
-                       if (board[k][c] == value) return false;
-                   int box_r = r / 3 * 3, box_c = c / 3 * 3;
-                   for (int rr = box_r; rr < box_r + 3; ++rr)
-                       for (int cc = box_c; cc < box_c + 3; ++cc)
-                           if ((rr > r || (rr == r && cc > c)) && board[rr][cc] == value) return false;
+       bool repeatedScans(const std::vector<std::vector<char>>& board) {
+           for (int row = 0; row < 9; ++row) {
+               std::array<bool, 9> seen{};
+               for (int col = 0; col < 9; ++col) {
+                   if (board[row][col] == '.') continue;
+                   int digit = board[row][col] - '1';
+                   if (seen[digit]) return false;
+                   seen[digit] = true;
+               }
+           }
+           for (int col = 0; col < 9; ++col) {
+               std::array<bool, 9> seen{};
+               for (int row = 0; row < 9; ++row) {
+                   if (board[row][col] == '.') continue;
+                   int digit = board[row][col] - '1';
+                   if (seen[digit]) return false;
+                   seen[digit] = true;
+               }
+           }
+           for (int box_row = 0; box_row < 3; ++box_row) {
+               for (int box_col = 0; box_col < 3; ++box_col) {
+                   std::array<bool, 9> seen{};
+                   for (int offset = 0; offset < 9; ++offset) {
+                       int row = box_row * 3 + offset / 3;
+                       int col = box_col * 3 + offset % 3;
+                       if (board[row][col] == '.') continue;
+                       int digit = board[row][col] - '1';
+                       if (seen[digit]) return false;
+                       seen[digit] = true;
+                   }
                }
            }
            return true;
        }
 
-       bool booleanTables(const std::vector<std::vector<char>>& board) {
-           bool rows[9][9]{}, cols[9][9]{}, boxes[9][9]{};
-           for (int r = 0; r < 9; ++r) for (int c = 0; c < 9; ++c) {
-               if (board[r][c] == '.') continue;
-               int digit = board[r][c] - '1';
-               int box = (r / 3) * 3 + c / 3;
-               if (rows[r][digit] || cols[c][digit] || boxes[box][digit]) return false;
-               rows[r][digit] = cols[c][digit] = boxes[box][digit] = true;
+       bool tupleSet(const std::vector<std::vector<char>>& board) {
+           std::unordered_set<std::string> seen;
+           for (int row = 0; row < 9; ++row) {
+               for (int col = 0; col < 9; ++col) {
+                   char digit = board[row][col];
+                   if (digit == '.') continue;
+                   if (!seen.insert("r" + std::to_string(row) + digit).second ||
+                       !seen.insert("c" + std::to_string(col) + digit).second ||
+                       !seen.insert("b" + std::to_string((row / 3) * 3 + col / 3) + digit).second)
+                       return false;
+               }
            }
            return true;
        }
 
        bool bitMasks(const std::vector<std::vector<char>>& board) {
-           int rows[9]{}, cols[9]{}, boxes[9]{};
-           for (int r = 0; r < 9; ++r) for (int c = 0; c < 9; ++c) {
-               if (board[r][c] == '.') continue;
-               int bit = 1 << (board[r][c] - '1');
-               int box = (r / 3) * 3 + c / 3;
-               if ((rows[r] & bit) || (cols[c] & bit) || (boxes[box] & bit)) return false;
-               rows[r] |= bit; cols[c] |= bit; boxes[box] |= bit;
+           std::array<int, 9> rows{};
+           std::array<int, 9> columns{};
+           std::array<int, 9> boxes{};
+           for (int row = 0; row < 9; ++row) {
+               for (int col = 0; col < 9; ++col) {
+                   char cell = board[row][col];
+                   if (cell == '.') continue;
+                   int bit = 1 << (cell - '1');
+                   int box = (row / 3) * 3 + col / 3;
+                   if ((rows[row] & bit) || (columns[col] & bit) || (boxes[box] & bit)) return false;
+                   rows[row] |= bit;
+                   columns[col] |= bit;
+                   boxes[box] |= bit;
+               }
            }
            return true;
        }
@@ -87,70 +147,52 @@ C++ 实现
 题解
 ----
 
-重复扫描浪费了哪些检查
+为什么只需检查已经填写的格子
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+空格不代表某个数字，也不参与重复。当前棋盘有效只要求已填数字不违反三类唯一性约束；它不保证存在完整解，因此
+不能把求解失败当作无效判据。
+
+三次独立扫描与一次统一扫描
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+直接方法分别扫描九行、九列和九个宫格，每个区域维护九位布尔集合。总操作仍为常数 243 次，但规则被分散在三段
+代码中。统一扫描在访问每个已填格时同时登记它所属的行、列和宫格。
+
+宫格编号如何由坐标得到
 ~~~~~~~~~~~~~~~~~~~~~~
 
-对每个数字重新扫描所属行、列、宫虽然正确，但同一对格子会被多次比较。扫描顺序已经提供了更直接的状态：只需记录每个区域此前出现过哪些数字，新格子到来时执行成员查询。
-
-一个格子为什么同时属于三个约束集合
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-格子 ``(r,c)`` 属于第 ``r`` 行、第 ``c`` 列，以及宫：
+``row / 3`` 给出宫格行，``col / 3`` 给出宫格列，二者均为 0 到 2。按行编号得到：
 
 .. math::
 
-   box=(r\div3)\times3+(c\div3)
+   box=(row/3)\times3+col/3
 
-整数除法把行列坐标分别压缩到 ``0..2`` 的宫坐标，再映射到 ``0..8``。当前数字只要在三者任一状态中已经出现，就构成违规重复。
+左上宫格为 0，右下宫格为 8。
 
-布尔表如何直接表达约束
+位掩码如何表示数字集合
 ~~~~~~~~~~~~~~~~~~~~~~
 
-``rows[r][d]`` 表示数字 ``d+1`` 是否已在第 ``r`` 行出现；列和宫完全对称。扫描非空格时先查询三项，再同时登记三项。空格不代表数字，不参与任何状态。
+数字 ``d`` 使用位 ``1 << (d-'1')``。每个区域掩码的九个低位分别表示 1 到 9 是否已经出现。读取格子时先与掩码
+按位与；非零说明重复，返回 ``false``。未重复则按位或写入三个掩码。
 
-位掩码如何压缩固定数字集合
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-数字范围只有 1 至 9，可用 9 位整数表示集合。数字 ``d`` 对应位 ``1 << (d-1)``：
-
-* ``mask & bit`` 非零表示已出现；
-* ``mask | bit`` 登记出现。
-
-三个长度为 9 的整数数组即可替代三组 ``9 × 9`` 布尔表，状态含义不变。
-
-扫描状态
+状态演化
 ~~~~~~~~
 
-.. list-table::
-   :header-rows: 1
+若先处理 ``(0,0)='4'``，则第 3 位写入 ``rows[0]``、``columns[0]``、``boxes[0]``。再处理
+``(2,2)='4'`` 时，行 2 和列 2 尚未出现 4，但 ``boxes[0]`` 的第 3 位已经为 1，因此立即发现宫格冲突。
 
-   * - 格子
-     - 数字位
-     - 查询状态
-     - 动作
-   * - ``(0,0)``
-     - ``5`` 的位
-     - 行列宫均未出现
-     - 登记三处
-   * - ``(0,7)``
-     - ``5`` 的位
-     - 第 0 行已经出现
-     - 返回 ``false``
+为什么一次扫描覆盖全部规则
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-为什么一次扫描足以发现所有冲突
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-若算法返回失败，当前数字在同行、同列或同宫的状态中已经存在，因此确实有更早格子与它冲突。反过来，若棋盘中存在任意一对同区域相同数字，后扫描的那个必然查询到先扫描者登记的位并失败。扫描结束仍未失败，说明所有三类区域都无重复。
-
-当前合法不等于一定可解
-~~~~~~~~~~~~~~~~~~~~~~
-
-状态只验证“已经填入的数字没有直接违反规则”。某个无冲突局面仍可能没有完整解；判断或构造完整解需要第 37 题的回溯搜索。本题不能把“没有局部重复”扩大解释为“存在解”。
+每个已填格唯一属于一行、一列和一个宫格。算法在访问时同时检查三个所属集合，所以任意规则冲突都会在同一数字第二次
+进入对应集合时被发现。反之，扫描结束未发现重复，三类区域中的已填数字均互异，棋盘按题目定义有效。
 
 复杂度来源
 ~~~~~~~~~~
 
-棋盘固定 81 格，每格执行常数次位运算，时间 ``O(81)``、空间 ``O(27)``，按输入规模通常写作 ``O(1)``。重复扫描仍是固定常数，但做了更多无意义比较。
+棋盘固定为 81 格，时间和额外空间都可视为 ``O(1)``。若推广到 ``N x N``，一次扫描时间为 ``O(N^2)``，行列宫格
+集合空间为 ``O(N)`` 个掩码。
 
 九语言实现
 ----------
@@ -160,15 +202,10 @@ C
 
 .. code-block:: c
 
-   bool isValidSudoku(char **board, int boardSize, int *boardColSize) {
-       int rows[9] = {0}, cols[9] = {0}, boxes[9] = {0};
-       (void)boardSize; (void)boardColSize;
-       for (int r = 0; r < 9; ++r) for (int c = 0; c < 9; ++c) {
-           char ch = board[r][c]; if (ch == '.') continue;
-           int bit = 1 << (ch - '1'), box = (r / 3) * 3 + c / 3;
-           if ((rows[r] & bit) || (cols[c] & bit) || (boxes[box] & bit)) return false;
-           rows[r] |= bit; cols[c] |= bit; boxes[box] |= bit;
-       }
+   bool isValidSudoku(char** board,int boardSize,int* boardColSize){
+       int rows[9]={0},cols[9]={0},boxes[9]={0};
+       for(int r=0;r<9;r++)for(int c=0;c<9;c++){char x=board[r][c];if(x=='.')continue;int bit=1<<(x-'1'),box=(r/3)*3+c/3;
+           if((rows[r]&bit)||(cols[c]&bit)||(boxes[box]&bit))return false;rows[r]|=bit;cols[c]|=bit;boxes[box]|=bit;}
        return true;
    }
 
@@ -179,16 +216,13 @@ Python
 
    class Solution:
        def isValidSudoku(self, board: list[list[str]]) -> bool:
-           rows, cols, boxes = [0] * 9, [0] * 9, [0] * 9
+           rows=[0]*9;columns=[0]*9;boxes=[0]*9
            for r in range(9):
                for c in range(9):
-                   if board[r][c] == ".":
-                       continue
-                   bit = 1 << (ord(board[r][c]) - ord("1"))
-                   box = (r // 3) * 3 + c // 3
-                   if rows[r] & bit or cols[c] & bit or boxes[box] & bit:
-                       return False
-                   rows[r] |= bit; cols[c] |= bit; boxes[box] |= bit
+                   if board[r][c]==".":continue
+                   bit=1<<(ord(board[r][c])-ord("1"));box=(r//3)*3+c//3
+                   if rows[r]&bit or columns[c]&bit or boxes[box]&bit:return False
+                   rows[r]|=bit;columns[c]|=bit;boxes[box]|=bit
            return True
 
 Java
@@ -197,14 +231,10 @@ Java
 .. code-block:: java
 
    class Solution {
-       public boolean isValidSudoku(char[][] board) {
-           int[] rows = new int[9], cols = new int[9], boxes = new int[9];
-           for (int r = 0; r < 9; r++) for (int c = 0; c < 9; c++) {
-               char ch = board[r][c]; if (ch == '.') continue;
-               int bit = 1 << (ch - '1'), box = (r / 3) * 3 + c / 3;
-               if ((rows[r] & bit) != 0 || (cols[c] & bit) != 0 || (boxes[box] & bit) != 0) return false;
-               rows[r] |= bit; cols[c] |= bit; boxes[box] |= bit;
-           }
+       public boolean isValidSudoku(char[][] board){
+           int[] rows=new int[9],cols=new int[9],boxes=new int[9];
+           for(int r=0;r<9;r++)for(int c=0;c<9;c++){char x=board[r][c];if(x=='.')continue;int bit=1<<(x-'1'),box=(r/3)*3+c/3;
+               if((rows[r]&bit)!=0||(cols[c]&bit)!=0||(boxes[box]&bit)!=0)return false;rows[r]|=bit;cols[c]|=bit;boxes[box]|=bit;}
            return true;
        }
    }
@@ -215,15 +245,10 @@ Rust
 .. code-block:: rust
 
    impl Solution {
-       pub fn is_valid_sudoku(board: Vec<Vec<char>>) -> bool {
-           let (mut rows, mut cols, mut boxes) = ([0u16; 9], [0u16; 9], [0u16; 9]);
-           for r in 0..9 { for c in 0..9 {
-               let ch = board[r][c]; if ch == '.' { continue; }
-               let bit = 1u16 << (ch as u8 - b'1'); let b = (r / 3) * 3 + c / 3;
-               if rows[r] & bit != 0 || cols[c] & bit != 0 || boxes[b] & bit != 0 { return false; }
-               rows[r] |= bit; cols[c] |= bit; boxes[b] |= bit;
-           }}
-           true
+       pub fn is_valid_sudoku(board:Vec<Vec<char>>)->bool{
+           let(mut rows,mut cols,mut boxes)=([0i32;9],[0i32;9],[0i32;9]);
+           for r in 0..9{for c in 0..9{let x=board[r][c];if x=='.'{continue}let bit=1<<(x as u8-b'1');let b=(r/3)*3+c/3;
+               if rows[r]&bit!=0||cols[c]&bit!=0||boxes[b]&bit!=0{return false}rows[r]|=bit;cols[c]|=bit;boxes[b]|=bit;}}true
        }
    }
 
@@ -232,15 +257,10 @@ Go
 
 .. code-block:: go
 
-   func isValidSudoku(board [][]byte) bool {
-       rows, cols, boxes := [9]int{}, [9]int{}, [9]int{}
-       for r := 0; r < 9; r++ { for c := 0; c < 9; c++ {
-           ch := board[r][c]; if ch == '.' { continue }
-           bit, box := 1<<int(ch-'1'), (r/3)*3+c/3
-           if rows[r]&bit != 0 || cols[c]&bit != 0 || boxes[box]&bit != 0 { return false }
-           rows[r] |= bit; cols[c] |= bit; boxes[box] |= bit
-       }}
-       return true
+   func isValidSudoku(board [][]byte)bool{
+       rows,cols,boxes:=[9]int{},[9]int{},[9]int{}
+       for r:=0;r<9;r++{for c:=0;c<9;c++{x:=board[r][c];if x=='.'{continue};bit:=1<<(x-'1');b:=(r/3)*3+c/3
+           if rows[r]&bit!=0||cols[c]&bit!=0||boxes[b]&bit!=0{return false};rows[r]|=bit;cols[c]|=bit;boxes[b]|=bit}};return true
    }
 
 TypeScript
@@ -248,15 +268,10 @@ TypeScript
 
 .. code-block:: typescript
 
-   function isValidSudoku(board: string[][]): boolean {
-       const rows = Array(9).fill(0), cols = Array(9).fill(0), boxes = Array(9).fill(0);
-       for (let r = 0; r < 9; r++) for (let c = 0; c < 9; c++) {
-           const ch = board[r][c]; if (ch === ".") continue;
-           const bit = 1 << (ch.charCodeAt(0) - 49), box = Math.floor(r / 3) * 3 + Math.floor(c / 3);
-           if ((rows[r] & bit) || (cols[c] & bit) || (boxes[box] & bit)) return false;
-           rows[r] |= bit; cols[c] |= bit; boxes[box] |= bit;
-       }
-       return true;
+   function isValidSudoku(board:string[][]):boolean{
+       const rows=new Array(9).fill(0),cols=new Array(9).fill(0),boxes=new Array(9).fill(0);
+       for(let r=0;r<9;r++)for(let c=0;c<9;c++){const x=board[r][c];if(x===".")continue;const bit=1<<(x.charCodeAt(0)-49),b=Math.floor(r/3)*3+Math.floor(c/3);
+           if((rows[r]&bit)||(cols[c]&bit)||(boxes[b]&bit))return false;rows[r]|=bit;cols[c]|=bit;boxes[b]|=bit;}return true;
    }
 
 C#
@@ -265,15 +280,10 @@ C#
 .. code-block:: csharp
 
    public class Solution {
-       public bool IsValidSudoku(char[][] board) {
-           int[] rows = new int[9], cols = new int[9], boxes = new int[9];
-           for (int r = 0; r < 9; r++) for (int c = 0; c < 9; c++) {
-               char ch = board[r][c]; if (ch == '.') continue;
-               int bit = 1 << (ch - '1'), box = (r / 3) * 3 + c / 3;
-               if ((rows[r] & bit) != 0 || (cols[c] & bit) != 0 || (boxes[box] & bit) != 0) return false;
-               rows[r] |= bit; cols[c] |= bit; boxes[box] |= bit;
-           }
-           return true;
+       public bool IsValidSudoku(char[][] board){
+           int[] rows=new int[9],cols=new int[9],boxes=new int[9];
+           for(int r=0;r<9;r++)for(int c=0;c<9;c++){char x=board[r][c];if(x=='.')continue;int bit=1<<(x-'1'),b=(r/3)*3+c/3;
+               if((rows[r]&bit)!=0||(cols[c]&bit)!=0||(boxes[b]&bit)!=0)return false;rows[r]|=bit;cols[c]|=bit;boxes[b]|=bit;}return true;
        }
    }
 
@@ -282,15 +292,11 @@ Julia
 
 .. code-block:: julia
 
-   function is_valid_sudoku(board::Vector{Vector{Char}})
-       rows = zeros(Int, 9); cols = zeros(Int, 9); boxes = zeros(Int, 9)
-       for r in 1:9, c in 1:9
-           ch = board[r][c]; ch == '.' && continue
-           bit = 1 << (Int(ch) - Int('1')); box = ((r - 1) ÷ 3) * 3 + (c - 1) ÷ 3 + 1
-           (rows[r] & bit != 0 || cols[c] & bit != 0 || boxes[box] & bit != 0) && return false
-           rows[r] |= bit; cols[c] |= bit; boxes[box] |= bit
-       end
-       true
+   function is_valid_sudoku(board)
+       rows=zeros(Int,9);cols=zeros(Int,9);boxes=zeros(Int,9)
+       for r in 1:9,c in 1:9;x=board[r][c];x=='.'&&continue;bit=1<<(Int(x-'1'));b=((r-1)÷3)*3+(c-1)÷3+1
+           if rows[r]&bit!=0||cols[c]&bit!=0||boxes[b]&bit!=0;return false;end;rows[r]|=bit;cols[c]|=bit;boxes[b]|=bit
+       end;true
    end
 
 R
@@ -299,13 +305,7 @@ R
 .. code-block:: r
 
    is_valid_sudoku <- function(board) {
-     rows <- integer(9); cols <- integer(9); boxes <- integer(9)
-     for (r in 1:9) for (c in 1:9) {
-       ch <- board[[r]][[c]]; if (ch == ".") next
-       digit <- match(ch, as.character(1:9)) - 1L
-       bit <- bitwShiftL(1L, digit); box <- ((r - 1L) %/% 3L) * 3L + (c - 1L) %/% 3L + 1L
-       if (bitwAnd(rows[[r]], bit) != 0L || bitwAnd(cols[[c]], bit) != 0L || bitwAnd(boxes[[box]], bit) != 0L) return(FALSE)
-       rows[[r]] <- bitwOr(rows[[r]], bit); cols[[c]] <- bitwOr(cols[[c]], bit); boxes[[box]] <- bitwOr(boxes[[box]], bit)
-     }
-     TRUE
+       rows<-integer(9);cols<-integer(9);boxes<-integer(9)
+       for(r in 1:9)for(c in 1:9){x<-board[[r]][[c]];if(x==".")next;bit<-bitwShiftL(1L,as.integer(x)-1L);b<-(r-1L)%/%3L*3L+(c-1L)%/%3L+1L
+           if(bitwAnd(rows[[r]],bit)||bitwAnd(cols[[c]],bit)||bitwAnd(boxes[[b]],bit))return(FALSE);rows[[r]]<-bitwOr(rows[[r]],bit);cols[[c]]<-bitwOr(cols[[c]],bit);boxes[[b]]<-bitwOr(boxes[[b]],bit)};TRUE
    }
