@@ -6,26 +6,43 @@
 
 :题号: 0028
 :难度: Easy
-:主题: 字符串、子串匹配、前缀函数、KMP
+:主题: 字符串、模式匹配、KMP
 :原题: `LeetCode 0028 <https://leetcode.com/problems/find-the-index-of-the-first-occurrence-in-a-string/>`_
-:重点: 候选起点、重复比较、最长相等前后缀、失配回退、最早匹配
+:重点: 连续子串、首次出现、零基下标、未找到返回 -1
 
 题目重述
 --------
 
-给定 ``haystack`` 与 ``needle``，返回 ``needle`` 第一次作为连续子串出现的零基起点；不存在返回 ``-1``。空模式
-按通用接口返回 0，模式比文本长返回 ``-1``。
+给定两个字符串 ``haystack`` 和 ``needle``，在 ``haystack`` 中寻找与 ``needle`` 完全相同的连续子串，返回第一次出现位置的零基起始下标；若不存在，返回 ``-1``。
+
+``haystack`` 和 ``needle`` 的长度均位于 ``[1, 10^4]``，并且只包含小写英文字母。
 
 自建示例
 --------
 
+模式出现多次：
+
 .. code-block:: text
 
-   haystack = "abababca"
-   needle   = "ababca"
-   返回 2
+   输入：haystack = "abracadabra", needle = "abra"
+   输出：0
+   解释："abra" 分别从下标 0 和 7 开始出现，应返回较早的下标 0。
 
-起点 0 已匹配 ``abab`` 后失配。朴素方法重新尝试下一个起点；KMP 利用模式内部 ``ab`` 的前后缀关系继续匹配。
+首次匹配位于中间：
+
+.. code-block:: text
+
+   输入：haystack = "mississippi", needle = "issip"
+   输出：4
+   解释：从下标 4 开始的连续五个字符是 "issip"。
+
+模式不存在：
+
+.. code-block:: text
+
+   输入：haystack = "algorithm", needle = "rhythm"
+   输出：-1
+   解释：文本中没有与 needle 完全相同的连续子串。
 
 C++ 实现
 --------
@@ -115,7 +132,7 @@ C++ 实现
      - 当前字符匹配模式下标 2
 
 为什么构造前缀函数也使用相同回退
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 计算 ``prefix[i]`` 时，已知 ``pattern[0:matched]`` 等于当前位置之前的后缀。若新字符失配，更长边界不成立，但该
 边界本身的最长边界仍可能成立，因此继续跳到 ``prefix[matched-1]``。每次回退严格缩短候选长度。
