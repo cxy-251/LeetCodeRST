@@ -6,251 +6,201 @@
 
 :题号: 0216
 :难度: Medium
-:主题: 回溯、组合枚举、可达范围剪枝
+:主题: 回溯、组合、剪枝
 :原题: `LeetCode 0216 <https://leetcode.com/problems/combination-sum-iii/>`_
-:访问状态: Available
-:教学重点: 用严格递增路径唯一表示组合，并依据剩余槽位的最小和、最大和剪去无解状态
+:重点: 从 1 到 9 选择、恰好 k 个、每个数字最多一次、组合不重复
 
-精确契约
+题目重述
 --------
 
-从 ``1`` 到 ``9`` 中选择恰好 ``k`` 个互不相同的数字，使它们的和等于 ``n``，返回所有合法组合。
+从整数 ``1`` 到 ``9`` 中选择恰好 ``k`` 个互不相同的数字，使这些数字的总和等于 ``n``，返回所有满足条件的组合。每个数字在同一个组合中最多使用一次，组合内数字的排列顺序不产生新答案。
 
-官方约束为：
+``k`` 位于 ``[2, 9]``，``n`` 位于 ``[1, 60]``。结果中不能出现重复组合；每个组合只包含 ``1..9`` 范围内的数字且长度必须正好为 ``k``。若没有可行组合，返回空列表；不同组合之间的返回顺序不作要求。
 
-* ``2 <= k <= 9``；
-* ``1 <= n <= 60``；
-* 每个数字只能使用一次；
-* 结果中不能包含重复组合；
-* 组合和组合之间的返回顺序不作要求。
-
-本文让每个组合内部保持严格递增。这个顺序不是额外限制：任意一组互不相同的数字都只有一种递增排列，因而它可以同时解决“数字不可重复”和“组合不可重复”两个问题。
-
-示例
-----
-
-单一答案
-~~~~~~~~
-
-.. code-block:: text
-
-   k = 3, n = 7
-   answer = [[1, 2, 4]]
-
-``1+2+4=7``。``[1,4,2]`` 只是同一组合的另一种排列，不应再次生成。
-
-多个答案
-~~~~~~~~
-
-.. code-block:: text
-
-   k = 3, n = 9
-   answer = [
-       [1, 2, 6],
-       [1, 3, 5],
-       [2, 3, 4]
-   ]
-
-每个结果都恰好包含三个互不相同的数字。
-
-目标过小
-~~~~~~~~
-
-.. code-block:: text
-
-   k = 4, n = 1
-   answer = []
-
-选择四个不同数字时，最小可能和为 ``1+2+3+4=10``，已经超过目标。
-
-目标过大
-~~~~~~~~
-
-.. code-block:: text
-
-   k = 2, n = 18
-   answer = []
-
-两个不同数字的最大和为 ``8+9=17``，无法达到 18。
-
-使用全部数字
-~~~~~~~~~~~~
-
-.. code-block:: text
-
-   k = 9, n = 45
-   answer = [[1, 2, 3, 4, 5, 6, 7, 8, 9]]
-
-当 ``k=9`` 时只能选择全部数字，它们的和为 45。
-
-搜索状态
+自建示例
 --------
 
-回溯过程逐步构造一个严格递增组合。递归状态由四部分组成：
-
-``start``
-   下一层允许选择的最小数字。
-
-``slots``
-   还需要选择多少个数字。
-
-``remaining``
-   还需要凑出的和。
-
-``path``
-   当前已经选择的严格递增前缀。
-
-初始状态为：
+存在多个两数组合：
 
 .. code-block:: text
 
-   start = 1
-   slots = k
-   remaining = n
-   path = []
+   输入：k = 2，n = 11
+   输出：[[2,9],[3,8],[4,7],[5,6]]
+   解释：这些数对都由两个不同的 1..9 数字组成且和为 11；[1,10] 超出取值范围，交换同一数对的顺序不算新组合。
 
-本层选择 ``value`` 后进入：
+目标超过可达到的最大和：
 
 .. code-block:: text
 
-   start = value + 1
-   slots = slots - 1
-   remaining = remaining - value
+   输入：k = 4，n = 35
+   输出：[]
+   解释：从 1..9 中选四个不同数字的最大和是 6+7+8+9=30，因此无法达到 35。
 
-下一层只能选择更大的数字，因此同一数字不会再次使用，同一组合也不会通过不同排列重复出现。
+状态定义
+--------
 
-搜索不变量
+递归状态为：
+
+.. code-block:: text
+
+   search(start, slots, remaining, path)
+
+含义：
+
+* 下一候选数字最小为 ``start``；
+* 还必须选择恰好 ``slots`` 个数字；
+* 这些数字的和必须等于 ``remaining``；
+* ``path`` 保存已经选择的严格递增前缀。
+
+每次选择 ``value`` 后递归到：
+
+.. code-block:: text
+
+   search(value + 1, slots - 1, remaining - value, path + [value])
+
+下一起点是 ``value+1``，因此数字不会重复，路径也始终递增。
+
+基本情况
+--------
+
+当 ``slots==0``：
+
+* ``remaining==0`` 时，当前路径恰好满足数量和总和要求，提交结果；
+* 否则丢弃。
+
+在进入基本情况前不能仅因为 ``remaining==0`` 就提交，因为还可能没有选满 ``k`` 个数字。
+
+上下界剪枝
 ----------
 
-每次进入递归函数时维护：
+当前还需选择 ``slots`` 个数字，候选范围是 ``start..9``。
 
-#. ``path`` 中的数字都在 ``1..9`` 内，并且严格递增；
-#. ``len(path)+slots=k``；
-#. ``sum(path)+remaining=n``；
-#. 后续候选只能来自 ``start..9``。
+数量剪枝
+~~~~~~~~
 
-初始路径为空，不变量成立。选择 ``value>=start`` 后，下一层从 ``value+1`` 开始，严格递增性继续成立；同时槽位减少 1、剩余和减少 ``value``，数量和总和关系也继续成立。
-
-终止条件
---------
-
-当 ``slots=0`` 时，路径已经包含恰好 ``k`` 个数字：
-
-* 若 ``remaining=0``，保存当前路径的副本；
-* 若 ``remaining!=0``，数量已经用完，当前分支无解。
-
-不能只在 ``remaining=0`` 时提交，因为路径可能还不足 ``k`` 个数字；也不能只在路径长度达到 ``k`` 时提交，因为总和可能不等于 ``n``。
-
-可达范围剪枝
-------------
-
-回溯枚举的候选只有九个，直接搜索已经可以完成题目。为了让状态含义更清楚，并避免进入确定无解的分支，可以根据剩余槽位计算可达和范围。
-
-候选数量不足
-~~~~~~~~~~~~
-
-若从 ``start`` 到 9 的数字数量少于 ``slots``，当前状态无法填满组合：
+可用数字数量为：
 
 .. code-block:: text
 
-   start + slots - 1 > 9
+   10 - start
 
-此时立即返回。
+若：
+
+.. code-block:: text
+
+   10 - start < slots
+
+则无法选满，立即返回。
 
 最小可达和
 ~~~~~~~~~~
 
-要让后续和尽可能小，应选择：
+选择当前可用的最小 ``slots`` 个数字：
 
 .. code-block:: text
 
-   start, start+1, ..., start+slots-1
+   start + (start+1) + ... + (start+slots-1)
 
-最小可达和为：
+使用等差数列公式：
 
 .. code-block:: text
 
    minimum = slots * (2*start + slots - 1) / 2
 
-若 ``remaining < minimum``，任何后续选择都会超过剩余目标，当前分支无解。
+若 ``remaining < minimum``，任何选择都太大，立即返回。
 
 最大可达和
 ~~~~~~~~~~
 
-要让后续和尽可能大，应选择 ``1..9`` 中最大的 ``slots`` 个数字：
+从 ``1..9`` 中最大的 ``slots`` 个数字是：
 
 .. code-block:: text
 
-   10-slots, 11-slots, ..., 9
+   9 + 8 + ... + (10-slots)
 
-最大可达和为：
+其和为：
 
 .. code-block:: text
 
    maximum = slots * (19 - slots) / 2
 
-在候选数量充足的前提下，这些数字都位于允许区间 ``start..9``。若 ``remaining > maximum``，当前分支同样无解。
+若 ``remaining > maximum``，即使选择最大的数字也不够，立即返回。
 
-候选上界
-~~~~~~~~
+循环中的提前停止
+----------------
 
-本层选择一个数字后，还要留下 ``slots-1`` 个更大的数字。因此本层最多选择：
+当前层枚举：
+
+.. code-block:: text
+
+   value = start .. 9
+
+至少要给后续保留 ``slots-1`` 个更大数字，因此当前值最大为：
 
 .. code-block:: text
 
    10 - slots
 
-例如还需选择三个数字时，本层最大只能选 7，才能把 8 和 9 留给后续位置。
-
-状态恢复与结果快照
-------------------
-
-数组或列表实现通常执行：
+选择某个 ``value`` 后，还需要：
 
 .. code-block:: text
 
-   path.push(value)
-   dfs(value + 1, slots - 1, remaining - value)
-   path.pop()
+   next_slots = slots - 1
+   next_remaining = remaining - value
 
-递归返回后必须撤销本层选择，使下一个兄弟分支重新从进入本层前的路径开始。
+后续最小和为：
 
-找到答案时保存的是 ``path`` 的副本。若把同一个可变列表直接放进结果，后续 ``pop`` 和新的选择会继续修改已经记录的答案。
+.. code-block:: text
+
+   value+1 + value+2 + ... + value+next_slots
+
+若 ``next_remaining`` 小于这个最小和，后续更大的 ``value`` 只会使情况更差，所以当前层可以直接 ``break``。
+
+若 ``next_remaining`` 大于后续能取得的最大和，只能 ``continue`` 尝试更大的当前值；更大的当前值会减少剩余目标，可能使状态变得可行。
 
 正确性证明
 ----------
 
-**引理一：搜索生成的每条路径都由互不相同且严格递增的 ``1..9`` 数字组成。**
+**引理一：每条递归路径中的数字严格递增。**
 
-每层只从 ``start..9`` 中选择；选择 ``value`` 后，下一层的起点变为 ``value+1``。因此后续数字严格大于此前数字，不会重复使用任何值。
+下一层起点始终为当前值加一，因此后续选择必然更大。
 
-**引理二：算法提交的每个结果都是合法组合。**
+**引理二：算法不会生成重复组合。**
 
-算法只在 ``slots=0`` 且 ``remaining=0`` 时提交。由搜索不变量，此时路径长度为 ``k``、路径和为 ``n``；再结合引理一，结果满足数字范围、互不相同和数量要求。
+每个组合只有唯一的升序表示。算法只生成升序路径，因此同一集合不可能由不同顺序重复产生。
 
-**引理三：每个合法组合都会被搜索到。**
+**引理三：剪枝不会删除可行解。**
 
-任取合法组合，并把它唯一地写成递增序列 ``c1<c2<...<ck``。第一层候选包含 ``c1``；选择 ``c1`` 后，下一层候选包含 ``c2``，依此类推，所以存在一条搜索路径按顺序选择全部 ``ci``。合法组合的剩余数字之和必然位于该状态的最小可达和与最大可达和之间，候选数量也足够，因此这条路径不会被剪掉。
+* 数量不足时无法选满；
+* ``remaining < minimum`` 时，任何合法选择和都至少为 ``minimum``；
+* ``remaining > maximum`` 时，任何合法选择和都至多为 ``maximum``。
 
-**引理四：每个合法组合只会提交一次。**
+这些条件都是可行性的必要条件。
 
-搜索路径必须严格递增，而一个组合只有一种严格递增排列。因此同一组数字不可能通过另一条排列路径再次生成。
+**引理四：循环提前停止安全。**
 
-**定理：算法恰好返回全部合法组合且没有重复。**
+若当前 ``value`` 已使后续剩余和小于最小可达和，更大的 ``value`` 会进一步减小剩余和并提高后续候选下界，不可能恢复可行。
 
-引理二保证所有输出都合法；引理三保证没有遗漏；引理四保证没有重复。
+**引理五：每个合法组合都会被枚举。**
+
+设合法组合升序为 ``a1<a2<...<ak``。根状态会枚举 ``a1``；选择后下一起点为 ``a1+1``，会枚举 ``a2``，依次直到 ``ak``。合法组合满足所有可达上下界，不会被剪枝，最终在 ``slots=0`` 且 ``remaining=0`` 时提交。
+
+**定理：算法返回且仅返回全部合法组合。**
+
+引理一和基本情况保证提交结果满足取值、互异、数量和总和要求；引理二保证不重复；引理三、四、五保证无遗漏。
 
 复杂度
 ------
 
-候选全集只有九个数字：
+候选集合固定为 9 个数字。搜索树叶子数最多为：
 
-* 搜索树至多考察 ``1..9`` 的全部子集，节点数量为 ``O(2^9)``；
-* 每次保存答案需要复制 ``k`` 个数字。若答案数为 ``A``，输出复制成本为 ``O(Ak)``；
-* 递归深度和当前路径长度最多为 ``k``，不计返回结果时额外空间为 ``O(k)``；
-* 返回结果本身占 ``O(Ak)`` 空间。
+.. code-block:: text
 
-``2^9`` 在本题中是固定上限，但保留这个表达式能说明回溯搜索来自子集枚举。
+   C(9, k)
+
+回溯工作量可写为 ``O(C(9,k) * k)``，因为每个结果需要复制长度 ``k`` 的路径。由于 9 是题目常数，在官方约束下总搜索规模很小。
+
+递归深度为 ``k``，路径工作空间为 ``O(k)``。返回结果本身占 ``O(Z*k)``，其中 ``Z`` 是答案数量。
 
 十语言实现
 ----------
@@ -260,70 +210,97 @@ C
 
 .. code-block:: c
 
-   #include <stdbool.h>
    #include <stdlib.h>
-
-   enum { MAX_COMBINATIONS = 126 };
 
    typedef struct {
        int **rows;
-       int *columns;
        int size;
-       int k;
-       int path[9];
-       bool failed;
-   } Context;
+       int capacity;
+       int *column_sizes;
+       int failed;
+   } Result;
 
-   static int minimum_sum(int start, int slots) {
+   static int min_sum(int start, int slots) {
        return slots * (2 * start + slots - 1) / 2;
    }
 
-   static int maximum_sum(int slots) {
+   static int max_sum(int slots) {
        return slots * (19 - slots) / 2;
    }
 
-   static void save_path(Context *context) {
-       int *row = (int *)malloc((size_t)context->k * sizeof(int));
-       if (row == NULL) {
-           context->failed = true;
+   static void append_result(Result *result, const int *path, int length) {
+       if (result->size == result->capacity) {
+           int new_capacity = result->capacity == 0 ? 4 : result->capacity * 2;
+           int **new_rows = realloc(result->rows, new_capacity * sizeof(int *));
+           if (new_rows == NULL) {
+               result->failed = 1;
+               return;
+           }
+           result->rows = new_rows;
+           int *new_columns = realloc(
+               result->column_sizes,
+               new_capacity * sizeof(int)
+           );
+           if (new_columns == NULL) {
+               result->failed = 1;
+               return;
+           }
+           result->column_sizes = new_columns;
+           result->capacity = new_capacity;
+       }
+
+       int *copy = malloc(length * sizeof(int));
+       if (copy == NULL) {
+           result->failed = 1;
            return;
        }
-       for (int i = 0; i < context->k; ++i) {
-           row[i] = context->path[i];
-       }
-       context->rows[context->size] = row;
-       context->columns[context->size] = context->k;
-       ++context->size;
+       for (int i = 0; i < length; ++i) copy[i] = path[i];
+       result->rows[result->size] = copy;
+       result->column_sizes[result->size] = length;
+       ++result->size;
    }
 
    static void search(
-       Context *context,
        int start,
        int slots,
        int remaining,
-       int depth
+       int *path,
+       int depth,
+       Result *result
    ) {
-       if (context->failed) return;
+       if (result->failed) return;
        if (slots == 0) {
-           if (remaining == 0) save_path(context);
+           if (remaining == 0) append_result(result, path, depth);
            return;
        }
-       if (start + slots - 1 > 9) return;
-       if (remaining < minimum_sum(start, slots) ||
-           remaining > maximum_sum(slots)) {
-           return;
-       }
+       if (10 - start < slots) return;
+       if (remaining < min_sum(start, slots)) return;
+       if (remaining > max_sum(slots)) return;
 
-       const int upper = 10 - slots;
-       for (int value = start; value <= upper; ++value) {
-           if (value > remaining) break;
-           context->path[depth] = value;
+       const int max_value = 10 - slots;
+       for (int value = start; value <= max_value; ++value) {
+           const int next_slots = slots - 1;
+           const int next_remaining = remaining - value;
+           if (next_slots == 0) {
+               if (next_remaining == 0) {
+                   path[depth] = value;
+                   append_result(result, path, depth + 1);
+               }
+               continue;
+           }
+
+           const int next_min = min_sum(value + 1, next_slots);
+           if (next_remaining < next_min) break;
+           if (next_remaining > max_sum(next_slots)) continue;
+
+           path[depth] = value;
            search(
-               context,
                value + 1,
-               slots - 1,
-               remaining - value,
-               depth + 1
+               next_slots,
+               next_remaining,
+               path,
+               depth + 1,
+               result
            );
        }
    }
@@ -334,44 +311,26 @@ C
        int *returnSize,
        int **returnColumnSizes
    ) {
-       *returnSize = 0;
-       *returnColumnSizes = NULL;
+       Result result = {NULL, 0, 0, NULL, 0};
+       int path[9];
 
-       Context context = {0};
-       context.rows = (int **)malloc(
-           MAX_COMBINATIONS * sizeof(int *)
-       );
-       context.columns = (int *)malloc(
-           MAX_COMBINATIONS * sizeof(int)
-       );
-       context.k = k;
+       search(1, k, n, path, 0, &result);
 
-       if (context.rows == NULL || context.columns == NULL) {
-           free(context.rows);
-           free(context.columns);
+       if (result.failed) {
+           for (int i = 0; i < result.size; ++i) free(result.rows[i]);
+           free(result.rows);
+           free(result.column_sizes);
+           *returnSize = 0;
+           *returnColumnSizes = NULL;
            return NULL;
        }
 
-       search(&context, 1, k, n, 0);
-
-       if (context.failed) {
-           for (int i = 0; i < context.size; ++i) free(context.rows[i]);
-           free(context.rows);
-           free(context.columns);
-           return NULL;
-       }
-       if (context.size == 0) {
-           free(context.rows);
-           free(context.columns);
-           return NULL;
-       }
-
-       *returnSize = context.size;
-       *returnColumnSizes = context.columns;
-       return context.rows;
+       *returnSize = result.size;
+       *returnColumnSizes = result.column_sizes;
+       return result.rows;
    }
 
-九个候选中同一长度的组合最多有 ``C(9,4)=126`` 个，因此固定的行指针容量足够。每个答案行仍单独分配并交给调用方释放。
+C 实现会增长结果指针数组。若第二次 ``realloc`` 失败，第一次成功后的新指针仍保存在结构中，最终统一释放，不丢失所有权。调用方负责释放每一行、行数组和列长度数组。
 
 C++
 ~~~
@@ -379,42 +338,64 @@ C++
 .. code-block:: cpp
 
    class Solution {
-       std::vector<std::vector<int>> answer;
-       std::vector<int> path;
-
-       static int minimumSum(int start, int slots) {
+       static int minSum(int start, int slots) {
            return slots * (2 * start + slots - 1) / 2;
        }
 
-       static int maximumSum(int slots) {
+       static int maxSum(int slots) {
            return slots * (19 - slots) / 2;
        }
 
-       void dfs(int start, int slots, int remaining) {
+       static void search(
+           int start,
+           int slots,
+           int remaining,
+           std::vector<int>& path,
+           std::vector<std::vector<int>>& result
+       ) {
            if (slots == 0) {
-               if (remaining == 0) answer.push_back(path);
+               if (remaining == 0) result.push_back(path);
                return;
            }
-           if (start + slots - 1 > 9) return;
-           if (remaining < minimumSum(start, slots) ||
-               remaining > maximumSum(slots)) return;
+           if (10 - start < slots) return;
+           if (remaining < minSum(start, slots)) return;
+           if (remaining > maxSum(slots)) return;
 
-           for (int value = start; value <= 10 - slots; ++value) {
-               if (value > remaining) break;
+           const int maxValue = 10 - slots;
+           for (int value = start; value <= maxValue; ++value) {
+               const int nextSlots = slots - 1;
+               const int nextRemaining = remaining - value;
+               if (nextSlots > 0) {
+                   const int nextMin = minSum(value + 1, nextSlots);
+                   if (nextRemaining < nextMin) break;
+                   if (nextRemaining > maxSum(nextSlots)) continue;
+               } else if (nextRemaining != 0) {
+                   continue;
+               }
+
                path.push_back(value);
-               dfs(value + 1, slots - 1, remaining - value);
+               search(
+                   value + 1,
+                   nextSlots,
+                   nextRemaining,
+                   path,
+                   result
+               );
                path.pop_back();
            }
        }
 
    public:
        std::vector<std::vector<int>> combinationSum3(int k, int n) {
-           dfs(1, k, n);
-           return answer;
+           std::vector<std::vector<int>> result;
+           std::vector<int> path;
+           path.reserve(k);
+           search(1, k, n, path, result);
+           return result;
        }
    };
 
-需要 ``<vector>``。``push_back`` 后递归，返回时 ``pop_back`` 恢复路径。
+需要 ``<vector>``。
 
 Python
 ~~~~~~
@@ -423,33 +404,45 @@ Python
 
    class Solution:
        def combinationSum3(self, k: int, n: int) -> list[list[int]]:
-           answer: list[list[int]] = []
+           result: list[list[int]] = []
            path: list[int] = []
 
-           def dfs(start: int, slots: int, remaining: int) -> None:
+           def min_sum(start: int, slots: int) -> int:
+               return slots * (2 * start + slots - 1) // 2
+
+           def max_sum(slots: int) -> int:
+               return slots * (19 - slots) // 2
+
+           def search(start: int, slots: int, remaining: int) -> None:
                if slots == 0:
                    if remaining == 0:
-                       answer.append(path.copy())
+                       result.append(path.copy())
                    return
-               if start + slots - 1 > 9:
+               if 10 - start < slots:
+                   return
+               if remaining < min_sum(start, slots):
+                   return
+               if remaining > max_sum(slots):
                    return
 
-               minimum = slots * (2 * start + slots - 1) // 2
-               maximum = slots * (19 - slots) // 2
-               if remaining < minimum or remaining > maximum:
-                   return
+               max_value = 10 - slots
+               for value in range(start, max_value + 1):
+                   next_slots = slots - 1
+                   next_remaining = remaining - value
+                   if next_slots > 0:
+                       if next_remaining < min_sum(value + 1, next_slots):
+                           break
+                       if next_remaining > max_sum(next_slots):
+                           continue
+                   elif next_remaining != 0:
+                       continue
 
-               for value in range(start, 11 - slots):
-                   if value > remaining:
-                       break
                    path.append(value)
-                   dfs(value + 1, slots - 1, remaining - value)
+                   search(value + 1, next_slots, next_remaining)
                    path.pop()
 
-           dfs(1, k, n)
-           return answer
-
-``path.copy()`` 保存当前答案快照；直接保存 ``path`` 会受到后续回溯修改。
+           search(1, k, n)
+           return result
 
 Java
 ~~~~
@@ -457,42 +450,54 @@ Java
 .. code-block:: java
 
    class Solution {
-       private final java.util.List<java.util.List<Integer>> answer =
-           new java.util.ArrayList<>();
-       private final java.util.List<Integer> path =
-           new java.util.ArrayList<>();
-
-       public java.util.List<java.util.List<Integer>> combinationSum3(
-           int k,
-           int n
-       ) {
-           dfs(1, k, n);
-           return answer;
+       public List<List<Integer>> combinationSum3(int k, int n) {
+           List<List<Integer>> result = new ArrayList<>();
+           search(1, k, n, new ArrayList<>(), result);
+           return result;
        }
 
-       private void dfs(int start, int slots, int remaining) {
+       private void search(
+           int start,
+           int slots,
+           int remaining,
+           List<Integer> path,
+           List<List<Integer>> result
+       ) {
            if (slots == 0) {
-               if (remaining == 0) {
-                   answer.add(new java.util.ArrayList<>(path));
-               }
+               if (remaining == 0) result.add(new ArrayList<>(path));
                return;
            }
-           if (start + slots - 1 > 9) return;
+           if (10 - start < slots) return;
+           if (remaining < minSum(start, slots)) return;
+           if (remaining > maxSum(slots)) return;
 
-           int minimum = slots * (2 * start + slots - 1) / 2;
-           int maximum = slots * (19 - slots) / 2;
-           if (remaining < minimum || remaining > maximum) return;
+           int maxValue = 10 - slots;
+           for (int value = start; value <= maxValue; ++value) {
+               int nextSlots = slots - 1;
+               int nextRemaining = remaining - value;
+               if (nextSlots > 0) {
+                   if (nextRemaining < minSum(value + 1, nextSlots)) break;
+                   if (nextRemaining > maxSum(nextSlots)) continue;
+               } else if (nextRemaining != 0) {
+                   continue;
+               }
 
-           for (int value = start; value <= 10 - slots; ++value) {
-               if (value > remaining) break;
                path.add(value);
-               dfs(value + 1, slots - 1, remaining - value);
+               search(value + 1, nextSlots, nextRemaining, path, result);
                path.remove(path.size() - 1);
            }
        }
+
+       private int minSum(int start, int slots) {
+           return slots * (2 * start + slots - 1) / 2;
+       }
+
+       private int maxSum(int slots) {
+           return slots * (19 - slots) / 2;
+       }
    }
 
-``new ArrayList<>(path)`` 创建独立答案，避免后续删除路径元素时修改结果。
+需要 ``java.util.ArrayList`` 与 ``java.util.List``。
 
 Rust
 ~~~~
@@ -501,53 +506,58 @@ Rust
 
    impl Solution {
        pub fn combination_sum3(k: i32, n: i32) -> Vec<Vec<i32>> {
-           fn dfs(
+           fn min_sum(start: i32, slots: i32) -> i32 {
+               slots * (2 * start + slots - 1) / 2
+           }
+
+           fn max_sum(slots: i32) -> i32 {
+               slots * (19 - slots) / 2
+           }
+
+           fn search(
                start: i32,
                slots: i32,
                remaining: i32,
                path: &mut Vec<i32>,
-               answer: &mut Vec<Vec<i32>>,
+               result: &mut Vec<Vec<i32>>,
            ) {
                if slots == 0 {
-                   if remaining == 0 {
-                       answer.push(path.clone());
-                   }
+                   if remaining == 0 { result.push(path.clone()); }
                    return;
                }
-               if start + slots - 1 > 9 {
-                   return;
-               }
+               if 10 - start < slots { return; }
+               if remaining < min_sum(start, slots) { return; }
+               if remaining > max_sum(slots) { return; }
 
-               let minimum = slots * (2 * start + slots - 1) / 2;
-               let maximum = slots * (19 - slots) / 2;
-               if remaining < minimum || remaining > maximum {
-                   return;
-               }
-
-               for value in start..=(10 - slots) {
-                   if value > remaining {
-                       break;
+               let max_value = 10 - slots;
+               for value in start..=max_value {
+                   let next_slots = slots - 1;
+                   let next_remaining = remaining - value;
+                   if next_slots > 0 {
+                       if next_remaining < min_sum(value + 1, next_slots) { break; }
+                       if next_remaining > max_sum(next_slots) { continue; }
+                   } else if next_remaining != 0 {
+                       continue;
                    }
+
                    path.push(value);
-                   dfs(
+                   search(
                        value + 1,
-                       slots - 1,
-                       remaining - value,
+                       next_slots,
+                       next_remaining,
                        path,
-                       answer,
+                       result,
                    );
                    path.pop();
                }
            }
 
-           let mut answer = Vec::new();
+           let mut result = Vec::new();
            let mut path = Vec::with_capacity(k as usize);
-           dfs(1, k, n, &mut path, &mut answer);
-           answer
+           search(1, k, n, &mut path, &mut result);
+           result
        }
    }
-
-``path.clone()`` 只在发现答案时执行，递归过程继续复用同一条路径缓冲区。
 
 Go
 ~~
@@ -555,43 +565,50 @@ Go
 .. code-block:: go
 
    func combinationSum3(k int, n int) [][]int {
-       answer := make([][]int, 0)
+       minSum := func(start int, slots int) int {
+           return slots * (2*start + slots - 1) / 2
+       }
+       maxSum := func(slots int) int {
+           return slots * (19 - slots) / 2
+       }
+
+       result := make([][]int, 0)
        path := make([]int, 0, k)
 
-       var dfs func(start int, slots int, remaining int)
-       dfs = func(start int, slots int, remaining int) {
+       var search func(int, int, int)
+       search = func(start int, slots int, remaining int) {
            if slots == 0 {
                if remaining == 0 {
-                   snapshot := append([]int(nil), path...)
-                   answer = append(answer, snapshot)
+                   copyPath := append([]int(nil), path...)
+                   result = append(result, copyPath)
                }
                return
            }
-           if start+slots-1 > 9 {
+           if 10-start < slots || remaining < minSum(start, slots) ||
+               remaining > maxSum(slots) {
                return
            }
 
-           minimum := slots * (2*start + slots - 1) / 2
-           maximum := slots * (19 - slots) / 2
-           if remaining < minimum || remaining > maximum {
-               return
-           }
-
-           for value := start; value <= 10-slots; value++ {
-               if value > remaining {
-                   break
+           maxValue := 10 - slots
+           for value := start; value <= maxValue; value++ {
+               nextSlots := slots - 1
+               nextRemaining := remaining - value
+               if nextSlots > 0 {
+                   if nextRemaining < minSum(value+1, nextSlots) { break }
+                   if nextRemaining > maxSum(nextSlots) { continue }
+               } else if nextRemaining != 0 {
+                   continue
                }
+
                path = append(path, value)
-               dfs(value+1, slots-1, remaining-value)
+               search(value+1, nextSlots, nextRemaining)
                path = path[:len(path)-1]
            }
        }
 
-       dfs(1, k, n)
-       return answer
+       search(1, k, n)
+       return result
    }
-
-``append([]int(nil), path...)`` 复制切片内容，避免答案共享回溯缓冲区。
 
 TypeScript
 ~~~~~~~~~~
@@ -599,33 +616,43 @@ TypeScript
 .. code-block:: typescript
 
    function combinationSum3(k: number, n: number): number[][] {
-       const answer: number[][] = [];
+       const result: number[][] = [];
        const path: number[] = [];
 
-       function dfs(start: number, slots: number, remaining: number): void {
+       const minSum = (start: number, slots: number): number =>
+           slots * (2 * start + slots - 1) / 2;
+       const maxSum = (slots: number): number =>
+           slots * (19 - slots) / 2;
+
+       const search = (start: number, slots: number, remaining: number): void => {
            if (slots === 0) {
-               if (remaining === 0) answer.push([...path]);
+               if (remaining === 0) result.push([...path]);
                return;
            }
-           if (start + slots - 1 > 9) return;
+           if (10 - start < slots) return;
+           if (remaining < minSum(start, slots)) return;
+           if (remaining > maxSum(slots)) return;
 
-           const minimum = slots * (2 * start + slots - 1) / 2;
-           const maximum = slots * (19 - slots) / 2;
-           if (remaining < minimum || remaining > maximum) return;
+           const maxValue = 10 - slots;
+           for (let value = start; value <= maxValue; value += 1) {
+               const nextSlots = slots - 1;
+               const nextRemaining = remaining - value;
+               if (nextSlots > 0) {
+                   if (nextRemaining < minSum(value + 1, nextSlots)) break;
+                   if (nextRemaining > maxSum(nextSlots)) continue;
+               } else if (nextRemaining !== 0) {
+                   continue;
+               }
 
-           for (let value = start; value <= 10 - slots; value += 1) {
-               if (value > remaining) break;
                path.push(value);
-               dfs(value + 1, slots - 1, remaining - value);
+               search(value + 1, nextSlots, nextRemaining);
                path.pop();
            }
-       }
+       };
 
-       dfs(1, k, n);
-       return answer;
+       search(1, k, n);
+       return result;
    }
-
-展开语法 ``[...path]`` 创建独立结果数组。
 
 C#
 ~~
@@ -633,41 +660,52 @@ C#
 .. code-block:: csharp
 
    public class Solution {
-       private readonly System.Collections.Generic.List<
-           System.Collections.Generic.IList<int>
-       > answer = new();
-       private readonly System.Collections.Generic.List<int> path = new();
-
-       public System.Collections.Generic.IList<
-           System.Collections.Generic.IList<int>
-       > CombinationSum3(int k, int n) {
-           Dfs(1, k, n);
-           return answer;
+       public IList<IList<int>> CombinationSum3(int k, int n) {
+           var result = new List<IList<int>>();
+           var path = new List<int>(k);
+           Search(1, k, n, path, result);
+           return result;
        }
 
-       private void Dfs(int start, int slots, int remaining) {
+       private static void Search(
+           int start,
+           int slots,
+           int remaining,
+           List<int> path,
+           List<IList<int>> result
+       ) {
            if (slots == 0) {
-               if (remaining == 0) {
-                   answer.Add(new System.Collections.Generic.List<int>(path));
-               }
+               if (remaining == 0) result.Add(new List<int>(path));
                return;
            }
-           if (start + slots - 1 > 9) return;
+           if (10 - start < slots || remaining < MinSum(start, slots) ||
+               remaining > MaxSum(slots)) return;
 
-           int minimum = slots * (2 * start + slots - 1) / 2;
-           int maximum = slots * (19 - slots) / 2;
-           if (remaining < minimum || remaining > maximum) return;
+           int maxValue = 10 - slots;
+           for (int value = start; value <= maxValue; ++value) {
+               int nextSlots = slots - 1;
+               int nextRemaining = remaining - value;
+               if (nextSlots > 0) {
+                   if (nextRemaining < MinSum(value + 1, nextSlots)) break;
+                   if (nextRemaining > MaxSum(nextSlots)) continue;
+               } else if (nextRemaining != 0) {
+                   continue;
+               }
 
-           for (int value = start; value <= 10 - slots; ++value) {
-               if (value > remaining) break;
                path.Add(value);
-               Dfs(value + 1, slots - 1, remaining - value);
+               Search(value + 1, nextSlots, nextRemaining, path, result);
                path.RemoveAt(path.Count - 1);
            }
        }
+
+       private static int MinSum(int start, int slots) =>
+           slots * (2 * start + slots - 1) / 2;
+
+       private static int MaxSum(int slots) =>
+           slots * (19 - slots) / 2;
    }
 
-创建新的 ``List<int>`` 保存答案快照，字段 ``path`` 只用于当前搜索路径。
+需要 ``System.Collections.Generic``。
 
 Julia
 ~~~~~
@@ -675,33 +713,41 @@ Julia
 .. code-block:: julia
 
    function combination_sum3(k::Int, n::Int)::Vector{Vector{Int}}
-       answer = Vector{Vector{Int}}()
+       min_sum(start, slots) = slots * (2 * start + slots - 1) ÷ 2
+       max_sum(slots) = slots * (19 - slots) ÷ 2
+
+       result = Vector{Vector{Int}}()
        path = Int[]
 
-       function dfs(start::Int, slots::Int, remaining::Int)
+       function search(start::Int, slots::Int, remaining::Int)
            if slots == 0
-               remaining == 0 && push!(answer, copy(path))
+               remaining == 0 && push!(result, copy(path))
                return
            end
-           start + slots - 1 > 9 && return
+           10 - start < slots && return
+           remaining < min_sum(start, slots) && return
+           remaining > max_sum(slots) && return
 
-           minimum = slots * (2 * start + slots - 1) ÷ 2
-           maximum = slots * (19 - slots) ÷ 2
-           (remaining < minimum || remaining > maximum) && return
+           max_value = 10 - slots
+           for value in start:max_value
+               next_slots = slots - 1
+               next_remaining = remaining - value
+               if next_slots > 0
+                   next_remaining < min_sum(value + 1, next_slots) && break
+                   next_remaining > max_sum(next_slots) && continue
+               elseif next_remaining != 0
+                   continue
+               end
 
-           for value in start:(10 - slots)
-               value > remaining && break
                push!(path, value)
-               dfs(value + 1, slots - 1, remaining - value)
+               search(value + 1, next_slots, next_remaining)
                pop!(path)
            end
        end
 
-       dfs(1, k, n)
-       answer
+       search(1, k, n)
+       result
    end
-
-``copy(path)`` 固化答案；``pop!`` 恢复当前路径。
 
 R
 ~
@@ -709,77 +755,85 @@ R
 .. code-block:: r
 
    combination_sum3 <- function(k, n) {
-     answer <- list()
+     min_sum <- function(start, slots) {
+       slots * (2 * start + slots - 1) / 2
+     }
+     max_sum <- function(slots) {
+       slots * (19 - slots) / 2
+     }
+
+     result <- list()
      path <- integer(0)
 
-     dfs <- function(start, slots, remaining) {
+     search <- function(start, slots, remaining) {
        if (slots == 0L) {
-         if (remaining == 0L) {
-           answer[[length(answer) + 1L]] <<- path
+         if (remaining == 0L) result[[length(result) + 1L]] <<- path
+         return(invisible(NULL))
+       }
+       if (10L - start < slots) return(invisible(NULL))
+       if (remaining < min_sum(start, slots)) return(invisible(NULL))
+       if (remaining > max_sum(slots)) return(invisible(NULL))
+
+       max_value <- 10L - slots
+       for (value in seq.int(start, max_value)) {
+         next_slots <- slots - 1L
+         next_remaining <- remaining - value
+         if (next_slots > 0L) {
+           if (next_remaining < min_sum(value + 1L, next_slots)) break
+           if (next_remaining > max_sum(next_slots)) next
+         } else if (next_remaining != 0L) {
+           next
          }
-         return(invisible(NULL))
-       }
-       if (start + slots - 1L > 9L) return(invisible(NULL))
 
-       minimum <- slots * (2L * start + slots - 1L) / 2L
-       maximum <- slots * (19L - slots) / 2L
-       if (remaining < minimum || remaining > maximum) {
-         return(invisible(NULL))
-       }
-
-       for (value in seq.int(start, 10L - slots)) {
-         if (value > remaining) break
          path <<- c(path, value)
-         dfs(value + 1L, slots - 1L, remaining - value)
+         search(value + 1L, next_slots, next_remaining)
          path <<- path[-length(path)]
        }
        invisible(NULL)
      }
 
-     dfs(1L, as.integer(k), as.integer(n))
-     answer
+     search(1L, as.integer(k), as.integer(n))
+     result
    }
-
-R 的列表赋值保存当前数值向量；递归返回后删除最后一个元素恢复路径。
 
 关键易错点
 ----------
 
-* 下一层仍从当前数字开始，导致同一数字被重复使用；
-* 每层都从 1 开始，导致同一组合按不同排列重复生成；
-* ``remaining=0`` 时忽略路径长度，提交不足 ``k`` 个数字的结果；
-* 路径长度达到 ``k`` 时忽略剩余和；
-* 递归返回后忘记撤销本层选择，污染兄弟分支；
-* 保存可变路径本身而不是副本，导致所有答案随后一起变化；
-* 最小可达和没有从当前 ``start`` 计算；
-* 本层候选取得过大，没有为剩余槽位留下足够数字。
+* 允许重复使用同一个数字；
+* 生成不同排列并在最后去重；
+* 只检查总和，不检查数量恰好为 ``k``；
+* ``remaining==0`` 时提前提交未选满路径；
+* 最大可达和错误地从 ``start`` 计算，遗漏始终可以选择更大的数字；
+* 当后续剩余和过大时错误地 ``break``；
+* 提交路径时没有复制可变容器；
+* 忘记回溯撤销最后一个数字。
 
 知识联系
 --------
 
-这道题是组合型回溯的标准模型：
+这道题的候选域固定且很小，重点不是渐近复杂度，而是如何定义可验证状态并做安全剪枝。
 
-* ``start`` 把排列树压缩成组合树；
-* ``slots`` 控制结果长度；
-* ``remaining`` 控制目标和；
-* 最小值与最大值界判断当前状态是否还有可能完成。
+更一般的组合问题中，常见剪枝模板是：
 
-相同结构可以迁移到固定长度子集、组合总和、从有序候选中选取若干元素，以及带上下界的搜索问题。候选包含重复值时，还需要在同一搜索层跳过相同候选；候选允许重复使用时，下一层起点应保持为当前位置而不是移动到下一个位置。
+* 剩余槽位数量；
+* 剩余候选数量；
+* 剩余目标与最小、最大可达值；
+* 候选单调性带来的 ``break`` 与 ``continue`` 区别。
 
 自检问题
 --------
 
-#. 为什么严格递增路径可以同时保证数字不重复和组合不重复？
-#. 为什么必须同时检查 ``slots=0`` 与 ``remaining=0`` 才能提交答案？
-#. 状态 ``(start, slots)`` 的最小可达和如何计算？
-#. 为什么本层候选最大只能到 ``10-slots``？
-#. 为什么找到答案时必须复制 ``path``？
+#. 为什么路径必须严格递增？
+#. ``remaining < minimum`` 和 ``remaining > maximum`` 分别说明什么？
+#. 为什么剩余和过小时可以 ``break``，过大时通常只能 ``continue``？
+#. 为什么 ``remaining==0`` 仍不一定可以提交？
+#. 输出复杂度为什么要乘以 ``k``？
 
 参考答案
 ~~~~~~~~
 
-#. 每个数字只能向更大的数字转移，因此不会重复使用；同一集合只有一种递增排列，因此不会按不同顺序重复生成。
-#. 前者保证数量恰好为 ``k``，后者保证总和恰好为 ``n``，缺少任一条件都可能提交非法结果。
-#. 选择从 ``start`` 开始的连续 ``slots`` 个最小整数，和为 ``slots*(2*start+slots-1)/2``。
-#. 选择当前值后还需留下 ``slots-1`` 个更大的数字，超过该上界将没有足够候选填满路径。
-#. 回溯会继续修改同一个可变路径；副本才能保存发现答案时的内容。
+#. 它同时保证数字不重复，并让每个组合只有一种生成顺序。
+#. 前者说明最小合法选择都太大，后者说明最大合法选择仍不够。
+#. 更大的当前值会让剩余和更小且后续下界更高；但当前剩余和过大时，更大的当前值可能使它降到可行范围。
+#. 还必须确认已经选满恰好 ``k`` 个数字。
+#. 每个结果都需要复制或构造长度为 ``k`` 的序列。
