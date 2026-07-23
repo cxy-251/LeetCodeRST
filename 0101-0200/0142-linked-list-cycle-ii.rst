@@ -6,28 +6,31 @@
 
 :题号: 0142
 :难度: Medium
-:主题: 链表、Floyd 两阶段算法、模同余
+:主题: 链表、Floyd 快慢指针、环入口、对象身份
 :原题: `LeetCode 0142 <https://leetcode.com/problems/linked-list-cycle-ii/>`_
-:重点: 环内相遇、入口距离、同步前进、返回原节点身份
+:重点: 返回环入口节点、无环返回空、``pos`` 非函数参数、不修改链表
 
 题目重述
 --------
 
-给定一条可能含环的单链表。若有环，返回从 ``head`` 出发第一次进入环的节点；若无环则返回空。不得修改链表。环入口按节点身份确定，不是按节点值判断，也不一定是快慢指针第一次相遇的位置。
+给定一条可能含环的单链表头节点 ``head``。若链表存在环，返回从链表头沿 ``next`` 首次进入环时的那个节点对象；若不存在环，返回 ``null``。测试描述中的 ``pos`` 只表示链表尾节点连接到哪个零基位置，不是函数参数。判断和返回必须依据节点身份，且不能修改链表结构。
+
+链表节点数在 ``0..10^4`` 范围内，节点值在 ``-10^5..10^5`` 范围内，``pos`` 为 ``-1`` 或有效节点下标。
 
 自建示例
 --------
 
 .. code-block:: text
 
-   A -> B -> C -> D -> E
-             ^         |
-             +---------+
+   输入：head = [9,4,7,2,5], pos = 2
+   输出：返回值为 7 的节点对象
+   解释：尾节点 5 的 next 指向下标 2 的节点 7，因此 7 是从链表头首次进入环的位置。
 
-   第一阶段：slow 与 fast 在 D 相遇
-   第二阶段：A/D -> B/E -> C/C
+.. code-block:: text
 
-入口是 ``C``，而第一阶段相遇点是 ``D``。
+   输入：head = [1,2,3], pos = -1
+   输出：null
+   解释：尾节点指向 null，链表不存在环。
 
 C++ 实现
 --------
@@ -45,7 +48,7 @@ C++ 实现
            return nullptr;
        }
 
-       ListNode* floyd(ListNode* head) {
+       ListNode* floydEntry(ListNode* head) {
            ListNode* slow = head;
            ListNode* fast = head;
            do {
@@ -64,37 +67,62 @@ C++ 实现
 
    public:
        ListNode* detectCycle(ListNode* head) {
-           return floyd(head);
+           return floydEntry(head);
        }
    };
 
 题解
 ----
 
-第一阶段得到什么
-~~~~~~~~~~~~~~~~
+两个阶段
+~~~~~~~~
 
-设头到入口距离为 ``mu``，环长为 ``lambda``。慢指针相遇时走了 ``t`` 步，快指针走了 ``2t`` 步。两者在环内同一位置，所以：
+#. 快慢指针相遇，证明存在环；
+#. 一个指针回到头，另一个留在相遇点，两者同速前进，再次相遇处就是入口。
+
+距离等式
+~~~~~~~~
+
+设头到入口距离为 ``mu``，环长为 ``lambda``，第一次相遇时慢指针在环内前进 ``x``。快指针比慢指针多走整数圈：
 
 .. code-block:: text
 
-   2t - t = k * lambda
-   t = k * lambda
+   2(mu+x) = mu+x+k*lambda
+   mu+x = k*lambda
+   mu = k*lambda-x
 
-相遇点到入口还差多少
-~~~~~~~~~~~~~~~~~~~~
+因此从相遇点再走 ``mu`` 步，等价于绕若干圈后回到入口。
 
-慢指针相遇位置的环内偏移是 ``(t-mu) mod lambda``。由于 ``t`` 是环长整数倍，从相遇点再走 ``mu`` 步恰好回到入口。
+.. list-table::
+   :header-rows: 1
 
-为什么同步指针第一次相遇就是入口
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   * - 指针
+     - 第二阶段起点
+     - 前进距离
+     - 终点
+   * - seeker
+     - 链表头
+     - ``mu``
+     - 环入口
+   * - slow
+     - 第一次相遇点
+     - ``mu``
+     - 环入口
 
-让 ``seeker`` 从头出发，另一个指针留在相遇点；两者每轮都走一步。经过 ``mu`` 步，前者第一次到入口，后者也从相遇点走到入口。环外路径没有重复节点，因此不可能更早相遇。
+无环为何安全返回空
+~~~~~~~~~~~~~~~~~~
+
+第一阶段每轮移动快指针前检查 ``fast`` 与 ``fast.next``。任一为空都说明沿链最终到达末端，不可能存在环。
+
+为什么返回的是入口对象
+~~~~~~~~~~~~~~~~~~~~~~
+
+第二阶段比较的是指针身份。两者首次相等时，seeker 恰走完头到入口的非环前缀，slow 也恰到入口；返回该对象而不是节点值。
 
 复杂度来源
 ~~~~~~~~~~
 
-身份集合方法为 ``O(n)`` 时间、``O(n)`` 空间；Floyd 两阶段每个指针只走线性步数，时间 ``O(n)``、额外空间 ``O(1)``。
+两阶段总移动次数均为 ``O(n)``，额外空间 ``O(1)``。哈希身份集合方法更直观，但需要 ``O(n)`` 空间。
 
 九语言实现
 ----------
@@ -134,7 +162,7 @@ Rust
 
 .. code-block:: rust
 
-   impl Solution {pub fn detect_cycle(head:Link)->Link{fn next(x:&Link)->Link{x.as_ref().and_then(|n|n.borrow().next.clone())}let mut slow=head.clone();let mut fast=head.clone();loop{slow=next(&slow);fast=next(&next(&fast));match(&slow,&fast){(Some(a),Some(b))if std::rc::Rc::ptr_eq(a,b)=>break,(None,_)|(_,None)=>return None,_=>{}}}let mut seek=head;loop{match(&seek,&slow){(Some(a),Some(b))if std::rc::Rc::ptr_eq(a,b)=>return seek,_=>{seek=next(&seek);slow=next(&slow);}}}}}
+   impl Solution {pub fn detect_cycle(head:Link)->Link{fn next(x:&Link)->Link{x.as_ref().and_then(|n|n.borrow().next.clone())}let(mut slow,mut fast)=(head.clone(),head.clone());loop{slow=next(&slow);fast=next(&next(&fast));match(&slow,&fast){(Some(a),Some(b))if std::rc::Rc::ptr_eq(a,b)=>break,(None,_)|(_,None)=>return None,_=>{}}}let mut seek=head;loop{match(&seek,&slow){(Some(a),Some(b))if std::rc::Rc::ptr_eq(a,b)=>return seek,_=>{seek=next(&seek);slow=next(&slow);}}}}}
 
 Go
 ~~
@@ -155,7 +183,7 @@ C#
 
 .. code-block:: csharp
 
-   public class Solution {public ListNode DetectCycle(ListNode head){var slow=head;var fast=head;do{if(fast==null||fast.next==null)return null;slow=slow.next;fast=fast.next.next;}while(!ReferenceEquals(slow,fast));var seek=head;while(!ReferenceEquals(seek,slow)){seek=seek.next;slow=slow.next;}return seek;}}
+   public class Solution {public ListNode DetectCycle(ListNode head){var slow=head;var fast=head;do{if(fast==null||fast.next==null)return null;slow=slow.next;fast=fast.next.next;}while(!object.ReferenceEquals(slow,fast));var seek=head;while(!object.ReferenceEquals(seek,slow)){seek=seek.next;slow=slow.next;}return seek;}}
 
 Julia
 ~~~~~
