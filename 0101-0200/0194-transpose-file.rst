@@ -6,10 +6,9 @@
 
 :题号: 0194
 :难度: Medium
-:类型: Shell
 :主题: Shell、文本矩阵、转置
 :原题: `LeetCode 194 <https://leetcode.com/problems/transpose-file/>`_
-:教学重点: 逐行保存每一列的字段，并在读取结束后按列编号输出。
+:重点: 逐行保存每一列的字段，并在读取结束后按列编号输出。
 
 题目重述
 --------
