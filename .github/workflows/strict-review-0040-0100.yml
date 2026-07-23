@@ -1,0 +1,84 @@
+name: Strict review 0040-0100
+
+on:
+  push:
+    paths:
+      - '.github/workflows/strict-review-0040-0100.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Apply reviewed problem statements
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+          import base64
+          import json
+          import subprocess
+          import zlib
+
+          parts = []
+          for number in range(1, 7):
+              parts.append(Path(f".strict-review-data/part-{number:02d}").read_text(encoding="utf-8").strip())
+          blob = "".join(parts)
+          data = json.loads(zlib.decompress(base64.b64decode(blob)).decode("utf-8"))
+          heads = data["heads"]
+          progress = data["progress"]
+
+          start_marker = "题目信息\n--------"
+          end_marker = "C++ 实现\n--------"
+
+          for relative, replacement in heads.items():
+              path = Path(relative)
+              original = path.read_text(encoding="utf-8")
+              if original.count(start_marker) != 1:
+                  raise RuntimeError(f"unexpected start marker count: {relative}")
+              if original.count(end_marker) != 1:
+                  raise RuntimeError(f"unexpected end marker count: {relative}")
+              start = original.index(start_marker)
+              end = original.index(end_marker)
+              prefix = original[:start]
+              tail = original[end:]
+              updated = prefix + replacement.rstrip() + "\n\n" + tail
+              if updated[:len(prefix)] != prefix:
+                  raise RuntimeError(f"title/prefix changed: {relative}")
+              if updated[updated.index(end_marker):] != tail:
+                  raise RuntimeError(f"C++ tail changed: {relative}")
+              path.write_text(updated, encoding="utf-8")
+
+          Path("PROGRESS.rst").write_text(progress.rstrip() + "\n", encoding="utf-8")
+          workflow = ".github/workflows/strict-review-0040-0100.yml"
+          Path(workflow).unlink()
+          for number in range(1, 7):
+              Path(f".strict-review-data/part-{number:02d}").unlink()
+          Path(".strict-review-data").rmdir()
+
+          status = subprocess.check_output(["git", "status", "--porcelain"], text=True)
+          actual = {line[3:] for line in status.splitlines() if line.strip()}
+          temporary = {workflow} | {f".strict-review-data/part-{number:02d}" for number in range(1, 7)}
+          expected = set(heads) | {"PROGRESS.rst"} | temporary
+          unexpected = actual - expected
+          if unexpected:
+              raise RuntimeError(f"unexpected changed paths: {sorted(unexpected)}")
+          missing = {"PROGRESS.rst"} | temporary - actual
+          if missing:
+              raise RuntimeError(f"required changes missing: {sorted(missing)}")
+          print(f"reviewed={len(heads)} problem_files_changed={len(actual - temporary - {'PROGRESS.rst'})}")
+          PY
+
+          git diff --check
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "strictly review problems 0040-0100"
+          git push origin HEAD:main
