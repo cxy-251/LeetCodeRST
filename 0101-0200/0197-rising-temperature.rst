@@ -6,10 +6,9 @@
 
 :题号: 0197
 :难度: Easy
-:类型: Database
 :主题: SQL、日期差、自连接
 :原题: `LeetCode 197 <https://leetcode.com/problems/rising-temperature/>`_
-:教学重点: 按日期相差一天连接两日记录，再比较当天与前一天温度。
+:重点: 按日期相差一天连接两日记录，再比较当天与前一天温度。
 
 题目重述
 --------
