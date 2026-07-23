@@ -5,9 +5,7 @@
 --------
 
 :题号: 0066
-:题名: Plus One
 :难度: Easy
-:类型: Algorithms
 :主题: 数组、十进制进位、反向扫描
 :原题: `LeetCode 0066 <https://leetcode.com/problems/plus-one/>`_
 :教学重点: 连续 9 后缀、进位终止、全 9 扩位、整数宽度

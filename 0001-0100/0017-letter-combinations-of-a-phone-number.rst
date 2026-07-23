@@ -5,30 +5,32 @@
 --------
 
 :题号: 0017
-:题名: Letter Combinations of a Phone Number
 :难度: Medium
-:类型: Algorithms
-:主题: 字符串、回溯
+:主题: 字符串、回溯、笛卡尔积
 :原题: `LeetCode 0017 <https://leetcode.com/problems/letter-combinations-of-a-phone-number/>`_
+:教学重点: 按键映射、递归层、路径状态、选择与撤销、输出规模
 
 题目重述
 --------
 
-给定只包含数字 ``2`` 到 ``9`` 的字符串 ``digits``，按照电话按键上每个数字对应的字母，返回所有可能的字母组合。每个输入数字必须贡献一个字母，组合顺序与数字顺序一致；输入为空时返回空列表。
+给定只包含数字 ``2`` 到 ``9`` 的字符串 ``digits``，按照电话键盘映射返回所有可能字母组合。每个输入数字必须
+贡献一个字母，字母顺序与数字顺序一致。空输入返回空列表。
+
+映射为 ``2:abc``、``3:def``、``4:ghi``、``5:jkl``、``6:mno``、``7:pqrs``、``8:tuv``、``9:wxyz``。
 
 自建示例
 --------
 
 .. code-block:: text
 
-   输入：digits = "27"
-   输出：["ap","aq","ar","as","bp","bq","br","bs","cp","cq","cr","cs"]
-   解释：2 对应 abc，7 对应 pqrs，共有 3 * 4 个组合。
+   digits = "27"
+   第一位选择 a、b、c；第二位分别选择 p、q、r、s。
+   输出 12 个组合：ap, aq, ar, as, ..., cp, cq, cr, cs。
 
 .. code-block:: text
 
-   输入：digits = ""
-   输出：[]
+   digits = ""
+   没有数字，也不生成一个空字符串组合；输出 []。
 
 C++ 实现
 --------

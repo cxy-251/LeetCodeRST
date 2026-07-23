@@ -5,9 +5,7 @@
 --------
 
 :题号: 0080
-:题名: Remove Duplicates from Sorted Array II
 :难度: Medium
-:类型: Algorithms
 :主题: 有序数组、双指针、原地覆盖
 :原题: `LeetCode 0080 <https://leetcode.com/problems/remove-duplicates-from-sorted-array-ii/>`_
 :教学重点: 最多保留两次、有效前缀、倒数第二项判断、稳定覆盖

@@ -5,9 +5,7 @@
 --------
 
 :题号: 0045
-:题名: Jump Game II
 :难度: Medium
-:类型: Algorithms
 :主题: 数组、动态规划、BFS 分层、区间贪心
 :原题: `LeetCode 0045 <https://leetcode.com/problems/jump-game-ii/>`_
 :教学重点: 当前层边界、下一层最远边界、延迟提交跳跃、最短层数

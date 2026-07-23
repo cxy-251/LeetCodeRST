@@ -5,9 +5,7 @@
 --------
 
 :题号: 0048
-:题名: Rotate Image
 :难度: Medium
-:类型: Algorithms
 :主题: 矩阵、坐标映射、转置、原地变换
 :原题: `LeetCode 0048 <https://leetcode.com/problems/rotate-image/>`_
 :教学重点: 顺时针映射、四元环、转置与行反转、覆盖安全性

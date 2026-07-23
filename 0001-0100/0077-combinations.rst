@@ -5,9 +5,7 @@
 --------
 
 :题号: 0077
-:题名: Combinations
 :难度: Medium
-:类型: Algorithms
 :主题: 回溯、组合、容量剪枝
 :原题: `LeetCode 0077 <https://leetcode.com/problems/combinations/>`_
 :教学重点: 严格递增路径、剩余容量、结果快照、输出规模

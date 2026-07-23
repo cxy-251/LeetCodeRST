@@ -5,9 +5,7 @@
 --------
 
 :题号: 0063
-:题名: Unique Paths II
 :难度: Medium
-:类型: Algorithms
 :主题: 动态规划、网格、障碍、滚动数组、饱和计数
 :原题: `LeetCode 0063 <https://leetcode.com/problems/unique-paths-ii/>`_
 :教学重点: 障碍归零、起点阻断、一维覆盖顺序、中间计数防溢出

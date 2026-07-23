@@ -5,9 +5,7 @@
 --------
 
 :题号: 0034
-:题名: Find First and Last Position of Element in Sorted Array
 :难度: Medium
-:类型: Algorithms
 :主题: 数组、二分查找、边界定位、重复元素
 :原题: `LeetCode 0034 <https://leetcode.com/problems/find-first-and-last-position-of-element-in-sorted-array/>`_
 :教学重点: lower bound、upper bound、半开区间、存在性验证、重复值边界

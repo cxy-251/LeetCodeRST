@@ -5,9 +5,7 @@
 --------
 
 :题号: 0044
-:题名: Wildcard Matching
 :难度: Hard
-:类型: Algorithms
 :主题: 字符串、动态规划、贪心、受控回退
 :原题: `LeetCode 0044 <https://leetcode.com/problems/wildcard-matching/>`_
 :教学重点: 问号单字符、星号任意长度、最近星号回退、整串匹配

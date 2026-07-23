@@ -5,29 +5,27 @@
 --------
 
 :题号: 0028
-:题名: Find the Index of the First Occurrence in a String
 :难度: Easy
-:类型: Algorithms
-:主题: 字符串、字符串匹配
+:主题: 字符串、子串匹配、前缀函数、KMP
 :原题: `LeetCode 0028 <https://leetcode.com/problems/find-the-index-of-the-first-occurrence-in-a-string/>`_
+:教学重点: 候选起点、重复比较、最长相等前后缀、失配回退、最早匹配
 
 题目重述
 --------
 
-给定字符串 ``haystack`` 和 ``needle``，返回 ``needle`` 在 ``haystack`` 中第一次完整出现的起始下标；若从未出现，返回 ``-1``。匹配必须是连续且逐字符相同的子串，存在多次匹配时只返回最靠左的位置。
+给定 ``haystack`` 与 ``needle``，返回 ``needle`` 第一次作为连续子串出现的零基起点；不存在返回 ``-1``。空模式
+按通用接口返回 0，模式比文本长返回 ``-1``。
 
 自建示例
 --------
 
 .. code-block:: text
 
-   输入：haystack = "algorithmbook", needle = "book"
-   输出：9
+   haystack = "abababca"
+   needle   = "ababca"
+   返回 2
 
-.. code-block:: text
-
-   输入：haystack = "aaaaa", needle = "bba"
-   输出：-1
+起点 0 已匹配 ``abab`` 后失配。朴素方法重新尝试下一个起点；KMP 利用模式内部 ``ab`` 的前后缀关系继续匹配。
 
 C++ 实现
 --------

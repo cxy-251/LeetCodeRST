@@ -5,9 +5,7 @@
 --------
 
 :题号: 0087
-:题名: Scramble String
 :难度: Hard
-:类型: Algorithms
 :主题: 字符串、区间动态规划、记忆化搜索
 :原题: `LeetCode 0087 <https://leetcode.com/problems/scramble-string/>`_
 :教学重点: 三维区间状态、交换与不交换转移、频次剪枝、失败状态缓存

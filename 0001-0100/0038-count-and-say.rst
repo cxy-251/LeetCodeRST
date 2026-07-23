@@ -5,9 +5,7 @@
 --------
 
 :题号: 0038
-:题名: Count and Say
 :难度: Medium
-:类型: Algorithms
 :主题: 字符串、游程编码、迭代生成、输出敏感复杂度
 :原题: `LeetCode 0038 <https://leetcode.com/problems/count-and-say/>`_
 :教学重点: 最大连续段、双指针扫描、计数文本拼接、逐项归纳

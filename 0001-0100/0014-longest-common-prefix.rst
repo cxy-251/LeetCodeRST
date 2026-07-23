@@ -5,31 +5,30 @@
 --------
 
 :题号: 0014
-:题名: Longest Common Prefix
 :难度: Easy
-:类型: Algorithms
-:主题: 字符串、字典树
+:主题: 字符串、纵向扫描、候选收缩、排序
 :原题: `LeetCode 0014 <https://leetcode.com/problems/longest-common-prefix/>`_
+:教学重点: 前缀连续性、逐列验证、首次冲突、排序端点
 
 题目重述
 --------
 
-给定字符串数组 ``strs``，返回所有字符串共同拥有的最长前缀。前缀必须从每个字符串的第一个字符开始连续出现；若第一个字符就不一致，返回空字符串。
+给定一个非空字符串数组，返回所有字符串的最长公共前缀。前缀必须从下标 0 开始连续出现；若首字符就不一致，
+返回空字符串。
 
 自建示例
 --------
 
 .. code-block:: text
 
-   输入：strs = ["interview", "internet", "internal"]
+   strs = ["interview", "internet", "internal"]
+   前五列均为 i、n、t、e、r；第六列分别为 v、n、n。
    输出："inter"
-   解释：三个字符串前五个字符相同，第六个字符开始分叉。
 
 .. code-block:: text
 
-   输入：strs = ["alpha", "beta", "gamma"]
-   输出：""
-   解释：不存在共同的首字符。
+   strs = ["same"]
+   只有一个字符串，它本身就是最长公共前缀。
 
 C++ 实现
 --------

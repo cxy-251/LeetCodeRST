@@ -5,9 +5,7 @@
 --------
 
 :题号: 0073
-:题名: Set Matrix Zeroes
 :难度: Medium
-:类型: Algorithms
 :主题: 矩阵、原地标记、分阶段更新
 :原题: `LeetCode 0073 <https://leetcode.com/problems/set-matrix-zeroes/>`_
 :教学重点: 原始零见证、首行首列复用、标记冲突、写入顺序

@@ -5,9 +5,7 @@
 --------
 
 :题号: 0055
-:题名: Jump Game
 :难度: Medium
-:类型: Algorithms
 :主题: 数组、贪心、动态规划、可达前缀
 :原题: `LeetCode 0055 <https://leetcode.com/problems/jump-game/>`_
 :教学重点: 最远可达边界、不可达断点、前缀闭包、反向好位置

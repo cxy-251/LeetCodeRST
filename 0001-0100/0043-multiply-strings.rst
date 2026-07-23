@@ -5,9 +5,7 @@
 --------
 
 :题号: 0043
-:题名: Multiply Strings
 :难度: Medium
-:类型: Algorithms
 :主题: 字符串、竖式乘法、位权对齐、进位
 :原题: `LeetCode 0043 <https://leetcode.com/problems/multiply-strings/>`_
 :教学重点: 乘积长度上界、结果槽位映射、局部进位、前导零删除

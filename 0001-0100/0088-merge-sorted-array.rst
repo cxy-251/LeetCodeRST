@@ -5,9 +5,7 @@
 --------
 
 :题号: 0088
-:题名: Merge Sorted Array
 :难度: Easy
-:类型: Algorithms
 :主题: 数组、双指针、原地归并、逆向写入
 :原题: `LeetCode 0088 <https://leetcode.com/problems/merge-sorted-array/>`_
 :教学重点: 有效前缀、尾部预留空间、未读数据保护、逆向取大

@@ -5,9 +5,7 @@
 --------
 
 :题号: 0051
-:题名: N-Queens
 :难度: Hard
-:类型: Algorithms
 :主题: 回溯、约束状态、位掩码、棋盘构造
 :原题: `LeetCode 0051 <https://leetcode.com/problems/n-queens/>`_
 :教学重点: 按行决策、列与两类对角线、选择撤销、完整棋盘输出

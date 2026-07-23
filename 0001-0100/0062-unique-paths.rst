@@ -5,9 +5,7 @@
 --------
 
 :题号: 0062
-:题名: Unique Paths
 :难度: Medium
-:类型: Algorithms
 :主题: 动态规划、网格、组合计数、滚动数组
 :原题: `LeetCode 0062 <https://leetcode.com/problems/unique-paths/>`_
 :教学重点: 最后一步分类、边界初始化、一维覆盖顺序、组合公式

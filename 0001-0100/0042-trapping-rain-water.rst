@@ -5,9 +5,7 @@
 --------
 
 :题号: 0042
-:题名: Trapping Rain Water
 :难度: Hard
-:类型: Algorithms
 :主题: 数组、前后缀最大值、单调栈、双指针
 :原题: `LeetCode 0042 <https://leetcode.com/problems/trapping-rain-water/>`_
 :教学重点: 单柱水位公式、较低边界确定性、双指针结算顺序、空间消除

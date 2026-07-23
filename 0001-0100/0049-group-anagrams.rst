@@ -5,9 +5,7 @@
 --------
 
 :题号: 0049
-:题名: Group Anagrams
 :难度: Medium
-:类型: Algorithms
 :主题: 字符串、哈希表、规范签名、字符频次
 :原题: `LeetCode 0049 <https://leetcode.com/problems/group-anagrams/>`_
 :教学重点: 异位词等价关系、排序键、频次向量键、哈希分组

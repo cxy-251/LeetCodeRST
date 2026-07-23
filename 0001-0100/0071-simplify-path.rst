@@ -5,9 +5,7 @@
 --------
 
 :题号: 0071
-:题名: Simplify Path
 :难度: Medium
-:类型: Algorithms
 :主题: 字符串、栈、路径规范化
 :原题: `LeetCode 0071 <https://leetcode.com/problems/simplify-path/>`_
 :教学重点: 组件精确分类、根目录边界、栈式回退、规范输出

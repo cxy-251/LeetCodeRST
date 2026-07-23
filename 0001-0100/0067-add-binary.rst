@@ -5,9 +5,7 @@
 --------
 
 :题号: 0067
-:题名: Add Binary
 :难度: Easy
-:类型: Algorithms
 :主题: 字符串、二进制、双指针、进位
 :原题: `LeetCode 0067 <https://leetcode.com/problems/add-binary/>`_
 :教学重点: 低位对齐、三项求和、反向构造、最高位进位

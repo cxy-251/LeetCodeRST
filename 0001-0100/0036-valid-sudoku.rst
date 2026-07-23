@@ -5,9 +5,7 @@
 --------
 
 :题号: 0036
-:题名: Valid Sudoku
 :难度: Medium
-:类型: Algorithms
 :主题: 矩阵、约束验证、集合、位掩码
 :原题: `LeetCode 0036 <https://leetcode.com/problems/valid-sudoku/>`_
 :教学重点: 行列宫三类约束、只验证已填数字、宫编号、固定范围状态压缩
