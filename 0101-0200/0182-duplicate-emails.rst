@@ -6,10 +6,9 @@
 
 :题号: 0182
 :难度: Easy
-:类型: Database
 :主题: SQL、分组、聚合过滤
 :原题: `LeetCode 182 <https://leetcode.com/problems/duplicate-emails/>`_
-:教学重点: 按邮箱分组并在聚合后筛选计数大于一的组。
+:重点: 按邮箱分组并在聚合后筛选计数大于一的组。
 
 题目重述
 --------
