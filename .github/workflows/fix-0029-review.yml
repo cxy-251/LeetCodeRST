@@ -1,0 +1,91 @@
+name: Fix strict review for 0029
+
+on:
+  push:
+    paths:
+      - '.github/workflows/fix-0029-review.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Fix problem 0029 review sections
+        shell: bash
+        run: |
+          python3 <<'PY'
+          from pathlib import Path
+
+          path = Path('0001-0100/0029-divide-two-integers.rst')
+          original = path.read_text(encoding='utf-8')
+          start_marker = '题目信息\n--------'
+          end_marker = 'C++ 实现\n--------'
+          start = original.index(start_marker)
+          end = original.index(end_marker)
+          prefix = original[:start]
+          tail = original[end:]
+
+          replacement = '''题目信息
+--------
+
+:题号: 0029
+:难度: Medium
+:主题: 整数、加法倍增、贪心、二进制商、溢出边界
+:原题: `LeetCode 0029 <https://leetcode.com/problems/divide-two-integers/>`_
+:重点: 禁用乘除取模、负数域、倍增表、降序消去、向零截断、``INT_MIN``
+
+题目重述
+--------
+
+给定两个 32 位有符号整数 ``dividend`` 和 ``divisor``，在不使用乘法、除法和取模运算符的前提下，返回两数相除得到的整数商。商的小数部分直接舍弃，也就是向零截断。
+
+``dividend`` 和 ``divisor`` 均在 ``[-2^31, 2^31-1]`` 范围内，且 ``divisor != 0``。唯一会超出 32 位有符号整数上界的情况是 ``INT_MIN / -1``，此时返回 ``INT_MAX``。
+
+自建示例
+--------
+
+.. code-block:: text
+
+   输入：dividend = 58, divisor = 7
+   输出：8
+   解释：58 除以 7 的整数部分为 8，剩余的 2 被舍弃。
+
+.. code-block:: text
+
+   输入：dividend = -58, divisor = 7
+   输出：-8
+   解释：数学结果约为 -8.2857，向零截断后得到 -8，而不是 -9。
+
+.. code-block:: text
+
+   输入：dividend = 5, divisor = 12
+   输出：0
+   解释：被除数的绝对值小于除数，整数商为 0。
+
+.. code-block:: text
+
+   输入：dividend = INT_MIN, divisor = -1
+   输出：INT_MAX
+   解释：数学结果为 2147483648，超过 32 位有符号整数上界，因此钳制为 INT_MAX。
+'''
+
+          updated = prefix + replacement.rstrip() + '\n\n' + tail
+          assert updated[:len(prefix)] == prefix
+          assert updated[updated.index(end_marker):] == tail
+          path.write_text(updated, encoding='utf-8')
+          Path('.github/workflows/fix-0029-review.yml').unlink()
+          PY
+
+          git diff --check
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -m "strictly review problem 0029 examples"
+          git push origin HEAD:main
