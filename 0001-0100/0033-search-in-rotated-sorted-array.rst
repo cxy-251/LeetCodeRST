@@ -6,27 +6,43 @@
 
 :题号: 0033
 :难度: Medium
-:主题: 数组、二分查找、旋转数组、区间排除
+:主题: 数组、二分查找、旋转有序数组
 :原题: `LeetCode 0033 <https://leetcode.com/problems/search-in-rotated-sorted-array/>`_
-:重点: 局部有序半区、目标值域、闭区间收缩、无重复前提
+:重点: 严格递增数组旋转、元素互异、零基下标、对数时间要求
 
 题目重述
 --------
 
-给定一个由严格递增数组在未知位置旋转得到的数组 ``nums``，元素互不相同。返回 ``target`` 的零基下标，不存在返回 ``-1``，要求 ``O(log n)`` 时间。
+给定一个元素互不相同的整数数组 ``nums``。它原本按严格递增顺序排列，之后可能在某个下标处旋转，使一个后缀移到数组开头。再给定整数 ``target``，若目标值存在，返回其零基下标；否则返回 ``-1``。
+
+要求算法的时间复杂度为 ``O(log n)``。``nums`` 的长度位于 ``[1, 5000]``，数组元素位于 ``[-10^4, 10^4]``，``target`` 也位于该范围。
 
 自建示例
 --------
 
-.. code-block:: text
-
-   nums = [4,5,6,7,0,1,2], target = 1
-   第一次中点为 7，左半段有序但目标不在 [4,7)；搜索区间转向右侧，最终返回 5。
+目标位于旋转后的左段：
 
 .. code-block:: text
 
-   nums = [6,7,1,2,3,4,5], target = 8
-   每轮都能排除一个值域不含 8 的有序半区，最终返回 -1。
+   输入：nums = [8, 10, 13, 1, 3, 5, 6], target = 10
+   输出：1
+   解释：目标值 10 位于零基下标 1。
+
+目标位于旋转后的右段：
+
+.. code-block:: text
+
+   输入：nums = [15, 18, 2, 4, 7, 11], target = 7
+   输出：4
+   解释：目标值 7 位于零基下标 4。
+
+目标不存在：
+
+.. code-block:: text
+
+   输入：nums = [5, 7, 9, 12, 1, 3], target = 8
+   输出：-1
+   解释：数组中没有值 8。
 
 C++ 实现
 --------
@@ -38,47 +54,44 @@ C++ 实现
    class Solution {
    private:
        int linearScan(const std::vector<int>& nums, int target) {
-           for (int i = 0; i < static_cast<int>(nums.size()); ++i)
+           for (int i = 0; i < static_cast<int>(nums.size()); ++i) {
                if (nums[i] == target) return i;
-           return -1;
-       }
-
-       int ordinaryBinary(const std::vector<int>& nums, int left, int right, int target) {
-           while (left <= right) {
-               int mid = left + (right - left) / 2;
-               if (nums[mid] == target) return mid;
-               if (nums[mid] < target) left = mid + 1;
-               else right = mid - 1;
            }
            return -1;
        }
 
-       int pivotThenBinary(const std::vector<int>& nums, int target) {
-           if (nums.empty()) return -1;
-           int left = 0, right = static_cast<int>(nums.size()) - 1;
-           while (left < right) {
-               int mid = left + (right - left) / 2;
-               if (nums[mid] > nums[right]) left = mid + 1;
-               else right = mid;
+       int findPivotThenSearch(const std::vector<int>& nums, int target) {
+           int low = 0, high = static_cast<int>(nums.size()) - 1;
+           while (low < high) {
+               int mid = low + (high - low) / 2;
+               if (nums[mid] > nums[high]) low = mid + 1;
+               else high = mid;
            }
-           int pivot = left;
-           if (target >= nums[pivot] && target <= nums.back())
-               return ordinaryBinary(nums, pivot, static_cast<int>(nums.size()) - 1, target);
-           return ordinaryBinary(nums, 0, pivot - 1, target);
+           int pivot = low;
+           low = 0; high = static_cast<int>(nums.size()) - 1;
+           if (target >= nums[pivot] && target <= nums.back()) low = pivot;
+           else high = pivot - 1;
+           while (low <= high) {
+               int mid = low + (high - low) / 2;
+               if (nums[mid] == target) return mid;
+               if (nums[mid] < target) low = mid + 1;
+               else high = mid - 1;
+           }
+           return -1;
        }
 
-       int oneStageBinary(const std::vector<int>& nums, int target) {
-           int left = 0, right = static_cast<int>(nums.size()) - 1;
-           while (left <= right) {
-               int mid = left + (right - left) / 2;
+       int onePassBinary(const std::vector<int>& nums, int target) {
+           int low = 0, high = static_cast<int>(nums.size()) - 1;
+           while (low <= high) {
+               int mid = low + (high - low) / 2;
                if (nums[mid] == target) return mid;
 
-               if (nums[left] <= nums[mid]) {
-                   if (nums[left] <= target && target < nums[mid]) right = mid - 1;
-                   else left = mid + 1;
+               if (nums[low] <= nums[mid]) {
+                   if (nums[low] <= target && target < nums[mid]) high = mid - 1;
+                   else low = mid + 1;
                } else {
-                   if (nums[mid] < target && target <= nums[right]) left = mid + 1;
-                   else right = mid - 1;
+                   if (nums[mid] < target && target <= nums[high]) low = mid + 1;
+                   else high = mid - 1;
                }
            }
            return -1;
@@ -86,66 +99,80 @@ C++ 实现
 
    public:
        int search(std::vector<int>& nums, int target) {
-           return oneStageBinary(nums, target);
+           return onePassBinary(nums, target);
        }
    };
 
 题解
 ----
 
-线性扫描遗漏了什么结构
-~~~~~~~~~~~~~~~~~~~~~~
+旋转后为什么仍可二分
+~~~~~~~~~~~~~~~~~~~~
 
-线性扫描正确但需要 ``O(n)``。旋转只把严格递增数组切成两段，数组至多有一个下降位置。二分中点虽然不能保证整个区间有序，却能保证左右两半至少有一半不跨越旋转点，因此仍然可以一次排除约一半候选。
+旋转只产生一个断点。任意二分区间中，``[low,mid]`` 与 ``[mid,high]`` 至少有一半保持严格递增。识别有序半区后，
+可以用端点范围判断目标是否位于其中；若不在，就保留另一半。
 
-两阶段方法如何定位旋转点
+元素互异为什么重要
+~~~~~~~~~~~~~~~~~~
+
+通过 ``nums[low] <= nums[mid]`` 可以确定左半有序，因为不存在大量相等值遮蔽断点。若允许重复值，端点与中点相等时
+可能无法判断旋转点在哪一侧，需要额外收缩边界，最坏可能退化为线性。
+
+一次迭代如何选择保留区间
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-最小值是第二段首元素。比较 ``nums[mid]`` 与 ``nums[right]``：若中点值更大，旋转点一定在右侧；否则中点可能就是最小值，保留 ``mid``。找到最小值后，根据目标值域选择一段普通二分。该方法清楚，但需要两个二分阶段。
+若左半有序：
 
-单阶段方法如何识别有序半区
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+* ``nums[low] <= target < nums[mid]`` 时目标只能在左半；
+* 否则目标若存在只能在右半。
 
-在闭区间 ``[left,right]`` 中：
+若右半有序：
 
-* 若 ``nums[left] <= nums[mid]``，左半区 ``[left,mid]`` 严格递增；
-* 否则旋转点位于左半区，右半区 ``[mid,right]`` 严格递增。
+* ``nums[mid] < target <= nums[high]`` 时保留右半；
+* 否则保留左半。
 
-元素互异使两种情况可判定。若允许大量重复值，端点和中点相等时可能无法确定哪半边跨越旋转点。
-
-目标值域如何决定保留区间
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-左半区有序时，目标落在 ``nums[left] <= target < nums[mid]`` 才保留左侧；否则保留右侧。右半区有序时使用对称条件 ``nums[mid] < target <= nums[right]``。中点已提前检查，所以新区间总能排除 ``mid``。
+中点已经先单独检查，因此范围判断采用半开边界，不会遗漏目标。
 
 状态演化
 ~~~~~~~~
 
+对 ``[8,10,13,1,3,5,6]`` 查找 10：
+
 .. list-table::
    :header-rows: 1
 
-   * - ``left,mid,right``
+   * - ``low``
+     - ``mid``
+     - ``high``
      - 有序半区
-     - 目标判断
-     - 新区间
-   * - ``0,3,6``
-     - 左侧 ``[4,5,6,7]``
-     - 1 不在 ``[4,7)``
-     - ``[4,6]``
-   * - ``4,5,6``
-     - 左侧 ``[0,1]``
-     - 中点值等于 1
-     - 返回 5
+     - 判断
+   * - 0
+     - 3
+     - 6
+     - 右半 ``[1,3,5,6]``
+     - 10 不在右半，保留左侧
+   * - 0
+     - 1
+     - 2
+     - 左半 ``[8,10]``
+     - 中点等于目标，返回 1
 
-为什么每次排除都安全
-~~~~~~~~~~~~~~~~~~~~
+为什么被舍弃半区不可能含目标
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-被识别的有序半区具有严格单调值域。若目标位于该值域，另一半不可能包含同值；若目标不在该值域，该有序半区中不存在目标。中点已单独验证，更新到 ``mid-1`` 或 ``mid+1`` 不会漏解。由此目标若存在始终保留在新区间中。
+有序半区内的端点范围完整描述其中所有值。目标落在该范围时，另一半无需考虑；目标不在该范围时，有序半区中也不
+可能存在目标。每轮至少删除一半候选，且保留区间仍包含所有可能位置。
+
+先找旋转点与一次二分的取舍
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+两阶段方法先二分最小值位置，再根据目标范围选择一个普通有序段做二分，逻辑直观，总时间仍为 ``O(log n)``。
+一次方法把两步合并到每轮判断中，只执行一个循环，标准入口采用它。
 
 复杂度来源
 ~~~~~~~~~~
 
-单阶段与两阶段方法都让候选区间每轮缩小约一半，时间 ``O(log n)``、额外空间 ``O(1)``。线性扫描为 ``O(n)``。
+二分区间每轮至少缩小一半，时间 ``O(log n)``，额外空间 ``O(1)``。线性扫描不利用结构，时间 ``O(n)``。
 
 九语言实现
 ----------
@@ -155,19 +182,11 @@ C
 
 .. code-block:: c
 
-   int search(int *nums, int n, int target) {
-       int left = 0, right = n - 1;
-       while (left <= right) {
-           int mid = left + (right - left) / 2;
-           if (nums[mid] == target) return mid;
-           if (nums[left] <= nums[mid]) {
-               if (nums[left] <= target && target < nums[mid]) right = mid - 1;
-               else left = mid + 1;
-           } else {
-               if (nums[mid] < target && target <= nums[right]) left = mid + 1;
-               else right = mid - 1;
-           }
-       }
+   int search(int* nums,int n,int target){
+       int low=0,high=n-1;
+       while(low<=high){int mid=low+(high-low)/2;if(nums[mid]==target)return mid;
+           if(nums[low]<=nums[mid]){if(nums[low]<=target&&target<nums[mid])high=mid-1;else low=mid+1;}
+           else{if(nums[mid]<target&&target<=nums[high])low=mid+1;else high=mid-1;}}
        return -1;
    }
 
@@ -178,21 +197,16 @@ Python
 
    class Solution:
        def search(self, nums: list[int], target: int) -> int:
-           left, right = 0, len(nums) - 1
-           while left <= right:
-               mid = left + (right - left) // 2
-               if nums[mid] == target:
-                   return mid
-               if nums[left] <= nums[mid]:
-                   if nums[left] <= target < nums[mid]:
-                       right = mid - 1
-                   else:
-                       left = mid + 1
+           low, high = 0, len(nums) - 1
+           while low <= high:
+               mid = low + (high - low) // 2
+               if nums[mid] == target: return mid
+               if nums[low] <= nums[mid]:
+                   if nums[low] <= target < nums[mid]: high = mid - 1
+                   else: low = mid + 1
                else:
-                   if nums[mid] < target <= nums[right]:
-                       left = mid + 1
-                   else:
-                       right = mid - 1
+                   if nums[mid] < target <= nums[high]: low = mid + 1
+                   else: high = mid - 1
            return -1
 
 Java
@@ -201,19 +215,11 @@ Java
 .. code-block:: java
 
    class Solution {
-       public int search(int[] nums, int target) {
-           int left = 0, right = nums.length - 1;
-           while (left <= right) {
-               int mid = left + (right - left) / 2;
-               if (nums[mid] == target) return mid;
-               if (nums[left] <= nums[mid]) {
-                   if (nums[left] <= target && target < nums[mid]) right = mid - 1;
-                   else left = mid + 1;
-               } else {
-                   if (nums[mid] < target && target <= nums[right]) left = mid + 1;
-                   else right = mid - 1;
-               }
-           }
+       public int search(int[] nums,int target){
+           int low=0,high=nums.length-1;
+           while(low<=high){int mid=low+(high-low)/2;if(nums[mid]==target)return mid;
+               if(nums[low]<=nums[mid]){if(nums[low]<=target&&target<nums[mid])high=mid-1;else low=mid+1;}
+               else{if(nums[mid]<target&&target<=nums[high])low=mid+1;else high=mid-1;}}
            return -1;
        }
    }
@@ -224,17 +230,11 @@ Rust
 .. code-block:: rust
 
    impl Solution {
-       pub fn search(nums: Vec<i32>, target: i32) -> i32 {
-           let (mut left, mut right) = (0i32, nums.len() as i32 - 1);
-           while left <= right {
-               let mid = left + (right - left) / 2;
-               if nums[mid as usize] == target { return mid; }
-               if nums[left as usize] <= nums[mid as usize] {
-                   if nums[left as usize] <= target && target < nums[mid as usize] { right = mid - 1; }
-                   else { left = mid + 1; }
-               } else if nums[mid as usize] < target && target <= nums[right as usize] { left = mid + 1; }
-               else { right = mid - 1; }
-           }
+       pub fn search(nums:Vec<i32>,target:i32)->i32{
+           let(mut low,mut high)=(0i32,nums.len() as i32-1);
+           while low<=high{let mid=low+(high-low)/2;let m=mid as usize;if nums[m]==target{return mid}
+               if nums[low as usize]<=nums[m]{if nums[low as usize]<=target&&target<nums[m]{high=mid-1}else{low=mid+1}}
+               else if nums[m]<target&&target<=nums[high as usize]{low=mid+1}else{high=mid-1}}
            -1
        }
    }
@@ -244,17 +244,11 @@ Go
 
 .. code-block:: go
 
-   func search(nums []int, target int) int {
-       left, right := 0, len(nums)-1
-       for left <= right {
-           mid := left + (right-left)/2
-           if nums[mid] == target { return mid }
-           if nums[left] <= nums[mid] {
-               if nums[left] <= target && target < nums[mid] { right = mid-1 } else { left = mid+1 }
-           } else {
-               if nums[mid] < target && target <= nums[right] { left = mid+1 } else { right = mid-1 }
-           }
-       }
+   func search(nums []int,target int)int{
+       low,high:=0,len(nums)-1
+       for low<=high{mid:=low+(high-low)/2;if nums[mid]==target{return mid}
+           if nums[low]<=nums[mid]{if nums[low]<=target&&target<nums[mid]{high=mid-1}else{low=mid+1}}
+           else if nums[mid]<target&&target<=nums[high]{low=mid+1}else{high=mid-1}}
        return -1
    }
 
@@ -263,20 +257,11 @@ TypeScript
 
 .. code-block:: typescript
 
-   function search(nums: number[], target: number): number {
-       let left = 0, right = nums.length - 1;
-       while (left <= right) {
-           const mid = left + Math.floor((right - left) / 2);
-           if (nums[mid] === target) return mid;
-           if (nums[left] <= nums[mid]) {
-               if (nums[left] <= target && target < nums[mid]) right = mid - 1;
-               else left = mid + 1;
-           } else {
-               if (nums[mid] < target && target <= nums[right]) left = mid + 1;
-               else right = mid - 1;
-           }
-       }
-       return -1;
+   function search(nums:number[],target:number):number{
+       let low=0,high=nums.length-1;
+       while(low<=high){const mid=low+Math.floor((high-low)/2);if(nums[mid]===target)return mid;
+           if(nums[low]<=nums[mid]){if(nums[low]<=target&&target<nums[mid])high=mid-1;else low=mid+1;}
+           else if(nums[mid]<target&&target<=nums[high])low=mid+1;else high=mid-1;}return -1;
    }
 
 C#
@@ -285,20 +270,11 @@ C#
 .. code-block:: csharp
 
    public class Solution {
-       public int Search(int[] nums, int target) {
-           int left = 0, right = nums.Length - 1;
-           while (left <= right) {
-               int mid = left + (right - left) / 2;
-               if (nums[mid] == target) return mid;
-               if (nums[left] <= nums[mid]) {
-                   if (nums[left] <= target && target < nums[mid]) right = mid - 1;
-                   else left = mid + 1;
-               } else {
-                   if (nums[mid] < target && target <= nums[right]) left = mid + 1;
-                   else right = mid - 1;
-               }
-           }
-           return -1;
+       public int Search(int[] nums,int target){
+           int low=0,high=nums.Length-1;
+           while(low<=high){int mid=low+(high-low)/2;if(nums[mid]==target)return mid;
+               if(nums[low]<=nums[mid]){if(nums[low]<=target&&target<nums[mid])high=mid-1;else low=mid+1;}
+               else if(nums[mid]<target&&target<=nums[high])low=mid+1;else high=mid-1;}return -1;
        }
    }
 
@@ -307,18 +283,12 @@ Julia
 
 .. code-block:: julia
 
-   function search_rotated(nums::Vector{Int}, target::Int)
-       left, right = 1, length(nums)
-       while left <= right
-           mid = left + (right - left) ÷ 2
-           nums[mid] == target && return mid - 1
-           if nums[left] <= nums[mid]
-               nums[left] <= target < nums[mid] ? (right = mid - 1) : (left = mid + 1)
-           else
-               nums[mid] < target <= nums[right] ? (left = mid + 1) : (right = mid - 1)
-           end
-       end
-       -1
+   function search_rotated(nums::Vector{Int},target::Int)
+       low,high=1,length(nums)
+       while low<=high;mid=low+(high-low)÷2;if nums[mid]==target;return mid-1;end
+           if nums[low]<=nums[mid];if nums[low]<=target<nums[mid];high=mid-1;else;low=mid+1;end
+           elseif nums[mid]<target<=nums[high];low=mid+1;else;high=mid-1;end
+       end;-1
    end
 
 R
@@ -326,16 +296,10 @@ R
 
 .. code-block:: r
 
-   search_rotated <- function(nums, target) {
-     left <- 1L; right <- length(nums)
-     while (left <= right) {
-       mid <- left + (right - left) %/% 2L
-       if (nums[[mid]] == target) return(mid - 1L)
-       if (nums[[left]] <= nums[[mid]]) {
-         if (nums[[left]] <= target && target < nums[[mid]]) right <- mid - 1L else left <- mid + 1L
-       } else {
-         if (nums[[mid]] < target && target <= nums[[right]]) left <- mid + 1L else right <- mid - 1L
-       }
-     }
-     -1L
+   search_rotated <- function(nums,target) {
+       low<-1L;high<-length(nums)
+       while(low<=high){mid<-low+(high-low)%/%2L;if(nums[[mid]]==target)return(mid-1L)
+           if(nums[[low]]<=nums[[mid]]){if(nums[[low]]<=target&&target<nums[[mid]])high<-mid-1L else low<-mid+1L}
+           else if(nums[[mid]]<target&&target<=nums[[high]])low<-mid+1L else high<-mid-1L}
+       -1L
    }
