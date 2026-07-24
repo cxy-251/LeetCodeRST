@@ -1,10 +1,39 @@
 1209. Remove All Adjacent Duplicates in String II
 =================================================
 
+题目信息
+--------
+
 :题号: 1209
-:题名: Remove All Adjacent Duplicates in String II
-:类型: Algorithms（元数据占位）
 :难度: Medium
+:主题: 字符串、栈、连续消除
 :原题: `LeetCode 1209 <https://leetcode.com/problems/remove-all-adjacent-duplicates-in-string-ii/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 每次删除恰好 ``k`` 个相邻相同字符，删除后新形成的连续段可继续触发操作；最终结果唯一
+
+题目重述
+--------
+
+给定只包含小写英文字母的字符串 ``s`` 和整数 ``k``。一次操作可以选择 ``k`` 个连续且完全相同的字符，并把它们同时删除。
+
+反复执行操作，直到字符串中不存在长度达到 ``k`` 的相同字符连续段。请返回最终字符串；题目保证无论采用何种合法删除顺序，最终结果都相同。
+
+``1 <= s.length <= 10^5``，``2 <= k <= 10^4``。
+
+自建示例
+--------
+
+一次删除可以引发新的连续删除：
+
+.. code-block:: text
+
+   输入：s = "abbbaacc", k = 3
+   输出："cc"
+   解释：先删除 bbb 得到 aaacc，再删除 aaa，最终剩下 cc。
+
+不存在足够长的连续段时保持原样：
+
+.. code-block:: text
+
+   输入：s = "abcd", k = 2
+   输出："abcd"
+   解释：任意相邻字符都不同，无法执行删除。
