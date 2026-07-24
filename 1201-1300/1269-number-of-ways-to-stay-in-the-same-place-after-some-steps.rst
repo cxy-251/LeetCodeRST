@@ -1,10 +1,39 @@
 1269. Number of Ways to Stay in the Same Place After Some Steps
 ===============================================================
 
+题目信息
+--------
+
 :题号: 1269
-:题名: Number of Ways to Stay in the Same Place After Some Steps
-:类型: Algorithms（元数据占位）
 :难度: Hard
+:主题: 动态规划、位置状态、计数
 :原题: `LeetCode 1269 <https://leetcode.com/problems/number-of-ways-to-stay-in-the-same-place-after-some-steps/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 从下标 ``0`` 出发，每步可左移、右移或停留，但不能越界；统计恰好执行 ``steps`` 步后回到下标 ``0`` 的方案数
+
+题目重述
+--------
+
+有一个长度为 ``arrLen`` 的数组，当前位置初始为下标 ``0``。每一步可以向左移动一格、向右移动一格，或者停留在原地，但移动后必须仍位于合法下标范围内。
+
+请统计恰好执行 ``steps`` 步后回到下标 ``0`` 的不同操作序列数量，并返回结果对 ``10^9 + 7`` 取模后的值。
+
+``1 <= steps <= 500``，``1 <= arrLen <= 10^6``。
+
+自建示例
+--------
+
+多次离开原点后仍可返回：
+
+.. code-block:: text
+
+   输入：steps = 4, arrLen = 3
+   输出：9
+   解释：统计所有由左移、右移和停留组成且不越界、四步后回到下标 0 的序列，共有九种。
+
+数组只有一个位置时每一步都只能停留：
+
+.. code-block:: text
+
+   输入：steps = 5, arrLen = 1
+   输出：1
+   解释：唯一合法操作序列是连续停留五次。
