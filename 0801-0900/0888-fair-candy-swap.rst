@@ -13,11 +13,11 @@
 题目重述
 --------
 
-数组 ``aliceSizes`` 和 ``bobSizes`` 分别表示 Alice 与 Bob 拥有的每盒糖果数量。两人需要进行一次交换：Alice 选择自己的一盒交给 Bob，Bob 也选择自己的一盒交给 Alice。
+数组 ``aliceSizes`` 和 ``bobSizes`` 分别表示 Alice 与 Bob 拥有的每盒糖果数量，两人当前的糖果总数不同。两人需要进行一次交换：Alice 选择自己的一盒交给 Bob，Bob 也选择自己的一盒交给 Alice。
 
 请返回 ``[aliceBox, bobBox]``，表示双方应交换的盒子糖果数，使交换后两人拥有的糖果总数相等。必须各交换一盒，输入中的重复盒子按实例存在；题目保证至少有一种合法答案，存在多组时可返回任意一组。
 
-``1 <= aliceSizes.length, bobSizes.length <= 10^4``，``1 <= aliceSizes[i], bobSizes[i] <= 10^5``。
+``1 <= aliceSizes.length, bobSizes.length <= 10^4``，``1 <= aliceSizes[i], bobSizes[j] <= 10^5``。
 
 自建示例
 --------
@@ -29,3 +29,11 @@
    输入：aliceSizes = [1,4], bobSizes = [2,5]
    输出：[1,2]
    解释：交换前 Alice 与 Bob 的总数分别为 5 和 7；交换一盒 1 与一盒 2 后，双方总数都变为 6。
+
+存在多组合法交换：
+
+.. code-block:: text
+
+   输入：aliceSizes = [3,4,5], bobSizes = [1,2,3]
+   输出：[4,1]
+   解释：双方原总数分别为 12 和 6。交换 4 与 1 后都变为 9；交换 5 与 2 也同样合法，因此当前输出只是合法答案之一。
