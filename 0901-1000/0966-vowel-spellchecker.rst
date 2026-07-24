@@ -29,3 +29,11 @@
    输入：wordlist = ["KiTe","kite","hare"], queries = ["KITE","keto","Hare","zero"]
    输出：["KiTe","KiTe","hare",""]
    解释："KITE" 忽略大小写后首先匹配 "KiTe"；"keto" 通过元音互换匹配 "KiTe"；"Hare" 忽略大小写匹配 "hare"；"zero" 无匹配。
+
+完全匹配优先于前面的大小写匹配：
+
+.. code-block:: text
+
+   输入：wordlist = ["KiTe","kite"], queries = ["kite"]
+   输出：["kite"]
+   解释：查询与第二个单词大小写完全一致，因此直接返回 "kite"，不会选择列表中更早的 "KiTe"。
