@@ -1,10 +1,31 @@
 1074. Number of Submatrices That Sum to Target
 ==============================================
 
+题目信息
+--------
+
 :题号: 1074
-:题名: Number of Submatrices That Sum to Target
-:类型: Algorithms（元数据占位）
 :难度: Hard
+:主题: 整数矩阵、连续子矩阵、目标和计数
 :原题: `LeetCode 1074 <https://leetcode.com/problems/number-of-submatrices-that-sum-to-target/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 子矩阵必须由连续行和连续列形成且非空；相同内容出现在不同边界时按不同子矩阵分别计数
+
+题目重述
+--------
+
+给定整数矩阵 ``matrix`` 和整数 ``target``。一个子矩阵由顶部行、底部行、左列和右列共同确定，包含这些边界之间的所有格子；行列范围都必须连续且至少包含一个格子。
+
+请统计元素总和恰好等于 ``target`` 的非空子矩阵数量。即使两个子矩阵包含相同的数值，只要它们的边界位置不同，就应分别计数。
+
+``1 <= matrix.length, matrix[i].length <= 100``，``-1000 <= matrix[i][j] <= 1000``，``-10^8 <= target <= 10^8``。
+
+自建示例
+--------
+
+横向、纵向和整矩阵都可能满足目标：
+
+.. code-block:: text
+
+   输入：matrix = [[1,-1],[-1,1]], target = 0
+   输出：5
+   解释：两行、两列以及整个 2 x 2 矩阵的元素和都为 0，共五个子矩阵。
