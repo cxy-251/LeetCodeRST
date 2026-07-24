@@ -1,10 +1,39 @@
 1354. Construct Target Array With Multiple Sums
 ===============================================
 
+题目信息
+--------
+
 :题号: 1354
-:题名: Construct Target Array With Multiple Sums
-:类型: Algorithms（元数据占位）
 :难度: Hard
+:主题: 数组、逆向贪心、优先队列
 :原题: `LeetCode 1354 <https://leetcode.com/problems/construct-target-array-with-multiple-sums/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 初始数组全为 ``1``；每次把一个位置替换为当前数组总和，判断能否得到目标数组
+
+题目重述
+--------
+
+给定正整数数组 ``target``。从同长度、所有元素均为 ``1`` 的数组开始，一次操作选择任意下标，把该位置的值替换为操作前整个数组的元素总和。
+
+可以执行任意次数操作。请判断是否能够恰好得到 ``target``。
+
+``1 <= target.length <= 5 * 10^4``，``1 <= target[i] <= 10^9``。
+
+自建示例
+--------
+
+按总和反复替换可以构造目标：
+
+.. code-block:: text
+
+   输入：target = [5,3]
+   输出：true
+   解释：[1,1] -> [2,1] -> [2,3] -> [5,3]。
+
+两个位置同时为二无法从全一数组得到：
+
+.. code-block:: text
+
+   输入：target = [2,2]
+   输出：false
+   解释：第一次操作只能得到 [2,1] 或 [1,2]，之后被替换位置会变为至少 3。
