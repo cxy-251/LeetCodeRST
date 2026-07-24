@@ -1,10 +1,39 @@
 1156. Swap For Longest Repeated Character Substring
 ===================================================
 
+题目信息
+--------
+
 :题号: 1156
-:题名: Swap For Longest Repeated Character Substring
-:类型: Algorithms（元数据占位）
 :难度: Medium
+:主题: 字符串、滑动窗口、至多一次交换
 :原题: `LeetCode 1156 <https://leetcode.com/problems/swap-for-longest-repeated-character-substring/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 最多交换字符串中任意两个位置一次；返回操作后由同一字符组成的最长连续子串长度
+
+题目重述
+--------
+
+给定小写字符串 ``text``。可以选择两个下标并交换对应字符，整个过程最多执行一次；也允许不交换。
+
+请返回经过最优选择后，字符串中由同一个字符连续组成的最长子串长度。交换只能重新排列现有字符，不能增加某个字符的总出现次数。
+
+``1 <= text.length <= 2 * 10^4``，``text`` 只包含小写英文字母。
+
+自建示例
+--------
+
+把分隔字符与末端字符交换：
+
+.. code-block:: text
+
+   输入：text = "bbabb"
+   输出：4
+   解释：把中间的 a 与末尾的 b 交换可得到 "bbbba"，最长连续 b 子串长度为 4。
+
+所有字符已经相同：
+
+.. code-block:: text
+
+   输入：text = "cccc"
+   输出：4
+   解释：无需交换，整个字符串就是长度为 4 的重复字符子串。
