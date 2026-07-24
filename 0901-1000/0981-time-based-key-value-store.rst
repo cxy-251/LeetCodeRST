@@ -31,3 +31,13 @@
    [[],["color","red",5],["color","blue",10],["color",7],["color",10],["shape",12]]
    输出：[null,null,null,"red","blue",""]
    解释：时刻 7 能看到的最新 color 记录来自时刻 5；时刻 10 返回刚写入的 blue；shape 从未写入，因此返回空字符串。
+
+查询时间早于该键的首次写入：
+
+.. code-block:: text
+
+   输入：
+   ["TimeMap","set","get"]
+   [[],["mode","dark",8],["mode",3]]
+   输出：[null,null,""]
+   解释：mode 的唯一历史记录位于时刻 8，查询时刻 3 没有时间不晚于它的记录，因此返回空字符串。
