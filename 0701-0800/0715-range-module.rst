@@ -26,15 +26,15 @@
 自建示例
 --------
 
-删除区间中部并查询边界：
+重叠加入后移除超出左边界的范围：
 
 .. code-block:: text
 
    输入：
-   操作 = ["RangeModule", "addRange", "queryRange", "removeRange", "queryRange", "queryRange", "queryRange"]
-   参数 = [[], [5,12], [6,11], [8,10], [7,9], [10,12], [4,6]]
-   输出：[null, null, true, null, false, true, false]
-   解释：加入 [5,12) 后，[6,11) 全部被跟踪。移除 [8,10) 后，[7,9) 含有未跟踪部分而返回 false；10 属于剩余的 [10,12)，所以查询 [10,12) 返回 true；[4,6) 含有从 4 到 5 的未跟踪部分。
+   操作 = ["RangeModule", "addRange", "addRange", "queryRange", "removeRange", "queryRange", "queryRange"]
+   参数 = [[], [3,7], [6,10], [4,9], [1,5], [3,6], [5,10]]
+   输出：[null, null, null, true, null, false, true]
+   解释：两个加入区间合并后覆盖 [3,10)，所以 [4,9) 完全被跟踪。移除 [1,5) 只会实际删除其中已跟踪的 [3,5)，此后 [3,6) 含未跟踪部分而返回 false，[5,10) 仍被完整跟踪。
 
 相邻半开区间可以覆盖完整查询范围：
 
