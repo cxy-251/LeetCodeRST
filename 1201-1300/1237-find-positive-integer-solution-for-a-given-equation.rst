@@ -1,10 +1,39 @@
 1237. Find Positive Integer Solution for a Given Equation
 =========================================================
 
+题目信息
+--------
+
 :题号: 1237
-:题名: Find Positive Integer Solution for a Given Equation
-:类型: Algorithms（元数据占位）
 :难度: Medium
+:主题: 交互接口、单调函数、双指针
 :原题: `LeetCode 1237 <https://leetcode.com/problems/find-positive-integer-solution-for-a-given-equation/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 隐藏函数 ``f(x,y)`` 对两个正整数参数都严格递增；找出范围内所有满足 ``f(x,y) == z`` 的正整数对
+
+题目重述
+--------
+
+给定只能通过 ``CustomFunction.f(x, y)`` 调用的隐藏函数，以及正整数目标 ``z``。题目保证函数对 ``x`` 和 ``y`` 分别严格递增。
+
+请返回所有满足 ``1 <= x, y <= 1000`` 且 ``f(x, y) == z`` 的整数对 ``[x, y]``。答案顺序不限。
+
+``1 <= z <= 100``，隐藏函数满足题目给定的严格单调性。
+
+自建示例
+--------
+
+单调线性函数可以有多个解：
+
+.. code-block:: text
+
+   输入：f(x,y) = x + 2y, z = 7
+   输出：[[1,3],[3,2],[5,1]]
+   解释：三组正整数代入后都等于 7，其他范围内整数对均不满足。
+
+乘法函数在质数目标下只有对称的两个解：
+
+.. code-block:: text
+
+   输入：f(x,y) = x * y, z = 7
+   输出：[[1,7],[7,1]]
+   解释：7 是质数，正整数因子对只有 1 与 7。
