@@ -1,10 +1,31 @@
 1013. Partition Array Into Three Parts With Equal Sum
 =====================================================
 
+题目信息
+--------
+
 :题号: 1013
-:题名: Partition Array Into Three Parts With Equal Sum
-:类型: Algorithms（元数据占位）
 :难度: Easy
+:主题: 数组、连续分段、相等区间和
 :原题: `LeetCode 1013 <https://leetcode.com/problems/partition-array-into-three-parts-with-equal-sum/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 必须用两个分界点把整个数组划成三个连续且非空的部分，并要求三部分元素和完全相等
+
+题目重述
+--------
+
+给定整数数组 ``arr``。判断是否存在下标 ``i`` 和 ``j``，满足 ``0 <= i < j - 1 < arr.length - 1``，使数组被分成 ``arr[0..i]``、``arr[i+1..j-1]`` 和 ``arr[j..n-1]`` 三个连续非空部分。
+
+只有当这三个部分的元素和彼此相等时返回 ``true``；否则返回 ``false``。所有数组元素都必须恰好属于其中一个部分。
+
+``3 <= arr.length <= 5 * 10^4``，``-10^4 <= arr[i] <= 10^4``。
+
+自建示例
+--------
+
+零和区间可以包含正负元素：
+
+.. code-block:: text
+
+   输入：arr = [1,-1,0,2,-2,0]
+   输出：true
+   解释：可分成 [1,-1]、[0,2,-2] 和 [0]，三部分均非空且元素和都为 0。
