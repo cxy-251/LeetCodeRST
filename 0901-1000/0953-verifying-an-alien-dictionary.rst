@@ -29,3 +29,11 @@
    输入：words = ["za","zb","ca"], order = "zabcdefghijklmnopqrstuvwxy"
    输出：true
    解释："za" 与 "zb" 在第二个字符处满足 a < b；"zb" 与 "ca" 在首字符处比较，外星顺序中 z 位于 c 之前。
+
+较长单词位于自身前缀之前：
+
+.. code-block:: text
+
+   输入：words = ["apple","app"], order = "abcdefghijklmnopqrstuvwxyz"
+   输出：false
+   解释：前几个字符完全相同，但 "app" 是更短的完整前缀，按字典序应排在 "apple" 前面。
