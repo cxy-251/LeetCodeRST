@@ -1,10 +1,39 @@
 1284. Minimum Number of Flips to Convert Binary Matrix to Zero Matrix
 =====================================================================
 
+题目信息
+--------
+
 :题号: 1284
-:题名: Minimum Number of Flips to Convert Binary Matrix to Zero Matrix
-:类型: Algorithms（元数据占位）
 :难度: Hard
+:主题: 二进制矩阵、状态压缩、广度优先搜索
 :原题: `LeetCode 1284 <https://leetcode.com/problems/minimum-number-of-flips-to-convert-binary-matrix-to-zero-matrix/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 翻转一个格会同时切换它自身及上下左右相邻格；求变为全零矩阵的最少操作数，无解返回 ``-1``
+
+题目重述
+--------
+
+给定二进制矩阵 ``mat``。一次操作选择任意格子，把该格以及它存在的上、下、左、右相邻格全部从 ``0`` 切换为 ``1``，或从 ``1`` 切换为 ``0``。
+
+请返回把矩阵变成全零矩阵所需的最少操作次数。若无法达到全零状态，返回 ``-1``。
+
+``1 <= mat.length, mat[i].length <= 3``，每个元素为 ``0`` 或 ``1``。
+
+自建示例
+--------
+
+单个一只需翻转一次：
+
+.. code-block:: text
+
+   输入：mat = [[1]]
+   输出：1
+   解释：翻转唯一格子后矩阵变为 [[0]]。
+
+初始已经全零：
+
+.. code-block:: text
+
+   输入：mat = [[0,0],[0,0]]
+   输出：0
+   解释：无需执行任何操作。
