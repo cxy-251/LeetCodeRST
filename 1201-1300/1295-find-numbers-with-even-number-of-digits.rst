@@ -1,10 +1,39 @@
 1295. Find Numbers with Even Number of Digits
 =============================================
 
+题目信息
+--------
+
 :题号: 1295
-:题名: Find Numbers with Even Number of Digits
-:类型: Algorithms（元数据占位）
 :难度: Easy
+:主题: 数组、十进制位数、计数
 :原题: `LeetCode 1295 <https://leetcode.com/problems/find-numbers-with-even-number-of-digits/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 统计十进制表示位数为偶数的数组元素数量
+
+题目重述
+--------
+
+给定正整数数组 ``nums``。对于每个元素，计算它的十进制表示包含多少个数字。
+
+请返回位数为偶数的元素数量。
+
+``1 <= nums.length <= 500``，``1 <= nums[i] <= 10^5``。
+
+自建示例
+--------
+
+不同位数的元素分别判断：
+
+.. code-block:: text
+
+   输入：nums = [7,44,100,9999]
+   输出：2
+   解释：44 有两位，9999 有四位；7 和 100 的位数为奇数。
+
+没有偶数位元素时返回零：
+
+.. code-block:: text
+
+   输入：nums = [1,200,999]
+   输出：0
+   解释：三个数分别有一位、三位和三位。
