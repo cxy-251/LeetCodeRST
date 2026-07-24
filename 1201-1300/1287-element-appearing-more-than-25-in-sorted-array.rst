@@ -1,10 +1,39 @@
 1287. Element Appearing More Than 25% In Sorted Array
 =====================================================
 
+题目信息
+--------
+
 :题号: 1287
-:题名: Element Appearing More Than 25% In Sorted Array
-:类型: Algorithms（元数据占位）
 :难度: Easy
+:主题: 有序数组、频次统计
 :原题: `LeetCode 1287 <https://leetcode.com/problems/element-appearing-more-than-25-in-sorted-array/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 数组按非递减顺序排列，题目保证恰有一个元素出现次数严格超过数组长度的四分之一
+
+题目重述
+--------
+
+给定按非递减顺序排列的整数数组 ``arr``。题目保证存在且只存在一个数值，其出现次数严格大于数组长度的 ``25%``。
+
+请返回该数值。
+
+``1 <= arr.length <= 10^4``，``0 <= arr[i] <= 10^5``。
+
+自建示例
+--------
+
+高频元素在有序数组中形成连续段：
+
+.. code-block:: text
+
+   输入：arr = [1,2,2,2,2,3]
+   输出：2
+   解释：2 出现四次，超过长度 6 的四分之一。
+
+单元素数组中的唯一值满足条件：
+
+.. code-block:: text
+
+   输入：arr = [7]
+   输出：7
+   解释：7 的出现比例为 100%。
