@@ -1,10 +1,39 @@
 1389. Create Target Array in the Given Order
 ============================================
 
+题目信息
+--------
+
 :题号: 1389
-:题名: Create Target Array in the Given Order
-:类型: Algorithms（元数据占位）
 :难度: Easy
+:主题: 数组、插入、模拟
 :原题: `LeetCode 1389 <https://leetcode.com/problems/create-target-array-in-the-given-order/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 从空数组开始，按下标顺序把 ``nums[i]`` 插入当前数组的 ``index[i]`` 位置，原位置及后续元素右移
+
+题目重述
+--------
+
+给定等长数组 ``nums`` 和 ``index``。初始目标数组为空。对 ``i = 0`` 到末尾，依次把 ``nums[i]`` 插入当前目标数组的下标 ``index[i]``。
+
+插入位置后的现有元素整体向右移动一格。完成所有插入后返回目标数组。
+
+``1 <= nums.length <= 100``，每一步的 ``index[i]`` 都是当前数组中的合法插入位置。
+
+自建示例
+--------
+
+后续插入会推动已有元素：
+
+.. code-block:: text
+
+   输入：nums = [1,2,3], index = [0,0,1]
+   输出：[2,3,1]
+   解释：过程为 [] -> [1] -> [2,1] -> [2,3,1]。
+
+只有一个元素时直接插入下标零：
+
+.. code-block:: text
+
+   输入：nums = [9], index = [0]
+   输出：[9]
+   解释：空数组唯一合法插入位置为 0。
