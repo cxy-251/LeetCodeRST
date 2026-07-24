@@ -29,3 +29,11 @@
    输入：words = ["abcdef","abcxyz","abqdef"], secret = "abcdef", allowedGuesses = 10
    输出：在不超过 10 次调用内使用秘密单词调用 master.guess
    解释：调用 master.guess("abcxyz") 会返回 3，因为前三个位置相同；随后猜测 "abcdef" 返回 6，表示找到秘密单词。实际提交的函数看不到 secret，只能使用接口反馈。
+
+候选列表只有秘密单词：
+
+.. code-block:: text
+
+   输入：words = ["planet"], secret = "planet", allowedGuesses = 10
+   输出：第一次调用 master.guess("planet") 返回 6
+   解释：候选数组长度达到题目允许的最小值，唯一候选必然就是秘密单词，因此一次合法调用即可完成任务，且没有超过调用次数上限。
