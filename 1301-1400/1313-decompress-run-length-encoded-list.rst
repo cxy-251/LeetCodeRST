@@ -1,10 +1,39 @@
 1313. Decompress Run-Length Encoded List
 ========================================
 
+题目信息
+--------
+
 :题号: 1313
-:题名: Decompress Run-Length Encoded List
-:类型: Algorithms（元数据占位）
 :难度: Easy
+:主题: 数组、游程编码、模拟
 :原题: `LeetCode 1313 <https://leetcode.com/problems/decompress-run-length-encoded-list/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 输入按 ``[freq, val]`` 成对排列，每对展开为 ``freq`` 个 ``val``，再按原顺序连接
+
+题目重述
+--------
+
+给定长度为偶数的整数数组 ``nums``。对每个偶数下标 ``2i``，``nums[2i]`` 表示频次，``nums[2i+1]`` 表示数值。
+
+把每一对展开成指定数量的相同数值，并按输入中的对顺序连接，返回完整解压数组。
+
+``2 <= nums.length <= 100``，频次和数值均在 ``[1,100]``。
+
+自建示例
+--------
+
+多组编码依次展开：
+
+.. code-block:: text
+
+   输入：nums = [2,5,1,3]
+   输出：[5,5,3]
+   解释：第一对展开为两个 5，第二对展开为一个 3。
+
+只有一组编码：
+
+.. code-block:: text
+
+   输入：nums = [3,7]
+   输出：[7,7,7]
+   解释：频次为 3，数值为 7。
