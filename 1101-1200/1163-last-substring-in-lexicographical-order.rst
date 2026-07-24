@@ -1,10 +1,39 @@
 1163. Last Substring in Lexicographical Order
 =============================================
 
+题目信息
+--------
+
 :题号: 1163
-:题名: Last Substring in Lexicographical Order
-:类型: Algorithms（元数据占位）
 :难度: Hard
+:主题: 字符串、字典序、后缀
 :原题: `LeetCode 1163 <https://leetcode.com/problems/last-substring-in-lexicographical-order/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 在字符串的全部非空连续子串中返回字典序最大的一个；相同前缀下更长字符串字典序更大
+
+题目重述
+--------
+
+给定只包含小写英文字母的字符串 ``s``。考虑它的所有非空连续子串，并按通常字典序比较。
+
+请返回字典序最大的子串。若一个字符串是另一个字符串的完整前缀，则较长的字符串字典序更大。
+
+``1 <= s.length <= 4 * 10^5``，``s`` 只包含小写英文字母。
+
+自建示例
+--------
+
+相同首字母的较长后缀胜出：
+
+.. code-block:: text
+
+   输入：s = "azbaz"
+   输出："zbaz"
+   解释：以 z 开头的候选有 "zbaz" 和 "z"；前者包含后者作为前缀且更长，因此字典序更大。
+
+所有字符相同：
+
+.. code-block:: text
+
+   输入：s = "aaa"
+   输出："aaa"
+   解释：候选 "a"、"aa"、"aaa" 具有相同前缀关系，最长的整个字符串字典序最大。
