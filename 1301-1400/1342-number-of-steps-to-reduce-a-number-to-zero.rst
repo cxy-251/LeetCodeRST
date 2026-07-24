@@ -1,10 +1,39 @@
 1342. Number of Steps to Reduce a Number to Zero
 ================================================
 
+题目信息
+--------
+
 :题号: 1342
-:题名: Number of Steps to Reduce a Number to Zero
-:类型: Algorithms（元数据占位）
 :难度: Easy
+:主题: 整数、模拟、位运算
 :原题: `LeetCode 1342 <https://leetcode.com/problems/number-of-steps-to-reduce-a-number-to-zero/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 当前数为偶数时除以二，为奇数时减一；统计变为零的操作次数
+
+题目重述
+--------
+
+给定非负整数 ``num``。只要它不为零，就按以下规则执行一步：若当前数为偶数则除以 ``2``；若为奇数则减去 ``1``。
+
+请返回把 ``num`` 变成 ``0`` 所需的操作次数。
+
+``0 <= num <= 10^6``。
+
+自建示例
+--------
+
+奇偶操作交替出现：
+
+.. code-block:: text
+
+   输入：num = 14
+   输出：6
+   解释：14 -> 7 -> 6 -> 3 -> 2 -> 1 -> 0，共六步。
+
+初始已经为零：
+
+.. code-block:: text
+
+   输入：num = 0
+   输出：0
+   解释：无需执行操作。
