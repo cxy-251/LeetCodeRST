@@ -1,10 +1,31 @@
 1003. Check If Word Is Valid After Substitutions
 ================================================
 
+题目信息
+--------
+
 :题号: 1003
-:题名: Check If Word Is Valid After Substitutions
-:类型: Algorithms（元数据占位）
 :难度: Medium
+:主题: 字符串、递归构造、模式消除
 :原题: `LeetCode 1003 <https://leetcode.com/problems/check-if-word-is-valid-after-substitutions/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 合法字符串从空串开始，通过在任意位置反复插入完整片段 ``abc`` 得到；字符顺序和嵌套位置都必须符合这一构造过程
+
+题目重述
+--------
+
+定义空字符串为初始合法字符串。若 ``t`` 合法，则可以在 ``t`` 的任意位置插入连续片段 ``"abc"``，得到新的合法字符串；这个过程可以重复任意多次。
+
+给定只包含 ``a``、``b``、``c`` 的非空字符串 ``s``，判断它能否通过上述构造过程得到。只有能够完全还原为空串的字符串才返回 ``true``。
+
+``1 <= s.length <= 2 * 10^4``，``s`` 只包含字符 ``a``、``b`` 和 ``c``。
+
+自建示例
+--------
+
+插入片段可以发生在已有片段内部：
+
+.. code-block:: text
+
+   输入：s = "ababcc"
+   输出：true
+   解释：从 "abc" 开始，在原字符串最后一个 c 之前插入 "abc"，得到 "ab" + "abc" + "c" = "ababcc"。
