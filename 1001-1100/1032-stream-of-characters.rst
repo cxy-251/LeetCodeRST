@@ -28,6 +28,16 @@
 
    输入：
    ["StreamChecker","query","query","query","query"]
-   [[["ab","ba","aa"]],["a"],["b"],["a"],["a"]]
+   [[['ab','ba','aa']],['a'],['b'],['a'],['a']]
    输出：[null,false,true,true,true]
    解释：字符流依次为 a、ab、aba、abaa；后三个时刻的后缀分别匹配 ab、ba 和 aa。
+
+字符流始终没有匹配后缀：
+
+.. code-block:: text
+
+   输入：
+   ["StreamChecker","query","query"]
+   [[['z']],['a'],['b']]
+   输出：[null,false,false]
+   解释：字符流依次为 a、ab，它们的任何非空后缀都不等于单词 z。
