@@ -29,3 +29,11 @@
    输入：words = ["i","in","pin","spin","spine","pine"]
    输出：5
    解释：可以形成 i -> in -> pin -> spin -> spine，每一步都恰好插入一个字母，因此链长为 5。
+
+输入只有一个单词：
+
+.. code-block:: text
+
+   输入：words = ["code"]
+   输出：1
+   解释：单个单词自身构成长度为 1 的字符串链。
