@@ -1,10 +1,39 @@
 1290. Convert Binary Number in a Linked List to Integer
 =======================================================
 
+题目信息
+--------
+
 :题号: 1290
-:题名: Convert Binary Number in a Linked List to Integer
-:类型: Algorithms（元数据占位）
 :难度: Easy
+:主题: 链表、二进制、数值转换
 :原题: `LeetCode 1290 <https://leetcode.com/problems/convert-binary-number-in-a-linked-list-to-integer/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 链表节点从最高有效位到最低有效位存储二进制数字；返回对应十进制整数
+
+题目重述
+--------
+
+给定非空单链表， 每个节点值为 ``0`` 或 ``1``。从头节点到尾节点依次表示一个二进制数的最高位到最低位。
+
+请返回该二进制数对应的十进制整数。除数值零本身外，输入表示没有前导零。
+
+链表长度不超过 ``30``。
+
+自建示例
+--------
+
+按从高位到低位解释节点：
+
+.. code-block:: text
+
+   输入：head = [1,0,1,1]
+   输出：11
+   解释：二进制 1011 等于十进制 11。
+
+单个零节点表示数值零：
+
+.. code-block:: text
+
+   输入：head = [0]
+   输出：0
+   解释：唯一二进制位为 0。
