@@ -1,10 +1,39 @@
 1317. Convert Integer to the Sum of Two No-Zero Integers
 ========================================================
 
+题目信息
+--------
+
 :题号: 1317
-:题名: Convert Integer to the Sum of Two No-Zero Integers
-:类型: Algorithms（元数据占位）
 :难度: Easy
+:主题: 整数、枚举、十进制数位
 :原题: `LeetCode 1317 <https://leetcode.com/problems/convert-integer-to-the-sum-of-two-no-zero-integers/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 两个正整数的十进制表示都不能含数字 ``0``，且它们的和必须等于 ``n``
+
+题目重述
+--------
+
+不含零整数是十进制表示中没有数字 ``0`` 的正整数。给定整数 ``n``，请找到两个不含零整数 ``a`` 和 ``b``，使 ``a + b == n``。
+
+返回 ``[a,b]``，任意合法答案均可。题目保证至少存在一种答案。
+
+``2 <= n <= 10^4``。
+
+自建示例
+--------
+
+两个加数都不能出现零：
+
+.. code-block:: text
+
+   输入：n = 101
+   输出：[2,99]
+   解释：2 和 99 的十进制表示都不含 0，且总和为 101。
+
+较小目标同样可以直接拆分：
+
+.. code-block:: text
+
+   输入：n = 11
+   输出：[2,9]
+   解释：两个正整数均不含零。
