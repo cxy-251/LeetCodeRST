@@ -29,3 +29,11 @@
    输入：text = "we will we will rock you", first = "we", second = "will"
    输出：["we","rock"]
    解释：前两个匹配片段分别是 "we will we" 和 "we will rock"，因此依次收集第三个单词 we 与 rock。
+
+匹配短语位于文本末尾：
+
+.. code-block:: text
+
+   输入：text = "a b", first = "a", second = "b"
+   输出：[]
+   解释：虽然文本以 a b 结尾，但其后不存在第三个单词，因此不能加入结果。
