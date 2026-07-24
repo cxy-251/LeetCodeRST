@@ -1,10 +1,31 @@
 1007. Minimum Domino Rotations For Equal Row
 ============================================
 
+题目信息
+--------
+
 :题号: 1007
-:题名: Minimum Domino Rotations For Equal Row
-:类型: Algorithms（元数据占位）
 :难度: Medium
+:主题: 多米诺骨牌、同下标交换、最少旋转
 :原题: `LeetCode 1007 <https://leetcode.com/problems/minimum-domino-rotations-for-equal-row/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 每块骨牌由 ``tops[i]`` 与 ``bottoms[i]`` 组成；旋转只交换同一下标的上下数字，目标是让整行顶部或整行底部相同
+
+题目重述
+--------
+
+给定长度相同的数组 ``tops`` 和 ``bottoms``，第 ``i`` 块多米诺骨牌顶部和底部的数字分别为 ``tops[i]`` 与 ``bottoms[i]``。一次旋转可以选择一块骨牌，交换它的上下数字。
+
+请返回最少旋转次数，使所有骨牌的顶部数字完全相同，或者所有底部数字完全相同。两种目标任选其一；若无论怎样旋转都无法达到，返回 ``-1``。
+
+``2 <= tops.length == bottoms.length <= 2 * 10^4``，所有数字都在 ``[1, 6]`` 范围内。
+
+自建示例
+--------
+
+只旋转一块即可统一顶部：
+
+.. code-block:: text
+
+   输入：tops = [2,1,2,2], bottoms = [1,2,1,1]
+   输出：1
+   解释：旋转下标 1 的骨牌后，顶部变为 [2,2,2,2]。原始顶部不统一，因此至少需要一次旋转。
