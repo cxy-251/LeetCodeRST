@@ -24,13 +24,13 @@
 自建示例
 --------
 
-存在完整构造路径：
+从四块底层连续构造三层：
 
 .. code-block:: text
 
-   输入：bottom = "ABC", allowed = ["ABD","BCE","DEF","AAA"]
+   输入：bottom = "ABCD", allowed = ["ABE","BCF","CDA","EFB","FAC"]
    输出：true
-   解释：底层相邻对 "AB" 和 "BC" 可以分别生成 D、E，得到第二层 "DE"；规则 "DEF" 又能在其上生成 F，因此可以构造到顶层。
+   解释：底层的相邻对 AB、BC、CD 分别生成 E、F、A，得到第二层 "EFA"；相邻对 EF、FA 再生成 B、C，得到第三层 "BC"；规则 "BCF" 最终生成顶块 F，因此存在完整构造路径。
 
 左右顺序不能互换：
 
