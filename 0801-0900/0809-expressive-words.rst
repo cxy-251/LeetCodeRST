@@ -29,3 +29,11 @@
    输入：s = "heeellooo", words = ["hello","helo","heeello","heelloo"]
    输出：3
    解释："hello"、"heeello" 和 "heelloo" 都能通过扩展 e 或 o 的字符组得到 s；"helo" 的单个 l 无法扩成目标中长度为 2 的 l 组，因为扩展后的组长度必须至少为 3。
+
+零次拉伸也属于合法情况：
+
+.. code-block:: text
+
+   输入：s = "abc", words = ["abc","abbc","ac"]
+   输出：1
+   解释："abc" 不需要执行任何操作就与目标相同，因此具有拉伸性；"abbc" 不能删除多出的 b，"ac" 也不能通过扩展补出缺少的 b。目标中的各字符组长度都小于 3，不能通过合法拉伸得到另外两个单词。
