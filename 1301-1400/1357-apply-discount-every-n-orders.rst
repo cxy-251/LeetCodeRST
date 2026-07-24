@@ -1,10 +1,40 @@
 1357. Apply Discount Every n Orders
 ===================================
 
+题目信息
+--------
+
 :题号: 1357
-:题名: Apply Discount Every n Orders
-:类型: Algorithms（元数据占位）
 :难度: Medium
+:主题: 设计题、订单计数、价格计算
 :原题: `LeetCode 1357 <https://leetcode.com/problems/apply-discount-every-n-orders/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 商品编号与价格由构造函数给定；每第 ``n`` 位顾客的整张账单按百分比折扣，各次结账共享顾客计数
+
+题目重述
+--------
+
+实现 ``Cashier`` 类。构造函数给定周期 ``n``、折扣百分比 ``discount``、商品编号数组和对应单价。``getBill(product, amount)`` 计算本次购买的商品总价。
+
+第 ``n``、``2n``、``3n`` 位顾客获得整单 ``discount%`` 的折扣，其他顾客按原价结算。商品编号在构造数据中唯一，查询商品均有效。
+
+方法调用次数不超过 ``1000``。
+
+自建示例
+--------
+
+第二位顾客获得折扣：
+
+.. code-block:: text
+
+   输入：n = 2, discount = 25, products = [1,2], prices = [100,40]
+   操作：getBill([1],[1])，getBill([2],[2])
+   输出：[100.0,60.0]
+   解释：第二单原价为 80，享受七五折后为 60。
+
+折扣后计数重新进入下一周期：
+
+.. code-block:: text
+
+   输入：继续调用 getBill([1,2],[1,1])
+   输出：140.0
+   解释：这是第三位顾客，不属于折扣订单。
