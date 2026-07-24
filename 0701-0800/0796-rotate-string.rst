@@ -20,18 +20,18 @@
 自建示例
 --------
 
-经过两次移位得到目标：
+含重复字符的字符串经过三次移位：
 
 .. code-block:: text
 
-   输入：s = "water", goal = "terwa"
+   输入：s = "aabaca", goal = "acaaab"
    输出：true
-   解释："water" 第一次移位得到 "aterw"，第二次移位得到 "terwa"。
+   解释：依次移位得到 "abacaa"、"bacaaa"、"acaaab"，第三次移位后与 goal 相同。
 
-字符相同但相对顺序不属于循环移位：
+字符数量相同但相对次序不属于循环移位：
 
 .. code-block:: text
 
-   输入：s = "water", goal = "tawer"
+   输入：s = "aabaca", goal = "aacaba"
    输出：false
-   解释：对 s 的循环移位只能得到 "water"、"aterw"、"terwa"、"erwat"、"rwate"，其中不包含 goal。
+   解释：s 的六种循环位置为 "aabaca"、"abacaa"、"bacaaa"、"acaaab"、"caaaba" 和 "aaabac"，其中不包含 "aacaba"。
