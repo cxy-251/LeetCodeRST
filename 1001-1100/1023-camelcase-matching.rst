@@ -28,4 +28,12 @@
 
    输入：queries = ["FooBar","FootBall","FrameBuffer","FoBa"], pattern = "FoB"
    输出：[true,true,false,true]
-   解释：前三个匹配结果中，FooBar 和 FootBall 可由 FoB 插入小写字母得到；FrameBuffer 没有按顺序出现模式中的小写字母 o；FoBa 只在末尾额外插入了小写 a。
+   解释：FooBar、FootBall 和 FoBa 都可由 FoB 只插入小写字母得到；FrameBuffer 没有按顺序保留模式中的小写 o。
+
+额外大写字母不能被忽略：
+
+.. code-block:: text
+
+   输入：queries = ["aB","aBC"], pattern = "aB"
+   输出：[true,false]
+   解释："aB" 与模式完全相同；"aBC" 多出的 C 是大写字母，不能通过允许的小写字母插入操作产生。
