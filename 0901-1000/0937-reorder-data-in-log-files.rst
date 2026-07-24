@@ -29,3 +29,11 @@
    输入：logs = ["d1 3 2","l2 red fox","l1 red ant","d2 1 4","l3 red ant"]
    输出：["l1 red ant","l3 red ant","l2 red fox","d1 3 2","d2 1 4"]
    解释：字母内容 "red ant" 排在 "red fox" 前；两条 "red ant" 日志按标识符 l1、l3 排序。数字日志保持 d1、d2 的原顺序。
+
+全部都是数字日志：
+
+.. code-block:: text
+
+   输入：logs = ["d2 3 4","d1 1 2"]
+   输出：["d2 3 4","d1 1 2"]
+   解释：没有字母日志需要提前，数字日志必须保持输入中的相对顺序，因此结果不变。
