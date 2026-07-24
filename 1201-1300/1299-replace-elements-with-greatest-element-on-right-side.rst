@@ -1,10 +1,39 @@
 1299. Replace Elements with Greatest Element on Right Side
 ==========================================================
 
+题目信息
+--------
+
 :题号: 1299
-:题名: Replace Elements with Greatest Element on Right Side
-:类型: Algorithms（元数据占位）
 :难度: Easy
+:主题: 数组、后缀最大值、原地替换
 :原题: `LeetCode 1299 <https://leetcode.com/problems/replace-elements-with-greatest-element-on-right-side/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 每个位置替换为其右侧所有元素中的最大值，最后一个位置固定替换为 ``-1``
+
+题目重述
+--------
+
+给定整数数组 ``arr``。对于每个下标 ``i``，把 ``arr[i]`` 替换为原数组中所有下标大于 ``i`` 的元素最大值。
+
+最后一个元素右侧没有任何元素，因此必须替换为 ``-1``。返回完成替换后的数组。
+
+``1 <= arr.length <= 10^4``，``1 <= arr[i] <= 10^5``。
+
+自建示例
+--------
+
+右侧最大值可能位于不同位置：
+
+.. code-block:: text
+
+   输入：arr = [4,1,7,3]
+   输出：[7,7,3,-1]
+   解释：前两个位置右侧最大值都是 7，值 7 的右侧最大值为 3，末尾替换为 -1。
+
+单元素数组只包含末尾位置：
+
+.. code-block:: text
+
+   输入：arr = [5]
+   输出：[-1]
+   解释：唯一元素右侧为空。
