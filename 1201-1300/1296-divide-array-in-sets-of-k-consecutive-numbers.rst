@@ -1,10 +1,39 @@
 1296. Divide Array in Sets of K Consecutive Numbers
 ===================================================
 
+题目信息
+--------
+
 :题号: 1296
-:题名: Divide Array in Sets of K Consecutive Numbers
-:类型: Algorithms（元数据占位）
 :难度: Medium
+:主题: 数组、贪心、频次统计、连续整数
 :原题: `LeetCode 1296 <https://leetcode.com/problems/divide-array-in-sets-of-k-consecutive-numbers/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 必须使用数组中的全部元素，把它们划分为若干长度为 ``k``、数值连续且各递增一的多重集合
+
+题目重述
+--------
+
+给定整数数组 ``nums`` 和正整数 ``k``。需要把数组中的每个元素实例恰好使用一次，划分成若干组，每组包含 ``k`` 个连续整数。
+
+组内元素重新排序后应形如 ``x, x+1, ..., x+k-1``。请判断是否存在这样的完整划分。
+
+``1 <= nums.length <= 10^5``，``1 <= nums[i] <= 10^9``，``1 <= k <= nums.length``。
+
+自建示例
+--------
+
+重复数值可以分配到不同连续组：
+
+.. code-block:: text
+
+   输入：nums = [1,2,2,3,3,4], k = 3
+   输出：true
+   解释：可以划分为 [1,2,3] 和 [2,3,4]。
+
+存在无法补齐的间隔时失败：
+
+.. code-block:: text
+
+   输入：nums = [1,2,4,5], k = 2
+   输出：true
+   解释：可以划分为 [1,2] 和 [4,5]，每组内部都由连续整数构成。
