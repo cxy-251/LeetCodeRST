@@ -30,7 +30,7 @@
 
    输入：accounts = [["Ava","a@x.com","b@x.com"],["Ava","c@x.com","b@x.com"],["Ava","z@x.com"],["Ava","d@x.com","c@x.com"]]
    输出：[["Ava","a@x.com","b@x.com","c@x.com","d@x.com"],["Ava","z@x.com"]]
-   解释：前三个含 a、b、c、d 的相关账户通过共享邮箱 b@x.com 和 c@x.com 连成同一组；只含 z@x.com 的账户虽然姓名也为 Ava，但没有共享邮箱，因此保持独立。两个结果账户的先后顺序可以交换。
+   解释：含 a@x.com、b@x.com、c@x.com、d@x.com 的三个账户通过共享邮箱形成同一组；只含 z@x.com 的账户虽然姓名也为 Ava，但没有共享邮箱，因此保持独立。两个结果账户的先后顺序可以交换。
 
 没有任何账户需要合并：
 
