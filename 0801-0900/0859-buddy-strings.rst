@@ -22,6 +22,14 @@
 自建示例
 --------
 
+交换两个不同字符得到目标：
+
+.. code-block:: text
+
+   输入：s = "abcd", goal = "abdc"
+   输出：true
+   解释：交换 s 中下标 2 和 3 的字符 c、d 后得到 "abdc"，恰好等于 goal。
+
 相同字符串依靠重复字符完成交换：
 
 .. code-block:: text
