@@ -1,10 +1,39 @@
 1326. Minimum Number of Taps to Open to Water a Garden
 ======================================================
 
+题目信息
+--------
+
 :题号: 1326
-:题名: Minimum Number of Taps to Open to Water a Garden
-:类型: Algorithms（元数据占位）
 :难度: Hard
+:主题: 区间覆盖、贪心、动态规划
 :原题: `LeetCode 1326 <https://leetcode.com/problems/minimum-number-of-taps-to-open-to-water-a-garden/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 第 ``i`` 个水龙头覆盖 ``[i-ranges[i], i+ranges[i]]`` 与花园的交集；用最少区间完整覆盖 ``[0,n]``
+
+题目重述
+--------
+
+花园位于数轴区间 ``[0,n]``。位置 ``i`` 有一个水龙头，打开后可浇灌从 ``i-ranges[i]`` 到 ``i+ranges[i]`` 的范围，超出花园部分忽略。
+
+请选择最少数量的水龙头，使整个闭区间 ``[0,n]`` 都被覆盖。若无法完整覆盖，返回 ``-1``。
+
+``1 <= n <= 10^4``，``ranges.length == n + 1``，``0 <= ranges[i] <= 100``。
+
+自建示例
+--------
+
+两个重叠区间可以覆盖整座花园：
+
+.. code-block:: text
+
+   输入：n = 5, ranges = [1,2,1,0,2,1]
+   输出：2
+   解释：位置 1 覆盖 [0,3]，位置 4 覆盖 [2,5]，二者并集覆盖整个花园。
+
+覆盖在中途断开时无解：
+
+.. code-block:: text
+
+   输入：n = 5, ranges = [3,0,0,0,0,0]
+   输出：-1
+   解释：唯一有效水龙头只覆盖 [0,3]，区间 (3,5] 无法浇灌。
