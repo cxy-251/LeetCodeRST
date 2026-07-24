@@ -1,10 +1,39 @@
 1351. Count Negative Numbers in a Sorted Matrix
 ===============================================
 
+题目信息
+--------
+
 :题号: 1351
-:题名: Count Negative Numbers in a Sorted Matrix
-:类型: Algorithms（元数据占位）
 :难度: Easy
+:主题: 矩阵、有序结构、计数
 :原题: `LeetCode 1351 <https://leetcode.com/problems/count-negative-numbers-in-a-sorted-matrix/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 每行和每列都按非递增顺序排列；统计严格小于零的元素数量
+
+题目重述
+--------
+
+给定 ``m x n`` 整数矩阵 ``grid``，每一行从左到右非递增，每一列从上到下非递增。
+
+请返回矩阵中负数元素的总数量。数值 ``0`` 不属于负数。
+
+``1 <= m,n <= 100``，``-100 <= grid[i][j] <= 100``。
+
+自建示例
+--------
+
+负数集中在每行右侧：
+
+.. code-block:: text
+
+   输入：grid = [[4,1,-1],[2,-1,-3]]
+   输出：3
+   解释：三个负数分别为 -1、-1、-3。
+
+没有负数时返回零：
+
+.. code-block:: text
+
+   输入：grid = [[3,0],[1,0]]
+   输出：0
+   解释：所有元素都大于或等于零。
