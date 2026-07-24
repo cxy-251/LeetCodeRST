@@ -29,3 +29,11 @@
    输入：name = "alex", typed = "aaleexx"
    输出：true
    解释：a、e、x 分别被连续输入两次，l 输入一次；去除各字符组中的额外重复后正好得到 "alex"。
+
+输入结果漏掉姓名字符：
+
+.. code-block:: text
+
+   输入：name = "anna", typed = "ana"
+   输出：false
+   解释：name 中连续的两个 n 都必须至少输入一次，而 typed 只有一个 n；长按只能增加字符，不能补救字符缺失。
