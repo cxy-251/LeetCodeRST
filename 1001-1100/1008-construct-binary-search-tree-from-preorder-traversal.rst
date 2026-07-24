@@ -1,10 +1,31 @@
 1008. Construct Binary Search Tree from Preorder Traversal
 ==========================================================
 
+题目信息
+--------
+
 :题号: 1008
-:题名: Construct Binary Search Tree from Preorder Traversal
-:类型: Algorithms（元数据占位）
 :难度: Medium
+:主题: 二叉搜索树、先序遍历、树构造
 :原题: `LeetCode 1008 <https://leetcode.com/problems/construct-binary-search-tree-from-preorder-traversal/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: ``preorder`` 是一棵节点值互不相同的二叉搜索树的先序遍历；需恢复满足左小右大的原树结构
+
+题目重述
+--------
+
+给定整数数组 ``preorder``，它是一棵二叉搜索树按“根节点、左子树、右子树”顺序得到的先序遍历结果。数组中的节点值互不相同。
+
+请构造并返回这棵二叉搜索树的根节点。对树中每个节点，左子树所有值都严格小于节点值，右子树所有值都严格大于节点值；题目保证输入对应的结果唯一。
+
+``1 <= preorder.length <= 100``，``1 <= preorder[i] <= 1000``，所有元素互不相同。
+
+自建示例
+--------
+
+左右子树都包含多层节点：
+
+.. code-block:: text
+
+   输入：preorder = [7,3,1,5,10,9]
+   输出：[7,3,10,1,5,9]
+   解释：根节点为 7；3、1、5 构成左子树，10、9 构成右子树。该树的先序遍历恰好为给定数组。
