@@ -29,3 +29,11 @@
    输入：words = ["xyy","yxx","xyz","zzz"], pattern = "abb"
    输出：["xyy","yxx"]
    解释：前两个单词都满足首字符不同于后两个相同字符；xyz 的后三个位置结构不匹配，zzz 会让模式中的 a 和 b 映射到同一字母。返回顺序可以不同。
+
+模式字符全部不同：
+
+.. code-block:: text
+
+   输入：words = ["mno","mom"], pattern = "abc"
+   输出：["mno"]
+   解释：pattern 的三个字符互不相同，所以匹配单词的三个位置也必须使用不同字母。mno 满足该条件；mom 的首尾相同，会让 a 与 c 映射到同一字母，因此不匹配。
