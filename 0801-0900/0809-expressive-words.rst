@@ -22,18 +22,18 @@
 自建示例
 --------
 
-不同长度的字符组分别判断：
+多个字符组独立判断：
 
 .. code-block:: text
 
-   输入：s = "heeellooo", words = ["hello","helo","heeello","heelloo"]
+   输入：s = "aaabccccd", words = ["abcd","aabcd","aaabccd","aaabbccccd","aaabcccc"]
    输出：3
-   解释："hello"、"heeello" 和 "heelloo" 都能通过扩展 e 或 o 的字符组得到 s；"helo" 的单个 l 无法扩成目标中长度为 2 的 l 组，因为扩展后的组长度必须至少为 3。
+   解释："abcd" 可以把 a 组扩为 3 个、c 组扩为 4 个；"aabcd" 只需继续扩展 a 和 c；"aaabccd" 只需把 c 组从 2 个扩为 4 个，因此前三个单词均可得到 s。"aaabbccccd" 含有两个 b，目标只有一个 b，拉伸不能删除字符；"aaabcccc" 缺少末尾 d，也无法通过扩展补出新字符组。
 
-零次拉伸也属于合法情况：
+目标中长度为二的组不能由更短组拉伸得到：
 
 .. code-block:: text
 
-   输入：s = "abc", words = ["abc","abbc","ac"]
+   输入：s = "xyy", words = ["xyy","xy","xyyy"]
    输出：1
-   解释："abc" 不需要执行任何操作就与目标相同，因此具有拉伸性；"abbc" 不能删除多出的 b，"ac" 也不能通过扩展补出缺少的 b。目标中的各字符组长度都小于 3，不能通过合法拉伸得到另外两个单词。
+   解释："xyy" 零次操作即可匹配。把 "xy" 中单个 y 扩成两个 y 不合法，因为执行拉伸后该组长度必须至少为 3；"xyyy" 又不能删除多出的 y，因此只有一个单词具有拉伸性。
