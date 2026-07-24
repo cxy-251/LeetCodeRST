@@ -1,10 +1,39 @@
 1277. Count Square Submatrices with All Ones
 ============================================
 
+题目信息
+--------
+
 :题号: 1277
-:题名: Count Square Submatrices with All Ones
-:类型: Algorithms（元数据占位）
 :难度: Medium
+:主题: 二进制矩阵、动态规划、正方形计数
 :原题: `LeetCode 1277 <https://leetcode.com/problems/count-square-submatrices-with-all-ones/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 统计元素全部为 ``1`` 的连续正方形子矩阵；不同位置和不同边长分别计数
+
+题目重述
+--------
+
+给定只包含 ``0`` 和 ``1`` 的矩阵 ``matrix``。正方形子矩阵必须由连续行和连续列组成，并且其中每个元素都为 ``1``。
+
+请返回矩阵中所有全一正方形子矩阵的数量。即使两个正方形重叠，只要边界或边长不同，就分别计数。
+
+``1 <= matrix.length, matrix[i].length <= 300``，每个元素为 ``0`` 或 ``1``。
+
+自建示例
+--------
+
+不同边长的正方形都要计数：
+
+.. code-block:: text
+
+   输入：matrix = [[1,1],[1,1]]
+   输出：5
+   解释：共有四个 1 x 1 正方形和一个 2 x 2 正方形。
+
+全零矩阵没有合法正方形：
+
+.. code-block:: text
+
+   输入：matrix = [[0,0],[0,0]]
+   输出：0
+   解释：不存在值为 1 的格子。
