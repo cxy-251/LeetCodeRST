@@ -1,10 +1,31 @@
 1977. Number of Ways to Separate Numbers
 ========================================
 
+题目信息
+--------
+
 :题号: 1977
-:题名: Number of Ways to Separate Numbers
-:类型: Algorithms（元数据占位）
 :难度: Hard
+:主题: 字符串、动态规划、最长公共前缀
 :原题: `LeetCode 1977 <https://leetcode.com/problems/number-of-ways-to-separate-numbers/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 切分出的正整数不能有前导零，且序列必须非递减
+
+题目重述
+--------
+
+把数字字符串切分成一个或多个正整数字符串，使每个数没有前导零，并且数值按顺序非递减。返回切分方案数并取模。
+
+自建示例
+--------
+
+.. code-block:: text
+
+   输入：num = "123"
+   输出：3
+   解释：合法切分为 [123]、[1,23]、[1,2,3]。
+
+.. code-block:: text
+
+   输入：num = "01"
+   输出：0
+   解释：第一个数必然以 0 开头，不合法。
