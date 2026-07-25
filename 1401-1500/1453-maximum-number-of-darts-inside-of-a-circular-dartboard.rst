@@ -1,10 +1,39 @@
 1453. Maximum Number of Darts Inside of a Circular Dartboard
 ============================================================
 
+题目信息
+--------
+
 :题号: 1453
-:题名: Maximum Number of Darts Inside of a Circular Dartboard
-:类型: Algorithms（元数据占位）
 :难度: Hard
+:主题: 平面几何、圆、枚举
 :原题: `LeetCode 1453 <https://leetcode.com/problems/maximum-number-of-darts-inside-of-a-circular-dartboard/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 圆心可以任意选择，半径固定为 ``r``；落在圆内部或边界上的点均计数
+
+题目重述
+--------
+
+给定平面上互不相同的点数组 ``darts`` 和正数半径 ``r``。可以把一个半径为 ``r`` 的圆形飞镖盘放在任意位置。
+
+请返回最多能够同时落在圆内部或圆周上的点数量。
+
+``1 <= darts.length <= 100``，坐标位于 ``[-10^4,10^4]``，``1 <= r <= 5000``。
+
+自建示例
+--------
+
+三个点可以同时位于同一圆周上：
+
+.. code-block:: text
+
+   输入：darts = [[0,0],[2,0],[1,1]], r = 1
+   输出：3
+   解释：以 (1,0) 为圆心时，三个点到圆心的距离都不超过 1。
+
+两点距离超过直径时无法同时包含：
+
+.. code-block:: text
+
+   输入：darts = [[0,0],[3,0]], r = 1
+   输出：1
+   解释：两点距离为 3，大于圆的直径 2。
