@@ -1,10 +1,39 @@
 1493. Longest Subarray of 1's After Deleting One Element
 ========================================================
 
+题目信息
+--------
+
 :题号: 1493
-:题名: Longest Subarray of 1's After Deleting One Element
-:类型: Algorithms（元数据占位）
 :难度: Medium
+:主题: 数组、滑动窗口、连续一
 :原题: `LeetCode 1493 <https://leetcode.com/problems/longest-subarray-of-1s-after-deleting-one-element/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 必须恰好删除一个元素，随后寻找最长的全一连续非空子数组；原数组全为一时答案为 ``n-1``
+
+题目重述
+--------
+
+给定二进制数组 ``nums``。必须从数组中删除恰好一个元素，剩余元素自动拼接。
+
+请返回删除后数组中只包含 ``1`` 的最长连续非空子数组长度；若不存在 ``1``，返回 ``0``。
+
+``1 <= nums.length <= 10^5``，``nums[i]`` 为 ``0`` 或 ``1``。
+
+自建示例
+--------
+
+删除两个全一段之间的零可以合并它们：
+
+.. code-block:: text
+
+   输入：nums = [1,1,0,1,1,1]
+   输出：5
+   解释：删除中间的 0 后，左右两段连接成五个连续的 1。
+
+原数组全为一时仍必须删除一个元素：
+
+.. code-block:: text
+
+   输入：nums = [1,1]
+   输出：1
+   解释：删除任意一个元素后只剩一个 1。
