@@ -1,10 +1,39 @@
 1466. Reorder Routes to Make All Paths Lead to the City Zero
 ============================================================
 
+题目信息
+--------
+
 :题号: 1466
-:题名: Reorder Routes to Make All Paths Lead to the City Zero
-:类型: Algorithms（元数据占位）
 :难度: Medium
+:主题: 树、图遍历、边方向
 :原题: `LeetCode 1466 <https://leetcode.com/problems/reorder-routes-to-make-all-paths-lead-to-the-city-zero/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 忽略方向后道路构成一棵树；反转最少道路，使每个城市都能沿有向路径到达城市 ``0``
+
+题目重述
+--------
+
+有 ``n`` 个城市和 ``n-1`` 条单向道路，``connections[i] = [a,b]`` 表示道路从 ``a`` 指向 ``b``。忽略方向后，所有城市连通且不存在环。
+
+可以反转任意道路方向。请返回最少反转次数，使每个城市都能沿道路方向到达城市 ``0``。
+
+``2 <= n <= 5 * 10^4``，城市编号合法，输入无重复道路。
+
+自建示例
+--------
+
+只需反转离开城市零的道路：
+
+.. code-block:: text
+
+   输入：n = 3, connections = [[0,1],[2,1]]
+   输出：1
+   解释：把 0 -> 1 反转为 1 -> 0 后，城市 2 可沿 2 -> 1 -> 0 到达城市 0。
+
+所有道路已经朝向城市零时无需反转：
+
+.. code-block:: text
+
+   输入：n = 3, connections = [[1,0],[2,1]]
+   输出：0
+   解释：每个城市原本就存在通往城市 0 的有向路径。
