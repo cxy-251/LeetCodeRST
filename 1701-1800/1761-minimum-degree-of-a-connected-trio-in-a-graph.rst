@@ -1,10 +1,31 @@
 1761. Minimum Degree of a Connected Trio in a Graph
 ===================================================
 
+题目信息
+--------
+
 :题号: 1761
-:题名: Minimum Degree of a Connected Trio in a Graph
-:类型: Algorithms（元数据占位）
 :难度: Hard
+:主题: 图、枚举、度数
 :原题: `LeetCode 1761 <https://leetcode.com/problems/minimum-degree-of-a-connected-trio-in-a-graph/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 连通三元组内部三条边不计入度数，统计三节点连接到组外的边数
+
+题目重述
+--------
+
+给定无向图。若三个节点两两直接相连，则构成连通三元组。其度数为至少一个端点属于该三元组、另一端在组外的边数。返回最小度数；不存在三元组时返回 ``-1``。
+
+自建示例
+--------
+
+.. code-block:: text
+
+   输入：n = 4, edges = [[1,2],[2,3],[1,3],[3,4]]
+   输出：1
+   解释：三元组 1、2、3 只有边 3-4 连接组外。
+
+.. code-block:: text
+
+   输入：n = 3, edges = [[1,2],[2,3]]
+   输出：-1
+   解释：没有三个节点两两相连。
