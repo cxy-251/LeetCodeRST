@@ -1,10 +1,31 @@
 1903. Largest Odd Number in String
 ==================================
 
+题目信息
+--------
+
 :题号: 1903
-:题名: Largest Odd Number in String
-:类型: Algorithms（元数据占位）
 :难度: Easy
+:主题: 贪心、字符串
 :原题: `LeetCode 1903 <https://leetcode.com/problems/largest-odd-number-in-string/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 最大奇数子串必须是从开头到最右侧奇数字符的前缀
+
+题目重述
+--------
+
+给定表示非负整数的数字字符串，返回其值最大的奇数非空子串；不存在奇数时返回空字符串。
+
+自建示例
+--------
+
+.. code-block:: text
+
+   输入：num = "42035"
+   输出："42035"
+   解释：末位 5 为奇数，整个字符串就是最大结果。
+
+.. code-block:: text
+
+   输入：num = "246"
+   输出：""
+   解释：字符串中没有奇数字符。

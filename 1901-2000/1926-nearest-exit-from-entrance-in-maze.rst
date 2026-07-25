@@ -1,10 +1,31 @@
 1926. Nearest Exit from Entrance in Maze
 ========================================
 
+题目信息
+--------
+
 :题号: 1926
-:题名: Nearest Exit from Entrance in Maze
-:类型: Algorithms（元数据占位）
 :难度: Medium
+:主题: 广度优先搜索、矩阵
 :原题: `LeetCode 1926 <https://leetcode.com/problems/nearest-exit-from-entrance-in-maze/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 出口是边界上的空格，但入口本身不算出口
+
+题目重述
+--------
+
+从入口空格开始，每步上下左右移动到空格。返回到达最近边界出口的最少步数；没有出口返回 -1。
+
+自建示例
+--------
+
+.. code-block:: text
+
+   输入：maze = [[".","+"],[".","."]], entrance = [1,0]
+   输出：1
+   解释：向上到 [0,0] 或向右到 [1,1] 都是一处出口。
+
+.. code-block:: text
+
+   输入：maze = [["+","+","+"],["+",".","+"],["+","+","+"]], entrance = [1,1]
+   输出：-1
+   解释：入口被墙完全包围。
