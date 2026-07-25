@@ -1,10 +1,31 @@
 1626. Best Team With No Conflicts
 =================================
 
+题目信息
+--------
+
 :题号: 1626
-:题名: Best Team With No Conflicts
-:类型: Algorithms（元数据占位）
 :难度: Medium
+:主题: 排序、动态规划
 :原题: `LeetCode 1626 <https://leetcode.com/problems/best-team-with-no-conflicts/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 年轻球员分数严格高于年长球员时产生冲突；同龄球员之间不冲突
+
+题目重述
+--------
+
+给定每名球员的年龄与分数。选择任意非空球员组成球队，要求不存在较年轻球员分数严格高于较年长球员的情况。返回最大总分。
+
+自建示例
+--------
+
+.. code-block:: text
+
+   输入：scores = [3,2,1], ages = [1,2,3]
+   输出：3
+   解释：可只选得分 3 的球员，或选择后两人得到 3。
+
+.. code-block:: text
+
+   输入：scores = [4,5,6], ages = [2,2,2]
+   输出：15
+   解释：同龄球员之间没有冲突，可全部选择。
