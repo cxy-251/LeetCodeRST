@@ -1,10 +1,39 @@
 1558. Minimum Numbers of Function Calls to Make Target Array
 ============================================================
 
+题目信息
+--------
+
 :题号: 1558
-:题名: Minimum Numbers of Function Calls to Make Target Array
-:类型: Algorithms（元数据占位）
 :难度: Medium
+:主题: 数组、位运算、贪心
 :原题: `LeetCode 1558 <https://leetcode.com/problems/minimum-numbers-of-function-calls-to-make-target-array/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 从全零数组开始，一次可把单个元素加一或把全部元素乘二；求构造目标数组的最少调用数
+
+题目重述
+--------
+
+初始有一个与 ``nums`` 等长且全部为 ``0`` 的数组。一次函数调用可以选择一个元素并增加 ``1``，或者把数组中所有元素同时乘以 ``2``。
+
+请返回把初始数组变成 ``nums`` 所需的最少函数调用次数。
+
+``1 <= nums.length <= 10^5``，``0 <= nums[i] <= 10^9``。
+
+自建示例
+--------
+
+二进制中的一位数量决定单点加一次数：
+
+.. code-block:: text
+
+   输入：nums = [1,2,3]
+   输出：5
+   解释：三个数的二进制一位总数为 4，并需要一次整体乘二操作。
+
+目标全部为零时无需调用函数：
+
+.. code-block:: text
+
+   输入：nums = [0,0]
+   输出：0
+   解释：初始数组已经等于目标。
