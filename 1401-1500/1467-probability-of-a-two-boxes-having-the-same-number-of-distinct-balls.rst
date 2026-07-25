@@ -1,10 +1,39 @@
 1467. Probability of a Two Boxes Having The Same Number of Distinct Balls
 =========================================================================
 
+题目信息
+--------
+
 :题号: 1467
-:题名: Probability of a Two Boxes Having The Same Number of Distinct Balls
-:类型: Algorithms（元数据占位）
 :难度: Hard
+:主题: 组合数学、概率、回溯
 :原题: `LeetCode 1467 <https://leetcode.com/problems/probability-of-a-two-boxes-having-the-same-number-of-distinct-balls/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 同色球彼此可区分，所有把一半球放入第一盒的选择等概率；求两盒不同颜色数量相同的概率
+
+题目重述
+--------
+
+给定数组 ``balls``，``balls[i]`` 表示第 ``i`` 种颜色的球数。所有球彼此可区分，球总数为偶数。
+
+随机把一半球放入第一盒，剩余球放入第二盒，每种具体分配等概率。请返回两盒中出现的不同颜色数量相同的概率，允许浮点误差 ``10^-5``。
+
+``2 <= balls.length <= 8``，``1 <= balls[i] <= 6``，球总数不超过 ``48`` 且为偶数。
+
+自建示例
+--------
+
+多数分配使两盒都包含两种颜色：
+
+.. code-block:: text
+
+   输入：balls = [1,2,1]
+   输出：0.66667
+   解释：从四个可区分球中选两个放入第一盒共有六种方式，其中四种使两盒都含两种颜色。
+
+两种颜色各一个球时颜色数量必然相同：
+
+.. code-block:: text
+
+   输入：balls = [1,1]
+   输出：1.0
+   解释：每盒得到一个球，因此每盒都恰好包含一种颜色。
