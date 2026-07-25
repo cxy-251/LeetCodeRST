@@ -1,10 +1,39 @@
 1567. Maximum Length of Subarray With Positive Product
 ======================================================
 
+题目信息
+--------
+
 :题号: 1567
-:题名: Maximum Length of Subarray With Positive Product
-:类型: Algorithms（元数据占位）
 :难度: Medium
+:主题: 数组、动态规划、正负号
 :原题: `LeetCode 1567 <https://leetcode.com/problems/maximum-length-of-subarray-with-positive-product/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 只关心连续子数组乘积的符号；零会截断区间，负数会交换正积和负积的最长长度状态
+
+题目重述
+--------
+
+给定整数数组 ``nums``。请在所有非空连续子数组中，寻找元素乘积为正数的最长一个，并返回其长度。
+
+若不存在乘积为正的非空连续子数组，返回 ``0``。无需返回子数组本身或计算可能溢出的实际乘积。
+
+``1 <= nums.length <= 10^5``，``-10^9 <= nums[i] <= 10^9``。
+
+自建示例
+--------
+
+偶数个负数可以组成正乘积区间：
+
+.. code-block:: text
+
+   输入：nums = [-1,-2,-3,0,1]
+   输出：2
+   解释：[-1,-2] 或 [-2,-3] 的乘积为正，长度为 2；零会截断连续区间。
+
+全部为正数时整个数组都可选择：
+
+.. code-block:: text
+
+   输入：nums = [1,2,3]
+   输出：3
+   解释：整个数组乘积为正。

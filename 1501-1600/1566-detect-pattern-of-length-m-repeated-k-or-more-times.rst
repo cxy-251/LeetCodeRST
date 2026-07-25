@@ -1,10 +1,39 @@
 1566. Detect Pattern of Length M Repeated K or More Times
 =========================================================
 
+题目信息
+--------
+
 :题号: 1566
-:题名: Detect Pattern of Length M Repeated K or More Times
-:类型: Algorithms（元数据占位）
 :难度: Easy
+:主题: 数组、连续模式、枚举
 :原题: `LeetCode 1566 <https://leetcode.com/problems/detect-pattern-of-length-m-repeated-k-or-more-times/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 长度为 ``m`` 的模式必须在数组中连续重复至少 ``k`` 次，中间不能插入其他元素
+
+题目重述
+--------
+
+给定正整数数组 ``arr`` 和正整数 ``m``、``k``。若存在一个长度为 ``m`` 的连续片段，在数组中紧挨着重复至少 ``k`` 次，则返回 ``true``。
+
+重复区域总长度至少为 ``m * k``，各次模式内容和顺序必须完全相同。若不存在，返回 ``false``。
+
+``2 <= arr.length <= 100``，``1 <= m <= 100``，``2 <= k <= 100``。
+
+自建示例
+--------
+
+长度二的模式可以连续重复三次：
+
+.. code-block:: text
+
+   输入：arr = [1,2,1,2,1,2], m = 2, k = 3
+   输出：true
+   解释：模式 [1,2] 从开头连续出现三次。
+
+中途有一个元素不同会破坏连续重复：
+
+.. code-block:: text
+
+   输入：arr = [1,2,1,3], m = 2, k = 2
+   输出：false
+   解释：两个长度二片段分别为 [1,2] 和 [1,3]。
