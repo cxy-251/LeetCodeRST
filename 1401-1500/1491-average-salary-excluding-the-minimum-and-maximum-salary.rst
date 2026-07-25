@@ -1,10 +1,39 @@
 1491. Average Salary Excluding the Minimum and Maximum Salary
 =============================================================
 
+题目信息
+--------
+
 :题号: 1491
-:题名: Average Salary Excluding the Minimum and Maximum Salary
-:类型: Algorithms（元数据占位）
 :难度: Easy
+:主题: 数组、求和、平均值
 :原题: `LeetCode 1491 <https://leetcode.com/problems/average-salary-excluding-the-minimum-and-maximum-salary/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 工资互不相同，删除唯一最低与最高工资后计算其余工资的算术平均值
+
+题目重述
+--------
+
+给定由互不相同的工资组成的数组 ``salary``。移除其中最小工资和最大工资各一个。
+
+请返回剩余工资的平均值。与正确答案的绝对或相对误差在 ``10^-5`` 内均可接受。
+
+``3 <= salary.length <= 100``，``1000 <= salary[i] <= 10^6``，所有工资互不相同。
+
+自建示例
+--------
+
+中间多项共同参与平均值计算：
+
+.. code-block:: text
+
+   输入：salary = [1000,2000,4000,8000]
+   输出：3000.0
+   解释：删除 1000 和 8000 后，平均值为 (2000 + 4000) / 2。
+
+只有三项时结果就是中间工资：
+
+.. code-block:: text
+
+   输入：salary = [1000,3000,5000]
+   输出：3000.0
+   解释：删除两端极值后只剩 3000。
