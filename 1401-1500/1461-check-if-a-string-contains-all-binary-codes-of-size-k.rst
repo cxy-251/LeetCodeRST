@@ -1,10 +1,39 @@
 1461. Check If a String Contains All Binary Codes of Size K
 ===========================================================
 
+题目信息
+--------
+
 :题号: 1461
-:题名: Check If a String Contains All Binary Codes of Size K
-:类型: Algorithms（元数据占位）
 :难度: Medium
+:主题: 字符串、滑动窗口、哈希集合、位运算
 :原题: `LeetCode 1461 <https://leetcode.com/problems/check-if-a-string-contains-all-binary-codes-of-size-k/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 检查全部 ``2^k`` 个长度为 ``k`` 的二进制字符串是否都作为连续子串出现
+
+题目重述
+--------
+
+给定二进制字符串 ``s`` 和正整数 ``k``。长度为 ``k`` 的二进制编码共有 ``2^k`` 种。
+
+若每一种编码都至少一次作为 ``s`` 的连续子串出现，返回 ``true``；否则返回 ``false``。不同编码的出现区间可以重叠。
+
+``1 <= s.length <= 5 * 10^5``，``1 <= k <= 20``。
+
+自建示例
+--------
+
+重叠窗口可以覆盖全部编码：
+
+.. code-block:: text
+
+   输入：s = "00110", k = 2
+   输出：true
+   解释：长度为二的子串依次包含 00、01、11、10，覆盖全部四种编码。
+
+字符串长度小于 ``k`` 时必然失败：
+
+.. code-block:: text
+
+   输入：s = "0", k = 2
+   输出：false
+   解释：不存在长度为二的连续子串。
