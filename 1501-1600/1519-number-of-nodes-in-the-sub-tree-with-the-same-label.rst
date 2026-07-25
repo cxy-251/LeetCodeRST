@@ -1,10 +1,39 @@
 1519. Number of Nodes in the Sub-Tree With the Same Label
 =========================================================
 
+题目信息
+--------
+
 :题号: 1519
-:题名: Number of Nodes in the Sub-Tree With the Same Label
-:类型: Algorithms（元数据占位）
 :难度: Medium
+:主题: 树、深度优先搜索、字符计数
 :原题: `LeetCode 1519 <https://leetcode.com/problems/number-of-nodes-in-the-sub-tree-with-the-same-label/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 无向树以节点 ``0`` 为根；对每个节点统计其子树中标签与自身相同的节点数量，包含自身
+
+题目重述
+--------
+
+给定一棵包含 ``n`` 个节点的无向树，节点编号为 ``0`` 到 ``n-1``，并把节点 ``0`` 视为根。字符串 ``labels`` 的第 ``i`` 个字符是节点 ``i`` 的标签。
+
+请返回长度为 ``n`` 的数组，其中 ``answer[i]`` 等于以节点 ``i`` 为根的子树中，标签与 ``labels[i]`` 相同的节点数量。节点自身必须计入。
+
+``1 <= n <= 10^5``，``edges.length == n-1``，``labels`` 只包含小写英文字母。
+
+自建示例
+--------
+
+祖先节点会统计多个后代的相同标签：
+
+.. code-block:: text
+
+   输入：n = 4, edges = [[0,1],[1,2],[1,3]], labels = "abaa"
+   输出：[3,1,1,1]
+   解释：节点 0 的子树中标签 a 出现于节点 0、2、3；其他节点各只统计自身。
+
+单节点树的答案为一：
+
+.. code-block:: text
+
+   输入：n = 1, edges = [], labels = "z"
+   输出：[1]
+   解释：根节点的子树只包含它自身。
