@@ -1,10 +1,31 @@
 1679. Max Number of K-Sum Pairs
 ===============================
 
+题目信息
+--------
+
 :题号: 1679
-:题名: Max Number of K-Sum Pairs
-:类型: Algorithms（元数据占位）
 :难度: Medium
+:主题: 哈希表、双指针、配对
 :原题: `LeetCode 1679 <https://leetcode.com/problems/max-number-of-k-sum-pairs/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 每次移除两个和为 ``k`` 的元素，每个元素最多使用一次
+
+题目重述
+--------
+
+给定数组和目标 ``k``。重复选择两个元素，其和为 ``k`` 时移除并记一次操作。返回最多操作次数。
+
+自建示例
+--------
+
+.. code-block:: text
+
+   输入：nums = [1,3,2,2], k = 4
+   输出：2
+   解释：可配对 (1,3) 和 (2,2)。
+
+.. code-block:: text
+
+   输入：nums = [5], k = 10
+   输出：0
+   解释：不足两个元素。
