@@ -1,10 +1,31 @@
 1781. Sum of Beauty of All Substrings
 =====================================
 
+题目信息
+--------
+
 :题号: 1781
-:题名: Sum of Beauty of All Substrings
-:类型: Algorithms（元数据占位）
 :难度: Medium
+:主题: 字符串、频次统计、枚举
 :原题: `LeetCode 1781 <https://leetcode.com/problems/sum-of-beauty-of-all-substrings/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 子串美丽值为最高字符频次减最低正频次，统计所有子串之和
+
+题目重述
+--------
+
+对字符串 ``s`` 的每个连续子串，统计其中各出现字符的频次，以最大频次减最小频次作为美丽值。返回所有子串美丽值总和。
+
+自建示例
+--------
+
+.. code-block:: text
+
+   输入：s = "aabcb"
+   输出：5
+   解释：只有部分长度较长的子串产生正美丽值，累计为 5。
+
+.. code-block:: text
+
+   输入：s = "a"
+   输出：0
+   解释：唯一子串的最大和最小频次都为 1。

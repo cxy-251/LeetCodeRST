@@ -1,10 +1,31 @@
 1793. Maximum Score of a Good Subarray
 ======================================
 
+题目信息
+--------
+
 :题号: 1793
-:题名: Maximum Score of a Good Subarray
-:类型: Algorithms（元数据占位）
 :难度: Hard
+:主题: 双指针、单调栈
 :原题: `LeetCode 1793 <https://leetcode.com/problems/maximum-score-of-a-good-subarray/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 好子数组必须包含下标 ``k``，得分为最小元素乘子数组长度
+
+题目重述
+--------
+
+给定正整数数组和下标 ``k``。在所有包含 ``k`` 的连续子数组中，返回 ``min(nums[i..j]) * (j-i+1)`` 的最大值。
+
+自建示例
+--------
+
+.. code-block:: text
+
+   输入：nums = [1,4,3,7,4,5], k = 3
+   输出：15
+   解释：选择 [3,7,4,5]，最小值 3、长度 4，得分 12；更优区间 [4,3,7,4,5] 得分 15。
+
+.. code-block:: text
+
+   输入：nums = [5], k = 0
+   输出：5
+   解释：唯一好子数组为整个数组。

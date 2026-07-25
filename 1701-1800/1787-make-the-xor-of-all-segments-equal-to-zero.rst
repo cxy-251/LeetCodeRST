@@ -1,10 +1,31 @@
 1787. Make the XOR of All Segments Equal to Zero
 ================================================
 
+题目信息
+--------
+
 :题号: 1787
-:题名: Make the XOR of All Segments Equal to Zero
-:类型: Algorithms（元数据占位）
 :难度: Hard
+:主题: 动态规划、异或、分组
 :原题: `LeetCode 1787 <https://leetcode.com/problems/make-the-xor-of-all-segments-equal-to-zero/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 修改数组元素，使每个长度为 ``k`` 的连续子数组异或值都为零
+
+题目重述
+--------
+
+给定整数数组和 ``k``。每次可把任一元素改为任意非负整数。返回使所有长度恰为 ``k`` 的连续子数组异或值均为 ``0`` 所需的最少修改次数。
+
+自建示例
+--------
+
+.. code-block:: text
+
+   输入：nums = [1,2,0,3,0], k = 1
+   输出：3
+   解释：长度一的子数组必须各自为 0，因此三个非零元素需修改。
+
+.. code-block:: text
+
+   输入：nums = [1,1], k = 2
+   输出：0
+   解释：唯一长度二子数组异或值已经为零。
