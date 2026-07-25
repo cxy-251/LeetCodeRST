@@ -1,10 +1,31 @@
 1884. Egg Drop With 2 Eggs and N Floors
 =======================================
 
+题目信息
+--------
+
 :题号: 1884
-:题名: Egg Drop With 2 Eggs and N Floors
-:类型: Algorithms（元数据占位）
 :难度: Medium
+:主题: 动态规划、数学
 :原题: `LeetCode 1884 <https://leetcode.com/problems/egg-drop-with-2-eggs-and-n-floors/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 两枚鸡蛋确定临界楼层，最小化最坏情况下操作次数
+
+题目重述
+--------
+
+有两枚相同鸡蛋和 ``n`` 层楼，存在一个临界楼层，鸡蛋从更高楼层落下会碎。返回保证确定临界楼层所需的最少操作次数。
+
+自建示例
+--------
+
+.. code-block:: text
+
+   输入：n = 3
+   输出：2
+   解释：先测试 2 楼，再根据结果测试 1 楼或 3 楼。
+
+.. code-block:: text
+
+   输入：n = 1
+   输出：1
+   解释：只需测试唯一楼层。

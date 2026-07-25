@@ -1,10 +1,31 @@
 1881. Maximum Value after Insertion
 ===================================
 
+题目信息
+--------
+
 :题号: 1881
-:题名: Maximum Value after Insertion
-:类型: Algorithms（元数据占位）
 :难度: Medium
+:主题: 贪心、字符串
 :原题: `LeetCode 1881 <https://leetcode.com/problems/maximum-value-after-insertion/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 将一位数字插入有符号整数串，使结果数值最大
+
+题目重述
+--------
+
+把数字 ``x`` 恰好插入整数字符串 ``n`` 的某个位置，不能放在负号之前。返回能够得到的最大数值字符串。
+
+自建示例
+--------
+
+.. code-block:: text
+
+   输入：n = "73", x = 6
+   输出："763"
+   解释：在数字 3 前插入 6 可获得最大正数。
+
+.. code-block:: text
+
+   输入：n = "-55", x = 2
+   输出："-255"
+   解释：负数绝对值越小数值越大，因此把 2 放在首位数字前。

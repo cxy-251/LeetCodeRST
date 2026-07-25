@@ -1,10 +1,31 @@
 1882. Process Tasks Using Servers
 =================================
 
+题目信息
+--------
+
 :题号: 1882
-:题名: Process Tasks Using Servers
-:类型: Algorithms（元数据占位）
 :难度: Medium
+:主题: 优先队列、模拟
 :原题: `LeetCode 1882 <https://leetcode.com/problems/process-tasks-using-servers/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 空闲服务器按权重和下标选择，任务按到达顺序分配
+
+题目重述
+--------
+
+任务在时间 ``i`` 到达，处理时长为 ``tasks[i]``。每次把等待最久的任务分配给权重最小的空闲服务器，权重相同取下标较小者；无空闲服务器则等待。返回每个任务使用的服务器下标。
+
+自建示例
+--------
+
+.. code-block:: text
+
+   输入：servers = [3,1], tasks = [2,1,2]
+   输出：[1,0,1]
+   解释：时间 0 选择服务器 1，时间 1 选择服务器 0，时间 2 服务器 1 再次空闲。
+
+.. code-block:: text
+
+   输入：servers = [5], tasks = [1,2]
+   输出：[0,0]
+   解释：只有一台服务器，所有任务都由它处理。
