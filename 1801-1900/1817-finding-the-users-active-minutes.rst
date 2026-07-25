@@ -1,10 +1,31 @@
 1817. Finding the Users Active Minutes
 ======================================
 
+题目信息
+--------
+
 :题号: 1817
-:题名: Finding the Users Active Minutes
-:类型: Algorithms（元数据占位）
 :难度: Medium
+:主题: 哈希表、集合、计数
 :原题: `LeetCode 1817 <https://leetcode.com/problems/finding-the-users-active-minutes/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 同一用户同一分钟的重复日志只计一次
+
+题目重述
+--------
+
+每条日志包含用户编号和操作分钟。计算每个用户不同活跃分钟的数量，并返回长度为 ``k`` 的数组，其中第 ``j`` 项表示恰有 ``j + 1`` 个活跃分钟的用户数。
+
+自建示例
+--------
+
+.. code-block:: text
+
+   输入：logs = [[1,1],[1,2],[2,2],[2,2]], k = 3
+   输出：[1,1,0]
+   解释：用户 1 有两个活跃分钟，用户 2 只有一个。
+
+.. code-block:: text
+
+   输入：logs = [[7,5]], k = 1
+   输出：[1]
+   解释：唯一用户有一个活跃分钟。
