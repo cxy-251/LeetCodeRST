@@ -1,10 +1,39 @@
 1432. Max Difference You Can Get From Changing an Integer
 =========================================================
 
+题目信息
+--------
+
 :题号: 1432
-:题名: Max Difference You Can Get From Changing an Integer
-:类型: Algorithms（元数据占位）
 :难度: Medium
+:主题: 贪心、十进制数位、字符串
 :原题: `LeetCode 1432 <https://leetcode.com/problems/max-difference-you-can-get-from-changing-an-integer/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 两次独立操作都从原数开始；每次选择一个数字并把其全部出现替换为另一数字，结果不能有前导零且不能为零
+
+题目重述
+--------
+
+给定正整数 ``num``。一次操作选择十进制数字 ``x`` 和 ``y``，把 ``num`` 中所有数字 ``x`` 同时替换为 ``y``。
+
+分别从原始 ``num`` 出发执行一次操作，得到两个合法正整数 ``a`` 和 ``b``。结果不能含前导零。请返回能够得到的最大差值 ``a - b``。
+
+``1 <= num <= 10^8``。
+
+自建示例
+--------
+
+相同数位可以整体替换为最大和最小合法数字：
+
+.. code-block:: text
+
+   输入：num = 555
+   输出：888
+   解释：最大值为 999，最小值为 111，差为 888。
+
+单个数位不能替换成前导零：
+
+.. code-block:: text
+
+   输入：num = 9
+   输出：8
+   解释：最大值保持为 9，最小合法值为 1。
