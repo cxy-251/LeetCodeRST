@@ -1,10 +1,31 @@
 1735. Count Ways to Make Array With Product
 ===========================================
 
+题目信息
+--------
+
 :题号: 1735
-:题名: Count Ways to Make Array With Product
-:类型: Algorithms（元数据占位）
 :难度: Hard
+:主题: 质因数分解、组合数学
 :原题: `LeetCode 1735 <https://leetcode.com/problems/count-ways-to-make-array-with-product/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 每个查询统计长度 ``n`` 的正整数数组乘积恰为 ``k`` 的有序方案数
+
+题目重述
+--------
+
+对每个查询 ``[n,k]``，返回长度为 ``n``、元素为正整数且乘积为 ``k`` 的数组数量，结果对 ``10^9+7`` 取模。
+
+自建示例
+--------
+
+.. code-block:: text
+
+   输入：queries = [[2,6],[1,7]]
+   输出：[4,1]
+   解释：乘积 6 的长度二数组为 [1,6]、[2,3]、[3,2]、[6,1]；长度一时只有 [7]。
+
+.. code-block:: text
+
+   输入：queries = [[3,1]]
+   输出：[1]
+   解释：所有元素都必须为 1。

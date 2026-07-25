@@ -1,10 +1,31 @@
 1723. Find Minimum Time to Finish All Jobs
 ==========================================
 
+题目信息
+--------
+
 :题号: 1723
-:题名: Find Minimum Time to Finish All Jobs
-:类型: Algorithms（元数据占位）
 :难度: Hard
+:主题: 回溯、状态压缩、负载均衡
 :原题: `LeetCode 1723 <https://leetcode.com/problems/find-minimum-time-to-finish-all-jobs/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 每份工作完整分配给一名工人，目标最小化最忙工人的总时间
+
+题目重述
+--------
+
+给定工作耗时数组和 ``k`` 名工人。每份工作必须分配给恰好一人，工人可承担多份工作。返回完成全部工作的最短总时间。
+
+自建示例
+--------
+
+.. code-block:: text
+
+   输入：jobs = [3,2,3], k = 3
+   输出：3
+   解释：三份工作分别交给三名工人。
+
+.. code-block:: text
+
+   输入：jobs = [1,2,4,7,8], k = 2
+   输出：11
+   解释：可分为 [1,2,8] 与 [4,7]，两人负载均为 11。
