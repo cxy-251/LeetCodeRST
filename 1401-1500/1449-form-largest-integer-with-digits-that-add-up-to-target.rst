@@ -1,10 +1,39 @@
 1449. Form Largest Integer With Digits That Add up to Target
 ============================================================
 
+题目信息
+--------
+
 :题号: 1449
-:题名: Form Largest Integer With Digits That Add up to Target
-:类型: Algorithms（元数据占位）
 :难度: Hard
+:主题: 动态规划、完全背包、字符串比较
 :原题: `LeetCode 1449 <https://leetcode.com/problems/form-largest-integer-with-digits-that-add-up-to-target/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 数字 ``1`` 到 ``9`` 可重复使用，代价由 ``cost`` 给出；总代价必须恰为 ``target``，返回数值最大的整数，无解返回 ``"0"``
+
+题目重述
+--------
+
+给定长度为 ``9`` 的数组 ``cost``，其中 ``cost[i]`` 是写下数字 ``i+1`` 的代价。可以使用任意多个数字，每次使用都支付对应代价。
+
+构造一个不含数字 ``0`` 的正整数，使所有数位代价之和恰好等于 ``target``，并使整数数值最大。若不存在合法构造，返回字符串 ``"0"``。
+
+``cost.length == 9``，``1 <= cost[i], target <= 5000``。
+
+自建示例
+--------
+
+代价相同时应优先使用更多且更大的数位：
+
+.. code-block:: text
+
+   输入：cost = [2,2,2,2,2,2,2,2,2], target = 4
+   输出："99"
+   解释：可以写两个数位，数位数量相同时由最高位开始选择更大的数字。
+
+目标小于所有数位代价时无解：
+
+.. code-block:: text
+
+   输入：cost = [3,3,3,3,3,3,3,3,3], target = 2
+   输出："0"
+   解释：任何数字的代价都超过目标。
