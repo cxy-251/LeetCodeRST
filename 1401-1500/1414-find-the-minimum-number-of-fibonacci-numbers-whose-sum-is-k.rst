@@ -1,10 +1,39 @@
 1414. Find the Minimum Number of Fibonacci Numbers Whose Sum Is K
 =================================================================
 
+题目信息
+--------
+
 :题号: 1414
-:题名: Find the Minimum Number of Fibonacci Numbers Whose Sum Is K
-:类型: Algorithms（元数据占位）
 :难度: Medium
+:主题: 贪心、斐波那契数列
 :原题: `LeetCode 1414 <https://leetcode.com/problems/find-the-minimum-number-of-fibonacci-numbers-whose-sum-is-k/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 从斐波那契数列中选择若干数使总和等于 ``k``，允许重复使用，最小化选择数量
+
+题目重述
+--------
+
+斐波那契数列从 ``1, 1`` 开始，之后每项等于前两项之和。给定正整数 ``k``，选择若干个斐波那契数，使它们的总和恰好等于 ``k``。
+
+请返回所需斐波那契数的最少数量。
+
+``1 <= k <= 10^9``。
+
+自建示例
+--------
+
+优先选择不超过剩余值的最大斐波那契数：
+
+.. code-block:: text
+
+   输入：k = 10
+   输出：2
+   解释：10 可以表示为 8 + 2，无法只用一个斐波那契数得到 10。
+
+目标本身是斐波那契数时只需一个：
+
+.. code-block:: text
+
+   输入：k = 1
+   输出：1
+   解释：1 本身属于斐波那契数列。
