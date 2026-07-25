@@ -1,10 +1,31 @@
 1719. Number Of Ways To Reconstruct A Tree
 ==========================================
 
+题目信息
+--------
+
 :题号: 1719
-:题名: Number Of Ways To Reconstruct A Tree
-:类型: Algorithms（元数据占位）
 :难度: Hard
+:主题: 树、祖先关系、图
 :原题: `LeetCode 1719 <https://leetcode.com/problems/number-of-ways-to-reconstruct-a-tree/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 每个无序节点对表示其中一个节点是另一个节点祖先，返回无解、唯一或多解状态
+
+题目重述
+--------
+
+根据祖先关系对 ``pairs`` 重建根树。若不存在合法树返回 ``0``，恰有一种返回 ``1``，存在多种返回 ``2``。
+
+自建示例
+--------
+
+.. code-block:: text
+
+   输入：pairs = [[1,2],[2,3]]
+   输出：1
+   解释：节点 2 必须为根，1 和 3 是其两个子节点。
+
+.. code-block:: text
+
+   输入：pairs = [[1,2],[1,3],[2,3]]
+   输出：2
+   解释：三节点完全两两具有祖先关系，可形成不止一种链式树。
