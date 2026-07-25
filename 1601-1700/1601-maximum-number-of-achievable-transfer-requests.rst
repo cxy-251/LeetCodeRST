@@ -1,10 +1,33 @@
 1601. Maximum Number of Achievable Transfer Requests
 ====================================================
 
+题目信息
+--------
+
 :题号: 1601
-:题名: Maximum Number of Achievable Transfer Requests
-:类型: Algorithms（元数据占位）
 :难度: Hard
+:主题: 位枚举、回溯、净流量平衡
 :原题: `LeetCode 1601 <https://leetcode.com/problems/maximum-number-of-achievable-transfer-requests/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 选择尽可能多的调动请求，使每栋楼调入人数与调出人数相等
+
+题目重述
+--------
+
+有 ``n`` 栋楼和若干员工调动请求 ``[from, to]``。可以接受任意子集；最终每栋楼的员工净变化必须为零。返回最多能够接受的请求数量。
+
+``1 <= n <= 20``，请求数不超过 ``16``，允许 ``from == to``。
+
+自建示例
+--------
+
+.. code-block:: text
+
+   输入：n = 3, requests = [[0,1],[1,2],[2,0],[0,2]]
+   输出：3
+   解释：接受前三个请求形成闭环，每栋楼净变化为零；四个请求全选会使 0 和 2 失衡。
+
+.. code-block:: text
+
+   输入：n = 2, requests = [[0,0],[1,1]]
+   输出：2
+   解释：楼内调动不会改变任何楼的人数，因此两个请求都可接受。
