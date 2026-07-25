@@ -1,10 +1,39 @@
 1497. Check If Array Pairs Are Divisible by k
 =============================================
 
+题目信息
+--------
+
 :题号: 1497
-:题名: Check If Array Pairs Are Divisible by k
-:类型: Algorithms（元数据占位）
 :难度: Medium
+:主题: 数组、余数计数、配对
 :原题: `LeetCode 1497 <https://leetcode.com/problems/check-if-array-pairs-are-divisible-by-k/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 把全部元素划分为两两不重叠的数对，使每对元素和都能被 ``k`` 整除；负数余数需统一到非负范围
+
+题目重述
+--------
+
+给定长度为偶数的整数数组 ``arr`` 和正整数 ``k``。需要把数组中的每个元素实例恰好使用一次，划分成 ``arr.length / 2`` 个数对。
+
+若可以使每个数对的元素和都能被 ``k`` 整除，返回 ``true``；否则返回 ``false``。
+
+``1 <= arr.length <= 10^5``，``arr.length`` 为偶数，``-10^9 <= arr[i] <= 10^9``，``1 <= k <= 10^5``。
+
+自建示例
+--------
+
+互补余数可以组成合法数对：
+
+.. code-block:: text
+
+   输入：arr = [1,2,3,4], k = 5
+   输出：true
+   解释：可以配对为 (1,4) 和 (2,3)，两对和都等于 5。
+
+存在无法匹配的余数时返回假：
+
+.. code-block:: text
+
+   输入：arr = [1,2,3,5], k = 5
+   输出：false
+   解释：2 与 3 可以配对，但剩余 1 与 5 的和不能被 5 整除。
