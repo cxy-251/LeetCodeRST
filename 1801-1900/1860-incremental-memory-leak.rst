@@ -1,10 +1,31 @@
 1860. Incremental Memory Leak
 =============================
 
+题目信息
+--------
+
 :题号: 1860
-:题名: Incremental Memory Leak
-:类型: Algorithms（元数据占位）
 :难度: Medium
+:主题: 模拟、数学
 :原题: `LeetCode 1860 <https://leetcode.com/problems/incremental-memory-leak/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 第 ``i`` 秒从剩余空间较大的内存中分配 ``i``，平局选择第一块
+
+题目重述
+--------
+
+两块内存初始容量给定。第 ``i`` 秒需要分配 ``i`` 单位空间，优先使用剩余空间较大的内存，平局用第一块。无法分配时返回崩溃秒数和两块剩余容量。
+
+自建示例
+--------
+
+.. code-block:: text
+
+   输入：memory1 = 2, memory2 = 2
+   输出：[3,1,0]
+   解释：第 1 秒使用第一块，第 2 秒使用第二块，第 3 秒两块都不足。
+
+.. code-block:: text
+
+   输入：memory1 = 1, memory2 = 1
+   输出：[2,0,1]
+   解释：第 1 秒使用第一块，第 2 秒无法分配。

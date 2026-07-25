@@ -1,10 +1,31 @@
 1878. Get Biggest Three Rhombus Sums in a Grid
 ==============================================
 
+题目信息
+--------
+
 :题号: 1878
-:题名: Get Biggest Three Rhombus Sums in a Grid
-:类型: Algorithms（元数据占位）
 :难度: Medium
+:主题: 矩阵、前缀和、几何
 :原题: `LeetCode 1878 <https://leetcode.com/problems/get-biggest-three-rhombus-sums-in-a-grid/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 只累加菱形边界，返回最大的三个不同和
+
+题目重述
+--------
+
+枚举网格中边与对角线平行的所有菱形边界，单个格子也视为面积为零的菱形。返回最大的三个不同边界和；不足三个则返回全部。
+
+自建示例
+--------
+
+.. code-block:: text
+
+   输入：grid = [[3,1,2]]
+   输出：[3,2,1]
+   解释：只有单格菱形，三个不同和就是三个格子的值。
+
+.. code-block:: text
+
+   输入：grid = [[1,2],[3,4]]
+   输出：[4,3,2]
+   解释：网格高度不足以形成更大的菱形，取最大的三个不同单格值。

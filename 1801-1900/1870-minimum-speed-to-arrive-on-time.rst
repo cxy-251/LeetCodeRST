@@ -1,10 +1,31 @@
 1870. Minimum Speed to Arrive on Time
 =====================================
 
+题目信息
+--------
+
 :题号: 1870
-:题名: Minimum Speed to Arrive on Time
-:类型: Algorithms（元数据占位）
 :难度: Medium
+:主题: 二分查找、数组
 :原题: `LeetCode 1870 <https://leetcode.com/problems/minimum-speed-to-arrive-on-time/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 除最后一段外，每段出发时间必须等待到下一个整数小时
+
+题目重述
+--------
+
+以固定整数速度依次经过若干段路。前面的每段到达后必须等到整数小时才能继续，最后一段无需等待。返回在 ``hour`` 内到达的最小速度，不可能时返回 -1。
+
+自建示例
+--------
+
+.. code-block:: text
+
+   输入：dist = [1,3,2], hour = 3
+   输出：3
+   解释：速度 3 的总时间为 1 + 1 + 2/3，小于 3；速度 2 超时。
+
+.. code-block:: text
+
+   输入：dist = [1,1], hour = 1
+   输出：-1
+   解释：第一段至少占用一个完整小时，最后一段还需要正时间。
