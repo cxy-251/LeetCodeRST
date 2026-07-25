@@ -1,10 +1,31 @@
 1948. Delete Duplicate Folders in System
 ========================================
 
+题目信息
+--------
+
 :题号: 1948
-:题名: Delete Duplicate Folders in System
-:类型: Algorithms（元数据占位）
 :难度: Hard
+:主题: 字典树、哈希、树序列化
 :原题: `LeetCode 1948 <https://leetcode.com/problems/delete-duplicate-folders-in-system/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 非空子文件夹结构完全相同的文件夹及其后代同时删除
+
+题目重述
+--------
+
+路径集合描述文件夹树。若两个或更多文件夹拥有完全相同的非空子文件夹结构，则标记这些文件夹；一次性删除所有标记文件夹及其后代，返回剩余路径。
+
+自建示例
+--------
+
+.. code-block:: text
+
+   输入：paths = [["a"],["b"],["a","x"],["b","x"]]
+   输出：[]
+   解释：a 与 b 都只有同名子文件夹 x，结构重复，因此两棵子树都被删除。
+
+.. code-block:: text
+
+   输入：paths = [["a"],["a","x"],["b"]]
+   输出：[["a"],["a","x"],["b"]]
+   解释：没有两个带非空子结构的文件夹相同。
