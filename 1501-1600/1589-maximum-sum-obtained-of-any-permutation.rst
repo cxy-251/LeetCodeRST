@@ -1,10 +1,39 @@
 1589. Maximum Sum Obtained of Any Permutation
 =============================================
 
+题目信息
+--------
+
 :题号: 1589
-:题名: Maximum Sum Obtained of Any Permutation
-:类型: Algorithms（元数据占位）
 :难度: Medium
+:主题: 数组、差分、排序、贪心
 :原题: `LeetCode 1589 <https://leetcode.com/problems/maximum-sum-obtained-of-any-permutation/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 可以任意重排 ``nums``；每个下标被请求覆盖的次数越多，应分配越大的元素
+
+题目重述
+--------
+
+给定整数数组 ``nums`` 和若干闭区间请求 ``requests[i] = [start_i,end_i]``。可以先任意重排 ``nums``，随后计算每个请求区间内的元素和，并把所有请求结果相加。
+
+请返回能够得到的最大总和，对 ``10^9 + 7`` 取模。
+
+``1 <= nums.length <= 10^5``，请求数量不超过 ``10^5``，所有区间下标合法。
+
+自建示例
+--------
+
+高频下标应放置最大元素：
+
+.. code-block:: text
+
+   输入：nums = [1,2,3], requests = [[0,1],[1,2]]
+   输出：9
+   解释：下标覆盖次数为 [1,2,1]，把 3 放在中间，可得到 4+5=9。
+
+只有整段请求时排列不影响结果：
+
+.. code-block:: text
+
+   输入：nums = [4,1], requests = [[0,1]]
+   输出：5
+   解释：请求覆盖全部元素，任意排列的总和都为 5。
