@@ -1,10 +1,39 @@
 1505. Minimum Possible Integer After at Most K Adjacent Swaps On Digits
 =======================================================================
 
+题目信息
+--------
+
 :题号: 1505
-:题名: Minimum Possible Integer After at Most K Adjacent Swaps On Digits
-:类型: Algorithms（元数据占位）
 :难度: Hard
+:主题: 字符串、贪心、树状数组、相邻交换
 :原题: `LeetCode 1505 <https://leetcode.com/problems/minimum-possible-integer-after-at-most-k-adjacent-swaps-on-digits/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 每次只能交换相邻数字；在至多 ``k`` 次交换内得到字典序最小的数字字符串，结果允许出现前导零
+
+题目重述
+--------
+
+给定由十进制数字组成的字符串 ``num`` 和非负整数 ``k``。一次操作可以交换字符串中任意一对相邻字符。
+
+执行至多 ``k`` 次操作后，请返回能够得到的数值最小字符串。比较时按相同长度数字字符串的字典序进行，移动零到开头是允许的。
+
+``1 <= num.length <= 3 * 10^4``，``num`` 只包含数字字符，``0 <= k <= 10^9``。
+
+自建示例
+--------
+
+一次交换应把可达的较小数字尽量前移：
+
+.. code-block:: text
+
+   输入：num = "321", k = 1
+   输出："231"
+   解释：交换前两个字符得到 231，比交换后两个字符得到的 312 更小。
+
+零次交换时必须保留原字符串：
+
+.. code-block:: text
+
+   输入：num = "908", k = 0
+   输出："908"
+   解释：没有可用操作，唯一可达结果就是输入本身。
