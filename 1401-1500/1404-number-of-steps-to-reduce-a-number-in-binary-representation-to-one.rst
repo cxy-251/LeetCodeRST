@@ -1,10 +1,39 @@
 1404. Number of Steps to Reduce a Number in Binary Representation to One
 ========================================================================
 
+题目信息
+--------
+
 :题号: 1404
-:题名: Number of Steps to Reduce a Number in Binary Representation to One
-:类型: Algorithms（元数据占位）
 :难度: Medium
+:主题: 字符串、二进制、模拟
 :原题: `LeetCode 1404 <https://leetcode.com/problems/number-of-steps-to-reduce-a-number-in-binary-representation-to-one/>`_
-:数据源: LeetCode GraphQL
-:处理状态: 题目文件已建立；题目信息、题目重述与自建示例待下一轮补充。
+:重点: 偶数除以二，奇数加一，反复操作直到数值变为一；输入可能远超普通整数范围
+
+题目重述
+--------
+
+给定一个不含前导零的二进制字符串 ``s``，它表示一个正整数。当前数为偶数时，将其除以 ``2``；为奇数且大于 ``1`` 时，将其加 ``1``。
+
+请返回把该数变为 ``1`` 所需的操作次数。
+
+``1 <= s.length <= 500``，``s`` 只包含 ``0`` 和 ``1``，且首字符为 ``1``。
+
+自建示例
+--------
+
+奇数加一后可能产生连续进位：
+
+.. code-block:: text
+
+   输入：s = "111"
+   输出：4
+   解释：7 -> 8 -> 4 -> 2 -> 1，共四步。
+
+二进制十只需除以二一次：
+
+.. code-block:: text
+
+   输入：s = "10"
+   输出：1
+   解释：二进制 10 表示十进制 2，除以二后得到 1。
