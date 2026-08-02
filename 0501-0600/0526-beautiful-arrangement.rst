@@ -35,3 +35,46 @@
    输入：n = 1
    输出：1
    解释：唯一排列 [1] 在位置 1 满足整除条件。
+
+按位置回溯并用位掩码去重
+------------------------
+
+从位置 1 开始逐位放置未使用数字。数字 ``value`` 能放在当前位置 ``position`` 的条件是二者至少一个能整除另一个；掩码的第 ``value-1`` 位记录它是否已被使用。由于后续结果只取决于已用集合，当前位置可以由集合中位数推出，适合记忆化。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+       int n;
+       std::vector<int> memo;
+
+       int count(int used) {
+           int& cached = memo[used];
+           if (cached != -1) return cached;
+           int position = __builtin_popcount(static_cast<unsigned>(used)) + 1;
+           if (position > n) return cached = 1;
+
+           cached = 0;
+           for (int value = 1; value <= n; ++value) {
+               int bit = 1 << (value - 1);
+               if ((used & bit) != 0) continue;
+               if (value % position != 0 && position % value != 0) continue;
+               cached += count(used | bit);
+           }
+           return cached;
+       }
+
+   public:
+       int countArrangement(int nValue) {
+           n = nValue;
+           memo.assign(1 << n, -1);
+           return count(0);
+       }
+   };
+
+代码分析
+--------
+
+每条递归路径恰好使用一个新数字，位置由已用数字数量决定；整除判断保留且只保留合法排列。相同已用集合的后续选择完全相同，记忆化避免重复计算。状态数为 ``2^n``，每个状态尝试 ``n`` 个值，时间复杂度为 ``O(n2^n)``，空间复杂度为 ``O(2^n)``。

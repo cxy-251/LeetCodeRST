@@ -35,3 +35,38 @@
    输入：n = 987
    输出：-1
    解释：任意其他排列都会小于 987，因此不存在更大结果。
+
+对数字串执行下一排列
+--------------------
+
+要得到刚好更大的排列，从右向左找第一个下降位置 ``pivot``，再从末尾找到刚好大于 ``digits[pivot]`` 的数字交换，最后把后缀升序排列。若不存在下降位置，原数字已是最大排列；用 ``long long`` 解析结果后再检查 32 位上界。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int nextGreaterElement(int n) {
+           std::string digits = std::to_string(n);
+           int pivot = static_cast<int>(digits.size()) - 2;
+           while (pivot >= 0 && digits[pivot] >= digits[pivot + 1]) {
+               --pivot;
+           }
+           if (pivot < 0) return -1;
+
+           int greater = static_cast<int>(digits.size()) - 1;
+           while (digits[greater] <= digits[pivot]) --greater;
+           std::swap(digits[pivot], digits[greater]);
+           std::reverse(digits.begin() + pivot + 1, digits.end());
+
+           long long value = std::stoll(digits);
+           return value > INT_MAX ? -1 : static_cast<int>(value);
+       }
+   };
+
+代码分析
+--------
+
+后缀原本按非递增排列，交换后将它升序能使结果在所有更大排列中最小；没有枢轴则不存在更大排列。所有数字只重排不增删，时间复杂度为 ``O(d)``，额外空间复杂度为 ``O(d)``，其中 ``d`` 为位数。

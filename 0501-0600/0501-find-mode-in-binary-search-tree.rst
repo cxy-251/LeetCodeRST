@@ -35,3 +35,71 @@
    输入：root = [9]
    输出：[9]
    解释：树中唯一的值自然具有最高频率。
+
+利用中序遍历的连续相同值
+------------------------
+
+BST 的中序遍历按非递减顺序访问节点，因此同一个值会形成连续的一段。扫描这段序列时维护当前值及其连续出现次数；次数超过历史最大值就清空答案并换成当前值，次数相等则追加当前值。这样无需单独的频率哈希表，也能处理允许重复值的 BST。
+
+代码使用 Morris 中序遍历，把临时线索接到当前节点的前驱上，访问完左子树后立即恢复指针。遍历结束时树的结构与输入相同，且不依赖递归栈。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       std::vector<int> findMode(TreeNode* root) {
+           std::vector<int> result;
+           TreeNode* current = root;
+           int previous = 0;
+           int run = 0;
+           int best = 0;
+           bool hasPrevious = false;
+
+           auto visit = [&](int value) {
+               if (!hasPrevious || value != previous) {
+                   previous = value;
+                   run = 1;
+                   hasPrevious = true;
+               } else {
+                   ++run;
+               }
+               if (run > best) {
+                   best = run;
+                   result.clear();
+                   result.push_back(value);
+               } else if (run == best) {
+                   result.push_back(value);
+               }
+           };
+
+           while (current != nullptr) {
+               if (current->left == nullptr) {
+                   visit(current->val);
+                   current = current->right;
+                   continue;
+               }
+               TreeNode* predecessor = current->left;
+               while (predecessor->right != nullptr &&
+                      predecessor->right != current) {
+                   predecessor = predecessor->right;
+               }
+               if (predecessor->right == nullptr) {
+                   predecessor->right = current;
+                   current = current->left;
+               } else {
+                   predecessor->right = nullptr;
+                   visit(current->val);
+                   current = current->right;
+               }
+           }
+           return result;
+       }
+   };
+
+代码分析
+--------
+
+中序顺序保证同值节点连续，``run`` 只需比较相邻访问值即可得到准确频率；答案更新规则同时保留所有并列最高值。Morris 线索每条边至多建立和恢复一次，时间复杂度为 ``O(n)``，除返回结果外额外空间复杂度为 ``O(1)``。

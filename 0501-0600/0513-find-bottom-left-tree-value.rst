@@ -35,3 +35,38 @@
    输入：root = [5]
    输出：5
    解释：根节点是唯一节点，也是最深层的最左节点。
+
+层序遍历中每层第一个节点
+------------------------
+
+队列按从左到右保存当前层。每轮开始时队首就是这一层最左节点，将它记录为 ``answer``，再处理整层并把孩子按左右顺序加入队尾。遍历结束时最后一次更新对应最深层的最左节点。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int findBottomLeftValue(TreeNode* root) {
+           std::queue<TreeNode*> queue;
+           queue.push(root);
+           int answer = root->val;
+           while (!queue.empty()) {
+               int levelSize = static_cast<int>(queue.size());
+               answer = queue.front()->val;
+               for (int i = 0; i < levelSize; ++i) {
+                   TreeNode* node = queue.front();
+                   queue.pop();
+                   if (node->left != nullptr) queue.push(node->left);
+                   if (node->right != nullptr) queue.push(node->right);
+               }
+           }
+           return answer;
+       }
+   };
+
+代码分析
+--------
+
+每层先读取队首再处理孩子，保证记录的是该层最左而非最后访问节点；队列层序顺序使最后一层自然是最深层。每个节点入队出队一次，时间复杂度为 ``O(n)``，队列空间为 ``O(w)``，其中 ``w`` 是最大层宽。

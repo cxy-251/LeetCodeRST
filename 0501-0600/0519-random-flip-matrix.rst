@@ -35,3 +35,52 @@
    输入：初始化 Solution(1,1)，调用 flip()、reset()、flip()
    输出：[0,0]，随后 [0,0]
    解释：reset 后唯一格子恢复为 0，因此可以再次被翻转。
+
+把未选择位置压缩成尾部交换表
+------------------------------
+
+把矩阵按行优先编号为 ``0..m*n-1``，维护尚未翻转的编号区间 ``[0, remaining)``。每次在区间内均匀抽取一个位置 ``pick``，将它映射到的真实编号返回；随后用区间最后一个位置替换 ``pick`` 的槽位并减少 ``remaining``。这样不需要显式保存整张矩阵。
+
+哈希表只记录发生过交换的编号，未记录的位置默认映射到自身。``reset`` 清空映射并恢复 ``remaining = m*n``。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+       int columns;
+       int total;
+       int remaining;
+       std::unordered_map<int, int> mapping;
+       std::mt19937 generator{std::random_device{}()};
+
+       int actual(int index) {
+           auto it = mapping.find(index);
+           return it == mapping.end() ? index : it->second;
+       }
+
+   public:
+       Solution(int m, int n)
+           : columns(n), total(m * n), remaining(total) {}
+
+       std::vector<int> flip() {
+           std::uniform_int_distribution<int> distribution(0, remaining - 1);
+           int pick = distribution(generator);
+           int value = actual(pick);
+           int last = remaining - 1;
+           mapping[pick] = actual(last);
+           --remaining;
+           return {value / columns, value % columns};
+       }
+
+       void reset() {
+           mapping.clear();
+           remaining = total;
+       }
+   };
+
+代码分析
+--------
+
+额外保存的 ``total`` 使 ``reset`` 能恢复原始矩阵大小；交换表的不变量是未翻转编号始终均匀占据前缀区间，因而每个剩余格子等概率。哈希查找使单次操作平均 ``O(1)``，空间复杂度为已翻转次数 ``O(t)``。

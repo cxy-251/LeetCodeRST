@@ -35,3 +35,41 @@
    输入：num1 = "0+-2i"，num2 = "3+0i"
    输出："0+-6i"
    解释：乘积的实部为 0，虚部系数为 -6，并按固定格式输出。
+
+先解析两部分再套乘法公式
+------------------------
+
+分隔实部和虚部的 ``+`` 仍然存在，即使虚部为负时字符串形如 ``a+-bi``。找到这个分隔符后，前段是实部，去掉末尾 ``i`` 的后段是虚部。复数乘法遵循 ``(a+bi)(c+di) = (ac-bd) + (ad+bc)i``。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+       std::pair<int, int> parse(const std::string& value) {
+           int plus = static_cast<int>(value.find('+'));
+           int real = std::stoi(value.substr(0, plus));
+           int imaginary = std::stoi(
+               value.substr(plus + 1, value.size() - plus - 2));
+           return {real, imaginary};
+       }
+
+   public:
+       std::string complexNumberMultiply(std::string num1,
+                                         std::string num2) {
+           auto first = parse(num1);
+           auto second = parse(num2);
+           int real = first.first * second.first -
+                      first.second * second.second;
+           int imaginary = first.first * second.second +
+                           first.second * second.first;
+           return std::to_string(real) + "+" +
+                  std::to_string(imaginary) + "i";
+       }
+   };
+
+代码分析
+--------
+
+解析保留实部、虚部的符号，公式中的 ``-bd`` 正确处理 ``i^2=-1``；输出始终重新插入 ``+``，因此负虚部会形成合法的 ``+-`` 格式。时间复杂度为 ``O(|num1|+|num2|)``，额外空间复杂度为 ``O(1)``（不计输出字符串）。

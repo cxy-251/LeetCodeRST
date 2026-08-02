@@ -35,3 +35,48 @@
    输入：k = 1，w = 4，profits = [3,6]，capital = [0,4]
    输出：10
    解释：两个项目都可启动，只能选择一个，因此选择利润为 6 的项目。
+
+资本可达项目中的利润最大化
+--------------------------
+
+把项目按资本门槛从小到大排序，并用指针把当前资本已经能够启动的项目全部加入最大堆。每次选择时，从堆顶取利润最大的项目；它不会减少资本，且在当前可选集合中给出最大的下一步资本，因此选择后再继续扩展可达项目。
+
+若最大堆为空，说明剩余项目的门槛都超过当前资本，无法继续选择，直接结束而不强行凑满 ``k`` 次。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int findMaximizedCapital(int k, int w,
+                                std::vector<int>& profits,
+                                std::vector<int>& capital) {
+           std::vector<std::pair<int, int>> projects;
+           for (int i = 0; i < static_cast<int>(profits.size()); ++i) {
+               projects.push_back({capital[i], profits[i]});
+           }
+           std::sort(projects.begin(), projects.end());
+
+           std::priority_queue<int> available;
+           long long current = w;
+           int next = 0;
+           for (int step = 0; step < k; ++step) {
+               while (next < static_cast<int>(projects.size()) &&
+                      projects[next].first <= current) {
+                   available.push(projects[next].second);
+                   ++next;
+               }
+               if (available.empty()) break;
+               current += available.top();
+               available.pop();
+           }
+           return static_cast<int>(current);
+       }
+   };
+
+代码分析
+--------
+
+排序指针保证每个项目只进入一次堆；最大堆选择当前可行项目中的最大利润，交换任何更小利润的选择都不会让后续资本更高，因此贪心最优。排序和堆操作的时间复杂度为 ``O(n log n + k log n)``，额外空间复杂度为 ``O(n)``。

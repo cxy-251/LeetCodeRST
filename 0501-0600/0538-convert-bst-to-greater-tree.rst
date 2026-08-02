@@ -35,3 +35,39 @@
    输入：root = [-3]
    输出：[-3]
    解释：不存在严格更大的节点，因此节点值不变。
+
+反向中序维护更大值总和
+----------------------
+
+BST 的反向中序顺序是从大到小。访问节点前已经累积的 ``running`` 正好是所有严格更大节点的原值之和；把当前节点加上它，再将更新后的值加入 ``running``，继续访问左子树。
+
+虽然节点值被原地修改，但每个节点只在加入当前累计后才影响更小节点，等价于按原值从大到小逐项累加。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+       long long running = 0;
+
+       void reverseInorder(TreeNode* node) {
+           if (node == nullptr) return;
+           reverseInorder(node->right);
+           node->val = static_cast<int>(node->val + running);
+           running += node->val;
+           reverseInorder(node->left);
+       }
+
+   public:
+       TreeNode* convertBST(TreeNode* root) {
+           running = 0;
+           reverseInorder(root);
+           return root;
+       }
+   };
+
+代码分析
+--------
+
+反向中序的不变量是 ``running`` 等于当前节点右侧所有原值之和；更新后将当前原值加回，恰好建立下一节点所需的累计。每个节点访问一次，时间复杂度为 ``O(n)``，递归栈空间为 ``O(h)``。

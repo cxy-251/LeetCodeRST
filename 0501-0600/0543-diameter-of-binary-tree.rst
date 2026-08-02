@@ -35,3 +35,37 @@
    输入：root = [9]
    输出：0
    解释：没有两个不同节点可连接，因此直径按边数为 0。
+
+后序返回从节点向下的最长边数
+------------------------------
+
+对每个节点，若左、右子树向下的最长路径分别为 ``left``、``right``，经过该节点的候选直径就是 ``left + right``；返回给父节点的高度则是 ``max(left,right)+1``。后序遍历先得到两个子树高度，同时更新全局最大直径，因此不要求最优路径经过根节点。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+       int answer = 0;
+
+       int height(TreeNode* node) {
+           if (node == nullptr) return 0;
+           int left = height(node->left);
+           int right = height(node->right);
+           answer = std::max(answer, left + right);
+           return std::max(left, right) + 1;
+       }
+
+   public:
+       int diameterOfBinaryTree(TreeNode* root) {
+           answer = 0;
+           height(root);
+           return answer;
+       }
+   };
+
+代码分析
+--------
+
+子树高度以边数表示时，左右高度相加正好是经过当前节点的节点间路径边数；所有节点都作为一次可能的路径最高点检查，所以不会漏掉子树内部直径。时间复杂度为 ``O(n)``，递归栈空间为 ``O(h)``。

@@ -35,3 +35,38 @@
    输入：wall = [[5],[5]]
    输出：2
    解释：每行只有一块砖，任意合法的内部垂线都会穿过两块砖。
+
+统计各行共同出现的内部缝隙
+--------------------------
+
+对每一行累加砖宽得到内部缝隙的位置，忽略该行最后一块砖的总宽度，因为墙的最右外边界不能选。若某个位置在 ``seam`` 行出现，垂线就能在这些行不穿砖；因此穿砖数为总行数减去最多缝隙频次。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int leastBricks(std::vector<std::vector<int>>& wall) {
+           std::unordered_map<int, int> frequency;
+           for (const auto& row : wall) {
+               int position = 0;
+               for (int i = 0; i + 1 < static_cast<int>(row.size()); ++i) {
+                   position += row[i];
+                   ++frequency[position];
+               }
+           }
+
+           int best = 0;
+           for (const auto& [position, count] : frequency) {
+               best = std::max(best, count);
+           }
+           return static_cast<int>(wall.size()) - best;
+       }
+   };
+
+代码分析
+--------
+
+固定一条合法垂线后，它不穿砖的行恰好是该位置的内部缝隙行；选择频次最高的位置即可最大化免穿砖行数。每块砖的内部边界只统计一次，时间复杂度为 ``O(砖块总数)``，额外空间复杂度为 ``O(缝隙数量)``。

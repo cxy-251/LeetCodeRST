@@ -35,3 +35,40 @@
    输入：machines = [1,0]
    输出：-1
    解释：共有 1 件衣服，无法在两台机器之间平均分配。
+
+前缀流量与单机净输出的最大值
+----------------------------
+
+先求平均目标 ``average``。从左到右扫描时，``balance`` 表示当前位置左侧整体需要从右侧得到的衣服数：正数代表需要向右传出，负数代表需要从右向左传入。跨过这条边至少需要 ``abs(balance)`` 轮。
+
+单台机器若比目标多出 ``machines[i] - average`` 件，就还需要自己在若干轮中送出这些衣服；它每轮最多送一件，所以答案还必须至少覆盖这个正数。遍历时取两种下界的最大值。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int findMinMoves(std::vector<int>& machines) {
+           long long total = std::accumulate(machines.begin(),
+                                             machines.end(), 0LL);
+           int n = static_cast<int>(machines.size());
+           if (total % n != 0) return -1;
+           long long average = total / n;
+           long long balance = 0;
+           long long answer = 0;
+           for (int clothes : machines) {
+               long long excess = clothes - average;
+               balance += excess;
+               answer = std::max(answer,
+                                 std::max(std::llabs(balance), excess));
+           }
+           return static_cast<int>(answer);
+       }
+   };
+
+代码分析
+--------
+
+前缀净流量给出相邻边不可突破的传输下界，过剩机器给出单机每轮至多输出一件的下界；同时操作可以并行进行，二者最大值即可达到。时间复杂度为 ``O(n)``，额外空间复杂度为 ``O(1)``。

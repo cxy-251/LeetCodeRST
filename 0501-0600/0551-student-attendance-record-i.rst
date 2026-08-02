@@ -35,3 +35,37 @@
    输入：s = "LALLL"
    输出：false
    解释：虽然只有一次缺席，但末尾出现连续三个 L。
+
+同时维护缺席总数和迟到后缀
+--------------------------
+
+扫描记录时累计 ``A`` 的总数，并用 ``late`` 表示当前连续 ``L`` 的长度；遇到 ``P`` 或 ``A`` 就把连续迟到长度清零。任意时刻缺席达到 2 或连续迟到达到 3，都可以立即判定不合格。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       bool checkRecord(std::string s) {
+           int absent = 0;
+           int late = 0;
+           for (char character : s) {
+               if (character == 'A') {
+                   if (++absent >= 2) return false;
+                   late = 0;
+               } else if (character == 'L') {
+                   if (++late >= 3) return false;
+               } else {
+                   late = 0;
+               }
+           }
+           return true;
+       }
+   };
+
+代码分析
+--------
+
+缺席限制依赖全局计数，迟到限制只依赖当前连续后缀；两个状态合起来完整覆盖合法性条件。每个字符只处理一次，时间复杂度为 ``O(n)``，额外空间复杂度为 ``O(1)``。

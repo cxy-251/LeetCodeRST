@@ -35,3 +35,42 @@
    输入：word1 = "tree"，word2 = "tree"
    输出：0
    解释：无需执行任何删除。
+
+保留最长公共子序列
+------------------
+
+最终相同的字符串必须同时是两个输入的公共子序列。若保留最长公共子序列长度为 ``l``，删除次数就是 ``len1-l + len2-l``；因此先求 LCS，再从两边删除其余字符即可达到最少操作。
+
+用一维 DP 保存前缀 LCS 长度，当前行从右向左更新，避免覆盖 ``dp[j-1]`` 所代表的左上状态。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int minDistance(std::string word1, std::string word2) {
+           int n = static_cast<int>(word2.size());
+           std::vector<int> dp(n + 1, 0);
+           for (char first : word1) {
+               int diagonal = 0;
+               for (int j = 1; j <= n; ++j) {
+                   int old = dp[j];
+                   if (first == word2[j - 1]) {
+                       dp[j] = diagonal + 1;
+                   } else {
+                       dp[j] = std::max(dp[j], dp[j - 1]);
+                   }
+                   diagonal = old;
+               }
+           }
+           return static_cast<int>(word1.size() + word2.size()) -
+                  2 * dp[n];
+       }
+   };
+
+代码分析
+--------
+
+LCS 状态的匹配与跳过转移覆盖所有共同保留方案，删除非 LCS 字符后即可构造相同结果，故该下界可达。时间复杂度为 ``O(|word1|*|word2|)``，空间复杂度为 ``O(|word2|)``。

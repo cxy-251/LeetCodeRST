@@ -35,3 +35,41 @@
    输入：依次编码 "https://a.example/x" 和 "https://b.example/y"
    输出：分别解码两个短网址时返回各自原网址
    解释：两个映射不能互相覆盖或混淆。
+
+对象内保存双向映射
+------------------
+
+题目不要求短网址具有可逆的数学编码，只要求在同一个对象状态中能够恢复。为每个新长网址分配递增编号，生成唯一短网址，并保存短网址到长网址的映射；再次编码同一长网址时复用已有短网址，避免产生不必要的重复键。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Codec {
+       const std::string prefix = "https://tinyurl.com/";
+       long long nextId = 0;
+       std::unordered_map<std::string, std::string> encoded;
+       std::unordered_map<std::string, std::string> original;
+
+   public:
+       std::string encode(std::string longUrl) {
+           auto existing = original.find(longUrl);
+           if (existing != original.end()) return existing->second;
+
+           std::string shortUrl = prefix + std::to_string(nextId++);
+           original[longUrl] = shortUrl;
+           encoded[shortUrl] = longUrl;
+           return shortUrl;
+       }
+
+       std::string decode(std::string shortUrl) {
+           auto it = encoded.find(shortUrl);
+           return it == encoded.end() ? "" : it->second;
+       }
+   };
+
+代码分析
+--------
+
+递增编号保证同一对象生成的短键不冲突，反向表保证 ``decode(encode(url))`` 返回原文本；双向表让重复编码可复用而不影响正确性。单次操作平均时间复杂度为 ``O(1)``（不计字符串哈希长度），空间复杂度为已编码网址总量 ``O(q)``。

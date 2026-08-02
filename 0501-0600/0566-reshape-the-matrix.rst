@@ -35,3 +35,40 @@
    输入：mat = [[1,2],[3,4]]，r = 1，c = 3
    输出：[[1,2],[3,4]]
    解释：原矩阵有 4 个元素，目标只有 3 个位置，因此返回原矩阵。
+
+用一维序号保持行优先顺序
+------------------------
+
+先比较原矩阵和目标矩阵的元素总数；不相等时直接返回原矩阵。相等时把原坐标 ``(i,j)`` 映射为一维序号 ``i * oldColumns + j``，再映射到目标的 ``(index / c, index % c)``，从而只改变形状不改变顺序。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       std::vector<std::vector<int>> matrixReshape(
+           std::vector<std::vector<int>>& mat, int r, int c) {
+           int rows = static_cast<int>(mat.size());
+           int columns = static_cast<int>(mat[0].size());
+           if (static_cast<long long>(rows) * columns !=
+               static_cast<long long>(r) * c) {
+               return mat;
+           }
+
+           std::vector<std::vector<int>> result(
+               r, std::vector<int>(c));
+           for (int index = 0; index < rows * columns; ++index) {
+               int oldRow = index / columns;
+               int oldColumn = index % columns;
+               result[index / c][index % c] = mat[oldRow][oldColumn];
+           }
+           return result;
+       }
+   };
+
+代码分析
+--------
+
+一维序号在新旧矩阵中保持不变，保证每个元素恰好复制一次且顺序不变；容量检查失败时不创建新结构。时间复杂度为 ``O(rows * columns)``，结果矩阵空间为 ``O(r*c)``。

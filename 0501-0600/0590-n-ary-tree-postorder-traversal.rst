@@ -35,3 +35,35 @@
    输入：root = [7]
    输出：[7]
    解释：没有子树，直接在最后访问根节点。
+
+先递归孩子再记录当前节点
+------------------------
+
+后序遍历的递归结构直接对应定义：按 children 从左到右调用每棵子树，所有孩子完成后才把当前节点值追加到结果。空节点不产生值。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+       std::vector<int> result;
+
+       void visit(Node* node) {
+           if (node == nullptr) return;
+           for (Node* child : node->children) visit(child);
+           result.push_back(node->val);
+       }
+
+   public:
+       std::vector<int> postorder(Node* root) {
+           result.clear();
+           visit(root);
+           return result;
+       }
+   };
+
+代码分析
+--------
+
+递归返回前才记录节点，保证所有孩子及其后代先出现且顺序不变；每个节点访问一次，时间复杂度为 ``O(n)``，递归栈空间为 ``O(h)``。

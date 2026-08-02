@@ -35,3 +35,62 @@
    输入：expression = "-1/4+1/4"
    输出："0/1"
    解释：两项相互抵消，零按规定写成 0/1。
+
+统一分母累加后约分
+------------------
+
+逐项读取可选符号、分子和分母。当前结果 ``numerator / denominator`` 加上新分数时，新的分子为 ``numerator * newDenominator + signedNumerator * denominator``，新的分母为两个分母之积；所有项处理完后用最大公约数约分。题目中的分母为正，因此结果分母也始终保持为正。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       std::string fractionAddition(std::string expression) {
+           long long numerator = 0;
+           long long denominator = 1;
+           int i = 0;
+
+           while (i < static_cast<int>(expression.size())) {
+               int sign = 1;
+               if (expression[i] == '+' || expression[i] == '-') {
+                   sign = expression[i] == '-' ? -1 : 1;
+                   ++i;
+               }
+
+               long long currentNumerator = 0;
+               while (i < static_cast<int>(expression.size()) &&
+                      std::isdigit(static_cast<unsigned char>(expression[i]))) {
+                   currentNumerator = currentNumerator * 10 +
+                                      expression[i] - '0';
+                   ++i;
+               }
+               ++i;  // '/'
+               long long currentDenominator = 0;
+               while (i < static_cast<int>(expression.size()) &&
+                      std::isdigit(static_cast<unsigned char>(expression[i]))) {
+                   currentDenominator = currentDenominator * 10 +
+                                        expression[i] - '0';
+                   ++i;
+               }
+
+               numerator = numerator * currentDenominator +
+                           sign * currentNumerator * denominator;
+               denominator *= currentDenominator;
+           }
+
+           long long positiveNumerator = numerator >= 0 ? numerator : -numerator;
+           long long divisor = std::gcd(positiveNumerator, denominator);
+           numerator /= divisor;
+           denominator /= divisor;
+           return std::to_string(numerator) + "/" +
+                  std::to_string(denominator);
+       }
+   };
+
+代码分析
+--------
+
+每次合并都在同一个有理数状态上继续计算，符号只作用于当前分子；最后一次约分可同时处理正数、负数和零，零会得到 ``0/1``。设表达式包含 ``t`` 项、每项数字长度受输入限制，扫描时间为 ``O(n)``，只使用常数额外空间。

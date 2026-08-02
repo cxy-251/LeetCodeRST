@@ -35,3 +35,68 @@
    输入：board = [["E","M"]]，click = [0,1]
    输出：[["E","X"]]
    解释：点击位置是地雷，立即改为 X。
+
+递归揭示零邻雷区域
+------------------
+
+点击地雷时直接改为 ``X``。点击未揭示空格后，先统计八个方向的 ``M``；若数量非零，只写入数字并停止扩展；若数量为零，写入 ``B`` 后递归访问八邻域的未揭示空格。先把当前格改写为 ``B``，就能防止递归环路和重复处理。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+       const int directions[8][2] = {
+           {-1, -1}, {-1, 0}, {-1, 1}, {0, -1},
+           {0, 1}, {1, -1}, {1, 0}, {1, 1}
+       };
+
+       void reveal(std::vector<std::vector<char>>& board,
+                   int row, int column) {
+           int rows = static_cast<int>(board.size());
+           int columns = static_cast<int>(board[0].size());
+           if (row < 0 || row >= rows || column < 0 || column >= columns ||
+               board[row][column] != 'E') return;
+
+           int mines = 0;
+           for (const auto& direction : directions) {
+               int nextRow = row + direction[0];
+               int nextColumn = column + direction[1];
+               if (nextRow >= 0 && nextRow < rows &&
+                   nextColumn >= 0 && nextColumn < columns &&
+                   board[nextRow][nextColumn] == 'M') {
+                   ++mines;
+               }
+           }
+           if (mines > 0) {
+               board[row][column] = static_cast<char>('0' + mines);
+               return;
+           }
+
+           board[row][column] = 'B';
+           for (const auto& direction : directions) {
+               reveal(board, row + direction[0],
+                      column + direction[1]);
+           }
+       }
+
+   public:
+       std::vector<std::vector<char>> updateBoard(
+           std::vector<std::vector<char>>& board,
+           std::vector<int>& click) {
+           int row = click[0];
+           int column = click[1];
+           if (board[row][column] == 'M') {
+               board[row][column] = 'X';
+           } else {
+               reveal(board, row, column);
+           }
+           return board;
+       }
+   };
+
+代码分析
+--------
+
+每个空格在第一次进入时就被改为 ``B`` 或数字，后续邻居不会再次展开它；八方向计数与扫雷规则完全对应。每个格子最多处理一次，时间复杂度为 ``O(rows * columns)``，递归栈空间为 ``O(rows * columns)`` 的最坏上界。

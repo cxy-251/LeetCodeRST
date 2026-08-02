@@ -35,3 +35,30 @@
    输入：root = null
    输出：0
    解释：没有任何节点，因此最大深度为 0。
+
+递归取最深孩子路径
+------------------
+
+空节点深度为 0；非空节点的深度是 1 加上所有孩子深度的最大值。叶节点没有孩子，最大孩子深度取 0，因此返回 1。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int maxDepth(Node* root) {
+           if (root == nullptr) return 0;
+           int depth = 0;
+           for (Node* child : root->children) {
+               depth = std::max(depth, maxDepth(child));
+           }
+           return depth + 1;
+       }
+   };
+
+代码分析
+--------
+
+每个节点只需知道最深孩子的结果，递归返回值与根到叶的节点计数定义一致。时间复杂度为 ``O(n)``，递归栈空间为 ``O(h)``。

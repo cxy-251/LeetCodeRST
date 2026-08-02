@@ -35,3 +35,36 @@
    输入：nums = [0,0,5]
    输出：5
    解释：前两个元素构成一对，末尾的 5 没有配对。
+
+唯一元素改变了成对下标的奇偶性
+------------------------------
+
+在唯一元素左侧，成对元素的第一份位于偶数下标、第二份位于奇数下标；越过唯一元素后，这种配对对齐会整体错一位。取中点并把它调整为偶数下标后，若 ``nums[mid] == nums[mid+1]``，唯一元素在右侧，否则在左侧（含中点）。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int singleNonDuplicate(std::vector<int>& nums) {
+           int left = 0;
+           int right = static_cast<int>(nums.size()) - 1;
+           while (left < right) {
+               int middle = left + (right - left) / 2;
+               if (middle % 2 == 1) --middle;
+               if (nums[middle] == nums[middle + 1]) {
+                   left = middle + 2;
+               } else {
+                   right = middle;
+               }
+           }
+           return nums[left];
+       }
+   };
+
+代码分析
+--------
+
+每次比较都根据配对是否完整排除一半区间，且把中点对齐到一对的起始下标，边界始终包含唯一元素。时间复杂度为 ``O(log n)``，额外空间复杂度为 ``O(1)``。

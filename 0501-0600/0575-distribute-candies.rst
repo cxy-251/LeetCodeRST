@@ -35,3 +35,28 @@
    输入：candyType = [5,5,5,5]
    输出：1
    解释：妹妹得到两颗糖，但无论如何都只有类型 5。
+
+不同类型数受两个上限约束
+------------------------
+
+妹妹最多拿 ``n/2`` 颗糖，因此不同类型数不可能超过这个数量；同时也不可能超过全部糖果中的不同类型总数。只要每种类型至少选一颗，取这两个上限的较小值就能构造出最优分配。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int distributeCandies(std::vector<int>& candyType) {
+           std::unordered_set<int> types(candyType.begin(),
+                                         candyType.end());
+           return std::min(static_cast<int>(types.size()),
+                           static_cast<int>(candyType.size() / 2));
+       }
+   };
+
+代码分析
+--------
+
+较小的上限是必要条件，按不同类型各取一颗并用重复糖果填满剩余数量即可达到，因此也是充分条件。时间复杂度为 ``O(n)`` 平均，额外空间复杂度为 ``O(n)``。

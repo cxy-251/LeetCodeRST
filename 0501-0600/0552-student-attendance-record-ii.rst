@@ -35,3 +35,52 @@
    输入：n = 2
    输出：8
    解释：共有 9 个字符串，只有 "AA" 因出现两次缺席而不合法；长度 2 不可能含有 LLL。
+
+状态记录缺席数和连续迟到数
+--------------------------
+
+构造记录时，合法性的未来只取决于已经使用了几次 ``A``（0 或 1）以及末尾连续 ``L`` 的长度（0、1 或 2）。在每个状态后追加 ``P``、``A`` 或 ``L``，若不违反限制就把方案数转移到新状态，并按模数保存。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int checkRecord(int n) {
+           const int mod = 1000000007;
+           std::array<std::array<long long, 3>, 2> dp{};
+           dp[0][0] = 1;
+           for (int day = 0; day < n; ++day) {
+               std::array<std::array<long long, 3>, 2> next{};
+               for (int absent = 0; absent <= 1; ++absent) {
+                   for (int late = 0; late <= 2; ++late) {
+                       long long ways = dp[absent][late];
+                       if (ways == 0) continue;
+                       next[absent][0] =
+                           (next[absent][0] + ways) % mod;  // P
+                       if (absent == 0) {
+                           next[1][0] = (next[1][0] + ways) % mod; // A
+                       }
+                       if (late < 2) {
+                           next[absent][late + 1] =
+                               (next[absent][late + 1] + ways) % mod;
+                       }
+                   }
+               }
+               dp = next;
+           }
+
+           long long answer = 0;
+           for (const auto& row : dp) {
+               for (long long ways : row) answer = (answer + ways) % mod;
+           }
+           return static_cast<int>(answer);
+       }
+   };
+
+代码分析
+--------
+
+状态中的两个维度正好保存追加字符所需的历史信息，所有合法记录都沿唯一字符序列转移到某个终态，非法的第二个 ``A`` 或第三个连续 ``L`` 不进入状态。状态数固定为 6，每天处理常数转移，时间复杂度为 ``O(n)``，空间复杂度为 ``O(1)``。

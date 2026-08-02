@@ -35,3 +35,31 @@
    输入：m = 2，n = 3，ops = []
    输出：6
    解释：六个格子均保持为 0，全部等于矩阵最大值。
+
+求所有操作矩形的共同左上区域
+----------------------------
+
+一次操作覆盖一个左上角固定为 ``(0, 0)`` 的前缀矩形。被所有操作覆盖的格子恰好获得最多增量，因此最大值区域的行数是所有 ``a`` 的最小值，列数是所有 ``b`` 的最小值；没有操作时，最小值仍为原矩阵的行数和列数。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int maxCount(int m, int n, std::vector<std::vector<int>>& ops) {
+           int rows = m;
+           int columns = n;
+           for (const auto& operation : ops) {
+               rows = std::min(rows, operation[0]);
+               columns = std::min(columns, operation[1]);
+           }
+           return rows * columns;
+       }
+   };
+
+代码分析
+--------
+
+每次操作都从同一个左上角开始，公共覆盖区域的尺寸由最短前缀决定，区域内每格都被全部操作命中，区域外至少少一次增量，故它们正好是全部最大值位置。只需扫描操作列表，时间复杂度为 ``O(k)``，额外空间复杂度为 ``O(1)``。

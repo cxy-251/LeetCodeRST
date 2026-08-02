@@ -35,3 +35,37 @@
    输入：root = [6]
    输出：0
    解释：左右子树都为空，坡度为 0。
+
+后序同时返回子树和并累加坡度
+----------------------------
+
+节点坡度依赖左右子树的总和，因此后序递归返回子树和，并在返回前用 ``abs(leftSum-rightSum)`` 加入全局答案。叶节点得到两个 0，自然贡献 0。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+       long long totalTilt = 0;
+
+       long long sum(TreeNode* node) {
+           if (node == nullptr) return 0;
+           long long left = sum(node->left);
+           long long right = sum(node->right);
+           totalTilt += std::llabs(left - right);
+           return left + right + node->val;
+       }
+
+   public:
+       int findTilt(TreeNode* root) {
+           totalTilt = 0;
+           sum(root);
+           return static_cast<int>(totalTilt);
+       }
+   };
+
+代码分析
+--------
+
+子树和在父节点使用前已经完整计算，递归返回值与定义一致；每个节点的坡度只加一次。时间复杂度为 ``O(n)``，递归栈空间为 ``O(h)``。

@@ -35,3 +35,56 @@
    输入：m = 3，n = 3，maxMove = 0，startRow = 1，startColumn = 1
    输出：0
    解释：不能执行任何移动，因此无法离开网格。
+
+按步数滚动统计仍在网格内的路径
+------------------------------
+
+``dp[row][column]`` 表示完成当前步数后仍位于该格的路径数。每次从格子向四个方向转移：若目标越界，就把该路径数加入答案；否则累加到下一层。越界路径不再进入下一层，正好实现“首次越界即结束”。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int findPaths(int m, int n, int maxMove,
+                     int startRow, int startColumn) {
+           const int mod = 1000000007;
+           std::vector<std::vector<int>> current(
+               m, std::vector<int>(n, 0));
+           current[startRow][startColumn] = 1;
+           const int directions[4][2] = {
+               {-1, 0}, {1, 0}, {0, -1}, {0, 1}
+           };
+           long long answer = 0;
+           for (int step = 0; step < maxMove; ++step) {
+               std::vector<std::vector<int>> next(
+                   m, std::vector<int>(n, 0));
+               for (int row = 0; row < m; ++row) {
+                   for (int column = 0; column < n; ++column) {
+                       int ways = current[row][column];
+                       if (ways == 0) continue;
+                       for (const auto& direction : directions) {
+                           int nextRow = row + direction[0];
+                           int nextColumn = column + direction[1];
+                           if (nextRow < 0 || nextRow >= m ||
+                               nextColumn < 0 || nextColumn >= n) {
+                               answer = (answer + ways) % mod;
+                           } else {
+                               next[nextRow][nextColumn] =
+                                   (next[nextRow][nextColumn] + ways) % mod;
+                           }
+                       }
+                   }
+               }
+               current.swap(next);
+           }
+           return static_cast<int>(answer);
+       }
+   };
+
+代码分析
+--------
+
+每层只保存尚未出界的路径，所有出界转移立即计数并丢弃；因此每条移动序列在第一次出界的步数被计数一次。时间复杂度为 ``O(maxMove * m * n)``，滚动数组空间复杂度为 ``O(mn)``。

@@ -35,3 +35,38 @@
    输入：nums = [0,2,1,3]
    输出：2
    解释：下标 0 和 3 各自形成长度 1 的循环，下标 1 与 2 形成长度 2 的循环。
+
+排列函数的每个环只需遍历一次
+----------------------------
+
+由于 ``nums`` 是排列，映射 ``i -> nums[i]`` 把所有下标分成互不相交的环。从任一未访问起点沿映射前进，直到回到已访问位置，得到的长度就是该环中所有起点的集合大小；把环内节点全部标记后，其他起点不会产生新的长度。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int arrayNesting(std::vector<int>& nums) {
+           int answer = 0;
+           std::vector<bool> visited(nums.size(), false);
+           for (int start = 0; start < static_cast<int>(nums.size()); ++start) {
+               if (visited[start]) continue;
+               int current = start;
+               int length = 0;
+               while (!visited[current]) {
+                   visited[current] = true;
+                   current = nums[current];
+                   ++length;
+               }
+               answer = std::max(answer, length);
+           }
+           return answer;
+       }
+   };
+
+代码分析
+--------
+
+排列保证跳转永远在合法下标且最终回到本环，访问标记保证每个下标只走一次；所有环互不相交，所以最大环长就是答案。时间复杂度为 ``O(n)``，额外空间复杂度为 ``O(n)``。

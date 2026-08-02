@@ -35,3 +35,40 @@
    输入：nums = [1,1,1]
    输出：0
    解释：任意非空连续子数组都不含 0。
+
+把 0 和 1 转为相反的余额
+------------------------
+
+扫描数组时把 ``1`` 记为 ``+1``、``0`` 记为 ``-1``。若两个前缀在同一位置得到相同余额，它们之间的区间净余额为 0，意味着其中 0 和 1 数量相等。记录每个余额最早出现的下标，重复时用当前位置减最早位置更新最大长度。
+
+前缀余额 0 的初始位置设为 ``-1``，保证从数组开头开始的合法区间也能计入。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int findMaxLength(std::vector<int>& nums) {
+           std::unordered_map<int, int> first;
+           first[0] = -1;
+           int balance = 0;
+           int answer = 0;
+           for (int i = 0; i < static_cast<int>(nums.size()); ++i) {
+               balance += nums[i] == 1 ? 1 : -1;
+               auto it = first.find(balance);
+               if (it == first.end()) {
+                   first[balance] = i;
+               } else {
+                   answer = std::max(answer, i - it->second);
+               }
+           }
+           return answer;
+       }
+   };
+
+代码分析
+--------
+
+相同余额的两个前缀之间恰好抵消了 0 和 1 的贡献，最早位置策略使同一终点得到最长区间。时间复杂度为 ``O(n)`` 平均，额外空间复杂度为 ``O(n)``。

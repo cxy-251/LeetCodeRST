@@ -35,3 +35,56 @@
    输入：strs = ["aa","aa","a"]
    输出：-1
    解释：每个 "aa" 都是另一份 "aa" 的子序列，而 "a" 又是 "aa" 的子序列，因此没有不公共子序列。
+
+只需检验每个原字符串本身
+------------------------
+
+若某个字符串存在不公共子序列，取它的完整字符串本身即可得到不短于该候选的结果；因此只需把每个 ``strs[i]`` 当作候选，检查它是否是其他任何字符串的子序列。候选按长度降序检查，第一枚通过者就是最大长度。
+
+检查时必须跳过自身，但不能跳过内容相同的另一项；重复字符串会互相包含，因而都不能通过。用双指针判断一个字符串是否为另一个字符串的子序列。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+       bool isSubsequence(const std::string& candidate,
+                          const std::string& source) {
+           int i = 0;
+           for (char character : source) {
+               if (i < static_cast<int>(candidate.size()) &&
+                   candidate[i] == character) {
+                   ++i;
+               }
+           }
+           return i == static_cast<int>(candidate.size());
+       }
+
+   public:
+       int findLUSlength(std::vector<std::string>& strs) {
+           std::vector<int> order(strs.size());
+           std::iota(order.begin(), order.end(), 0);
+           std::sort(order.begin(), order.end(),
+                     [&](int left, int right) {
+                         return strs[left].size() > strs[right].size();
+                     });
+
+           for (int i : order) {
+               bool uncommon = true;
+               for (int j = 0; j < static_cast<int>(strs.size()); ++j) {
+                   if (i != j && isSubsequence(strs[i], strs[j])) {
+                       uncommon = false;
+                       break;
+                   }
+               }
+               if (uncommon) return strs[i].size();
+           }
+           return -1;
+       }
+   };
+
+代码分析
+--------
+
+完整字符串是其自身所有子序列中最长的一个，所以检验原字符串不会错过最优答案；跳过自身且保留重复项检查，准确表达“其他字符串”的约束。设字符串数为 ``m``、最大长度为 ``L``，排序后判断时间复杂度为 ``O(m^2 L)``，额外空间为 ``O(m)``。

@@ -35,3 +35,45 @@
    输入：p1 = [0,0]，p2 = [3,0]，p3 = [3,2]，p4 = [0,2]
    输出：false
    解释：相邻边长度分别为 3 和 2，并不全部相等。
+
+六个点对距离判定边和对角线
+----------------------------
+
+四个顶点的排列顺序未知，不能直接假定输入顺序对应相邻点。计算六个点对的平方距离并排序：正方形应有四个相等且非零的边长平方，另外两个相等的对角线平方，并且对角线平方恰好是边长平方的两倍。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+       long long distanceSquared(const std::vector<int>& a,
+                                 const std::vector<int>& b) {
+           long long dx = static_cast<long long>(a[0]) - b[0];
+           long long dy = static_cast<long long>(a[1]) - b[1];
+           return dx * dx + dy * dy;
+       }
+
+   public:
+       bool validSquare(std::vector<int>& p1, std::vector<int>& p2,
+                        std::vector<int>& p3, std::vector<int>& p4) {
+           std::vector<std::vector<int>> points = {p1, p2, p3, p4};
+           std::vector<long long> distances;
+           for (int i = 0; i < 4; ++i) {
+               for (int j = i + 1; j < 4; ++j) {
+                   distances.push_back(
+                       distanceSquared(points[i], points[j]));
+               }
+           }
+           std::sort(distances.begin(), distances.end());
+           return distances[0] > 0 &&
+                  distances[0] == distances[3] &&
+                  distances[4] == distances[5] &&
+                  distances[4] == 2 * distances[0];
+       }
+   };
+
+代码分析
+--------
+
+重复点会产生零距离并被第一项条件排除；排序后的前四项相等保证四条边一致，后两项相等且为两倍则保证它们是同一组正方形对角线。平方距离避免浮点误差，六个点对的计算次数固定，时间和额外空间复杂度均为 ``O(1)``。

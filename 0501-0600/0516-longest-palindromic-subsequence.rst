@@ -35,3 +35,41 @@
    输入：s = "abc"
    输出：1
    解释：任意单个字符都构成回文，但无法选择两个或更多字符组成回文。
+
+区间回文状态压缩
+----------------
+
+令区间 ``[i,j]`` 的状态表示该子串能得到的最长回文子序列长度。若两端字符相同，可以把它们同时选入，状态为内层 ``[i+1,j-1]`` 加 2；若不同，则最优解必须放弃左端或右端之一，取两个较短区间的较大值。
+
+用一维数组按 ``i`` 从右向左处理。更新 ``dp[j]`` 前保存旧的 ``dp[j-1]``，它就是上一轮的内层状态，避免覆盖二维转移所需的信息。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int longestPalindromeSubseq(std::string s) {
+           int n = static_cast<int>(s.size());
+           std::vector<int> dp(n, 1);
+           for (int left = n - 2; left >= 0; --left) {
+               int diagonal = 0;
+               for (int right = left + 1; right < n; ++right) {
+                   int old = dp[right];
+                   if (s[left] == s[right]) {
+                       dp[right] = diagonal + 2;
+                   } else {
+                       dp[right] = std::max(dp[right], dp[right - 1]);
+                   }
+                   diagonal = old;
+               }
+           }
+           return dp.empty() ? 0 : dp.back();
+       }
+   };
+
+代码分析
+--------
+
+相等端点的选择和不相等端点的二选一完整覆盖了区间最优解；``diagonal`` 保存更新前的内层值，``dp[right-1]`` 保存当前左端下的左侧区间。时间复杂度为 ``O(n^2)``，空间复杂度压缩为 ``O(n)``。

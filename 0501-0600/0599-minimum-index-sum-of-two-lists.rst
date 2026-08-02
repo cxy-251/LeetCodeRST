@@ -35,3 +35,46 @@
    输入：list1 = ["a","b","c"]，list2 = ["b","a","d"]
    输出：["a","b"]
    解释：a 和 b 的下标和都为 1，二者都达到最小值；输出顺序可以不同。
+
+哈希定位并维护最小下标和
+------------------------
+
+先记录 ``list1`` 中每个字符串的下标，再扫描 ``list2``。遇到公共字符串时计算两个下标之和；若严格小于当前最优值就清空答案并替换，若相等则追加，这样可以保留全部并列项。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       std::vector<std::string> findRestaurant(
+           std::vector<std::string>& list1,
+           std::vector<std::string>& list2) {
+           std::unordered_map<std::string, int> position;
+           for (int i = 0; i < static_cast<int>(list1.size()); ++i) {
+               position[list1[i]] = i;
+           }
+
+           std::vector<std::string> answer;
+           int best = INT_MAX;
+           for (int i = 0; i < static_cast<int>(list2.size()); ++i) {
+               auto it = position.find(list2[i]);
+               if (it == position.end()) continue;
+               int sum = it->second + i;
+               if (sum < best) {
+                   best = sum;
+                   answer.clear();
+                   answer.push_back(list2[i]);
+               } else if (sum == best) {
+                   answer.push_back(list2[i]);
+               }
+           }
+           return answer;
+       }
+   };
+
+代码分析
+--------
+
+哈希表把 ``list1`` 的查找从线性扫描降为平均常数时间；``list2`` 按顺序扫描时，答案只在发现更小或相等的下标和时更新，既不会遗漏并列项，也不会保留旧的较差项。时间复杂度为平均 ``O(|list1| + |list2|)``，额外空间复杂度为 ``O(|list1|)``。

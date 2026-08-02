@@ -35,3 +35,44 @@
    输入：score = [42]
    输出：["Gold Medal"]
    解释：唯一运动员排名第一。
+
+排序下标而不是改写得分
+----------------------
+
+把 ``(score, originalIndex)`` 按得分降序排列，排序后数组位置 ``rank`` 就是名次 ``rank + 1``。将前三名映射为奖牌文本，其余名次转成十进制字符串并写回原下标，因而不会丢失输入顺序。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       std::vector<std::string> findRelativeRanks(
+           std::vector<int>& score) {
+           std::vector<std::pair<int, int>> order;
+           for (int i = 0; i < static_cast<int>(score.size()); ++i) {
+               order.push_back({score[i], i});
+           }
+           std::sort(order.begin(), order.end(),
+                     [](const auto& left, const auto& right) {
+                         return left.first > right.first;
+                     });
+
+           std::vector<std::string> result(score.size());
+           const std::string medals[3] = {
+               "Gold Medal", "Silver Medal", "Bronze Medal"};
+           for (int rank = 0; rank < static_cast<int>(order.size()); ++rank) {
+               int index = order[rank].second;
+               result[index] = rank < 3
+                   ? medals[rank]
+                   : std::to_string(rank + 1);
+           }
+           return result;
+       }
+   };
+
+代码分析
+--------
+
+得分互不相同使排序后的顺序唯一；保存原下标让排名标签回到对应运动员，而不是按排名顺序返回。排序耗时 ``O(n log n)``，结果和排序数组额外占用 ``O(n)`` 空间。

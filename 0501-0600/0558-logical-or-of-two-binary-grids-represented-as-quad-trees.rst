@@ -35,3 +35,55 @@
    输入：quadTree1 是 val=false 的叶节点，quadTree2 表示另一网格
    输出：与 quadTree2 表示相同网格的四叉树
    解释：0 与另一格值执行逻辑或后保持另一格值不变。
+
+叶节点短路，递归合并四个象限
+------------------------------
+
+若任一输入区域是值为 1 的叶节点，整个结果区域必为 1；若一方是值为 0 的叶节点，结果直接等于另一方。只有两方都非叶时才递归计算四个象限，随后检查四个结果是否都是相同值的叶节点，若是则压缩回一个叶节点。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       Node* intersect(Node* first, Node* second) {
+           if (first->isLeaf) {
+               return first->val ? new Node(true, true) : second;
+           }
+           if (second->isLeaf) {
+               return second->val ? new Node(true, true) : first;
+           }
+
+           Node* result = new Node(false, false);
+           result->topLeft = intersect(first->topLeft, second->topLeft);
+           result->topRight = intersect(first->topRight, second->topRight);
+           result->bottomLeft = intersect(first->bottomLeft,
+                                          second->bottomLeft);
+           result->bottomRight = intersect(first->bottomRight,
+                                           second->bottomRight);
+
+           Node* children[4] = {
+               result->topLeft, result->topRight,
+               result->bottomLeft, result->bottomRight
+           };
+           bool merge = true;
+           for (int i = 0; i < 4; ++i) {
+               if (!children[i]->isLeaf ||
+                   children[i]->val != children[0]->val) {
+                   merge = false;
+                   break;
+               }
+           }
+           if (merge) {
+               return new Node(children[0]->val, true);
+           }
+           return result;
+       }
+   };
+
+代码分析
+--------
+
+叶节点规则直接对应区域逐格 OR 的恒等关系，非叶区域递归覆盖四个互不重叠象限；四叶合并保持表示的语义不变并压缩结构。每对对应节点最多处理一次，时间复杂度为 ``O(q)``，额外递归空间为 ``O(h)``，其中 ``q`` 为两树展开后的对应节点规模。

@@ -35,3 +35,34 @@
    输入：amount = 0，coins = [2,5]
    输出：1
    解释：唯一方案是不使用任何硬币。
+
+硬币外层保证组合不重复
+----------------------
+
+令 ``dp[x]`` 表示只使用已经处理的面额组成金额 ``x`` 的组合数。对每种硬币先遍历，再从该面额向金额上升更新，等价于决定该面额使用 0 次、1 次或更多次；由于面额的处理顺序固定，``1+1+4`` 和 ``4+1+1`` 不会被当成两种组合。
+
+``dp[0] = 1`` 表示空组合，后续所有组合都由它扩展而来。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int change(int amount, std::vector<int>& coins) {
+           std::vector<int> dp(amount + 1, 0);
+           dp[0] = 1;
+           for (int coin : coins) {
+               for (int value = coin; value <= amount; ++value) {
+                   dp[value] += dp[value - coin];
+               }
+           }
+           return dp[amount];
+       }
+   };
+
+代码分析
+--------
+
+外层面额顺序把每种组合归到唯一的“最后处理面额”路径，内层正序又允许同一面额重复使用。每种面额和每个金额各处理一次，时间复杂度为 ``O(amount * coins.size())``，空间复杂度为 ``O(amount)``。

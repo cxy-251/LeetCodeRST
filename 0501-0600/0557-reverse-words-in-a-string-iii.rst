@@ -35,3 +35,34 @@
    输入：s = "a bc"
    输出："a cb"
    解释：单字符单词反转后不变，第二个单词由 bc 变为 cb。
+
+按空格定位每个单词并原地反转
+----------------------------
+
+用两个指针确定一个连续非空单词的起止位置，调用 ``reverse`` 只改变该区间；跳过空格后继续处理下一个单词。由于从不交换空格或单词区间的顺序，原句布局保持不变。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       std::string reverseWords(std::string s) {
+           int begin = 0;
+           while (begin < static_cast<int>(s.size())) {
+               int end = begin;
+               while (end < static_cast<int>(s.size()) && s[end] != ' ') {
+                   ++end;
+               }
+               std::reverse(s.begin() + begin, s.begin() + end);
+               begin = end + 1;
+           }
+           return s;
+       }
+   };
+
+代码分析
+--------
+
+每个单词边界只由空格确定，局部反转不会影响其他字符；单词长度为 1 时区间反转也保持原样。时间复杂度为 ``O(n)``，额外空间复杂度为 ``O(1)``（不计输入副本）。

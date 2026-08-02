@@ -35,3 +35,39 @@
    输入：nums = [1,2,2,4]
    输出：0
    解释：数组本身已经非递减。
+
+从左右扫描确定需要扩展的边界
+----------------------------
+
+从左到右维护已见最大值：若当前值小于它，当前位置一定需要被纳入排序区间，并更新右边界。再从右到左维护已见最小值：若当前值大于它，当前位置一定需要被纳入，并更新左边界。两次扫描后，``[left,right]`` 正好覆盖所有破坏全局有序性的元素。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int findUnsortedSubarray(std::vector<int>& nums) {
+           int n = static_cast<int>(nums.size());
+           int left = n;
+           int right = -1;
+           int maximum = INT_MIN;
+           for (int i = 0; i < n; ++i) {
+               maximum = std::max(maximum, nums[i]);
+               if (nums[i] < maximum) right = i;
+           }
+
+           int minimum = INT_MAX;
+           for (int i = n - 1; i >= 0; --i) {
+               minimum = std::min(minimum, nums[i]);
+               if (nums[i] > minimum) left = i;
+           }
+           return right == -1 ? 0 : right - left + 1;
+       }
+   };
+
+代码分析
+--------
+
+左扫描发现的逆序值必须向右延伸到当前位置，右扫描发现的逆序值必须向左延伸；没有任何边界被触发时数组已经有序。两次线性扫描，时间复杂度为 ``O(n)``，额外空间复杂度为 ``O(1)``。

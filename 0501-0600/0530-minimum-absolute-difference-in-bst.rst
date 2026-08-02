@@ -35,3 +35,41 @@
    输入：root = [2,1,5]
    输出：1
    解释：节点 1 与节点 2 的绝对差为 1，是所有节点对中的最小值。
+
+BST 中序序列的相邻差值
+----------------------
+
+二叉搜索树中序遍历得到严格递增的节点值序列。对有序序列，任意非相邻两值的差不会小于它们之间某个相邻差，因此只需要比较连续访问节点的差值即可得到全局最小绝对差。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+       TreeNode* previous = nullptr;
+       int answer = INT_MAX;
+
+       void inorder(TreeNode* node) {
+           if (node == nullptr) return;
+           inorder(node->left);
+           if (previous != nullptr) {
+               answer = std::min(answer, node->val - previous->val);
+           }
+           previous = node;
+           inorder(node->right);
+       }
+
+   public:
+       int getMinimumDifference(TreeNode* root) {
+           previous = nullptr;
+           answer = INT_MAX;
+           inorder(root);
+           return answer;
+       }
+   };
+
+代码分析
+--------
+
+中序顺序把任意节点对问题化为相邻差值问题，节点值互不相同使差值为正；递归访问每个节点一次。时间复杂度为 ``O(n)``，递归栈空间为 ``O(h)``。

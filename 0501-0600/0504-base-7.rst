@@ -35,3 +35,35 @@
    输入：num = -49
    输出："-100"
    解释：49 等于 7 的平方，绝对值的七进制表示为 100，再在前面添加负号。
+
+反复取七进制最低位
+------------------
+
+除以 7 的余数是当前最低位，商继续提供更高位；反复执行直到商为 0，再把得到的余数序列反转。负数先记录符号并对绝对值进行转换，最后把负号加回；使用 ``long long`` 取得绝对值时不会触及有符号最小值的边界。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       std::string convertToBase7(int num) {
+           if (num == 0) return "0";
+           bool negative = num < 0;
+           long long value = std::llabs(static_cast<long long>(num));
+           std::string result;
+           while (value > 0) {
+               result.push_back(static_cast<char>('0' + value % 7));
+               value /= 7;
+           }
+           if (negative) result.push_back('-');
+           std::reverse(result.begin(), result.end());
+           return result;
+       }
+   };
+
+代码分析
+--------
+
+每次除法都确定一个不会再变化的低位，反转后得到从高位到低位的标准表示；零单独返回避免产生空字符串。设结果有 ``d`` 位，时间复杂度为 ``O(d)``，额外空间复杂度为 ``O(d)``（不计返回字符串）。

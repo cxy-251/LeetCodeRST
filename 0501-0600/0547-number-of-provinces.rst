@@ -35,3 +35,43 @@
    输入：isConnected = [[1,0,0],[0,1,0],[0,0,1]]
    输出：3
    解释：除自身之外没有任何直接或间接连接，因此每个城市单独构成一个省份。
+
+从未访问城市开始 DFS
+--------------------
+
+每次找到一个未访问城市，就把它作为新省份的起点，并沿邻接矩阵访问所有直接或间接可达城市。一次 DFS 完成一个连通分量，随后继续寻找下一个未访问城市。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+       void visit(const std::vector<std::vector<int>>& graph,
+                  std::vector<bool>& visited, int city) {
+           visited[city] = true;
+           for (int next = 0; next < static_cast<int>(graph.size()); ++next) {
+               if (graph[city][next] == 1 && !visited[next]) {
+                   visit(graph, visited, next);
+               }
+           }
+       }
+
+   public:
+       int findCircleNum(std::vector<std::vector<int>>& isConnected) {
+           int n = static_cast<int>(isConnected.size());
+           std::vector<bool> visited(n, false);
+           int provinces = 0;
+           for (int city = 0; city < n; ++city) {
+               if (visited[city]) continue;
+               ++provinces;
+               visit(isConnected, visited, city);
+           }
+           return provinces;
+       }
+   };
+
+代码分析
+--------
+
+访问标记保证每座城市只被归入一个连通分量；无向矩阵中的路径可通过递归传递，因此一次 DFS 恰好覆盖一个省份。遍历矩阵时间复杂度为 ``O(n^2)``，访问标记和递归栈空间为 ``O(n)``。

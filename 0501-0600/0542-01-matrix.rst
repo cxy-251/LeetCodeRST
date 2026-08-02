@@ -35,3 +35,57 @@
    输入：mat = [[0,0],[0,0]]
    输出：[[0,0],[0,0]]
    解释：每个位置自身就是零格。
+
+从所有零格同时开始 BFS
+----------------------
+
+把所有值为 0 的格子一次性加入队列，距离设为 0；值为 1 的格子设为未访问。多源 BFS 按距离层扩展，某个格子第一次被访问时，必然是从最近的零格到达，因此可直接确定最短距离。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       std::vector<std::vector<int>> updateMatrix(
+           std::vector<std::vector<int>>& mat) {
+           int rows = static_cast<int>(mat.size());
+           int columns = static_cast<int>(mat[0].size());
+           std::queue<std::pair<int, int>> queue;
+           std::vector<std::vector<int>> distance(
+               rows, std::vector<int>(columns, -1));
+           for (int row = 0; row < rows; ++row) {
+               for (int column = 0; column < columns; ++column) {
+                   if (mat[row][column] == 0) {
+                       distance[row][column] = 0;
+                       queue.push({row, column});
+                   }
+               }
+           }
+
+           const int directions[4][2] = {
+               {-1, 0}, {1, 0}, {0, -1}, {0, 1}
+           };
+           while (!queue.empty()) {
+               auto [row, column] = queue.front();
+               queue.pop();
+               for (const auto& direction : directions) {
+                   int nextRow = row + direction[0];
+                   int nextColumn = column + direction[1];
+                   if (nextRow < 0 || nextRow >= rows ||
+                       nextColumn < 0 || nextColumn >= columns ||
+                       distance[nextRow][nextColumn] != -1) continue;
+                   distance[nextRow][nextColumn] =
+                       distance[row][column] + 1;
+                   queue.push({nextRow, nextColumn});
+               }
+           }
+           return distance;
+       }
+   };
+
+代码分析
+--------
+
+所有源点同层入队，BFS 的层数就是到最近源点的四方向距离，访问标记保证每格只被确定一次。时间复杂度为 ``O(rows * columns)``，队列和结果矩阵空间复杂度为 ``O(rows * columns)``。

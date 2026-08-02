@@ -35,3 +35,35 @@
    输入：nums = [4,4,4]
    输出：0
    解释：任意非空子序列的最大值与最小值之差都是 0，不满足恰好为 1。
+
+统计相邻数值的频次总和
+----------------------
+
+和谐子序列只关心选出的数值集合，且允许从原数组删除任意元素，所以对于一对 ``x`` 和 ``x + 1``，可以把它们的全部出现位置都选入子序列。统计每个数值的频次，再枚举每个 ``x`` 与 ``x + 1`` 的频次和即可。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int findLHS(std::vector<int>& nums) {
+           std::unordered_map<int, int> frequency;
+           for (int value : nums) ++frequency[value];
+
+           int answer = 0;
+           for (const auto& [value, count] : frequency) {
+               auto next = frequency.find(value + 1);
+               if (next != frequency.end()) {
+                   answer = std::max(answer, count + next->second);
+               }
+           }
+           return answer;
+       }
+   };
+
+代码分析
+--------
+
+任意合法答案的最小值和最大值必须恰好是 ``x`` 与 ``x + 1``，同一数值的所有出现位置都不会破坏这个条件，因此该数值对的最大贡献就是两种频次之和。哈希表统计和枚举均为平均 ``O(n)``，额外空间复杂度为 ``O(u)``，其中 ``u`` 是不同数值的数量。
