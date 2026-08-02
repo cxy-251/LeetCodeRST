@@ -35,3 +35,59 @@
    输入：nums = [-2, 4, 0]，k = 1
    输出：[-2, 4, 0]
    解释：每个窗口只包含一个元素，所以结果与原数组相同。
+
+保存仍有资格成为最大值的下标
+----------------------------
+
+维护一个双端队列 ``deque``，其中保存窗口内的下标，并满足：
+
+* 下标从队首到队尾递增，队首之外的下标过期时可直接删除；
+* 对应值从队首到队尾单调不增，队首就是当前窗口最大值。
+
+处理新下标 ``i`` 时先删除队首所有满足 ``index <= i-k`` 的过期下标；
+再从队尾删除所有 ``nums[index] <= nums[i]`` 的下标，因为新元素更晚离开窗口且值不小于它们，
+这些旧元素以后不可能成为最大值。最后把 ``i`` 放入队尾；当窗口首次达到长度 ``k`` 时，队首值就是答案。
+
+相等值也可以从队尾删除：保留更晚的那个不会改变最大值，但能让过期管理更简单。
+
+正确性说明
+----------
+
+队列中的每个下标都在当前窗口内，且被删除的旧下标要么已经过期，要么被一个更晚且不小于它的新值支配，
+所以删除不会丢掉未来可能的最大值。删除完成后，队列值单调不增，队首必为窗口最大值；
+窗口每右移一格重复同样维护，故输出的每个值都对应正确窗口。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       std::vector<int> maxSlidingWindow(std::vector<int>& nums, int k) {
+           std::deque<int> candidates;
+           std::vector<int> answer;
+
+           for (int i = 0; i < static_cast<int>(nums.size()); ++i) {
+               while (!candidates.empty() && candidates.front() <= i - k) {
+                   candidates.pop_front();
+               }
+               while (!candidates.empty() &&
+                      nums[candidates.back()] <= nums[i]) {
+                   candidates.pop_back();
+               }
+               candidates.push_back(i);
+
+               if (i >= k - 1) {
+                   answer.push_back(nums[candidates.front()]);
+               }
+           }
+           return answer;
+       }
+   };
+
+代码分析
+--------
+
+每个下标最多入队一次、从队首或队尾出队一次，因此总时间复杂度为 ``O(n)``；双端队列最多保存 ``k`` 个下标，
+额外空间为 ``O(k)``，返回数组另占题目要求的输出空间。只保存下标而不是值，才能判断最大值何时离开窗口。

@@ -39,3 +39,59 @@
    操作：addNum(5), addNum(1), addNum(9), addNum(-3), findMedian()
    输出：3.0
    解释：四个数排序后为 [-3,1,5,9]，中间两个数是 1 和 5，平均值为 3。
+
+用两个堆维护排序中线
+--------------------
+
+把数据分成两个部分：最大堆 ``lower`` 保存较小的一半，最小堆 ``upper`` 保存较大的一半，保持：
+
+* ``lower`` 的元素数量等于或比 ``upper`` 多 1；
+* ``lower.top() <= upper.top()``（两堆都非空时）。
+
+加入新数时，若它不大于 ``lower`` 堆顶就放入下半堆，否则放入上半堆；随后通过跨堆移动堆顶恢复大小平衡。
+奇数个元素时中位数是 ``lower.top()``，偶数个元素时是两个堆顶的平均值。
+
+正确性说明
+----------
+
+两个堆的顺序关系保证下半部分每个值都不大于上半部分每个值，大小平衡保证中间位置只可能落在
+``lower.top`` 或两堆顶之间。加入元素后先按值放置，再至多移动一个元素纠正数量差，两个不变量始终成立，
+所以查询得到排序序列的定义中位数。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class MedianFinder {
+       std::priority_queue<int> lower;
+       std::priority_queue<int, std::vector<int>, std::greater<int>> upper;
+
+   public:
+       MedianFinder() = default;
+
+       void addNum(int num) {
+           if (lower.empty() || num <= lower.top()) lower.push(num);
+           else upper.push(num);
+
+           if (lower.size() > upper.size() + 1) {
+               upper.push(lower.top());
+               lower.pop();
+           } else if (upper.size() > lower.size()) {
+               lower.push(upper.top());
+               upper.pop();
+           }
+       }
+
+       double findMedian() {
+           if (lower.size() > upper.size()) return lower.top();
+           return (static_cast<long long>(lower.top()) + upper.top()) / 2.0;
+       }
+   };
+
+代码分析
+--------
+
+每次加入元素最多执行常数次堆操作，时间复杂度为 ``O(log n)``；查询只读取堆顶，时间为 ``O(1)``。
+两个堆合计保存全部数据，额外空间为 ``O(n)``；求偶数中位数时先在 ``long long`` 中相加再除以 ``2.0``，
+保证平均值保留小数且不受整数除法影响。

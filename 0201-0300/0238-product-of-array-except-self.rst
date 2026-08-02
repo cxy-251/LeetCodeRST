@@ -35,3 +35,57 @@
    输入：nums = [2, 2, 3]
    输出：[6, 6, 4]
    解释：前两个位置分别只排除自己的那个 2，另一个 2 仍参与乘积。
+
+前缀乘积与后缀乘积
+------------------
+
+``answer[i]`` 可以拆成当前位置左侧所有元素的乘积与右侧所有元素的乘积：
+
+.. math::
+
+   answer[i] = (nums[0]\cdots nums[i-1]) (nums[i+1]\cdots nums[n-1])
+
+第一遍从左到右，把当前位置的左侧乘积写入 ``answer[i]``，再把当前元素乘入滚动的 ``prefix``；
+第二遍从右到左，用滚动的 ``suffix`` 乘到已有答案上，再更新 ``suffix``。初始化两个滚动乘积为 1，
+正好处理数组两端。整个过程不使用除法，因此零元素和多个零元素都会按乘积定义自然得到正确结果。
+
+正确性说明
+----------
+
+第一遍结束后，``answer[i]`` 等于 ``nums[0..i-1]`` 的乘积。第二遍处理 ``i`` 时，
+``suffix`` 等于 ``nums[i+1..n-1]`` 的乘积；相乘后正是排除 ``nums[i]`` 的全部元素。
+随后把 ``nums[i]`` 加入 ``suffix``，不变量推进到下一个更左位置。两遍覆盖所有下标，故每个输出位置都准确排除自身。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       std::vector<int> productExceptSelf(std::vector<int>& nums) {
+           const int n = static_cast<int>(nums.size());
+           std::vector<int> answer(n, 1);
+
+           long long prefix = 1;
+           for (int i = 0; i < n; ++i) {
+               answer[i] = static_cast<int>(prefix);
+               prefix *= nums[i];
+           }
+
+           long long suffix = 1;
+           for (int i = n - 1; i >= 0; --i) {
+               answer[i] = static_cast<int>(
+                   static_cast<long long>(answer[i]) * suffix);
+               suffix *= nums[i];
+           }
+           return answer;
+       }
+   };
+
+代码分析
+--------
+
+两次线性扫描，时间复杂度为 ``O(n)``；除返回数组外只保存两个乘积，额外空间为 ``O(1)``。
+``answer`` 先承载左侧乘积，再原地融合右侧乘积，没有建立完整的前缀表或后缀表；使用 ``long long``
+进行乘法中间计算，最终按题目返回类型输出。

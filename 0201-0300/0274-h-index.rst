@@ -35,3 +35,49 @@
    输入：citations = [0, 0, 0]
    输出：0
    解释：不存在至少一篇引用次数不少于 1 的论文，所以只有 h = 0 满足定义。
+
+把引用次数截断到论文数
+----------------------
+
+答案 ``h`` 不可能超过论文数 ``n``，因此引用次数大于 ``n`` 的论文在判断任何候选 ``h`` 时都等价于
+恰好 ``n`` 次。建立 ``freq[c]`` 统计截断后引用次数为 ``c`` 的论文，再从 ``h=n`` 向下累计
+``papers``（引用次数至少为当前 ``h`` 的论文数）。第一次满足 ``papers >= h`` 的 ``h`` 就是最大可行值。
+
+这直接对应定义中的“两部分”：累计得到的论文至少有 ``h`` 篇达到阈值；其余论文若存在，
+因为不在累计集合中，引用次数小于 ``h``，自然不超过 ``h``。
+
+正确性说明
+----------
+
+对每个候选 ``h``，从桶的高端累加得到的 ``papers`` 恰好是原数组中满足
+``citation >= h`` 的论文数量。故 ``papers >= h`` 当且仅当 ``h`` 可行。
+从大到小首次命中返回的就是最大可行阈值；若直到 1 都不满足，``h=0`` 总是可行，返回 0。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int hIndex(std::vector<int>& citations) {
+           const int n = static_cast<int>(citations.size());
+           std::vector<int> frequency(n + 1, 0);
+           for (int citation : citations) {
+               ++frequency[std::min(citation, n)];
+           }
+
+           int papers = 0;
+           for (int h = n; h >= 0; --h) {
+               papers += frequency[h];
+               if (papers >= h) return h;
+           }
+           return 0;
+       }
+   };
+
+代码分析
+--------
+
+建立桶和反向累计都为 ``O(n)``，频次数组额外占 ``O(n)`` 空间；不需要排序，也不改变输入。
+把大引用次数合并到 ``frequency[n]`` 不会影响任何 ``h<=n`` 的判断，正是利用了 H 指数的上界。

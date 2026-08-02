@@ -35,3 +35,51 @@
    输入：n = 1，isBadVersion(1) = true
    输出：1
    解释：题目保证至少有一个坏版本，因此唯一版本就是第一个坏版本。
+
+寻找第一个 true
+----------------
+
+把 ``isBadVersion`` 看成单调布尔序列：好版本为 ``false``，从首个坏版本开始全部为 ``true``。
+在闭区间 ``[left,right]`` 内二分：
+
+* ``mid`` 为坏版本时，首个坏版本不晚于 ``mid``，保留左半边并令 ``right=mid``；
+* ``mid`` 为好版本时，首个坏版本一定在右侧，令 ``left=mid+1``。
+
+循环结束时 ``left==right``，这个位置仍在候选区间内且是首个坏版本。中点计算使用
+``left + (right-left)/2``，避免两个一基大编号相加时溢出。
+
+正确性说明
+----------
+
+循环不变量是：首个坏版本位于 ``[left,right]``。坏中点不能被排除，因为它自己可能是首个；
+好中点及其左侧都不可能是首个，只能排除。区间长度每轮严格减小，终止时唯一候选就是首个坏版本。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   // The judge provides isBadVersion(int version).
+   class Solution {
+   public:
+       int firstBadVersion(int n) {
+           long long left = 1;
+           long long right = n;
+           while (left < right) {
+               const long long middle = left + (right - left) / 2;
+               if (isBadVersion(static_cast<int>(middle))) {
+                   right = middle;
+               } else {
+                   left = middle + 1;
+               }
+           }
+           return static_cast<int>(left);
+       }
+   };
+
+代码分析
+--------
+
+每轮只调用一次接口并把候选区间缩小约一半，接口调用次数和时间复杂度为 ``O(log n)``，
+额外空间为 ``O(1)``。使用 ``long long`` 保存边界，避免在 ``n`` 接近 ``2^31-1`` 时中点表达式溢出；
+题目保证至少存在一个坏版本，所以不需要处理“全为好版本”的额外返回值。

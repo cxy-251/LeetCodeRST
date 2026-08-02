@@ -38,3 +38,53 @@
                     [2, 5, 9]]，target = 4
    输出：false
    解释：所有行列都保持非递减，但矩阵中没有值 4。
+
+从右上角消除一行或一列
+----------------------
+
+从右上角 ``(row=0, column=n-1)`` 开始：
+
+* 当前值等于 ``target``，立即成功；
+* 当前值大于 ``target``，当前列下面的值只会更大，整列都不可能包含目标，向左移动；
+* 当前值小于 ``target``，当前行左侧的值只会更小，整行都不可能包含目标，向下移动。
+
+每次移动至少删除一行或一列的搜索范围，直到越过矩阵边界。矩阵的行列单调性足以支持这个消除过程，
+但不要求行与行之间整体有序，因此不应把坐标直接映射到一维二分查找。
+
+正确性说明
+----------
+
+若当前值大于目标，因为当前列从上到下非递减，当前位置下方不可能出现更小的目标，删除整列安全；
+若当前值小于目标，因为当前行从左到右非递减，当前位置左侧不可能出现更大的目标，删除整行安全。
+等于时返回真。每个未删除位置都保留了出现目标的可能性，越界时搜索范围为空，返回假也就正确。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       bool searchMatrix(std::vector<std::vector<int>>& matrix, int target) {
+           if (matrix.empty() || matrix[0].empty()) return false;
+
+           int row = 0;
+           int column = static_cast<int>(matrix[0].size()) - 1;
+           const int rows = static_cast<int>(matrix.size());
+           while (row < rows && column >= 0) {
+               if (matrix[row][column] == target) return true;
+               if (matrix[row][column] > target) {
+                   --column;
+               } else {
+                   ++row;
+               }
+           }
+           return false;
+       }
+   };
+
+代码分析
+--------
+
+行指针只向下移动，列指针只向左移动，最多执行 ``m+n`` 次比较，时间复杂度为 ``O(m+n)``，
+额外空间为 ``O(1)``。算法只读取矩阵，不受重复值影响，也不需要额外的 visited 标记。

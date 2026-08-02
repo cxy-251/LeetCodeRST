@@ -35,3 +35,57 @@
    输入：citations = [0]
    输出：0
    解释：唯一论文没有被引用，无法满足 h = 1，所以结果为 0。
+
+把 H 指数转为有序下标条件
+-------------------------
+
+设论文数为 ``n``，考虑排序后下标 ``i``。从 ``i`` 到末尾共有 ``n-i`` 篇论文，
+而它们的引用次数都不小于 ``citations[i]``。如果：
+
+.. code-block:: text
+
+   citations[i] >= n - i
+
+那么末尾这 ``n-i`` 篇论文就证明 ``h=n-i`` 可行。随着 ``i`` 向右移动，左侧引用次数不下降，
+右侧所需的论文数量下降，所以这个条件一旦成立就不会再次失败；用二分查找第一个成立的下标，
+返回对应的 ``n-i``。若没有下标成立，答案为 0。
+
+正确性说明
+----------
+
+第一个满足条件的 ``i`` 给出最大的 ``n-i``，且后缀中的每篇论文都至少有该数量的引用，
+因此这个值可行。任何更大的 ``h`` 对应更靠左的下标；这些下标都不满足条件，说明达到该阈值的论文数不足，
+所以不可能有更大的可行 H 指数。二分搜索的单调性和定义完全一致。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int hIndex(std::vector<int>& citations) {
+           const int n = static_cast<int>(citations.size());
+           int left = 0;
+           int right = n - 1;
+           int answer = 0;
+
+           while (left <= right) {
+               const int middle = left + (right - left) / 2;
+               const int possible = n - middle;
+               if (citations[middle] >= possible) {
+                   answer = possible;
+                   right = middle - 1;
+               } else {
+                   left = middle + 1;
+               }
+           }
+           return answer;
+       }
+   };
+
+代码分析
+--------
+
+每轮排除一半下标，时间复杂度为 ``O(log n)``，只使用固定数量的变量，额外空间为 ``O(1)``。
+输入已按非递减顺序排列，代码不复制、不排序；二分查找返回的是论文数量阈值，不是某篇论文的引用次数。
