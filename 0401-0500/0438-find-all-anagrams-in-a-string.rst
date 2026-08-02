@@ -35,3 +35,48 @@
    输入：s = "aaaa"，p = "aa"
    输出：[0,1,2]
    解释：三个长度为 2 的窗口都由两个 a 组成，即使它们互相重叠，也必须分别返回起点。
+
+固定窗口维护字符频次差
+------------------------
+
+异位词窗口长度必须等于 ``p``。先记录 ``p`` 的需求频次，右指针加入字符，窗口超过长度时左指针移出字符；维护尚未满足的字符实例数 ``missing``，当它变为 0 时当前窗口频次恰好与 ``p`` 相同，记录左端下标。窗口每次只移动一格，因此重叠结果不会被跳过。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       std::vector<int> findAnagrams(std::string s, std::string p) {
+           if (p.size() > s.size()) return {};
+           std::array<int, 26> need{};
+           std::array<int, 26> window{};
+           for (char c : p) ++need[c - 'a'];
+           int missing = static_cast<int>(p.size());
+           std::vector<int> result;
+
+           for (int right = 0;
+                right < static_cast<int>(s.size()); ++right) {
+               int id = s[right] - 'a';
+               if (window[id] < need[id]) --missing;
+               ++window[id];
+
+               if (right >= static_cast<int>(p.size())) {
+                   int leftId = s[right - p.size()] - 'a';
+                   if (window[leftId] <= need[leftId]) ++missing;
+                   --window[leftId];
+               }
+               if (missing == 0) {
+                   result.push_back(right
+                       - static_cast<int>(p.size()) + 1);
+               }
+           }
+           return result;
+       }
+   };
+
+代码分析
+--------
+
+加入字符只在它尚未超过需求时减少 ``missing``，移出字符只在它原本满足需求时恢复 ``missing``；窗口长度固定后，``missing == 0`` 等价于两组频次完全相同。时间复杂度为 ``O(|s| + |p|)``，额外空间为固定的 ``O(1)``。

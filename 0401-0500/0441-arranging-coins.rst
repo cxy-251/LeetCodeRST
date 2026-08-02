@@ -35,3 +35,38 @@
    输入：n = 10
    输出：4
    解释：1 + 2 + 3 + 4 = 10，四行全部完整且没有剩余硬币。
+
+三角数上的二分查找
+------------------
+
+填满 ``m`` 行恰好需要三角数 ``m(m+1)/2`` 枚硬币。这个数量随 ``m`` 单调增加，因此可以在行数区间内二分：若中点行所需硬币不超过 ``n``，说明中点及其左侧都可行，继续向右；否则向左寻找最后一个可行行数。
+
+计算三角数时使用 ``long long``，避免 ``m * (m + 1)`` 在乘法阶段先以 ``int`` 溢出。二分结束时右边界正好停在最后一个满足条件的行数。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int arrangeCoins(int n) {
+           long long left = 0;
+           long long right = n;
+           while (left <= right) {
+               long long middle = left + (right - left) / 2;
+               long long required = middle * (middle + 1) / 2;
+               if (required <= n) {
+                   left = middle + 1;
+               } else {
+                   right = middle - 1;
+               }
+           }
+           return static_cast<int>(right);
+       }
+   };
+
+代码分析
+--------
+
+二分维护的判定条件是“前 ``m`` 行能否全部填满”，它具有单调性：可行行数之后的所有行都不可行。返回右边界而不是左边界，是因为循环结束时 ``left`` 指向第一个不可行值，``right`` 指向最后一个可行值。时间复杂度为 ``O(log n)``，额外空间复杂度为 ``O(1)``。

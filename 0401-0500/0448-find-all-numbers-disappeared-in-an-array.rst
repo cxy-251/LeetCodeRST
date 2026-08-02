@@ -35,3 +35,36 @@
    输入：nums = [2, 1]
    输出：[]
    解释：范围 1..2 中的两个整数都至少出现一次，因此没有缺失值。
+
+用出现值标记对应范围位置
+------------------------
+
+值 ``x`` 对应下标 ``x - 1``。第一次看到 ``x`` 时，将 ``nums[x - 1]`` 变为负数，表示范围值 ``x`` 出现过；完成标记后再次扫描，仍为正数的下标 ``i`` 就代表值 ``i + 1`` 从未出现。
+
+读取输入值时先取绝对值，因为数组中的元素可能已经被前面的标记取反。重复值只会重复访问同一位置，不会影响“是否出现”的最终状态。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       std::vector<int> findDisappearedNumbers(std::vector<int>& nums) {
+           for (int value : nums) {
+               int index = std::abs(value) - 1;
+               if (nums[index] > 0) nums[index] = -nums[index];
+           }
+
+           std::vector<int> result;
+           for (int i = 0; i < static_cast<int>(nums.size()); ++i) {
+               if (nums[i] > 0) result.push_back(i + 1);
+           }
+           return result;
+       }
+   };
+
+代码分析
+--------
+
+原数组的每个槽位同时承担“对应值是否出现”的标记位，第二次扫描将正槽位反解为缺失值。取绝对值保证已被改写的元素仍能正确映射下标；标记和收集各扫描一次，时间复杂度为 ``O(n)``，除返回结果外额外空间复杂度为 ``O(1)``。

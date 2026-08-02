@@ -35,3 +35,35 @@
    输入：buckets = 1，minutesToDie = 10，minutesToTest = 10
    输出：0
    解释：无需进行任何测试，唯一的桶已经确定是毒桶。
+
+把每只猪看成一个多进制状态位
+------------------------------
+
+可进行的完整测试轮数为 ``rounds = minutesToTest / minutesToDie``。一只猪有 ``rounds + 1`` 种可观察状态：在第 1、2、……轮死亡，或一直存活。若有 ``p`` 只猪，联合观察结果最多编码 ``(rounds + 1)^p`` 个桶；要唯一定位毒桶，必须让这个数量至少覆盖 ``buckets``。
+
+每轮给不同猪安排不同的桶组合，就相当于为桶编号的每一位设置该猪的状态。因而找到满足容量条件的最小 ``p`` 即得到最少猪数。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int poorPigs(int buckets, int minutesToDie, int minutesToTest) {
+           int rounds = minutesToTest / minutesToDie;
+           long long states = rounds + 1;
+           long long distinguishable = 1;
+           int pigs = 0;
+           while (distinguishable < buckets) {
+               distinguishable *= states;
+               ++pigs;
+           }
+           return pigs;
+       }
+   };
+
+代码分析
+--------
+
+死亡轮次和存活状态共同构成一只猪的离散观测值；多只猪的状态组合数相乘，所以最小猪数是最小的满足幂次覆盖桶数的指数。容量为 1 时循环不执行并返回 0。时间复杂度为 ``O(log_{rounds+1} buckets)``，额外空间复杂度为 ``O(1)``。

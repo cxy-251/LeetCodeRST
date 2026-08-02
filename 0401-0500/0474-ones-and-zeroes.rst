@@ -35,3 +35,42 @@
    输入：strs = ["1", "11", "0"]，m = 0，n = 3
    输出：2
    解释：可以选择 "1" 和 "11"，但不能选择含有 0 的字符串。
+
+零和一预算的二维 0/1 背包
+-------------------------
+
+每个字符串是一件物品，消耗 ``zero`` 个零预算和 ``one`` 个一预算，价值为 1。``dp[i][j]`` 表示最多使用 ``i`` 个零和 ``j`` 个一时能选的最大字符串数。处理一个字符串时，两个预算都必须从大到小更新，才能保证同一字符串在本轮只被选择一次。
+
+字符串内容相同也不能合并，因为它们在数组中是不同物品；逐个处理正好保留了这种下标区别。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int findMaxForm(std::vector<std::string>& strs, int m, int n) {
+           std::vector<std::vector<int>> dp(
+               m + 1, std::vector<int>(n + 1, 0));
+           for (const std::string& word : strs) {
+               int zeros = std::count(word.begin(), word.end(), '0');
+               int ones = static_cast<int>(word.size()) - zeros;
+               for (int availableZeros = m; availableZeros >= zeros;
+                    --availableZeros) {
+                   for (int availableOnes = n; availableOnes >= ones;
+                        --availableOnes) {
+                       dp[availableZeros][availableOnes] = std::max(
+                           dp[availableZeros][availableOnes],
+                           dp[availableZeros - zeros][availableOnes - ones] + 1);
+                   }
+               }
+           }
+           return dp[m][n];
+       }
+   };
+
+代码分析
+--------
+
+倒序遍历两个容量维度确保转移读取的是处理当前字符串之前的状态，因此每个字符串最多贡献一次；状态值只记录数量，不需要记录具体子集。设字符串数为 ``q``，时间复杂度为 ``O(qmn)``，空间复杂度为 ``O(mn)``。

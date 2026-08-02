@@ -35,3 +35,32 @@
    输入：x = 6，y = 6
    输出：0
    解释：所有对应二进制位都相同，因此汉明距离为 0。
+
+异或保留所有不同位
+------------------
+
+对两个整数做按位异或：相同位得到 0，不同位得到 1，因此汉明距离就是异或结果中 1 的个数。逐位检查并右移即可，不需要显式补齐两个二进制字符串的前导零。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int hammingDistance(int x, int y) {
+           unsigned int difference =
+               static_cast<unsigned int>(x ^ y);
+           int answer = 0;
+           while (difference != 0) {
+               answer += difference & 1u;
+               difference >>= 1;
+           }
+           return answer;
+       }
+   };
+
+代码分析
+--------
+
+异或后的每个 1 与一个不同的二进制位置一一对应，逐位累加不会遗漏高位；输入为非负且不使用符号位，转为无符号类型后右移语义明确。最多检查 31 位，时间复杂度为 ``O(log(max(x,y)))``，额外空间复杂度为 ``O(1)``。

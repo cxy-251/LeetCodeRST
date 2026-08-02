@@ -35,3 +35,36 @@
    输入：nums = [4, 4]
    输出：0
    解释：两个下标构成一个数对，但对应二进制位完全相同。
+
+按位统计一方为 1、另一方为 0
+------------------------------
+
+固定某一个二进制位，设数组中有 ``ones`` 个数在该位为 1，``zeros = n - ones`` 个数为 0。这个位对总汉明距离的贡献就是从两类中各选一个的 ``ones * zeros``，因为每个无序下标对只在该位不同一次。
+
+对所有有效位累加即可，不需要枚举 ``O(n^2)`` 个数对。不同下标的重复数值也会被分别放入计数，符合题目的下标计数规则。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int totalHammingDistance(std::vector<int>& nums) {
+           long long answer = 0;
+           int n = static_cast<int>(nums.size());
+           for (int bit = 0; bit < 31; ++bit) {
+               int ones = 0;
+               for (int value : nums) {
+                   if (value & (1 << bit)) ++ones;
+               }
+               answer += static_cast<long long>(ones) * (n - ones);
+           }
+           return static_cast<int>(answer);
+       }
+   };
+
+代码分析
+--------
+
+每个数对在每个二进制位上的差异被独立计算，``ones * zeros`` 恰好枚举该位的两种取值组合，因此不存在重复或遗漏。输入上界小于 ``2^30``，检查 31 位足够；时间复杂度为 ``O(31n)``，额外空间复杂度为 ``O(1)``。

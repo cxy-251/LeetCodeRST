@@ -37,3 +37,88 @@
    调用：inc("x"), dec("x"), getMaxKey(), getMinKey()
    查询输出：""、""
    解释：dec 后 x 的计数变为 0 并被删除，结构重新为空。
+
+按计数维护相邻桶
+------------------
+
+用双向链表按计数从小到大排列桶，每个桶保存同一计数下的所有键；再用哈希表把每个键定位到所在桶。``inc`` 只需把键移动到计数加一的相邻桶，``dec`` 移动到计数减一的相邻桶；相邻桶不存在时在对应位置创建。桶空后立即删除，链表首尾就分别代表最小和最大计数。
+
+链表迭代器和哈希映射共同保证移动、插入和删除都是平均常数时间；并列键从桶的集合中任取即可。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class AllOne {
+       struct Bucket {
+           int count;
+           std::unordered_set<std::string> keys;
+       };
+       std::list<Bucket> buckets;
+       std::unordered_map<std::string,
+                          std::list<Bucket>::iterator> where;
+
+   public:
+       void inc(std::string key) {
+           auto it = where.find(key);
+           if (it == where.end()) {
+               if (buckets.empty() || buckets.front().count != 1) {
+                   buckets.push_front({1, {}});
+               }
+               buckets.front().keys.insert(key);
+               where[key] = buckets.begin();
+               return;
+           }
+
+           auto bucket = it->second;
+           auto next = std::next(bucket);
+           if (next == buckets.end()
+               || next->count != bucket->count + 1) {
+               next = buckets.insert(next,
+                                     {bucket->count + 1, {}});
+           }
+           next->keys.insert(key);
+           where[key] = next;
+           bucket->keys.erase(key);
+           if (bucket->keys.empty()) buckets.erase(bucket);
+       }
+
+       void dec(std::string key) {
+           auto bucket = where[key];
+           if (bucket->count == 1) {
+               bucket->keys.erase(key);
+               where.erase(key);
+               if (bucket->keys.empty()) buckets.erase(bucket);
+               return;
+           }
+
+           auto previous = bucket;
+           if (bucket == buckets.begin()
+               || std::prev(bucket)->count != bucket->count - 1) {
+               previous = buckets.insert(bucket,
+                                         {bucket->count - 1, {}});
+           } else {
+               previous = std::prev(bucket);
+           }
+           previous->keys.insert(key);
+           where[key] = previous;
+           bucket->keys.erase(key);
+           if (bucket->keys.empty()) buckets.erase(bucket);
+       }
+
+       std::string getMaxKey() {
+           if (buckets.empty()) return "";
+           return *buckets.back().keys.begin();
+       }
+
+       std::string getMinKey() {
+           if (buckets.empty()) return "";
+           return *buckets.front().keys.begin();
+       }
+   };
+
+代码分析
+--------
+
+键的计数变化只跨越相邻桶，哈希表始终指向移动后的有效迭代器；空桶删除后仍保持链表按计数有序。``dec`` 的调用契约保证键存在，因此 ``where[key]`` 不会创建错误状态。所有操作平均 ``O(1)``，额外空间为 ``O(键数量)``。

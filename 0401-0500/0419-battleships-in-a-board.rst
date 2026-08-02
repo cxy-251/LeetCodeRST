@@ -37,3 +37,36 @@
    输入：board = [[".","."],[".","."]]
    输出：0
    解释：棋盘中没有字符 X，因此没有战舰。
+
+只数每艘战舰的左上端点
+------------------------
+
+输入保证不同战舰不在上下左右相邻，因此一艘水平或竖直战舰的第一个 ``X`` 不会在它的上方或左方紧邻另一个 ``X``。扫描每个格子时，只有当前格为 ``X`` 且上方、左方都不是 ``X``，才把它视为一艘新战舰；同一战舰后续的横向或纵向格子都会被跳过。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int countBattleships(std::vector<std::vector<char>>& board) {
+           int rows = static_cast<int>(board.size());
+           int cols = static_cast<int>(board[0].size());
+           int result = 0;
+           for (int row = 0; row < rows; ++row) {
+               for (int col = 0; col < cols; ++col) {
+                   if (board[row][col] != 'X') continue;
+                   if (row > 0 && board[row - 1][col] == 'X') continue;
+                   if (col > 0 && board[row][col - 1] == 'X') continue;
+                   ++result;
+               }
+           }
+           return result;
+       }
+   };
+
+代码分析
+--------
+
+有效输入保证一艘战舰不会从左方和上方同时以另一艘船接入，所以“没有上邻居且没有左邻居”恰好只命中每艘船一次；算法不修改棋盘。时间复杂度为 ``O(mn)``，额外空间为 ``O(1)``。

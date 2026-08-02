@@ -35,3 +35,31 @@
    输入：nums = [4, 4]
    输出：4
    解释：数组只有一个不同数值，按题目要求返回最大值 4。
+
+只保留最大的三个不同值
+------------------------
+
+用有序集合维护当前见过的最大三个不同数值。插入重复值不会改变集合；插入新值后若集合超过三个，就删除最小值。扫描结束时，集合大小为 3 则最小者是第三大，否则最大者是题目要求的回退答案。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int thirdMax(std::vector<int>& nums) {
+           std::set<int> top;
+           for (int value : nums) {
+               top.insert(value);
+               if (top.size() > 3) top.erase(top.begin());
+           }
+           if (top.size() == 3) return *top.begin();
+           return *top.rbegin();
+       }
+   };
+
+代码分析
+--------
+
+集合既去除重复名次，又把维护规模限制为 3，不需要使用可能与合法输入冲突的哨兵值；``-2^31`` 也能正常存储。每次操作是固定大小集合上的 ``O(log 3)``，总体时间可视为 ``O(n)``，额外空间为 ``O(1)``。

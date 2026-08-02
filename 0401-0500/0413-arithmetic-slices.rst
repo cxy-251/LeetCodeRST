@@ -35,3 +35,36 @@
    输入：nums = [5, 5, 5, 5, 5]
    输出：6
    解释：长度为 3、4、5 的连续子数组分别有 3、2、1 个，差值均为 0，总数为 6。
+
+按右端点统计新增加的切片
+--------------------------
+
+扫描到下标 ``i`` 时，如果 ``nums[i] - nums[i-1]`` 与前一个差值相同，那么以 ``i`` 结尾的等差切片数量会比以 ``i-1`` 结尾多一个：在原有每个切片前面再延长一项，并新增刚好长度为 3 的切片。令 ``ending`` 表示这个数量，差值中断时归零。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int numberOfArithmeticSlices(std::vector<int>& nums) {
+           long long answer = 0;
+           int ending = 0;
+           for (int i = 2; i < static_cast<int>(nums.size()); ++i) {
+               if (nums[i] - nums[i - 1]
+                   == nums[i - 1] - nums[i - 2]) {
+                   ++ending;
+                   answer += ending;
+               } else {
+                   ending = 0;
+               }
+           }
+           return static_cast<int>(answer);
+       }
+   };
+
+代码分析
+--------
+
+``ending`` 在连续等差段中依次为 1、2、3……，分别代表以当前下标结尾、长度至少 3 的切片数；中断后不能把前段延伸过来。每个相邻差只比较一次，时间复杂度为 ``O(n)``，额外空间为 ``O(1)``。

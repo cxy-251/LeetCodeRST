@@ -35,3 +35,33 @@
    输入：nums = [5, 5]
    输出：0
    解释：所有元素已经相同，不需要任何操作。
+
+绝对距离和在中位数处最小
+------------------------
+
+若把所有元素变成目标 ``t``，操作数为 ``sum |nums[i] - t|``。目标向右移动一个单位时，左侧元素的距离增加、右侧元素的距离减少；当左右元素数量平衡或从左侧转为右侧时，距离和达到最小，这正是排序数组的中位数位置。
+
+排序后选取 ``nums[n/2]`` 作为目标即可。数组长度为偶数时，任意位于两个中间值之间的整数都能达到相同最小值，选右中位数不会影响答案。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int minMoves2(std::vector<int>& nums) {
+           std::sort(nums.begin(), nums.end());
+           long long median = nums[nums.size() / 2];
+           long long moves = 0;
+           for (int value : nums) {
+               moves += std::llabs(static_cast<long long>(value) - median);
+           }
+           return static_cast<int>(moves);
+       }
+   };
+
+代码分析
+--------
+
+中位数使绝对距离和的左右斜率分别为负和正，任何其他目标都不能更小；偶数长度时中间区间上的目标等价。排序耗时 ``O(n log n)``，求和耗时 ``O(n)``，额外空间复杂度为 ``O(1)``（不计排序实现的栈）。

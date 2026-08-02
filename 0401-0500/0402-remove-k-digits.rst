@@ -35,3 +35,48 @@
    输入：num = "10020"，k = 2
    输出："0"
    解释：删除 1 和 2 后剩下 000，规范化结果必须写成单个字符 "0"。
+
+单调栈保留尽可能小的高位
+--------------------------
+
+从左到右构造结果。若当前数字比栈顶小，栈顶作为更高位就会使结果变大；只要还有删除额度，就弹出这样的栈顶，再放入当前数字。弹栈停止后，栈内前缀已经是当前扫描范围能得到的最小前缀。
+
+扫描结束仍有删除额度时，只能从末尾删除，因为前面的字符已经按贪心确定；最后去掉所有前导零，空串或全零结果统一写为 ``"0"``。这保证恰好删除 ``k`` 位，而不是只删除有利于变小的位。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       std::string removeKdigits(std::string num, int k) {
+           std::string stack;
+           for (char digit : num) {
+               while (k > 0 && !stack.empty()
+                      && stack.back() > digit) {
+                   stack.pop_back();
+                   --k;
+               }
+               stack.push_back(digit);
+           }
+
+           while (k > 0 && !stack.empty()) {
+               stack.pop_back();
+               --k;
+           }
+
+           int first = 0;
+           while (first < static_cast<int>(stack.size())
+                  && stack[first] == '0') {
+               ++first;
+           }
+           std::string result = stack.substr(first);
+           return result.empty() ? "0" : result;
+       }
+   };
+
+代码分析
+--------
+
+在相邻的下降处优先删除左侧较大的数字，是数值比较中最重要的高位决策；每个字符最多入栈、出栈一次，删除额度始终准确递减。先完成删除、再规范化前导零，避免把零误当成可以少删的字符。时间复杂度为 ``O(n)``，额外空间为 ``O(n)``。

@@ -35,3 +35,36 @@
    输入：nums = [2, 2, 3, 5]
    输出：false
    解释：总和为 12，但不存在元素和恰好为 6 的子集，因此无法分成两个等和部分。
+
+只寻找一半总和
+----------------
+
+若所有元素总和为奇数，直接不可能平分；若为偶数，只需判断是否存在一个子集的和为 ``total / 2``，剩余元素就自动构成另一半。令 ``dp[s]`` 表示处理过的元素中是否能组成和 ``s``，每加入一个数时从目标和向下更新，确保同一个数组位置不会在同一轮被重复使用。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       bool canPartition(std::vector<int>& nums) {
+           int total = std::accumulate(nums.begin(), nums.end(), 0);
+           if (total % 2 != 0) return false;
+           int target = total / 2;
+           std::vector<bool> dp(target + 1, false);
+           dp[0] = true;
+
+           for (int value : nums) {
+               for (int sum = target; sum >= value; --sum) {
+                   dp[sum] = dp[sum] || dp[sum - value];
+               }
+           }
+           return dp[target];
+       }
+   };
+
+代码分析
+--------
+
+倒序枚举和，保证当前元素只参与一次；``dp[0]`` 表示尚未选择元素的空子集，正整数约束使状态方向清晰。总和为 ``S`` 时，时间复杂度为 ``O(nS)``，额外空间为 ``O(S)``。

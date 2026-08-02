@@ -35,3 +35,38 @@
    输入：n = 16
    输出的第 15 项："FizzBuzz"
    解释：15 同时是 3 和 5 的倍数，因此不能只输出 Fizz 或 Buzz。
+
+先判断同时满足的组合
+----------------------
+
+按 ``1..n`` 顺序处理每个整数。3 和 5 的公倍数必须先判断，否则会被前面的单独 ``Fizz`` 或 ``Buzz`` 分支提前截走；其他情况再分别判断 3、5，最后把整数转换为字符串。数组下标 ``i-1`` 对应数字 ``i``。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       std::vector<std::string> fizzBuzz(int n) {
+           std::vector<std::string> result;
+           result.reserve(n);
+           for (int value = 1; value <= n; ++value) {
+               if (value % 15 == 0) {
+                   result.push_back("FizzBuzz");
+               } else if (value % 3 == 0) {
+                   result.push_back("Fizz");
+               } else if (value % 5 == 0) {
+                   result.push_back("Buzz");
+               } else {
+                   result.push_back(std::to_string(value));
+               }
+           }
+           return result;
+       }
+   };
+
+代码分析
+--------
+
+``value % 15 == 0`` 同时覆盖 3 和 5 的条件，其他分支互斥且顺序明确。每个整数只处理一次，时间复杂度为 ``O(n)``（不计字符串输出长度），额外空间为 ``O(1)``（不计返回数组）。

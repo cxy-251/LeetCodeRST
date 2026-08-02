@@ -35,3 +35,50 @@
    输入：words = ["red", "blue", "green"]
    输出：[]
    解释：任一单词都无法由数组中的至少两个较短单词完整组成。
+
+按长度加入字典并做前缀切分
+--------------------------
+
+先按单词长度排序。判断当前单词时，集合中只包含已经处理过的单词，因而不会把当前单词自身作为唯一组成部分；对当前字符串做动态规划，``reachable[i]`` 表示前 ``i`` 个字符能由集合中的单词拼出。若 ``reachable[i]`` 为真且 ``word[i..j)`` 在集合中，就把 ``reachable[j]`` 设为真。
+
+当 ``reachable[length]`` 为真时，至少经过了两个较短单词；判断结束后再把当前单词放入集合，供更长的单词使用。单词可重复使用，因为同一个集合单词可以在不同的切分位置被查到。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       std::vector<std::string> findAllConcatenatedWordsInADict(
+           std::vector<std::string>& words) {
+           std::sort(words.begin(), words.end(),
+                     [](const std::string& left, const std::string& right) {
+                         return left.size() < right.size();
+                     });
+
+           std::unordered_set<std::string> dictionary;
+           std::vector<std::string> result;
+           for (const std::string& word : words) {
+               int n = static_cast<int>(word.size());
+               std::vector<bool> reachable(n + 1, false);
+               reachable[0] = true;
+               for (int begin = 0; begin < n; ++begin) {
+                   if (!reachable[begin]) continue;
+                   for (int end = begin + 1; end <= n; ++end) {
+                       if (dictionary.count(word.substr(begin, end - begin))) {
+                           reachable[end] = true;
+                       }
+                   }
+               }
+               if (reachable[n]) result.push_back(word);
+               dictionary.insert(word);
+           }
+           return result;
+       }
+   };
+
+代码分析
+--------
+
+按长度处理保证组成词短于当前目标，避免“自身一次匹配”造成假阳性；布尔状态的每次转移都对应一个真实的单词边界，所以终点可达就代表完整拼接。设最大单词长度为 ``L``，哈希查找平均常数时总时间约为 ``O(sum |word| * L^2)``（包含子串构造），额外空间为 ``O(sum |word|)``。

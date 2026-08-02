@@ -35,3 +35,42 @@
    输入：s = "AABBA"，k = 0
    输出：2
    解释：不能改变任何字符，最长现有重复段是 AA 或 BB，长度均为 2。
+
+窗口长度减去最高频次就是所需替换数
+--------------------------------------
+
+维护一个滑动窗口和窗口内每个大写字母的频次。若把窗口中出现次数最多的字符保留为目标字符，其余字符都替换掉即可使整个窗口相同，所需次数为 ``windowLength - maxFrequency``。当这个数量超过 ``k`` 时，移动左端并归还字符；否则用窗口长度更新答案。
+
+``maxFrequency`` 可以只增不减：它是窗口历史上的上界，偶尔比当前窗口真实最高频次大只会让窗口暂时显得更宽，不会让最终记录的最大合法长度超过真实答案；左端仍会在必要时继续收缩。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int characterReplacement(std::string s, int k) {
+           std::array<int, 26> frequency{};
+           int left = 0;
+           int maxFrequency = 0;
+           int answer = 0;
+
+           for (int right = 0;
+                right < static_cast<int>(s.size()); ++right) {
+               maxFrequency = std::max(
+                   maxFrequency, ++frequency[s[right] - 'A']);
+               while (right - left + 1 - maxFrequency > k) {
+                   --frequency[s[left] - 'A'];
+                   ++left;
+               }
+               answer = std::max(answer, right - left + 1);
+           }
+           return answer;
+       }
+   };
+
+代码分析
+--------
+
+窗口保持“可由至多 ``k`` 次替换统一”的条件，最长合法窗口就是答案；字符频次固定为 26，左右指针各走一次。时间复杂度为 ``O(n)``，额外空间为 ``O(1)``。

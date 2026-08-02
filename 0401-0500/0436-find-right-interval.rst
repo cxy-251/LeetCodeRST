@@ -35,3 +35,39 @@
    输入：intervals = [[5,5]]
    输出：[0]
    解释：该区间的开始点 5 大于或等于自身结束点 5，因此原下标 0 满足定义。
+
+对开始点排序后做 lower_bound
+------------------------------
+
+右区间只由开始点决定。把所有 ``(start, 原下标)`` 按开始点升序保存，对每个 ``end_i`` 二分查找第一个大于等于它的开始点；这一定是满足条件者中开始点最小的一个，直接返回其原下标。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       std::vector<int> findRightInterval(
+           std::vector<std::vector<int>>& intervals) {
+           std::vector<std::pair<int, int>> starts;
+           for (int i = 0; i < static_cast<int>(intervals.size()); ++i) {
+               starts.push_back({intervals[i][0], i});
+           }
+           std::sort(starts.begin(), starts.end());
+
+           std::vector<int> result;
+           for (const auto& interval : intervals) {
+               auto it = std::lower_bound(
+                   starts.begin(), starts.end(),
+                   std::make_pair(interval[1], -1));
+               result.push_back(it == starts.end() ? -1 : it->second);
+           }
+           return result;
+       }
+   };
+
+代码分析
+--------
+
+开始点互不相同，所以 lower_bound 找到的候选唯一；保存原下标避免排序后丢失答案位置。预处理排序为 ``O(n log n)``，每个区间二分查询同为 ``O(log n)``，总体时间 ``O(n log n)``，额外空间为 ``O(n)``。

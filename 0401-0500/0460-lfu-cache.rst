@@ -39,3 +39,81 @@
    调用：put(5,50), get(5)
    查询输出：-1
    解释：零容量缓存不能保存任何键值对。
+
+频率桶内用访问顺序解决并列
+--------------------------
+
+用一个按频率编号的双向链表集合保存键：同一频率的键位于同一个桶内，链表头是最近使用，尾部是最久未使用。哈希表把每个键映射到其值、频率和链表迭代器，因此可以在 ``O(1)`` 时间从旧桶删除并放入频率加一的新桶。
+
+额外维护 ``minFrequency``。新键总是进入频率 1 的桶；淘汰时直接取最低频率桶的尾节点。若某频率桶被移空且它正是最低频率，就把最低频率提升到下一桶。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class LFUCache {
+       struct Entry {
+           int value;
+           int frequency;
+           std::list<int>::iterator position;
+       };
+
+       int capacity;
+       int minFrequency = 0;
+       std::unordered_map<int, Entry> entries;
+       std::unordered_map<int, std::list<int>> buckets;
+
+       void touch(int key) {
+           Entry& entry = entries[key];
+           int oldFrequency = entry.frequency;
+           auto bucketIt = buckets.find(oldFrequency);
+           bucketIt->second.erase(entry.position);
+           if (bucketIt->second.empty()) {
+               buckets.erase(bucketIt);
+               if (minFrequency == oldFrequency) ++minFrequency;
+           }
+
+           ++entry.frequency;
+           buckets[entry.frequency].push_front(key);
+           entry.position = buckets[entry.frequency].begin();
+       }
+
+   public:
+       LFUCache(int capacity) : capacity(capacity) {}
+
+       int get(int key) {
+           auto it = entries.find(key);
+           if (it == entries.end()) return -1;
+           touch(key);
+           return entries[key].value;
+       }
+
+       void put(int key, int value) {
+           if (capacity == 0) return;
+
+           auto it = entries.find(key);
+           if (it != entries.end()) {
+               it->second.value = value;
+               touch(key);
+               return;
+           }
+
+           if (entries.size() == static_cast<size_t>(capacity)) {
+               auto& leastUsed = buckets[minFrequency];
+               int victim = leastUsed.back();
+               leastUsed.pop_back();
+               if (leastUsed.empty()) buckets.erase(minFrequency);
+               entries.erase(victim);
+           }
+
+           buckets[1].push_front(key);
+           entries[key] = {value, 1, buckets[1].begin()};
+           minFrequency = 1;
+       }
+   };
+
+代码分析
+--------
+
+频率哈希表定位桶，链表迭代器定位桶内节点，二者合起来使访问、升频和淘汰都不需要遍历。链表头插保证同频时最新访问在前，尾删正好淘汰最久未使用者；每个操作的平均时间复杂度为 ``O(1)``，空间复杂度为 ``O(capacity)``。

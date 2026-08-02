@@ -35,3 +35,67 @@
    输入：password = "aaaaaA1"
    输出：1
    解释：长度和字符类别均合格，只需把五个连续 a 中的一个替换成其他字符，即可打断所有三个连续相同字符的情况。
+
+先分离长度、类别和重复段三种缺陷
+----------------------------------
+
+统计是否缺少小写、大写、数字三类字符，并把每段连续相同字符长度为 ``len`` 的替换需求记为 ``len / 3``。当长度小于 6 时，插入操作既能补长度，也可能顺便补类别或打断重复，最优次数是 ``max(6-n, missing)``；长度在 6 到 20 之间时，只需在缺少类别和重复段替换之间取较大值。
+
+长度超过 20 时必须先删除 ``n-20`` 个字符。删除应优先作用于 ``len % 3 == 0`` 的重复段：删 1 个就能减少 1 次替换；其次处理余数为 1 的段，删 2 个减少 1 次；剩余删除每 3 个再减少 1 次替换。删除完成后，剩余替换次数与缺少类别数可以由同一批替换操作共同承担，因此还要取二者最大值。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int strongPasswordChecker(std::string password) {
+           int n = static_cast<int>(password.size());
+           bool lower = false;
+           bool upper = false;
+           bool digit = false;
+           for (char c : password) {
+               lower |= c >= 'a' && c <= 'z';
+               upper |= c >= 'A' && c <= 'Z';
+               digit |= c >= '0' && c <= '9';
+           }
+           int missing = !lower + !upper + !digit;
+
+           std::vector<int> runs;
+           for (int i = 0; i < n;) {
+               int j = i;
+               while (j < n && password[j] == password[i]) ++j;
+               if (j - i >= 3) runs.push_back(j - i);
+               i = j;
+           }
+
+           int replacements = 0;
+           for (int length : runs) replacements += length / 3;
+           if (n < 6) return std::max(6 - n, missing);
+           if (n <= 20) return std::max(missing, replacements);
+
+           int deletions = n - 20;
+           for (int remainder = 0; remainder < 3; ++remainder) {
+               for (int& length : runs) {
+                   if (deletions == 0 || length % 3 != remainder) {
+                       continue;
+                   }
+                   int need = remainder == 0 ? 1
+                           : (remainder == 1 ? 2 : 3);
+                   int use = std::min(deletions, need);
+                   int before = length / 3;
+                   length -= use;
+                   deletions -= use;
+                   replacements -= before - length / 3;
+               }
+           }
+           replacements -= deletions / 3;
+           return (n - 20) + std::max(missing, replacements);
+       }
+   };
+
+代码分析
+--------
+
+删除顺序按“每个删除能节省多少次替换”排序，优先消除最便宜的一次替换；未用于降低替换数的剩余删除仍然必须执行，但不会改变替换需求。短密码分支单独处理插入与类别缺失的重叠收益。设密码长度为 ``n``，扫描和重复段处理为 ``O(n)``，额外空间为 ``O(n)``。

@@ -35,3 +35,36 @@
    输入：num = -2
    输出："fffffffe"
    解释：-2 的 32 位补码为 0xfffffffe，因此返回八位十六进制表示且不带负号。
+
+按无符号补码逐个取四位
+------------------------
+
+把输入转换为 ``uint32_t`` 后，负数会按 32 位模意义保留其补码位模式，正数的位模式不变。每次取最低四位作为一个十六进制数字，再无符号右移四位；循环结束后反转收集结果。这样负数会自然产生最多 8 位，而不会出现负号。
+
+0 是唯一需要单独处理的空循环结果；十六进制字符表采用小写 ``a..f``，从高位反转后也不会产生前导零。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       std::string toHex(int num) {
+           if (num == 0) return "0";
+           const std::string digits = "0123456789abcdef";
+           uint32_t value = static_cast<uint32_t>(num);
+           std::string result;
+           while (value != 0) {
+               result.push_back(digits[value & 0xF]);
+               value >>= 4;
+           }
+           std::reverse(result.begin(), result.end());
+           return result;
+       }
+   };
+
+代码分析
+--------
+
+无符号类型保证右移补零，32 位补码的负数最终在第 8 个十六进制数字后结束；每轮固定处理四个位。时间复杂度为 ``O(1)``（最多 8 轮），额外空间为 ``O(1)``（不计返回字符串）。

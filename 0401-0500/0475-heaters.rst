@@ -35,3 +35,41 @@
    输入：houses = [4]，heaters = [4]
    输出：0
    解释：房屋正好位于加热器位置，不需要向外扩展覆盖范围。
+
+每座房屋取最近加热器的距离
+--------------------------
+
+固定半径 ``r`` 时，一座房屋能否被覆盖只取决于它到最近加热器的距离。因此对每座房屋寻找左右两侧最近的加热器，取两者距离的较小值；所有房屋所需距离的最大值，就是统一半径的最小可行值。
+
+排序加热器后用 ``lower_bound`` 定位第一个不小于房屋位置的加热器，同时检查它和前一个位置。边界只有一侧候选时，将另一侧视为无穷远。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int findRadius(std::vector<int>& houses,
+                      std::vector<int>& heaters) {
+           std::sort(heaters.begin(), heaters.end());
+           long long answer = 0;
+           for (int house : houses) {
+               auto rightIt = std::lower_bound(heaters.begin(), heaters.end(),
+                                               house);
+               long long right = rightIt == heaters.end()
+                                     ? LLONG_MAX
+                                     : static_cast<long long>(*rightIt) - house;
+               long long left = rightIt == heaters.begin()
+                                    ? LLONG_MAX
+                                    : house - static_cast<long long>(*std::prev(rightIt));
+               answer = std::max(answer, std::min(left, right));
+           }
+           return static_cast<int>(answer);
+       }
+   };
+
+代码分析
+--------
+
+最近加热器必然是排序位置中房屋左右相邻的两个候选之一，检查这两个位置即可得到该房屋的最小覆盖半径；再取所有房屋的最大需求保证全部覆盖。排序耗时 ``O(h log h)``，每座房屋二分耗时 ``O(log h)``，总时间复杂度为 ``O(h log h + r log h)``，额外空间复杂度为 ``O(1)``。

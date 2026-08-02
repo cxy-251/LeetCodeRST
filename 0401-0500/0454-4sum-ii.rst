@@ -42,3 +42,46 @@
    输入：nums1 = [1]，nums2 = [1]，nums3 = [1]，nums4 = [1]
    输出：0
    解释：唯一四元组的元素和为 4，不满足条件。
+
+把四元组拆成两组配对和
+----------------------
+
+先枚举 ``nums1[i] + nums2[j]``，用哈希表记录每个和由多少个下标对产生；再枚举 ``nums3[k] + nums4[l]``，若其相反数为 ``need``，就可以和前面的所有 ``-need`` 配对。频次而不是单个位置必须被保存，因为相同数值的不同下标组合都应计数。
+
+数组元素可能接近 32 位边界，配对和使用 ``long long``，避免求和在查表前溢出。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int fourSumCount(std::vector<int>& nums1,
+                        std::vector<int>& nums2,
+                        std::vector<int>& nums3,
+                        std::vector<int>& nums4) {
+           std::unordered_map<long long, int> frequency;
+           for (int left : nums1) {
+               for (int right : nums2) {
+                   ++frequency[static_cast<long long>(left) + right];
+               }
+           }
+
+           long long answer = 0;
+           for (int left : nums3) {
+               for (int right : nums4) {
+                   long long need =
+                       -(static_cast<long long>(left) + right);
+                   auto it = frequency.find(need);
+                   if (it != frequency.end()) answer += it->second;
+               }
+           }
+           return static_cast<int>(answer);
+       }
+   };
+
+代码分析
+--------
+
+每个前半部分下标对只入表一次，后半部分下标对按需要查表一次；哈希频次会自动乘出相同数值对应的多种下标选择。两层枚举各处理 ``n^2`` 个组合，平均时间复杂度为 ``O(n^2)``，哈希表空间复杂度为 ``O(n^2)``。

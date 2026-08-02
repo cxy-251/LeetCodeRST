@@ -35,3 +35,37 @@
    输入：nums = [4,7,2]
    输出：false
    解释：玩家 1 无论先取 4 还是 2，玩家 2 都能取走中间的 7，最终玩家 1 得 6、玩家 2 得 7。
+
+区间博弈保存当前玩家的得分差
+------------------------------
+
+定义 ``dp[i]`` 为当前玩家面对区间 ``[i, j]`` 时，相对另一名玩家最多能取得的分数差。若取左端，收益是 ``nums[i] - dp[i+1]``；若取右端，收益是 ``nums[j] - dp[i]``，因为取走后轮到对手，原本的优势要被对手在剩余区间取得的最优差值抵消。
+
+按区间长度从 2 增长，并让 ``dp[i+1]`` 仍保留上一长度的值，就能把二维状态压缩成一维。最终 ``dp[0] >= 0`` 表示先手至少不输，平局也符合题意。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       bool PredictTheWinner(std::vector<int>& nums) {
+           int n = static_cast<int>(nums.size());
+           std::vector<long long> dp(nums.begin(), nums.end());
+           for (int length = 2; length <= n; ++length) {
+               for (int left = 0; left + length <= n; ++left) {
+                   int right = left + length - 1;
+                   long long takeLeft = nums[left] - dp[left + 1];
+                   long long takeRight = nums[right] - dp[left];
+                   dp[left] = std::max(takeLeft, takeRight);
+               }
+           }
+           return dp[0] >= 0;
+       }
+   };
+
+代码分析
+--------
+
+每个区间只保留当前玩家相对对手的最优差值，取端点后的“轮到对手”由减法体现；一维更新顺序保证两个子区间状态仍未被覆盖。状态数为 ``O(n^2)``，时间复杂度为 ``O(n^2)``，空间复杂度压缩为 ``O(n)``。

@@ -41,3 +41,61 @@
    输入：n = "31"
    输出："2"
    解释：31 = 1 + 2 + 4 + 8 + 16，在二进制中为 11111，而底数不能小于 2。
+
+枚举全 1 表示的位数并二分底数
+------------------------------
+
+若表示中有 ``terms`` 个连续的 1，则必须满足 ``N = 1 + k + ... + k^(terms-1)``。底数越大，这个和严格增加，因此固定 ``terms`` 后可以在 ``[2, N-1]`` 上二分寻找精确底数。为了得到最小底数，应从较大的 ``terms``（更多位的全 1 表示）向下枚举；最后 ``terms = 2`` 一定给出 ``k = N - 1``。
+
+计算几何和时使用“超过目标就立即停止”的乘法检查，避免 ``k`` 的高次幂溢出 64 位整数。最多需要考虑的位数是 ``N`` 的二进制位数，因为底数至少为 2。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+       long long target;
+
+       long long geometricSum(long long base, int terms) {
+           long long power = 1;
+           long long sum = 1;
+           for (int i = 1; i < terms; ++i) {
+               if (power > target / base) return target + 1;
+               power *= base;
+               if (sum > target - power) return target + 1;
+               sum += power;
+           }
+           return sum;
+       }
+
+   public:
+       std::string smallestGoodBase(std::string n) {
+           target = std::stoll(n);
+           int maxTerms = 0;
+           for (long long value = target; value > 0; value >>= 1) {
+               ++maxTerms;
+           }
+
+           for (int terms = maxTerms; terms >= 2; --terms) {
+               long long left = 2;
+               long long right = target - 1;
+               while (left <= right) {
+                   long long base = left + (right - left) / 2;
+                   long long sum = geometricSum(base, terms);
+                   if (sum == target) return std::to_string(base);
+                   if (sum < target) {
+                       left = base + 1;
+                   } else {
+                       right = base - 1;
+                   }
+               }
+           }
+           return std::to_string(target - 1);
+       }
+   };
+
+代码分析
+--------
+
+固定位数时几何和关于底数单调，二分不会漏掉该位数的唯一候选；从位数多到少搜索，则首次命中的底数小于所有更短表示的底数。乘法前用 ``target / base`` 判断下一幂是否会超过目标，保证中间值不溢出。位数枚举和二分共同带来 ``O(log^2 N)`` 时间，额外空间复杂度为 ``O(1)``。

@@ -40,3 +40,51 @@
    调用：pick()
    输出：[-2,5]
    解释：矩形只覆盖一个整数坐标点，因此每次调用都必须返回该点。
+
+按整数点数量选择矩形
+--------------------
+
+闭区间矩形 ``[a,b,x,y]`` 覆盖的整数点数为 ``(x-a+1)(y-b+1)``。先计算每个矩形的前缀面积（整数点数量），在所有点的总范围内均匀抽取一个序号；前缀和定位到的矩形，其被选中的概率正比于覆盖点数，正好保证全体整数点等概率。
+
+进入矩形后，再分别在横坐标和纵坐标的闭区间内均匀抽取一个整数即可。面积和使用 ``long long``，不能用几何连续面积或让每个矩形等概率替代整数点数量。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+       std::vector<std::vector<int>> rectangles;
+       std::vector<long long> prefix;
+       std::mt19937 generator{std::random_device{}()};
+
+   public:
+       Solution(std::vector<std::vector<int>>& rects)
+           : rectangles(rects) {
+           long long total = 0;
+           for (const auto& rect : rectangles) {
+               long long width = static_cast<long long>(rect[2]) - rect[0] + 1;
+               long long height = static_cast<long long>(rect[3]) - rect[1] + 1;
+               total += width * height;
+               prefix.push_back(total);
+           }
+       }
+
+       std::vector<int> pick() {
+           std::uniform_int_distribution<long long> choosePoint(
+               1, prefix.back());
+           long long serial = choosePoint(generator);
+           int index = static_cast<int>(std::lower_bound(
+               prefix.begin(), prefix.end(), serial) - prefix.begin());
+           const auto& rect = rectangles[index];
+
+           std::uniform_int_distribution<int> chooseX(rect[0], rect[2]);
+           std::uniform_int_distribution<int> chooseY(rect[1], rect[3]);
+           return {chooseX(generator), chooseY(generator)};
+       }
+   };
+
+代码分析
+--------
+
+前缀和序号把所有矩形覆盖的整数点拼成一个不重叠的抽样空间，矩形内的每个点又等概率出现，所以任意可选点概率相同。构造函数时间和空间复杂度为 ``O(r)``，每次 ``pick`` 二分定位耗时 ``O(log r)``，额外抽样空间为 ``O(1)``。

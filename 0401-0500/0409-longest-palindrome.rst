@@ -35,3 +35,39 @@
    输入：s = "Aa"
    输出：1
    解释：A 与 a 是不同字符，无法放在回文两侧，只能任选一个字符作为长度为 1 的回文。
+
+偶数部分全部利用，奇数部分最多留一个中心
+--------------------------------------------
+
+回文两侧必须成对使用同一字符，所以每种字符的频次先取最大的偶数部分；若存在任意奇数频次，还可以从其中一种字符拿一个放在中心。其他奇数频次各自多出的一个不能同时放入同一回文，否则中心会不止一个。
+
+大小写使用独立计数槽位，不能把 ``A`` 与 ``a`` 合并。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int longestPalindrome(std::string s) {
+           std::array<int, 52> frequency{};
+           for (char c : s) {
+               int id = c >= 'a' ? c - 'a' : 26 + c - 'A';
+               ++frequency[id];
+           }
+
+           int length = 0;
+           bool hasOdd = false;
+           for (int count : frequency) {
+               length += count / 2 * 2;
+               if (count % 2 == 1) hasOdd = true;
+           }
+           return length + (hasOdd ? 1 : 0);
+       }
+   };
+
+代码分析
+--------
+
+每个字符的偶数份额都能放到回文两侧，所有奇数频次只共同贡献一个中心字符；这是最大长度的必要且充分条件。时间复杂度为 ``O(n)``，额外空间为固定的 ``O(1)``。

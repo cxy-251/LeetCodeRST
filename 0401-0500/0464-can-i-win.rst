@@ -35,3 +35,54 @@
    输入：maxChoosableInteger = 3，desiredTotal = 7
    输出：false
    解释：1 + 2 + 3 = 6，小于目标 7，整局不可能有人达到目标。
+
+位掩码记录已使用整数
+--------------------
+
+因为最大可选整数不超过 20，可以用一个整数的第 ``i`` 位表示数字 ``i + 1`` 是否已经被使用。一个掩码代表一个确定的局面；轮到当前玩家时，若选择某个数能立即达到目标就获胜，否则把该数标记后交给对手，只要存在一个让对手无法获胜的选择，当前局面就是必胜。
+
+先判断所有数字总和是否足够达到目标；若不足，任何策略都不可能获胜。递归参数中的当前和随掩码唯一确定，但显式传入可使转移含义清楚。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+       int maximum;
+       int target;
+       std::vector<int> memo;
+
+       bool win(int used, int current) {
+           int& cached = memo[used];
+           if (cached != -1) return cached;
+
+           for (int i = 0; i < maximum; ++i) {
+               if (used & (1 << i)) continue;
+               int value = i + 1;
+               if (current + value >= target ||
+                   !win(used | (1 << i), current + value)) {
+                   return cached = 1;
+               }
+           }
+           return cached = 0;
+       }
+
+   public:
+       bool canIWin(int maxChoosableInteger, int desiredTotal) {
+           if (desiredTotal <= 0) return true;
+           long long sum = static_cast<long long>(maxChoosableInteger) *
+                           (maxChoosableInteger + 1) / 2;
+           if (sum < desiredTotal) return false;
+
+           maximum = maxChoosableInteger;
+           target = desiredTotal;
+           memo.assign(1 << maximum, -1);
+           return win(0, 0);
+       }
+   };
+
+代码分析
+--------
+
+``memo[used]`` 缓存的是“从该使用集合出发、轮到当前玩家时能否获胜”，如果存在立即获胜或能把对手送入必败局面的选择就返回真；所有选择都失败时才返回假。状态数为 ``2^m``，每个状态尝试 ``m`` 个数字，时间复杂度为 ``O(m 2^m)``，空间复杂度为 ``O(2^m)``。

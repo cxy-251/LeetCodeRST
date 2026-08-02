@@ -35,3 +35,75 @@
    输入：heightMap = [[4,1,4],[4,0,4],[4,4,4]]
    输出：1
    解释：中心格与高度为 1 的上边界格四邻接，水位超过 1 就会从该缺口流出，因此中心只能储存 1 个单位。
+
+从外边界维护当前最低挡水墙
+----------------------------
+
+水能否留在内部取决于它到外界路径上的最低边界。把所有边界格先放入按高度排序的最小堆，并标记已访问；每次取出当前最低的边界格，检查四邻格。若邻格更低，它能储存 ``边界高度 - 邻格高度`` 的水；随后把邻格以 ``max(邻格地形高度, 当前边界高度)`` 作为新的有效边界压入堆。
+
+这样堆中的高度表示从已探索区域向外的最低泄水门槛，而不是单纯的原始地形高度。边界格只入堆一次，四邻接检查也不会把对角接触当作通道。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+       using Cell = std::tuple<int, int, int>;
+
+   public:
+       int trapRainWater(std::vector<std::vector<int>>& heightMap) {
+           int rows = static_cast<int>(heightMap.size());
+           int cols = static_cast<int>(heightMap[0].size());
+           if (rows < 3 || cols < 3) return 0;
+
+           std::priority_queue<Cell, std::vector<Cell>,
+                               std::greater<Cell>> boundary;
+           std::vector<std::vector<bool>> visited(
+               rows, std::vector<bool>(cols, false));
+           auto push = [&](int row, int col) {
+               if (visited[row][col]) return;
+               visited[row][col] = true;
+               boundary.emplace(heightMap[row][col], row, col);
+           };
+
+           for (int row = 0; row < rows; ++row) {
+               push(row, 0);
+               push(row, cols - 1);
+           }
+           for (int col = 1; col + 1 < cols; ++col) {
+               push(0, col);
+               push(rows - 1, col);
+           }
+
+           const int directions[4][2] = {
+               {-1, 0}, {1, 0}, {0, -1}, {0, 1}
+           };
+           int water = 0;
+           while (!boundary.empty()) {
+               auto [level, row, col] = boundary.top();
+               boundary.pop();
+               for (const auto& direction : directions) {
+                   int nextRow = row + direction[0];
+                   int nextCol = col + direction[1];
+                   if (nextRow < 0 || nextRow >= rows
+                       || nextCol < 0 || nextCol >= cols
+                       || visited[nextRow][nextCol]) {
+                       continue;
+                   }
+                   visited[nextRow][nextCol] = true;
+                   water += std::max(
+                       0, level - heightMap[nextRow][nextCol]);
+                   boundary.emplace(
+                       std::max(level, heightMap[nextRow][nextCol]),
+                       nextRow, nextCol);
+               }
+           }
+           return water;
+       }
+   };
+
+代码分析
+--------
+
+最小堆每次扩展全局最低有效边界，邻格一旦被访问就确定其能够达到的最低外部水位；若地形低于该水位，差值就是可储水量。每个格子入堆一次，时间复杂度为 ``O(mn log(mn))``，额外空间为 ``O(mn)``。

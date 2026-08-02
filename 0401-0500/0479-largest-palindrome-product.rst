@@ -35,3 +35,50 @@
    输入：任意合法 n
    输出：largestPalindrome mod 1337
    解释：不能比较各乘积取模后的大小来选择答案，必须先比较原始乘积并确定最大的回文数。
+
+从最大半段生成回文并利用 11 的因子
+----------------------------------
+
+对 ``n > 1``，最大回文乘积可以按偶数位回文的形式搜索：取一个 ``n`` 位的左半段 ``half``，拼接它的逆序得到完整回文。按 ``half`` 从大到小生成，就已经按回文数值从大到小检查。
+
+偶数位回文数能被 11 整除，因此两个因数中至少有一个是 11 的倍数。内层只枚举从最大 ``n`` 位数向下的 11 的倍数，并在“该因数乘最大因数都已小于当前回文”时停止；找到处于合法位数范围的整除关系后，立即对原始回文取模。``n = 1`` 单独处理，因为最大的结果是 ``9`` 而不是两位回文。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int largestPalindrome(int n) {
+           if (n == 1) return 9;
+
+           long long lower = 1;
+           for (int i = 1; i < n; ++i) lower *= 10;
+           long long upper = lower * 10 - 1;
+           long long factorStart = upper - upper % 11;
+
+           for (long long half = upper; half >= lower; --half) {
+               std::string left = std::to_string(half);
+               std::string right = left;
+               std::reverse(right.begin(), right.end());
+               long long palindrome = std::stoll(left + right);
+
+               for (long long factor = factorStart;
+                    factor >= lower; factor -= 11) {
+                   if (factor * upper < palindrome) break;
+                   if (palindrome % factor != 0) continue;
+                   long long other = palindrome / factor;
+                   if (other >= lower && other <= upper) {
+                       return static_cast<int>(palindrome % 1337);
+                   }
+               }
+           }
+           return 0;
+       }
+   };
+
+代码分析
+--------
+
+半段按降序生成保证第一次找到的就是原始值最大的可行回文；11 的因子性质把因数搜索缩小到约每 11 个数取一个，乘积上界剪枝又排除了不可能达到当前回文的因数。使用 ``long long`` 可容纳 ``n <= 8`` 时的最多 16 位乘积，取模只在确定最大回文后进行；额外空间复杂度为 ``O(n)``，时间取决于实际检查的半段和候选因数数量。

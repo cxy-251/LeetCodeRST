@@ -42,3 +42,46 @@
    调用：大量重复执行 randPoint()
    输出：所有点都在圆内
    解释：长期统计应按面积均匀分布，不能简单让半径在 0..radius 上均匀而导致圆心附近过密。
+
+在外接正方形中拒绝采样
+----------------------
+
+先在 ``[-1,1] × [-1,1]`` 正方形中均匀生成偏移量 ``(dx,dy)``，若 ``dx^2 + dy^2 > 1`` 就丢弃并重试，否则把偏移量乘以半径再平移到圆心。正方形中被接受的点仍然保持均匀，而接受区域正是单位圆，因此得到按面积均匀的圆内点。
+
+不能把半径直接均匀取在 ``[0,radius]`` 上，因为半径越小的同心圆环面积越小，会造成圆心附近过密；拒绝采样避免了这个偏差。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+       double radius;
+       double centerX;
+       double centerY;
+
+       double uniform(double left, double right) {
+           return left + (right - left) *
+                            (std::rand() / static_cast<double>(RAND_MAX));
+       }
+
+   public:
+       Solution(double radius, double x_center, double y_center)
+           : radius(radius), centerX(x_center), centerY(y_center) {}
+
+       std::vector<double> randPoint() {
+           double dx = 0;
+           double dy = 0;
+           do {
+               dx = uniform(-1.0, 1.0);
+               dy = uniform(-1.0, 1.0);
+           } while (dx * dx + dy * dy > 1.0);
+
+           return {centerX + radius * dx, centerY + radius * dy};
+       }
+   };
+
+代码分析
+--------
+
+被接受的偏移点在单位圆内均匀分布，缩放和平移只改变坐标，不改变相对面积概率；边界是否恰好命中圆周不影响连续分布。每次尝试使用常数空间，接受概率为 ``pi/4``，因此期望尝试次数为常数，额外空间复杂度为 ``O(1)``。

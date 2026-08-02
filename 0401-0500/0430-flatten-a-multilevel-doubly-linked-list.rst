@@ -37,3 +37,51 @@
    输入：head = null
    输出：null
    解释：没有节点需要展平。
+
+展开子链表并返回它的尾节点
+----------------------------
+
+沿主链表扫描。遇到 ``child`` 时，先保存当前节点原来的 ``next``，递归把子链表展平并得到子链表尾部，再把当前节点接到子链表头，把子链表尾接回原后继；最后清空 ``child``。返回尾节点让外层能够一次完成回接，而不必重新扫描刚展开的子链表。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+       Node* flattenTail(Node* head) {
+           Node* current = head;
+           Node* tail = head;
+           while (current != nullptr) {
+               Node* next = current->next;
+               if (current->child != nullptr) {
+                   Node* child = current->child;
+                   Node* childTail = flattenTail(child);
+                   current->child = nullptr;
+                   current->next = child;
+                   child->prev = current;
+                   if (next != nullptr) {
+                       childTail->next = next;
+                       next->prev = childTail;
+                   }
+                   tail = childTail;
+               } else {
+                   tail = current;
+               }
+               current = next;
+           }
+           return tail;
+       }
+
+   public:
+       Node* flatten(Node* head) {
+           if (head == nullptr) return nullptr;
+           flattenTail(head);
+           return head;
+       }
+   };
+
+代码分析
+--------
+
+保存原后继保证子链表展开后仍能回到主链；每次接入都同时更新两个方向的指针并清空 child，不会丢失或重复节点。每个节点被处理一次，时间复杂度为 ``O(n)``，递归栈空间为 ``O(h)``。

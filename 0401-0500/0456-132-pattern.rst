@@ -39,3 +39,39 @@
    输入：nums = [1, 2, 3, 4]
    输出：false
    解释：任意较晚元素都不会落在先前较小值和中间较大值之间，无法形成 132 模式。
+
+从右向左维护 3 的候选和最大的 2
+--------------------------------
+
+从右向左扫描时，当前元素可以作为模式中的 ``1``，而右侧需要存在一个 ``3`` 和一个介于两者之间的 ``2``。用单调递减栈保存尚未确定为 ``3`` 的右侧候选；当当前值大于栈顶时，栈顶可以被当前值确定为 ``3``，并把被弹出的值更新为候选 ``2``。候选 ``2`` 取所有已弹出值中的最大值，最容易满足 ``nums[i] < 2``。
+
+若当前值小于候选 ``2``，就已经同时得到 ``1 < 2 < 3``。严格比较保留了题目对三个层级不允许相等的要求。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       bool find132pattern(std::vector<int>& nums) {
+           std::vector<int> stack;
+           long long middle = LLONG_MIN;  // 模式中的 2
+
+           for (int i = static_cast<int>(nums.size()) - 1; i >= 0; --i) {
+               if (static_cast<long long>(nums[i]) < middle) return true;
+               while (!stack.empty() && nums[i] > stack.back()) {
+                   middle = std::max(middle,
+                                     static_cast<long long>(stack.back()));
+                   stack.pop_back();
+               }
+               stack.push_back(nums[i]);
+           }
+           return false;
+       }
+   };
+
+代码分析
+--------
+
+栈保持递减关系，只有当前值严格大于栈顶时才会弹出并形成“当前值作为 3、栈顶作为 2”的候选；一旦 ``middle`` 被设置，后续更左侧元素只需与它比较。每个元素最多入栈、出栈一次，时间复杂度为 ``O(n)``，额外空间复杂度为 ``O(n)``。

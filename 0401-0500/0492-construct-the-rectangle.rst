@@ -35,3 +35,31 @@
    输入：area = 13
    输出：[13,1]
    解释：13 只有因数 1 和 13，因此这是唯一合法矩形。
+
+从平方根向下寻找最接近因数
+--------------------------
+
+在因数对 ``L * W = area`` 中，若 ``W`` 越接近平方根，``L = area / W`` 就越接近 ``W``，长宽差越小。因此从 ``floor(sqrt(area))`` 向下枚举宽度，第一次整除时得到的 ``[area / W, W]`` 就是最优答案，同时天然满足 ``L >= W``。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       std::vector<int> constructRectangle(int area) {
+           for (int width = static_cast<int>(std::sqrt(area));
+                width >= 1; --width) {
+               if (area % width == 0) {
+                   return {area / width, width};
+               }
+           }
+           return {area, 1};
+       }
+   };
+
+代码分析
+--------
+
+因数对关于平方根对称，离平方根最近的可行宽度使 ``L-W`` 最小；向下枚举保证第一次命中就是该宽度。最多检查 ``sqrt(area)`` 个候选，时间复杂度为 ``O(sqrt(area))``，额外空间复杂度为 ``O(1)``。

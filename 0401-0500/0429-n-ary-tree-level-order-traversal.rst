@@ -35,3 +35,43 @@
    输入：root = null
    输出：[]
    解释：没有任何节点，因此没有层级结果。
+
+按队列长度切分层级
+--------------------
+
+队列始终保存尚未处理的节点，并且从左到右排列。每轮先记录当前队列长度，这个长度就是当前层节点数；连续弹出这些节点写入一行，再按原顺序把它们的所有孩子加入队尾，下一轮便恰好处理下一层。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       std::vector<std::vector<int>> levelOrder(Node* root) {
+           if (root == nullptr) return {};
+           std::queue<Node*> queue;
+           queue.push(root);
+           std::vector<std::vector<int>> result;
+
+           while (!queue.empty()) {
+               int levelSize = static_cast<int>(queue.size());
+               std::vector<int> level;
+               for (int i = 0; i < levelSize; ++i) {
+                   Node* current = queue.front();
+                   queue.pop();
+                   level.push_back(current->val);
+                   for (Node* child : current->children) {
+                       queue.push(child);
+                   }
+               }
+               result.push_back(std::move(level));
+           }
+           return result;
+       }
+   };
+
+代码分析
+--------
+
+记录 ``levelSize`` 把同层节点与下一层节点分开，孩子的遍历顺序直接决定每层的从左到右顺序。每个节点入队、出队一次，时间复杂度为 ``O(n)``，队列和结果之外的额外空间为 ``O(n)``。

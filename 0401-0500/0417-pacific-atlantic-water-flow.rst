@@ -37,3 +37,91 @@
    输入：heights = [[7]]
    输出：[[0,0]]
    解释：唯一格子同时属于上、下、左、右边界，因此可以到达两个海洋。
+
+从海洋反向寻找可到达格子
+--------------------------
+
+正向从每个格子找水流路径会重复搜索。反过来从太平洋边界和大西洋边界分别做 BFS：若当前格高度为 ``h``，反向只能走到高度大于或等于 ``h`` 的邻格，因为那样的水才可能从邻格向当前格流下。两次搜索得到的可达集合取交集，就是同时能到达两海洋的格子。
+
+每个边界格只入各自队列一次，等高格也允许通过；四邻接方向和矩阵边界的初始化直接对应题目规则。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+       void flood(const std::vector<std::vector<int>>& heights,
+                  std::queue<std::pair<int, int>>& queue,
+                  std::vector<std::vector<bool>>& seen) {
+           int rows = static_cast<int>(heights.size());
+           int cols = static_cast<int>(heights[0].size());
+           const int directions[4][2] = {
+               {-1, 0}, {1, 0}, {0, -1}, {0, 1}
+           };
+           while (!queue.empty()) {
+               auto [row, col] = queue.front();
+               queue.pop();
+               for (const auto& direction : directions) {
+                   int nextRow = row + direction[0];
+                   int nextCol = col + direction[1];
+                   if (nextRow < 0 || nextRow >= rows
+                       || nextCol < 0 || nextCol >= cols
+                       || seen[nextRow][nextCol]
+                       || heights[nextRow][nextCol]
+                              < heights[row][col]) {
+                       continue;
+                   }
+                   seen[nextRow][nextCol] = true;
+                   queue.push({nextRow, nextCol});
+               }
+           }
+       }
+
+   public:
+       std::vector<std::vector<int>> pacificAtlantic(
+           std::vector<std::vector<int>>& heights) {
+           int rows = static_cast<int>(heights.size());
+           int cols = static_cast<int>(heights[0].size());
+           std::vector<std::vector<bool>> pacific(
+               rows, std::vector<bool>(cols, false));
+           std::vector<std::vector<bool>> atlantic(
+               rows, std::vector<bool>(cols, false));
+           std::queue<std::pair<int, int>> pacificQueue;
+           std::queue<std::pair<int, int>> atlanticQueue;
+
+           for (int row = 0; row < rows; ++row) {
+               pacific[row][0] = true;
+               pacificQueue.push({row, 0});
+               atlantic[row][cols - 1] = true;
+               atlanticQueue.push({row, cols - 1});
+           }
+           for (int col = 0; col < cols; ++col) {
+               if (!pacific[0][col]) {
+                   pacific[0][col] = true;
+                   pacificQueue.push({0, col});
+               }
+               if (!atlantic[rows - 1][col]) {
+                   atlantic[rows - 1][col] = true;
+                   atlanticQueue.push({rows - 1, col});
+               }
+           }
+           flood(heights, pacificQueue, pacific);
+           flood(heights, atlanticQueue, atlantic);
+
+           std::vector<std::vector<int>> result;
+           for (int row = 0; row < rows; ++row) {
+               for (int col = 0; col < cols; ++col) {
+                   if (pacific[row][col] && atlantic[row][col]) {
+                       result.push_back({row, col});
+                   }
+               }
+           }
+           return result;
+       }
+   };
+
+代码分析
+--------
+
+反向边条件 ``next >= current`` 恰好是正向水流“不上坡”的逆命题；两个独立 visited 矩阵不会混淆海洋来源。每个格子最多被两次搜索各访问一次，时间复杂度为 ``O(mn)``，额外空间为 ``O(mn)``。

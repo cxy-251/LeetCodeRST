@@ -37,3 +37,46 @@
    返回：3
    修改后的有效前缀：["x","1","2"]
    解释：组长度 12 必须拆成字符 1 和 2 写入，而不是作为一个整数槽位。
+
+读指针扫描分组，写指针覆盖前缀
+------------------------------
+
+读指针 ``read`` 每次定位一段连续相同字符，先向右扫描得到该组的结束位置和长度，再由写指针 ``write`` 把字符写回结果前缀。长度为 1 时只写字符；长度大于 1 时把十进制字符串的每一位依次写入，因而自然支持两位及更多位的计数。
+
+压缩结果不会比已经读过的内容更长，所以写指针不会越过读指针破坏尚未统计的分组。扫描结束后，``write`` 就是有效前缀长度。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int compress(std::vector<char>& chars) {
+           int read = 0;
+           int write = 0;
+           while (read < static_cast<int>(chars.size())) {
+               char current = chars[read];
+               int begin = read;
+               while (read < static_cast<int>(chars.size()) &&
+                      chars[read] == current) {
+                   ++read;
+               }
+
+               chars[write++] = current;
+               int count = read - begin;
+               if (count > 1) {
+                   std::string digits = std::to_string(count);
+                   for (char digit : digits) {
+                       chars[write++] = digit;
+                   }
+               }
+           }
+           return write;
+       }
+   };
+
+代码分析
+--------
+
+读指针只负责确认完整分组，写指针只写压缩后的有效结果；即使写入覆盖了数组前缀，也不会影响当前分组之后尚未读取的字符。每个字符最多被读写常数次，时间复杂度为 ``O(n)``；``to_string`` 产生的数字长度最多为 ``O(log n)``，除结果数组外的辅助空间为 ``O(log n)``。

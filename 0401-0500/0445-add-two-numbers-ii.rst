@@ -35,3 +35,50 @@
    输入：l1 = [9,9]，l2 = [1]
    输出：[1,0,0]
    解释：99 + 1 = 100，结果比两个输入都多一个最高位节点。
+
+栈恢复从低位到高位的计算顺序
+----------------------------
+
+链表头部是最高位，而加法必须从最低位开始。分别把两条链表的数字压入栈，出栈时就能从个位向左处理；每一步把两个栈顶数字和进位相加，当前位插入结果链表头部。这样既不需要反转输入链表，也不改变输入节点。
+
+两个栈都为空后，若仍有进位，再把它作为新的最高位插入。结果节点始终头插，因此生成的链表天然保持最高位在前。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       ListNode* addTwoNumbers(ListNode* l1, ListNode* l2) {
+           std::vector<int> first;
+           std::vector<int> second;
+           for (ListNode* node = l1; node != nullptr; node = node->next) {
+               first.push_back(node->val);
+           }
+           for (ListNode* node = l2; node != nullptr; node = node->next) {
+               second.push_back(node->val);
+           }
+
+           int i = static_cast<int>(first.size()) - 1;
+           int j = static_cast<int>(second.size()) - 1;
+           int carry = 0;
+           ListNode* head = nullptr;
+           while (i >= 0 || j >= 0 || carry != 0) {
+               int sum = carry;
+               if (i >= 0) sum += first[i--];
+               if (j >= 0) sum += second[j--];
+
+               ListNode* node = new ListNode(sum % 10);
+               node->next = head;
+               head = node;
+               carry = sum / 10;
+           }
+           return head;
+       }
+   };
+
+代码分析
+--------
+
+栈顶对应当前最低位，``carry`` 保存向更高位传递的进位；头插把逆序计算结果重新排列为正序。循环条件包含进位，保证 ``99 + 1`` 这类情况会生成额外的最高位。设两条链表长度分别为 ``m``、``n``，时间复杂度为 ``O(m+n)``，栈和结果链表之外的辅助空间为 ``O(m+n)``。

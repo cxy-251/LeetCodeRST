@@ -35,3 +35,57 @@
    输入：s1 = "ab"，n1 = 5，s2 = "ac"，n2 = 1
    输出：0
    解释：S1 中没有字符 c，连一个完整的 ac 都无法形成。
+
+在每个源块边界寻找相同状态
+--------------------------
+
+扫描一个 ``s1`` 块时，顺次匹配 ``s2`` 的字符；每次指针走过 ``s2`` 尾部，就完成一个目标块并从 ``s2[0]`` 重新开始。一个源块扫描结束时，状态只由“下次要匹配 ``s2`` 的哪个位置”和“已经完成了多少个目标块”组成。
+
+状态位置只有 ``|s2|`` 种。若在两个不同的源块边界再次看到同一个位置，之间的源块序列会重复，完成目标块的增量也固定，可以把剩余的 ``s1`` 块按周期整段跳过。最后用能够匹配出的 ``s2`` 块数除以 ``n2``，得到完整 ``[s2,n2]`` 的数量。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int getMaxRepetitions(std::string s1, int n1,
+                             std::string s2, int n2) {
+           std::vector<int> firstBlock(s2.size(), -1);
+           std::vector<long long> firstCompleted(s2.size(), 0);
+           int position = 0;
+           int block = 0;
+           long long completed = 0;
+
+           while (block < n1) {
+               for (char character : s1) {
+                   if (character != s2[position]) continue;
+                   ++position;
+                   if (position == static_cast<int>(s2.size())) {
+                       position = 0;
+                       ++completed;
+                   }
+               }
+               ++block;
+
+               if (firstBlock[position] == -1) {
+                   firstBlock[position] = block;
+                   firstCompleted[position] = completed;
+               } else {
+                   int cycleBlocks = block - firstBlock[position];
+                   long long cycleCompleted =
+                       completed - firstCompleted[position];
+                   long long cycles = (n1 - block) / cycleBlocks;
+                   block += static_cast<int>(cycles * cycleBlocks);
+                   completed += cycles * cycleCompleted;
+               }
+           }
+           return static_cast<int>(completed / n2);
+       }
+   };
+
+代码分析
+--------
+
+只在源块边界记录状态，避免把周期切在一个 ``s1`` 块内部；再次到达同一匹配位置时，周期内的完成数量可整体相加，覆盖 ``n1`` 达到百万级的情况。每个状态首次记录一次，之后至多处理剩余周期外的块，时间复杂度为 ``O(|s1| * |s2|)`` 的状态扫描量，额外空间复杂度为 ``O(|s2|)``。

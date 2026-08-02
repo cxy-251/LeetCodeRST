@@ -35,3 +35,42 @@
    输入：intervals = [[0,2], [0,2], [0,2]]
    输出：2
    解释：三个区间彼此重叠，最多保留一个，因此至少删除两个。
+
+重叠时保留结束点更早的区间
+----------------------------
+
+按结束点升序扫描。若当前区间的开始点小于已经保留区间的结束点，两者重叠，必须删除一个；保留结束点更早的那个能给后续留下更大的可用空间，因此若当前结束点更早就用它替换已保留区间，否则继续保留原区间。开始点等于结束点时不重叠，使用严格 ``<`` 判断。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int eraseOverlapIntervals(
+           std::vector<std::vector<int>>& intervals) {
+           std::sort(intervals.begin(), intervals.end(),
+               [](const std::vector<int>& first,
+                  const std::vector<int>& second) {
+                   return first[1] < second[1];
+               });
+
+           int removed = 0;
+           int lastEnd = intervals[0][1];
+           for (int i = 1; i < static_cast<int>(intervals.size()); ++i) {
+               if (intervals[i][0] < lastEnd) {
+                   ++removed;
+                   lastEnd = std::min(lastEnd, intervals[i][1]);
+               } else {
+                   lastEnd = intervals[i][1];
+               }
+           }
+           return removed;
+       }
+   };
+
+代码分析
+--------
+
+每次冲突都选择结束更早者等价于最大化能够保留的非重叠区间数量，删除数就是总数减去该最大数量。排序为 ``O(n log n)``，扫描为 ``O(n)``，额外空间为 ``O(1)``（不计排序实现可能使用的栈）。

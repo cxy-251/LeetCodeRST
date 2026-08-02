@@ -35,3 +35,39 @@
    输入：nums = [0,1]，target = 1
    输出：2
    解释：+0+1 与 -0+1 的数值相同，但第一个位置选择的符号不同，应分别计数。
+
+把正号集合转换成子集和计数
+--------------------------
+
+设所有元素总和为 ``S``，被放正号的元素和为 ``P``，被放负号的元素和为 ``M``。则 ``P-M=target``、``P+M=S``，所以必须有 ``P=(S+target)/2``。若 ``|target| > S`` 或 ``S+target`` 为奇数，答案直接为 0。
+
+随后变成 0/1 背包：``dp[j]`` 表示处理过的元素中和为 ``j`` 的符号分配数。每个元素只处理一次，容量从目标和向下更新；值为 0 时 ``dp[j]`` 会自我相加，正好保留 ``+0`` 与 ``-0`` 的两种不同选择。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int findTargetSumWays(std::vector<int>& nums, int target) {
+           int total = std::accumulate(nums.begin(), nums.end(), 0);
+           if (std::abs(target) > total || (total + target) % 2 != 0) {
+               return 0;
+           }
+           int positiveSum = (total + target) / 2;
+           std::vector<int> dp(positiveSum + 1, 0);
+           dp[0] = 1;
+           for (int value : nums) {
+               for (int sum = positiveSum; sum >= value; --sum) {
+                   dp[sum] += dp[sum - value];
+               }
+           }
+           return dp[positiveSum];
+       }
+   };
+
+代码分析
+--------
+
+正号子集一旦确定，负号集合也随之确定，子集和计数与符号方案一一对应；倒序更新避免同一元素被重复放入，零值在 ``sum`` 不变时仍会使方案数翻倍。时间复杂度为 ``O(nS)``，空间复杂度为 ``O(S)``。

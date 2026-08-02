@@ -35,3 +35,40 @@
    输入：grid = [[1]]
    输出：4
    解释：该格子的四条边都面向网格外部。
+
+从每块陆地的四条边累计
+----------------------
+
+一块陆地初始贡献 4 条边。若它的上方或左方也是陆地，则这条共享边已经在之前或当前的计数中出现两次，减去 2；只检查上、左两个方向，就能在不重复计算的前提下处理所有相邻陆地对。面向网格外或水的边不会触发扣除，自然保留在周长中。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int islandPerimeter(std::vector<std::vector<int>>& grid) {
+           int rows = static_cast<int>(grid.size());
+           int columns = static_cast<int>(grid[0].size());
+           int perimeter = 0;
+           for (int row = 0; row < rows; ++row) {
+               for (int column = 0; column < columns; ++column) {
+                   if (grid[row][column] == 0) continue;
+                   perimeter += 4;
+                   if (row > 0 && grid[row - 1][column] == 1) {
+                       perimeter -= 2;
+                   }
+                   if (column > 0 && grid[row][column - 1] == 1) {
+                       perimeter -= 2;
+                   }
+               }
+           }
+           return perimeter;
+       }
+   };
+
+代码分析
+--------
+
+每个陆地格与相邻陆地共享的边会从两块格子的独立边数中消失，因此每发现一对相邻陆地扣除 2；只从上、左检查保证每对只处理一次。遍历每个格子一次，时间复杂度为 ``O(rows * columns)``，额外空间复杂度为 ``O(1)``。

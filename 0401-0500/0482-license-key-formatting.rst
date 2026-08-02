@@ -35,3 +35,43 @@
    输入：s = "2-z"，k = 1
    输出："2-Z"
    解释：删除原连字符后每个字符组成一组，字母 z 转为大写 Z。
+
+清洗后从右侧切分
+----------------
+
+先删除所有原有连字符并统一大小写，得到连续字符序列。分组时从末尾向左每次取 ``k`` 个字符，最后剩下的前缀自然成为首组；若总长度能被 ``k`` 整除，首组长度就是 ``k``，不会产生空组。
+
+从左侧按首组长度输出也可以保持顺序，同时避免反复在字符串头部插入导致线性移动。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       std::string licenseKeyFormatting(std::string s, int k) {
+           std::string clean;
+           for (char character : s) {
+               if (character == '-') continue;
+               clean.push_back(static_cast<char>(std::toupper(
+                   static_cast<unsigned char>(character))));
+           }
+
+           int firstLength = clean.size() % k;
+           if (firstLength == 0) firstLength = k;
+
+           std::string result = clean.substr(0, firstLength);
+           for (int begin = firstLength;
+                begin < static_cast<int>(clean.size()); begin += k) {
+               result.push_back('-');
+               result.append(clean, begin, k);
+           }
+           return result;
+       }
+   };
+
+代码分析
+--------
+
+首组长度由除法余数决定，之后每段固定取 ``k`` 个字符，正好对应从右向左分组的结果；原有连字符从未进入 ``clean``，所以不会影响新边界。清洗和生成各扫描一次，时间复杂度为 ``O(|s|)``，额外空间复杂度为 ``O(|s|)``。

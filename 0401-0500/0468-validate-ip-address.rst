@@ -41,3 +41,80 @@ IPv4 前导零非法：
    输入：queryIP = "01.2.3.4"
    输出："Neither"
    解释：第一段 01 含有不允许的前导零。
+
+分隔符、字符集和数值范围分别校验
+----------------------------------
+
+IPv4 和 IPv6 的规则不同，先按出现的分隔符选择对应校验器。IPv4 必须得到恰好四个非空十进制段，单段长度超过 1 时不能以 0 开头，并在逐位构造时检查不超过 255；IPv6 必须得到恰好八个非空字段，每个字段长度为 1 到 4，且每个字符都属于十六进制字符集。
+
+不把字符串直接交给数值转换函数，可以同时控制空段、前导零、非法字符和字段数量，避免转换函数对边界格式作出宽松解释。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+       bool isIPv4(const std::string& s) {
+           int parts = 0;
+           int begin = 0;
+           for (int i = 0; i <= static_cast<int>(s.size()); ++i) {
+               if (i < static_cast<int>(s.size()) && s[i] != '.') {
+                   if (!std::isdigit(static_cast<unsigned char>(s[i]))) {
+                       return false;
+                   }
+                   continue;
+               }
+
+               if (i == begin || ++parts > 4) return false;
+               if (i - begin > 1 && s[begin] == '0') return false;
+               if (i - begin > 3) return false;
+
+               int value = 0;
+               for (int j = begin; j < i; ++j) {
+                   value = value * 10 + (s[j] - '0');
+               }
+               if (value > 255) return false;
+               begin = i + 1;
+           }
+           return parts == 4;
+       }
+
+       bool isHex(char c) {
+           return std::isdigit(static_cast<unsigned char>(c)) ||
+                  (c >= 'a' && c <= 'f') ||
+                  (c >= 'A' && c <= 'F');
+       }
+
+       bool isIPv6(const std::string& s) {
+           int fields = 0;
+           int begin = 0;
+           for (int i = 0; i <= static_cast<int>(s.size()); ++i) {
+               if (i < static_cast<int>(s.size()) && s[i] != ':') {
+                   if (!isHex(s[i])) return false;
+                   continue;
+               }
+               if (i == begin || i - begin > 4 || ++fields > 8) {
+                   return false;
+               }
+               begin = i + 1;
+           }
+           return fields == 8;
+       }
+
+   public:
+       std::string validIPAddress(std::string queryIP) {
+           if (queryIP.find('.') != std::string::npos) {
+               return isIPv4(queryIP) ? "IPv4" : "Neither";
+           }
+           if (queryIP.find(':') != std::string::npos) {
+               return isIPv6(queryIP) ? "IPv6" : "Neither";
+           }
+           return "Neither";
+       }
+   };
+
+代码分析
+--------
+
+IPv4 的循环在字符串末尾额外处理最后一段，因此尾部句点会形成空段并被拒绝；IPv6 同理拒绝 ``::`` 和首尾冒号。每个字符只扫描常数次，时间复杂度为 ``O(|queryIP|)``，额外空间复杂度为 ``O(1)``。

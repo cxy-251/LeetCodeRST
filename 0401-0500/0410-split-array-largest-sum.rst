@@ -35,3 +35,52 @@
    输入：nums = [2, 9, 1]，k = 3
    输出：9
    解释：恰好分成三段时唯一的分段方式是 [2]、[9]、[1]，最大段和为 9。
+
+二分“允许的最大段和”
+----------------------
+
+设候选上限为 ``limit``。从左到右尽量把元素放入当前段；只有加入下一个元素会超过 ``limit`` 时才切一刀。这样得到的是在该上限下所需的最少段数：每次延迟切分都让当前段尽可能长，不会增加段数。
+
+若最少段数大于 ``k``，上限太小；若不大于 ``k``，由于数组元素非负，可以继续把某些非空段拆开，直到恰好得到 ``k`` 段。因此“可行”随 ``limit`` 单调变化，可以在 ``[max(nums), sum(nums)]`` 上二分最小可行值。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int splitArray(std::vector<int>& nums, int k) {
+           long long left = 0;
+           long long right = 0;
+           for (int value : nums) {
+               left = std::max(left, static_cast<long long>(value));
+               right += value;
+           }
+
+           while (left < right) {
+               long long limit = left + (right - left) / 2;
+               int parts = 1;
+               long long current = 0;
+               for (int value : nums) {
+                   if (current + value > limit) {
+                       ++parts;
+                       current = value;
+                   } else {
+                       current += value;
+                   }
+               }
+               if (parts <= k) {
+                   right = limit;
+               } else {
+                   left = limit + 1;
+               }
+           }
+           return static_cast<int>(left);
+       }
+   };
+
+代码分析
+--------
+
+贪心切段只用于判断一个 ``limit`` 是否可行，不直接声称它就是最优分段；非负元素保证段数条件具有单调性，且“至多 k 段”可细分为“恰好 k 段”。二分次数为 ``O(log sum)``，每次扫描数组，时间复杂度为 ``O(n log sum)``，额外空间为 ``O(1)``。

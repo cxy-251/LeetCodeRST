@@ -37,3 +37,34 @@
    输入：timeSeries = [0,2,4]，duration = 2
    输出：6
    解释：区间分别为 [0,1]、[2,3]、[4,5]，相邻但不重叠，总长度为 6。
+
+相邻攻击的新增贡献取间隔与持续时间的较小值
+----------------------------------------------
+
+第一击一定贡献 ``duration`` 秒。对于相邻攻击时间差 ``gap``：若 ``gap >= duration``，前一次中毒已经结束，新攻击再贡献完整的 ``duration``；若 ``gap < duration``，前一次效果只覆盖到下一击前，新增贡献只有 ``gap`` 秒。因此每次新增长度是 ``min(duration, gap)``。
+
+按题意区间是离散的 ``[t, t + duration - 1]``，所以相差 ``duration`` 时恰好不重叠，不能写成小于等于的重叠判断。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int findPoisonedDuration(std::vector<int>& timeSeries,
+                                int duration) {
+           long long total = duration;
+           for (int i = 1; i < static_cast<int>(timeSeries.size()); ++i) {
+               long long gap = static_cast<long long>(timeSeries[i]) -
+                                timeSeries[i - 1];
+               total += std::min<long long>(duration, gap);
+           }
+           return static_cast<int>(total);
+       }
+   };
+
+代码分析
+--------
+
+只保留相邻攻击的时间差即可计算区间并集长度；时间序列已经严格递增，不需要排序或维护全部区间。遍历一次得到 ``O(n)`` 时间和 ``O(1)`` 额外空间，累计值用 ``long long`` 防止中间加法溢出。

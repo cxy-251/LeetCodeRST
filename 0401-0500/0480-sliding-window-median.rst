@@ -35,3 +35,75 @@
    输入：nums = [1,5,2,8]，k = 2
    输出：[3.0,3.5,5.0]
    解释：每个窗口包含两个数，中位数分别是 (1+5)/2、(5+2)/2、(2+8)/2。
+
+两个有序集合维护窗口中位位置
+------------------------------
+
+把当前窗口拆成 ``lower`` 和 ``upper`` 两个多重集合：``lower`` 保存较小的一半，且最多比 ``upper`` 多一个元素；``upper`` 保存较大的一半。每次加入或移除元素后，移动两个集合的边界元素恢复大小平衡，于是奇数窗口的中位数是 ``lower`` 最大值，偶数窗口的中位数是两边界的平均值。
+
+使用 ``multiset`` 而不是 ``set``，因为窗口中可能有重复数字；删除时只删除一个与待移出值相等的迭代器。插入新元素和移除旧元素都发生在窗口右移的同一轮。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+       std::multiset<long long> lower;
+       std::multiset<long long> upper;
+
+       void rebalance() {
+           while (lower.size() > upper.size() + 1) {
+               auto it = std::prev(lower.end());
+               upper.insert(*it);
+               lower.erase(it);
+           }
+           while (lower.size() < upper.size()) {
+               auto it = upper.begin();
+               lower.insert(*it);
+               upper.erase(it);
+           }
+       }
+
+       void add(long long value) {
+           if (lower.empty() || value <= *lower.rbegin()) {
+               lower.insert(value);
+           } else {
+               upper.insert(value);
+           }
+           rebalance();
+       }
+
+       void eraseValue(long long value) {
+           auto lowerIt = lower.find(value);
+           if (lowerIt != lower.end()) {
+               lower.erase(lowerIt);
+           } else {
+               upper.erase(upper.find(value));
+           }
+           rebalance();
+       }
+
+       double median(int k) {
+           if (k % 2 == 1) return static_cast<double>(*lower.rbegin());
+           return (*lower.rbegin() + *upper.begin()) / 2.0;
+       }
+
+   public:
+       std::vector<double> medianSlidingWindow(std::vector<int>& nums, int k) {
+           lower.clear();
+           upper.clear();
+           std::vector<double> result;
+           for (int i = 0; i < static_cast<int>(nums.size()); ++i) {
+               add(nums[i]);
+               if (i >= k) eraseValue(nums[i - k]);
+               if (i >= k - 1) result.push_back(median(k));
+           }
+           return result;
+       }
+   };
+
+代码分析
+--------
+
+平衡后 ``lower`` 的大小在奇数窗口时比 ``upper`` 多一、偶数窗口时相等，并且所有 ``lower`` 元素不大于所有 ``upper`` 元素，因此边界正好给出中位数。每个元素只插入和删除一次，时间复杂度为 ``O(n log k)``，额外空间复杂度为 ``O(k)``。

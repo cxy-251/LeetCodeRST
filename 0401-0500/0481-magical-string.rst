@@ -35,3 +35,46 @@
    输入：n = 1
    输出：1
    解释：魔法字符串的第一个字符就是 1。
+
+用组长度指针自描述生成
+----------------------
+
+魔法字符串的前几个字符固定为 ``122``。其中一个指针指向“下一组应该有多长”，另一个变量记录下一组应填入的字符（在 1 和 2 之间交替）。每生成一组，就把指针处的数字作为组长度写入字符串，并把读取指针向后移动。
+
+只需生成到第 ``n`` 位；写入最后一组时若超过 ``n``，截断即可。计数器在写入字符 ``1`` 时同步增加，不必再次扫描前缀。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int magicalString(int n) {
+           if (n <= 3) return 1;
+
+           std::vector<int> magical(n + 2, 0);
+           magical[0] = 1;
+           magical[1] = 2;
+           magical[2] = 2;
+           int read = 2;
+           int write = 3;
+           int nextValue = 1;
+           int ones = 1;
+
+           while (write < n) {
+               int repeat = magical[read++];
+               for (int count = 0; count < repeat && write < n; ++count) {
+                   magical[write++] = nextValue;
+                   if (nextValue == 1) ++ones;
+               }
+               nextValue = 3 - nextValue;
+           }
+           return ones;
+       }
+   };
+
+代码分析
+--------
+
+``read`` 读取的不是待写字符，而是下一组长度；``nextValue`` 负责在相邻组之间切换，因此生成过程正好满足“组长度序列等于字符串本身”的定义。每个位置只写一次，时间复杂度为 ``O(n)``，额外空间复杂度为 ``O(n)``。
