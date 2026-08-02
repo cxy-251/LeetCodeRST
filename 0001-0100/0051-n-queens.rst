@@ -56,27 +56,6 @@ C++ 实现
            return board;
        }
 
-       bool scanPreviousRows(const std::vector<int>& placement, int row, int col) {
-           for (int previous = 0; previous < row; ++previous) {
-               int previous_col = placement[previous];
-               if (previous_col == col ||
-                   previous - previous_col == row - col ||
-                   previous + previous_col == row + col) return false;
-           }
-           return true;
-       }
-
-       void scanDfs(int row, std::vector<int>& placement,
-                    std::vector<std::vector<std::string>>& result) {
-           int n = static_cast<int>(placement.size());
-           if (row == n) { result.push_back(buildBoard(placement)); return; }
-           for (int col = 0; col < n; ++col) {
-               if (!scanPreviousRows(placement, row, col)) continue;
-               placement[row] = col;
-               scanDfs(row + 1, placement, result);
-           }
-       }
-
        void booleanDfs(int row, std::vector<int>& placement,
                        std::vector<char>& columns,
                        std::vector<char>& down,
@@ -95,24 +74,6 @@ C++ 实现
            }
        }
 
-       void bitDfs(int row, int n, int columns, int down, int up,
-                   std::vector<int>& placement,
-                   std::vector<std::vector<std::string>>& result) {
-           if (row == n) { result.push_back(buildBoard(placement)); return; }
-           int full = (1 << n) - 1;
-           int available = full & ~(columns | down | up);
-           while (available) {
-               int bit = available & -available;
-               available ^= bit;
-               int col = 0;
-               while ((1 << col) != bit) ++col;
-               placement[row] = col;
-               bitDfs(row + 1, n, columns | bit,
-                      ((down | bit) << 1) & full,
-                      (up | bit) >> 1, placement, result);
-           }
-       }
-
    public:
        std::vector<std::vector<std::string>> solveNQueens(int n) {
            std::vector<std::vector<std::string>> result;
@@ -126,67 +87,22 @@ C++ 实现
 题解
 ----
 
-从逐格枚举到按行决策
-~~~~~~~~~~~~~~~~~~~~
+合法棋盘有 ``n`` 个皇后，而同一行不能放两个，所以每一行必然恰好放一个。递归层数可以直接当作 ``row``，每层只决定这一行的列；``placement[row]`` 保存这条搜索路径上的列序列，不再枚举“这个格子放不放皇后”的无效状态。
 
-逐个格子决定放或不放会制造大量不可能包含 ``n`` 个皇后的状态。合法棋盘每行恰好一个皇后，因此递归深度直接表示行号；本层只需选择列，行冲突从模型中消失。
+对候选位置 ``(row, col)``，列冲突由 ``col`` 判断；同一条 ``\`` 对角线的 ``row - col`` 相同，同一条 ``/`` 对角线的 ``row + col`` 相同。``row - col`` 的范围是 ``[-(n-1), n-1]``，加上 ``n-1`` 后可以作为 ``down`` 数组下标；``row + col`` 直接落在 ``[0, 2n-2]``，对应 ``up`` 数组。三张布尔表保存当前路径已经占用的列和对角线，因此每次尝试只需常数时间判断。
 
-三类冲突如何编码
-~~~~~~~~~~~~~~~~
+主入口调用的是 ``booleanDfs``：通过检查后写入 ``placement[row]``，同时把三个占用标记设为真；递归返回后再把同一组标记恢复为假。恢复动作必须和选择动作完全对应，否则某个失败分支留下的列或对角线会错误剪掉后续合法分支。到达 ``row == n`` 时，列序列已经包含每一行的选择，``buildBoard`` 再把它转换成题目要求的字符串棋盘。
 
-对位置 ``(row,col)``：列编号是 ``col``；``\`` 对角线由 ``row-col`` 唯一确定；``/`` 对角线由 ``row+col`` 唯一确定。前者加 ``n-1`` 后落在 ``0..2n-2``，因此三组布尔表都能常数时间判断冲突。
-
-扫描旧皇后为何可以被状态表替代
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-基准方法每次尝试都扫描之前所有行，重复询问相同的列和对角线占用。布尔表把已放置皇后的攻击信息累积为可查询状态，选择与撤销各只修改三个槽位。
-
-状态演化
-~~~~~~~~
-
-.. list-table::
-   :header-rows: 1
-
-   * - 层级
-     - 已放列
-     - 当前候选
-     - 动作
-   * - row 0
-     - ``{}``
-     - ``0,1,2,3``
-     - 选择列 1
-   * - row 1
-     - ``{1}``
-     - 仅列 3 不冲突
-     - 选择列 3
-   * - row 2
-     - ``{1,3}``
-     - 仅列 0 不冲突
-     - 选择列 0
-   * - row 3
-     - ``{0,1,3}``
-     - 仅列 2 不冲突
-     - 得到 ``[1,3,0,2]``
-
-选择与撤销为何必须对称
-~~~~~~~~~~~~~~~~~~~~~~
-
-进入子树前，棋盘路径与三组状态同时加入当前皇后；子树返回后清除完全相同的三个标记。这样父层状态恢复到尝试前，失败分支不会影响同层其他列。
+用自建的 ``n = 5`` 示例看一条成功路径：列序列 ``[0,2,4,1,3]`` 生成第一块棋盘。它不是因为预先知道答案才被保留，而是每一步都通过列、``row-col`` 和 ``row+col`` 三项检查；如果某一行没有可选列，递归回退并撤销上一行的标记，继续尝试其他列。
 
 为什么不重不漏
-~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~
 
-任意合法棋盘都唯一对应一个列序列。该序列在每一层都通过冲突检查，因此对应分支不会被剪掉；算法枚举每行所有合法列，所以不会漏解。不同列序列至少在一行选择不同，生成的棋盘也不同，因此不会重复。
+每个合法棋盘在每一行只有一个列选择，因此对应唯一的 ``placement`` 序列。算法逐行尝试全部列，只剪掉与已放皇后冲突的选择；合法序列不会被剪掉，所有到达叶子的序列也都满足三类约束。不同序列至少有一行的列不同，构造出的棋盘也不同，所以既不漏解也不重复。
 
-位掩码如何压缩候选
-~~~~~~~~~~~~~~~~~~
+代码中只保留实际入口使用的布尔状态搜索；把候选约束放在三张表中，比每次尝试重新扫描之前所有行更直接，也使代码中的状态与上面的证明一一对应。
 
-最低 ``n`` 位表示当前行各列。``available = full & ~(columns|down|up)`` 一次得到全部合法列；提取 ``bit = available & -available`` 后，进入下一行时两类对角线攻击分别左移和右移一位。它与布尔表搜索同一棵树，只把状态更新压缩为位运算。
-
-复杂度来源
-~~~~~~~~~~
-
-搜索树上界可写为 ``O(n!)`` 量级，实际受对角线剪枝显著缩小。布尔表每个候选常数检查；每个答案构造 ``n²`` 个字符。递归、列序列和约束状态使用 ``O(n)`` 额外空间，不计输出。
+输出本身需要为每个方案写出 ``n²`` 个字符。若合法方案数为 ``S``，按当前“每层扫描全部列”的代码写法，搜索和构造的时间可写为 ``O(n · n! + S n²)`` 的上界量级，实际搜索会受到列和对角线剪枝；不计返回结果，递归栈、列序列和三张状态表共使用 ``O(n)`` 额外空间。
 
 九语言实现
 ----------

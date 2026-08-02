@@ -172,37 +172,37 @@ C++ 实现
 状态演化
 ~~~~~~~~
 
+以下追踪自建示例中从下标 ``13`` 开始的有效窗口。单词长度为 4，需求为
+``fooo:1``、``wing:2``、``ding:1``、``barr:1``；前面的非需求块会把窗口重置到
+下一个块边界，这里从第一个 ``fooo`` 开始记录：
+
 .. list-table::
    :header-rows: 1
 
-   * - 新块
-     - ``good`` 次数
+   * - 块起点
+     - 新块
      - 动作
      - 窗口
-   * - word
-     - 0
-     - 加入
-     - word
-   * - good
-     - 1
-     - 加入
-     - word,good
-   * - good
-     - 2
-     - 加入
-     - word,good,good
-   * - good
-     - 3
-     - 超量，移除 word 和第一个 good
-     - good,good
-   * - best
-     - 2
-     - 加入
-     - good,good,best
-   * - word
-     - 2
-     - 达到四块，记录起点 8
-     - good,good,best,word
+   * - 13
+     - ``fooo``
+     - ``count=1``
+     - ``fooo``
+   * - 17
+     - ``wing``
+     - ``count=2``
+     - ``fooo,wing``
+   * - 21
+     - ``ding``
+     - ``count=3``
+     - ``fooo,wing,ding``
+   * - 25
+     - ``barr``
+     - ``count=4``，尚未达到 5 个单词
+     - ``fooo,wing,ding,barr``
+   * - 29
+     - ``wing``
+     - ``wing`` 达到需求次数 2，``count=5``，记录起点 13；随后移除最左 ``fooo``
+     - ``wing,ding,barr,wing``
 
 为什么只检查新加入单词的超量
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~

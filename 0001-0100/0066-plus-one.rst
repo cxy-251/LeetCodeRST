@@ -46,36 +46,10 @@ C++ 实现
 
 .. code-block:: cpp
 
-   #include <algorithm>
    #include <vector>
 
    class Solution {
    private:
-       std::vector<int> convertToInteger(const std::vector<int>& digits) {
-           long long value = 0;
-           for (int digit : digits) value = value * 10 + digit;
-           ++value;
-           if (value == 0) return {0};
-           std::vector<int> result;
-           while (value > 0) { result.push_back(value % 10); value /= 10; }
-           std::reverse(result.begin(), result.end());
-           return result;
-       }
-
-       std::vector<int> genericAddition(std::vector<int> digits, int addend) {
-           int carry = addend;
-           for (int index = static_cast<int>(digits.size()) - 1; index >= 0 && carry > 0; --index) {
-               int total = digits[index] + carry;
-               digits[index] = total % 10;
-               carry = total / 10;
-           }
-           while (carry > 0) {
-               digits.insert(digits.begin(), carry % 10);
-               carry /= 10;
-           }
-           return digits;
-       }
-
        std::vector<int> propagateOne(std::vector<int> digits) {
            for (int index = static_cast<int>(digits.size()) - 1; index >= 0; --index) {
                if (digits[index] < 9) {
@@ -97,10 +71,10 @@ C++ 实现
 题解
 ----
 
-为什么整数转换不可靠
-~~~~~~~~~~~~~~~~~~
+为什么不把数字数组转换成整数
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-数组长度可远超 64 位整数范围。逐位构造固定宽整数会溢出，即使最终只加 1。数字数组本身已经是十进制表示，直接模拟竖式运算即可。
+数组长度可远超 64 位整数范围，先转换再加一会在中间步骤溢出，即使最终只需要增加 1。数字数组本身已经是十进制表示，直接模拟进位既避免了宽度限制，也保留了题目要求的数字数组形式。
 
 加一只会影响哪些位置
 ~~~~~~~~~~~~~~~~~~~~
@@ -140,11 +114,6 @@ C++ 实现
 
 ``99...9 + 1 = 100...0``。循环把原有 ``n`` 位全部置零，越过最高位后只需在前面加入一个 1，结果长度为 ``n+1``，不存在其他形式。
 
-通用加法与专用加一的关系
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-通用竖式维护 ``total`` 和 ``carry``，可以处理任意小加数。加一时 ``carry`` 初始为 1，且每轮只有“非 9 后终止”或“9 变 0”两种情况，专用实现可以省去除法和显式进位变量。
-
 为什么没有前导零问题
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -158,7 +127,7 @@ C++ 实现
 复杂度来源
 ~~~~~~~~~~
 
-最坏扫描全部 ``n`` 位，时间 ``O(n)``。除返回数组外，原地版本额外空间 ``O(1)``；若复制输入以保持只读，复制成本和结果空间为 ``O(n)``。
+最坏扫描全部 ``n`` 位，时间 ``O(n)``。当前 ``plusOne`` 把输入复制给 ``propagateOne``，因此不修改调用者的数组；除返回数组外还需要 ``O(n)`` 的工作副本。若接口允许直接改写输入并把该副本改为引用传递，额外工作空间可以降为 ``O(1)``。
 
 九语言实现
 ----------

@@ -62,16 +62,6 @@ C++ 实现
            return result;
        }
 
-       std::vector<TreeNode*> sharedTemplates(int start, int end) {
-           if (start > end) return {nullptr};
-           std::vector<TreeNode*> result;
-           for (int root_value = start; root_value <= end; ++root_value)
-               for (TreeNode* left : sharedTemplates(start, root_value - 1))
-                   for (TreeNode* right : sharedTemplates(root_value + 1, end))
-                       result.push_back(new TreeNode(root_value, left, right));
-           return result;
-       }
-
    public:
        std::vector<TreeNode*> generateTrees(int n) {
            return generate(1, n);

@@ -55,9 +55,9 @@ C++ 实现
 
 .. code-block:: cpp
 
-#include <array>
-#include <utility>
-#include <vector>
+   #include <array>
+   #include <utility>
+   #include <vector>
 
    class Solution {
    private:

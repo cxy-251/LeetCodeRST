@@ -44,18 +44,6 @@ C++ 实现
 
    class Solution {
    private:
-       std::string fixedWidthConversion(const std::string& a, const std::string& b) {
-           unsigned long long left = 0, right = 0;
-           for (char ch : a) left = left * 2 + (ch - '0');
-           for (char ch : b) right = right * 2 + (ch - '0');
-           unsigned long long sum = left + right;
-           if (sum == 0) return "0";
-           std::string result;
-           while (sum > 0) { result.push_back('0' + sum % 2); sum /= 2; }
-           std::reverse(result.begin(), result.end());
-           return result;
-       }
-
        std::string padAndAdd(std::string a, std::string b) {
            if (a.size() < b.size()) a.insert(a.begin(), b.size() - a.size(), '0');
            if (b.size() < a.size()) b.insert(b.begin(), a.size() - b.size(), '0');

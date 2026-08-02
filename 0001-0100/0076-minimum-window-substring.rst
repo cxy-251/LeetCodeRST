@@ -13,7 +13,7 @@
 题目重述
 --------
 
-给定字符串 ``s`` 和 ``t``，寻找 ``s`` 中最短的连续子串，使该子串包含 ``t`` 中全部字符及其重复次数。字符区分大小写；若不存在满足条件的子串，返回空字符串。题目保证非空答案唯一。
+给定字符串 ``s`` 和 ``t``，寻找 ``s`` 中最短的连续子串，使该子串包含 ``t`` 中全部字符及其重复次数。字符区分大小写；若不存在满足条件的子串，返回空字符串。若有多个同样短的答案，返回其中任意一个即可。
 
 约束为 ``1 <= s.length, t.length <= 10^5``，两个字符串只包含英文字母。
 
@@ -78,8 +78,12 @@ C++ 实现
                        best_start = left; best_length = right - left + 1;
                    }
                    unsigned char drop = s[left++];
-                   if (required[drop] > 0 && window[drop]-- == required[drop]) --formed;
-                   else --window[drop];
+                   if (required[drop] > 0) {
+                       if (window[drop] == required[drop]) --formed;
+                       --window[drop];
+                   } else {
+                       --window[drop];
+                   }
                }
            }
            return best_length == INT_MAX ? "" : s.substr(best_start, best_length);
