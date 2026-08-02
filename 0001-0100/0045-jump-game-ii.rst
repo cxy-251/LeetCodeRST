@@ -22,10 +22,10 @@
 
 .. code-block:: text
 
-   输入：nums = [3,1,2,0,4,1]
+   输入：nums = [3,1,3,0,4,1]
    输出：2
 
-第一次从下标 0 跳到下标 2，第二次可直接跳到下标 4 或越过它到达末尾下标 5；最少需要两跳。
+第一次从下标 0 跳到下标 2，第二次可直接到达末尾下标 5；最少需要两跳。
 
 .. code-block:: text
 
@@ -51,6 +51,7 @@ C++ 实现
            std::vector<int> dp(n, INT_MAX);
            dp[0] = 0;
            for (int i = 0; i < n; ++i) {
+               if (dp[i] == INT_MAX) continue;
                for (int next = i + 1; next < n && next <= i + nums[i]; ++next)
                    dp[next] = std::min(dp[next], dp[i] + 1);
            }

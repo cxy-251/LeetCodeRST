@@ -75,6 +75,13 @@ C++ 实现
            enumerateAll(position + 1, path, result);
        }
 
+       std::vector<std::string> bruteForce(int n) {
+           std::vector<std::string> result;
+           std::string path(2 * n, ' ');
+           enumerateAll(0, path, result);
+           return result;
+       }
+
        void backtrack(int n, int open, int close, std::string& path,
                       std::vector<std::string>& result) {
            if (open == n && close == n) {

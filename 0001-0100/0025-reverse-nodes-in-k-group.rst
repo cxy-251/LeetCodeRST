@@ -51,6 +51,7 @@ C++ 实现
 
 .. code-block:: cpp
 
+   #include <algorithm>
    #include <vector>
 
    class Solution {

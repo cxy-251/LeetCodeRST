@@ -32,6 +32,7 @@ C++ 实现
 
 .. code-block:: cpp
 
+   #include <utility>
    #include <vector>
 
    class Solution {

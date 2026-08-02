@@ -63,9 +63,10 @@ C++ 实现
 
 .. code-block:: cpp
 
-   #include <array>
-   #include <unordered_set>
-   #include <vector>
+#include <array>
+#include <string>
+#include <unordered_set>
+#include <vector>
 
    class Solution {
    private:

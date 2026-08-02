@@ -52,28 +52,12 @@ C++ 实现
 .. code-block:: cpp
 
    #include <algorithm>
+   #include <utility>
    #include <vector>
 
    class Solution {
-   private:
-       std::vector<int> enumerateAll(const std::vector<int>& input) {
-           std::vector<int> current = input;
-           std::sort(current.begin(), current.end());
-           std::vector<std::vector<int>> all;
-           do {
-               all.push_back(current);
-           } while (std::next_permutation(current.begin(), current.end()));
-           for (int i = 0; i < static_cast<int>(all.size()); ++i) {
-               if (all[i] == input) return all[(i + 1) % all.size()];
-           }
-           return input;
-       }
-
-       void libraryVersion(std::vector<int>& nums) {
-           std::next_permutation(nums.begin(), nums.end());
-       }
-
-       void linearSuffix(std::vector<int>& nums) {
+   public:
+       void nextPermutation(std::vector<int>& nums) {
            int pivot = static_cast<int>(nums.size()) - 2;
            while (pivot >= 0 && nums[pivot] >= nums[pivot + 1]) --pivot;
 
@@ -84,11 +68,6 @@ C++ 实现
            }
 
            std::reverse(nums.begin() + pivot + 1, nums.end());
-       }
-
-   public:
-       void nextPermutation(std::vector<int>& nums) {
-           linearSuffix(nums);
        }
    };
 

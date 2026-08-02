@@ -40,6 +40,7 @@ C++ 实现
 .. code-block:: cpp
 
    #include <algorithm>
+   #include <utility>
    #include <vector>
 
    class Solution {

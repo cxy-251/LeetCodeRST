@@ -72,7 +72,7 @@ C++ 实现
            int remaining, base; bool negative;
            toNegative(dividend, divisor, remaining, base, negative);
            int quotient = 0;
-           const int half_min = INT_MIN / 2;
+           const int half_min = -(1 << 30);
            while (remaining <= base) {
                int value = base;
                int contribution = -1;
@@ -95,7 +95,7 @@ C++ 实现
            std::vector<int> contributions;
            int value = base;
            int contribution = -1;
-           const int half_min = INT_MIN / 2;
+           const int half_min = -(1 << 30);
            while (value >= remaining) {
                values.push_back(value);
                contributions.push_back(contribution);
@@ -171,7 +171,7 @@ C++ 实现
 为什么倍增前需要 ``half_min`` 边界
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-计算 ``value + value`` 前必须保证 ``value >= INT_MIN / 2``，否则加法会低于 ``INT_MIN``。另一个停止条件
+计算 ``value + value`` 前必须保证 ``value >= -2^30``，否则加法会低于 ``INT_MIN``。另一个停止条件
 ``value + value < remaining`` 表示下一倍数的绝对值已经超过当前被除数，不需要保存。
 
 降序选择为什么得到最大合法商
@@ -214,7 +214,7 @@ C
        int values[32], parts[32], count=0, value=base, part=-1;
        while (value >= remaining) {
            values[count]=value;parts[count++]=part;
-           if (value < INT_MIN/2 || value+value < remaining) break;
+       if (value < -(1 << 30) || value+value < remaining) break;
            value+=value;part+=part;
        }
        int quotient=0;
@@ -253,7 +253,7 @@ Java
            if(dividend==Integer.MIN_VALUE&&divisor==-1)return Integer.MAX_VALUE;
            boolean negative=(dividend<0)!=(divisor<0);int remaining=dividend>0?-dividend:dividend;int base=divisor>0?-divisor:divisor;
            int[] values=new int[32],parts=new int[32];int count=0,value=base,part=-1;
-           while(value>=remaining){values[count]=value;parts[count++]=part;if(value<Integer.MIN_VALUE/2||value+value<remaining)break;value+=value;part+=part;}
+           while(value>=remaining){values[count]=value;parts[count++]=part;if(value<-(1<<30)||value+value<remaining)break;value+=value;part+=part;}
            int quotient=0;for(int i=count-1;i>=0;i--)if(values[i]>=remaining){remaining-=values[i];quotient+=parts[i];}
            return negative?quotient:-quotient;
        }
@@ -269,7 +269,7 @@ Rust
            if dividend==i32::MIN&&divisor==-1{return i32::MAX}
            let negative=(dividend<0)!=(divisor<0);let mut remaining=if dividend>0{-dividend}else{dividend};let base=if divisor>0{-divisor}else{divisor};
            let(mut values,mut parts)=(Vec::new(),Vec::new());let(mut value,mut part)=(base,-1);
-           while value>=remaining{values.push(value);parts.push(part);if value<i32::MIN/2||value+value<remaining{break}value+=value;part+=part;}
+           while value>=remaining{values.push(value);parts.push(part);if value<-(1_i32<<30)||value+value<remaining{break}value+=value;part+=part;}
            let mut quotient=0;for i in (0..values.len()).rev(){if values[i]>=remaining{remaining-=values[i];quotient+=parts[i];}}
            if negative{quotient}else{-quotient}
        }
@@ -284,7 +284,7 @@ Go
        const min=-1<<31;const max=1<<31-1;if dividend==min&&divisor==-1{return max}
        negative:=(dividend<0)!=(divisor<0);remaining:=dividend;if remaining>0{remaining=-remaining};base:=divisor;if base>0{base=-base}
        values,parts:=[]int{},[]int{};value,part:=base,-1
-       for value>=remaining{values=append(values,value);parts=append(parts,part);if value<min/2||value+value<remaining{break};value+=value;part+=part}
+       for value>=remaining{values=append(values,value);parts=append(parts,part);if value<-(1<<30)||value+value<remaining{break};value+=value;part+=part}
        quotient:=0;for i:=len(values)-1;i>=0;i--{if values[i]>=remaining{remaining-=values[i];quotient+=parts[i]}}
        if negative{return quotient};return -quotient
    }
@@ -295,10 +295,10 @@ TypeScript
 .. code-block:: typescript
 
    function divide(dividend:number,divisor:number):number{
-       const min=-(2**31),max=2**31-1;if(dividend===min&&divisor===-1)return max;
+       const min=-2147483648,max=2147483647;if(dividend===min&&divisor===-1)return max;
        const negative=(dividend<0)!==(divisor<0);let remaining=dividend>0?-dividend:dividend;const base=divisor>0?-divisor:divisor;
        const values:number[]=[],parts:number[]=[];let value=base,part=-1;
-       while(value>=remaining){values.push(value);parts.push(part);if(value<min/2||value+value<remaining)break;value+=value;part+=part;}
+       while(value>=remaining){values.push(value);parts.push(part);if(value<-(1<<30)||value+value<remaining)break;value+=value;part+=part;}
        let quotient=0;for(let i=values.length-1;i>=0;i--)if(values[i]>=remaining){remaining-=values[i];quotient+=parts[i];}
        return negative?quotient:-quotient;
    }
@@ -313,7 +313,7 @@ C#
            if(dividend==int.MinValue&&divisor==-1)return int.MaxValue;
            bool negative=(dividend<0)!=(divisor<0);int remaining=dividend>0?-dividend:dividend;int baseValue=divisor>0?-divisor:divisor;
            var values=new List<int>();var parts=new List<int>();int value=baseValue,part=-1;
-           while(value>=remaining){values.Add(value);parts.Add(part);if(value<int.MinValue/2||value+value<remaining)break;value+=value;part+=part;}
+           while(value>=remaining){values.Add(value);parts.Add(part);if(value<-(1<<30)||value+value<remaining)break;value+=value;part+=part;}
            int quotient=0;for(int i=values.Count-1;i>=0;i--)if(values[i]>=remaining){remaining-=values[i];quotient+=parts[i];}
            return negative?quotient:-quotient;
        }
@@ -328,7 +328,7 @@ Julia
        dividend==typemin(Int32)&&divisor==-1 && return typemax(Int32)
        negative=(dividend<0)!=(divisor<0);remaining=dividend>0 ? -dividend : dividend;base=divisor>0 ? -divisor : divisor
        values=Int32[];parts=Int32[];value=base;part=Int32(-1)
-       while value>=remaining;push!(values,value);push!(parts,part);if value<typemin(Int32)÷2||value+value<remaining;break;end;value+=value;part+=part;end
+           while value>=remaining;push!(values,value);push!(parts,part);if value < -Int32(1 << 30) || value+value<remaining;break;end;value+=value;part+=part;end
        quotient=Int32(0);for i in reverse(eachindex(values));if values[i]>=remaining;remaining-=values[i];quotient+=parts[i];end;end
        negative ? quotient : -quotient
    end
@@ -339,13 +339,13 @@ R
 .. code-block:: r
 
    divide_integers <- function(dividend, divisor) {
-       int_min <- -(2^31); int_max <- 2^31-1
+       int_min <- -2147483648; int_max <- 2147483647
        if (dividend == int_min && divisor == -1) return(int_max)
        negative <- xor(dividend < 0, divisor < 0)
        remaining <- if (dividend > 0) -dividend else dividend
        base <- if (divisor > 0) -divisor else divisor
        values <- numeric(); parts <- numeric(); value <- base; part <- -1
-       while (value >= remaining) { values<-c(values,value);parts<-c(parts,part);if(value<int_min/2||value+value<remaining)break;value<-value+value;part<-part+part }
+       while (value >= remaining) { values<-c(values,value);parts<-c(parts,part);if(value < -1073741824 || value+value<remaining)break;value<-value+value;part<-part+part }
        quotient <- 0
        for (i in rev(seq_along(values))) if (values[[i]] >= remaining) { remaining<-remaining-values[[i]];quotient<-quotient+parts[[i]] }
        if (negative) quotient else -quotient

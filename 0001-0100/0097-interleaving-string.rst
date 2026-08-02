@@ -29,10 +29,10 @@
 
 .. code-block:: text
 
-   输入：s1 = "ab", s2 = "cd", s3 = "adbc"
+   输入：s1 = "ab", s2 = "cd", s3 = "adcb"
    输出：false
 
-在取出 ``a``、``d`` 后，若再取 ``b``，``s2`` 中的 ``c`` 已无法出现在 ``d`` 之前。
+取出 ``a``、``d`` 后，目标要求先取 ``c``；但 ``d`` 位于 ``s2`` 的 ``c`` 之后，已经违反了 ``s2`` 的相对顺序。
 
 C++ 实现
 --------
@@ -40,6 +40,7 @@ C++ 实现
 .. code-block:: cpp
 
    #include <string>
+   #include <utility>
    #include <vector>
 
    class Solution {

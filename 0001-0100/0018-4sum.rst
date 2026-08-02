@@ -232,7 +232,7 @@ C
 
    int** fourSum(int* nums, int n, int target, int* returnSize, int** returnColumnSizes) {
        qsort(nums,n,sizeof(int),cmp);
-       int capacity = n*n*n/6 + 1, count = 0;
+       int capacity = 16, count = 0;
        int** result = malloc((size_t)capacity*sizeof(int*));
        int* columns = malloc((size_t)capacity*sizeof(int));
        for (int a=0; a+3<n; ++a) {
@@ -243,6 +243,11 @@ C
                while (left<right) {
                    long long sum=(long long)nums[a]+nums[b]+nums[left]+nums[right];
                    if (sum<target) ++left; else if (sum>target) --right; else {
+                       if (count == capacity) {
+                           capacity *= 2;
+                           result = realloc(result, (size_t)capacity*sizeof(int*));
+                           columns = realloc(columns, (size_t)capacity*sizeof(int));
+                       }
                        result[count]=malloc(4*sizeof(int));
                        result[count][0]=nums[a]; result[count][1]=nums[b];
                        result[count][2]=nums[left]; result[count][3]=nums[right];
