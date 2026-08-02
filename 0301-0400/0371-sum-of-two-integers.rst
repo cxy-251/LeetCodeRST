@@ -35,3 +35,34 @@
    输入：a = -8，b = -9
    输出：-17
    解释：结果仍按有符号整数语义计算，负号不代表可以忽略进位或符号位。
+
+异或保留无进位结果，与运算生成进位
+------------------------------------
+
+对两个二进制数，``a ^ b`` 在每一位上给出不考虑进位的和；``a & b`` 找出同时为 1 的位，左移一位后就是需要加到更高位的进位。先把 ``a``、``b`` 更新为“无进位和”和“进位”，再重复同样过程，直到没有进位。
+
+把整数视为固定宽度的二进制补码时，异或和移位对负数同样成立；使用无符号临时变量进行左移，避免对有符号位移的实现细节产生依赖。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int getSum(int a, int b) {
+           unsigned int first = static_cast<unsigned int>(a);
+           unsigned int second = static_cast<unsigned int>(b);
+           while (second != 0) {
+               unsigned int carry = (first & second) << 1;
+               first ^= second;
+               second = carry;
+           }
+           return static_cast<int>(first);
+       }
+   };
+
+代码分析
+--------
+
+每轮都把至少一位进位向更高位移动，固定宽度整数下有限轮后进位消失；此时 ``first`` 就是完整补码和。实现正文没有使用 ``+`` 或 ``-``，时间复杂度为 ``O(w)``，其中 ``w`` 是整数位宽，额外空间为 ``O(1)``。

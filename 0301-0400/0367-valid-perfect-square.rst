@@ -35,3 +35,39 @@
    输入：num = 145
    输出：false
    解释：12^2 = 144，13^2 = 169，145 位于两者之间，不是任何整数的平方。
+
+在可能的根区间上二分
+----------------------
+
+平方函数在非负整数上单调递增，因此可以在 ``[1, num]`` 中二分整数根。若 ``mid * mid`` 等于目标立即成功；若小于目标，根只能在右侧；若大于目标，根只能在左侧。二分结束仍未命中则不是完全平方数。
+
+比较平方时使用 ``long long``，因为 ``mid`` 接近 ``sqrt(INT_MAX)`` 时乘积虽然通常仍可容纳，但显式提升类型使边界推理不依赖 32 位乘法规则，也满足不调用内置平方根函数的要求。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       bool isPerfectSquare(int num) {
+           long long left = 1;
+           long long right = num;
+           while (left <= right) {
+               long long middle = left + (right - left) / 2;
+               long long square = middle * middle;
+               if (square == num) return true;
+               if (square < num) {
+                   left = middle + 1;
+               } else {
+                   right = middle - 1;
+               }
+           }
+           return false;
+       }
+   };
+
+代码分析
+--------
+
+每次比较排除一半候选根，区间闭合条件也覆盖 ``num == 1``；搜索过程中没有浮点近似和平方根库调用。时间复杂度为 ``O(log num)``，额外空间为 ``O(1)``。

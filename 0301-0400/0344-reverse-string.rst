@@ -35,3 +35,29 @@
    输入：s = ["?"]
    修改后：["?"]
    解释：唯一字符的镜像位置仍是自身。
+
+从两端向中间交换
+------------------
+
+下标 ``left`` 与 ``right = n - 1 - left`` 互为镜像。只要 ``left < right``，交换这两个位置并让两个指针向中间移动，就能一次确定一对字符的最终位置；指针相遇或交错时，所有位置都已经处理。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       void reverseString(std::vector<char>& s) {
+           int left = 0;
+           int right = static_cast<int>(s.size()) - 1;
+           while (left < right) {
+               std::swap(s[left++], s[right--]);
+           }
+       }
+   };
+
+代码分析
+--------
+
+每次交换把一对镜像位置放到正确字符，未处理区间严格缩小；单字符或空边界不会进入循环。算法原地完成，时间复杂度为 ``O(n)``，额外空间为 ``O(1)``。

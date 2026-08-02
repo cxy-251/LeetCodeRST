@@ -35,3 +35,38 @@
    输入：n = 2
    输出：1
    解释：必须至少拆成两个正整数，唯一拆分是 1+1，乘积为 1。
+
+状态明确表达“必须继续拆分”
+----------------------------
+
+令 ``dp[x]`` 表示把 ``x`` 拆分后能得到的最大乘积。枚举第一段 ``first``，剩余部分为 ``rest = x - first``：可以把剩余部分整体作为一段，得到 ``first * rest``；也可以继续使用 ``dp[rest]``，得到 ``first * dp[rest]``。两者取大，就同时覆盖了“最后一刀”和“继续拆分”两种情况。
+
+``dp[1] = 1`` 只是为了让它作为递归中的一段数参与 ``2 = 1 + 1``；真正返回的 ``n`` 从 2 开始，所以不会把“不拆分 n”当作答案。按 ``x`` 从小到大填表，所有 ``rest < x`` 的状态都已经计算完成。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int integerBreak(int n) {
+           std::vector<int> dp(n + 1, 0);
+           dp[1] = 1;
+
+           for (int value = 2; value <= n; ++value) {
+               for (int first = 1; first < value; ++first) {
+                   int rest = value - first;
+                   dp[value] = std::max(
+                       dp[value],
+                       std::max(first * rest, first * dp[rest]));
+               }
+           }
+           return dp[n];
+       }
+   };
+
+代码分析
+--------
+
+每个拆分方案都有第一段，剩余部分要么整体保留、要么继续拆分，转移覆盖且不重复遗漏；交换第一段和剩余段不会影响枚举完整性。状态数为 ``O(n)``，每个状态枚举 ``O(n)`` 个第一段，时间复杂度为 ``O(n^2)``，额外空间为 ``O(n)``。

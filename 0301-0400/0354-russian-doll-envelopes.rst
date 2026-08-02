@@ -35,3 +35,46 @@
    输入：envelopes = [[5,2],[5,7]]
    输出：1
    解释：两者宽度相等，不满足宽和高都严格增大的条件，因此最多选择一个。
+
+用排序处理宽度，再在高度上做严格 LIS
+--------------------------------------
+
+先按宽度升序排序；宽度相等时按高度降序排序。这样在高度序列中寻找严格递增子序列时，同宽信封的高度会反向排列，不可能被同一条递增子序列同时选中，正好排除了“宽度相等也嵌套”的错误。宽度严格增加的候选则按高度的严格递增关系形成合法链。
+
+维护 ``tails[len - 1]`` 为长度为 ``len`` 的递增子序列能够拥有的最小末尾高度。对当前高度用 ``lower_bound`` 找到第一个大于等于它的位置并替换；找不到时扩展序列长度。这里必须使用 ``lower_bound``，因为高度相等也不允许嵌套。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int maxEnvelopes(std::vector<std::vector<int>>& envelopes) {
+           std::sort(envelopes.begin(), envelopes.end(),
+               [](const std::vector<int>& first,
+                  const std::vector<int>& second) {
+                   if (first[0] != second[0]) {
+                       return first[0] < second[0];
+                   }
+                   return first[1] > second[1];
+               });
+
+           std::vector<int> tails;
+           for (const auto& envelope : envelopes) {
+               auto it = std::lower_bound(
+                   tails.begin(), tails.end(), envelope[1]);
+               if (it == tails.end()) {
+                   tails.push_back(envelope[1]);
+               } else {
+                   *it = envelope[1];
+               }
+           }
+           return static_cast<int>(tails.size());
+       }
+   };
+
+代码分析
+--------
+
+宽度升序、高度降序的排序规则把二维严格条件转成一维严格 LIS；``tails`` 只记录每种长度的最小末尾，不直接保存最终链，但长度保持正确。排序时间为 ``O(n log n)``，LIS 同样为 ``O(n log n)``，额外空间为 ``O(n)``。

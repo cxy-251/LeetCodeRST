@@ -39,3 +39,41 @@
    输入：nums = [-5]
    输出：0
    解释：唯一元素的下标权重为 0，唯一旋转的得分为 0。
+
+相邻旋转的得分只差一项
+------------------------
+
+先计算不旋转时的 ``F(0)`` 和数组总和。向右旋转一次时，除原来最后一个元素外的每个元素下标都增加 1，最后一个元素从权重 ``n-1`` 变成 0。因此
+``F(k+1) = F(k) + total - n * moved``，其中 ``moved`` 是本轮从末尾移到开头的元素。
+
+按这个关系依次生成所有旋转得分，不需要真的复制或旋转数组。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int maxRotateFunction(std::vector<int>& nums) {
+           int n = static_cast<int>(nums.size());
+           long long total = 0;
+           long long current = 0;
+           for (int i = 0; i < n; ++i) {
+               total += nums[i];
+               current += 1LL * i * nums[i];
+           }
+
+           long long answer = current;
+           for (int k = 1; k < n; ++k) {
+               current += total - 1LL * n * nums[n - k];
+               answer = std::max(answer, current);
+           }
+           return static_cast<int>(answer);
+       }
+   };
+
+代码分析
+--------
+
+递推中的 ``nums[n-k]`` 正是本轮从数组末尾移到开头的元素，符号和权重变化由推导直接给出；负数也自然参与求和。初始化和每轮更新都为常数操作，时间复杂度为 ``O(n)``，额外空间为 ``O(1)``。

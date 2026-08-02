@@ -35,3 +35,48 @@
    输入：s = "x3[yz]"
    输出："xyzyzyz"
    解释：开头的 x 原样保留，yz 连续重复三次。
+
+遇到左括号保存外层上下文
+--------------------------
+
+当前层维护已经解码的字符串 ``current`` 和正在读取的重复次数 ``repeat``。读数字时累积多位数；读左括号时把当前字符串与重复次数压栈并开始一个空的内层字符串；读右括号时弹出外层字符串，将当前层重复 ``repeat`` 次后接回外层。普通字母直接加入当前层。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       std::string decodeString(std::string s) {
+           std::stack<std::pair<std::string, int>> contexts;
+           std::string current;
+           int repeat = 0;
+
+           for (char c : s) {
+               if (std::isdigit(static_cast<unsigned char>(c))) {
+                   repeat = repeat * 10 + (c - '0');
+               } else if (c == '[') {
+                   contexts.push({current, repeat});
+                   current.clear();
+                   repeat = 0;
+               } else if (c == ']') {
+                   auto [previous, times] = contexts.top();
+                   contexts.pop();
+                   std::string expanded = previous;
+                   for (int i = 0; i < times; ++i) {
+                       expanded += current;
+                   }
+                   current = expanded;
+               } else {
+                   current.push_back(c);
+               }
+           }
+           return current;
+       }
+   };
+
+代码分析
+--------
+
+栈帧保存左括号之前的外层前缀和重复次数，右括号只需把已经完成的内层结果合并回去；嵌套结构因此按后进先出正确闭合。解析时间至少为 ``O(|s|)``，加上生成结果所需的字符复制；额外栈空间为最大嵌套深度和中间字符串。

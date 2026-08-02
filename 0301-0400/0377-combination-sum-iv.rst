@@ -35,3 +35,34 @@
    输入：nums = [2,6]，target = 5
    输出：0
    解释：所有可选数字都是偶数，任何有限序列的和也为偶数，无法得到 5。
+
+按总和计数，最后一个元素区分顺序
+----------------------------------
+
+定义 ``dp[sum]`` 为组成总和 ``sum`` 的有序序列数量。``dp[0] = 1`` 表示空序列，构造 ``sum`` 时枚举最后放入的数字 ``num``：此前的任意一个 ``sum - num`` 序列后面接上 ``num``，都会得到一个不同序列，因此转移为 ``dp[sum] += dp[sum-num]``。
+
+先枚举总和、再枚举最后一个数字，而不是先固定数字再填表，正是把排列顺序区分开的原因；同一数字可重复使用，因为每个总和都可以再次从更小总和转移。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int combinationSum4(std::vector<int>& nums, int target) {
+           std::vector<int> dp(target + 1, 0);
+           dp[0] = 1;
+           for (int sum = 1; sum <= target; ++sum) {
+               for (int num : nums) {
+                   if (num <= sum) dp[sum] += dp[sum - num];
+               }
+           }
+           return dp[target];
+       }
+   };
+
+代码分析
+--------
+
+每个有序序列都有唯一的最后一个元素，转移既不重复计数也不漏掉方案；正数条件保证状态依赖严格变小，不会出现无限循环。时间复杂度为 ``O(target * nums.size())``，额外空间为 ``O(target)``，答案范围由题目保证不会溢出。

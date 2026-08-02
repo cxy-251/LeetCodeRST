@@ -37,3 +37,65 @@
    输入：queries = [["p","x"],["x","x"]]
    输出：[-1.0,-1.0]
    解释：x 从未出现在任何已知方程中，两项都无法根据输入关系确定。
+
+把比值写成带权有向图
+----------------------
+
+方程 ``A / B = v`` 可表示为边 ``A -> B`` 权重 ``v``，同时加入反向边 ``B -> A`` 权重 ``1 / v``。沿路径相乘就得到起点与终点的比值；查询时从起点深搜到终点，使用访问集合避免在环中重复走回。
+
+查询的两个变量必须都出现在图中；已知变量自除时路径长度为零，结果为 1。每个查询单独建立访问集合，不能让前一个查询的访问状态影响后一个查询。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+       std::unordered_map<
+           std::string,
+           std::vector<std::pair<std::string, double>>> graph;
+
+       double search(const std::string& current,
+                     const std::string& target,
+                     std::unordered_set<std::string>& visited) {
+           if (current == target) return 1.0;
+           visited.insert(current);
+           for (const auto& edge : graph[current]) {
+               if (visited.count(edge.first) != 0) continue;
+               double rest = search(edge.first, target, visited);
+               if (rest >= 0.0) return edge.second * rest;
+           }
+           return -1.0;
+       }
+
+   public:
+       std::vector<double> calcEquation(
+           std::vector<std::vector<std::string>>& equations,
+           std::vector<double>& values,
+           std::vector<std::vector<std::string>>& queries) {
+           graph.clear();
+           for (int i = 0; i < static_cast<int>(equations.size()); ++i) {
+               const std::string& first = equations[i][0];
+               const std::string& second = equations[i][1];
+               graph[first].push_back({second, values[i]});
+               graph[second].push_back({first, 1.0 / values[i]});
+           }
+
+           std::vector<double> result;
+           for (const auto& query : queries) {
+               if (graph.count(query[0]) == 0
+                   || graph.count(query[1]) == 0) {
+                   result.push_back(-1.0);
+                   continue;
+               }
+               std::unordered_set<std::string> visited;
+               result.push_back(search(query[0], query[1], visited));
+           }
+           return result;
+       }
+   };
+
+代码分析
+--------
+
+反向边保留了比值的倒数，路径上的边权相乘就是方程连乘；不可达时深搜返回 ``-1.0``，不会把失败路径的权重混入结果。设变量数为 ``V``、边数为 ``E``，每个查询最坏遍历 ``O(V+E)``，图及单次访问集合空间为 ``O(V+E)``。

@@ -43,3 +43,39 @@
    输入：coins = [9]，amount = 0
    输出：0
    解释：空选择的总金额就是 0，因此不需要硬币。
+
+按金额建立最少硬币数
+----------------------
+
+定义 ``dp[x]`` 为恰好组成金额 ``x`` 所需的最少硬币数；不可达状态先设为一个大于任何可能答案的值。``dp[0] = 0`` 是空选择的真实基础。对于当前金额 ``x``，若使用一枚面额 ``coin`` 作为最后一枚硬币，前面的部分必须恰好组成 ``x - coin``，因此可以从 ``dp[x - coin] + 1`` 转移。
+
+金额按从小到大计算，所有转移来源都已经确定。由于同一面额可以无限使用，当前循环再次读取更小金额的状态就自然允许重复使用；而“最后一枚硬币”的枚举覆盖了每一种组合。金额大于 ``amount`` 的面额不可能参与任何解，可以直接跳过。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int coinChange(std::vector<int>& coins, int amount) {
+           const int impossible = amount + 1;
+           std::vector<int> dp(amount + 1, impossible);
+           dp[0] = 0;
+
+           for (int current = 1; current <= amount; ++current) {
+               for (long long coin : coins) {
+                   if (coin > current) continue;
+                   int previous = current - static_cast<int>(coin);
+                   dp[current] = std::min(dp[current], dp[previous] + 1);
+               }
+           }
+
+           return dp[amount] == impossible ? -1 : dp[amount];
+       }
+   };
+
+代码分析
+--------
+
+``amount + 1`` 足以作为不可达标记，因为任何可达金额最多使用 ``amount`` 枚面额至少为 1 的硬币；即使从不可达状态加一，也不会产生整数溢出。``coin`` 用 ``long long`` 接收，比较时不会因题目允许的超大面额而发生窄化问题。时间复杂度为 ``O(amount * coins.size())``，额外空间为 ``O(amount)``；金额为零时只读取 ``dp[0]`` 并返回零。

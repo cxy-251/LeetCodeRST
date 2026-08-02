@@ -35,3 +35,56 @@
    输入：input = "home\n\tdocs\n\timages"
    输出：0
    解释：没有任何名称包含点号，因此文件系统中没有文件路径可统计。
+
+用每一层的累计路径长度压缩树结构
+----------------------------------
+
+逐行读取条目，前导制表符数量就是深度。维护 ``pathLength[depth]``，表示到该层条目父目录为止的路径长度；当前条目长度等于父路径长度加一个斜杠（若有父层）再加名称长度。目录只更新这一层的长度，文件则用当前累计长度更新答案，不再把文件作为后续目录父节点。
+
+遇到更浅层条目时，覆盖对应深度的长度即可丢弃旧的兄弟分支；因为输入按先序层级排列，当前行的父目录信息总在数组中。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int lengthLongestPath(std::string input) {
+           std::vector<int> pathLength(1, 0);
+           int answer = 0;
+           int start = 0;
+           while (start < static_cast<int>(input.size())) {
+               int end = input.find('\n', start);
+               if (end == static_cast<int>(std::string::npos)) {
+                   end = static_cast<int>(input.size());
+               }
+
+               int depth = 0;
+               while (start + depth < end
+                      && input[start + depth] == '\t') {
+                   ++depth;
+               }
+               std::string name = input.substr(
+                   start + depth, end - start - depth);
+               int currentLength = pathLength[depth]
+                                  + (depth == 0 ? 0 : 1)
+                                  + static_cast<int>(name.size());
+               if (name.find('.') != std::string::npos) {
+                   answer = std::max(answer, currentLength);
+               } else {
+                   if (pathLength.size() <= depth + 1) {
+                       pathLength.resize(depth + 2);
+                   }
+                   pathLength[depth + 1] = currentLength;
+               }
+               start = end + 1;
+           }
+           return answer;
+       }
+   };
+
+代码分析
+--------
+
+``pathLength[depth]`` 始终是当前条目的父路径长度，斜杠只在有父目录时计入；文件名中的点号直接决定是否更新答案。每个字符被扫描和切分有限次，时间复杂度为 ``O(|input|)``，额外空间为 ``O(h)``，``h`` 为层级深度。

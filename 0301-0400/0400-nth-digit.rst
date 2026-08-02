@@ -41,3 +41,41 @@
    输入：n = 9
    输出：9
    解释：序列前九位正好是 1、2、...、9，第九位为 9。
+
+按位数分段定位目标整数
+------------------------
+
+所有一位数贡献 ``9 * 1`` 位、所有两位数贡献 ``90 * 2`` 位、所有三位数贡献 ``900 * 3`` 位，依次类推。先从 ``n`` 中扣除完整位数段，直到目标落入某个固定位数的整数区间。
+
+在当前段内，``(n - 1) / digits`` 告诉我们目标落在哪个整数，``(n - 1) % digits`` 告诉我们它是该整数的第几位。两个 ``-1`` 是把题目的一基位置转换成零基偏移。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int findNthDigit(int n) {
+           long long position = n;
+           long long digits = 1;
+           long long count = 9;
+           long long start = 1;
+
+           while (position > digits * count) {
+               position -= digits * count;
+               ++digits;
+               count *= 10;
+               start *= 10;
+           }
+
+           long long number = start + (position - 1) / digits;
+           int offset = static_cast<int>((position - 1) % digits);
+           return std::to_string(number)[offset] - '0';
+       }
+   };
+
+代码分析
+--------
+
+每个完整位数段一次扣除，定位后只构造一个目标整数，不会拼接无限序列；使用 ``long long`` 保存段长度和位置，避免 ``digits * count`` 在 32 位范围附近溢出。位数段数量很少，时间和额外空间均为 ``O(log n)``。

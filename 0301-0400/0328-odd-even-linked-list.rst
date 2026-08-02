@@ -35,3 +35,40 @@
    输入：head = []
    输出：[]
    解释：没有节点需要重新连接，返回空链表。
+
+同时维护两条稳定链
+--------------------
+
+``odd`` 指向当前奇数位置链的尾部，``even`` 指向当前偶数位置链的尾部，另存 ``evenHead`` 作为偶数链的起点。每轮把 ``even`` 后面的节点接到奇数链尾部，再把新奇数节点后面的节点接到偶数链尾部；因为节点总是按原顺序取出，两条链内部都保持稳定。
+
+循环结束时，奇数链比偶数链多一个或刚好一样长，``even`` 或 ``even->next`` 为空。把奇数链尾接到 ``evenHead``，即可得到完整结果；整个过程只改指针，不创建节点。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       ListNode* oddEvenList(ListNode* head) {
+           if (head == nullptr || head->next == nullptr) return head;
+
+           ListNode* odd = head;
+           ListNode* even = head->next;
+           ListNode* evenHead = even;
+
+           while (even != nullptr && even->next != nullptr) {
+               odd->next = even->next;
+               odd = odd->next;
+               even->next = odd->next;
+               even = even->next;
+           }
+           odd->next = evenHead;
+           return head;
+       }
+   };
+
+代码分析
+--------
+
+``odd`` 和 ``even`` 的移动分别跳过一个节点，因此每个原节点只被重新接线有限次；奇偶指的是原位置而不是值，代码没有读取节点值。空链表和单节点链表直接返回，避免访问空指针。时间复杂度为 ``O(n)``，额外空间为 ``O(1)``。

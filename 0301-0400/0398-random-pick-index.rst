@@ -37,3 +37,37 @@
    调用：pick(2)
    输出：3
    解释：值 2 只出现在下标 3，因此每次调用都必须返回 3。
+
+把目标值的所有下标预先分组
+----------------------------
+
+构造时建立“值到下标数组”的映射。调用 ``pick(target)`` 时，目标对应的每个下标在同一个连续数组中，随机选择其位置即可保证下标等概率；不需要按值抽样，因为题目要求的是目标值对应的实例位置。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+       std::unordered_map<int, std::vector<int>> positions;
+       std::mt19937 generator{std::random_device{}()};
+
+   public:
+       Solution(std::vector<int>& nums) {
+           for (int i = 0; i < static_cast<int>(nums.size()); ++i) {
+               positions[nums[i]].push_back(i);
+           }
+       }
+
+       int pick(int target) {
+           const auto& candidates = positions[target];
+           std::uniform_int_distribution<int> distribution(
+               0, static_cast<int>(candidates.size()) - 1);
+           return candidates[distribution(generator)];
+       }
+   };
+
+代码分析
+--------
+
+构造阶段每个数组位置只加入一次，之后随机范围正好覆盖所有合法下标；目标保证存在，所以候选数组非空。构造时间为 ``O(n)``，每次 ``pick`` 平均为 ``O(1)``，额外空间为 ``O(n)``。

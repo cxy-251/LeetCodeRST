@@ -35,3 +35,41 @@
    输入：n = 2
    输出：[1,2]
    解释：结果包含区间内每个整数一次，二者字典序与数值顺序相同。
+
+把十进制前缀当作一棵树
+------------------------
+
+数字的字典序遍历可以看成前缀树的先序遍历：从 ``1`` 开始，若当前数乘 10 仍不超过 ``n``，就进入它的下一位子节点；否则说明当前分支已经走到底，沿父节点回退，直到可以把当前前缀加 1。回退时跳过末位为 9 或已经超过 ``n`` 的前缀。
+
+该过程直接在整数前缀上移动，不建立字符串，也不使用额外的访问集合；每个整数输出一次，回退和扩展的总移动次数与输出规模同阶。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       std::vector<int> lexicalOrder(int n) {
+           std::vector<int> result;
+           result.reserve(n);
+           long long current = 1;
+           for (int i = 0; i < n; ++i) {
+               result.push_back(static_cast<int>(current));
+               if (current * 10 <= n) {
+                   current *= 10;
+               } else {
+                   while (current % 10 == 9 || current + 1 > n) {
+                       current /= 10;
+                   }
+                   ++current;
+               }
+           }
+           return result;
+       }
+   };
+
+代码分析
+--------
+
+乘 10 相当于进入当前前缀的最小子树，除以 10 相当于回到父前缀；``current`` 使用宽类型避免中间乘 10 溢出。除返回数组外只使用常数级状态，输出本身占 ``O(n)``，总遍历时间为 ``O(n)``。

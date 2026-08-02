@@ -35,3 +35,39 @@
    输入：nums = [3, 3, 3]
    输出：false
    解释：任意三个值都相等，不满足严格小于关系。
+
+只保留最有希望的前两个数
+--------------------------
+
+扫描到当前位置时，维护一个最小的 ``first``，以及在 ``first`` 之后出现、且尽可能小的 ``second``。遇到 ``x``：若 ``x <= first``，用它替换 ``first``；否则若 ``x <= second``，用它替换 ``second``；若 ``x`` 同时大于两者，就得到 ``first < second < x`` 的三元组。
+
+替换不会破坏下标顺序：``first`` 只来自当前或更早位置，``second`` 只在当前值大于 ``first`` 时更新，因此保存的 ``first`` 必定位于 ``second`` 之前。用 ``<=`` 更新是为了让相等值不能错误地推进到更长的严格序列，同时给后续更大值留下最小前缀。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       bool increasingTriplet(std::vector<int>& nums) {
+           int first = INT_MAX;
+           int second = INT_MAX;
+
+           for (int value : nums) {
+               if (value <= first) {
+                   first = value;
+               } else if (value <= second) {
+                   second = value;
+               } else {
+                   return true;
+               }
+           }
+           return false;
+       }
+   };
+
+代码分析
+--------
+
+``first`` 和 ``second`` 不是固定的某两个下标，而是到当前位置为止最有利于扩展的状态；较小的前缀不会减少后续可选值。两个变量始终保持严格候选关系，第三次进入 ``else`` 才返回真。算法只扫描一次数组，时间复杂度为 ``O(n)``，额外空间为 ``O(1)``。

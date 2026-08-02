@@ -35,3 +35,70 @@
    输入：words = ["ab", "cd"]
    输出：[]
    解释：两个可能的拼接 "abcd" 和 "cdab" 都不是回文。
+
+在每个拼接边界切开
+--------------------
+
+考虑固定的 ``words[i]``，如果它与另一个单词拼接后是回文，那么两词的边界一定把这个回文划分成两段。对每个切分位置 ``split``，记前缀为 ``prefix``、后缀为 ``suffix``：若 ``suffix`` 本身是回文，前缀的反转就可以放在它左侧；若 ``prefix`` 是回文，后缀的反转就可以放在它右侧。把所需的反转字符串放入哈希表查找，就不需要枚举另一个单词并实际拼接。
+
+切分位置包含两端，因此能覆盖空字符串参与的情况；同一回文单词与空字符串可能在端点切分中被重复发现，结果用集合按下标对去重。只有找到的下标与 ``i`` 不同，才能满足题目的 ``i != j``。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+       bool isPalindrome(const std::string& word,
+                         int left, int right) {
+           while (left < right) {
+               if (word[left++] != word[right--]) return false;
+           }
+           return true;
+       }
+
+   public:
+       std::vector<std::vector<int>> palindromePairs(
+           std::vector<std::string>& words) {
+           std::unordered_map<std::string, int> index;
+           for (int i = 0; i < static_cast<int>(words.size()); ++i) {
+               index[words[i]] = i;
+           }
+
+           std::set<std::pair<int, int>> uniquePairs;
+           for (int i = 0; i < static_cast<int>(words.size()); ++i) {
+               const std::string& word = words[i];
+               int length = static_cast<int>(word.size());
+               for (int split = 0; split <= length; ++split) {
+                   if (isPalindrome(word, split, length - 1)) {
+                       std::string need = word.substr(0, split);
+                       std::reverse(need.begin(), need.end());
+                       auto it = index.find(need);
+                       if (it != index.end() && it->second != i) {
+                           uniquePairs.insert({i, it->second});
+                       }
+                   }
+
+                   if (isPalindrome(word, 0, split - 1)) {
+                       std::string need = word.substr(split);
+                       std::reverse(need.begin(), need.end());
+                       auto it = index.find(need);
+                       if (it != index.end() && it->second != i) {
+                           uniquePairs.insert({it->second, i});
+                       }
+                   }
+               }
+           }
+
+           std::vector<std::vector<int>> result;
+           for (const auto& pair : uniquePairs) {
+               result.push_back({pair.first, pair.second});
+           }
+           return result;
+       }
+   };
+
+代码分析
+--------
+
+``isPalindrome`` 对空区间也返回真，因此 ``split == 0`` 和 ``split == length`` 能自然处理空前缀或空后缀。两种方向分别对应回文边界的左右两侧，避免漏掉有序下标对；集合只去掉同一对被不同切分重复产生的情况。设单词总长度为 ``L``、最大长度为 ``m``，朴素边界检查总成本约为 ``O(Lm)``，哈希查找为平均常数，额外空间为反转临时串和结果集合。

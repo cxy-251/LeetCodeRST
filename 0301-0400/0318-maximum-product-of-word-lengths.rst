@@ -35,3 +35,49 @@
    输入：words = ["aa", "ab", "ac"]
    输出：0
    解释：任意两个单词都包含字母 a，因此没有一对满足条件。
+
+把每个单词压成 26 位集合
+------------------------
+
+一个单词是否包含某个字母只需要一个布尔状态，因此可以用整数的第 ``c - 'a'`` 位表示字母 ``c`` 是否出现。两个单词的掩码按位与为零，当且仅当它们没有公共字母；单词内部同一字母重复出现不会改变掩码。
+
+先按掩码记录同一字符集合下的最长单词。相同掩码的两个单词不可能合法配对，较短者也不可能在与第三个单词的乘积中优于同掩码的较长者，因此保留每个掩码的最大长度即可。最后枚举不同掩码的两两组合，更新合法乘积。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int maxProduct(std::vector<std::string>& words) {
+           std::unordered_map<int, int> longest;
+           for (const std::string& word : words) {
+               int mask = 0;
+               for (char c : word) {
+                   mask |= 1 << (c - 'a');
+               }
+               longest[mask] = std::max(longest[mask],
+                                        static_cast<int>(word.size()));
+           }
+
+           std::vector<std::pair<int, int>> groups(
+               longest.begin(), longest.end());
+           int answer = 0;
+           for (int i = 0; i < static_cast<int>(groups.size()); ++i) {
+               for (int j = i + 1;
+                    j < static_cast<int>(groups.size()); ++j) {
+                   if ((groups[i].first & groups[j].first) == 0) {
+                       answer = std::max(answer,
+                           groups[i].second * groups[j].second);
+                   }
+               }
+           }
+           return answer;
+       }
+   };
+
+代码分析
+--------
+
+位运算一次就能完成字符集合相交判断，避免对每一对单词重复扫描字符。压缩同掩码单词不会改变最优值，且在重复字符集合较多时减少配对数量。设保留下来的掩码数为 ``u``，建掩码需要 ``O(所有单词字符总数)``，配对需要 ``O(u^2)``，额外空间为 ``O(u)``。

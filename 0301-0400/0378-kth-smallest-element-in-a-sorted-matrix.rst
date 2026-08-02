@@ -35,3 +35,45 @@
    输入：matrix = [[-5]]，k = 1
    输出：-5
    解释：矩阵只有一个元素，它同时是第一小元素。
+
+二分答案值，计数不超过它的元素
+------------------------------
+
+矩阵中的最小值和最大值给出了答案范围。对候选值 ``mid``，逐行用 ``upper_bound`` 统计小于等于 ``mid`` 的元素个数；这个计数随着 ``mid`` 增大单调不减。如果计数至少为 ``k``，第 ``k`` 小值不大于 ``mid``，收缩右边界；否则答案必须更大，移动左边界。
+
+计数按出现次数累加，所以重复值不会被去重；最终二分找到的是第一个使计数达到 ``k`` 的值，也就是一基排名下的第 ``k`` 小元素。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int kthSmallest(std::vector<std::vector<int>>& matrix,
+                       int k) {
+           long long left = matrix[0][0];
+           long long right = matrix.back().back();
+           while (left < right) {
+               long long middle = left + (right - left) / 2;
+               int count = 0;
+               for (const auto& row : matrix) {
+                   count += static_cast<int>(
+                       std::upper_bound(row.begin(), row.end(), middle)
+                       - row.begin());
+               }
+
+               if (count >= k) {
+                   right = middle;
+               } else {
+                   left = middle + 1;
+               }
+           }
+           return static_cast<int>(left);
+       }
+   };
+
+代码分析
+--------
+
+``upper_bound`` 利用每行有序性完成计数，二分利用“计数至少为 k”的单调性；行列同时有序但这里不需要额外构造元素堆。设边长为 ``n``、数值范围宽度为 ``V``，时间复杂度为 ``O(n log n log V)``，额外空间为 ``O(1)``。

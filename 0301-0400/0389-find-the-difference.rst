@@ -35,3 +35,28 @@
    输入：s = ""，t = "z"
    输出："z"
    解释：s 没有字符，因此 t 中唯一字符就是新增字符。
+
+异或抵消相同字符实例
+----------------------
+
+把 ``s`` 和 ``t`` 中的所有字符一起异或。相同字符出现两次时会互相抵消，``t`` 比 ``s`` 多出的那一个字符没有对应实例，最终只剩它。字符顺序和重复次数都不会影响这个抵消过程。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       char findTheDifference(std::string s, std::string t) {
+           int difference = 0;
+           for (char c : s) difference ^= c;
+           for (char c : t) difference ^= c;
+           return static_cast<char>(difference);
+       }
+   };
+
+代码分析
+--------
+
+异或满足交换律、结合律且 ``x ^ x == 0``，因此无须排序或维护 26 个频次。两个字符串总长度只被扫描一次，时间复杂度为 ``O(|s| + |t|)``，额外空间为 ``O(1)``。

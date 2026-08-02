@@ -35,3 +35,40 @@
    输入：n = 1
    输出：1
    解释：序列已经只含一个整数，不需要执行删除。
+
+只跟踪当前序列的首项、步长和长度
+----------------------------------
+
+每轮删除后，剩余序列仍是等差序列。设当前最小值为 ``head``，相邻元素间距为 ``step``，剩余个数为 ``remaining``。从左向右删除时，首项必被删掉；从右向左删除时，只有剩余个数为奇数时首项才会被删掉。首项是否移动一格由此确定，轮后步长翻倍，长度减半，方向交替。
+
+不需要实际保存序列，``n`` 很大时也只执行对数轮次。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int lastRemaining(int n) {
+           long long head = 1;
+           long long step = 1;
+           long long remaining = n;
+           bool fromLeft = true;
+
+           while (remaining > 1) {
+               if (fromLeft || (remaining % 2 == 1)) {
+                   head += step;
+               }
+               remaining /= 2;
+               step *= 2;
+               fromLeft = !fromLeft;
+           }
+           return static_cast<int>(head);
+       }
+   };
+
+代码分析
+--------
+
+``head`` 只在本轮最左元素被删除时前进，``step`` 记录压缩后相邻保留元素的间隔；这些量足以恢复下一轮的等差序列。每轮长度至少减半，时间复杂度为 ``O(log n)``，额外空间为 ``O(1)``。

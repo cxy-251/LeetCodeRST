@@ -35,3 +35,37 @@
    输入：n = 6，pick = 6
    输出：6
    解释：隐藏数可以等于 n，搜索范围包含两个端点。
+
+接口返回值直接决定保留哪一半
+------------------------------
+
+维护仍可能包含 ``pick`` 的闭区间 ``[left, right]``。猜测中点后，返回 ``0`` 立即得到答案；返回 ``-1`` 表示猜测偏大，隐藏数只能在左半；返回 ``1`` 表示猜测偏小，隐藏数只能在右半。每次更新都保留端点合法性。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int guessNumber(int n) {
+           long long left = 1;
+           long long right = n;
+           while (left <= right) {
+               long long middle = left + (right - left) / 2;
+               int result = guess(static_cast<int>(middle));
+               if (result == 0) return static_cast<int>(middle);
+               if (result < 0) {
+                   right = middle - 1;
+               } else {
+                   left = middle + 1;
+               }
+           }
+           return -1;
+       }
+   };
+
+代码分析
+--------
+
+``guess`` 的 ``-1`` 与 ``1`` 含义恰好分别对应“猜大”和“猜小”，不能按普通比较函数的直觉反写；用 ``long long`` 计算中点避免边界加法溢出。每次调用缩小一半搜索区间，时间复杂度为 ``O(log n)``，额外空间为 ``O(1)``。

@@ -35,3 +35,31 @@
    输入：ransomNote = "aabc"，magazine = "abc"
    输出：false
    解释：目标需要两个 a，而 magazine 中只有一个 a，同一个字符位置不能使用两次。
+
+比较 26 种字符的剩余额度
+--------------------------
+
+先把 ``magazine`` 中每个字母的可用次数记入数组，再扫描 ``ransomNote``，每取出一个字母就消耗一个额度；任一额度变成负数，说明杂志中的字符实例不够。字符顺序无关，所以不需要模拟具体取出位置。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       bool canConstruct(std::string ransomNote,
+                         std::string magazine) {
+           std::array<int, 26> remaining{};
+           for (char c : magazine) ++remaining[c - 'a'];
+           for (char c : ransomNote) {
+               if (--remaining[c - 'a'] < 0) return false;
+           }
+           return true;
+       }
+   };
+
+代码分析
+--------
+
+每个目标字符都对应一次额度消耗，因而恰好表达“同一字符位置不能重复使用”；多余的 ``magazine`` 字符不影响结果。时间复杂度为 ``O(ransomNote.size() + magazine.size())``，额外空间为固定的 ``O(1)``。

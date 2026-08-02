@@ -35,3 +35,63 @@
    调用：remove(5), getRandom()
    输出：true；随机结果为 5 或 8，二者概率相同
    解释：删除后仍保留一个 5，集合现在含两个实例。
+
+数组保存实例，值映射到所有实例位置
+------------------------------------
+
+允许重复值时，数组中的每个位置代表一个独立实例；哈希表把值映射到这些位置的集合。插入时把新位置加入集合，返回此前该集合是否为空；删除时取出任意一个位置。为了保持数组紧凑，仍把末尾实例搬到被删位置，同时从末尾位置集合中移除旧下标、加入新下标。
+
+随机选择直接在实例数组上取下标，所以出现两次的值天然有两份等概率实例。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class RandomizedCollection {
+       std::vector<int> values;
+       std::unordered_map<int, std::unordered_set<int>> positions;
+       std::mt19937 generator{std::random_device{}()};
+
+   public:
+       bool insert(int val) {
+           bool wasAbsent = positions[val].empty();
+           positions[val].insert(static_cast<int>(values.size()));
+           values.push_back(val);
+           return wasAbsent;
+       }
+
+       bool remove(int val) {
+           auto it = positions.find(val);
+           if (it == positions.end() || it->second.empty()) {
+               return false;
+           }
+
+           int removedIndex = *it->second.begin();
+           int lastIndex = static_cast<int>(values.size()) - 1;
+           int lastValue = values[lastIndex];
+           it->second.erase(removedIndex);
+           bool removeValueEntry = it->second.empty();
+
+           if (removedIndex != lastIndex) {
+               values[removedIndex] = lastValue;
+               auto& movedPositions = positions[lastValue];
+               movedPositions.erase(lastIndex);
+               movedPositions.insert(removedIndex);
+           }
+           values.pop_back();
+           if (removeValueEntry) positions.erase(val);
+           return true;
+       }
+
+       int getRandom() {
+           std::uniform_int_distribution<int> distribution(
+               0, static_cast<int>(values.size()) - 1);
+           return values[distribution(generator)];
+       }
+   };
+
+代码分析
+--------
+
+位置集合与数组始终同步：移动末尾实例后，它在哈希表中的旧位置被替换为新位置，删除一个值的最后实例时才移除该值的映射。数组位置等概率抽样，重复实例会按出现次数累加概率。插入、删除和随机选择平均为 ``O(1)``，额外空间为 ``O(m)``。

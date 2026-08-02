@@ -35,3 +35,50 @@
    输入：nums = [1,2,3]
    输出：[1,2]
    解释：[1,3] 也是大小为 2 的最大合法子集，题目允许返回任意一个。
+
+排序后，合法子集就是一条整除链
+--------------------------------
+
+将数组升序排序。若一个已选子集按升序排列，并且每个新元素都能被当前链的最后一个元素整除，那么链中任意更早元素也能整除新元素，因而“最后一个整除前一个”的条件足以保证任意两数可比较。
+
+令 ``dp[i]`` 表示以排序后第 ``i`` 个数结尾的最长整除链长度。若 ``nums[i] % nums[j] == 0``，就可以把 ``i`` 接在以 ``j`` 结尾的链后；同时记录 ``parent[i]``，最后从最长结尾反向恢复一个合法子集。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       std::vector<int> largestDivisibleSubset(
+           std::vector<int>& nums) {
+           std::sort(nums.begin(), nums.end());
+           int n = static_cast<int>(nums.size());
+           std::vector<int> dp(n, 1);
+           std::vector<int> parent(n, -1);
+           int bestIndex = 0;
+
+           for (int i = 0; i < n; ++i) {
+               for (int j = 0; j < i; ++j) {
+                   if (nums[i] % nums[j] == 0
+                       && dp[j] + 1 > dp[i]) {
+                       dp[i] = dp[j] + 1;
+                       parent[i] = j;
+                   }
+               }
+               if (dp[i] > dp[bestIndex]) bestIndex = i;
+           }
+
+           std::vector<int> result;
+           for (int i = bestIndex; i != -1; i = parent[i]) {
+               result.push_back(nums[i]);
+           }
+           std::reverse(result.begin(), result.end());
+           return result;
+       }
+   };
+
+代码分析
+--------
+
+排序把可能的除数放在被除数之前，状态转移只需检查前面的元素；链式整除保证恢复结果中的任意两数都满足题目条件。每个有序下标对检查一次，时间复杂度为 ``O(n^2)``，额外空间为 ``O(n)``；排序会改变输入数组顺序，但题目只要求返回子集。

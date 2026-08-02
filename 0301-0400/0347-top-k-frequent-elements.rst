@@ -35,3 +35,43 @@
    输入：nums = [5, 5, 1]，k = 1
    输出：[5]
    解释：5 的出现次数高于 1，因此唯一答案是 5。
+
+频率本身就是桶的下标
+----------------------
+
+先统计每个值的出现次数。频率的范围从 1 到 ``nums.size()``，因此可以建立同样按频率编号的桶，把值放入 ``bucket[count]``。从最高频率向下扫描桶，取出恰好 ``k`` 个不同值；不需要对所有值按比较器排序，频率边界的唯一性由题目保证。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       std::vector<int> topKFrequent(
+           std::vector<int>& nums, int k) {
+           std::unordered_map<int, int> frequency;
+           for (int value : nums) ++frequency[value];
+
+           std::vector<std::vector<int>> bucket(nums.size() + 1);
+           for (const auto& entry : frequency) {
+               bucket[entry.second].push_back(entry.first);
+           }
+
+           std::vector<int> result;
+           for (int count = static_cast<int>(nums.size());
+                count >= 1 && static_cast<int>(result.size()) < k;
+                --count) {
+               for (int value : bucket[count]) {
+                   result.push_back(value);
+                   if (static_cast<int>(result.size()) == k) break;
+               }
+           }
+           return result;
+       }
+   };
+
+代码分析
+--------
+
+桶按出现次数排列，反向扫描自然得到从高到低的频率顺序；每个不同值只进入一个桶，所以不会重复输出。哈希统计和桶扫描平均为线性时间，时间复杂度为 ``O(n)``，额外空间为 ``O(n)``。结果不要求排序，桶内顺序无需额外规定。

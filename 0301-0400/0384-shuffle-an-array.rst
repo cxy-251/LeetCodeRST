@@ -37,3 +37,41 @@
    调用：shuffle(), reset()
    输出：[-4]，[-4]
    解释：只有一种排列，两种操作都返回相同内容。
+
+Fisher–Yates 逐步确定随机位置
+------------------------------
+
+从数组末尾向前处理位置 ``i``，在尚未确定的 ``[0, i]`` 中等概率选择一个位置并交换。第 ``i`` 位的每个元素都有 ``1/(i+1)`` 的机会被选中，递推得到所有完整排列等概率。每次洗牌都从原始数组复制一份，避免上一次随机结果影响下一次。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+       std::vector<int> original;
+       std::mt19937 generator{std::random_device{}()};
+
+   public:
+       Solution(std::vector<int>& nums) : original(nums) {}
+
+       std::vector<int> reset() {
+           return original;
+       }
+
+       std::vector<int> shuffle() {
+           std::vector<int> result = original;
+           for (int i = static_cast<int>(result.size()) - 1;
+                i > 0; --i) {
+               std::uniform_int_distribution<int> distribution(0, i);
+               int chosen = distribution(generator);
+               std::swap(result[i], result[chosen]);
+           }
+           return result;
+       }
+   };
+
+代码分析
+--------
+
+``reset`` 返回从未修改的 ``original`` 副本；Fisher–Yates 每一步只在尚未固定的前缀中抽样，不会产生排列偏斜。洗牌时间为 ``O(n)``，复制结果的额外空间为 ``O(n)``，重置也需要复制返回值。

@@ -35,3 +35,40 @@
    输入：nums = [1, 2, 4]，n = 7
    输出：0
    解释：通过选择这些元素的不同子集，可以表示 1 到 7 的每个整数，不需要添加新值。
+
+维护当前连续覆盖的右端
+------------------------
+
+设 ``reach`` 表示当前元素可以覆盖的连续区间为 ``[1, reach - 1]``，初始没有元素，所以 ``reach = 1``。若下一个未处理的原数组元素 ``nums[i] <= reach``，它可以和已有子集组合，把覆盖右端扩展到 ``reach + nums[i] - 1``，因此令 ``reach += nums[i]``。
+
+如果 ``nums[i] > reach``，金额 ``reach`` 无法由已有元素表示，而任何更大的补丁也不能表示这个缺口；最小且最有用的选择只能是补入 ``reach``。加入它后，原来 ``[1, reach - 1]`` 的所有数与补丁组合，恰好连续覆盖到 ``2 * reach - 1``，所以令 ``reach += reach``。只要 ``reach <= n`` 就必须继续补齐或吸收原数组元素。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int minPatches(std::vector<int>& nums, int n) {
+           long long reach = 1;
+           int index = 0;
+           int patches = 0;
+
+           while (reach <= n) {
+               if (index < static_cast<int>(nums.size())
+                   && nums[index] <= reach) {
+                   reach += nums[index++];
+               } else {
+                   reach += reach;
+                   ++patches;
+               }
+           }
+           return patches;
+       }
+   };
+
+代码分析
+--------
+
+数组已升序排列，所以一旦当前元素大于缺口，后面的原元素也不可能先填补它；补入 ``reach`` 是在该时刻能把连续覆盖区间扩展得最远的最优选择。使用 ``long long`` 是因为覆盖端点会超过 ``n`` 才停止，而 ``n`` 接近 32 位上界。每个原数组元素最多处理一次，时间复杂度为 ``O(nums.size())``，额外空间为 ``O(1)``。

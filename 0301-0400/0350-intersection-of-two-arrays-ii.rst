@@ -35,3 +35,36 @@
    输入：nums1 = [5, 5]，nums2 = [6]
    输出：[]
    解释：两个数组没有可配对的相同值。
+
+用剩余频次表示可用位置
+------------------------
+
+先统计 ``nums1`` 中每个值还可以被匹配的次数。扫描 ``nums2`` 时，只有当某值的剩余次数大于零，才把它放入答案并将次数减一。这样同一个 ``nums1`` 位置不会被重复使用；最终某值的输出次数正好是两个数组频次的较小值。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       std::vector<int> intersect(
+           std::vector<int>& nums1, std::vector<int>& nums2) {
+           std::unordered_map<int, int> remaining;
+           for (int value : nums1) ++remaining[value];
+
+           std::vector<int> result;
+           for (int value : nums2) {
+               auto it = remaining.find(value);
+               if (it == remaining.end() || it->second == 0) continue;
+               result.push_back(value);
+               --it->second;
+           }
+           return result;
+       }
+   };
+
+代码分析
+--------
+
+频次表把多重集交集的“每个位置最多匹配一次”直接编码为可用额度；扫描第二个数组时消耗额度，不需要对输入排序，也不依赖结果顺序。平均时间复杂度为 ``O(nums1.size() + nums2.size())``，额外空间为 ``O(nums1.size())``。

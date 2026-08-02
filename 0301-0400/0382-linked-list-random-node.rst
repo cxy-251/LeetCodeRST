@@ -37,3 +37,42 @@
    调用：getRandom()
    输出：-6
    解释：链表只有一个节点，每次调用都必须返回它的值。
+
+水塘抽样不预先知道链表长度
+----------------------------
+
+每次调用从头遍历链表，维护当前已经看到的节点数 ``count`` 和候选值。看到第 ``count`` 个节点时，以 ``1 / count`` 的概率用它替换候选。第一个节点必选；任意第 ``j`` 个节点最终被保留的概率是 ``1/j`` 乘以前面没有替换它的概率，恰好为 ``1/n``。
+
+这样无需先统计长度或复制节点，且不改变链表结构。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+       ListNode* head;
+       std::mt19937 generator{std::random_device{}()};
+
+   public:
+       Solution(ListNode* head) : head(head) {}
+
+       int getRandom() {
+           int count = 0;
+           int chosen = 0;
+           for (ListNode* node = head; node != nullptr;
+                node = node->next) {
+               ++count;
+               std::uniform_int_distribution<int> distribution(1, count);
+               if (distribution(generator) == 1) {
+                   chosen = node->val;
+               }
+           }
+           return chosen;
+       }
+   };
+
+代码分析
+--------
+
+水塘抽样保证每个节点位置等概率，而不是按节点值去重；重复值的概率会自动按对应节点数量相加。每次 ``getRandom`` 遍历 ``n`` 个节点，时间复杂度为 ``O(n)``，除随机状态外额外空间为 ``O(1)``。

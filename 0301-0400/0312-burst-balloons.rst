@@ -35,3 +35,46 @@
    输入：nums = [0, 5]
    输出：5
    解释：先戳破 0 不得硬币，再戳 5 得到 5；若先戳 5，它的左邻值为 0，本次收益也为 0。
+
+把“最后戳破”作为区间决策
+--------------------------
+
+直接按戳破顺序搜索会遇到动态相邻关系：当前一个气球的邻居取决于之前删掉了谁。反过来观察一个开区间 ``(left, right)``，如果最后戳破其中的 ``k``，那么在这一步发生时，``left`` 和 ``right`` 一定是它的左右邻居；而 ``k`` 左侧和右侧的气球已经分别独立完成。于是最后一步把两个子区间的最优值和一次收益连接起来。
+
+在数组两端补上数值为 1 的虚拟气球。令 ``dp[left][right]`` 表示只戳破下标严格位于 ``left`` 与 ``right`` 之间的气球所能得到的最大硬币数。枚举区间内的每一个 ``k`` 作为最后一个气球，转移为
+``dp[left][k] + dp[k][right] + a[left] * a[k] * a[right]``。按区间长度从短到长计算，两个子区间在转移前已经完成。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int maxCoins(std::vector<int>& nums) {
+           int n = static_cast<int>(nums.size());
+           std::vector<int> values(n + 2, 1);
+           for (int i = 0; i < n; ++i) values[i + 1] = nums[i];
+
+           std::vector<std::vector<long long>> dp(
+               n + 2, std::vector<long long>(n + 2, 0));
+           for (int length = 2; length <= n + 1; ++length) {
+               for (int left = 0; left + length <= n + 1; ++left) {
+                   int right = left + length;
+                   for (int last = left + 1; last < right; ++last) {
+                       dp[left][right] = std::max(
+                           dp[left][right],
+                           dp[left][last] + dp[last][right]
+                               + 1LL * values[left] * values[last]
+                               * values[right]);
+                   }
+               }
+           }
+           return static_cast<int>(dp[0][n + 1]);
+       }
+   };
+
+代码分析
+--------
+
+``dp[left][right]`` 的边界气球不会被戳破，只负责提供最后一步的邻居值，因此补 1 后不需要另写首尾情况。枚举“最后一个”消除了中间相邻关系变化带来的依赖；所有合法顺序都有唯一的最后一个气球，故不会漏解。状态数为 ``O(n^2)``，每个状态枚举 ``O(n)`` 个最后位置，时间复杂度为 ``O(n^3)``，空间复杂度为 ``O(n^2)``。

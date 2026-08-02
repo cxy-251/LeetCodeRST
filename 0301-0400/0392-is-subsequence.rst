@@ -35,3 +35,32 @@
    输入：s = "god"，t = "doing"
    输出：false
    解释：g 位于字符串末尾，在它之后无法再找到 o 和 d，因此不能保持所需顺序。
+
+贪心匹配最早可用位置
+----------------------
+
+从左到右扫描 ``t``，维护 ``s`` 中下一个尚未匹配的字符。遇到相同字符就消耗 ``s`` 的一个位置，否则跳过 ``t`` 当前字符。选择最早出现的可匹配位置不会减少后续可用范围，因此如果连最早匹配都无法完成，任何更晚的选择也不可能完成。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       bool isSubsequence(std::string s, std::string t) {
+           int index = 0;
+           for (char c : t) {
+               if (index < static_cast<int>(s.size())
+                   && s[index] == c) {
+                   ++index;
+               }
+           }
+           return index == static_cast<int>(s.size());
+       }
+   };
+
+代码分析
+--------
+
+``index`` 单调向右移动，同一个 ``t`` 位置最多匹配一次；空 ``s`` 时索引初始就等于其长度，返回真。时间复杂度为 ``O(|t|)``，额外空间为 ``O(1)``。

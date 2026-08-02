@@ -35,3 +35,46 @@
    输入：data = [240,162,138]
    输出：false
    解释：240 声明一个四字节字符，但数组只提供了两个后续字节，还缺少一个连续字节。
+
+用 remaining 表示当前字符还需几个连续字节
+--------------------------------------------
+
+从左到右读取字节。若当前没有等待连续字节，则根据首字节的前缀判断字符长度：``0`` 表示单字节，``110``、``1110``、``11110`` 分别表示还需 1、2、3 个字节；其他前缀均非法。若正在等待，当前字节必须满足 ``10xxxxxx``，通过后将剩余数减一。
+
+数组结束时 ``remaining`` 必须为零，否则最后一个字符不完整；孤立的连续字节也会在 ``remaining == 0`` 时无法匹配任何首字节格式。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       bool validUtf8(std::vector<int>& data) {
+           int remaining = 0;
+           for (int byte : data) {
+               if (remaining == 0) {
+                   if ((byte & 0x80) == 0) {
+                       continue;
+                   } else if ((byte & 0xE0) == 0xC0) {
+                       remaining = 1;
+                   } else if ((byte & 0xF0) == 0xE0) {
+                       remaining = 2;
+                   } else if ((byte & 0xF8) == 0xF0) {
+                       remaining = 3;
+                   } else {
+                       return false;
+                   }
+               } else {
+                   if ((byte & 0xC0) != 0x80) return false;
+                   --remaining;
+               }
+           }
+           return remaining == 0;
+       }
+   };
+
+代码分析
+--------
+
+首字节只负责建立“还需几个字节”的状态，连续字节只负责消耗状态；掩码 ``0xF8`` 也会拒绝五字节及更长前缀。每个字节只检查一次，时间复杂度为 ``O(n)``，额外空间为 ``O(1)``。

@@ -35,3 +35,46 @@
    输入：a = 1337，b = [5]
    输出：0
    解释：1337 的任意正整数次幂都能被 1337 整除。
+
+按十进制位递推指数
+--------------------
+
+若已经处理了指数前缀 ``q``，再读入一位 ``d`` 后新指数是 ``10q + d``，所以
+``a^(10q+d) = (a^q)^10 * a^d``。每一步都先把当前结果取十次方，再乘上底数的 ``d`` 次方，并对 1337 取模；整个过程中从未构造完整指数。
+
+模幂函数用二进制快速幂计算小指数 10 或数字位 ``0..9``。底数和中间乘积使用 ``long long``，每次乘法前后都保持在可控范围内。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+       static constexpr long long MOD = 1337;
+
+       long long power(long long base, int exponent) {
+           long long result = 1;
+           base %= MOD;
+           while (exponent > 0) {
+               if (exponent & 1) result = result * base % MOD;
+               base = base * base % MOD;
+               exponent >>= 1;
+           }
+           return result;
+       }
+
+   public:
+       int superPow(int a, std::vector<int>& b) {
+           long long result = 1;
+           for (int digit : b) {
+               result = power(result, 10)
+                      * power(a, digit) % MOD;
+           }
+           return static_cast<int>(result);
+       }
+   };
+
+代码分析
+--------
+
+十进制位递推严格保持了指数的高位到低位顺序，``b`` 再长也只需保存一个模意义下的结果；快速幂则避免逐次相乘。若 ``b`` 长度为 ``L``，每一位只进行常数次模幂，时间复杂度为 ``O(L)``（常数来自最多 4 次平方/乘法），额外空间为 ``O(1)``。

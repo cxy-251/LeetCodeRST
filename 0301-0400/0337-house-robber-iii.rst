@@ -35,3 +35,39 @@
    输入：root = [0, 0, 0]
    输出：0
    解释：无论选择哪些合法节点，总金额都为 0。
+
+每个节点只需两个互斥状态
+--------------------------
+
+对每个子树返回两个值：``notRob`` 表示不选择当前节点时的最大金额，``rob`` 表示选择当前节点时的最大金额。若选择当前节点，两个孩子都不能选，所以只能加上孩子的 ``notRob``；若不选择当前节点，每个孩子可以选也可以不选，分别取两种状态的较大值。
+
+后序遍历先得到左右子树状态，再合并当前节点。这样直接相连的父子冲突被局部状态完整表达，而兄弟节点的选择可以独立组合；祖孙节点不直接相连，也会在不同层的状态转移中被允许。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+       std::pair<int, int> dfs(TreeNode* node) {
+           if (node == nullptr) return {0, 0};
+
+           auto left = dfs(node->left);
+           auto right = dfs(node->right);
+           int notRob = std::max(left.first, left.second)
+                      + std::max(right.first, right.second);
+           int rob = node->val + left.first + right.first;
+           return {notRob, rob};
+       }
+
+   public:
+       int rob(TreeNode* root) {
+           auto result = dfs(root);
+           return std::max(result.first, result.second);
+       }
+   };
+
+代码分析
+--------
+
+状态的第一项和第二项分别固定了当前节点是否被选择，子树之间只通过这两个最优值交互，不需要记录具体盗取路径。每个树节点访问一次，时间复杂度为 ``O(n)``；递归栈空间为 ``O(h)``，其中 ``h`` 是树高。
