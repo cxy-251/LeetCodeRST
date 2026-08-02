@@ -143,6 +143,53 @@
 * 算法会改变输入数组元素顺序；
 * 元素和索引操作不需要宽整数。
 
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int findKthLargest(std::vector<int>& nums, int k) {
+           int target = static_cast<int>(nums.size()) - k;
+           int left = 0;
+           int right = static_cast<int>(nums.size()) - 1;
+
+           while (left <= right) {
+               int pivot = nums[left + (right - left) / 2];
+               int less = left;
+               int current = left;
+               int greater = right;
+
+               while (current <= greater) {
+                   if (nums[current] < pivot) {
+                       std::swap(nums[less++], nums[current++]);
+                   } else if (nums[current] > pivot) {
+                       std::swap(nums[current], nums[greater--]);
+                   } else {
+                       ++current;
+                   }
+               }
+
+               if (target < less) {
+                   right = less - 1;
+               } else if (target > greater) {
+                   left = greater + 1;
+               } else {
+                   return nums[target];
+               }
+           }
+           return -1;
+       }
+   };
+
+代码分析
+--------
+
+第 ``k`` 大元素在升序下标中的位置是 ``target = n-k``。三路分区把当前区间划成“小于 pivot、等于 pivot、大于 pivot”三段；交换大于区元素时不递增 ``current``，因为换进来的元素尚未检查。分区结束后，若目标下标落在等于段，答案已经确定；否则只在目标所在的一侧继续处理，另一侧不再访问。
+
+例如 ``nums=[3,2,3,1,2,4,5,5,6]``、``k=4`` 时目标下标为 5。某轮分区若得到小于段下标 ``[0,3]``、等于段 ``[4,5]``、大于段从 6 开始，目标在等于段内，直接返回该值；重复值被整体归入等于段，不会导致相同值之间无意义地继续分割。算法原地改变数组顺序，平均时间复杂度为 ``O(n)``，确定性中点值下最坏复杂度为 ``O(n^2)``，额外空间复杂度为 ``O(1)``。
+
 十语言实现
 ----------
 

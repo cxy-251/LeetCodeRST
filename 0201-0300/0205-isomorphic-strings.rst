@@ -226,6 +226,42 @@
   ``O(n)``，两个环境保存 ``O(k)`` 键；
 * 所有实现都只读输入，返回单个布尔值，没有与 ``n`` 同阶的输出载荷。
 
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       bool isIsomorphic(std::string s, std::string t) {
+           if (s.size() != t.size()) return false;
+
+           std::array<int, 256> forward;
+           std::array<int, 256> reverse;
+           forward.fill(-1);
+           reverse.fill(-1);
+
+           for (std::size_t i = 0; i < s.size(); ++i) {
+               unsigned char source = static_cast<unsigned char>(s[i]);
+               unsigned char target = static_cast<unsigned char>(t[i]);
+               if ((forward[source] != -1 && forward[source] != target) ||
+                   (reverse[target] != -1 && reverse[target] != source)) {
+                   return false;
+               }
+               forward[source] = target;
+               reverse[target] = source;
+           }
+           return true;
+       }
+   };
+
+代码分析
+--------
+
+同构要求源字符到目标字符是函数，同时目标字符不能被两个不同源字符复用，所以只维护单向映射会漏掉冲突。``forward`` 检查“同一个源是否总映射到同一个目标”，``reverse`` 检查“同一个目标是否已经被另一个源占用”；两张表在每一对位置上同步更新，正好维护了双射不变量。
+
+例如 ``s = "egg"``、``t = "add"`` 时，``e -> a``、``g -> d`` 且反向映射无冲突，返回真；``s = "ab"``、``t = "cc"`` 时，第二个源 ``b`` 试图再次映射到已被 ``a`` 占用的 ``c``，反向表立即拒绝。输入按 ASCII 字符处理，表大小固定为 256；每个位置只检查和更新常数项，时间复杂度为 ``O(n)``，额外空间复杂度为 ``O(1)``。
+
 十语言实现
 ----------
 

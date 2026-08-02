@@ -230,6 +230,51 @@ Kahn 算法不断选择当前入度为 0 的课程：
 * Julia 同样把课程编号加一后访问数组，但邻接表中可以继续保存零基课程编号；
 * 重复边不会改变渐近复杂度，它们按出现次数计入 ``E``。
 
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       bool canFinish(int numCourses,
+                      std::vector<std::vector<int>>& prerequisites) {
+           std::vector<std::vector<int>> graph(numCourses);
+           std::vector<int> indegree(numCourses, 0);
+           for (const auto& prerequisite : prerequisites) {
+               int course = prerequisite[0];
+               int prerequisiteCourse = prerequisite[1];
+               graph[prerequisiteCourse].push_back(course);
+               ++indegree[course];
+           }
+
+           std::queue<int> ready;
+           for (int course = 0; course < numCourses; ++course) {
+               if (indegree[course] == 0) ready.push(course);
+           }
+
+           int processed = 0;
+           while (!ready.empty()) {
+               int course = ready.front();
+               ready.pop();
+               ++processed;
+               for (int next : graph[course]) {
+                   if (--indegree[next] == 0) ready.push(next);
+               }
+           }
+           return processed == numCourses;
+       }
+   };
+
+代码分析
+--------
+
+把每条 ``[course, prerequisite]`` 看成从先修课到课程的有向边。入度为 0 的课程当前没有未完成先修课，可以加入队列；取出后删除它发出的所有边，新的入度为 0 的课程继续进入队列。队列清空时，若仍有正入度节点，它们只能互相依赖形成环，无法完成全部课程。
+
+例如 ``numCourses=4``、先修关系 ``[1,0],[2,0],[3,1],[3,2]`` 时，先取 0，再使 1、2 就绪，最后取 3；四个节点都被处理，返回真。若加入 ``[0,3]``，处理会停在环上的节点之外，``processed`` 小于 4，返回假。重复边会相应增加和减少入度，不改变“所有依赖边都已删除才可入队”的判定。
+
+每条边只被加入和处理一次，每个课程只入队一次；时间复杂度为 ``O(V+E)``，邻接表、入度数组和队列的额外空间复杂度为 ``O(V+E)``。
+
 十语言实现
 ----------
 

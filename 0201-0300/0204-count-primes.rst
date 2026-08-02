@@ -230,6 +230,41 @@ n=20
 当 ``n <= 2`` 时，严格小于 ``n`` 的范围不含任何质数，应直接返回 0；此时不能按“长度为 ``n`` 的数组”
 去访问 ``composite[1]``。只有 ``n > 2`` 时才建立筛数组并初始化 0、1 的非质数标记，之后的筛法状态才有合法下标。
 
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int countPrimes(int n) {
+           if (n <= 2) return 0;
+
+           std::vector<bool> composite(n, false);
+           composite[0] = composite[1] = true;
+           for (int prime = 2; prime <= (n - 1) / prime; ++prime) {
+               if (composite[prime]) continue;
+               for (long long multiple = 1LL * prime * prime;
+                    multiple < n; multiple += prime) {
+                   composite[static_cast<int>(multiple)] = true;
+               }
+           }
+
+           int count = 0;
+           for (int value = 2; value < n; ++value) {
+               if (!composite[value]) ++count;
+           }
+           return count;
+       }
+   };
+
+代码分析
+--------
+
+筛数组的下标 ``x`` 表示 ``x`` 是否已经被某个更小质数标记为合数。处理质数 ``p`` 时，从 ``p*p`` 开始标记，因为 ``2p`` 到 ``(p-1)p`` 已经分别在处理更小因子时被标记；只需处理 ``p*p < n`` 的质数，平方更大的质数不会再产生新的复合数。条件写成 ``prime <= (n-1)/prime``，避免判断平方时的整数溢出。
+
+例如 ``n=10`` 时，先用 2 标记 4、6、8，再用 3 标记 9，未标记的 ``2,3,5,7`` 就是严格小于 10 的四个质数。数组长度严格为 ``n``，因此不会把 ``n`` 本身误计入；筛法时间复杂度为 ``O(n log log n)``，额外空间复杂度为 ``O(n)``。
+
 十语言实现
 ----------
 

@@ -231,6 +231,36 @@
 * Rust 的 ``Vec<i32>`` 按值传入会移动所有权，不会复制元素缓冲区；
 * R 与 Julia 使用一基索引，窗口长度分别为 ``right-left+1``，不能照抄零基边界后再额外加一。
 
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       int minSubArrayLen(int target, std::vector<int>& nums) {
+           long long sum = 0;
+           int left = 0;
+           int answer = static_cast<int>(nums.size()) + 1;
+
+           for (int right = 0; right < static_cast<int>(nums.size()); ++right) {
+               sum += nums[right];
+               while (sum >= target) {
+                   answer = std::min(answer, right - left + 1);
+                   sum -= nums[left++];
+               }
+           }
+           return answer == static_cast<int>(nums.size()) + 1 ? 0 : answer;
+       }
+   };
+
+代码分析
+--------
+
+题目保证数组元素为正数，所以右端点向右移动时窗口和只会增加，左端点向右移动时窗口和只会减少。扫描到 ``right`` 后，只要当前窗口和已达到 ``target``，就不断删除最左元素；删除到下一步不再满足为止。这样记录的最后一个满足窗口是当前 ``right`` 下的最短窗口，任何更早的左端点只会更长。
+
+例如 ``target=7``、``nums=[2,3,1,2,4,3]`` 时，窗口扩展到 ``[2,3,1,2]`` 首次达到 8，收缩得到长度 4；继续扩展到末尾后，窗口 ``[4,3]`` 达到 7，更新答案为 2。每个元素最多被 ``right`` 加入一次、被 ``left`` 移除一次，时间复杂度为 ``O(n)``，除输入和结果外额外空间复杂度为 ``O(1)``；使用 64 位 ``sum`` 避免累加中间值溢出。
+
 十语言实现
 ----------
 

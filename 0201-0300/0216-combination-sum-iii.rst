@@ -202,6 +202,60 @@
 
 递归深度为 ``k``，路径工作空间为 ``O(k)``。返回结果本身占 ``O(Z*k)``，其中 ``Z`` 是答案数量。
 
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   private:
+       static int minSum(int start, int count) {
+           return count * (2 * start + count - 1) / 2;
+       }
+
+       static int maxSum(int count) {
+           return count * (19 - count) / 2;
+       }
+
+       void search(int start, int slots, int remaining,
+                   std::vector<int>& path,
+                   std::vector<std::vector<int>>& answer) {
+           if (slots == 0) {
+               if (remaining == 0) answer.push_back(path);
+               return;
+           }
+           if (start > 9 || start + slots - 1 > 9) return;
+
+           int minimum = minSum(start, slots);
+           int maximum = maxSum(slots);
+           if (remaining < minimum || remaining > maximum) return;
+
+           for (int value = start; value <= 9; ++value) {
+               path.push_back(value);
+               search(value + 1, slots - 1, remaining - value,
+                      path, answer);
+               path.pop_back();
+           }
+       }
+
+   public:
+       std::vector<std::vector<int>> combinationSum3(int k, int n) {
+           std::vector<std::vector<int>> answer;
+           std::vector<int> path;
+           search(1, k, n, path, answer);
+           return answer;
+       }
+   };
+
+代码分析
+--------
+
+递归状态 ``(start, slots, remaining)`` 表示下一个数字至少从 ``start`` 选择，还要选 ``slots`` 个数，且它们的和必须为 ``remaining``。每次选择 ``value`` 后递归到 ``value+1``，所以路径严格递增，天然保证每个数字只用一次；数字范围被限制在 1 到 9，不需要额外去重。
+
+剪枝不是固定深度的形式检查，而是由剩余可选集合的最小和、最大和推出：若还选 ``slots`` 个数，最小只能是 ``start`` 起的连续 ``slots`` 个，最大只能是 9 向下的 ``slots`` 个。``remaining`` 落在这个区间之外时，无论后续如何选都不可能成功。比如 ``k=3,n=9`` 时，路径 ``[1,2]`` 还需一个 6，继续搜索；路径 ``[1,8]`` 已经不可能再选出大于 8 且不超过 9 的两个空位，会被边界条件直接剪掉。
+
+叶节点只有在 ``slots==0`` 且 ``remaining==0`` 时加入答案，因此每个结果恰好包含 ``k`` 个不同数字且和为 ``n``。候选组合总数至多为 ``C(9,k)``，复制每个答案需要 ``O(k)``，回溯时间复杂度为 ``O(C(9,k) * k)``，递归路径和调用栈额外空间为 ``O(k)``，不计返回结果载荷。
+
 十语言实现
 ----------
 

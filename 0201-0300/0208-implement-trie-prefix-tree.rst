@@ -203,6 +203,70 @@ C 释放函数在有限节点树上递归访问每个节点一次，因此全部
 * R 每次调用 ``utf8ToInt`` 会物化 ``O(L)`` 整数向量，因此其适配器额外和峰值空间为 ``O(L)``，不只是路径游标的 ``O(1)``；
 * R 用 environment 作为共享可变节点，修改子链接和终止标记对持有同一 Trie 根的调用者可见。
 
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Trie {
+   private:
+       struct Node {
+           std::array<Node*, 26> child{};
+           bool terminal = false;
+       };
+
+       Node* root_ = new Node();
+
+       Node* walk(const std::string& word) const {
+           Node* node = root_;
+           for (char character : word) {
+               int index = character - 'a';
+               if (node->child[index] == nullptr) return nullptr;
+               node = node->child[index];
+           }
+           return node;
+       }
+
+       static void release(Node* node) {
+           if (node == nullptr) return;
+           for (Node* child : node->child) release(child);
+           delete node;
+       }
+
+   public:
+       Trie() = default;
+
+       ~Trie() { release(root_); }
+
+       void insert(std::string word) {
+           Node* node = root_;
+           for (char character : word) {
+               int index = character - 'a';
+               if (node->child[index] == nullptr) {
+                   node->child[index] = new Node();
+               }
+               node = node->child[index];
+           }
+           node->terminal = true;
+       }
+
+       bool search(std::string word) const {
+           Node* node = walk(word);
+           return node != nullptr && node->terminal;
+       }
+
+       bool startsWith(std::string prefix) const {
+           return walk(prefix) != nullptr;
+       }
+   };
+
+代码分析
+--------
+
+每条边代表一个小写字母，节点的 ``terminal`` 只在某个完整单词结束处为真，因此 ``search`` 与 ``startsWith`` 的区别是：前者还必须检查终止标记，后者只需成功走完路径。插入时若路径不存在就创建节点；再次插入同一个单词只重复设置标记，不会产生第二份逻辑单词。
+
+例如先插入 ``"apple"`` 后，``startsWith("app")`` 为真而 ``search("app")`` 为假，直到单独插入 ``"app"`` 才把 ``p`` 节点标为完整单词。长度为 ``L`` 的操作沿路径访问 ``L`` 个字符，时间复杂度为 ``O(L)``；Trie 持有的节点数为所有不同前缀的总数，额外空间为 ``O(N)``，其中固定 26 个指针槽是每个节点的常数开销。
+
 十语言实现
 ----------
 

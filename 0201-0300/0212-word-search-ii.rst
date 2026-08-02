@@ -188,6 +188,95 @@ Trie 构建扫描全部单词字符，时间 ``O(S)``。设创建 ``N`` 个 Trie
 
 递归深度最多 ``min(L,mn)``，调用栈 ``O(L)``；棋盘原地标记只需固定状态；输出载荷为 ``O(Z)``。C 和 Rust 复制结果字符串；R 建 Trie 时 ``strsplit`` 物化字符向量；Julia ``codeunits`` 在官方 ASCII 字符域上提供字节包装视图。
 
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   private:
+       struct Node {
+           std::array<Node*, 26> child{};
+           std::string word;
+       };
+
+       static void release(Node* node) {
+           if (node == nullptr) return;
+           for (Node* child : node->child) release(child);
+           delete node;
+       }
+
+       static void insert(Node* root, const std::string& word) {
+           Node* node = root;
+           for (char character : word) {
+               int index = character - 'a';
+               if (node->child[index] == nullptr) {
+                   node->child[index] = new Node();
+               }
+               node = node->child[index];
+           }
+           node->word = word;
+       }
+
+       void search(std::vector<std::vector<char>>& board, int row, int column,
+                   Node* node, std::vector<std::string>& answer) {
+           char character = board[row][column];
+           if (character == '#') return;
+
+           Node* next = node->child[character - 'a'];
+           if (next == nullptr) return;
+
+           if (!next->word.empty()) {
+               answer.push_back(next->word);
+               next->word.clear();
+           }
+
+           board[row][column] = '#';
+           static constexpr int directions[4][2] = {
+               {-1, 0}, {1, 0}, {0, -1}, {0, 1}
+           };
+           for (const auto& direction : directions) {
+               int nextRow = row + direction[0];
+               int nextColumn = column + direction[1];
+               if (nextRow >= 0 && nextRow < static_cast<int>(board.size()) &&
+                   nextColumn >= 0 &&
+                   nextColumn < static_cast<int>(board[0].size())) {
+                   search(board, nextRow, nextColumn, next, answer);
+               }
+           }
+           board[row][column] = character;
+       }
+
+   public:
+       std::vector<std::string> findWords(
+           std::vector<std::vector<char>>& board,
+           std::vector<std::string>& words) {
+           if (board.empty() || board[0].empty()) return {};
+
+           Node* root = new Node();
+           for (const std::string& word : words) insert(root, word);
+
+           std::vector<std::string> answer;
+           for (int row = 0; row < static_cast<int>(board.size()); ++row) {
+               for (int column = 0;
+                    column < static_cast<int>(board[0].size()); ++column) {
+                   search(board, row, column, root, answer);
+               }
+           }
+           release(root);
+           return answer;
+       }
+   };
+
+代码分析
+--------
+
+Trie 把所有单词的共享前缀合并起来，棋盘 DFS 只有在当前路径仍是某个单词前缀时才继续。进入一个格子前读取它的字符，随后临时写成 ``'#'``，所以同一条路径不会重复使用该格子；递归返回后恢复原字符，其他起点和路径仍能正常使用棋盘。
+
+当 DFS 到达带有 ``word`` 的 Trie 节点时，当前路径就是一个完整单词。把该字段清空后再继续搜索，可以避免同一单词从不同起点或不同路径重复加入结果，同时不影响其他单词的共享前缀。以单词 ``"oath"`` 为例，只有路径按 ``o -> a -> t -> h`` 依次命中 Trie 时才加入，遇到不在 Trie 中的分支会立即回退。
+
+设所有单词字符总数为 ``S``，Trie 节点数为 ``N``，最大单词长度为 ``L``。建树时间为 ``O(S)``、持久空间为 ``O(N)``；搜索时间取决于实际 DFS 状态数，未剪枝的粗略上界为 ``O(mn * 4 * 3^(L-1))``，Trie 前缀会显著缩小它。递归深度为 ``O(min(L,mn))``，除结果载荷外棋盘原地标记和局部状态占 ``O(L)``。
+
 核心语言实现
 ------------
 

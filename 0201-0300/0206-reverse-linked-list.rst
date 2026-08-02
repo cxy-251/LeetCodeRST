@@ -252,6 +252,33 @@
 节点包含值字段和可修改的 ``next``；Julia 使用仓库统一的可变 ``ListNode``，R 使用统一的
 ``environment`` 节点并通过 ``node$next`` 重接。调用方负责按所在平台提供这一类型外壳。
 
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       ListNode* reverseList(ListNode* head) {
+           ListNode* previous = nullptr;
+           ListNode* current = head;
+           while (current != nullptr) {
+               ListNode* next = current->next;
+               current->next = previous;
+               previous = current;
+               current = next;
+           }
+           return previous;
+       }
+   };
+
+代码分析
+--------
+
+循环开始时，``previous`` 指向已经反转好的前缀，``current`` 指向尚未处理的首节点；保存 ``next`` 后再改写 ``current->next``，就不会丢失剩余链表。把当前节点接到反转前缀头部，然后同步前进两个指针，直到所有节点都转入前缀。空链表直接返回空指针，单节点也会自然保持不变。
+
+例如 ``1 -> 2 -> 3`` 的指针状态依次变为 ``1 -> null``、``2 -> 1 -> null``、``3 -> 2 -> 1 -> null``，最终返回 ``3``。每个节点只保存和改写一次 ``next``，时间复杂度为 ``O(n)``，除固定指针外额外空间复杂度为 ``O(1)``；节点本身被原地重连，没有复制载荷。
+
 十语言实现
 ----------
 

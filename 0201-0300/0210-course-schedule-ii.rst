@@ -223,6 +223,51 @@
 * Julia、R 将零基课程编号加一访问数组，但返回值仍保持题目要求的零基编号；
 * R 实现使用 CSR 和预分配队列，避免对邻接表反复 ``c`` 导致的额外复制。
 
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       std::vector<int> findOrder(
+           int numCourses, std::vector<std::vector<int>>& prerequisites) {
+           std::vector<std::vector<int>> graph(numCourses);
+           std::vector<int> indegree(numCourses, 0);
+           for (const auto& prerequisite : prerequisites) {
+               int course = prerequisite[0];
+               int prerequisiteCourse = prerequisite[1];
+               graph[prerequisiteCourse].push_back(course);
+               ++indegree[course];
+           }
+
+           std::queue<int> ready;
+           for (int course = 0; course < numCourses; ++course) {
+               if (indegree[course] == 0) ready.push(course);
+           }
+
+           std::vector<int> order;
+           order.reserve(numCourses);
+           while (!ready.empty()) {
+               int course = ready.front();
+               ready.pop();
+               order.push_back(course);
+               for (int next : graph[course]) {
+                   if (--indegree[next] == 0) ready.push(next);
+               }
+           }
+           if (static_cast<int>(order.size()) != numCourses) return {};
+           return order;
+       }
+   };
+
+代码分析
+--------
+
+这段代码与“完成全部课程”的版本使用同一入度不变量，但把每次出队的课程保存到 ``order``。队列开始时包含所有无需先修课的课程；课程出队后，它对后继课程的最后一条未完成依赖可能被删除，于是后继才可入队。因而 ``order`` 中任意边 ``prerequisite -> course`` 都满足先修课先出现。
+
+若图有环，环中每个节点至少保留一条来自环内的入边，无法进入队列，结果长度会小于 ``numCourses``，此时必须返回空数组而不是返回不完整顺序。无环时拓扑过程会处理每个课程，得到的任意一个合法顺序都满足题目要求。每条边只处理一次，时间复杂度为 ``O(V+E)``；邻接表和入度数组是 ``O(V+E)``，返回顺序本身另占 ``O(V)``。
+
 十语言实现
 ----------
 

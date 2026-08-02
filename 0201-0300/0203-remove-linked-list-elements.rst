@@ -234,6 +234,36 @@
 * C 删除节点时逐个释放，总释放次数等于删除节点数；
 * 返回链表复用原有保留节点，返回载荷不是新分配的 ``O(n)`` 容器。
 
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       ListNode* removeElements(ListNode* head, int val) {
+           ListNode dummy(0);
+           dummy.next = head;
+           ListNode* previous = &dummy;
+
+           while (previous->next != nullptr) {
+               if (previous->next->val == val) {
+                   previous->next = previous->next->next;
+               } else {
+                   previous = previous->next;
+               }
+           }
+           return dummy.next;
+       }
+   };
+
+代码分析
+--------
+
+``previous`` 始终指向已经确认保留的节点，并检查它后面的第一个尚未处理节点。遇到目标值时只把前驱的 ``next`` 越过该节点；不移动 ``previous``，是因为新的后继仍可能连续含有目标值。遇到非目标值才前进，因此每个节点恰好检查一次。虚拟头把“删除原头节点”和“删除中间节点”统一成同一条重连规则。
+
+例如 ``1 -> 6 -> 6 -> 3``、目标值为 ``6`` 时，第一次删除后仍检查虚拟头后的第二个 ``6``，第二次删除后再保留 ``3``，结果为 ``1 -> 3``。代码只重连节点，不复制保留节点；时间复杂度为 ``O(n)``，除固定的虚拟头和指针外额外空间为 ``O(1)``。
+
 十语言实现
 ----------
 

@@ -258,6 +258,42 @@ Floyd 快慢指针
   ``floor(value/10)`` 和 ``value %% 10`` 在该范围内精确；
 * 算法不修改调用者可见输入，只更新函数局部状态。
 
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   private:
+       static int nextValue(int value) {
+           int sum = 0;
+           while (value > 0) {
+               int digit = value % 10;
+               sum += digit * digit;
+               value /= 10;
+           }
+           return sum;
+       }
+
+   public:
+       bool isHappy(int n) {
+           int slow = n;
+           int fast = nextValue(n);
+           while (fast != 1 && slow != fast) {
+               slow = nextValue(slow);
+               fast = nextValue(nextValue(fast));
+           }
+           return fast == 1;
+       }
+   };
+
+代码分析
+--------
+
+把“重复计算各位平方和”看作从一个正整数指向下一个状态的函数。状态序列最终只能到达 1，或进入不含 1 的循环；因此不必保存全部历史状态，可以用 Floyd 判环让 ``slow`` 每次走一步、``fast`` 每次走两步。若 ``fast`` 先到 1，原数是快乐数；若两指针相遇，说明进入了循环且该循环不是 1。
+
+例如从 ``19`` 出发得到 ``82 -> 68 -> 100 -> 1``，快指针会在到达 1 时结束；从 ``2`` 出发会进入 ``4 -> 16 -> 37 -> 58 -> 89 -> 145 -> 42 -> 20 -> 4``，两指针相遇后返回 ``false``。每次变换只扫描当前状态的十进制位；在题目范围内状态很快进入有限的小状态集合，因此总时间是状态链长度加循环长度，额外空间为 ``O(1)``。
+
 十语言实现
 ----------
 

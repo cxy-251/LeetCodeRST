@@ -20,7 +20,6 @@
 * ``1 <= buildings.length <= 10^4``；
 * ``0 <= left < right <= 2^31 - 1``；
 * ``1 <= height <= 2^31 - 1``；
-* ``buildings`` 已按 ``left`` 非递减排列。
 
 输出由关键点 ``[x, height]`` 组成。关键点表示从横坐标 ``x`` 开始，天空线高度变为
 ``height``。结果必须满足：
@@ -121,11 +120,12 @@
 
    boundaries = sort_unique(all left and right)
    heap = empty max heap ordered by height
+   ordered = sort_copy(buildings by left)
    building_index = 0
    previous_height = 0
 
    for x in boundaries:
-       while building_index < n and buildings[building_index].left <= x:
+       while building_index < n and ordered[building_index].left <= x:
            heap.push(height, right)
            building_index += 1
 
@@ -154,7 +154,7 @@
 扫描到边界 ``x`` 时维护三个状态：
 
 ``building_index``
-   第一栋尚未加入堆的建筑。由于输入按左边界排序，加入过程只需要单调向右移动。
+   按左边界排序的副本中第一栋尚未加入堆的建筑。排序后加入过程只需要单调向右移动，不能直接假设调用者传入数组已经有序。
 
 ``heap``
    所有已经开始、但尚未从堆中删除的候选建筑。堆顶按高度最大排列。
@@ -225,12 +225,68 @@
 
 设建筑数量为 ``n``，不同边界数量为 ``b``，输出关键点数量为 ``k``，其中 ``b <= 2n``。
 
-* 收集并排序边界需要 ``O(n log n)`` 时间；
+* 复制并按左边界排序建筑、收集并排序边界需要 ``O(n log n)`` 时间；
 * 每栋建筑入堆一次、至多出堆一次，共需要 ``O(n log n)`` 时间；
 * 扫描边界需要 ``O(b)`` 时间；
 * 总时间复杂度为 ``O(n log n)``；
 * 边界数组和最大堆需要 ``O(n)`` 辅助空间；
 * 返回结果需要 ``O(k)`` 空间。
+
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       std::vector<std::vector<int>> getSkyline(
+           std::vector<std::vector<int>>& buildings) {
+           std::vector<std::vector<int>> ordered = buildings;
+           std::sort(ordered.begin(), ordered.end());
+
+           std::vector<int> boundaries;
+           boundaries.reserve(ordered.size() * 2);
+           for (const auto& building : ordered) {
+               boundaries.push_back(building[0]);
+               boundaries.push_back(building[1]);
+           }
+           std::sort(boundaries.begin(), boundaries.end());
+           boundaries.erase(
+               std::unique(boundaries.begin(), boundaries.end()),
+               boundaries.end());
+
+           std::priority_queue<std::pair<int, int>> active;
+           std::vector<std::vector<int>> answer;
+           std::size_t next = 0;
+           int previousHeight = 0;
+
+           for (int x : boundaries) {
+               while (next < ordered.size() && ordered[next][0] <= x) {
+                   active.push({ordered[next][2], ordered[next][1]});
+                   ++next;
+               }
+               while (!active.empty() && active.top().second <= x) {
+                   active.pop();
+               }
+
+               int currentHeight = active.empty() ? 0 : active.top().first;
+               if (currentHeight != previousHeight) {
+                   answer.push_back({x, currentHeight});
+                   previousHeight = currentHeight;
+               }
+           }
+           return answer;
+       }
+   };
+
+代码分析
+--------
+
+代码先复制并按 ``left`` 排序建筑，因为题目只给出每栋建筑的边界约束，并不保证输入数组顺序。``next`` 指向尚未加入堆的建筑；扫描到 ``x`` 时加入所有 ``left <= x`` 的建筑，再删除堆顶中 ``right <= x`` 的过期建筑。半开区间语义保证 ``right == x`` 的建筑在该位置已经失效。
+
+堆按高度最大化，堆顶就是当前仍可能影响轮廓的最高建筑。堆只能直接删除堆顶，所以较矮的过期建筑可以暂留；等它成为堆顶时，清理循环会把它移除。每个边界只计算一次最终高度，只有高度与上一个关键点不同才输出，因此相邻等高建筑不会制造伪关键点，也会在最大右边界输出高度 0。
+
+例如 ``[[0,2,3],[2,5,3]]`` 在 ``x=2`` 先加入第二栋、再清理第一栋，堆顶高度仍为 3，不会输出中间的 0；无序输入如 ``[[5,7,4],[1,3,2]]`` 也会先通过 ``ordered`` 排序，再按边界得到两个互不相连的轮廓。排序、边界扫描和堆操作的总时间复杂度为 ``O(n log n)``，排序副本、边界数组和堆占 ``O(n)`` 额外空间，返回结果另占 ``O(k)``。
 
 十语言实现
 ----------

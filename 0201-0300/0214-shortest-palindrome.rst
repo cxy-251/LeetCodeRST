@@ -182,6 +182,40 @@ border 的前后两段相等，所以：
 
 返回字符串最长为 ``2n-1``：非空字符串至少保留首字符作为回文前缀。
 
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   public:
+       std::string shortestPalindrome(std::string s) {
+           std::string reversed = s;
+           std::reverse(reversed.begin(), reversed.end());
+           std::string combined = s + '#' + reversed;
+           std::vector<int> prefix(combined.size(), 0);
+
+           for (std::size_t i = 1; i < combined.size(); ++i) {
+               int matched = prefix[i - 1];
+               while (matched > 0 && combined[i] != combined[matched]) {
+                   matched = prefix[matched - 1];
+               }
+               if (combined[i] == combined[matched]) ++matched;
+               prefix[i] = matched;
+           }
+
+           int palindromicPrefix = prefix.back();
+           return reversed.substr(0, s.size() - palindromicPrefix) + s;
+       }
+   };
+
+代码分析
+--------
+
+要只在原串左侧添加字符，原串中保留的部分必须是从位置 0 开始的最长回文前缀。令 ``reversed`` 为原串反转，在 ``s + '#' + reversed`` 上计算 KMP 前缀函数；分隔符不出现在题目允许的小写字符中，因此跨过分隔符的匹配只能比较原串前缀与反转串后缀。组合串末尾的前缀函数值正好是最长回文前缀长度。
+
+例如 ``s="aacecaaa"`` 时，最长回文前缀为 ``aacecaa``，只需把剩余的 ``a`` 添加到左侧，得到 ``"aaacecaaa"``；``s="abcd"`` 的最长回文前缀只有 ``a``，反转剩余部分 ``dcb`` 后得到 ``"dcbabcd"``。前缀函数的回退沿已有边界跳转，不会重复扫描失配前缀，组合串长度为 ``2n+1``，所以时间复杂度为 ``O(n)``，前缀数组和临时字符串占 ``O(n)`` 空间。
+
 十语言实现
 ----------
 

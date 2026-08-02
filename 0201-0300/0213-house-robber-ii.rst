@@ -136,6 +136,40 @@
 * 输入不复制、不修改；
 * 官方约束下普通整数不会溢出。
 
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class Solution {
+   private:
+       static int robRange(const std::vector<int>& nums, int left, int right) {
+           int skip = 0;
+           int take = 0;
+           for (int index = left; index <= right; ++index) {
+               int nextTake = skip + nums[index];
+               skip = std::max(skip, take);
+               take = nextTake;
+           }
+           return std::max(skip, take);
+       }
+
+   public:
+       int rob(std::vector<int>& nums) {
+           int n = static_cast<int>(nums.size());
+           if (n == 1) return nums[0];
+           return std::max(robRange(nums, 0, n - 2),
+                           robRange(nums, 1, n - 1));
+       }
+   };
+
+代码分析
+--------
+
+首尾相邻使圆环不能整体套用线性房屋的转移，但任意合法方案必然不同时选择首尾之一。于是把方案分成两类：不选最后一间，只在 ``[0,n-2]`` 上做线性 DP；不选第一间，只在 ``[1,n-1]`` 上做线性 DP。两类覆盖所有合法方案，取较大值即可。``n=1`` 时首尾是同一间，单独返回它的收益。
+
+线性辅助函数用 ``skip`` 表示前一间不选时的最优值，用 ``take`` 表示前一间选中时的最优值。处理当前房屋时，新的 ``take`` 只能由旧 ``skip`` 加当前收益得到；新的 ``skip`` 可以取旧 ``skip`` 或旧 ``take`` 的较大者，这正是“不允许相邻选中”的约束。每个区间只扫描一次，时间复杂度为 ``O(n)``，只保存两个状态，额外空间复杂度为 ``O(1)``，输入数组不被修改。
+
 十语言实现
 ----------
 

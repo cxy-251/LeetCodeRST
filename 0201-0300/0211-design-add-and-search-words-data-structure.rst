@@ -170,6 +170,74 @@ C 平台 ``wordDictionaryAddWord`` 返回 ``void``，不能报告分配失败。
 
 该策略保持对象一致性，但调用者仍无法知道某次添加因资源不足没有生效。
 
+C++ 实现
+--------
+
+.. code-block:: cpp
+
+   class WordDictionary {
+   private:
+       struct Node {
+           std::array<Node*, 26> child{};
+           bool terminal = false;
+       };
+
+       Node* root_ = new Node();
+
+       static void release(Node* node) {
+           if (node == nullptr) return;
+           for (Node* child : node->child) release(child);
+           delete node;
+       }
+
+       bool match(const Node* node, const std::string& word,
+                  std::size_t position) const {
+           if (position == word.size()) return node->terminal;
+
+           char character = word[position];
+           if (character != '.') {
+               int index = character - 'a';
+               return node->child[index] != nullptr &&
+                      match(node->child[index], word, position + 1);
+           }
+
+           for (const Node* child : node->child) {
+               if (child != nullptr && match(child, word, position + 1)) {
+                   return true;
+               }
+           }
+           return false;
+       }
+
+   public:
+       WordDictionary() = default;
+
+       ~WordDictionary() { release(root_); }
+
+       void addWord(std::string word) {
+           Node* node = root_;
+           for (char character : word) {
+               int index = character - 'a';
+               if (node->child[index] == nullptr) {
+                   node->child[index] = new Node();
+               }
+               node = node->child[index];
+           }
+           node->terminal = true;
+       }
+
+       bool search(std::string word) const {
+           return match(root_, word, 0);
+       }
+   };
+
+代码分析
+--------
+
+普通字符查询只有一条可能路径，``.`` 则代表当前位置可以沿任意非空子链接继续。``match(node, position)`` 的状态同时记录 Trie 节点和查询串位置；到达串尾时只有终止标记为真才算完整单词，因而不会把某个单词的前缀误判为答案。
+
+例如加入 ``"bad"``、``"dad"``、``"mad"`` 后，查询 ``".ad"`` 会分别尝试三个首字符并在 ``d`` 节点成功；查询 ``"b.."`` 能匹配 ``bad``，而查询 ``"ba"`` 在到达串尾时发现 ``a`` 不是终止节点，返回假。插入长度为 ``L`` 的单词需要 ``O(L)`` 时间；无通配符搜索为 ``O(L)``，含通配符时最坏会探索 ``26`` 个分支，时间取决于实际 Trie 状态数，粗略上界为 ``O(26^L)``，递归栈为 ``O(L)``。
+
 十语言实现
 ----------
 
