@@ -51,13 +51,13 @@ C++ 实现
        }
 
        int rightToLeft(const std::string& title) {
-           int result = 0;
-           int weight = 1;
+           long long result = 0;
+           long long weight = 1;
            for (int i = static_cast<int>(title.size()) - 1; i >= 0; --i) {
                result += (title[i] - 'A' + 1) * weight;
                weight *= 26;
            }
-           return result;
+           return static_cast<int>(result);
        }
 
    public:
