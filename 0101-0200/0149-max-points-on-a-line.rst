@@ -38,6 +38,8 @@ C++ 实现
 .. code-block:: cpp
 
    #include <algorithm>
+   #include <cstdint>
+   #include <cstdlib>
    #include <numeric>
    #include <unordered_map>
    #include <utility>

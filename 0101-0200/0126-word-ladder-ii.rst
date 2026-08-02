@@ -46,6 +46,7 @@ C++ 实现
    #include <string>
    #include <unordered_map>
    #include <unordered_set>
+   #include <utility>
    #include <vector>
 
    class Solution {
@@ -76,6 +77,7 @@ C++ 实现
            std::queue<std::vector<std::string>> queue;
            queue.push({beginWord});
            std::unordered_set<std::string> unused = dictionary;
+           unused.erase(beginWord);
            std::vector<std::vector<std::string>> result;
            while (!queue.empty() && result.empty()) {
                int count = queue.size();
