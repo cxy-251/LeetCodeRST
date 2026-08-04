@@ -43,110 +43,68 @@ C++ 实现
 
    class Solution {
    private:
-       std::vector<int> bruteForce(
-           const std::vector<int>& nums,
-           int target
-       ) {
+       std::vector<int> bruteForce(const std::vector<int>& nums, int target) {
            for (int left = 0; left < static_cast<int>(nums.size()); ++left) {
-               for (int right = left + 1;
-                    right < static_cast<int>(nums.size());
-                    ++right) {
-                   const long long sum =
-                       static_cast<long long>(nums[left]) + nums[right];
-
+               for (int right = left + 1; right < static_cast<int>(nums.size()); ++right) {
+                   const long long sum = static_cast<long long>(nums[left]) + nums[right];
                    if (sum == target) {
                        return {left, right};
                    }
                }
            }
-
            return {};
        }
 
-       std::vector<int> sortAndTwoPointers(
-           const std::vector<int>& nums,
-           int target
-       ) {
+       std::vector<int> sortAndTwoPointers(const std::vector<int>& nums, int target) {
            std::vector<std::pair<int, int>> items;
            items.reserve(nums.size());
-
-           for (int index = 0;
-                index < static_cast<int>(nums.size());
-                ++index) {
+           for (int index = 0; index < static_cast<int>(nums.size()); ++index) {
                items.emplace_back(nums[index], index);
            }
-
            std::sort(items.begin(), items.end());
-
            int left = 0;
            int right = static_cast<int>(items.size()) - 1;
-
            while (left < right) {
-               const long long sum =
-                   static_cast<long long>(items[left].first) +
-                   items[right].first;
-
+               const long long sum = static_cast<long long>(items[left].first) + items[right].first;
                if (sum == target) {
                    return {items[left].second, items[right].second};
                }
-
                if (sum < target) {
                    ++left;
                } else {
                    --right;
                }
            }
-
            return {};
        }
 
-       std::vector<int> twoPassHash(
-           const std::vector<int>& nums,
-           int target
-       ) {
+       std::vector<int> twoPassHash(const std::vector<int>& nums, int target) {
            std::unordered_map<int, int> indexByValue;
            indexByValue.reserve(nums.size());
-
-           for (int index = 0;
-                index < static_cast<int>(nums.size());
-                ++index) {
+           for (int index = 0; index < static_cast<int>(nums.size()); ++index) {
                indexByValue[nums[index]] = index;
            }
-
-           for (int index = 0;
-                index < static_cast<int>(nums.size());
-                ++index) {
+           for (int index = 0; index < static_cast<int>(nums.size()); ++index) {
                const int need = target - nums[index];
                const auto found = indexByValue.find(need);
-
                if (found != indexByValue.end() && found->second != index) {
                    return {index, found->second};
                }
            }
-
            return {};
        }
 
-       std::vector<int> onePassHash(
-           const std::vector<int>& nums,
-           int target
-       ) {
+       std::vector<int> onePassHash(const std::vector<int>& nums, int target) {
            std::unordered_map<int, int> seen;
            seen.reserve(nums.size());
-
-           for (int index = 0;
-                index < static_cast<int>(nums.size());
-                ++index) {
+           for (int index = 0; index < static_cast<int>(nums.size()); ++index) {
                const int need = target - nums[index];
                const auto found = seen.find(need);
-
                if (found != seen.end()) {
                    return {found->second, index};
                }
-
                seen[nums[index]] = index;
            }
-
            return {};
        }
 
