@@ -8,43 +8,27 @@
 :难度: Medium
 :主题: 数组、排序、双指针、去重
 :原题: `LeetCode 0015 <https://leetcode.com/problems/3sum/>`_
-:重点: 三个不同下标、和值为零、按数值去重、结果顺序不限定
+:重点: 固定一个数把三数问题降为两数问题，再利用有序性移动双指针，并在搜索层级内完成去重
 
 题目重述
 --------
 
-给定整数数组 ``nums``，找出所有满足 ``i``、``j``、``k`` 两两不同且 ``nums[i] + nums[j] + nums[k] == 0`` 的三元组，并返回不重复的数值三元组集合。
+给定整数数组 ``nums``，找出所有满足 ``i``、``j``、``k`` 两两不同且
+``nums[i] + nums[j] + nums[k] == 0`` 的三元组。
 
-同一组三个数无论来自哪些下标、内部按什么顺序排列，都只能在结果中出现一次。结果中三元组的顺序以及各三元组内部的顺序均不作要求。
-
-``nums`` 的长度位于 ``[3, 3000]``，每个元素位于 ``[-10^5, 10^5]``。
+结果按数值组合去重：同一组三个数即使来自不同下标，也只能出现一次。三元组之间的顺序以及每个三元组内部的
+顺序都不作要求。数组长度位于 ``[3, 3000]``，元素位于 ``[-10^5, 10^5]``。
 
 自建示例
 --------
 
-包含重复值与多组答案：
-
-.. code-block:: text
-
-   输入：nums = [-4, -1, -1, 0, 1, 2, 3]
-   输出：[[-4, 1, 3], [-1, -1, 2], [-1, 0, 1]]
-   解释：这三种数值组合的和都为 0；两个 -1 来自不同下标。结果顺序可以不同。
-
-没有合法三元组：
-
-.. code-block:: text
-
-   输入：nums = [2, 4, 7, 9]
-   输出：[]
-   解释：所有元素均为正数，任意三个数之和都不可能为 0。
-
-全部为零：
-
-.. code-block:: text
-
-   输入：nums = [0, 0, 0, 0]
-   输出：[[0, 0, 0]]
-   解释：虽然可以选择多组不同下标，但对应的数值三元组相同，因此只返回一次。
+* 多组答案：``nums = [-4, -1, -1, 0, 1, 2, 3]``，答案包含 ``[-4, 1, 3]``、``[-1, -1, 2]``、
+  ``[-1, 0, 1]``；
+* 重复下标组合：``nums = [0, 0, 0, 0]``，虽然有多种下标选择，只返回一个 ``[0, 0, 0]``；
+* 无答案：``nums = [2, 4, 7, 9]``，返回空集合；
+* 需要两个相同值：``nums = [-2, 1, 1]``，两个 ``1`` 来自不同位置，返回 ``[-2, 1, 1]``；
+* 全部为负：``nums = [-5, -3, -1]``，返回空集合；
+* 最小规模：``nums = [-1, 0, 1]``，返回 ``[-1, 0, 1]``。
 
 C++ 实现
 --------
@@ -52,7 +36,6 @@ C++ 实现
 .. code-block:: cpp
 
    #include <algorithm>
-   #include <climits>
    #include <set>
    #include <unordered_set>
    #include <vector>
@@ -62,14 +45,15 @@ C++ 实现
        std::vector<std::vector<int>> enumerateTriples(const std::vector<int>& nums) {
            std::set<std::vector<int>> unique;
            const int n = static_cast<int>(nums.size());
-           for (int i = 0; i < n; ++i) {
-               for (int j = i + 1; j < n; ++j) {
-                   for (int k = j + 1; k < n; ++k) {
-                       if (1LL * nums[i] + nums[j] + nums[k] == 0) {
-                           std::vector<int> triple{nums[i], nums[j], nums[k]};
-                           std::sort(triple.begin(), triple.end());
-                           unique.insert(triple);
+           for (int first = 0; first < n; ++first) {
+               for (int second = first + 1; second < n; ++second) {
+                   for (int third = second + 1; third < n; ++third) {
+                       if (1LL * nums[first] + nums[second] + nums[third] != 0) {
+                           continue;
                        }
+                       std::vector<int> triple{nums[first], nums[second], nums[third]};
+                       std::sort(triple.begin(), triple.end());
+                       unique.insert(triple);
                    }
                }
            }
@@ -79,17 +63,16 @@ C++ 实现
        std::vector<std::vector<int>> hashForEachFirst(const std::vector<int>& nums) {
            std::set<std::vector<int>> unique;
            const int n = static_cast<int>(nums.size());
-           for (int i = 0; i < n; ++i) {
+           for (int first = 0; first < n; ++first) {
                std::unordered_set<int> seen;
-               for (int j = i + 1; j < n; ++j) {
-                   const long long needed = -1LL * nums[i] - nums[j];
-                   if (needed >= INT_MIN && needed <= INT_MAX &&
-                       seen.count(static_cast<int>(needed))) {
-                       std::vector<int> triple{nums[i], nums[j], static_cast<int>(needed)};
+               for (int second = first + 1; second < n; ++second) {
+                   const int need = -nums[first] - nums[second];
+                   if (seen.count(need)) {
+                       std::vector<int> triple{nums[first], nums[second], need};
                        std::sort(triple.begin(), triple.end());
                        unique.insert(triple);
                    }
-                   seen.insert(nums[j]);
+                   seen.insert(nums[second]);
                }
            }
            return {unique.begin(), unique.end()};
@@ -99,11 +82,18 @@ C++ 实现
            std::sort(nums.begin(), nums.end());
            std::vector<std::vector<int>> result;
            const int n = static_cast<int>(nums.size());
-
            for (int first = 0; first + 2 < n; ++first) {
-               if (first > 0 && nums[first] == nums[first - 1]) continue;
-               if (nums[first] > 0) break;
-
+               if (first > 0 && nums[first] == nums[first - 1]) {
+                   continue;
+               }
+               const long long smallest = 1LL * nums[first] + nums[first + 1] + nums[first + 2];
+               if (smallest > 0) {
+                   break;
+               }
+               const long long largest = 1LL * nums[first] + nums[n - 2] + nums[n - 1];
+               if (largest < 0) {
+                   continue;
+               }
                int left = first + 1;
                int right = n - 1;
                while (left < right) {
@@ -114,10 +104,14 @@ C++ 实现
                        --right;
                    } else {
                        result.push_back({nums[first], nums[left], nums[right]});
-                       const int left_value = nums[left];
-                       const int right_value = nums[right];
-                       while (left < right && nums[left] == left_value) ++left;
-                       while (left < right && nums[right] == right_value) --right;
+                       const int leftValue = nums[left];
+                       const int rightValue = nums[right];
+                       while (left < right && nums[left] == leftValue) {
+                           ++left;
+                       }
+                       while (left < right && nums[right] == rightValue) {
+                           --right;
+                       }
                    }
                }
            }
@@ -133,35 +127,65 @@ C++ 实现
 题解
 ----
 
-三重枚举暴露了候选数量和重复来源
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+三重枚举
+~~~~~~~~
 
-三个递增下标形成 ``O(n^3)`` 个候选。同一组值可能由大量下标组合产生，因此命中后还需要排序三元组并放入
-集合去重。要同时减少搜索和去重成本，需要利用数值顺序。
+``enumerateTriples`` 使用三个递增下标覆盖全部组合，候选数量为 ``O(n³)``。命中后还要把三个数排序并放入
+集合，因为不同下标组合可能产生相同数值三元组。
 
-固定首元素如何转化为两数之和
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+这里同时存在两个成本：搜索空间是三次方，结果去重又发生在搜索完成之后。要进一步优化，需要让数值顺序既能
+排除候选，也能让重复值在生成阶段直接跳过。
 
-排序后固定 ``nums[first]``，剩余目标为：
+固定首值
+~~~~~~~~
 
-.. math::
+固定 ``nums[first]`` 后，剩余两个数必须满足：
 
-   nums[left]+nums[right]=-nums[first]
+``nums[second] + nums[third] = -nums[first]``。
 
-后缀有序。当前总和小于零时，右端已经是当前可用最大值，只有增大左值才可能到达零；总和大于零时，只有减小
-右值才可能到达零。这种单调移动一次排除一整组不可能组合。
+三数问题由此降为每个首值对应的一次两数之和。``hashForEachFirst`` 对后缀维护 ``seen``：扫描到
+``nums[second]`` 时，查询所需补数是否已经出现。每个首值的后缀扫描为线性，总时间降为 ``O(n²)``。
 
-三处去重为什么分别发生在首值和命中后的两端
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+哈希方法仍用外部集合统一去重，因为相同数值可能在不同首下标或不同后缀位置重复命中。它减少了搜索成本，
+尚未把去重融入状态移动。
 
-外层首值与前一首值相同时，它能形成的值三元组已经被前一位置完整搜索，直接跳过。命中答案后，连续相同的
-左值与右值只会再次产生同一三元组，因此先记录，再分别越过两个重复值段。若在命中前跳过，可能删除唯一答案；
-若只移动一格，则会输出重复答案。
-
-指针状态演化
+有序两数搜索
 ~~~~~~~~~~~~
 
-固定首值 ``-2``，并令剩余有序值为 ``[-1,0,1,1,3]``：
+排序后固定 ``first``，令 ``left = first + 1``、``right = n - 1``。当前三数和为 ``sum``：
+
+* ``sum < 0`` 时，需要更大的数，只能右移 ``left``；
+* ``sum > 0`` 时，需要更小的数，只能左移 ``right``；
+* ``sum == 0`` 时，记录当前三元组并跳过两侧重复值。
+
+当 ``sum < 0`` 时，固定当前左值并把右端移到任何更小位置，只会让和更小，因此这些组合可整体排除。
+``sum > 0`` 时论证对称。两个指针都只向中间移动，一次后缀搜索为 ``O(n)``。
+
+三层去重
+~~~~~~~~
+
+排序让相同数值连续出现，去重可以在生成答案时完成。
+
+外层若 ``nums[first] == nums[first - 1]``，当前首值能够形成的所有数值组合已经由前一个相同首值完整搜索，
+因此整个后缀搜索可以跳过。
+
+命中三元组后，连续相同的 ``left`` 值都会与同一个首值和右值生成相同结果；右侧同理。代码先记录答案，再
+越过左右两个重复值段。只移动一格会重复输出，命中前提前跳过则可能错过唯一合法组合。
+
+边界剪枝
+~~~~~~~~
+
+固定首值后，排序还给出两个立即可计算的边界：
+
+* 当前首值与后面最小两个数之和 ``smallest`` 已经大于零，之后首值只会更大，可以结束外层循环；
+* 当前首值与数组最大两个数之和 ``largest`` 仍小于零，本轮不可能命中，可以直接处理下一个首值。
+
+这两个判断只减少实际扫描次数，不改变最坏 ``O(n²)`` 复杂度。
+
+状态推演
+~~~~~~~~
+
+以排序后的 ``[-4, -1, -1, 0, 1, 2, 3]`` 为例，固定首值 ``-1``：
 
 .. list-table::
    :header-rows: 1
@@ -172,290 +196,54 @@ C++ 实现
      - 动作
    * - -1
      - 3
+     - 1
+     - 右指针左移
+   * - -1
+     - 2
      - 0
-     - 记录 ``[-2,-1,3]``，跳过左侧重复值段
+     - 记录 ``[-1, -1, 2]``，跳过左侧 ``-1`` 与右侧 ``2``
    * - 0
-     - 3
-     - 1
-     - 和偏大，右移
-   * - 0
-     - 1
-     - -1
-     - 和偏小，左移
-   * - 1
      - 1
      - 0
-     - 记录 ``[-2,1,1]``，跳过两侧重复值段
+     - 记录 ``[-1, 0, 1]``，跳过两侧值
 
-为什么移动一个指针能排除整组候选
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+下一个外层位置仍为 ``-1``，会被首值去重直接跳过，因此这两组答案都只生成一次。
 
-若总和小于零，固定当前左值并选择任何更靠左的右端，只会使右值不增，和值仍小于零；这些组合全部可排除。
-若总和大于零，固定当前右值并选择任何更靠右的左端，只会使左值不减，和值仍大于零。命中时当前值对已记录，
-跳过相同数值只删除重复结果。因此所有唯一值对要么被检查，要么由单调性安全排除。
+代码演进
+~~~~~~~~
 
-为什么首值大于零可以结束
-~~~~~~~~~~~~~~~~~~~~~~~~
+``enumerateTriples`` 用三层循环选择三个未知下标，并依靠集合在结果阶段去重。
 
-数组有序后，首值大于零意味着后面两个值也大于零，三数和必然为正。更后的首值只会更大，因此外层可以直接
-终止。
+``hashForEachFirst`` 固定一个下标，把后两个未知位置转换为补数查询。第三层循环消失，时间降为二次，但仍需
+集合消除跨位置重复结果。
 
-复杂度来源
+``sortAndTwoPointers`` 用排序建立单调性。哈希状态与结果集合消失；左右指针根据和值方向批量排除候选，重复值
+则在首值层和命中位置直接跳过。
+
+公开入口采用 ``sortAndTwoPointers``。它接收输入副本进行排序，因此不会改变调用者传入的 ``nums``。
+
+复杂度分析
 ~~~~~~~~~~
 
-排序耗时 ``O(n log n)``。外层最多 ``n`` 次，每个首元素对应的左右指针合计移动 ``O(n)``，总时间
-``O(n^2)``。除排序实现和返回结果外，工作空间为常数或 ``O(log n)``。三数求和使用更宽类型避免溢出。
+.. list-table::
+   :header-rows: 1
 
-九语言实现
-----------
+   * - 方法
+     - 时间复杂度
+     - 工作空间
+     - 去重方式
+   * - 三重枚举
+     - ``O(n³)``
+     - 取决于结果集合
+     - 排序每个命中并放入集合
+   * - 固定首值加哈希
+     - 期望 ``O(n²)``
+     - ``O(n)`` 加结果集合
+     - 哈希找补数，集合统一去重
+   * - 排序双指针
+     - ``O(n²)``
+     - ``O(n)`` 输入副本
+     - 在首值与命中两端直接跳过重复段
 
-C
-~
-
-.. code-block:: c
-
-   #include <stdlib.h>
-
-   static int compare_int(const void* a, const void* b) {
-       int x = *(const int*)a, y = *(const int*)b;
-       return (x > y) - (x < y);
-   }
-
-   int** threeSum(int* nums, int numsSize, int* returnSize, int** returnColumnSizes) {
-       qsort(nums, numsSize, sizeof(int), compare_int);
-       int capacity = numsSize * numsSize / 2 + 1;
-       int** result = malloc((size_t)capacity * sizeof(int*));
-       int* columns = malloc((size_t)capacity * sizeof(int));
-       int count = 0;
-       for (int first = 0; first + 2 < numsSize; ++first) {
-           if (first > 0 && nums[first] == nums[first - 1]) continue;
-           if (nums[first] > 0) break;
-           int left = first + 1, right = numsSize - 1;
-           while (left < right) {
-               long long sum = (long long)nums[first] + nums[left] + nums[right];
-               if (sum < 0) ++left;
-               else if (sum > 0) --right;
-               else {
-                   result[count] = malloc(3 * sizeof(int));
-                   result[count][0] = nums[first];
-                   result[count][1] = nums[left];
-                   result[count][2] = nums[right];
-                   columns[count++] = 3;
-                   int lv = nums[left], rv = nums[right];
-                   while (left < right && nums[left] == lv) ++left;
-                   while (left < right && nums[right] == rv) --right;
-               }
-           }
-       }
-       *returnSize = count;
-       *returnColumnSizes = columns;
-       return result;
-   }
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def threeSum(self, nums: list[int]) -> list[list[int]]:
-           nums.sort(); result = []
-           for first in range(len(nums) - 2):
-               if first and nums[first] == nums[first - 1]: continue
-               if nums[first] > 0: break
-               left, right = first + 1, len(nums) - 1
-               while left < right:
-                   total = nums[first] + nums[left] + nums[right]
-                   if total < 0: left += 1
-                   elif total > 0: right -= 1
-                   else:
-                       result.append([nums[first], nums[left], nums[right]])
-                       lv, rv = nums[left], nums[right]
-                       while left < right and nums[left] == lv: left += 1
-                       while left < right and nums[right] == rv: right -= 1
-           return result
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {
-       public List<List<Integer>> threeSum(int[] nums) {
-           Arrays.sort(nums);
-           List<List<Integer>> result = new ArrayList<>();
-           for (int first = 0; first + 2 < nums.length; first++) {
-               if (first > 0 && nums[first] == nums[first - 1]) continue;
-               if (nums[first] > 0) break;
-               int left = first + 1, right = nums.length - 1;
-               while (left < right) {
-                   long sum = (long)nums[first] + nums[left] + nums[right];
-                   if (sum < 0) left++;
-                   else if (sum > 0) right--;
-                   else {
-                       result.add(List.of(nums[first], nums[left], nums[right]));
-                       int lv = nums[left], rv = nums[right];
-                       while (left < right && nums[left] == lv) left++;
-                       while (left < right && nums[right] == rv) right--;
-                   }
-               }
-           }
-           return result;
-       }
-   }
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {
-       pub fn three_sum(mut nums: Vec<i32>) -> Vec<Vec<i32>> {
-           nums.sort_unstable();
-           let mut result = Vec::new();
-           for first in 0..nums.len().saturating_sub(2) {
-               if first > 0 && nums[first] == nums[first - 1] { continue; }
-               if nums[first] > 0 { break; }
-               let (mut left, mut right) = (first + 1, nums.len() - 1);
-               while left < right {
-                   let sum = nums[first] as i64 + nums[left] as i64 + nums[right] as i64;
-                   if sum < 0 { left += 1; }
-                   else if sum > 0 { right -= 1; }
-                   else {
-                       result.push(vec![nums[first], nums[left], nums[right]]);
-                       let (lv, rv) = (nums[left], nums[right]);
-                       while left < right && nums[left] == lv { left += 1; }
-                       while left < right && nums[right] == rv { right -= 1; }
-                   }
-               }
-           }
-           result
-       }
-   }
-
-Go
-~~
-
-.. code-block:: go
-
-   func threeSum(nums []int) [][]int {
-       sort.Ints(nums); result := [][]int{}
-       for first := 0; first+2 < len(nums); first++ {
-           if first > 0 && nums[first] == nums[first-1] { continue }
-           if nums[first] > 0 { break }
-           left, right := first+1, len(nums)-1
-           for left < right {
-               sum := nums[first]+nums[left]+nums[right]
-               if sum < 0 { left++ } else if sum > 0 { right-- } else {
-                   result = append(result, []int{nums[first],nums[left],nums[right]})
-                   lv, rv := nums[left], nums[right]
-                   for left < right && nums[left] == lv { left++ }
-                   for left < right && nums[right] == rv { right-- }
-               }
-           }
-       }
-       return result
-   }
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function threeSum(nums: number[]): number[][] {
-       nums.sort((a, b) => a - b); const result: number[][] = [];
-       for (let first = 0; first + 2 < nums.length; ++first) {
-           if (first > 0 && nums[first] === nums[first - 1]) continue;
-           if (nums[first] > 0) break;
-           let left = first + 1, right = nums.length - 1;
-           while (left < right) {
-               const sum = nums[first] + nums[left] + nums[right];
-               if (sum < 0) ++left; else if (sum > 0) --right; else {
-                   result.push([nums[first], nums[left], nums[right]]);
-                   const lv = nums[left], rv = nums[right];
-                   while (left < right && nums[left] === lv) ++left;
-                   while (left < right && nums[right] === rv) --right;
-               }
-           }
-       }
-       return result;
-   }
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {
-       public IList<IList<int>> ThreeSum(int[] nums) {
-           Array.Sort(nums); var result = new List<IList<int>>();
-           for (int first = 0; first + 2 < nums.Length; first++) {
-               if (first > 0 && nums[first] == nums[first - 1]) continue;
-               if (nums[first] > 0) break;
-               int left = first + 1, right = nums.Length - 1;
-               while (left < right) {
-                   long sum = (long)nums[first] + nums[left] + nums[right];
-                   if (sum < 0) left++; else if (sum > 0) right--; else {
-                       result.Add(new List<int>{nums[first], nums[left], nums[right]});
-                       int lv = nums[left], rv = nums[right];
-                       while (left < right && nums[left] == lv) left++;
-                       while (left < right && nums[right] == rv) right--;
-                   }
-               }
-           }
-           return result;
-       }
-   }
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function three_sum(nums::Vector{Int})
-       sort!(nums); result = Vector{Vector{Int}}(); n = length(nums)
-       for first in 1:max(0, n - 2)
-           if first > 1 && nums[first] == nums[first - 1]; continue; end
-           if nums[first] > 0; break; end
-           left, right = first + 1, n
-           while left < right
-               total = nums[first] + nums[left] + nums[right]
-               if total < 0; left += 1
-               elseif total > 0; right -= 1
-               else
-                   push!(result, [nums[first], nums[left], nums[right]])
-                   lv, rv = nums[left], nums[right]
-                   while left < right && nums[left] == lv; left += 1; end
-                   while left < right && nums[right] == rv; right -= 1; end
-               end
-           end
-       end
-       result
-   end
-
-R
-~
-
-.. code-block:: r
-
-   threeSum <- function(nums) {
-       nums <- sort(nums); n <- length(nums); result <- list()
-       if (n < 3L) return(result)
-       for (first in seq_len(n - 2L)) {
-           if (first > 1L && nums[[first]] == nums[[first - 1L]]) next
-           if (nums[[first]] > 0) break
-           left <- first + 1L; right <- n
-           while (left < right) {
-               total <- nums[[first]] + nums[[left]] + nums[[right]]
-               if (total < 0) left <- left + 1L
-               else if (total > 0) right <- right - 1L
-               else {
-                   result[[length(result) + 1L]] <- c(nums[[first]], nums[[left]], nums[[right]])
-                   lv <- nums[[left]]; rv <- nums[[right]]
-                   while (left < right && nums[[left]] == lv) left <- left + 1L
-                   while (left < right && nums[[right]] == rv) right <- right - 1L
-               }
-           }
-       }
-       result
-   }
+排序耗时 ``O(n log n)``，被后续 ``O(n²)`` 扫描主导。三数求和使用 ``long long``，避免三个输入值相加时
+依赖更窄范围；返回结果空间不计入工作空间。
