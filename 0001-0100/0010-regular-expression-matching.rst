@@ -8,41 +8,31 @@
 :难度: Hard
 :主题: 字符串、递归、记忆化、动态规划
 :原题: `LeetCode 0010 <https://leetcode.com/problems/regular-expression-matching/>`_
-:重点: 完整匹配、点号单字符匹配、星号修饰前项、模式合法性
+:重点: 从枚举星号重复次数，推导到后缀状态转移，再压缩动态规划的行状态
 
 题目重述
 --------
 
-给定字符串 ``s`` 和模式 ``p``，判断模式能否匹配字符串的全部字符。模式中的小写英文字母只匹配自身，``.`` 匹配任意单个字符，``*`` 修饰它前面的一个模式元素，表示该元素可以连续出现零次或多次；``*`` 不是独立的通配符，不能脱离前置元素单独匹配字符。
+给定字符串 ``s`` 和模式 ``p``，判断模式能否匹配字符串的全部字符。
 
-匹配必须覆盖整个字符串，不能只匹配其中一段。``s`` 和 ``p`` 的长度均位于 ``[1, 20]``；``s`` 只包含小写英文字母，``p`` 只包含小写英文字母、``.`` 和 ``*``。题目保证每个 ``*`` 前都有可修饰的有效元素。
+模式只包含小写英文字母、``.`` 和 ``*``：
+
+* 小写字母只匹配与自身相同的一个字符；
+* ``.`` 匹配任意一个字符；
+* ``*`` 修饰它前面的模式元素，表示该元素可以连续出现零次或多次。
+
+``*`` 不是独立通配符。匹配必须覆盖整个字符串，不能只匹配其中一段。字符串和模式长度都位于
+``[1, 20]``，字符串只包含小写英文字母；题目保证每个 ``*`` 前都有可修饰的有效元素。
 
 自建示例
 --------
 
-星号重复多次：
-
-.. code-block:: text
-
-   输入：s = "miss", p = "mis*"
-   输出：true
-   解释：模式中的 s* 可以匹配字符串末尾连续出现的两个 s。
-
-完整匹配失败：
-
-.. code-block:: text
-
-   输入：s = "cab", p = "c.*d"
-   输出：false
-   解释：.* 可以匹配 "ab"，但模式末尾还要求一个 d，无法与已经耗尽的字符串匹配。
-
-星号选择零次：
-
-.. code-block:: text
-
-   输入：s = "b", p = "a*b"
-   输出：true
-   解释：a* 选择出现零次，剩余的 b 与字符串中的 b 匹配。
+* 普通字符不足：``s = "aa"``、``p = "a"``，模式只消费一个字符，返回 ``false``；
+* 星号重复多次：``s = "miss"``、``p = "mis*"``，``s*`` 消费两个 ``s``，返回 ``true``；
+* 星号选择零次：``s = "b"``、``p = "a*b"``，``a*`` 不消费字符，返回 ``true``；
+* 点号与星号组合：``s = "ab"``、``p = ".*"``，``.*`` 可以消费全部字符，返回 ``true``；
+* 多组星号分配：``s = "aab"``、``p = "c*a*b"``，``c*`` 取零次、``a*`` 取两次，返回 ``true``；
+* 完整匹配失败：``s = "cab"``、``p = "c.*d"``，末尾 ``d`` 无法匹配，返回 ``false``。
 
 C++ 实现
 --------
@@ -54,180 +44,189 @@ C++ 实现
 
    class Solution {
    private:
-       bool directDfs(
-           const std::string& s,
-           const std::string& p,
-           int i,
-           int j
-       ) {
+       bool firstMatches(const std::string& s, const std::string& p, int i, int j) {
+           return i < static_cast<int>(s.size()) && (p[j] == s[i] || p[j] == '.');
+       }
+
+       bool directDfs(const std::string& s, const std::string& p, int i, int j) {
            if (j == static_cast<int>(p.size())) {
                return i == static_cast<int>(s.size());
            }
-
-           const bool first_match =
-               i < static_cast<int>(s.size()) &&
-               (p[j] == s[i] || p[j] == '.');
-
-           if (
-               j + 1 < static_cast<int>(p.size()) &&
-               p[j + 1] == '*'
-           ) {
-               return directDfs(s, p, i, j + 2) ||
-                   (first_match && directDfs(s, p, i + 1, j));
+           const bool first = firstMatches(s, p, i, j);
+           if (j + 1 < static_cast<int>(p.size()) && p[j + 1] == '*') {
+               return directDfs(s, p, i, j + 2) || (first && directDfs(s, p, i + 1, j));
            }
-
-           return first_match && directDfs(s, p, i + 1, j + 1);
+           return first && directDfs(s, p, i + 1, j + 1);
        }
 
-       bool memoDfs(
-           const std::string& s,
-           const std::string& p,
-           int i,
-           int j,
-           std::vector<std::vector<int>>& memo
-       ) {
+       bool memoDfs(const std::string& s, const std::string& p, int i, int j,
+                    std::vector<std::vector<int>>& memo) {
            int& cached = memo[i][j];
            if (cached != -1) {
                return cached == 1;
            }
-
-           bool answer;
+           bool answer = false;
            if (j == static_cast<int>(p.size())) {
                answer = i == static_cast<int>(s.size());
            } else {
-               const bool first_match =
-                   i < static_cast<int>(s.size()) &&
-                   (p[j] == s[i] || p[j] == '.');
-
-               if (
-                   j + 1 < static_cast<int>(p.size()) &&
-                   p[j + 1] == '*'
-               ) {
+               const bool first = firstMatches(s, p, i, j);
+               if (j + 1 < static_cast<int>(p.size()) && p[j + 1] == '*') {
                    answer = memoDfs(s, p, i, j + 2, memo) ||
-                       (first_match && memoDfs(s, p, i + 1, j, memo));
+                       (first && memoDfs(s, p, i + 1, j, memo));
                } else {
-                   answer = first_match &&
-                       memoDfs(s, p, i + 1, j + 1, memo);
+                   answer = first && memoDfs(s, p, i + 1, j + 1, memo);
                }
            }
-
            cached = answer ? 1 : 0;
            return answer;
+       }
+
+       bool memoizedDfs(const std::string& s, const std::string& p) {
+           std::vector<std::vector<int>> memo(s.size() + 1, std::vector<int>(p.size() + 1, -1));
+           return memoDfs(s, p, 0, 0, memo);
        }
 
        bool bottomUp(const std::string& s, const std::string& p) {
            const int m = static_cast<int>(s.size());
            const int n = static_cast<int>(p.size());
-           std::vector<std::vector<char>> dp(
-               m + 1,
-               std::vector<char>(n + 1, false)
-           );
+           std::vector<std::vector<char>> dp(m + 1, std::vector<char>(n + 1, false));
            dp[m][n] = true;
-
            for (int i = m; i >= 0; --i) {
                for (int j = n - 1; j >= 0; --j) {
-                   const bool first_match =
-                       i < m && (p[j] == s[i] || p[j] == '.');
-
+                   const bool first = i < m && (p[j] == s[i] || p[j] == '.');
                    if (j + 1 < n && p[j + 1] == '*') {
-                       dp[i][j] = dp[i][j + 2] ||
-                           (first_match && dp[i + 1][j]);
+                       dp[i][j] = dp[i][j + 2] || (first && dp[i + 1][j]);
                    } else {
-                       dp[i][j] = first_match && dp[i + 1][j + 1];
+                       dp[i][j] = first && dp[i + 1][j + 1];
                    }
                }
            }
-
            return dp[0][0];
+       }
+
+       bool compressedDp(const std::string& s, const std::string& p) {
+           const int m = static_cast<int>(s.size());
+           const int n = static_cast<int>(p.size());
+           std::vector<char> next(n + 1, false);
+           next[n] = true;
+           for (int j = n - 2; j >= 0; --j) {
+               if (p[j + 1] == '*') {
+                   next[j] = next[j + 2];
+               }
+           }
+           for (int i = m - 1; i >= 0; --i) {
+               std::vector<char> current(n + 1, false);
+               for (int j = n - 1; j >= 0; --j) {
+                   const bool first = p[j] == s[i] || p[j] == '.';
+                   if (j + 1 < n && p[j + 1] == '*') {
+                       current[j] = current[j + 2] || (first && next[j]);
+                   } else {
+                       current[j] = first && next[j + 1];
+                   }
+               }
+               next.swap(current);
+           }
+           return next[0];
        }
 
    public:
        bool isMatch(std::string s, std::string p) {
-           return bottomUp(s, p);
+           return compressedDp(s, p);
        }
    };
 
 题解
 ----
 
-从匹配路径枚举到后缀状态
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-直接递归会枚举 ``*`` 的不同重复次数。决定后续结果所需的信息只有两个位置：字符串尚未匹配部分的起点
-``i`` 和模式尚未处理部分的起点 ``j``。定义：
-
-.. code-block:: text
-
-   match(i, j) = s[i:] 能否被 p[j:] 完整匹配
-
-当 ``j == len(p)`` 时，只有 ``i == len(s)`` 才成功。字符串先耗尽时不能立即失败，因为剩余模式可能是
-``a*b*c*``，每组都可选择零次。
-
-普通字符和点号为什么同时前进一步
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-当前位置能够匹配一个字符的条件是：
-
-.. code-block:: text
-
-   first_match = i < len(s) 且 (p[j] == s[i] 或 p[j] == '.')
-
-若当前元素后面没有 ``*``，它必须恰好消费一个字符，因此转移为：
-
-.. math::
-
-   match(i,j)=first\_match \land match(i+1,j+1)
-
-字符串位置和模式位置必须同时前进；只移动其中一个都会改变“一个模式元素匹配一个字符”的语义。
-
-星号两条分支为什么覆盖所有重复次数
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-当 ``p[j + 1] == '*'`` 时，当前元素出现次数只有两类：
-
-* 零次：跳过 ``元素 + *``，进入 ``match(i, j + 2)``；
-* 至少一次：先匹配一个字符，字符串前进而模式停留，进入 ``match(i + 1, j)``。
-
-第二条分支每次只消费一个字符并保留模式位置，下一状态仍可选择继续消费或停止，因此覆盖一次、两次及更多次。
-两条分支合并为：
-
-.. math::
-
-   match(i,j)=match(i,j+2)\lor(first\_match\land match(i+1,j))
-
-递归为什么产生重复后缀
-~~~~~~~~~~~~~~~~~~~~
-
-在 ``s = "aaaa"``、``p = "a*a*"`` 中，不同的重复次数分配会到达相同 ``(i, j)``。朴素递归会反复展开
-同一个后缀问题。记忆化表为每个状态保存未计算、假、真三种值，使最多 ``(m + 1)(n + 1)`` 个状态各计算一次。
-
-动态规划为什么必须从后向前填表
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-自底向上表 ``dp[i][j]`` 使用同一后缀定义。转移依赖：
-
-* ``dp[i][j + 2]``；
-* ``dp[i + 1][j]``；
-* ``dp[i + 1][j + 1]``。
-
-因此 ``i`` 和 ``j`` 都从大到小遍历，计算当前格时右侧、下侧和右下格已经得到结果。唯一直接为真的空状态是
-``dp[m][n]``，表示字符串和模式同时耗尽。
-
-状态演化
+原始分支
 ~~~~~~~~
 
-对 ``s = "aab"``、``p = "c*a*b"``：
+没有 ``*`` 时，匹配过程只有一条路径：当前模式元素与当前字符匹配后，两边同时前进一步。
+``*`` 使一个模式元素可以消费零个、一个或多个字符，算法必须决定每一组星号实际消费多少字符。
+
+最直接的方法是从字符串下标 ``i`` 和模式下标 ``j`` 开始递归尝试。真正影响后续结果的不是此前采用了
+哪些分支，而只是两个尚未处理的后缀，因此定义：
+
+``match(i, j)`` 表示 ``s[i:]`` 能否被 ``p[j:]`` 完整匹配。
+
+当 ``j`` 到达模式末尾时，只有 ``i`` 也到达字符串末尾才成功。字符串先耗尽时不能立即失败，因为剩余
+模式可能由 ``a*b*c*`` 这类可以全部取零次的分组组成。
+
+普通元素
+~~~~~~~~
+
+当前位置能够消费一个字符的条件为
+``first = i < s.size() && (p[j] == s[i] || p[j] == '.')``。
+
+若当前模式元素后面没有 ``*``，它必须恰好消费一个字符。只有 ``first`` 为真时，状态才能同时移动到
+``(i + 1, j + 1)``。字母和 ``.`` 的差异只体现在 ``first`` 的计算中，后续转移完全相同。
+
+星号转移
+~~~~~~~~
+
+若 ``p[j + 1] == '*'``，当前分组只有两种本质不同的选择：
+
+* 出现零次：不消费字符串，跳过模式中的 ``元素 + *``，进入 ``(i, j + 2)``；
+* 出现至少一次：先消费一个匹配字符，模式仍停在当前元素，进入 ``(i + 1, j)``。
+
+第二条分支保留 ``j``，所以下一状态仍可继续消费或改选零次退出。它由此覆盖一次、两次以及更多次，
+不需要单独枚举具体重复次数。转移统一为
+``match(i, j) = match(i, j + 2) || (first && match(i + 1, j))``。
+
+``directDfs`` 完整实现了这棵选择树。连续星号会产生大量不同的消费分配，例如 ``s = "aaaa"``、
+``p = "a*a*"`` 中，多条路径会到达同一个 ``(i, j)``，因此朴素递归可能产生指数级重复计算。
+
+后缀记忆
+~~~~~~~~
+
+``memoizedDfs`` 为每个 ``(i, j)`` 保存未计算、失败和成功三种状态。第一次进入一个后缀问题时展开递归，
+之后再次到达同一状态时直接返回缓存结果。
+
+字符串共有 ``m + 1`` 个后缀起点，模式共有 ``n + 1`` 个后缀起点，所以最多只有
+``(m + 1)(n + 1)`` 个不同状态。记忆化没有改变递归转移，只删除了不同匹配路径对同一后缀的重复展开。
+
+自底向上
+~~~~~~~~
+
+二维动态规划使用相同定义：``dp[i][j]`` 表示 ``s[i:]`` 与 ``p[j:]`` 是否完整匹配。基础状态
+``dp[m][n] = true`` 表示两个后缀同时为空。
+
+当前状态依赖 ``dp[i][j + 2]``、``dp[i + 1][j]`` 或 ``dp[i + 1][j + 1]``，所以 ``i`` 和 ``j``
+都从大到小遍历。计算一个格子时，它右侧、下一行和右下方的状态已经得到结果。
+
+当 ``i == m`` 时，``first`` 必定为假，普通模式元素不能再消费字符；星号分组仍可通过
+``dp[m][j + 2]`` 选择零次。因此空字符串后缀无需单独写一套转移规则。
+
+空间压缩
+~~~~~~~~
+
+计算第 ``i`` 行时只会读取当前行右侧的 ``dp[i][j + 2]``，以及下一行的 ``dp[i + 1][j]`` 和
+``dp[i + 1][j + 1]``。更早的行不会再被使用，因此二维表可以压缩为两个一维数组：
+
+* ``next[j]`` 保存下一行 ``dp[i + 1][j]``；
+* ``current[j]`` 保存正在计算的 ``dp[i][j]``。
+
+模式下标仍从右向左扫描，使 ``current[j + 2]`` 在使用前已经计算。完成一行后交换两个数组，旧的
+``current`` 不再需要。
+
+开始处理真实字符前，``next`` 先表示空字符串后缀 ``dp[m][j]``。只有形如 ``元素*`` 的连续分组可以
+取零次并最终到达 ``dp[m][n]``，所以初始化同样从右向左传播 ``next[j + 2]``。
+
+状态推演
+~~~~~~~~
+
+以 ``s = "aab"``、``p = "c*a*b"`` 为例：
 
 .. list-table::
    :header-rows: 1
 
    * - 状态
-     - 当前模式
+     - 模式起点
      - 选择
      - 后继状态
    * - ``(0, 0)``
      - ``c*``
-     - ``c`` 不匹配 ``a``，只能零次
+     - ``c`` 不匹配 ``a``，只能取零次
      - ``(0, 2)``
    * - ``(0, 2)``
      - ``a*``
@@ -239,240 +238,62 @@ C++ 实现
      - ``(2, 2)``
    * - ``(2, 2)``
      - ``a*``
-     - 当前 ``b`` 不匹配，结束重复
+     - ``b`` 不匹配 ``a``，结束重复
      - ``(2, 4)``
    * - ``(2, 4)``
      - ``b``
      - 同时消费字符和模式
      - ``(3, 5)``
 
-最终字符串与模式同时耗尽，答案为真。
+最终状态 ``(3, 5)`` 的两个后缀都为空，因此整条匹配路径成功。星号每一步只做“退出分组”或“消费一个
+并保留分组”两种选择，已经覆盖所有重复次数。
 
-为什么 ``dp[0][0]`` 代表完整匹配
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+代码演进
+~~~~~~~~
 
-每个状态只判断两个完整后缀。普通元素覆盖唯一的一次消费方式，星号分支覆盖零次和至少一次的全部情况；所有转移
-最终都到达更短的字符串后缀或模式后缀。由后缀长度归纳，每个 ``dp[i][j]`` 都准确表示对应后缀能否完整匹配，
-所以 ``dp[0][0]`` 正是整个字符串与整个模式的答案。
+``directDfs`` 直接枚举星号分支，代码最接近匹配语义，瓶颈是不同路径反复计算相同后缀。
 
-复杂度来源
+``memoizedDfs`` 增加二维缓存，每个 ``(i, j)`` 只展开一次，指数级搜索被压缩为有限状态图。
+
+``bottomUp`` 删除递归调用和递归栈，按依赖方向显式填充全部后缀状态。
+
+``compressedDp`` 观察到当前行只依赖自身右侧与下一行，删除完整二维表，只保留两个模式长度的一维数组。
+公开入口采用这一方案。
+
+复杂度分析
 ~~~~~~~~~~
 
-朴素递归在连续星号下可能产生指数级分支。记忆化和动态规划均有 ``O(mn)`` 个状态，每个状态只做常数工作，
-时间复杂度 ``O(mn)``，表空间 ``O(mn)``；记忆化还使用 ``O(m+n)`` 递归栈。
+.. list-table::
+   :header-rows: 1
 
-九语言实现
-----------
+   * - 方法
+     - 时间复杂度
+     - 工作空间
+     - 主要代价
+   * - 朴素递归
+     - 最坏指数级
+     - ``O(m + n)``
+     - 重复展开相同后缀状态
+   * - 记忆化递归
+     - ``O(mn)``
+     - ``O(mn)``
+     - 保存全部状态，并使用递归栈
+   * - 二维动态规划
+     - ``O(mn)``
+     - ``O(mn)``
+     - 填充完整后缀状态表
+   * - 一维动态规划
+     - ``O(mn)``
+     - ``O(n)``
+     - 每次只保存当前行和下一行
 
-以下实现统一使用自底向上动态规划。
+其中 ``m`` 和 ``n`` 分别是字符串与模式长度。每个动态规划状态只执行常数次比较和布尔运算。
 
-C
-~
+边界处理
+~~~~~~~~
 
-.. code-block:: c
-
-   #include <stdbool.h>
-   #include <stdlib.h>
-   #include <string.h>
-
-   bool isMatch(char* s, char* p) {
-       int m = (int)strlen(s), n = (int)strlen(p);
-       bool* dp = calloc((size_t)(m + 1) * (n + 1), sizeof(bool));
-       #define AT(i, j) dp[(i) * (n + 1) + (j)]
-       AT(m, n) = true;
-       for (int i = m; i >= 0; --i) {
-           for (int j = n - 1; j >= 0; --j) {
-               bool first = i < m && (p[j] == s[i] || p[j] == '.');
-               if (j + 1 < n && p[j + 1] == '*')
-                   AT(i, j) = AT(i, j + 2) || (first && AT(i + 1, j));
-               else
-                   AT(i, j) = first && AT(i + 1, j + 1);
-           }
-       }
-       bool answer = AT(0, 0);
-       free(dp);
-       return answer;
-       #undef AT
-   }
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def isMatch(self, s: str, p: str) -> bool:
-           m, n = len(s), len(p)
-           dp = [[False] * (n + 1) for _ in range(m + 1)]
-           dp[m][n] = True
-           for i in range(m, -1, -1):
-               for j in range(n - 1, -1, -1):
-                   first = i < m and p[j] in (s[i], ".")
-                   if j + 1 < n and p[j + 1] == "*":
-                       dp[i][j] = dp[i][j + 2] or (first and dp[i + 1][j])
-                   else:
-                       dp[i][j] = first and dp[i + 1][j + 1]
-           return dp[0][0]
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {
-       public boolean isMatch(String s, String p) {
-           int m = s.length(), n = p.length();
-           boolean[][] dp = new boolean[m + 1][n + 1];
-           dp[m][n] = true;
-           for (int i = m; i >= 0; --i) {
-               for (int j = n - 1; j >= 0; --j) {
-                   boolean first = i < m &&
-                       (p.charAt(j) == s.charAt(i) || p.charAt(j) == '.');
-                   if (j + 1 < n && p.charAt(j + 1) == '*')
-                       dp[i][j] = dp[i][j + 2] || (first && dp[i + 1][j]);
-                   else
-                       dp[i][j] = first && dp[i + 1][j + 1];
-               }
-           }
-           return dp[0][0];
-       }
-   }
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {
-       pub fn is_match(s: String, p: String) -> bool {
-           let s = s.as_bytes();
-           let p = p.as_bytes();
-           let (m, n) = (s.len(), p.len());
-           let mut dp = vec![vec![false; n + 1]; m + 1];
-           dp[m][n] = true;
-           for i in (0..=m).rev() {
-               for j in (0..n).rev() {
-                   let first = i < m && (p[j] == s[i] || p[j] == b'.');
-                   dp[i][j] = if j + 1 < n && p[j + 1] == b'*' {
-                       dp[i][j + 2] || (first && dp[i + 1][j])
-                   } else {
-                       first && dp[i + 1][j + 1]
-                   };
-               }
-           }
-           dp[0][0]
-       }
-   }
-
-Go
-~~
-
-.. code-block:: go
-
-   func isMatch(s string, p string) bool {
-       m, n := len(s), len(p)
-       dp := make([][]bool, m+1)
-       for i := range dp { dp[i] = make([]bool, n+1) }
-       dp[m][n] = true
-       for i := m; i >= 0; i-- {
-           for j := n-1; j >= 0; j-- {
-               first := i < m && (p[j] == s[i] || p[j] == '.')
-               if j+1 < n && p[j+1] == '*' {
-                   dp[i][j] = dp[i][j+2] || (first && dp[i+1][j])
-               } else {
-                   dp[i][j] = first && dp[i+1][j+1]
-               }
-           }
-       }
-       return dp[0][0]
-   }
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function isMatch(s: string, p: string): boolean {
-       const m = s.length, n = p.length;
-       const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(false));
-       dp[m][n] = true;
-       for (let i = m; i >= 0; --i) {
-           for (let j = n - 1; j >= 0; --j) {
-               const first = i < m && (p[j] === s[i] || p[j] === ".");
-               dp[i][j] = j + 1 < n && p[j + 1] === "*"
-                   ? dp[i][j + 2] || (first && dp[i + 1][j])
-                   : first && dp[i + 1][j + 1];
-           }
-       }
-       return dp[0][0];
-   }
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {
-       public bool IsMatch(string s, string p) {
-           int m = s.Length, n = p.Length;
-           bool[,] dp = new bool[m + 1, n + 1];
-           dp[m, n] = true;
-           for (int i = m; i >= 0; --i) {
-               for (int j = n - 1; j >= 0; --j) {
-                   bool first = i < m && (p[j] == s[i] || p[j] == '.');
-                   dp[i, j] = j + 1 < n && p[j + 1] == '*'
-                       ? dp[i, j + 2] || (first && dp[i + 1, j])
-                       : first && dp[i + 1, j + 1];
-               }
-           }
-           return dp[0, 0];
-       }
-   }
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function is_match(s::String, p::String)::Bool
-       a, b = collect(s), collect(p)
-       m, n = length(a), length(b)
-       dp = falses(m + 1, n + 1)
-       dp[m + 1, n + 1] = true
-       for i in m:-1:0, j in (n - 1):-1:0
-           first = i < m && (b[j + 1] == a[i + 1] || b[j + 1] == '.')
-           if j + 1 < n && b[j + 2] == '*'
-               dp[i + 1, j + 1] = dp[i + 1, j + 3] ||
-                   (first && dp[i + 2, j + 1])
-           else
-               dp[i + 1, j + 1] = first && dp[i + 2, j + 2]
-           end
-       end
-       dp[1, 1]
-   end
-
-R
-~
-
-.. code-block:: r
-
-   isMatch <- function(s, p) {
-       a <- strsplit(s, "", fixed = TRUE)[[1]]
-       b <- strsplit(p, "", fixed = TRUE)[[1]]
-       m <- length(a); n <- length(b)
-       dp <- matrix(FALSE, nrow = m + 1L, ncol = n + 1L)
-       dp[m + 1L, n + 1L] <- TRUE
-       for (i in m:0) {
-           if (n == 0L) next
-           for (j in (n - 1L):0) {
-               first <- i < m && (b[j + 1L] == a[i + 1L] || b[j + 1L] == ".")
-               if (j + 1L < n && b[j + 2L] == "*") {
-                   dp[i + 1L, j + 1L] <- dp[i + 1L, j + 3L] ||
-                       (first && dp[i + 2L, j + 1L])
-               } else {
-                   dp[i + 1L, j + 1L] <- first && dp[i + 2L, j + 2L]
-               }
-           }
-       }
-       dp[1L, 1L]
-   }
+* 模式耗尽时，字符串也必须耗尽，体现完整匹配而非子串匹配；
+* 字符串后缀为空时，剩余模式只有全部由可取零次的星号分组组成才可能成功；
+* ``.`` 仍然必须消费一个真实字符，不能匹配空字符串；
+* ``*`` 的零次分支跳过两个模式字符，重复分支只推进字符串位置；
+* 模式由题目保证合法，代码不负责修复缺少前置元素的 ``*``。
