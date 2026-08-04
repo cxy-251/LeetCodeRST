@@ -8,57 +8,24 @@
 :难度: Medium
 :主题: 数学、整数、溢出边界
 :原题: `LeetCode 0007 <https://leetcode.com/problems/reverse-integer/>`_
-:重点: 十进制数位反转、负号保留、前导零消失、32 位溢出
+:重点: 从文本反转和宽整数累积，推导到纯 32 位逐位处理，并在危险乘加发生前判断溢出
 
 题目重述
 --------
 
-给定一个 32 位有符号整数 ``x``，返回将其十进制数字顺序反转后的整数。负数只反转数字部分，负号仍位于结果最前；原整数末尾的零在反转后成为前导零，不保留在整数结果中。
+给定一个 32 位有符号整数 ``x``，需要返回将其十进制数字顺序反转后的整数。负数只反转数字部分，负号仍保留在结果前；原整数末尾的零在反转后成为前导零，因此不会保留在整数结果中。
 
-若反转后的数学结果超出 32 位有符号整数范围 ``[-2^31, 2^31 - 1]``，返回 ``0``。题目假设运行环境不能使用 64 位有符号或无符号整数保存中间结果。
+若反转后的数学结果超出 32 位有符号整数范围 ``[-2^31, 2^31 - 1]``，返回 ``0``。题目还要求不能依赖 64 位有符号或无符号整数保存中间结果。
 
 自建示例
 --------
 
-包含内部零的负数：
-
-.. code-block:: text
-
-   输入：x = -408
-   输出：-804
-   解释：数字部分 408 反转为 804，再保留负号。
-
-末尾零自然消失：
-
-.. code-block:: text
-
-   输入：x = 1200
-   输出：21
-   解释：反转得到的数字序列为 0021，作为整数返回时前导零不保留。
-
-反转后溢出：
-
-.. code-block:: text
-
-   输入：x = 1534236469
-   输出：0
-   解释：反转后的数学值 9646324351 超出 32 位有符号整数上界。
-
-零值保持为零：
-
-.. code-block:: text
-
-   输入：x = 0
-   输出：0
-   解释：没有需要处理的数字位，反转结果仍为 0。
-
-负向边界溢出：
-
-.. code-block:: text
-
-   输入：x = -2147483648
-   输出：0
-   解释：反转后的数学值为 -8463847412，低于 32 位有符号整数下界；不能先对该输入取绝对值，因为 ``2147483648`` 已超出正数上界。
+* 普通正数：``x = 123``，依次取出 ``3``、``2``、``1``，返回 ``321``；
+* 负数含零：``x = -408``，数字部分反转后返回 ``-804``；
+* 末尾零：``x = 1200``，反转后的前导零被整数表示自动丢弃，返回 ``21``；
+* 正向溢出：``x = 1534236469``，反转结果超过 ``INT_MAX``，返回 ``0``；
+* 最小整数：``x = -2147483648``，不能先取绝对值，反转结果也越界，返回 ``0``；
+* 零值：``x = 0``，返回 ``0``。
 
 C++ 实现
 --------
@@ -73,13 +40,8 @@ C++ 实现
    private:
        int reverseAsString(int x) {
            std::string text = std::to_string(x);
-           const bool negative = text.front() == '-';
-
-           std::reverse(
-               text.begin() + (negative ? 1 : 0),
-               text.end()
-           );
-
+           const int firstDigit = text.front() == '-' ? 1 : 0;
+           std::reverse(text.begin() + firstDigit, text.end());
            const long long value = std::stoll(text);
            if (value < INT_MIN || value > INT_MAX) {
                return 0;
@@ -90,13 +52,11 @@ C++ 实现
        int reverseWithWideInteger(int x) {
            long long remaining = x;
            long long reversed = 0;
-
            while (remaining != 0) {
                const long long digit = remaining % 10;
                remaining /= 10;
                reversed = reversed * 10 + digit;
            }
-
            if (reversed < INT_MIN || reversed > INT_MAX) {
                return 0;
            }
@@ -105,27 +65,19 @@ C++ 实现
 
        int reverseWithinInt(int x) {
            int reversed = 0;
-
            while (x != 0) {
                const int digit = x % 10;
-               x /= 10;  // C++11 起，有符号整数除法向零截断
-
-               if (
-                   reversed > INT_MAX / 10 ||
-                   (reversed == INT_MAX / 10 && digit > 7)
-               ) {
+               x /= 10;
+               if (reversed > INT_MAX / 10 ||
+                   (reversed == INT_MAX / 10 && digit > INT_MAX % 10)) {
                    return 0;
                }
-               if (
-                   reversed < INT_MIN / 10 ||
-                   (reversed == INT_MIN / 10 && digit < -8)
-               ) {
+               if (reversed < INT_MIN / 10 ||
+                   (reversed == INT_MIN / 10 && digit < INT_MIN % 10)) {
                    return 0;
                }
-
                reversed = reversed * 10 + digit;
            }
-
            return reversed;
        }
 
@@ -138,188 +90,98 @@ C++ 实现
 题解
 ----
 
-字符串转换如何直接表达数字反转
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+文本反转
+~~~~~~~~
 
-``reverseAsString`` 把整数转换成十进制文本，保留开头的负号，只反转数字部分。文本 ``"-120"``
-会变成 ``"-021"``，重新解析后自然得到 ``-21``。
+最直观的方法是把整数转换为十进制字符串，跳过开头的负号，反转剩余字符，再把文本解析回整数。原数末尾的零会移动到文本数字部分开头，重新解析时自然消失。
 
-这种方法与题意的表面描述最接近，但需要额外字符串空间，并依赖能够容纳反转结果的 ``long long``
-完成解析和越界判断。它适合作为直观对照，不满足题目对主解法“不依赖 64 位整数”的约束。
+``reverseAsString`` 直接对应题意，但需要 ``O(d)`` 字符串空间。更重要的是，反转后的文本可能已经超出 32 位范围，因此解析时仍需借助 ``long long``；它不能作为满足题目限制的主解法。
 
-宽整数为什么能把边界判断推迟到最后
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+逐位转移
+~~~~~~~~
 
-``reverseWithWideInteger`` 仍然使用整数运算，但把剩余输入和累计结果都提升为 ``long long``。因为任意
-32 位整数最多有 10 个十进制数字，其反转后的数学值可以被常见 64 位有符号整数容纳，所以循环内可以
-直接执行乘十和加法，最后再检查结果是否位于 32 位范围。
+字符串并非必要。十进制整数的最低位可以通过 ``digit = x % 10`` 取得，随后执行 ``x /= 10`` 删除该位。把取出的数字追加到结果末尾，则执行 ``reversed = reversed * 10 + digit``。
 
-这种写法展示了逐位算法的核心结构，但安全性来自更宽整数，而不是来自算法自身的边界控制。题目明确
-假设环境不能存储 64 位整数，因此标准入口不能选择这一方案。
+每轮完成一次明确的状态转移：输入少一个最低位，结果多一个新的最低位。循环结束时，原数字的各位已经按从低位到高位的顺序进入 ``reversed``，正好形成反转结果。
 
-从十进制位权推导逐位状态变化
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+C++ 的有符号除法向零截断，余数与被除数同号。因此负数不需要单独提取符号：``-408 % 10`` 得到 ``-8``，后续数字依次为 ``0`` 和 ``-4``，累计结果自然成为 ``-804``。
 
-主解法需要始终把状态保存在 32 位整数中。对当前尚未处理的整数 ``x``，定义向零截断商 ``q`` 和最低位
-``digit``：
+这也避免了对 ``INT_MIN`` 取绝对值。``-2147483648`` 的正数绝对值是 ``2147483648``，已经超出 32 位有符号整数上界。
 
-.. math::
+宽整数累积
+~~~~~~~~~~
 
-   q = \operatorname{trunc}(x / 10)
+``reverseWithWideInteger`` 使用 ``long long`` 保存 ``remaining`` 和 ``reversed``，循环中可以直接执行乘十和加法，最后再判断结果是否位于 32 位范围。
 
-.. math::
+这一步把字符串、解析和字符反转全部删除，只保留十进制数位转移。它的边界安全依赖更宽类型，而题目明确不允许用 64 位整数保存中间结果，因此还需要把越界判断移动到每次乘加之前。
 
-   digit = x - 10q
+乘加边界
+~~~~~~~~
 
-于是始终有：
+下一状态是 ``reversed * 10 + digit``。若先执行这条语句再检查，32 位有符号整数可能已经溢出，原数学结果也已经丢失。因此必须根据当前 ``reversed`` 预判下一次乘加是否安全。
 
-.. math::
+正向上界分为三种情况：
 
-   x = 10q + digit
+* ``reversed > INT_MAX / 10`` 时，单独乘十就会越界；
+* ``reversed < INT_MAX / 10`` 时，追加任意十进制位都安全；
+* ``reversed == INT_MAX / 10`` 时，``digit`` 不能大于 ``INT_MAX % 10``，即 ``7``。
 
-``digit`` 位于 ``[-9, 9]``，它就是 ``x`` 当前的最低十进制位。把 ``x`` 更新为 ``q``，等价于删除
-最低位；把该数字追加到结果末尾，则执行：
+负向下界完全对应：
 
-.. math::
+* ``reversed < INT_MIN / 10`` 时，乘十后会低于下界；
+* ``reversed > INT_MIN / 10`` 时，追加当前负数位仍安全；
+* ``reversed == INT_MIN / 10`` 时，``digit`` 不能小于 ``INT_MIN % 10``，即 ``-8``。
 
-   reversed_{next} = 10 \cdot reversed + digit
+只有通过这两组检查后，``reversed = reversed * 10 + digit`` 才会执行。这样所有中间状态始终位于 32 位有符号整数范围内。
 
-每轮把输入的一位从 ``x`` 移入 ``reversed``，因此不需要保存数字数组，也不需要单独处理正负号。
+状态推演
+~~~~~~~~
 
-向零截断为什么能统一处理正数和负数
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-对正数 ``408``：
-
-.. code-block:: text
-
-   q = 40, digit = 8
-
-对负数 ``-408``，向零截断得到：
-
-.. code-block:: text
-
-   q = -40, digit = -8
-
-两者都满足 ``x = 10 * q + digit``。负数弹出的每一位也为负，累计结果会自然保持负号：
-
-.. code-block:: text
-
-   0 * 10 + (-8) = -8
-   -8 * 10 + 0   = -80
-   -80 * 10 + (-4) = -804
-
-这样可以直接处理 ``INT_MIN``。若先对输入取绝对值，``abs(-2147483648)`` 会变成 ``2147483648``，
-它已经超出 32 位正数上界。
-
-C++ 的有符号整数除法向零截断，因此对负数也能直接使用 ``quotient = x / 10``，再用
-``digit = x - quotient * 10`` 恢复最低位；本题的 C++ 主解法只依赖这一语言语义。
-
-压入前边界如何从 32 位范围推导
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-设：
-
-.. math::
-
-   INT\_MAX = 2147483647
-
-.. math::
-
-   INT\_MIN = -2147483648
-
-下一状态为 ``10 * reversed + digit``。真正执行乘法前，先比较 ``reversed`` 与上下界除以 10 的商。
-
-正向上界
-^^^^^^^^
-
-``INT_MAX / 10`` 向零截断为 ``214748364``。
-
-* 若 ``reversed > 214748364``，乘十后已经超过上界；
-* 若 ``reversed < 214748364``，即使追加最大数字 9 也不会超过上界；
-* 若 ``reversed == 214748364``，最后一位最多只能是 ``7``。
-
-因此正向越界条件为：
-
-.. code-block:: text
-
-   reversed > INT_MAX / 10
-   或
-   reversed == INT_MAX / 10 且 digit > 7
-
-负向下界
-^^^^^^^^
-
-``INT_MIN / 10`` 向零截断为 ``-214748364``。
-
-* 若 ``reversed < -214748364``，乘十后已经小于下界；
-* 若 ``reversed > -214748364``，追加最小数字 -9 仍不会越过下界；
-* 若 ``reversed == -214748364``，最后一位最小只能是 ``-8``。
-
-因此负向越界条件为：
-
-.. code-block:: text
-
-   reversed < INT_MIN / 10
-   或
-   reversed == INT_MIN / 10 且 digit < -8
-
-``7`` 和 ``-8`` 分别来自 ``2147483647`` 与 ``-2147483648`` 的最后一位。只有累计结果已经到达
-十分之一边界时，最后一位比较才会生效。
-
-普通负数的状态演化
-~~~~~~~~~~~~~~~~~~
-
-使用 ``x = -408``：
+以 ``x = -408`` 为例：
 
 .. list-table::
    :header-rows: 1
 
    * - 轮次
-     - 更新前 ``x``
-     - 向零截断商
+     - 原 ``x``
      - ``digit``
-     - 更新前 ``reversed``
-     - 更新后 ``reversed``
+     - 新 ``x``
+     - 原 ``reversed``
+     - 新 ``reversed``
    * - 1
      - -408
-     - -40
      - -8
+     - -40
      - 0
      - -8
    * - 2
      - -40
-     - -4
      - 0
+     - -4
      - -8
      - -80
    * - 3
      - -4
-     - 0
      - -4
+     - 0
      - -80
      - -804
 
-第三轮后 ``x`` 变成 0，说明所有十进制位都已移动到结果中。
+对于 ``x = 1534236469``，处理到最后一个数字前，``reversed`` 已经是 ``964632435``。它大于 ``INT_MAX / 10``，算法在执行危险乘法前直接返回 ``0``。
 
-溢出输入在危险乘法前停止
-~~~~~~~~~~~~~~~~~~~~~~~~
+代码演进
+~~~~~~~~
 
-使用 ``x = 1534236469``。前九轮完成后：
+``reverseAsString`` 按字符反转，代码需要字符串、负号起点、文本解析和额外空间。
 
-.. code-block:: text
+``reverseWithWideInteger`` 把字符操作替换为取余、整除和乘加，字符串与解析过程消失，但增加了 64 位中间状态和最终范围检查。
 
-   x = 1
-   reversed = 964632435
+``reverseWithinInt`` 保留相同的逐位转移，把最终检查前移到每次乘加之前。``long long`` 状态和循环后的范围判断同时消失，所有计算都在 ``int`` 中完成。
 
-下一轮弹出 ``digit = 1``。此时 ``reversed > 214748364``，所以无需执行
-``964632435 * 10 + 1`` 就可以确定结果会超过 ``INT_MAX``，直接返回 ``0``。
+公开入口采用 ``reverseWithinInt``，因为它满足题目的存储限制，并且不会先触发有符号整数溢出再尝试补救。
 
-这一步顺序对于 C 和 C++ 尤其重要：若先让 32 位有符号整数发生溢出，再检查结果，原数学值已经丢失，
-并且 C、C++ 的有符号溢出还可能产生未定义行为。
-
-解法对比与主解法选择
-~~~~~~~~~~~~~~~~~~~~
+复杂度分析
+~~~~~~~~~~
 
 .. list-table::
    :header-rows: 1
@@ -327,369 +189,27 @@ C++ 的有符号整数除法向零截断，因此对负数也能直接使用 ``q
    * - 方法
      - 时间复杂度
      - 工作空间
-     - 边界控制来源
-   * - 字符串反转后解析
+     - 主要代价
+   * - 字符串反转
      - ``O(d)``
      - ``O(d)``
-     - 更宽解析类型与最终范围检查
+     - 构造、反转并解析十进制文本
    * - 宽整数逐位累积
      - ``O(d)``
      - ``O(1)``
-     - 64 位中间结果与最终范围检查
+     - 使用 64 位中间结果后统一检查范围
    * - 纯 32 位逐位处理
      - ``O(d)``
      - ``O(1)``
-     - 每次乘加之前反推安全边界
+     - 每次乘加前检查上下界
 
-``d`` 是输入的十进制位数。标准入口选择纯 32 位方案，因为它在每个中间状态都满足题目的存储约束，
-也直接展示固定宽度算术中应如何在危险运算发生前控制边界。
+``d`` 是输入的十进制位数。32 位整数最多只有常数个十进制位，但保留 ``O(d)`` 更能表达算法随位数增长的工作量。
 
-为什么每轮恰好移动一个十进制位
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+边界处理
+~~~~~~~~
 
-向零截断商和余数满足 ``x = 10 * quotient + digit``，且 ``|digit| < 10``。因此 ``digit`` 唯一表示
-当前最低位，``quotient`` 唯一表示删除该位后的剩余整数。
-
-更新 ``reversed = reversed * 10 + digit`` 会把已有数字整体提升一个十进制位，再把刚弹出的最低位放到
-个位。输入减少一位，结果增加一位，所以每轮恰好完成一次数字转移。
-
-为什么四个比较覆盖全部溢出情况
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-对正数边界，``reversed`` 与 ``INT_MAX / 10`` 的大小关系已经决定乘十后的数量级。只有两者相等时，
-``digit`` 才能决定最终结果位于上界内还是上界外。负数边界完全对称，只是 32 位下界的末位为 ``-8``。
-
-因此正向的“商过大、商相等且末位过大”和负向的“商过小、商相等且末位过小”覆盖了所有越界可能；
-其余状态执行乘加必然安全。
-
-为什么循环结束得到完整反转
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-循环开始时，``x`` 保存尚未处理的高位部分，``reversed`` 保存已经弹出的低位按弹出顺序组成的整数。
-每轮保持这一关系，并让 ``x`` 少一位。
-
-当 ``x == 0`` 时，原整数已经没有未处理数字。所有数字均按“原最低位到原最高位”的顺序进入
-``reversed``，正好构成完整反转。最先弹出的零只会让 ``0 * 10 + 0`` 仍为 0，所以原整数末尾零会
-自然消失，中间位置的零仍会通过后续乘十保留。
-
-复杂度来源
-~~~~~~~~~~
-
-字符串方法转换、反转和解析 ``d`` 个字符，时间复杂度 ``O(d)``，字符串占用 ``O(d)`` 工作空间。
-
-两种整数方法每轮通过除以 10 删除一个十进制位，共执行 ``d`` 轮，时间复杂度 ``O(d)``。它们只维护
-固定数量的整数变量，工作空间为 ``O(1)``。纯 32 位方案每轮增加常数次边界比较，不改变渐进复杂度。
-
-九语言实现
-----------
-
-九语言统一实现纯 32 位逐位方案。所有实现都按“取得向零截断商和最低位 → 执行边界检查 → 安全后
-乘十并追加”的顺序更新状态。宿主语言即使提供更宽整数或任意精度整数，也显式遵守 32 位结果范围。
-
-C
-~
-
-.. code-block:: c
-
-   #include <limits.h>
-
-   int reverse(int x) {
-       int reversed = 0;
-
-       while (x != 0) {
-           const int digit = x % 10;
-           x /= 10;  // C99 起，有符号整数除法向零截断
-
-           if (
-               reversed > INT_MAX / 10 ||
-               (reversed == INT_MAX / 10 && digit > 7)
-           ) {
-               return 0;
-           }
-           if (
-               reversed < INT_MIN / 10 ||
-               (reversed == INT_MIN / 10 && digit < -8)
-           ) {
-               return 0;
-           }
-
-           reversed = reversed * 10 + digit;
-       }
-
-       return reversed;
-   }
-
-Python
-~~~~~~
-
-Python 的 ``//`` 对负数向下取整。实现先对绝对值整除，再恢复商的符号，从而得到向零截断结果。
-
-.. code-block:: python
-
-   class Solution:
-       def reverse(self, x: int) -> int:
-           int_min = -(2**31)
-           int_max = 2**31 - 1
-           reversed_number = 0
-
-           while x != 0:
-               quotient = abs(x) // 10
-               if x < 0:
-                   quotient = -quotient
-               digit = x - quotient * 10
-               x = quotient
-
-               if (
-                   reversed_number > 214748364
-                   or (
-                       reversed_number == 214748364
-                       and digit > 7
-                   )
-               ):
-                   return 0
-               if (
-                   reversed_number < -214748364
-                   or (
-                       reversed_number == -214748364
-                       and digit < -8
-                   )
-               ):
-                   return 0
-
-               reversed_number = reversed_number * 10 + digit
-
-           return reversed_number
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {
-       public int reverse(int x) {
-           int reversed = 0;
-
-           while (x != 0) {
-               int digit = x % 10;
-               x /= 10; // Java 整数除法向零截断
-
-               if (
-                   reversed > Integer.MAX_VALUE / 10 ||
-                   (reversed == Integer.MAX_VALUE / 10 && digit > 7)
-               ) {
-                   return 0;
-               }
-               if (
-                   reversed < Integer.MIN_VALUE / 10 ||
-                   (reversed == Integer.MIN_VALUE / 10 && digit < -8)
-               ) {
-                   return 0;
-               }
-
-               reversed = reversed * 10 + digit;
-           }
-
-           return reversed;
-       }
-   }
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {
-       pub fn reverse(mut x: i32) -> i32 {
-           let mut reversed = 0_i32;
-
-           while x != 0 {
-               let digit = x % 10;
-               x /= 10; // i32 除法向零截断
-
-               if reversed > i32::MAX / 10
-                   || (reversed == i32::MAX / 10 && digit > 7)
-               {
-                   return 0;
-               }
-               if reversed < i32::MIN / 10
-                   || (reversed == i32::MIN / 10 && digit < -8)
-               {
-                   return 0;
-               }
-
-               reversed = reversed * 10 + digit;
-           }
-
-           reversed
-       }
-   }
-
-Go
-~~
-
-Go 的 ``int`` 宽度取决于平台；代码使用明确的 32 位上下界，使返回语义不依赖宿主位宽。
-
-.. code-block:: go
-
-   func reverse(x int) int {
-       const intMin = -1 << 31
-       const intMax = 1<<31 - 1
-       reversed := 0
-
-       for x != 0 {
-           digit := x % 10
-           x /= 10 // Go 整数除法向零截断
-
-           if reversed > intMax/10 ||
-               (reversed == intMax/10 && digit > 7) {
-               return 0
-           }
-           if reversed < intMin/10 ||
-               (reversed == intMin/10 && digit < -8) {
-               return 0
-           }
-
-           reversed = reversed*10 + digit
-       }
-
-       return reversed
-   }
-
-TypeScript
-~~~~~~~~~~
-
-TypeScript 使用 ``number``，但 32 位整数和检查前的中间状态都能被精确表示。``Math.trunc`` 明确提供
-向零截断语义。
-
-.. code-block:: typescript
-
-   function reverse(x: number): number {
-       const intMin = -(2 ** 31);
-       const intMax = 2 ** 31 - 1;
-       let reversed = 0;
-
-       while (x !== 0) {
-           const quotient = Math.trunc(x / 10);
-           const digit = x - quotient * 10;
-           x = quotient;
-
-           if (
-               reversed > Math.trunc(intMax / 10) ||
-               (reversed === Math.trunc(intMax / 10) && digit > 7)
-           ) {
-               return 0;
-           }
-           if (
-               reversed < Math.trunc(intMin / 10) ||
-               (reversed === Math.trunc(intMin / 10) && digit < -8)
-           ) {
-               return 0;
-           }
-
-           reversed = reversed * 10 + digit;
-       }
-
-       return reversed;
-   }
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {
-       public int Reverse(int x) {
-           int reversed = 0;
-
-           while (x != 0) {
-               int digit = x % 10;
-               x /= 10; // C# 整数除法向零截断
-
-               if (
-                   reversed > int.MaxValue / 10 ||
-                   (reversed == int.MaxValue / 10 && digit > 7)
-               ) {
-                   return 0;
-               }
-               if (
-                   reversed < int.MinValue / 10 ||
-                   (reversed == int.MinValue / 10 && digit < -8)
-               ) {
-                   return 0;
-               }
-
-               reversed = reversed * 10 + digit;
-           }
-
-           return reversed;
-       }
-   }
-
-Julia
-~~~~~
-
-Julia 的 ``Int`` 宽度随平台变化。实现仍按 32 位边界检查，并显式选择向零截断。
-
-.. code-block:: julia
-
-   function reverse_integer(x::Int)::Int
-       int_min = -2147483648
-       int_max = 2147483647
-       reversed = 0
-
-       while x != 0
-           quotient = div(x, 10, RoundToZero)
-           digit = x - quotient * 10
-           x = quotient
-
-           if reversed > div(int_max, 10) ||
-              (reversed == div(int_max, 10) && digit > 7)
-               return 0
-           end
-           if reversed < div(int_min, 10, RoundToZero) ||
-              (reversed == div(int_min, 10, RoundToZero) && digit < -8)
-               return 0
-           end
-
-           reversed = reversed * 10 + digit
-       end
-
-       return reversed
-   end
-
-R
-~
-
-R 的 ``numeric`` 可以精确表示 32 位整数。``trunc`` 用于获得向零截断商；结果保持为 numeric，避免
-``-2147483648`` 与 ``NA_integer_`` 的内部表示冲突。
-
-.. code-block:: r
-
-   reverse_integer <- function(x) {
-       int_min <- -2147483648
-       int_max <- 2147483647
-       reversed <- 0
-
-       while (x != 0) {
-           quotient <- trunc(x / 10)
-           digit <- x - quotient * 10
-           x <- quotient
-
-           if (
-               reversed > trunc(int_max / 10) ||
-               (reversed == trunc(int_max / 10) && digit > 7)
-           ) {
-               return(0)
-           }
-           if (
-               reversed < trunc(int_min / 10) ||
-               (reversed == trunc(int_min / 10) && digit < -8)
-           ) {
-               return(0)
-           }
-
-           reversed <- reversed * 10 + digit
-       }
-
-       reversed
-   }
+* ``x = 0`` 时循环不执行，初始结果 ``0`` 直接返回；
+* 原数末尾的零先被取出，追加到初始结果时不产生有效高位，因此自然消失；
+* 负数直接使用负余数累计，不取绝对值，可以安全处理 ``INT_MIN``；
+* 上下界判断使用 ``INT_MAX % 10`` 和 ``INT_MIN % 10``，不依赖硬编码末位；
+* 一旦下一次乘加会越界，立即返回 ``0``，不会执行未定义的有符号溢出。
