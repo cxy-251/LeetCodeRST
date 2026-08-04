@@ -36,108 +36,67 @@ C++ 实现
 
    class Solution {
    private:
-       std::string simulatePath(
-           const std::string& s,
-           int numRows
-       ) {
-           if (
-               numRows == 1 ||
-               numRows >= static_cast<int>(s.size())
-           ) {
+       std::string simulatePath(const std::string& s, int numRows) {
+           if (numRows == 1 || numRows >= static_cast<int>(s.size())) {
                return s;
            }
-
            std::vector<std::string> rows(numRows);
            int row = 0;
            int direction = 1;
-
            for (char ch : s) {
                rows[row].push_back(ch);
-
                if (row == 0) {
                    direction = 1;
                } else if (row == numRows - 1) {
                    direction = -1;
                }
-
                row += direction;
            }
-
            std::string result;
            result.reserve(s.size());
-
            for (const std::string& current : rows) {
                result += current;
            }
-
            return result;
        }
 
-       std::string groupByCycle(
-           const std::string& s,
-           int numRows
-       ) {
+       std::string groupByCycle(const std::string& s, int numRows) {
            const int length = static_cast<int>(s.size());
            if (numRows == 1 || numRows >= length) {
                return s;
            }
-
            const int cycle = 2 * numRows - 2;
            std::vector<std::string> rows(numRows);
-
            for (int index = 0; index < length; ++index) {
                const int offset = index % cycle;
-               const int row = offset < numRows
-                   ? offset
-                   : cycle - offset;
-
+               const int row = offset < numRows ? offset : cycle - offset;
                rows[row].push_back(s[index]);
            }
-
            std::string result;
            result.reserve(s.size());
-
            for (const std::string& current : rows) {
                result += current;
            }
-
            return result;
        }
 
-       std::string readByCycle(
-           const std::string& s,
-           int numRows
-       ) {
+       std::string readByCycle(const std::string& s, int numRows) {
            const int length = static_cast<int>(s.size());
            if (numRows == 1 || numRows >= length) {
                return s;
            }
-
            const int cycle = 2 * numRows - 2;
            std::string result;
            result.reserve(s.size());
-
            for (int row = 0; row < numRows; ++row) {
-               for (
-                   int vertical = row;
-                   vertical < length;
-                   vertical += cycle
-               ) {
+               for (int vertical = row; vertical < length; vertical += cycle) {
                    result.push_back(s[vertical]);
-
-                   const int diagonal =
-                       vertical + cycle - 2 * row;
-
-                   if (
-                       row > 0 &&
-                       row < numRows - 1 &&
-                       diagonal < length
-                   ) {
+                   const int diagonal = vertical + cycle - 2 * row;
+                   if (row > 0 && row < numRows - 1 && diagonal < length) {
                        result.push_back(s[diagonal]);
                    }
                }
            }
-
            return result;
        }
 
