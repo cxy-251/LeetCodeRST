@@ -6,74 +6,47 @@
 
 :题号: 0025
 :难度: Hard
-:主题: 链表、分组、指针反转、递归
+:主题: 链表、分组、区间反转、递归
 :原题: `LeetCode 0025 <https://leetcode.com/problems/reverse-nodes-in-k-group/>`_
-:重点: 每 k 个节点分组、完整组反转、不完整尾组保留、不得只交换节点值
+:重点: 先确认完整分组，再原地反转半开区间，并保持不足 k 个节点的尾部不变
 
 题目重述
 --------
 
-给定单链表头节点 ``head`` 和正整数 ``k``，从链表开头起每 ``k`` 个连续节点组成一组，反转每个完整分组中的节点顺序，并返回处理后的头节点。
+给定单链表头节点 ``head`` 和正整数 ``k``，从链表开头开始，每连续 ``k`` 个节点组成一组。反转每个完整分组
+中的节点顺序，返回处理后的链表头节点。
 
-若链表末尾剩余节点不足 ``k`` 个，这些节点保持原来的顺序。必须通过修改节点连接关系完成反转，不能只交换节点值。
+若末尾剩余节点不足 ``k`` 个，这部分必须保持原顺序。必须通过修改 ``next`` 指针交换节点位置，不能只交换
+节点值。
 
 链表节点数量为 ``n``，满足 ``1 <= n <= 5000``；节点值位于 ``[0, 1000]``；``1 <= k <= n``。
 
 自建示例
 --------
 
-尾部不足一组：
-
-.. code-block:: text
-
-   输入：head = [1, 2, 3, 4, 5, 6, 7], k = 3
-   输出：[3, 2, 1, 6, 5, 4, 7]
-   解释：前两个完整三节点组分别反转，末尾只有节点 7，不足三个，因此保持不变。
-
-分组大小为二：
-
-.. code-block:: text
-
-   输入：head = [4, 8, 1, 9, 3], k = 2
-   输出：[8, 4, 9, 1, 3]
-   解释：节点对 [4, 8] 和 [1, 9] 分别反转，最后的节点 3 保留。
-
-分组大小为一：
-
-.. code-block:: text
-
-   输入：head = [5, 6, 7], k = 1
-   输出：[5, 6, 7]
-   解释：每组只有一个节点，反转后链表不变。
+* 多个完整组与尾组：``head = [1,2,3,4,5,6,7]``、``k = 3``，结果为 ``[3,2,1,6,5,4,7]``；
+* 恰好分完：``head = [1,2,3,4,5,6]``、``k = 2``，结果为 ``[2,1,4,3,6,5]``；
+* 整条链表一组：``head = [4,8,1,9]``、``k = 4``，结果为 ``[9,1,8,4]``；
+* 分组大小为一：``head = [5,6,7]``、``k = 1``，结果仍为 ``[5,6,7]``；
+* 尾部不足一组：``head = [2,4,6,8,10]``、``k = 3``，结果为 ``[6,4,2,8,10]``。
 
 C++ 实现
 --------
 
 .. code-block:: cpp
 
-   #include <algorithm>
-   #include <vector>
-
    class Solution {
    private:
-       ListNode* arrayBlocks(ListNode* head, int k) {
-           std::vector<ListNode*> nodes;
-           for (ListNode* node = head; node != nullptr; node = node->next) nodes.push_back(node);
-           for (int start = 0; start + k <= static_cast<int>(nodes.size()); start += k) {
-               std::reverse(nodes.begin() + start, nodes.begin() + start + k);
-           }
-           for (int i = 1; i < static_cast<int>(nodes.size()); ++i) nodes[i - 1]->next = nodes[i];
-           if (!nodes.empty()) nodes.back()->next = nullptr;
-           return nodes.empty() ? nullptr : nodes[0];
-       }
-
        ListNode* recursiveGroups(ListNode* head, int k) {
-           ListNode* cursor = head;
+           ListNode* groupNext = head;
            for (int count = 0; count < k; ++count) {
-               if (cursor == nullptr) return head;
-               cursor = cursor->next;
+               if (groupNext == nullptr) {
+                   return head;
+               }
+               groupNext = groupNext->next;
            }
-           ListNode* previous = recursiveGroups(cursor, k);
+
+           ListNode* previous = recursiveGroups(groupNext, k);
            ListNode* current = head;
            for (int count = 0; count < k; ++count) {
                ListNode* next = current->next;
@@ -86,26 +59,32 @@ C++ 实现
 
        ListNode* iterativeGroups(ListNode* head, int k) {
            ListNode dummy(0, head);
-           ListNode* group_prev = &dummy;
-           while (true) {
-               ListNode* kth = group_prev;
-               for (int step = 0; step < k && kth != nullptr; ++step) kth = kth->next;
-               if (kth == nullptr) break;
+           ListNode* groupPrevious = &dummy;
 
-               ListNode* group_next = kth->next;
-               ListNode* old_start = group_prev->next;
-               ListNode* previous = group_next;
-               ListNode* current = old_start;
-               while (current != group_next) {
+           while (true) {
+               ListNode* kth = groupPrevious;
+               for (int step = 0; step < k; ++step) {
+                   kth = kth->next;
+                   if (kth == nullptr) {
+                       return dummy.next;
+                   }
+               }
+
+               ListNode* groupStart = groupPrevious->next;
+               ListNode* groupNext = kth->next;
+               ListNode* previous = groupNext;
+               ListNode* current = groupStart;
+
+               while (current != groupNext) {
                    ListNode* next = current->next;
                    current->next = previous;
                    previous = current;
                    current = next;
                }
-               group_prev->next = kth;
-               group_prev = old_start;
+
+               groupPrevious->next = kth;
+               groupPrevious = groupStart;
            }
-           return dummy.next;
        }
 
    public:
@@ -117,214 +96,92 @@ C++ 实现
 题解
 ----
 
-数组分块为什么简单却失去原地链表优势
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+先确认完整分组
+~~~~~~~~~~~~~~
 
-把所有节点放入数组后，可以按下标反转完整块再重建链接，时间 ``O(n)``，但额外保存 ``O(n)`` 个节点指针。链表
-本身已经提供顺序关系，迭代主解法只需固定数量指针。
+一组只有在确实包含 ``k`` 个节点时才允许反转。若先改指针、反转到一半后才发现节点不足，就必须再把尾部恢复，
+不仅逻辑复杂，也容易破坏原链表。
 
-为什么必须先探测完整 k 节点组
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+迭代方法令 ``groupPrevious`` 指向当前组之前的节点，再从它出发向后移动 ``k`` 次：
 
-若边反转边计数，最后发现不足 ``k`` 个时必须把已经修改的后缀再次反转恢复。主解法先从 ``group_prev`` 向后走
-``k`` 步；中途为空就直接结束，此时尚未修改任何链接，所以不完整后缀天然保留。
+* 成功到达节点 ``kth``，说明 ``groupPrevious->next`` 到 ``kth`` 正好构成完整一组；
+* 中途到达空指针，说明剩余节点不足 ``k`` 个，此时尚未改动任何链接，可以直接返回。
 
-半开区间如何限定本组反转范围
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+虚拟头节点使第一组也拥有普通前驱。即使第一组反转后真实头节点改变，最终仍统一返回 ``dummy.next``。
 
-探测成功后，``kth`` 是组末节点，``group_next = kth.next``。反转区间是
-``[group_prev.next, group_next)``。令 ``previous = group_next``，循环到 ``current == group_next``，旧组头最终会
-自动指向组后缀，不需要额外寻找新组尾。
-
-一组链接变化
+四个分组边界
 ~~~~~~~~~~~~
+
+探测成功后，当前结构可写为：
 
 .. code-block:: text
 
-   group_prev -> 1 -> 2 -> 3 -> group_next
-   group_prev -> 3 -> 2 -> 1 -> group_next
+   ... -> groupPrevious -> groupStart -> ... -> kth -> groupNext -> ...
 
-反转前保存 ``old_start = 1``。反转后 ``kth = 3`` 成为新组头，``old_start`` 成为新组尾；设置
-``group_prev.next = kth``，再令 ``group_prev = old_start``。
+其中：
 
-状态演化
-~~~~~~~~
+* ``groupPrevious`` 是已处理前缀的尾节点；
+* ``groupStart`` 是当前组旧头；
+* ``kth`` 是当前组旧尾；
+* ``groupNext`` 是下一组首节点，可能为空。
 
-.. list-table::
-   :header-rows: 1
+真正需要反转的是半开区间 ``[groupStart, groupNext)``。使用半开区间后，循环条件可以直接写成
+``current != groupNext``，无需额外统计已经反转了多少节点。
 
-   * - 阶段
-     - 已处理前缀
-     - 当前后缀
-     - 动作
-   * - 初始
-     - 空
-     - 1,2,3,4,5
-     - 探测到 3
-   * - 第一组后
-     - 3,2,1
-     - 4,5
-     - ``group_prev`` 位于 1
-   * - 再探测
-     - 3,2,1
-     - 4,5
-     - 不足 3 个，结束
-
-为什么节点不会丢失、重复或成环
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-反转循环在改写 ``current.next`` 前保存原后继，每个本组节点恰好处理一次。初始前驱是组后缀，最后一条反向链接
-自然接回后缀；组前驱再连接新组头，于是已处理前缀、当前组、未处理后缀重新形成一条链。各完整组互不重叠。
-
-递归与迭代的空间差异
+反转如何自动接回后缀
 ~~~~~~~~~~~~~~~~~~~~
 
-递归方法先探测 ``k`` 个节点，再递归处理后缀，把后缀结果作为本组反转的初始前驱。时间仍为 ``O(n)``，调用栈
-约 ``O(n/k)``。迭代方法每个节点在探测和反转中各访问常数次，总时间 ``O(n)``，额外空间 ``O(1)``。
+普通链表反转通常令 ``previous`` 从空指针开始。本题把它初始化为 ``groupNext``：
 
-九语言实现
-----------
+.. code-block:: text
 
-C
-~
+   previous = groupNext
 
-.. code-block:: c
+随后对当前组逐个执行：
 
-   struct ListNode* reverseKGroup(struct ListNode* head, int k) {
-       struct ListNode dummy={0,head};struct ListNode* group_prev=&dummy;
-       for(;;){
-           struct ListNode* kth=group_prev;for(int i=0;i<k&&kth;i++)kth=kth->next;if(!kth)break;
-           struct ListNode* next_group=kth->next,*old_start=group_prev->next,*prev=next_group,*cur=old_start;
-           while(cur!=next_group){struct ListNode* next=cur->next;cur->next=prev;prev=cur;cur=next;}
-           group_prev->next=kth;group_prev=old_start;
-       }
-       return dummy.next;
-   }
+.. code-block:: text
 
-Python
-~~~~~~
+   next = current.next
+   current.next = previous
+   previous = current
+   current = next
 
-.. code-block:: python
+第一次改写就让旧组头 ``groupStart`` 指向 ``groupNext``。循环结束时，``previous`` 指向新组头 ``kth``，而旧组头
+已经成为新组尾并正确连接后缀。因此组内反转与连接后缀在同一循环中完成。
 
-   class Solution:
-       def reverseKGroup(self, head, k):
-           dummy=ListNode(0,head);group_prev=dummy
-           while True:
-               kth=group_prev
-               for _ in range(k):
-                   kth=kth.next
-                   if kth is None:return dummy.next
-               group_next=kth.next;old_start=group_prev.next;prev=group_next;cur=old_start
-               while cur is not group_next:
-                   nxt=cur.next;cur.next=prev;prev=cur;cur=nxt
-               group_prev.next=kth;group_prev=old_start
+接回前缀并推进
+~~~~~~~~~~~~~~
 
-Java
-~~~~
+反转结束后还需要完成两件事：
 
-.. code-block:: java
+.. code-block:: text
 
-   class Solution {
-       public ListNode reverseKGroup(ListNode head,int k){
-           ListNode dummy=new ListNode(0,head),gp=dummy;
-           while(true){ListNode kth=gp;for(int i=0;i<k&&kth!=null;i++)kth=kth.next;if(kth==null)break;
-               ListNode gn=kth.next,old=gp.next,prev=gn,cur=old;
-               while(cur!=gn){ListNode next=cur.next;cur.next=prev;prev=cur;cur=next;}
-               gp.next=kth;gp=old;}
-           return dummy.next;
-       }
-   }
+   groupPrevious.next = kth
+   groupPrevious = groupStart
 
-Rust
-~~~~
+第一条把已处理前缀接到当前组的新头。第二条把 ``groupPrevious`` 移到当前组的新尾，也就是反转前保存的
+``groupStart``。下一轮便从原来的 ``groupNext`` 开始探测。
 
-.. code-block:: rust
+循环开始时始终满足：``groupPrevious`` 之前的节点已经按完整组反转并连成一条链，
+``groupPrevious->next`` 开始的后缀尚未处理。一次循环只处理该后缀的前 ``k`` 个节点，完成后不变量继续成立。
+因此每个完整组恰好反转一次，最后不足 ``k`` 个节点的尾部从未被修改。
 
-   impl Solution {
-       pub fn reverse_k_group(head: Option<Box<ListNode>>, k: i32) -> Option<Box<ListNode>> {
-           fn solve(mut head: Option<Box<ListNode>>, k: usize) -> Option<Box<ListNode>> {
-               let mut check=&head;for _ in 0..k{match check{Some(node)=>check=&node.next,None=>return head}}
-               let mut rest=head.as_mut().unwrap();for _ in 1..k{rest=rest.next.as_mut().unwrap();}
-               let suffix=rest.next.take();let mut previous=solve(suffix,k);let mut current=head;
-               for _ in 0..k{let mut node=current.unwrap();current=node.next.take();node.next=previous;previous=Some(node);}
-               previous
-           }
-           solve(head,k as usize)
-       }
-   }
+递归如何表达同一结构
+~~~~~~~~~~~~~~~~~~~~
 
-Go
-~~
+``recursiveGroups`` 同样先向后探测 ``k`` 个节点。若不足一组，直接返回当前 ``head``，保留整个尾部。
 
-.. code-block:: go
+若存在完整组，``groupNext`` 已指向下一组开头。递归先取得后缀处理后的头节点，并把它作为本组反转时的初始
+``previous``。这样当前组旧头在第一次反转时就会连接到已经处理好的后缀，最后返回当前组的新头。
 
-   func reverseKGroup(head *ListNode,k int)*ListNode{
-       dummy:=&ListNode{Next:head};gp:=dummy
-       for{ kth:=gp;for i:=0;i<k&&kth!=nil;i++{kth=kth.Next};if kth==nil{break}
-           gn:=kth.Next;old:=gp.Next;prev:=gn;cur:=old
-           for cur!=gn{next:=cur.Next;cur.Next=prev;prev=cur;cur=next}
-           gp.Next=kth;gp=old }
-       return dummy.Next
-   }
+递归与迭代执行的是同一分组操作；迭代显式保存组前驱，递归则由调用返回值连接相邻分组。公开入口采用迭代方法，
+避免递归栈随分组数量增长。
 
-TypeScript
+复杂度分析
 ~~~~~~~~~~
 
-.. code-block:: typescript
+设链表长度为 ``n``。迭代方法中，每个完整组的节点在探测和反转阶段各访问一次；不足一组的尾部只被最后一次
+探测访问，因此总时间复杂度为 ``O(n)``，额外空间为 ``O(1)``。
 
-   function reverseKGroup(head:ListNode|null,k:number):ListNode|null{
-       const dummy=new ListNode(0,head);let gp=dummy;
-       while(true){let kth:ListNode|null=gp;for(let i=0;i<k&&kth!==null;i++)kth=kth.next;if(kth===null)break;
-           const gn=kth.next,old=gp.next!;let prev=gn,cur:ListNode|null=old;
-           while(cur!==gn){const next=cur!.next;cur!.next=prev;prev=cur;cur=next;}
-           gp.next=kth;gp=old;}
-       return dummy.next;
-   }
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {
-       public ListNode ReverseKGroup(ListNode head,int k){
-           var dummy=new ListNode(0,head);var gp=dummy;
-           while(true){var kth=gp;for(int i=0;i<k&&kth!=null;i++)kth=kth.next;if(kth==null)break;
-               var gn=kth.next;var old=gp.next;var prev=gn;var cur=old;
-               while(cur!=gn){var next=cur.next;cur.next=prev;prev=cur;cur=next;}
-               gp.next=kth;gp=old;}
-           return dummy.next;
-       }
-   }
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function reverse_k_group(head,k)
-       dummy=ListNode(0,head);gp=dummy
-       while true
-           kth=gp;for _ in 1:k;kth=kth===nothing ? nothing : kth.next;end;kth===nothing && break
-           gn=kth.next;old=gp.next;prev=gn;cur=old
-           while cur!==gn;next=cur.next;cur.next=prev;prev=cur;cur=next;end
-           gp.next=kth;gp=old
-       end
-       dummy.next
-   end
-
-R
-~
-
-.. code-block:: r
-
-   reverse_k_group <- function(head,k) {
-       dummy<-new_list_node(0,head);gp<-dummy
-       repeat {
-           kth<-gp;for(i in seq_len(k)){kth<-kth$next;if(is.null(kth))break};if(is.null(kth))break
-           gn<-kth$next;old<-gp$next;prev<-gn;cur<-old
-           while(!identical(cur,gn)){next_node<-cur$next;cur$next<-prev;prev<-cur;cur<-next_node}
-           gp$next<-kth;gp<-old
-       }
-       dummy$next
-   }
+递归方法同样为 ``O(n)`` 时间。递归深度约为完整分组数量 ``O(n / k)``，每层只保存固定数量指针，因此调用栈
+空间为 ``O(n / k)``；当 ``k = 1`` 时最坏为 ``O(n)``。
