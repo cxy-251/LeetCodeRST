@@ -8,31 +8,25 @@
 :难度: Hard
 :主题: 数组、前后缀最大值、单调栈、双指针
 :原题: `LeetCode 0042 <https://leetcode.com/problems/trapping-rain-water/>`_
-:重点: 单柱水位、左右边界、双指针结算、总水量累加
+:重点: 从逐柱重复寻找左右挡板，推导到预处理边界、按层结算凹槽和常量空间双指针
 
 题目重述
 --------
 
-给定非负整数数组 ``height``，其中每个元素表示宽度为 1 的柱子高度。降雨后，水只能保留在左右都有柱子围住的位置；返回所有柱子之间能够储存的总水量。
+给定非负整数数组 ``height``。每个元素表示一根宽度为 ``1`` 的柱子高度，所有柱子相邻排列。降雨后，水会保留在
+左右都有更高或等高柱子围住的低洼位置。返回全部位置能够储存的水量总和。
 
-约束为 ``1 <= height.length <= 2 * 10^4``、``0 <= height[i] <= 10^5``。
+柱子本身不储水；数组两端若没有另一侧挡板，也无法留住水。``height`` 的长度位于 ``[1, 2 * 10^4]``，每根柱子
+高度位于 ``[0, 10^5]``。
 
 自建示例
 --------
 
-.. code-block:: text
-
-   输入：height = [3,0,1,3,0,2]
-   输出：7
-
-各位置储水量依次为 ``[0,3,2,0,2,0]``，总和为 ``7``。
-
-.. code-block:: text
-
-   输入：height = [1,2,3,2]
-   输出：0
-
-不存在同时低于左右边界的凹槽。
+* 多个凹槽：``height = [3, 0, 1, 3, 0, 2]``，各位置水量为 ``[0, 3, 2, 0, 2, 0]``，答案为 ``7``；
+* 右边界更高：``height = [4, 2, 0, 3, 2, 5]``，各位置水量为 ``[0, 2, 4, 1, 2, 0]``，答案为 ``9``；
+* 单调递增：``height = [0, 1, 2, 3]``，答案为 ``0``；
+* 单调递减：``height = [4, 3, 2, 1]``，答案为 ``0``；
+* 平台不能形成凹槽：``height = [2, 2, 2]``，答案为 ``0``。
 
 C++ 实现
 --------
@@ -40,63 +34,88 @@ C++ 实现
 .. code-block:: cpp
 
    #include <algorithm>
-   #include <stack>
    #include <vector>
 
    class Solution {
    private:
-       int scanEveryColumn(const std::vector<int>& height) {
+       int scanBothSidesForEveryColumn(const std::vector<int>& height) {
            int total = 0;
-           for (int i = 0; i < static_cast<int>(height.size()); ++i) {
-               int left = 0, right = 0;
-               for (int j = 0; j <= i; ++j) left = std::max(left, height[j]);
-               for (int j = i; j < static_cast<int>(height.size()); ++j) right = std::max(right, height[j]);
-               total += std::min(left, right) - height[i];
+           const int size = static_cast<int>(height.size());
+           for (int index = 0; index < size; ++index) {
+               int leftMaximum = height[index];
+               int rightMaximum = height[index];
+               for (int left = index - 1; left >= 0; --left) {
+                   leftMaximum = std::max(leftMaximum, height[left]);
+               }
+               for (int right = index + 1; right < size; ++right) {
+                   rightMaximum = std::max(rightMaximum, height[right]);
+               }
+               total += std::min(leftMaximum, rightMaximum) - height[index];
            }
            return total;
        }
 
-       int prefixSuffix(const std::vector<int>& height) {
-           const int n = static_cast<int>(height.size());
-           if (n == 0) return 0;
-           std::vector<int> left(n), right(n);
-           left[0] = height[0];
-           for (int i = 1; i < n; ++i) left[i] = std::max(left[i - 1], height[i]);
-           right[n - 1] = height[n - 1];
-           for (int i = n - 2; i >= 0; --i) right[i] = std::max(right[i + 1], height[i]);
+       int prefixAndSuffixMaximums(const std::vector<int>& height) {
+           const int size = static_cast<int>(height.size());
+           if (size == 0) {
+               return 0;
+           }
+
+           std::vector<int> leftMaximum(size);
+           std::vector<int> rightMaximum(size);
+           leftMaximum[0] = height[0];
+           for (int index = 1; index < size; ++index) {
+               leftMaximum[index] = std::max(leftMaximum[index - 1], height[index]);
+           }
+           rightMaximum[size - 1] = height[size - 1];
+           for (int index = size - 2; index >= 0; --index) {
+               rightMaximum[index] = std::max(rightMaximum[index + 1], height[index]);
+           }
+
            int total = 0;
-           for (int i = 0; i < n; ++i) total += std::min(left[i], right[i]) - height[i];
+           for (int index = 0; index < size; ++index) {
+               total += std::min(leftMaximum[index], rightMaximum[index]) - height[index];
+           }
            return total;
        }
 
        int monotonicStack(const std::vector<int>& height) {
-           std::stack<int> indices;
+           std::vector<int> stack;
            int total = 0;
            for (int right = 0; right < static_cast<int>(height.size()); ++right) {
-               while (!indices.empty() && height[right] > height[indices.top()]) {
-                   int bottom = indices.top(); indices.pop();
-                   if (indices.empty()) break;
-                   int left = indices.top();
-                   int width = right - left - 1;
-                   int bounded = std::min(height[left], height[right]) - height[bottom];
-                   total += width * bounded;
+               while (!stack.empty() && height[right] > height[stack.back()]) {
+                   const int bottom = stack.back();
+                   stack.pop_back();
+                   if (stack.empty()) {
+                       break;
+                   }
+
+                   const int left = stack.back();
+                   const int width = right - left - 1;
+                   const int boundedHeight =
+                       std::min(height[left], height[right]) - height[bottom];
+                   total += width * boundedHeight;
                }
-               indices.push(right);
+               stack.push_back(right);
            }
            return total;
        }
 
        int twoPointers(const std::vector<int>& height) {
-           int left = 0, right = static_cast<int>(height.size()) - 1;
-           int left_max = 0, right_max = 0, total = 0;
+           int left = 0;
+           int right = static_cast<int>(height.size()) - 1;
+           int leftMaximum = 0;
+           int rightMaximum = 0;
+           int total = 0;
+
            while (left <= right) {
-               if (left_max <= right_max) {
-                   left_max = std::max(left_max, height[left]);
-                   total += left_max - height[left];
+               if (leftMaximum <= rightMaximum) {
+                   leftMaximum = std::max(leftMaximum, height[left]);
+                   total += leftMaximum - height[left];
                    ++left;
                } else {
-                   right_max = std::max(right_max, height[right]);
-                   total += right_max - height[right];
+                   rightMaximum = std::max(rightMaximum, height[right]);
+                   total += rightMaximum - height[right];
                    --right;
                }
            }
@@ -112,232 +131,156 @@ C++ 实现
 题解
 ----
 
-单柱水量由哪两个边界决定
-~~~~~~~~~~~~~~~~~~~~~~~~
+先确定一根柱子的水位
+~~~~~~~~~~~~~~~~~~~~
 
-位置 ``i`` 上方水面最高只能到左右最高柱中较低者：
+位置 ``i`` 能达到的水面由两侧最高挡板中较低的一根决定。设：
+
+.. math::
+
+   L_i=\max(height[0..i]),\qquad R_i=\max(height[i..n-1])
+
+则该位置水量为：
+
+.. math::
+
+   water_i=\min(L_i,R_i)-height[i]
+
+左右最大值都包含当前位置，所以 ``L_i`` 与 ``R_i`` 均不低于 ``height[i]``，差值不会为负。这一公式把整体问题
+拆成互不重叠的竖直水柱；所有 ``water_i`` 相加就是答案。
+
+逐柱向两侧扫描
+~~~~~~~~~~~~~~
+
+最直接的方法对每个位置重新向左、向右寻找最高柱，再代入公式。它不会漏算：每单位水都位于唯一的数组下标上；也
+不会重复：每轮只计算当前下标正上方的水柱。
+
+瓶颈在于边界被反复寻找。相邻位置的左侧最高值往往相同，但直接方法仍从头扫描；右侧同理。``n`` 根柱子各进行最多
+``n`` 次搜索，最坏时间为 ``O(n^2)``。
+
+前后缀最大值复用边界
+~~~~~~~~~~~~~~~~~~~~
+
+左侧最高值满足递推关系：
+
+.. math::
+
+   L_i=\max(L_{i-1},height[i])
+
+右侧最高值对称地从右向左递推。``prefixAndSuffixMaximums`` 先分别构造两个数组，再用同一水量公式结算每一列。
+这样每个方向的最大值只计算一次，时间降为 ``O(n)``，代价是 ``O(n)`` 额外空间。
+
+这一步已经揭示了核心状态：处理某一侧时，并不需要知道那一侧所有柱子，只需知道截至当前位置的最高柱。
+
+双指针为什么只结算较低边界一侧
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+双指针从两端向中间扫描，``leftMaximum`` 与 ``rightMaximum`` 分别表示已经看过的左侧、右侧最高柱。
+
+若 ``leftMaximum <= rightMaximum``，右侧已经存在一根高度至少为 ``rightMaximum`` 的柱子，因此也必然不低于
+``leftMaximum``。对当前 ``left`` 位置而言：
+
+* 左边界最高值已经确定为 ``leftMaximum``；
+* 右侧至少存在一根不低于它的挡板；
+* 水位的较低边界必然是 ``leftMaximum``。
+
+所以当前水量可立即确定为 ``leftMaximum - height[left]``。尚未扫描区域即使出现更高柱，也无法让较低的左边界
+升高；出现较低柱也不会消除已经找到的右挡板。该位置以后无需修正，可以移动 ``left``。
+
+若 ``leftMaximum > rightMaximum``，同理可确定右指针位置的水量。每轮至少结算一个位置，最终覆盖全部下标。
+
+更新最大值后再加水
+~~~~~~~~~~~~~~~~~~
+
+处理某个位置时先执行：
 
 .. code-block:: text
 
-   water[i] = min(left_max[i], right_max[i]) - height[i]
+   sideMaximum = max(sideMaximum, height[position])
 
-左右最大值都包含当前位置，因此差值不会为负。逐柱向两边重新扫描会重复计算大量最大值，最坏 ``O(n²)``。
-
-前后缀数组消除了什么重复
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-从左到右递推 ``left_max``，从右到左递推 ``right_max``，每个边界最大值只计算一次。随后每柱可在常数时间结算，总时间降为 ``O(n)``，代价是两个长度为 ``n`` 的数组。
-
-单调栈为何按横层结算
-~~~~~~~~~~~~~~~~~~~~
-
-栈保存递减高度的下标。遇到更高右边界时，弹出的柱子成为凹槽底；新栈顶是左边界。宽度是两边界之间的柱数，高度是较低边界减去槽底。每个下标最多入栈、出栈一次。
-
-双指针何时可以确定一侧水量
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-维护已扫描区域的 ``left_max`` 与 ``right_max``。若 ``left_max <= right_max``，左指针位置的右侧至少已有一根高度为 ``right_max`` 的柱子，因此较低边界必是 ``left_max``；未扫描区域即使出现更高柱，也不会改变该位置水位，可以立即结算左侧。另一种情况对称地结算右侧。
+再累加 ``sideMaximum - height[position]``。若当前位置本身刷新了最高柱，它是新的挡板，水量自然为零；若没有刷新，
+差值就是该柱上方水深。这个顺序也保证累加值永远非负。
 
 状态演化
 ~~~~~~~~
 
-对 ``[4,2,0,3,2,5]``：
+对 ``height = [4, 2, 0, 3, 2, 5]``：
 
 .. list-table::
    :header-rows: 1
 
-   * - ``left``
-     - ``right``
-     - ``left_max``
-     - ``right_max``
-     - 本轮水量
-   * - 0
-     - 5
+   * - 结算位置
+     - ``leftMaximum``
+     - ``rightMaximum``
+     - 本轮增加
+     - 累计
+   * - 左 0，高度 4
      - 4
      - 0
-     - 左侧 0
-   * - 1
-     - 5
+     - 0
+     - 0
+   * - 右 5，高度 5
      - 4
      - 5
-     - 左侧 2
-   * - 2
-     - 5
+     - 0
+     - 0
+   * - 左 1，高度 2
      - 4
      - 5
-     - 左侧 4
-   * - 3
-     - 5
+     - 2
+     - 2
+   * - 左 2，高度 0
      - 4
      - 5
-     - 左侧 1
-   * - 4
-     - 5
+     - 4
+     - 6
+   * - 左 3，高度 3
      - 4
      - 5
-     - 左侧 2
+     - 1
+     - 7
+   * - 左 4，高度 2
+     - 4
+     - 5
+     - 2
+     - 9
 
-为什么处理过的位置不会需要修正
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+右侧最高柱达到 5 后，左侧最高值 4 始终较低，因此剩余左侧位置可以依次确定。
 
-结算较低最大值一侧时，另一侧已经存在不低于它的边界。该柱的水位上限和下限都确定为较低最大值：更高的未来边界不能抬高较低侧，更低的未来柱也不能推翻已经存在的高边界。因此每个位置一次结算即为最终值。
+单调栈是另一种结算方向
+~~~~~~~~~~~~~~~~~~~~~~
 
-复杂度来源
+前后缀与双指针按“竖直列”计算水量。单调栈改为按“横向凹槽层”结算。
+
+栈中保存尚未找到右挡板的柱子下标，并保持对应高度非递增。遇到更高的 ``right`` 时，不断弹出较低柱：
+
+* 弹出的 ``bottom`` 是本层凹槽底；
+* 弹出后的栈顶 ``left`` 是左挡板；
+* 当前柱 ``right`` 是右挡板；
+* 横向宽度为 ``right - left - 1``；
+* 新增水层高度为 ``min(height[left], height[right]) - height[bottom]``。
+
+若弹出后栈为空，说明没有左挡板，不能蓄水。一个下标最多入栈和出栈各一次，因此时间仍为 ``O(n)``。不同弹出操作
+结算的是不同高度层，不会重复计算已经由更低槽底结算的水。
+
+从边界数组压缩到常量状态
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+四种方法的演进关系是：
+
+#. 逐柱扫描直接使用水位定义，但重复寻找左右最高柱；
+#. 前后缀数组缓存每个位置的两个最高值，删除重复扫描；
+#. 双指针观察到水位只由较低边界决定，每轮只要另一侧已有不低于它的挡板，就能提前结算，因此无需保存全部数组；
+#. 单调栈从另一维度处理问题，在右挡板出现时一次结算一个横向凹槽层。
+
+公开入口采用双指针，因为它同时达到线性时间和常量额外空间。
+
+复杂度分析
 ~~~~~~~~~~
 
-逐柱扫描 ``O(n²)``；前后缀和单调栈均为 ``O(n)`` 时间、``O(n)`` 空间；双指针为 ``O(n)`` 时间、``O(1)`` 额外空间。
+设柱子数量为 ``n``。
 
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   int trap(int *height, int n) {
-       int left = 0, right = n - 1, left_max = 0, right_max = 0, total = 0;
-       while (left <= right) {
-           if (left_max <= right_max) {
-               if (height[left] > left_max) left_max = height[left];
-               total += left_max - height[left++];
-           } else {
-               if (height[right] > right_max) right_max = height[right];
-               total += right_max - height[right--];
-           }
-       }
-       return total;
-   }
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def trap(self, height: list[int]) -> int:
-           left, right = 0, len(height) - 1
-           left_max = right_max = total = 0
-           while left <= right:
-               if left_max <= right_max:
-                   left_max = max(left_max, height[left])
-                   total += left_max - height[left]
-                   left += 1
-               else:
-                   right_max = max(right_max, height[right])
-                   total += right_max - height[right]
-                   right -= 1
-           return total
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {
-       public int trap(int[] height) {
-           int left=0,right=height.length-1,leftMax=0,rightMax=0,total=0;
-           while(left<=right){
-               if(leftMax<=rightMax){leftMax=Math.max(leftMax,height[left]);total+=leftMax-height[left++];}
-               else{rightMax=Math.max(rightMax,height[right]);total+=rightMax-height[right--];}
-           }
-           return total;
-       }
-   }
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {
-       pub fn trap(height: Vec<i32>) -> i32 {
-           if height.is_empty() { return 0; }
-           let (mut left, mut right) = (0usize, height.len()-1);
-           let (mut left_max, mut right_max, mut total) = (0,0,0);
-           while left <= right {
-               if left_max <= right_max {
-                   left_max = left_max.max(height[left]); total += left_max-height[left]; left += 1;
-               } else {
-                   right_max = right_max.max(height[right]); total += right_max-height[right];
-                   if right == 0 { break; } right -= 1;
-               }
-           }
-           total
-       }
-   }
-
-Go
-~~
-
-.. code-block:: go
-
-   func trap(height []int) int {
-       left,right,leftMax,rightMax,total:=0,len(height)-1,0,0,0
-       for left<=right {
-           if leftMax<=rightMax { if height[left]>leftMax{leftMax=height[left]}; total+=leftMax-height[left]; left++
-           } else { if height[right]>rightMax{rightMax=height[right]}; total+=rightMax-height[right]; right-- }
-       }
-       return total
-   }
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function trap(height: number[]): number {
-       let left=0,right=height.length-1,leftMax=0,rightMax=0,total=0;
-       while(left<=right){
-           if(leftMax<=rightMax){leftMax=Math.max(leftMax,height[left]);total+=leftMax-height[left++];}
-           else{rightMax=Math.max(rightMax,height[right]);total+=rightMax-height[right--];}
-       }
-       return total;
-   }
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {
-       public int Trap(int[] height) {
-           int left=0,right=height.Length-1,leftMax=0,rightMax=0,total=0;
-           while(left<=right){
-               if(leftMax<=rightMax){leftMax=Math.Max(leftMax,height[left]);total+=leftMax-height[left++];}
-               else{rightMax=Math.Max(rightMax,height[right]);total+=rightMax-height[right--];}
-           }
-           return total;
-       }
-   }
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function trap(height::Vector{Int})::Int
-       left,right,leftmax,rightmax,total=1,length(height),0,0,0
-       while left<=right
-           if leftmax<=rightmax
-               leftmax=max(leftmax,height[left]);total+=leftmax-height[left];left+=1
-           else
-               rightmax=max(rightmax,height[right]);total+=rightmax-height[right];right-=1
-           end
-       end
-       total
-   end
-
-R
-~
-
-.. code-block:: r
-
-   trap <- function(height) {
-     left<-1L;right<-length(height);left_max<-0L;right_max<-0L;total<-0L
-     while(left<=right){
-       if(left_max<=right_max){left_max<-max(left_max,height[[left]]);total<-total+left_max-height[[left]];left<-left+1L}
-       else{right_max<-max(right_max,height[[right]]);total<-total+right_max-height[[right]];right<-right-1L}
-     }
-     total
-   }
+* 逐柱向两侧扫描需要 ``O(n^2)`` 时间、``O(1)`` 额外空间；
+* 前后缀最大值需要 ``O(n)`` 时间、``O(n)`` 额外空间；
+* 单调栈中每个下标最多入栈和出栈一次，需要 ``O(n)`` 时间、``O(n)`` 额外空间；
+* 双指针中每个位置只结算一次，需要 ``O(n)`` 时间、``O(1)`` 额外空间。
