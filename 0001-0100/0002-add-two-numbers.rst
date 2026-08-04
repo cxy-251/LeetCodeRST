@@ -39,16 +39,13 @@ C++ 实现
            ListNode dummy(0);
            ListNode* tail = &dummy;
            int carry = 0;
-
            while (l1 != nullptr || l2 != nullptr || carry != 0) {
                const int first = l1 == nullptr ? 0 : l1->val;
                const int second = l2 == nullptr ? 0 : l2->val;
                const int total = first + second + carry;
-
                tail->next = new ListNode(total % 10);
                tail = tail->next;
                carry = total / 10;
-
                if (l1 != nullptr) {
                    l1 = l1->next;
                }
@@ -56,18 +53,15 @@ C++ 实现
                    l2 = l2->next;
                }
            }
-
            return dummy.next;
        }
 
        int length(ListNode* node) {
            int result = 0;
-
            while (node != nullptr) {
                ++result;
                node = node->next;
            }
-
            return result;
        }
 
@@ -75,29 +69,23 @@ C++ 实现
            if (length(l1) < length(l2)) {
                std::swap(l1, l2);
            }
-
            ListNode* const head = l1;
            ListNode* previous = nullptr;
            int carry = 0;
-
            while (l1 != nullptr) {
                const int second = l2 == nullptr ? 0 : l2->val;
                const int total = l1->val + second + carry;
-
                l1->val = total % 10;
                carry = total / 10;
                previous = l1;
                l1 = l1->next;
-
                if (l2 != nullptr) {
                    l2 = l2->next;
                }
            }
-
            if (carry != 0) {
                previous->next = new ListNode(carry);
            }
-
            return head;
        }
 
