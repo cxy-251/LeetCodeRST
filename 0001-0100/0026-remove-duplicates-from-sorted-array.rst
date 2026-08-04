@@ -6,45 +6,30 @@
 
 :题号: 0026
 :难度: Easy
-:主题: 数组、双指针、原地修改
+:主题: 数组、双指针、原地覆盖
 :原题: `LeetCode 0026 <https://leetcode.com/problems/remove-duplicates-from-sorted-array/>`_
-:重点: 非递减数组、每个值只保留一次、有效前缀、常量额外空间
+:重点: 从实际删除重复元素，推导到只维护有效前缀，并用写入位置同时表示不同值数量
 
 题目重述
 --------
 
-给定一个按非递减顺序排列的整数数组 ``nums``，在原数组中删除重复值的逻辑影响，使每个不同数值只在开头的有效区域中出现一次，并返回不同数值的数量 ``k``。
+给定一个按非递减顺序排列的整数数组 ``nums``，需要在原数组中原地移除重复值，使每个不同数值只保留一次，
+并返回不同数值的数量 ``k``。
 
-处理完成后，``nums`` 的前 ``k`` 个位置必须按原顺序保存全部不同值；下标 ``k`` 及其后的内容不作要求。不得另行分配用于保存完整结果的数组，额外空间应为 ``O(1)``。
+处理完成后，``nums[0..k-1]`` 必须按原有顺序保存数组中的全部不同值。下标 ``k`` 及其后的内容不参与判定，
+可以保留任意值；题目也不要求真正缩短数组容器。算法只能使用常量级额外空间。
 
-``nums`` 的长度位于 ``[1, 3 * 10^4]``，每个元素位于 ``[-100, 100]``。
+数组长度位于 ``[1, 3 * 10^4]``，元素位于 ``[-100, 100]``。由于输入非空，答案 ``k`` 至少为 ``1``。
 
 自建示例
 --------
 
-多段重复值：
-
-.. code-block:: text
-
-   输入：nums = [-2, -2, -1, -1, -1, 3, 3, 5]
-   输出：k = 4，nums 的前 4 个元素为 [-2, -1, 3, 5]
-   解释：数组中共有四个不同值；第 4 个位置之后的内容无需检查。
-
-没有重复值：
-
-.. code-block:: text
-
-   输入：nums = [0, 2, 4, 7]
-   输出：k = 4，nums 的前 4 个元素为 [0, 2, 4, 7]
-   解释：所有元素都不同，有效前缀就是整个数组。
-
-所有值相同：
-
-.. code-block:: text
-
-   输入：nums = [6, 6, 6, 6]
-   输出：k = 1，nums 的第一个元素为 6
-   解释：数值 6 只保留一次。
+* 多段重复：``nums = [-2, -2, -1, -1, -1, 3, 3, 5]``，返回 ``k = 4``，有效前缀为
+  ``[-2, -1, 3, 5]``；
+* 没有重复：``nums = [0, 2, 4, 7]``，返回 ``k = 4``，整个数组都是有效前缀；
+* 全部相同：``nums = [6, 6, 6, 6]``，返回 ``k = 1``，有效前缀为 ``[6]``；
+* 重复段位于两端：``nums = [-3, -3, 0, 2, 2]``，返回 ``k = 3``，有效前缀为 ``[-3, 0, 2]``；
+* 单个元素：``nums = [9]``，返回 ``k = 1``，数组无需改动。
 
 C++ 实现
 --------
@@ -55,26 +40,34 @@ C++ 实现
 
    class Solution {
    private:
-       int eraseDuplicates(std::vector<int>& nums) {
-           for (int i = 1; i < static_cast<int>(nums.size());) {
-               if (nums[i] == nums[i - 1]) nums.erase(nums.begin() + i);
-               else ++i;
+       int eraseRepeatedValues(std::vector<int>& nums) {
+           int index = 1;
+           while (index < static_cast<int>(nums.size())) {
+               if (nums[index] == nums[index - 1]) {
+                   nums.erase(nums.begin() + index);
+               } else {
+                   ++index;
+               }
            }
            return static_cast<int>(nums.size());
        }
 
-       int copyDistinct(std::vector<int>& nums) {
-           if (nums.empty()) return 0;
-           std::vector<int> distinct{nums[0]};
-           for (int i = 1; i < static_cast<int>(nums.size()); ++i) {
-               if (nums[i] != distinct.back()) distinct.push_back(nums[i]);
+       int copyThroughBuffer(std::vector<int>& nums) {
+           std::vector<int> distinct;
+           distinct.reserve(nums.size());
+           distinct.push_back(nums[0]);
+           for (int read = 1; read < static_cast<int>(nums.size()); ++read) {
+               if (nums[read] != distinct.back()) {
+                   distinct.push_back(nums[read]);
+               }
            }
-           for (int i = 0; i < static_cast<int>(distinct.size()); ++i) nums[i] = distinct[i];
+           for (int index = 0; index < static_cast<int>(distinct.size()); ++index) {
+               nums[index] = distinct[index];
+           }
            return static_cast<int>(distinct.size());
        }
 
-       int twoPointers(std::vector<int>& nums) {
-           if (nums.empty()) return 0;
+       int compactInPlace(std::vector<int>& nums) {
            int write = 1;
            for (int read = 1; read < static_cast<int>(nums.size()); ++read) {
                if (nums[read] != nums[write - 1]) {
@@ -87,197 +80,179 @@ C++ 实现
 
    public:
        int removeDuplicates(std::vector<int>& nums) {
-           return twoPointers(nums);
+           return compactInPlace(nums);
        }
    };
 
 题解
 ----
 
-直接删除为什么可能反复移动后缀
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+实际删除
+~~~~~~~~
 
-数组中间删除一个元素需要把后续槽位整体左移。重复值很多时，每次 ``erase`` 都移动长后缀，最坏时间达到
-``O(n^2)``。题目只要求正确的有效前缀，无需真的缩短数组。
+最直接的理解是：发现相邻重复值后，就从数组容器中真正删除后一个元素。输入已经有序，相同值必然连续，因此
+``eraseRepeatedValues`` 只需比较 ``nums[index]`` 与 ``nums[index - 1]``。
 
-有序性如何把全局去重变成相邻段判断
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+删除后不能立即增加 ``index``。原来位于 ``index + 1`` 的元素会左移到当前 ``index``，它仍需与前一个保留值
+比较。例如 ``[2, 2, 2]`` 删除中间的 ``2`` 后，当前位置仍是另一个 ``2``。
 
-非递减数组中，相同值必然形成连续区间。扫描当前值时，只需与最近保留值比较：相等表示仍在同一重复段；不等表示
-进入一个从未保留的新值段。
+这种方法最终会得到真正缩短且无重复的数组，语义正确，但没有利用题目的判定方式。数组中间执行一次 ``erase``
+需要把后面的所有元素向左搬移；若大量重复值集中在前部，同一批后缀元素可能被反复搬动，最坏时间达到
+``O(n²)``。
 
-读写指针分别保存什么
-~~~~~~~~~~~~~~~~~~~~
+题目真正要求的不是缩短容器，而只是构造正确的前 ``k`` 个位置。物理删除完成了不必要的工作。
 
-``read`` 遍历原始元素；``write`` 既是有效前缀长度，也是下一个新值的写入位置。非空数组的第一个值必然保留，
-所以初始 ``write = 1``。发现 ``nums[read] != nums[write-1]`` 时写入并增加 ``write``。
+额外结果数组
+~~~~~~~~~~~~
+
+为了避免反复搬移，可以顺序扫描输入，把每个新出现的值追加到 ``distinct``。因为数组有序，当前值是否首次出现，
+只需与结果中的最后一个值比较。
+
+``copyThroughBuffer`` 扫描结束后，再把 ``distinct`` 复制回 ``nums`` 的开头。每个输入元素只读取一次，每个不同值
+只写入结果数组和原数组各一次，时间降为 ``O(n)``。
+
+这一步已经识别出题目只关心一个连续的无重复结果序列，却仍同时保存了两份内容：原数组和完整的
+``distinct``。既然最终还要把结果写回 ``nums`` 的前缀，就可以直接把原数组前部当作结果缓冲区。
+
+有效前缀
+~~~~~~~~
+
+原地方法维护 ``write``，它同时具有两种含义：
+
+* ``nums[0..write-1]`` 是已经完成的无重复有效前缀；
+* ``write`` 是下一个新值应写入的位置，也是当前已经保留的不同值数量。
+
+输入非空，第一个元素必然是第一个不同值，因此初始有效前缀为 ``nums[0..0]``，令 ``write = 1``。``read`` 从
+下标 ``1`` 开始扫描尚未处理的原始元素。
+
+每轮只需把 ``nums[read]`` 与 ``nums[write - 1]`` 比较：
+
+* 两者相等，当前元素仍属于最近一个重复段，直接跳过；
+* 两者不同，当前元素是下一个尚未保留的新值，把它写入 ``nums[write]``，再增加 ``write``。
+
+这里比较的是“最近保留值”，而不是固定比较某个原始位置。即使前面发生过覆盖，``nums[write - 1]`` 仍精确表示
+有效前缀的最后一个不同值。
+
+有序性与重复段
+~~~~~~~~~~~~~~
+
+非递减顺序保证同一个值只会形成一个连续段。扫描离开某个值段后，后面不可能再次出现该值。
+
+因此，每个值段的第一个元素必然与最近保留值不同，会被写入一次；该段其余元素都与最近保留值相同，会被全部
+跳过。算法无需哈希集合记录见过的所有数值，只需保存有效前缀最后一个值。
+
+若输入无序，例如 ``[2, 1, 2]``，第二个 ``2`` 不与最近保留值 ``1`` 相等，却已经出现过；当前方法会错误地
+再次保留它。有序条件正是把“是否全局出现过”缩减为“一次相邻边界比较”的依据。
+
+覆盖安全
+~~~~~~~~
+
+扫描过程中始终有 ``write <= read``：
+
+* 初始时二者都为 ``1``；
+* 跳过重复值时，只有 ``read`` 增加；
+* 保留新值时，先写入 ``nums[write]``，再让 ``write`` 增加一次，而 ``read`` 也会在本轮结束后增加一次。
+
+所以写入位置只可能是当前位置或当前位置之前，从不会覆盖 ``read + 1`` 及其后的未扫描元素。即使
+``nums[write] = nums[read]`` 发生向前覆盖，未来读取所需的原始后缀仍保持完整。
 
 状态演化
 ~~~~~~~~
 
+以 ``nums = [1, 1, 2, 2, 4, 5]`` 为例：
+
 .. list-table::
    :header-rows: 1
 
-   * - ``read`` 值
+   * - ``read``
+     - 当前值
+     - ``write``
      - 最近保留值
      - 动作
      - 有效前缀
    * - 1
      - 1
+     - 1
+     - 1
      - 跳过
-     - 1
-   * - 2
-     - 1
-     - 写入
-     - 1,2
+     - ``[1]``
    * - 2
      - 2
+     - 1
+     - 1
+     - 写入下标 1
+     - ``[1, 2]``
+   * - 3
+     - 2
+     - 2
+     - 2
      - 跳过
-     - 1,2
+     - ``[1, 2]``
    * - 4
-     - 2
-     - 写入
-     - 1,2,4
-   * - 5
      - 4
-     - 写入
-     - 1,2,4,5
+     - 2
+     - 2
+     - 写入下标 2
+     - ``[1, 2, 4]``
+   * - 5
+     - 5
+     - 3
+     - 4
+     - 写入下标 3
+     - ``[1, 2, 4, 5]``
 
-为什么向前覆盖不会破坏未来读取
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+扫描结束时 ``write = 4``。原数组可能变为 ``[1, 2, 4, 5, 4, 5]``，后两个位置仍保留旧内容，但题目只检查
+前四个位置，因此结果完全符合要求。
 
-始终有 ``write <= read``。写入位置要么等于当前读取位置，要么位于它之前，从不覆盖 ``read+1`` 之后尚未扫描的
-元素。因此读写指针可以安全共用同一数组。
-
-为什么每个不同值恰好保留一次
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-每个连续值段的第一个元素与最近保留值不同，会被写入；该段其余元素都相等，会被跳过。所有值段按原顺序扫描，
-所以既不漏掉不同值，也不会重复保留。扫描结束时 ``write`` 正好等于值段数量。
-
-复杂度来源
+循环不变量
 ~~~~~~~~~~
 
-双指针读取每个元素一次，时间 ``O(n)``，额外空间 ``O(1)``。额外数组方法时间 ``O(n)``、空间 ``O(n)``；直接
-删除最坏 ``O(n^2)``。
+每轮处理 ``nums[read]`` 之前，保持以下状态：
 
-九语言实现
-----------
+* ``nums[0..write-1]`` 按非递减顺序包含已扫描前缀中的全部不同值，每个值恰好一次；
+* ``nums[read]`` 及其后的元素尚未读取，仍保留扫描所需的原始顺序；
+* ``write <= read``。
 
-C
-~
+当前值等于最近保留值时，它不会给不同值集合增加新成员，跳过后状态不变。当前值不等时，它是一个新值段的
+首元素，写到有效前缀末尾后仍保持有序且不重复。扫描结束时，已扫描前缀就是整个数组，因此有效前缀恰好包含
+全部不同值，``write`` 也恰好等于其数量。
 
-.. code-block:: c
+代码演进
+~~~~~~~~
 
-   int removeDuplicates(int* nums, int n) {
-       if (n == 0) return 0;
-       int write = 1;
-       for (int read = 1; read < n; ++read)
-           if (nums[read] != nums[write - 1]) nums[write++] = nums[read];
-       return write;
-   }
+``eraseRepeatedValues`` 在发现重复值时修改数组长度。它得到正确结果，却为每次删除反复搬移后缀。
 
-Python
-~~~~~~
+``copyThroughBuffer`` 删除了中间 ``erase``，改为只追加新值，时间降为线性；代价是保存一份完整结果数组，随后
+还要复制回输入前缀。
 
-.. code-block:: python
+``compactInPlace`` 把额外结果数组替换为 ``nums`` 自身的前缀。``write`` 取代了 ``distinct.size()``，
+``nums[write - 1]`` 取代了 ``distinct.back()``，第二次整体复制也随之消失。
 
-   class Solution:
-       def removeDuplicates(self, nums: list[int]) -> int:
-           if not nums: return 0
-           write = 1
-           for read in range(1, len(nums)):
-               if nums[read] != nums[write - 1]:
-                   nums[write] = nums[read]; write += 1
-           return write
+公开入口采用 ``compactInPlace``。它直接满足原地修改要求，并让“有效前缀长度”“不同值数量”和“下一写入位置”
+统一为同一个变量。
 
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {
-       public int removeDuplicates(int[] nums) {
-           if (nums.length==0) return 0;
-           int write=1;
-           for(int read=1;read<nums.length;read++) if(nums[read]!=nums[write-1]) nums[write++]=nums[read];
-           return write;
-       }
-   }
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {
-       pub fn remove_duplicates(nums: &mut Vec<i32>) -> i32 {
-           if nums.is_empty(){return 0}
-           let mut write=1usize;
-           for read in 1..nums.len(){if nums[read]!=nums[write-1]{nums[write]=nums[read];write+=1;}}
-           write as i32
-       }
-   }
-
-Go
-~~
-
-.. code-block:: go
-
-   func removeDuplicates(nums []int) int {
-       if len(nums)==0{return 0};write:=1
-       for read:=1;read<len(nums);read++{if nums[read]!=nums[write-1]{nums[write]=nums[read];write++}}
-       return write
-   }
-
-TypeScript
+复杂度分析
 ~~~~~~~~~~
 
-.. code-block:: typescript
+.. list-table::
+   :header-rows: 1
 
-   function removeDuplicates(nums:number[]):number{
-       if(nums.length===0)return 0;let write=1;
-       for(let read=1;read<nums.length;read++)if(nums[read]!==nums[write-1])nums[write++]=nums[read];
-       return write;
-   }
+   * - 方法
+     - 时间复杂度
+     - 工作空间
+     - 主要代价
+   * - 实际删除
+     - 最坏 ``O(n²)``
+     - ``O(1)``
+     - 每次删除都可能搬移一段数组后缀
+   * - 额外结果数组
+     - ``O(n)``
+     - ``O(n)``
+     - 保存全部不同值并复制回输入前缀
+   * - 原地覆盖
+     - ``O(n)``
+     - ``O(1)``
+     - 每个元素读取一次，每个新值至多写入一次
 
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {
-       public int RemoveDuplicates(int[] nums) {
-           if(nums.Length==0)return 0;int write=1;
-           for(int read=1;read<nums.Length;read++)if(nums[read]!=nums[write-1])nums[write++]=nums[read];
-           return write;
-       }
-   }
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function remove_duplicates!(nums::Vector{Int})
-       isempty(nums) && return 0
-       write=1
-       for read in 2:length(nums)
-           if nums[read]!=nums[write];write+=1;nums[write]=nums[read];end
-       end
-       write
-   end
-
-R
-~
-
-.. code-block:: r
-
-   remove_duplicates <- function(nums) {
-       n <- length(nums); if (n == 0L) return(list(k=0L, nums=nums))
-       write <- 1L
-       if (n >= 2L) for (read in 2:n) if (nums[[read]] != nums[[write]]) {
-           write <- write + 1L; nums[[write]] <- nums[[read]]
-       }
-       list(k=write, nums=nums)
-   }
+原地方法不会缩短 ``nums``，返回值 ``k`` 用来划定结果前缀。下标 ``k`` 之后的内容属于未指定区域，不计入答案，
+也无需额外清理。
