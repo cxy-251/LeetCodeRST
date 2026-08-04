@@ -8,16 +8,17 @@
 :难度: Medium
 :主题: 矩阵、模拟、边界收缩
 :原题: `LeetCode 0054 <https://leetcode.com/problems/spiral-matrix/>`_
-:重点: 从方向模拟与访问标记，推导到用四条边界表示尚未输出的矩形
+:重点: 从逐格记录访问状态，推导到用四条边界表示全部未输出位置
 
 题目重述
 --------
 
-给定一个 ``m × n`` 整数矩阵 ``matrix``，从左上角开始，按照向右、向下、向左、向上的顺时针
-螺旋顺序返回矩阵中的所有元素。
+给定一个 ``m × n`` 整数矩阵 ``matrix``，从左上角开始，按照向右、向下、向左、向上的顺时针螺旋顺序，
+返回矩阵中的全部元素。
 
-每个位置必须恰好输出一次。矩阵不一定是方阵，约束为 ``1 <= m, n <= 10``，
-``-100 <= matrix[row][col] <= 100``。
+每个位置必须恰好输出一次。矩阵不一定是方阵。
+
+约束为 ``1 <= m, n <= 10``、``-100 <= matrix[row][column] <= 100``。
 
 自建示例
 --------
@@ -32,21 +33,21 @@
 
    输出：[1,2,3,6,9,12,11,10,7,4,5,8]
 
-外圈输出后，尚未访问的区域是单列 ``[[5],[8]]``，继续从上向下输出。
+输出外圈后，剩余区域是单列 ``[[5],[8]]``，继续从上向下输出。
 
 .. code-block:: text
 
    输入：[[4,5,6,7]]
    输出：[4,5,6,7]
 
-只有一行时，上边已经包含全部元素，不能再反向输出一次下边。
+只有一行时，向右输出后矩形已经为空，不能再反向输出所谓的下边。
 
 .. code-block:: text
 
    输入：[[2],[3],[4]]
    输出：[2,3,4]
 
-只有一列时，右边已经包含除首元素外的其余元素，不能再向上输出一次左边。
+只有一列时，首元素属于上边，其余元素属于右边；之后不能再向上重复输出左边。
 
 C++ 实现
 --------
@@ -62,73 +63,40 @@ C++ 实现
        ) {
            const int rows = static_cast<int>(matrix.size());
            const int columns = static_cast<int>(matrix[0].size());
-           const int row_step[4] = {0, 1, 0, -1};
-           const int column_step[4] = {1, 0, -1, 0};
+           const int total = rows * columns;
+           const int rowStep[4] = {0, 1, 0, -1};
+           const int columnStep[4] = {1, 0, -1, 0};
+
            std::vector<std::vector<char>> visited(
                rows,
                std::vector<char>(columns, false)
            );
            std::vector<int> result;
-           result.reserve(rows * columns);
+           result.reserve(total);
 
            int row = 0;
            int column = 0;
            int direction = 0;
-           for (int count = 0; count < rows * columns; ++count) {
+           for (int count = 0; count < total; ++count) {
                result.push_back(matrix[row][column]);
                visited[row][column] = true;
+               if (count + 1 == total) break;
 
-               int next_row = row + row_step[direction];
-               int next_column = column + column_step[direction];
-               bool blocked = next_row < 0 || next_row >= rows ||
-                              next_column < 0 || next_column >= columns ||
-                              visited[next_row][next_column];
+               int nextRow = row + rowStep[direction];
+               int nextColumn = column + columnStep[direction];
+               bool blocked = nextRow < 0 || nextRow >= rows ||
+                              nextColumn < 0 || nextColumn >= columns ||
+                              visited[nextRow][nextColumn];
                if (blocked) {
                    direction = (direction + 1) % 4;
-                   next_row = row + row_step[direction];
-                   next_column = column + column_step[direction];
+                   nextRow = row + rowStep[direction];
+                   nextColumn = column + columnStep[direction];
                }
-               row = next_row;
-               column = next_column;
+
+               row = nextRow;
+               column = nextColumn;
            }
            return result;
-       }
-
-       void peelRecursively(
-           const std::vector<std::vector<int>>& matrix,
-           int top,
-           int bottom,
-           int left,
-           int right,
-           std::vector<int>& result
-       ) {
-           if (top > bottom || left > right) return;
-
-           for (int column = left; column <= right; ++column) {
-               result.push_back(matrix[top][column]);
-           }
-           for (int row = top + 1; row <= bottom; ++row) {
-               result.push_back(matrix[row][right]);
-           }
-           if (top < bottom) {
-               for (int column = right - 1; column >= left; --column) {
-                   result.push_back(matrix[bottom][column]);
-               }
-           }
-           if (left < right) {
-               for (int row = bottom - 1; row > top; --row) {
-                   result.push_back(matrix[row][left]);
-               }
-           }
-
-           peelRecursively(
-               matrix,
-               top + 1,
-               bottom - 1,
-               left + 1,
-               right - 1,
-               result
-           );
        }
 
        std::vector<int> shrinkBoundaries(
@@ -138,6 +106,7 @@ C++ 实现
            int bottom = static_cast<int>(matrix.size()) - 1;
            int left = 0;
            int right = static_cast<int>(matrix[0].size()) - 1;
+
            std::vector<int> result;
            result.reserve(matrix.size() * matrix[0].size());
 
@@ -146,25 +115,24 @@ C++ 实现
                    result.push_back(matrix[top][column]);
                }
                ++top;
+               if (top > bottom) break;
 
                for (int row = top; row <= bottom; ++row) {
                    result.push_back(matrix[row][right]);
                }
                --right;
+               if (left > right) break;
 
-               if (top <= bottom) {
-                   for (int column = right; column >= left; --column) {
-                       result.push_back(matrix[bottom][column]);
-                   }
-                   --bottom;
+               for (int column = right; column >= left; --column) {
+                   result.push_back(matrix[bottom][column]);
                }
+               --bottom;
+               if (top > bottom) break;
 
-               if (left <= right) {
-                   for (int row = bottom; row >= top; --row) {
-                       result.push_back(matrix[row][left]);
-                   }
-                   ++left;
+               for (int row = bottom; row >= top; --row) {
+                   result.push_back(matrix[row][left]);
                }
+               ++left;
            }
            return result;
        }
@@ -178,75 +146,84 @@ C++ 实现
 题解
 ----
 
-直接方法：沿当前方向移动
+从定义出发：沿当前方向逐格移动
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+最直接的模拟保存三个状态：当前位置 ``(row,column)``、当前方向 ``direction``，以及每个位置是否已经输出。
+方向按照右、下、左、上的顺序循环。
+
+每输出一个元素，就尝试沿当前方向进入下一格。下一格越界或已经访问时，说明当前方向被阻挡，需要顺时针
+转向一次。
+
+为什么只检查矩阵边界不够
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-最直接的模拟状态包括当前位置和当前方向。方向按右、下、左、上的顺序循环；下一格越界或已经访问时，
-顺时针转向一次。
+走完外圈后，当前位置仍可能朝矩阵内部移动。下一格即使没有越界，也可能属于已经输出的外圈；仅靠行列范围
+无法区分它与真正尚未输出的内部位置。
 
-只检查越界不够。例如走完矩阵外圈后，当前位置仍可能向某个矩阵内部坐标移动，但那个坐标已经在外圈中
-输出过。``simulateWithVisited`` 因而需要一张 ``m × n`` 的布尔表，才能区分“尚未访问的内部格子”和
-“已经经过的外圈格子”。
+``simulateWithVisited`` 因此维护一张 ``m × n`` 的访问表。它直接模拟运动过程，时间为 ``O(mn)``，但额外
+空间也是 ``O(mn)``。
 
-这种方法直接复现移动过程，时间为 ``O(mn)``，访问表额外占用 ``O(mn)`` 空间。继续优化的关键不是让
-转向判断更快，而是判断访问表中是否存在可以被更小状态完整表达的结构。
+代码在输出最后一个元素后立即结束，不再计算下一坐标。这样当前位置始终指向一个真实、尚未输出的格子，
+不会为了结束循环而暂时写入越界坐标。
 
-访问一圈后为什么仍是矩形
-~~~~~~~~~~~~~~~~~~~~~~~~
+访问表中隐藏了什么结构
+~~~~~~~~~~~~~~~~~~~~~~
 
-初始未输出区域是整个矩形。依次输出它的上边、右边、下边和左边后，被删除的恰好是最外面一圈；
-剩余位置仍是一个矩形，只是四条边各向内收缩一格。
+初始时，尚未输出的位置是整个矩形。若依次输出当前矩形的上边、右边、下边和左边，删除的恰好是最外层；
+剩余位置仍然是一个更小的矩形。
 
-因此，无需记录每一个格子是否访问，只需维护当前未输出矩形：
+所以不必分别记录每个格子的访问状态。只需维护尚未输出矩形的四条边界：
 
 .. code-block:: text
 
    行范围：[top, bottom]
    列范围：[left, right]
 
-循环开始时保持以下不变量：这两个闭区间的笛卡尔积恰好包含所有尚未输出的位置，矩形之外的所有位置
-已经按螺旋顺序输出且只输出一次。
+循环开始时保持以下不变量：两个闭区间的笛卡尔积，恰好等于全部尚未输出的位置；矩形之外的位置已经按照
+螺旋顺序输出且不会再次进入候选。
 
-一轮为什么按上、右、下、左处理
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+一圈如何从四条边界推导
+~~~~~~~~~~~~~~~~~~~~~~
 
-当前矩形非空时，上边一定存在，可以从 ``left`` 到 ``right`` 输出，随后执行 ``top++``，表示整条上边
-已经移出未处理区域。
+只要矩形非空，上边一定存在。先从左到右输出 ``matrix[top][left..right]``，再执行 ``top++``，表示上边
+已经从未处理区域中删除。
 
-新的矩形若仍有位置，原来的右边中尚未输出的部分从新 ``top`` 延伸到 ``bottom``。输出后执行
-``right--``。到这里，剩余区域可能已经退化为空，因此下边和左边必须分别重新检查边界。
+删除一条边后，矩形可能立即为空。因此每一步都先检查剩余矩形，再决定下一条边是否存在：
 
 .. code-block:: text
 
-   输出上边后：top++
-   输出右边后：right--
-   若 top <= bottom：输出下边，bottom--
-   若 left <= right：输出左边，left++
+   输出上边，top++      ；若 top > bottom，结束
+   输出右边，right--     ；若 left > right，结束
+   输出下边，bottom--    ；若 top > bottom，结束
+   输出左边，left++
 
-每次边界更新都表示对应整条边已经永久离开未处理矩形。下一轮只处理更内层矩形，不需要访问标记。
+右边从新的 ``top`` 开始，不会重复右上角；下边只遍历新的 ``right``，不会重复右下角；左边使用新的
+``bottom`` 和原来的 ``top`` 之间的行，也不会重复两个左侧角点。
 
-为什么下边和左边需要守卫
-~~~~~~~~~~~~~~~~~~~~~~~~
+为什么单行和单列必须提前结束
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-当剩余区域只有一行时，上边已经输出这一行全部元素。``top++`` 后会出现 ``top > bottom``；若仍输出
-下边，就会把同一行反向输出一次。
+若当前矩形只有一行，上边已经输出全部剩余元素。``top++`` 后满足 ``top > bottom``，此时直接结束；若继续
+输出下边，就会把同一行反向输出第二次。
 
-当剩余区域只有一列时，上边输出首元素，右边继续输出这一列的其余元素。``right--`` 后会出现
-``left > right``；若仍输出左边，就会把同一列向上重复输出。
+若当前矩形只有一列，上边输出顶部元素，右边输出该列其余元素。``right--`` 后满足 ``left > right``，此时
+直接结束；若继续输出左边，就会把同一列向上重复一次。
 
-这两个守卫不是特殊补丁，而是每处理一条边后重新确认未处理矩形是否还具有对应的另一条平行边。
+这些判断不是针对示例的补丁，而是在每条边被删除后重新验证循环不变量：只有剩余矩形仍非空，下一条边才
+真实存在。
 
-自建示例中的边界演化
+四乘三示例的边界演化
 ~~~~~~~~~~~~~~~~~~~~
 
-对 ``4 × 3`` 示例，第一轮状态如下：
+第一轮处理 ``4 × 3`` 示例：
 
 .. list-table::
    :header-rows: 1
 
    * - 阶段
      - 输出
-     - 更新后的未处理矩形
+     - 剩余矩形
    * - 上边
      - ``1,2,3``
      - 行 ``[1,3]``，列 ``[0,2]``
@@ -260,30 +237,21 @@ C++ 实现
      - ``7,4``
      - 行 ``[1,2]``，列 ``[1,1]``
 
-第二轮只剩单列 ``[5,8]``。上边输出 ``5``，右边输出 ``8``，随后列范围为空，左边被守卫跳过。
+第二轮只剩一列。上边输出 ``5``，右边输出 ``8``；随后 ``left > right``，遍历结束。
 
 为什么每个位置恰好输出一次
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-一轮中的四段只取当前矩形的边界。上边和右边共享的右上角在输出上边后通过 ``top++`` 被排除；
-右边和下边共享的右下角在输出右边后通过 ``right--`` 被排除。下边和左边的两个角也由循环端点与边界
-更新排除，退化为单行或单列时再由守卫阻止重复。
+根据循环不变量，每轮开始时，四条边界包围的矩形恰好包含全部未输出位置。算法按顺时针顺序输出其外层，
+并在每条边输出后立即收缩对应边界，因此刚输出的位置永久离开未处理矩形，不可能在后续轮次再次出现。
 
-每输出一条边，就把它从未处理矩形中删除，因此已经输出的位置不会进入后续轮次。循环只在未处理矩形
-为空时结束，所以所有位置最终都会被输出。
-
-递归剥层与迭代边界的关系
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-``peelRecursively`` 先输出当前外圈，再递归处理
-``[top+1,bottom-1] × [left+1,right-1]``。它与四边界循环使用相同的不变量；差别只是递归把每一圈
-保存在调用栈中。
-
-主入口选择 ``shrinkBoundaries``，因为它保留同样的结构，又不需要 ``O(min(m,n))`` 的递归栈。
+只要矩形仍非空，至少存在上边，算法就会继续输出元素；只有行区间或列区间为空时才结束。因此所有位置最终
+都会被输出。结合“不重复进入未处理矩形”，可得每个位置恰好输出一次，且顺序正是顺时针螺旋顺序。
 
 复杂度来源
 ~~~~~~~~~~
 
-矩阵共有 ``mn`` 个位置，每个位置恰好追加一次，因此时间为 ``O(mn)``。主方法除返回数组外只保存四条
-边界和循环变量，额外空间为 ``O(1)``。方向模拟额外使用 ``O(mn)`` 访问表；递归剥层额外使用
-``O(min(m,n))`` 调用栈。
+矩阵共有 ``mn`` 个位置，主方法对每个位置只追加一次，时间为 ``O(mn)``。除返回数组外，只维护四条边界和
+循环变量，额外空间为 ``O(1)``。
+
+方向模拟同样是 ``O(mn)`` 时间，但访问表额外占用 ``O(mn)`` 空间。主入口调用 ``shrinkBoundaries``。
