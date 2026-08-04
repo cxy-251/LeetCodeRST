@@ -69,7 +69,7 @@ C++ 实现
                }
            }
            for (int candidate = 1; candidate <= n; ++candidate) {
-               if (!present.contains(candidate)) {
+               if (present.count(candidate) == 0) {
                    return candidate;
                }
            }
