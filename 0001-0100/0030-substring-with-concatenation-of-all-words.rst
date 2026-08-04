@@ -6,45 +6,33 @@
 
 :题号: 0030
 :难度: Hard
-:主题: 字符串、哈希计数、固定步长滑动窗口
+:主题: 字符串、哈希计数、滑动窗口
 :原题: `LeetCode 0030 <https://leetcode.com/problems/substring-with-concatenation-of-all-words/>`_
-:重点: 等长单词、全部单词各使用一次、重复单词频次、零基起点
+:重点: 从逐起点重建词频，推导到按单词长度对齐的滑动窗口，并准确处理重复单词与重叠答案
 
 题目重述
 --------
 
-给定字符串 ``s`` 和字符串数组 ``words``。数组中的所有单词长度相同，需要找出 ``s`` 中所有满足以下条件的零基起始下标：从该下标开始的连续子串，恰好可以由 ``words`` 中的全部单词各使用一次、按任意顺序首尾拼接而成。
+给定字符串 ``s`` 和字符串数组 ``words``。``words`` 中所有单词长度相同，需要返回 ``s`` 中全部满足条件的
+零基起始下标：从该位置开始的连续子串，能够由 ``words`` 中的所有单词各使用一次、按任意顺序首尾拼接而成。
 
-``words`` 中相同的单词出现多次时，拼接子串中也必须使用相应次数。不同合法子串可以重叠，返回下标的顺序不作要求。
+设单词长度为 ``w``、单词数量为 ``k``，每个候选子串的长度固定为 ``w * k``。候选内部必须恰好切成 ``k``
+个长度为 ``w`` 的块；单词顺序可以改变，但每个单词的出现次数必须与 ``words`` 完全相同。若 ``words`` 中同一
+单词出现多次，候选中也必须保留相同的重复次数。
 
-``s`` 的长度位于 ``[1, 10^4]``，``words`` 的长度位于 ``[1, 5000]``，每个单词长度位于 ``[1, 30]``；``s`` 和所有单词只包含小写英文字母。
+不同合法子串可以重叠，返回下标的顺序不限。``s`` 的长度位于 ``[1, 10^4]``，``words`` 的长度位于
+``[1, 5000]``，每个单词长度位于 ``[1, 30]``；字符串只包含小写英文字母。
 
 自建示例
 --------
 
-重复单词参与拼接：
-
-.. code-block:: text
-
-   输入：s = "lingmindraboofooowingdingbarrwingmonkeypoundcake"，words = ["fooo", "barr", "wing", "ding", "wing"]
-   输出：[13]
-   解释：从下标 13 开始的子串可分成 "fooo"、"wing"、"ding"、"barr"、"wing"，其中 "wing" 恰好使用两次。
-
-存在重叠答案：
-
-.. code-block:: text
-
-   输入：s = "aaaaaa"，words = ["aa", "aa"]
-   输出：[0, 1, 2]
-   解释：长度为 4 的子串从下标 0、1、2 开始时都等于 "aaaa"，均可由两个 "aa" 拼接。返回顺序可以不同。
-
-没有合法拼接：
-
-.. code-block:: text
-
-   输入：s = "catdogbird"，words = ["dog", "cat", "fish"]
-   输出：[]
-   解释：任何长度为 9 的连续子串都无法同时包含三个指定单词各一次。
+* 重复单词与重叠答案：``s = "barfoofoofoobar"``、``words = ["bar", "foo", "foo"]``，返回
+  ``[0, 6]``；两个长度为 ``9`` 的合法子串分别是 ``"barfoofoo"`` 和 ``"foofoobar"``；
+* 起点不与字符串开头对齐：``s = "xbarfooend"``、``words = ["bar", "foo"]``，返回 ``[1]``；
+* 同一批单词采用不同顺序：``s = "catdogcat"``、``words = ["cat", "dog"]``，返回 ``[0, 3]``；
+* 频次不满足：``s = "foofoobar"``、``words = ["foo", "bar", "bar"]``，返回 ``[]``，因为候选中缺少
+  第二个 ``bar``；
+* 目标总长度超过文本：``s = "abc"``、``words = ["ab", "cd"]``，返回 ``[]``。
 
 C++ 实现
 --------
@@ -57,76 +45,101 @@ C++ 实现
 
    class Solution {
    private:
+       std::unordered_map<std::string, int> buildRequirement(
+           const std::vector<std::string>& words
+       ) {
+           std::unordered_map<std::string, int> requirement;
+           for (const std::string& word : words) {
+               ++requirement[word];
+           }
+           return requirement;
+       }
+
        std::vector<int> recountEveryStart(
            const std::string& s,
            const std::vector<std::string>& words
        ) {
            std::vector<int> result;
-           if (words.empty()) return result;
-           int word_length = static_cast<int>(words[0].size());
-           int total_length = word_length * static_cast<int>(words.size());
-           std::unordered_map<std::string, int> need;
-           for (const auto& word : words) ++need[word];
+           if (words.empty()) {
+               return result;
+           }
+           const int wordLength = static_cast<int>(words.front().size());
+           const int wordCount = static_cast<int>(words.size());
+           const int totalLength = wordLength * wordCount;
+           if (totalLength > static_cast<int>(s.size())) {
+               return result;
+           }
 
-           for (int start = 0; start + total_length <= static_cast<int>(s.size()); ++start) {
+           const auto requirement = buildRequirement(words);
+           for (int start = 0; start + totalLength <= static_cast<int>(s.size()); ++start) {
                std::unordered_map<std::string, int> used;
                int block = 0;
-               for (; block < static_cast<int>(words.size()); ++block) {
-                   std::string word = s.substr(start + block * word_length, word_length);
-                   if (++used[word] > need[word]) break;
+               for (; block < wordCount; ++block) {
+                   const int position = start + block * wordLength;
+                   const std::string word = s.substr(position, wordLength);
+                   const auto required = requirement.find(word);
+                   if (required == requirement.end()) {
+                       break;
+                   }
+                   if (++used[word] > required->second) {
+                       break;
+                   }
                }
-               if (block == static_cast<int>(words.size())) result.push_back(start);
+               if (block == wordCount) {
+                   result.push_back(start);
+               }
            }
            return result;
        }
 
-       std::vector<int> slidingByOffset(
+       std::vector<int> slidingByOffsets(
            const std::string& s,
            const std::vector<std::string>& words
        ) {
            std::vector<int> result;
-           if (words.empty() || words[0].empty()) return result;
+           if (words.empty() || words.front().empty()) {
+               return result;
+           }
+           const int wordLength = static_cast<int>(words.front().size());
+           const int wordCount = static_cast<int>(words.size());
+           const int totalLength = wordLength * wordCount;
+           if (totalLength > static_cast<int>(s.size())) {
+               return result;
+           }
 
-           const int word_length = static_cast<int>(words[0].size());
-           const int word_count = static_cast<int>(words.size());
-           const int total_length = word_length * word_count;
-           if (total_length > static_cast<int>(s.size())) return result;
-
-           std::unordered_map<std::string, int> need;
-           for (const auto& word : words) ++need[word];
-
-           for (int offset = 0; offset < word_length; ++offset) {
+           const auto requirement = buildRequirement(words);
+           for (int offset = 0; offset < wordLength; ++offset) {
                int left = offset;
-               int count = 0;
+               int windowWords = 0;
                std::unordered_map<std::string, int> seen;
 
                for (int right = offset;
-                    right + word_length <= static_cast<int>(s.size());
-                    right += word_length) {
-                   std::string word = s.substr(right, word_length);
-                   auto required = need.find(word);
-                   if (required == need.end()) {
+                    right + wordLength <= static_cast<int>(s.size());
+                    right += wordLength) {
+                   const std::string word = s.substr(right, wordLength);
+                   const auto required = requirement.find(word);
+                   if (required == requirement.end()) {
                        seen.clear();
-                       count = 0;
-                       left = right + word_length;
+                       windowWords = 0;
+                       left = right + wordLength;
                        continue;
                    }
 
                    ++seen[word];
-                   ++count;
+                   ++windowWords;
                    while (seen[word] > required->second) {
-                       std::string removed = s.substr(left, word_length);
+                       const std::string removed = s.substr(left, wordLength);
                        --seen[removed];
-                       --count;
-                       left += word_length;
+                       --windowWords;
+                       left += wordLength;
                    }
 
-                   if (count == word_count) {
+                   if (windowWords == wordCount) {
                        result.push_back(left);
-                       std::string removed = s.substr(left, word_length);
+                       const std::string removed = s.substr(left, wordLength);
                        --seen[removed];
-                       --count;
-                       left += word_length;
+                       --windowWords;
+                       left += wordLength;
                    }
                }
            }
@@ -135,244 +148,156 @@ C++ 实现
 
    public:
        std::vector<int> findSubstring(std::string s, std::vector<std::string>& words) {
-           return slidingByOffset(s, words);
+           return slidingByOffsets(s, words);
        }
    };
 
 题解
 ----
 
-逐起点重计数重复了哪些工作
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+逐起点重新验证
+~~~~~~~~~~~~~~
 
-目标总长度为 ``word_length * word_count``。基准方法枚举每个字符起点，把目标区间重新切成 ``word_count`` 个块并
-重建频次。相邻候选的大部分单词块重叠，却被反复切片和统计，块操作最坏 ``O(nk)``。
+设单词长度为 ``w``、数量为 ``k``，目标子串长度为 ``L = w * k``。最直接的方法是枚举每个满足
+``start + L <= s.size()`` 的字符起点，再把区间 ``[start, start + L)`` 切成 ``k`` 个长度为 ``w`` 的块。
 
-等长条件如何固定切分边界
+``recountEveryStart`` 先建立需求词频 ``requirement``。验证一个起点时，从左到右读取各块，并在局部哈希表
+``used`` 中累计次数：
+
+* 当前块不在需求表中，候选立即失败；
+* 当前单词使用次数超过需求，候选立即失败；
+* 成功读取 ``k`` 个块，当前起点就是答案。
+
+每个答案都具有唯一的固定切分方式，因此这套验证不会遗漏或误收候选。它的问题是相邻起点彼此独立：每次都重新
+切片、重新建立 ``used``，即使两个候选包含大量相同块，也不会复用任何统计结果。
+
+字符起点不能直接共用窗口
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-所有单词长度为 ``w``。一旦起点确定，块边界只能是 ``start, start+w, start+2w, ...``，无需尝试不同切法。所有
-起点按 ``start mod w`` 分成 ``w`` 个余数类；每条扫描线都只按 ``w`` 步长移动。
+普通滑动窗口通常每次移动一个字符。本题每个合法候选必须从某个长度为 ``w`` 的块边界开始，但答案起点不一定是
+``w`` 的整数倍。例如 ``s = "xbarfooend"`` 中的答案从下标 ``1`` 开始。
 
-为什么扫描 w 个偏移仍是线性块数量
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+按照起点除以 ``w`` 的余数，可以把所有字符位置拆成 ``w`` 条互不混合的扫描线：
 
-不同偏移覆盖互不相同的块起点。每个合法字符起点只属于一个余数类，因此所有扫描线处理的完整块总数仍与字符串
-长度同阶，而不是对整个字符串重复扫描 ``w`` 遍。
+.. code-block:: text
 
-窗口频次维护哪些状态
+   偏移 0：0, w, 2w, 3w, ...
+   偏移 1：1, 1+w, 1+2w, ...
+   ...
+   偏移 w-1：w-1, 2w-1, 3w-1, ...
+
+同一候选中的全部单词块都位于同一条扫描线。分别扫描所有偏移，就能覆盖每个可能起点；每个完整块起点只属于
+其中一条扫描线，因此不是把同一批块重复扫描 ``w`` 次。
+
+窗口保存的最小状态
+~~~~~~~~~~~~~~~~~~
+
+在一条扫描线上，``right`` 每次前进 ``w`` 个字符并加入一个完整单词块。窗口使用四项状态：
+
+* ``left``：窗口最左单词块的起点；
+* ``right``：本轮新单词块的起点；
+* ``seen[word]``：当前窗口内该单词的出现次数；
+* ``windowWords``：窗口包含的单词块总数。
+
+每轮修复完成后，窗口保持两个条件：其中只包含需求表中的单词，并且每种单词的次数都不超过需求次数。这两个
+条件使窗口成为一个仍有可能扩展成完整答案的连续单词序列。
+
+非需求单词切断窗口
+~~~~~~~~~~~~~~~~~~
+
+若新块不在 ``requirement`` 中，任何跨过该块的候选都必然包含一个多余单词，不可能合法。此时可以清空
+``seen``，令 ``windowWords = 0``，并把 ``left`` 移到该块之后。
+
+这个重置一次排除了所有跨越当前块的起点。逐起点方法会在这些起点上分别读到同一个错误块后失败，滑动窗口只处理
+一次。
+
+超量单词推动左边界
+~~~~~~~~~~~~~~~~~~
+
+加入需求单词后，只有这个新单词的次数可能超过需求。扩张前其他单词都满足上界，本轮没有增加它们；收缩时它们的
+次数只会减少，因此无需遍历整张哈希表寻找超量项。
+
+若 ``seen[word] > requirement[word]``，必须从左侧逐块移除，直到当前单词恢复到允许次数。继续保留更早的左边界
+没有意义：任何以这些位置开始、并以当前 ``right`` 结尾的窗口都包含过多的 ``word``，必然不是答案。
+
+每次移除都同步减少对应词频与 ``windowWords``，并令 ``left += w``。被移出的块不会再次进入这条扫描线的窗口，
+所以左边界的累计移动仍为线性数量。
+
+总数相等即可确认答案
 ~~~~~~~~~~~~~~~~~~~~
 
-``need[word]`` 是需求次数，``seen[word]`` 是当前窗口次数，``left`` 是最左块起点，``count`` 是窗口块数。读入块后：
+窗口修复后，每种单词次数都不超过需求，且窗口中没有需求表之外的单词。若此时
+``windowWords == wordCount``，窗口总次数已经等于全部需求次数之和。
 
-#. 非需求单词会切断所有跨越它的候选，清空窗口并把 ``left`` 移到其后；
-#. 合法且未超量时继续扩张；
-#. 当前单词超量时，从左逐块移除，直到其频次恢复到需求范围。
+假设仍有某个单词出现次数小于需求，为保持相同总数，就必须存在另一个单词超过需求；这与窗口不变量矛盾。因此
+所有单词频次必然逐项相等，``left`` 就是一个合法起点，不需要再次比较两张哈希表。
 
-状态演化
-~~~~~~~~
+命中后不能清空窗口
+~~~~~~~~~~~~~~~~~~
 
-以下追踪自建示例中从下标 ``13`` 开始的有效窗口。单词长度为 4，需求为
-``fooo:1``、``wing:2``、``ding:1``、``barr:1``；前面的非需求块会把窗口重置到
-下一个块边界，这里从第一个 ``fooo`` 开始记录：
+记录答案后，只移除最左单词块，而不是清空整个窗口。这样窗口保留当前答案的后缀，可以继续发现与它重叠的下一
+答案。
+
+以 ``s = "barfoofoofoobar"``、``words = ["bar", "foo", "foo"]`` 为例，单词长度为 ``3``：
 
 .. list-table::
    :header-rows: 1
 
-   * - 块起点
+   * - ``right``
      - 新块
-     - 动作
-     - 窗口
-   * - 13
-     - ``fooo``
-     - ``count=1``
-     - ``fooo``
-   * - 17
-     - ``wing``
-     - ``count=2``
-     - ``fooo,wing``
-   * - 21
-     - ``ding``
-     - ``count=3``
-     - ``fooo,wing,ding``
-   * - 25
-     - ``barr``
-     - ``count=4``，尚未达到 5 个单词
-     - ``fooo,wing,ding,barr``
-   * - 29
-     - ``wing``
-     - ``wing`` 达到需求次数 2，``count=5``，记录起点 13；随后移除最左 ``fooo``
-     - ``wing,ding,barr,wing``
+     - 处理
+     - ``left``
+     - 修复后的窗口
+   * - 0
+     - ``bar``
+     - 加入
+     - 0
+     - ``bar``
+   * - 3
+     - ``foo``
+     - 加入
+     - 0
+     - ``bar, foo``
+   * - 6
+     - ``foo``
+     - 命中 0，随后移除 ``bar``
+     - 3
+     - ``foo, foo``
+   * - 9
+     - ``foo``
+     - ``foo`` 超量，移除最左 ``foo``
+     - 6
+     - ``foo, foo``
+   * - 12
+     - ``bar``
+     - 命中 6，随后移除最左 ``foo``
+     - 9
+     - ``foo, bar``
 
-为什么只检查新加入单词的超量
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+第一次命中后若清空窗口，下标 ``6`` 的答案仍可重新积累得到，但会丢弃本可复用的两个 ``foo``；只移除一个左块
+恰好把完整窗口变回“长度少一块、频次仍合法”的可扩展状态。
 
-扩张前窗口中所有频次都不超过需求。一次只增加新 ``word`` 的频次，因此只有它可能刚刚超量。收缩会让其他单词
-次数减少，不可能制造新的超量，无需每轮遍历整个哈希表。
+代码演进
+~~~~~~~~
 
-为什么 count 等于单词数时频次必然完全相等
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+``recountEveryStart`` 为每个字符起点创建新的 ``used``，并重新读取最多 ``k`` 个单词块。它的正确性直接，但
+候选之间没有共享状态。
 
-窗口只含需求表中的单词，并且每种次数都不超过需求。窗口总块数与需求总次数都等于 ``word_count``；若某个单词
-次数仍小于需求，就必须有另一个单词超量才能补足总数，与窗口不变量矛盾。因此所有频次逐项相等。
+等长条件把任意起点的切分边界唯一确定，并允许按 ``start mod w`` 拆成独立扫描线。``slidingByOffsets`` 在每条
+扫描线上复用上一个候选窗口：右端只加入一个新块，左端只在出现非法块、超量单词或完整命中后向前移动。
 
-记录后为何立即移除最左块
-~~~~~~~~~~~~~~~~~~~~~~~~
+因此新实现删除了“为每个起点重建整张词频表”的工作。公开入口采用对齐滑动窗口，它既保留重复单词的精确频次，
+也不会遗漏不同偏移或彼此重叠的答案。
 
-记录完整窗口后移除最左块，使窗口继续寻找同一扫描线上的重叠答案。若直接清空，会遗漏共享后缀的下一答案；若
-保持完整窗口再加入新块，窗口长度会超过目标并增加无效状态。
-
-复杂度来源
+复杂度分析
 ~~~~~~~~~~
 
-每个对齐块最多被右端加入一次、左端移除一次，哈希窗口操作为 ``O(n)``；若切片复制 ``w`` 个字符，实际字符工作
-量可记为 ``O(nw)``。``need`` 与 ``seen`` 最多保存不同单词数 ``u``，额外空间 ``O(u)``。基准方法为
-``O(nk)`` 次块检查。
+设 ``n = s.size()``、单词长度为 ``w``、单词数量为 ``k``、不同单词数为 ``u``。
 
-九语言实现
-----------
+逐起点方法最多验证 ``n - wk + 1`` 个起点，每个起点检查至多 ``k`` 个块，因此需要
+``O((n-wk+1)k)`` 次块处理。当前代码的 ``substr`` 和字符串哈希还会读取 ``w`` 个字符，字符级时间可写为
+``O((n-wk+1)kw)``；局部计数表占 ``O(u)`` 工作空间。
 
-C
-~
-
-.. code-block:: c
-
-   static int word_id(const char* slice,char** words,int wordsSize,int w,int* rep,int unique){
-       for(int id=0;id<unique;++id)if(memcmp(slice,words[rep[id]],(size_t)w)==0)return id;return -1;
-   }
-   int* findSubstring(char* s,char** words,int wordsSize,int* returnSize){
-       *returnSize=0;if(wordsSize==0)return NULL;int n=(int)strlen(s),w=(int)strlen(words[0]);if(w==0||w*wordsSize>n)return NULL;
-       int* rep=malloc((size_t)wordsSize*sizeof(int));int* need=calloc((size_t)wordsSize,sizeof(int));int unique=0;
-       for(int i=0;i<wordsSize;++i){int id=-1;for(int j=0;j<unique;++j)if(strcmp(words[i],words[rep[j]])==0){id=j;break;}if(id<0){id=unique;rep[unique++]=i;}need[id]++;}
-       int* result=malloc((size_t)(n+1)*sizeof(int));int* seen=calloc((size_t)unique,sizeof(int));
-       for(int offset=0;offset<w;++offset){memset(seen,0,(size_t)unique*sizeof(int));int left=offset,count=0;
-           for(int right=offset;right+w<=n;right+=w){int id=word_id(s+right,words,wordsSize,w,rep,unique);if(id<0){memset(seen,0,(size_t)unique*sizeof(int));count=0;left=right+w;continue;}seen[id]++;count++;
-               while(seen[id]>need[id]){int removed=word_id(s+left,words,wordsSize,w,rep,unique);seen[removed]--;count--;left+=w;}
-               if(count==wordsSize){result[(*returnSize)++]=left;int removed=word_id(s+left,words,wordsSize,w,rep,unique);seen[removed]--;count--;left+=w;}}}
-       free(rep);free(need);free(seen);return result;
-   }
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def findSubstring(self, s: str, words: list[str]) -> list[int]:
-           if not words: return []
-           from collections import Counter, defaultdict
-           w, k, need = len(words[0]), len(words), Counter(words)
-           result = []
-           for offset in range(w):
-               left = offset; count = 0; seen = defaultdict(int)
-               for right in range(offset, len(s) - w + 1, w):
-                   word = s[right:right+w]
-                   if word not in need:
-                       seen.clear(); count = 0; left = right + w; continue
-                   seen[word] += 1; count += 1
-                   while seen[word] > need[word]:
-                       removed = s[left:left+w]; seen[removed] -= 1; count -= 1; left += w
-                   if count == k:
-                       result.append(left)
-                       removed = s[left:left+w]; seen[removed] -= 1; count -= 1; left += w
-           return result
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {
-       public List<Integer> findSubstring(String s,String[] words){
-           List<Integer> result=new ArrayList<>();if(words.length==0)return result;int w=words[0].length(),k=words.length;
-           Map<String,Integer> need=new HashMap<>();for(String x:words)need.merge(x,1,Integer::sum);
-           for(int offset=0;offset<w;offset++){int left=offset,count=0;Map<String,Integer> seen=new HashMap<>();
-               for(int right=offset;right+w<=s.length();right+=w){String word=s.substring(right,right+w);if(!need.containsKey(word)){seen.clear();count=0;left=right+w;continue;}seen.merge(word,1,Integer::sum);count++;
-                   while(seen.get(word)>need.get(word)){String removed=s.substring(left,left+w);seen.put(removed,seen.get(removed)-1);count--;left+=w;}
-                   if(count==k){result.add(left);String removed=s.substring(left,left+w);seen.put(removed,seen.get(removed)-1);count--;left+=w;}}}
-           return result;
-       }
-   }
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {
-       pub fn find_substring(s:String,words:Vec<String>)->Vec<i32>{
-           use std::collections::HashMap;if words.is_empty(){return vec![]}let w=words[0].len();let k=words.len();let mut need:HashMap<&str,i32>=HashMap::new();for x in &words{*need.entry(x).or_insert(0)+=1;}
-           let mut result=Vec::new();for offset in 0..w{let(mut left,mut count)=(offset,0usize);let mut seen:HashMap<&str,i32>=HashMap::new();let mut right=offset;
-               while right+w<=s.len(){let word=&s[right..right+w];right+=w;if !need.contains_key(word){seen.clear();count=0;left=right;continue;}*seen.entry(word).or_insert(0)+=1;count+=1;
-                   while seen[word]>need[word]{let removed=&s[left..left+w];*seen.get_mut(removed).unwrap()-=1;count-=1;left+=w;}
-                   if count==k{result.push(left as i32);let removed=&s[left..left+w];*seen.get_mut(removed).unwrap()-=1;count-=1;left+=w;}}}result
-       }
-   }
-
-Go
-~~
-
-.. code-block:: go
-
-   func findSubstring(s string,words []string)[]int{
-       if len(words)==0{return []int{}};w,k:=len(words[0]),len(words);need:=map[string]int{};for _,x:=range words{need[x]++};result:=[]int{}
-       for offset:=0;offset<w;offset++{left,count:=offset,0;seen:=map[string]int{};for right:=offset;right+w<=len(s);right+=w{word:=s[right:right+w];limit,ok:=need[word];if !ok{seen=map[string]int{};count=0;left=right+w;continue};seen[word]++;count++
-               for seen[word]>limit{removed:=s[left:left+w];seen[removed]--;count--;left+=w};if count==k{result=append(result,left);removed:=s[left:left+w];seen[removed]--;count--;left+=w}}};return result
-   }
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function findSubstring(s:string,words:string[]):number[]{
-       if(words.length===0)return [];const w=words[0].length,k=words.length,need=new Map<string,number>();for(const x of words)need.set(x,(need.get(x)??0)+1);const result:number[]=[];
-       for(let offset=0;offset<w;offset++){let left=offset,count=0;const seen=new Map<string,number>();for(let right=offset;right+w<=s.length;right+=w){const word=s.slice(right,right+w),limit=need.get(word);if(limit===undefined){seen.clear();count=0;left=right+w;continue;}seen.set(word,(seen.get(word)??0)+1);count++;
-               while(seen.get(word)!>limit){const removed=s.slice(left,left+w);seen.set(removed,seen.get(removed)!-1);count--;left+=w;}if(count===k){result.push(left);const removed=s.slice(left,left+w);seen.set(removed,seen.get(removed)!-1);count--;left+=w;}}}return result;
-   }
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {
-       public IList<int> FindSubstring(string s,string[] words){
-           var result=new List<int>();if(words.Length==0)return result;int w=words[0].Length,k=words.Length;var need=new Dictionary<string,int>();foreach(var x in words)need[x]=need.GetValueOrDefault(x)+1;
-           for(int offset=0;offset<w;offset++){int left=offset,count=0;var seen=new Dictionary<string,int>();for(int right=offset;right+w<=s.Length;right+=w){string word=s.Substring(right,w);if(!need.ContainsKey(word)){seen.Clear();count=0;left=right+w;continue;}seen[word]=seen.GetValueOrDefault(word)+1;count++;
-                   while(seen[word]>need[word]){string removed=s.Substring(left,w);seen[removed]--;count--;left+=w;}if(count==k){result.Add(left);string removed=s.Substring(left,w);seen[removed]--;count--;left+=w;}}}return result;
-       }
-   }
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function find_substring(s::String,words::Vector{String})
-       isempty(words)&&return Int[];w=ncodeunits(words[1]);k=length(words);need=Dict{String,Int}();for x in words;need[x]=get(need,x,0)+1;end;result=Int[];n=ncodeunits(s)
-       for offset in 0:w-1;left=offset+1;count=0;seen=Dict{String,Int}();right=offset+1
-           while right+w-1<=n;word=String(SubString(s,right,right+w-1));right+=w;if !haskey(need,word);empty!(seen);count=0;left=right;continue;end;seen[word]=get(seen,word,0)+1;count+=1
-               while seen[word]>need[word];removed=String(SubString(s,left,left+w-1));seen[removed]-=1;count-=1;left+=w;end
-               if count==k;push!(result,left-1);removed=String(SubString(s,left,left+w-1));seen[removed]-=1;count-=1;left+=w;end
-           end
-       end;result
-   end
-
-R
-~
-
-.. code-block:: r
-
-   find_substring <- function(s, words) {
-       if (length(words)==0L) return(integer()); w<-nchar(words[[1]]);k<-length(words);need<-table(words);result<-integer()
-       for (offset in 0:(w-1L)) { left<-offset+1L;right<-offset+1L;count<-0L;seen<-setNames(integer(length(need)),names(need))
-           while (right+w-1L<=nchar(s)) { word<-substr(s,right,right+w-1L);right<-right+w
-               if (!(word %in% names(need))) { seen[]<-0L;count<-0L;left<-right;next }
-               seen[[word]]<-seen[[word]]+1L;count<-count+1L
-               while(seen[[word]]>need[[word]]){removed<-substr(s,left,left+w-1L);seen[[removed]]<-seen[[removed]]-1L;count<-count-1L;left<-left+w}
-               if(count==k){result<-c(result,left-1L);removed<-substr(s,left,left+w-1L);seen[[removed]]<-seen[[removed]]-1L;count<-count-1L;left<-left+w}
-           }
-       }
-       result
-   }
+对齐滑动窗口中，每个完整块最多从右端加入一次、从左端移除一次，所有偏移合计为 ``O(n)`` 次块处理。按当前
+``std::string`` 切片实现，字符级时间为 ``O(nw)``；若用不复制的字符串视图并把固定长度比较视为一次块操作，
+通常写作 ``O(n)``。需求表与窗口表最多保存 ``u`` 个单词，工作空间为 ``O(u)``，返回下标不计入其中。
