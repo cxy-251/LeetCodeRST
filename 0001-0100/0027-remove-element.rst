@@ -6,45 +6,30 @@
 
 :题号: 0027
 :难度: Easy
-:主题: 数组、双指针、原地修改
+:主题: 数组、双指针、原地覆盖
 :原题: `LeetCode 0027 <https://leetcode.com/problems/remove-element/>`_
-:重点: 移除指定值、有效前缀、剩余顺序不限定、常量额外空间
+:重点: 从实际删除元素，推导到维护有效前缀，并比较稳定覆盖与尾部替换的写入代价
 
 题目重述
 --------
 
-给定整数数组 ``nums`` 和整数 ``val``，在原数组中移除所有等于 ``val`` 的元素，并返回未被移除的元素数量 ``k``。
+给定整数数组 ``nums`` 和整数 ``val``，原地移除所有等于 ``val`` 的元素，并返回未被移除的元素数量 ``k``。
 
-处理完成后，``nums`` 的前 ``k`` 个位置必须包含全部不等于 ``val`` 的元素；这些元素的相对顺序可以改变。下标 ``k`` 及其后的内容不作要求。不得另行分配用于保存完整结果的数组，额外空间应为 ``O(1)``。
+处理完成后，``nums`` 的前 ``k`` 个位置必须包含原数组中全部不等于 ``val`` 的元素，每个保留元素出现的次数不变。
+这些元素的相对顺序可以改变；下标 ``k`` 及其后的内容不作要求。题目要求只使用 ``O(1)`` 额外空间，不能另建
+完整结果数组代替原数组。
 
 ``nums`` 的长度位于 ``[0, 100]``，数组元素位于 ``[0, 50]``，``val`` 位于 ``[0, 100]``。
 
 自建示例
 --------
 
-目标值多次出现：
-
-.. code-block:: text
-
-   输入：nums = [3, 1, 3, 2, 4, 3], val = 3
-   输出：k = 3，nums 的前 3 个元素包含 [1, 2, 4]
-   解释：三个值为 3 的元素全部移除；前缀中剩余元素的顺序可以不同。
-
-目标值不存在：
-
-.. code-block:: text
-
-   输入：nums = [0, 2, 5], val = 7
-   输出：k = 3，nums 的前 3 个元素包含 [0, 2, 5]
-   解释：数组中没有值 7，因此所有元素都保留。
-
-全部元素被移除：
-
-.. code-block:: text
-
-   输入：nums = [4, 4, 4], val = 4
-   输出：k = 0
-   解释：没有元素需要保留，数组后续内容不作要求。
+* 多次出现：``nums = [3, 1, 3, 2, 4, 3]``、``val = 3``，返回 ``k = 3``；有效前缀可以是
+  ``[1, 2, 4]``，也可以是包含相同三个值的其他顺序；
+* 目标值不存在：``nums = [0, 2, 5]``、``val = 7``，返回 ``k = 3``，全部元素都保留；
+* 全部移除：``nums = [4, 4, 4]``、``val = 4``，返回 ``k = 0``；
+* 空数组：``nums = []``、``val = 1``，返回 ``k = 0``；
+* 只移除首尾：``nums = [6, 1, 2, 6]``、``val = 6``，返回 ``k = 2``，有效前缀包含 ``1`` 和 ``2``。
 
 C++ 实现
 --------
@@ -56,9 +41,12 @@ C++ 实现
    class Solution {
    private:
        int eraseMatches(std::vector<int>& nums, int val) {
-           for (int i = 0; i < static_cast<int>(nums.size());) {
-               if (nums[i] == val) nums.erase(nums.begin() + i);
-               else ++i;
+           for (int index = 0; index < static_cast<int>(nums.size());) {
+               if (nums[index] == val) {
+                   nums.erase(nums.begin() + index);
+               } else {
+                   ++index;
+               }
            }
            return static_cast<int>(nums.size());
        }
@@ -66,23 +54,26 @@ C++ 实现
        int stableCompaction(std::vector<int>& nums, int val) {
            int write = 0;
            for (int read = 0; read < static_cast<int>(nums.size()); ++read) {
-               if (nums[read] != val) nums[write++] = nums[read];
+               if (nums[read] != val) {
+                   nums[write] = nums[read];
+                   ++write;
+               }
            }
            return write;
        }
 
        int replaceFromEnd(std::vector<int>& nums, int val) {
            int index = 0;
-           int active = static_cast<int>(nums.size());
-           while (index < active) {
+           int activeSize = static_cast<int>(nums.size());
+           while (index < activeSize) {
                if (nums[index] == val) {
-                   nums[index] = nums[active - 1];
-                   --active;
+                   --activeSize;
+                   nums[index] = nums[activeSize];
                } else {
                    ++index;
                }
            }
-           return active;
+           return activeSize;
        }
 
    public:
@@ -94,177 +85,169 @@ C++ 实现
 题解
 ----
 
-直接删除为什么产生重复后缀移动
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+实际删除
+~~~~~~~~
 
-数组中间删除会把后续元素整体左移。目标值频繁出现时，每次删除都可能移动长后缀，最坏 ``O(n^2)``。题目只要求
-有效前缀，覆盖槽位即可。
+最直接的理解是：扫描数组，遇到 ``val`` 就调用 ``erase``，让容器真正删除该位置。``eraseMatches`` 按照这个定义
+执行，循环结束后数组中只剩保留元素，返回的新长度就是答案。
 
-稳定压缩如何把元素分为保留与丢弃
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+删除后不能立即增加 ``index``。原下一个元素已经左移到当前下标，尚未检查；若直接前进，连续目标值中的第二个就会
+被跳过。
 
-``read`` 依次检查原数组。当前值不等于 ``val`` 时写入 ``nums[write]`` 并增加 ``write``；等于目标时不写入。
-``write`` 同时表示已保留数量、有效前缀长度和下一个写入位置。
+这个方法语义正确，问题出在数组中间删除的代价。删除一个位置后，其后的全部元素都要左移一格。若长度为 ``n``
+的数组中存在大量待删除元素，同一批后缀可能被反复搬移，最坏时间达到 ``O(n²)``。
+
+有效前缀
+~~~~~~~~
+
+题目并不要求缩短 ``nums``，也不关心答案前缀之后的内容。真正需要完成的只有两件事：
+
+* 计算有多少个元素不等于 ``val``；
+* 把这些元素放入数组开头连续的 ``k`` 个位置。
+
+因此不必在每次命中时维持整个数组都有效。可以把数组分成“已经完成的有效前缀”和“尚未扫描的区域”，用覆盖代替
+物理删除。删除引起的反复后缀搬移由一次顺序扫描取代。
+
+稳定覆盖
+~~~~~~~~
+
+``stableCompaction`` 使用两个位置：
+
+* ``read`` 指向当前检查的原元素；
+* ``write`` 指向下一个保留元素应写入的位置。
+
+处理 ``read`` 之前，``nums[0..write)`` 恰好包含已扫描前缀中所有不等于 ``val`` 的元素，并保持原相对顺序。
+
+若 ``nums[read] == val``，当前元素不属于答案，``write`` 不变；若不相等，就把它写入 ``nums[write]``，再增加
+``write``。两种操作都使有效前缀继续精确对应已扫描区域中的保留元素。
 
 状态演化
 ~~~~~~~~
 
+以 ``nums = [3, 1, 3, 2, 4, 3]``、``val = 3`` 为例：
+
 .. list-table::
    :header-rows: 1
 
-   * - 当前值
-     - 分类
-     - ``write``
+   * - ``read``
+     - 当前值
+     - 动作
+     - 新 ``write``
      - 有效前缀
-   * - 3
-     - 丢弃
+   * - 0
+     - 3
+     - 跳过
      - 0
      - 空
    * - 1
-     - 保留
      - 1
+     - 写入下标 0
      - 1
-   * - 3
-     - 丢弃
-     - 1
-     - 1
+     - ``[1]``
    * - 2
-     - 保留
-     - 2
-     - 1,2
-   * - 4
-     - 保留
      - 3
-     - 1,2,4
+     - 跳过
+     - 1
+     - ``[1]``
+   * - 3
+     - 2
+     - 写入下标 1
+     - 2
+     - ``[1, 2]``
+   * - 4
+     - 4
+     - 写入下标 2
+     - 3
+     - ``[1, 2, 4]``
+   * - 5
+     - 3
+     - 跳过
+     - 3
+     - ``[1, 2, 4]``
 
-为什么向前写入不会覆盖未读元素
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+扫描结束时，``write`` 既是保留元素数量，也是有效前缀长度，因此可以直接返回。
 
-``write`` 只在保留元素时增加，而 ``read`` 每轮都增加，因此始终 ``write <= read``。写入位置不会位于当前读取位置
-之后，未来的 ``nums[read+1:]`` 不受影响。
+覆盖安全
+~~~~~~~~
 
-尾部交换何时可以减少写入
-~~~~~~~~~~~~~~~~~~~~~~~~
+``write`` 只在发现保留元素时增加，而 ``read`` 每轮都会增加，所以处理任意位置时始终满足
+``write <= read``。
 
-若目标值很多且顺序不重要，可以用活动区间最后一个元素覆盖目标位置，并缩短 ``active``。覆盖进来的元素尚未检查，
-所以当前下标不能立即前进。该方法每遇到目标值只写一次，但会改变保留元素顺序。
+写入只可能发生在当前读取位置或它之前，不会覆盖 ``read + 1`` 之后尚未扫描的元素。即使 ``write == read``，
+赋值也只是把元素写回原位置。原数组因此可以同时承担输入和输出缓冲区，不需要额外结果数组。
 
-为什么稳定前缀包含全部且仅包含保留元素
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+尾部替换
+~~~~~~~~
 
-只有不等于 ``val`` 的元素会写入，因此前缀中没有错误元素。每个原元素又被读取一次，所有不等于 ``val`` 的元素
-都会按读取顺序写入，所以没有遗漏。扫描结束时 ``write`` 正是剩余数量。
+题目明确允许改变保留元素顺序，这又产生另一条优化路线。若当前位置等于 ``val``，可以用当前活动区间的最后一个
+元素覆盖它，再把活动区间长度减一：
 
-复杂度来源
+.. code-block:: text
+
+   [已确认保留 | 当前检查 | 尚未检查 ........ | 活动末尾] [无效区域]
+
+``replaceFromEnd`` 使用 ``[index, activeSize)`` 表示仍待处理的活动区域。命中目标值时，先执行
+``--activeSize``，再把新的末尾元素复制到 ``index``。被覆盖进来的元素原来位于尚未检查区域，它可能仍等于
+``val``，所以本轮不能增加 ``index``，下一轮必须继续检查同一位置。
+
+若当前值不等于 ``val``，它已经处于最终有效前缀中，才可以增加 ``index``。循环结束时
+``index == activeSize``，前缀 ``nums[0..activeSize)`` 中没有目标值，后面的区域不再属于答案。
+
+两种线性方法的取舍
+~~~~~~~~~~~~~~~~~~
+
+稳定覆盖与尾部替换都把时间降为 ``O(n)``，但利用的题意不同：
+
+* 稳定覆盖按原顺序读取和写入，保留元素的相对顺序不变；
+* 尾部替换利用“顺序不限”，用未检查的末尾元素填补目标位置。
+
+设最终保留 ``k`` 个元素，删除 ``r = n - k`` 个元素。当前代码中，稳定覆盖对每个保留元素写一次，约有 ``k``
+次写入；尾部替换每缩短一次活动区间写一次，约有 ``r`` 次写入。因此尾部替换通常在待删除元素较少时更有优势，
+而不是在目标值很多时更有优势。
+
+例如数组中没有 ``val`` 时，尾部替换不执行任何写入，稳定覆盖会把每个元素写回原位置；全部元素都等于
+``val`` 时，稳定覆盖不写入任何元素，尾部替换则会连续缩短活动区间。
+
+公开入口采用 ``stableCompaction``。它同样满足原地和线性时间要求，同时保持输入中保留元素的相对顺序，状态定义
+更直接。尾部替换适合顺序完全无关且希望在删除项稀少时减少写入的场景。
+
+代码演进
+~~~~~~~~
+
+``eraseMatches`` 在每次命中时维护整个数组的连续性，因此一个删除动作会反复搬移尚未处理的长后缀。
+
+``stableCompaction`` 不再真正缩短容器，只维护有效前缀。``erase``、动态数组长度变化和重复后缀移动全部消失，
+代码只剩一次读取、条件筛选和必要写入。
+
+``replaceFromEnd`` 从同一个“只要求有效前缀”的认识分叉。它进一步利用结果顺序不限，不再搬运删除位置之后的全部
+保留元素，而是用活动末尾一次填补当前空位；代价是失去稳定顺序，并且覆盖后必须重新检查当前下标。
+
+复杂度分析
 ~~~~~~~~~~
 
-稳定压缩与尾部交换都为 ``O(n)`` 时间、``O(1)`` 空间。稳定压缩最坏写入 ``n`` 次；尾部交换在目标值较少时未必
-更优，但目标值很多时可减少保留元素搬运。直接删除最坏 ``O(n^2)``。
+.. list-table::
+   :header-rows: 1
 
-九语言实现
-----------
+   * - 方法
+     - 时间复杂度
+     - 工作空间
+     - 顺序
+     - 主要代价
+   * - 逐个物理删除
+     - ``O(n²)``
+     - ``O(1)``
+     - 保持
+     - 每次删除都可能搬移整个后缀
+   * - 稳定覆盖
+     - ``O(n)``
+     - ``O(1)``
+     - 保持
+     - 每个元素读取一次，保留元素写入前缀
+   * - 尾部替换
+     - ``O(n)``
+     - ``O(1)``
+     - 改变
+     - 每轮增加左边界或缩短活动区间
 
-C
-~
-
-.. code-block:: c
-
-   int removeElement(int* nums, int n, int val) {
-       int write=0;
-       for(int read=0;read<n;++read) if(nums[read]!=val) nums[write++]=nums[read];
-       return write;
-   }
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def removeElement(self, nums: list[int], val: int) -> int:
-           write = 0
-           for value in nums:
-               if value != val:
-                   nums[write] = value
-                   write += 1
-           return write
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {
-       public int removeElement(int[] nums,int val){
-           int write=0;for(int value:nums)if(value!=val)nums[write++]=value;return write;
-       }
-   }
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {
-       pub fn remove_element(nums:&mut Vec<i32>,val:i32)->i32{
-           let mut write=0usize;
-           for read in 0..nums.len(){let value=nums[read];if value!=val{nums[write]=value;write+=1;}}
-           write as i32
-       }
-   }
-
-Go
-~~
-
-.. code-block:: go
-
-   func removeElement(nums []int,val int)int{
-       write:=0;for _,value:=range nums{if value!=val{nums[write]=value;write++}};return write
-   }
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function removeElement(nums:number[],val:number):number{
-       let write=0;for(const value of nums)if(value!==val)nums[write++]=value;return write;
-   }
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {
-       public int RemoveElement(int[] nums,int val){
-           int write=0;foreach(int value in nums)if(value!=val)nums[write++]=value;return write;
-       }
-   }
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function remove_element!(nums::Vector{Int}, val::Int)
-       write=0
-       for value in nums
-           if value != val;write+=1;nums[write]=value;end
-       end
-       write
-   end
-
-R
-~
-
-.. code-block:: r
-
-   remove_element <- function(nums, val) {
-       write <- 0L
-       for (value in nums) if (value != val) {
-           write <- write + 1L
-           nums[[write]] <- value
-       }
-       list(k=write, nums=nums)
-   }
+尾部替换中，``index`` 最多增加 ``n`` 次，``activeSize`` 最多减少 ``n`` 次，所以循环总次数仍为线性数量级。
+三种方法返回的 ``k`` 之后的数组内容都不属于答案，无需清零或恢复。
