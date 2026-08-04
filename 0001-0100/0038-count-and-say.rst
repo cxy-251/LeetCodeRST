@@ -8,43 +8,31 @@
 :难度: Medium
 :主题: 字符串、游程编码、递推
 :原题: `LeetCode 0038 <https://leetcode.com/problems/count-and-say/>`_
-:重点: 相邻相同字符分组、数量后接字符、逐项递推
+:重点: 从保存完整序列，推导到只保留当前项，并用最大连续字符段唯一生成下一项
 
 题目重述
 --------
 
-定义字符串序列 ``countAndSay``：第一项为 ``"1"``；从第二项开始，每一项都是对前一项进行游程描述得到的字符串。
+定义字符串序列 ``countAndSay``：
 
-描述时从左向右把连续相同字符分成若干组，并对每组依次写出“该字符连续出现的次数”和“该字符本身”。给定整数 ``n``，返回序列的第 ``n`` 项。
+* 第 ``1`` 项为 ``"1"``；
+* 第 ``n`` 项通过从左到右描述第 ``n-1`` 项得到。
 
-``n`` 位于 ``[1, 30]``。
+描述一个字符串时，把相邻且相同的字符划分为最大连续段。对于每一段，依次写出“该段的字符数量”和“该字符”。
+给定整数 ``n``，返回序列的第 ``n`` 项。
+
+这里处理的是字符串而不是整数运算。例如 ``"21"`` 表示“两个 ``1``”，生成下一项时应把它读成一个 ``2``、
+一个 ``1``，得到 ``"1211"``。``n`` 位于 ``[1, 30]``。
 
 自建示例
 --------
 
-第六项：
-
-.. code-block:: text
-
-   输入：n = 6
-   输出："312211"
-   解释：序列依次为 "1"、"11"、"21"、"1211"、"111221"、"312211"。第五项包含三个 1、两个 2、一个 1，所以描述为 "312211"。
-
-第一项：
-
-.. code-block:: text
-
-   输入：n = 1
-   输出："1"
-   解释：第一项由定义直接给出，不需要描述前一项。
-
-连续组必须分别描述：
-
-.. code-block:: text
-
-   输入：n = 5
-   输出："111221"
-   解释：第四项 "1211" 应分成 "1"、"2"、"11" 三个连续组，分别描述为 "11"、"12"、"21"。
+* ``n = 1`` 时返回 ``"1"``，这是序列定义给出的初始项；
+* ``n = 4`` 时返回 ``"1211"``，因为第三项 ``"21"`` 包含一个 ``2`` 和一个 ``1``；
+* ``n = 6`` 时返回 ``"312211"``，因为第五项 ``"111221"`` 被划分为 ``"111"``、``"22"``、
+  ``"1"``，分别描述为 ``"31"``、``"22"``、``"11"``；
+* 描述 ``"1211"`` 时，开头的 ``'1'`` 与末尾的两个 ``'1'`` 不能合并，因为中间的 ``'2'`` 将它们分隔成
+  不同连续段。
 
 C++ 实现
 --------
@@ -52,19 +40,22 @@ C++ 实现
 .. code-block:: cpp
 
    #include <string>
+   #include <vector>
 
    class Solution {
    private:
-       std::string recursive(int n) {
-           if (n == 1) return "1";
-           return describe(recursive(n - 1));
-       }
-
        std::string describe(const std::string& current) {
            std::string next;
-           for (int start = 0; start < static_cast<int>(current.size());) {
+           next.reserve(current.size() * 2);
+
+           int start = 0;
+           while (start < static_cast<int>(current.size())) {
                int end = start + 1;
-               while (end < static_cast<int>(current.size()) && current[end] == current[start]) ++end;
+               while (end < static_cast<int>(current.size()) &&
+                      current[end] == current[start]) {
+                   ++end;
+               }
+
                next += std::to_string(end - start);
                next.push_back(current[start]);
                start = end;
@@ -72,177 +63,148 @@ C++ 实现
            return next;
        }
 
-       std::string iterative(int n) {
+       std::string buildWholeSequence(int n) {
+           std::vector<std::string> sequence(n);
+           sequence[0] = "1";
+           for (int index = 1; index < n; ++index) {
+               sequence[index] = describe(sequence[index - 1]);
+           }
+           return sequence.back();
+       }
+
+       std::string rollingGeneration(int n) {
            std::string current = "1";
-           for (int term = 2; term <= n; ++term) current = describe(current);
+           for (int index = 2; index <= n; ++index) {
+               current = describe(current);
+           }
            return current;
        }
 
    public:
        std::string countAndSay(int n) {
-           return iterative(n);
+           return rollingGeneration(n);
        }
    };
 
 题解
 ----
 
-序列递推依赖什么信息
-~~~~~~~~~~~~~~~~~~~~
+直接保存前 n 项
+~~~~~~~~~~~~~~~
 
-第 ``n`` 项只依赖第 ``n-1`` 项，不需要保存更早字符串。无论递归还是迭代，核心子过程都是对一个字符串进行游程编码：
-把最大连续相同字符段转换成“长度 + 字符”。
+按照定义，最直接的做法是创建数组 ``sequence``：先写入 ``sequence[0] = "1"``，之后令
+``sequence[i] = describe(sequence[i-1])``，最后返回第 ``n`` 项。
 
-为什么必须按连续段计数
-~~~~~~~~~~~~~~~~~~~~
+``buildWholeSequence`` 完整保留了递推关系，因而正确性直接来自题目定义。它的问题不是重复计算，而是保存了已经不会
+再次使用的历史项。生成第 ``i+1`` 项只读取第 ``i`` 项；第 ``i-1`` 项及更早字符串在此后都没有用途。
 
-描述的是读取顺序中的相邻重复，不是全局字符频率。例如 ``1211`` 中三个字符 ``1`` 分属首部单个 1 和末尾两个 1，
-不能合并成“3 个 1”，因为中间有字符 2 分隔。
+下一项不是全局字符计数
+~~~~~~~~~~~~~~~~~~~~~~
 
-双指针如何找到一个完整字符段
+描述操作统计的是最大连续相同字符段，而不是整个字符串中的字符频率。以 ``"1211"`` 为例，它的唯一分段是：
+
+.. code-block:: text
+
+   "1" | "2" | "11"
+
+因此输出为：
+
+.. code-block:: text
+
+   一个 1  -> "11"
+   一个 2  -> "12"
+   两个 1  -> "21"
+   合并    -> "111221"
+
+若把三个 ``1`` 合并统计为 ``"31"``，就破坏了原字符串中的读取顺序，得到的不是题目定义的下一项。
+
+双指针如何确定一个最大连续段
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-``start`` 指向当前段首，``end`` 从下一位置向右移动，直到越界或字符改变。此时半开区间 ``[start,end)`` 恰好是一个
-最大连续段，长度为 ``end-start``。写入描述后令 ``start=end``，继续处理下一段。
+``start`` 指向尚未描述部分的第一个字符，``end`` 从 ``start + 1`` 开始向右移动。只要
+``current[end] == current[start]``，两个位置仍属于同一段；遇到不同字符或到达字符串末尾时停止。
+
+此时半开区间 ``[start, end)`` 具有三个性质：
+
+#. 区间内所有字符相同；
+#. 长度为 ``end - start``；
+#. 若 ``end`` 未越界，``current[end]`` 与该段字符不同，因此当前段不能继续延长。
+
+所以它恰好是从 ``start`` 开始的最大连续段。写入段长度和段字符后令 ``start = end``，下一轮从第一个未处理字符
+继续。每个输入字符恰好属于一个段，不会遗漏，也不会被重复描述。
 
 状态演化
 ~~~~~~~~
 
-描述 ``111221``：
+描述 ``"111221"``：
 
 .. list-table::
    :header-rows: 1
 
-   * - 连续段
-     - 长度
-     - 输出片段
+   * - ``start``
+     - ``end``
+     - 最大连续段
+     - 写入片段
      - 累计结果
-   * - ``111``
+   * - 0
      - 3
-     - ``31``
-     - ``31``
-   * - ``22``
-     - 2
-     - ``22``
-     - ``3122``
-   * - ``1``
-     - 1
-     - ``11``
-     - ``312211``
+     - ``"111"``
+     - ``"31"``
+     - ``"31"``
+   * - 3
+     - 5
+     - ``"22"``
+     - ``"22"``
+     - ``"3122"``
+   * - 5
+     - 6
+     - ``"1"``
+     - ``"11"``
+     - ``"312211"``
 
-为什么每轮描述结果唯一
-~~~~~~~~~~~~~~~~~~~~~~
+使用 ``std::to_string(end - start)``，而不是假设段长度永远只有一位数字，使 ``describe`` 对任意字符串的连续段都
+保持正确。
 
-任意字符串都能唯一划分为最大连续相同字符段：段首从第一个字符开始，段尾由第一个不同字符唯一确定。每段的字符和长度
-也随之唯一，因此下一项没有歧义。
+为什么连续段划分唯一
+~~~~~~~~~~~~~~~~~~~~
 
-递归与迭代的取舍
-~~~~~~~~~~~~~~~~
+从字符串首字符开始，一个连续段的结束位置只能是“第一个不同字符”或字符串末尾。确定第一段后，对剩余后缀应用
+同一规则，下一段也被唯一确定。重复执行直到末尾，整个字符串便被唯一划分。
 
-递归定义最贴近数学序列，但需要 ``O(n)`` 调用栈，并在回溯时构造每一项。迭代只维护当前项，逐轮替换，控制流更直接，
-标准入口采用迭代。
+每段的长度和字符随划分唯一确定，因此 ``describe(current)`` 的结果唯一。由第一项 ``"1"`` 开始逐轮应用该函数，
+每一项也都唯一确定。
 
-复杂度来源
+只保留当前项
+~~~~~~~~~~~~
+
+递推只存在一阶依赖：
+
+.. math::
+
+   term_i = describe(term_{i-1})
+
+生成新字符串后，旧 ``current`` 不会再参与后续计算，可以直接由新字符串替换。``rollingGeneration`` 因而只维护
+当前项，而不保存完整 ``sequence``。
+
+这一步没有改变任何一轮的输入或输出。第 ``i`` 轮开始时，``current`` 与直接方法中的 ``sequence[i-1]`` 相同；
+调用相同的 ``describe`` 后，新 ``current`` 就与 ``sequence[i]`` 相同。由此逐轮保持等价，最终返回第 ``n`` 项。
+
+边界处理
+~~~~~~~~
+
+``n = 1`` 时循环区间 ``[2, n]`` 为空，直接返回初始字符串 ``"1"``。当当前项只有一个字符时，``end`` 立即到达
+末尾，仍会正确写出 ``"1" + 字符``。连续段位于字符串末尾时，也由越界条件正常结束，不需要哨兵字符。
+
+复杂度分析
 ~~~~~~~~~~
 
-设第 ``i`` 项长度为 ``L_i``，生成第 ``n`` 项的总时间为 ``O(\sum_{i=1}^{n} L_i)``；最后一轮与返回字符串空间为
-``O(L_n)``。迭代除当前项和下一项外不保存历史序列。
+设第 ``i`` 项长度为 ``L_i``。生成第 ``i+1`` 项时，需要扫描 ``L_i`` 个字符，并写出长度为 ``L_{i+1}`` 的结果，
+因此生成第 ``n`` 项的总时间为：
 
-九语言实现
-----------
+.. math::
 
-C
-~
+   O\left(\sum_{i=1}^{n-1}(L_i+L_{i+1})\right)
+   = O\left(\sum_{i=1}^{n}L_i\right)
 
-.. code-block:: c
-
-   char* countAndSay(int n){
-       char* current=malloc(2);strcpy(current,"1");
-       for(int term=2;term<=n;term++){int len=(int)strlen(current);char* next=malloc((size_t)(2*len+16));int write=0;
-           for(int start=0;start<len;){int end=start+1;while(end<len&&current[end]==current[start])end++;write+=sprintf(next+write,"%d%c",end-start,current[start]);start=end;}
-           next[write]='\0';free(current);current=next;}
-       return current;
-   }
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def countAndSay(self, n: int) -> str:
-           current="1"
-           for _ in range(2,n+1):
-               pieces=[];start=0
-               while start<len(current):
-                   end=start+1
-                   while end<len(current) and current[end]==current[start]:end+=1
-                   pieces.append(str(end-start));pieces.append(current[start]);start=end
-               current="".join(pieces)
-           return current
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {
-       public String countAndSay(int n){String current="1";for(int term=2;term<=n;term++){StringBuilder next=new StringBuilder();for(int start=0;start<current.length();){int end=start+1;while(end<current.length()&&current.charAt(end)==current.charAt(start))end++;next.append(end-start).append(current.charAt(start));start=end;}current=next.toString();}return current;}
-   }
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {
-       pub fn count_and_say(n:i32)->String{
-           let mut current=String::from("1");for _ in 2..=n{let b=current.as_bytes();let mut next=String::new();let mut start=0;while start<b.len(){let mut end=start+1;while end<b.len()&&b[end]==b[start]{end+=1;}next.push_str(&(end-start).to_string());next.push(b[start] as char);start=end;}current=next;}current
-       }
-   }
-
-Go
-~~
-
-.. code-block:: go
-
-   func countAndSay(n int)string{
-       current:="1";for term:=2;term<=n;term++{var next strings.Builder;for start:=0;start<len(current);{end:=start+1;for end<len(current)&&current[end]==current[start]{end++};next.WriteString(strconv.Itoa(end-start));next.WriteByte(current[start]);start=end};current=next.String()};return current
-   }
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function countAndSay(n:number):string{
-       let current="1";for(let term=2;term<=n;term++){let next="";for(let start=0;start<current.length;){let end=start+1;while(end<current.length&&current[end]===current[start])end++;next+=String(end-start)+current[start];start=end;}current=next;}return current;
-   }
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {
-       public string CountAndSay(int n){string current="1";for(int term=2;term<=n;term++){var next=new StringBuilder();for(int start=0;start<current.Length;){int end=start+1;while(end<current.Length&&current[end]==current[start])end++;next.Append(end-start).Append(current[start]);start=end;}current=next.ToString();}return current;}
-   }
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function count_and_say(n::Int)
-       current="1";for _ in 2:n;chars=collect(current);io=IOBuffer();start=1;while start<=length(chars);stop=start+1;while stop<=length(chars)&&chars[stop]==chars[start];stop+=1;end;print(io,stop-start,chars[start]);start=stop;end;current=String(take!(io));end;current
-   end
-
-R
-~
-
-.. code-block:: r
-
-   count_and_say <- function(n) {
-       current<-"1";if(n>=2L)for(term in 2:n){chars<-strsplit(current,"",fixed=TRUE)[[1]];parts<-character();start<-1L
-           while(start<=length(chars)){end<-start+1L;while(end<=length(chars)&&chars[[end]]==chars[[start]])end<-end+1L;parts<-c(parts,as.character(end-start),chars[[start]]);start<-end};current<-paste(parts,collapse="")};current
-   }
+``buildWholeSequence`` 保存全部项，额外空间为 ``O(\sum L_i)``。``rollingGeneration`` 在一轮转换期间只同时持有当前项
+和下一项，工作空间为 ``O(L_{n-1}+L_n)``，除返回结果外可写为与最大单项长度同阶。公开入口采用滚动生成方法。
