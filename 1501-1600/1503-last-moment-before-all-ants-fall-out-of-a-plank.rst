@@ -7,7 +7,6 @@
 :题号: 1503
 :难度: Medium
 :主题: 数组、运动模拟、等价变换、贪心
-:访问状态: Public
 :原题: `LeetCode 1503 <https://leetcode.com/problems/last-moment-before-all-ants-fall-out-of-a-plank/>`_
 :重点: 从逐时刻模拟碰撞，推导到相遇反向与直接穿过等价，最后只计算每只蚂蚁到对应端点的距离
 
