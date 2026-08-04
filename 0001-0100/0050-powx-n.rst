@@ -6,33 +6,50 @@
 
 :题号: 0050
 :难度: Medium
-:主题: 数学、快速幂、二进制分解、整数边界
+:主题: 数学、递归、二进制、快速幂
 :原题: `LeetCode 0050 <https://leetcode.com/problems/powx-n/>`_
-:重点: 指数折半、平方倍增、负指数倒数、最小整数边界
+:重点: 从逐次相乘推导到指数折半，并安全处理负指数与 ``INT_MIN``
 
 题目重述
 --------
 
-实现 ``x`` 的整数次幂 ``x^n``，其中 ``x`` 是浮点数，``n`` 是 32 位有符号整数。零指数结果为 1；负指数满足 ``x^n = 1 / x^{-n}``。
+给定浮点数 ``x`` 和 32 位有符号整数 ``n``，计算并返回 ``x`` 的 ``n`` 次幂。
 
-约束为 ``-100.0 < x < 100.0``、``-2^31 <= n <= 2^31 - 1``；保证 ``x`` 不为零或 ``n`` 为正，并保证数学结果位于 ``[-10^4, 10^4]``。
+不能依赖把答案预先存入表中。零指数满足 ``x^0 = 1``；负指数满足
+``x^n = (1 / x)^(-n)``。题目保证不会要求计算无定义的零的非正整数次幂，并保证结果位于题目规定的
+浮点范围内。
+
+``n`` 的范围为 ``[-2^31, 2^31 - 1]``，因此处理负指数时必须考虑最小 32 位整数无法在
+``int`` 中直接取相反数。
 
 自建示例
 --------
 
 .. code-block:: text
 
-   输入：x = 3.0, n = 4
-   输出：81.0
+   输入：x = 2.0, n = 13
+   输出：8192.0
 
-``3^4 = 81``。
+   13 = 8 + 4 + 1
+   2^13 = 2^8 × 2^4 × 2
+
+负指数示例：
 
 .. code-block:: text
 
-   输入：x = 4.0, n = -2
-   输出：0.0625
+   输入：x = 4.0, n = -3
+   输出：0.015625
 
-负指数先取倒数，``4^-2 = 1 / 16``。处理 ``n = -2^31`` 时不能在 32 位整数中直接计算 ``-n``。
+   4^-3 = (1/4)^3 = 1/64
+
+边界示例：
+
+.. code-block:: text
+
+   输入：x = 1.0, n = -2147483648
+   输出：1.0
+
+``-n`` 无法由 32 位 ``int`` 表示；必须先把 ``n`` 提升到更宽的整数类型。
 
 C++ 实现
 --------
@@ -41,25 +58,32 @@ C++ 实现
 
    class Solution {
    private:
-       double linear(double base, long long exponent) {
+       double repeatedMultiplication(double base, long long exponent) {
            double result = 1.0;
-           for (long long i = 0; i < exponent; ++i) result *= base;
+           for (long long count = 0; count < exponent; ++count) {
+               result *= base;
+           }
            return result;
        }
 
-       double recursivePower(double base, long long exponent) {
+       double recursiveFastPower(double base, long long exponent) {
            if (exponent == 0) return 1.0;
-           double half = recursivePower(base, exponent / 2);
-           double result = half * half;
-           return exponent % 2 == 0 ? result : result * base;
+
+           double half = recursiveFastPower(base, exponent / 2);
+           double squared = half * half;
+           if (exponent % 2 == 0) return squared;
+           return squared * base;
        }
 
-       double iterativePower(double base, long long exponent) {
+       double iterativeFastPower(double base, long long exponent) {
            double result = 1.0;
+
            while (exponent > 0) {
-               if (exponent & 1LL) result *= base;
+               if (exponent % 2 == 1) {
+                   result *= base;
+               }
                base *= base;
-               exponent >>= 1;
+               exponent /= 2;
            }
            return result;
        }
@@ -71,165 +95,245 @@ C++ 实现
                x = 1.0 / x;
                exponent = -exponent;
            }
-           return iterativePower(x, exponent);
+           return iterativeFastPower(x, exponent);
        }
    };
 
 题解
 ----
 
-线性乘法为何不可接受
-~~~~~~~~~~~~~~~~~~~~
+直接方法：把乘方理解成重复乘法
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-连续乘 ``|n|`` 次的时间为 ``O(|n|)``。32 位指数绝对值可超过二十亿，即使每轮只有一次乘法也无法接受。需要利用指数的代数结构消除重复乘积。
+当指数为非负整数时，最直接的定义是：
 
-指数折半如何减少问题规模
+.. code-block:: text
+
+   x^n = 1 × x × x × ... × x
+                 共 n 个 x
+
+``repeatedMultiplication`` 完全按照定义执行，因此容易确认正确。
+
+问题在于它进行了 ``n`` 次乘法。32 位正指数最多接近 ``2.1 × 10^9``，线性次数无法接受。真正需要消除的
+不是单次乘法成本，而是大量重复构造相同的幂。
+
+指数中隐藏着什么重复结构
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code-block:: text
-
-   x^(2k)   = (x^k)^2
-   x^(2k+1) = (x^k)^2 * x
-
-递归每层把指数减半，深度 ``O(log |n|)``。同一个 ``half`` 必须只计算一次；若写成两次递归调用，会恢复为线性数量的子问题。
-
-二进制展开如何形成迭代快速幂
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-例如 ``13 = 1101₂ = 8+4+1``：
+偶数指数可以平分为两个完全相同的子问题：
 
 .. code-block:: text
 
-   x^13 = x^8 * x^4 * x
+   x^(2k) = x^k × x^k = (x^k)^2
 
-从最低位扫描指数。当前底数依次表示 ``x,x²,x⁴,x⁸``；最低位为 1 时把该贡献乘入结果。每轮底数平方，指数右移一位。
+奇数指数只比偶数情况多一个 ``x``：
 
-指数 13 的状态演化
-~~~~~~~~~~~~~~~~~~
+.. code-block:: text
+
+   x^(2k+1) = (x^k)^2 × x
+
+指数从 ``n`` 变为 ``n / 2``，每层规模减半。递归深度由 ``n`` 降为 ``log n``。
+
+为什么半幂只能递归计算一次
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+错误写法可能直接写成：
+
+.. code-block:: text
+
+   power(x, n/2) × power(x, n/2)
+
+两个调用计算完全相同的值，却分别展开整棵递归子树。设调用次数为 ``T(n)``，它满足：
+
+.. code-block:: text
+
+   T(n) = 2T(n/2) + O(1)
+
+总调用数仍为 ``O(n)``。正确做法先保存：
+
+.. code-block:: text
+
+   half = power(x, n/2)
+
+随后只计算 ``half × half``。此时递推变为 ``T(n) = T(n/2) + O(1)``，时间才是
+``O(log n)``。
+
+递归快速幂为什么正确
+~~~~~~~~~~~~~~~~~~~~
+
+``recursiveFastPower(base, exponent)`` 只接收非负指数。
+
+当 ``exponent = 0`` 时返回 1，符合零指数定义。设递归正确返回
+``half = base^(exponent/2)``：
+
+* 指数为偶数 ``2k`` 时，``half² = base^(2k)``；
+* 指数为奇数 ``2k+1`` 时，``half² × base = base^(2k+1)``。
+
+每次递归都把指数减半，最终一定到达零。
+
+从指数折半到二进制分解
+~~~~~~~~~~~~~~~~~~~~~~
+
+不断判断奇偶、再除以 2，本质上是在从低位到高位读取指数的二进制表示。
+
+以 ``13`` 为例：
+
+.. code-block:: text
+
+   13 = 1101₂ = 2³ + 2² + 2⁰
+
+因此：
+
+.. code-block:: text
+
+   x^13 = x^(2³) × x^(2²) × x^(2⁰)
+        = x^8 × x^4 × x
+
+当前 ``base`` 依次代表：
+
+.. code-block:: text
+
+   x, x², x⁴, x⁸, ...
+
+指数当前最低位为 1 时，该幂需要进入答案；最低位为 0 时跳过。每轮把 ``base`` 平方，并把指数除以 2，
+便转向下一位。
+
+迭代过程的不变量
+~~~~~~~~~~~~~~~~
+
+设负指数已经转换完毕，初始目标是 ``original_base^original_exponent``。循环每轮开始时保持：
+
+.. code-block:: text
+
+   result × base^exponent
+   = original_base^original_exponent
+
+初始时 ``result = 1``，等式成立。
+
+若 ``exponent = 2k`` 为偶数，更新为：
+
+.. code-block:: text
+
+   base' = base²
+   exponent' = k
+
+于是：
+
+.. code-block:: text
+
+   result × (base²)^k = result × base^(2k)
+
+目标值不变。
+
+若 ``exponent = 2k+1`` 为奇数，先执行 ``result *= base``，再平方底数并把指数除以 2：
+
+.. code-block:: text
+
+   result' × (base²)^k
+   = result × base × base^(2k)
+   = result × base^(2k+1)
+
+目标值仍不变。循环结束时 ``exponent = 0``，不变量变成：
+
+.. code-block:: text
+
+   result × base^0 = result
+
+所以 ``result`` 就是原目标幂。
+
+``2^13`` 的状态演化
+~~~~~~~~~~~~~~~~~~~
 
 .. list-table::
    :header-rows: 1
 
-   * - 指数
-     - 当前底数
+   * - ``exponent``
+     - ``base``
      - 最低位
-     - 结果动作
+     - ``result`` 更新后
    * - 13
-     - ``x``
+     - ``2``
      - 1
-     - 乘入 ``x``
+     - ``2``
    * - 6
-     - ``x²``
+     - ``4``
      - 0
-     - 不乘
+     - ``2``
    * - 3
-     - ``x⁴``
+     - ``16``
      - 1
-     - 乘入 ``x⁴``
+     - ``32``
    * - 1
-     - ``x⁸``
+     - ``256``
      - 1
-     - 乘入 ``x⁸``
+     - ``8192``
+   * - 0
+     - ``65536``
+     - 结束
+     - ``8192``
 
-最终结果为 ``x * x⁴ * x⁸ = x¹³``。
+每个二进制位只处理一次，因此只需与指数位数同阶的循环次数。
 
-负指数为何先转换底数
-~~~~~~~~~~~~~~~~~~~~
+负指数如何复用同一算法
+~~~~~~~~~~~~~~~~~~~~~~
 
-令 ``base = 1/x``、``exponent = |n|``，之后完全复用非负快速幂。这样循环中只处理非负指数，不需要为每个二进制位区分符号。
+对 ``n < 0``：
 
-INT_MIN 为什么必须先提升
-~~~~~~~~~~~~~~~~~~~~~~~~
+.. code-block:: text
 
-32 位范围是 ``[-2147483648,2147483647]``，``2147483648`` 无法放入 ``int``。若先执行 ``-n`` 会溢出。C++ 实现先把指数提升为 ``long long``，再取相反数，因此 ``n = INT_MIN`` 也能安全处理。
+   x^n = (1/x)^(-n)
 
-为什么每个二进制位恰好贡献一次
+先把底数改为 ``1/x``，把指数改为非负值，后续递归或迭代算法完全不需要处理符号。
+
+这种变换也说明了为什么 ``x = 0`` 且 ``n < 0`` 不应出现：它需要计算 ``1/0``。题目已经排除了这一情况。
+
+为什么必须先提升 ``n`` 再取反
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-第 ``k`` 轮底数是 ``x^(2^k)``，指数最低位就是原指数第 ``k`` 位。位为 1 时乘入，位为 0 时跳过；右移后该位永久删除。所有置位贡献乘积的指数和恰好等于原指数，因此结果正确。
+32 位有符号整数范围不对称：
+
+.. code-block:: text
+
+   最小值：-2147483648
+   最大值： 2147483647
+
+当 ``n = -2147483648`` 时，数学上的 ``-n = 2147483648`` 超出 ``int`` 上界。若先在 ``int`` 中执行
+``-n``，会发生溢出。
+
+代码先执行：
+
+.. code-block:: cpp
+
+   long long exponent = n;
+
+此时数值已进入更宽的类型，再执行 ``exponent = -exponent`` 就是安全的。
+
+边界情况
+~~~~~~~~
+
+``n = 0``
+   循环不会执行，返回初始值 1。
+
+``n = 1``
+   唯一二进制位为 1，底数恰好乘入一次。
+
+``x = 0`` 且 ``n > 0``
+   快速幂自然得到 0。
+
+``x = 1`` 或 ``x = -1``
+   算法无需特殊分支；平方和奇偶位会自然得到正确结果。
+
+``n = INT_MIN``
+   通过 ``long long`` 转换安全处理其绝对值。
 
 复杂度来源
 ~~~~~~~~~~
 
-线性方法为 ``O(|n|)``；递归和迭代快速幂执行 ``O(log |n|)`` 次平方与乘法。递归使用 ``O(log |n|)`` 栈，迭代只用 ``O(1)`` 额外空间。
+设 ``N = |n|``。
 
-九语言实现
-----------
+重复乘法执行 ``N`` 次乘法，时间为 ``O(N)``，额外空间为 ``O(1)``。
 
-C
-~
+递归快速幂每层把指数减半，时间为 ``O(log N)``，递归栈为 ``O(log N)``。
 
-.. code-block:: c
-
-   double myPow(double x,int n){long long exponent=n;if(exponent<0){x=1.0/x;exponent=-exponent;}double result=1.0;while(exponent>0){if(exponent&1LL)result*=x;x*=x;exponent>>=1;}return result;}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def myPow(self, x: float, n: int) -> float:
-           exponent = n
-           if exponent < 0: x = 1.0 / x; exponent = -exponent
-           result = 1.0
-           while exponent:
-               if exponent & 1: result *= x
-               x *= x
-               exponent >>= 1
-           return result
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public double myPow(double x,int n){long exponent=n;if(exponent<0){x=1.0/x;exponent=-exponent;}double result=1.0;while(exponent>0){if((exponent&1L)!=0)result*=x;x*=x;exponent>>=1;}return result;}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn my_pow(mut x:f64,n:i32)->f64{let mut exponent=n as i64;if exponent<0{x=1.0/x;exponent=-exponent}let mut result=1.0;while exponent>0{if exponent&1==1{result*=x}x*=x;exponent>>=1}result}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func myPow(x float64,n int)float64{exponent:=int64(n);if exponent<0{x=1/x;exponent=-exponent};result:=1.0;for exponent>0{if exponent&1==1{result*=x};x*=x;exponent>>=1};return result}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function myPow(x:number,n:number):number{let exponent=n;if(exponent<0){x=1/x;exponent=-exponent;}let result=1;while(exponent>0){if(exponent%2===1)result*=x;x*=x;exponent=Math.floor(exponent/2);}return result;}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public double MyPow(double x,int n){long exponent=n;if(exponent<0){x=1.0/x;exponent=-exponent;}double result=1.0;while(exponent>0){if((exponent&1L)!=0)result*=x;x*=x;exponent>>=1;}return result;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function fast_pow(x::Float64,n::Int)::Float64
-       exponent=Int128(n)
-       if exponent<0;x=1/x;exponent=-exponent;end
-       result=1.0
-       while exponent>0;if isodd(exponent);result*=x;end;x*=x;exponent>>=1;end
-       result
-   end
-
-R
-~
-
-.. code-block:: r
-
-   fast_pow <- function(x,n){exponent<-as.numeric(n);if(exponent<0){x<-1/x;exponent<--exponent};result<-1;while(exponent>0){if(exponent%%2==1)result<-result*x;x<-x*x;exponent<-floor(exponent/2)};result}
+迭代快速幂每轮删除一个二进制位，时间为 ``O(log N)``，只保存底数、指数和结果，额外空间为
+``O(1)``。当 ``n = 0`` 时，可把时间视为 ``O(1)``。
