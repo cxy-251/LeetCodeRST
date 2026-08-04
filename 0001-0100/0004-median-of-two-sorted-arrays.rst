@@ -43,136 +43,84 @@ C++ 实现
 
    class Solution {
    private:
-       double mergeAll(
-           const std::vector<int>& nums1,
-           const std::vector<int>& nums2
-       ) {
+       double mergeAll(const std::vector<int>& nums1, const std::vector<int>& nums2) {
            std::vector<int> merged;
            merged.reserve(nums1.size() + nums2.size());
-
            int i = 0;
            int j = 0;
-
-           while (i < static_cast<int>(nums1.size()) ||
-                  j < static_cast<int>(nums2.size())) {
+           while (i < static_cast<int>(nums1.size()) || j < static_cast<int>(nums2.size())) {
                if (j == static_cast<int>(nums2.size()) ||
-                   (i < static_cast<int>(nums1.size()) &&
-                    nums1[i] <= nums2[j])) {
+                   (i < static_cast<int>(nums1.size()) && nums1[i] <= nums2[j])) {
                    merged.push_back(nums1[i++]);
                } else {
                    merged.push_back(nums2[j++]);
                }
            }
-
            const int total = static_cast<int>(merged.size());
            const int middle = total / 2;
-
            if (total % 2 == 1) {
                return merged[middle];
            }
-
-           return (
-               static_cast<double>(merged[middle - 1]) +
-               static_cast<double>(merged[middle])
-           ) / 2.0;
+           return (static_cast<double>(merged[middle - 1]) + static_cast<double>(merged[middle])) / 2.0;
        }
 
-       double walkToMiddle(
-           const std::vector<int>& nums1,
-           const std::vector<int>& nums2
-       ) {
-           const int total =
-               static_cast<int>(nums1.size() + nums2.size());
+       double walkToMiddle(const std::vector<int>& nums1, const std::vector<int>& nums2) {
+           const int total = static_cast<int>(nums1.size() + nums2.size());
            const int middle = total / 2;
-
            int i = 0;
            int j = 0;
            int previous = 0;
            int current = 0;
-
            for (int step = 0; step <= middle; ++step) {
                previous = current;
-
                if (j == static_cast<int>(nums2.size()) ||
-                   (i < static_cast<int>(nums1.size()) &&
-                    nums1[i] <= nums2[j])) {
+                   (i < static_cast<int>(nums1.size()) && nums1[i] <= nums2[j])) {
                    current = nums1[i++];
                } else {
                    current = nums2[j++];
                }
            }
-
            if (total % 2 == 1) {
                return current;
            }
-
-           return (
-               static_cast<double>(previous) +
-               static_cast<double>(current)
-           ) / 2.0;
+           return (static_cast<double>(previous) + static_cast<double>(current)) / 2.0;
        }
 
-       double binaryPartition(
-           const std::vector<int>& nums1,
-           const std::vector<int>& nums2
-       ) {
+       double binaryPartition(const std::vector<int>& nums1, const std::vector<int>& nums2) {
            if (nums1.size() > nums2.size()) {
                return binaryPartition(nums2, nums1);
            }
-
            const int m = static_cast<int>(nums1.size());
            const int n = static_cast<int>(nums2.size());
            const int leftSize = (m + n + 1) / 2;
-
            int low = 0;
            int high = m;
-
            while (low <= high) {
                const int cut1 = low + (high - low) / 2;
                const int cut2 = leftSize - cut1;
-
-               const long long left1 = cut1 == 0
-                   ? std::numeric_limits<long long>::lowest()
-                   : nums1[cut1 - 1];
-               const long long right1 = cut1 == m
-                   ? std::numeric_limits<long long>::max()
-                   : nums1[cut1];
-               const long long left2 = cut2 == 0
-                   ? std::numeric_limits<long long>::lowest()
-                   : nums2[cut2 - 1];
-               const long long right2 = cut2 == n
-                   ? std::numeric_limits<long long>::max()
-                   : nums2[cut2];
-
+               const long long left1 = cut1 == 0 ? std::numeric_limits<long long>::lowest() : nums1[cut1 - 1];
+               const long long right1 = cut1 == m ? std::numeric_limits<long long>::max() : nums1[cut1];
+               const long long left2 = cut2 == 0 ? std::numeric_limits<long long>::lowest() : nums2[cut2 - 1];
+               const long long right2 = cut2 == n ? std::numeric_limits<long long>::max() : nums2[cut2];
                if (left1 <= right2 && left2 <= right1) {
                    const long long leftMax = std::max(left1, left2);
-
                    if ((m + n) % 2 == 1) {
                        return static_cast<double>(leftMax);
                    }
-
                    const long long rightMin = std::min(right1, right2);
-                   return (
-                       static_cast<double>(leftMax) +
-                       static_cast<double>(rightMin)
-                   ) / 2.0;
+                   return (static_cast<double>(leftMax) + static_cast<double>(rightMin)) / 2.0;
                }
-
                if (left1 > right2) {
                    high = cut1 - 1;
                } else {
                    low = cut1 + 1;
                }
            }
-
            return 0.0;
        }
 
    public:
-       double findMedianSortedArrays(
-           std::vector<int>& nums1,
-           std::vector<int>& nums2
-       ) {
+       double findMedianSortedArrays(std::vector<int>& nums1, std::vector<int>& nums2) {
            return binaryPartition(nums1, nums2);
        }
    };
