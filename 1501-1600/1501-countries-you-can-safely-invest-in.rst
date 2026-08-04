@@ -1,13 +1,14 @@
 1501. Countries You Can Safely Invest In
 ========================================
 
+题目信息
+--------
+
 :题号: 1501
-:题名: Countries You Can Safely Invest In
-:类型: Database
-:难度: Medium
-:访问状态: Premium
+:难度: Medium（Premium）
+:主题: Database、公共表表达式、UNION ALL、分组聚合
 :原题: `LeetCode 1501 <https://leetcode.com/problems/countries-you-can-safely-invest-in/>`_
-:题面说明: 官方当前需要 Premium；以下题意与表结构依据可公开核对的题目资料整理。
+:重点: 将每通电话展开为主叫和被叫两条参与记录，再按国家聚合并与全局平均时长比较
 
 题目重述
 --------
