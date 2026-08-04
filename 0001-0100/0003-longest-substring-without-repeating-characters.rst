@@ -39,27 +39,17 @@ C++ 实现
    private:
        int enumerateStarts(const std::string& s) {
            int best = 0;
-
-           for (int left = 0;
-                left < static_cast<int>(s.size());
-                ++left) {
+           for (int left = 0; left < static_cast<int>(s.size()); ++left) {
                std::array<bool, 256> used{};
-
-               for (int right = left;
-                    right < static_cast<int>(s.size());
-                    ++right) {
-                   const auto ch =
-                       static_cast<unsigned char>(s[right]);
-
+               for (int right = left; right < static_cast<int>(s.size()); ++right) {
+                   const auto ch = static_cast<unsigned char>(s[right]);
                    if (used[ch]) {
                        break;
                    }
-
                    used[ch] = true;
                    best = std::max(best, right - left + 1);
                }
            }
-
            return best;
        }
 
@@ -67,46 +57,30 @@ C++ 实现
            std::array<bool, 256> inWindow{};
            int left = 0;
            int best = 0;
-
-           for (int right = 0;
-                right < static_cast<int>(s.size());
-                ++right) {
-               const auto ch =
-                   static_cast<unsigned char>(s[right]);
-
+           for (int right = 0; right < static_cast<int>(s.size()); ++right) {
+               const auto ch = static_cast<unsigned char>(s[right]);
                while (inWindow[ch]) {
-                   const auto removed =
-                       static_cast<unsigned char>(s[left]);
-
+                   const auto removed = static_cast<unsigned char>(s[left]);
                    inWindow[removed] = false;
                    ++left;
                }
-
                inWindow[ch] = true;
                best = std::max(best, right - left + 1);
            }
-
            return best;
        }
 
        int jumpWithLastPosition(const std::string& s) {
            std::array<int, 256> last;
            last.fill(-1);
-
            int left = 0;
            int best = 0;
-
-           for (int right = 0;
-                right < static_cast<int>(s.size());
-                ++right) {
-               const auto ch =
-                   static_cast<unsigned char>(s[right]);
-
+           for (int right = 0; right < static_cast<int>(s.size()); ++right) {
+               const auto ch = static_cast<unsigned char>(s[right]);
                left = std::max(left, last[ch] + 1);
                last[ch] = right;
                best = std::max(best, right - left + 1);
            }
-
            return best;
        }
 
