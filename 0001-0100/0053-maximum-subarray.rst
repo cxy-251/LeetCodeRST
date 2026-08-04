@@ -6,14 +6,16 @@
 
 :题号: 0053
 :难度: Medium
-:主题: 数组、动态规划、前缀和、分治
+:主题: 数组、前缀和、动态规划、分治
 :原题: `LeetCode 0053 <https://leetcode.com/problems/maximum-subarray/>`_
-:重点: 非空连续子数组、右端点状态、负贡献前缀、全负数组
+:重点: 从重复计算区间和，推导到只保留以前一位置结尾的最优非空子数组
 
 题目重述
 --------
 
-给定整数数组 ``nums``，选择一个至少包含一个元素的连续子数组，返回该子数组的最大元素和。空子数组不能作为候选，因此数组全部为负数时，答案是其中最大的单个元素。
+给定整数数组 ``nums``，从中选择一个至少包含一个元素的连续子数组，返回该子数组的最大元素和。
+
+子数组必须连续且不能为空。数组全部为负数时，答案不是 0，而是其中最大的单个元素。
 
 约束为 ``1 <= nums.length <= 10^5``、``-10^4 <= nums[i] <= 10^4``。
 
@@ -25,14 +27,22 @@
    输入：nums = [-4,2,3,-8,5,6,-2]
    输出：11
 
-最大和子数组是 ``[5,6]``，元素和为 ``11``。
+最大和子数组为 ``[5,6]``，元素和为 ``11``。虽然前面的 ``[2,3]`` 也是正和区间，连接中间的 ``-8``
+后只得到 ``8``，不如从 ``5`` 重新开始。
 
 .. code-block:: text
 
    输入：nums = [-9,-2,-7]
    输出：-2
 
-所有连续子数组的和都为负，最优选择是单个元素 ``-2``。
+所有非空连续子数组的和都为负，最优选择是单个元素 ``-2``。
+
+.. code-block:: text
+
+   输入：nums = [4,-1,2,1,-7,3]
+   输出：6
+
+最大和子数组为 ``[4,-1,2,1]``。局部出现负数并不表示必须立即截断；只要此前累计贡献仍为正，继续连接仍可能更优。
 
 C++ 实现
 --------
@@ -45,11 +55,25 @@ C++ 实现
 
    class Solution {
    private:
-       int bruteForce(const std::vector<int>& nums) {
+       int enumerateAndSum(const std::vector<int>& nums) {
+           const int n = static_cast<int>(nums.size());
            int best = INT_MIN;
-           for (int left = 0; left < static_cast<int>(nums.size()); ++left) {
+           for (int left = 0; left < n; ++left) {
+               for (int right = left; right < n; ++right) {
+                   int sum = 0;
+                   for (int i = left; i <= right; ++i) sum += nums[i];
+                   best = std::max(best, sum);
+               }
+           }
+           return best;
+       }
+
+       int extendRight(const std::vector<int>& nums) {
+           const int n = static_cast<int>(nums.size());
+           int best = INT_MIN;
+           for (int left = 0; left < n; ++left) {
                int sum = 0;
-               for (int right = left; right < static_cast<int>(nums.size()); ++right) {
+               for (int right = left; right < n; ++right) {
                    sum += nums[right];
                    best = std::max(best, sum);
                }
@@ -59,39 +83,52 @@ C++ 实现
 
        int prefixMinimum(const std::vector<int>& nums) {
            int prefix = 0;
-           int minimum_prefix = 0;
+           int minimumPrefix = 0;
            int best = INT_MIN;
            for (int value : nums) {
                prefix += value;
-               best = std::max(best, prefix - minimum_prefix);
-               minimum_prefix = std::min(minimum_prefix, prefix);
+               best = std::max(best, prefix - minimumPrefix);
+               minimumPrefix = std::min(minimumPrefix, prefix);
            }
            return best;
        }
 
        int kadane(const std::vector<int>& nums) {
-           int ending_here = nums[0];
+           int endingHere = nums[0];
            int best = nums[0];
            for (int i = 1; i < static_cast<int>(nums.size()); ++i) {
-               ending_here = std::max(nums[i], ending_here + nums[i]);
-               best = std::max(best, ending_here);
+               endingHere = std::max(nums[i], endingHere + nums[i]);
+               best = std::max(best, endingHere);
            }
            return best;
        }
 
-       struct Segment { int total, prefix, suffix, best; };
+       struct Segment {
+           int total;
+           int prefix;
+           int suffix;
+           int best;
+       };
 
        Segment divide(const std::vector<int>& nums, int left, int right) {
-           if (left == right) return {nums[left], nums[left], nums[left], nums[left]};
-           int mid = left + (right - left) / 2;
-           Segment a = divide(nums, left, mid);
-           Segment b = divide(nums, mid + 1, right);
+           if (left == right) {
+               int value = nums[left];
+               return {value, value, value, value};
+           }
+
+           int middle = left + (right - left) / 2;
+           Segment a = divide(nums, left, middle);
+           Segment b = divide(nums, middle + 1, right);
            return {
                a.total + b.total,
                std::max(a.prefix, a.total + b.prefix),
                std::max(b.suffix, b.total + a.suffix),
                std::max({a.best, b.best, a.suffix + b.prefix})
            };
+       }
+
+       int divideAndConquer(const std::vector<int>& nums) {
+           return divide(nums, 0, static_cast<int>(nums.size()) - 1).best;
        }
 
    public:
@@ -103,18 +140,86 @@ C++ 实现
 题解
 ----
 
-这道题最容易写错的地方是把“到当前位置为止的最大和”当成状态。那个值不一定以当前位置结尾，不能直接判断下一个元素是否应该接上。真正有用的状态是 ``ending_here``：处理 ``nums[i]`` 后，它表示**必须以 ``i`` 作为右端点**的连续子数组最大和。
+第一步：完整枚举定义中的所有候选
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-以 ``nums[i]`` 结尾的候选只有两类：从当前位置重新开始，或把当前位置接到某个以 ``i-1`` 结尾的区间后面。后一类只需要保留上一步的最优值，因为更差的前缀再接上同一个 ``nums[i]`` 只会更差。因此转移为：
+连续子数组由左端点 ``left`` 和右端点 ``right`` 唯一确定。最直接的方法枚举所有 ``left <= right``，再扫描
+``[left,right]`` 求和。
+
+数组共有 ``O(n²)`` 个非空区间，每个区间求和最坏需要 ``O(n)``，因此 ``enumerateAndSum`` 的时间为
+``O(n³)``。它完整表达了题意，也暴露出真正的浪费：相邻区间共享绝大多数元素，却反复从头求和。
+
+第二步：固定左端点时复用上一个区间和
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+固定 ``left`` 后，右端点从左向右移动：
 
 .. code-block:: text
 
-   ending_here = max(nums[i], previous_ending + nums[i])
-   best = max(best, ending_here)
+   sum(left, right) = sum(left, right - 1) + nums[right]
 
-当 ``previous_ending`` 为负时，接上它会比直接从当前元素开始更小，所以负贡献前缀可以丢弃；为非负时，保留它不会降低当前和。这个判断不是凭直觉跳过区间，而是已经包含在上面的两项取最大值中。
+因此只需维护一个累计和。``extendRight`` 仍枚举全部 ``O(n²)`` 个区间，但每个区间只做常数工作，时间降为
+``O(n²)``，额外空间为 ``O(1)``。
 
-用第一个自建数组逐项追踪状态：
+进一步优化不能再只加速“某个已选区间的求和”，而要避免枚举全部左右端点。
+
+第三步：固定右端点时只需要此前最小前缀
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+定义前缀和 ``prefix[k]`` 为前 ``k`` 个元素之和，则区间 ``[left,right]`` 的和为：
+
+.. code-block:: text
+
+   prefix[right + 1] - prefix[left]
+
+固定 ``right`` 后，``prefix[right + 1]`` 已确定。要使区间和最大，只需在此前的
+``prefix[0..right]`` 中选择最小值。因此扫描时维护：
+
+.. code-block:: text
+
+   prefix         当前前缀和
+   minimumPrefix  当前前缀之前出现过的最小前缀和
+
+代码必须先用 ``prefix - minimumPrefix`` 更新答案，再把当前 ``prefix`` 纳入后续候选。这样左端点一定不晚于
+当前元素，得到的始终是非空区间。
+
+以 ``[-4,2,3,-8,5,6,-2]`` 为例，前缀和依次为：
+
+.. code-block:: text
+
+   0, -4, -2, 1, -7, -2, 4, 2
+
+处理前缀 ``4`` 时，此前最小前缀是 ``-7``，差值 ``4 - (-7) = 11``，对应 ``[5,6]``。
+
+第四步：把左端点选择压缩成“是否连接上一段”
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+前缀最小值从左端点角度求解。还可以从右端点角度建立更直接的动态规划状态：
+
+.. code-block:: text
+
+   endingHere = 必须以当前位置 i 结尾的非空连续子数组最大和
+
+任何以 ``i`` 结尾的非空连续子数组只有两类：
+
+1. 只包含 ``nums[i]``，从当前位置重新开始；
+2. 把 ``nums[i]`` 接到某个以 ``i-1`` 结尾的非空连续子数组后面。
+
+第二类中，只需连接以 ``i-1`` 结尾的最大和。若连接一个更差的旧区间，再加上相同的 ``nums[i]``，结果仍然
+更差。因此转移完整压缩为：
+
+.. code-block:: text
+
+   endingHere = max(nums[i], previousEnding + nums[i])
+   best       = max(best, endingHere)
+
+``previousEnding`` 为负时，连接它会降低当前和，所以重新开始；它为非负时，连接不会比单独使用当前元素差。
+这不是额外的贪心假设，而是上述两个完整候选取最大后的直接结论。
+
+状态演化
+~~~~~~~~
+
+对 ``[-4,2,3,-8,5,6,-2]``：
 
 .. list-table::
    :header-rows: 1
@@ -122,7 +227,7 @@ C++ 实现
    * - 当前值
      - 连接旧区间
      - 重新开始
-     - ``ending_here``
+     - ``endingHere``
      - ``best``
    * - -4
      - —
@@ -160,105 +265,49 @@ C++ 实现
      - 9
      - 11
 
-初始化为什么不能使用 0
-~~~~~~~~~~~~~~~~~~~~~
+在 ``-8`` 处，最佳结尾和变为 ``-3``。它仍必须被保留，因为状态要求区间以当前位置结尾；全局答案
+``best`` 则继续保留此前的 ``5``。下一步遇到 ``5`` 时，算法比较连接后的 ``2`` 与重新开始的 ``5``，从而
+丢弃负贡献前缀。
 
-数组要求非空。若 ``ending_here`` 和 ``best`` 初始化为 0，输入 ``[-8,-3,-5]`` 会错误返回空区间的 0。使用首元素初始化，使每个状态从始至终对应非空区间。
+为什么必须用首元素初始化
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-另一种线性写法：前缀最小值
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+题目要求子数组非空。若把 ``endingHere`` 和 ``best`` 初始化为 0，输入 ``[-9,-2,-7]`` 会错误返回不存在的空
+子数组之和 0。
 
-区间 ``[left,right]`` 的和是 ``prefix[right+1]-prefix[left]``。固定右端前缀时，应减去此前最小前缀。它与 Kadane 都在线性扫描中决定最优左端，只是一个维护最小前缀，一个维护最佳结尾和。
+使用 ``nums[0]`` 初始化后，每个 ``endingHere`` 都对应一个真实非空区间，每个 ``best`` 也来自真实候选，
+全负数组自然返回最大的单个元素。
 
-代码中的 ``prefixMinimum`` 因而不需要保存所有前缀；``minimum_prefix`` 始终是当前前缀之前的最小值，先用它更新答案，再把当前前缀纳入后续位置的候选。这样可以避免把空区间当成答案，和 ``kadane`` 一样能正确处理全负数组。
-
-四项区间摘要如何合并
-~~~~~~~~~~~~~~~~~~~~
-
-``divide`` 的每个区间返回 ``total``、``prefix``、``suffix`` 和 ``best``。跨过中点的最优区间只能由左段后缀接右段前缀组成，因此合并时只需比较左、右内部答案和这一个跨界候选；其余三项也能由两段摘要常数时间算出。这份递归摘要不同于每次跨界重新扫描的分治写法：每个递归节点只做常数工作，所有节点总数为 ``O(n)``，所以当前实现的 ``divide`` 是线性时间、``O(log n)`` 栈空间。
-
-为什么最终覆盖全部答案
+为什么 Kadane 不重不漏
 ~~~~~~~~~~~~~~~~~~~~~~
 
-转移完整枚举了所有以 ``i`` 结尾的区间：长度 1 的区间与从 ``i-1`` 延伸的区间。归纳可得 ``ending_here`` 正确。所有非空区间都有唯一右端点，``best`` 取各右端点最优值的最大值，因此得到全局答案。
+归纳假设 ``previousEnding`` 是所有以 ``i-1`` 结尾区间中的最大和。任何以 ``i`` 结尾的区间，要么长度为 1，
+要么删除末尾 ``nums[i]`` 后成为一个以 ``i-1`` 结尾的区间。两类候选分别由转移式的两项覆盖，因此
+``endingHere`` 正确。
 
-主入口与代价
-~~~~~~~~~~~~
+每个非空连续子数组都有唯一右端点。``best`` 依次比较每个右端点对应的最优区间，所以最终覆盖全部候选，
+得到全局最大和。
 
-``maxSubArray`` 调用 ``kadane``，不修改输入数组，只保留当前结尾状态和全局答案，因此时间为 ``O(n)``、额外空间为 ``O(1)``。类中的 ``bruteForce``、``prefixMinimum`` 和 ``divide`` 是用于对照的实现：前者为 ``O(n²)``；前缀摘要为 ``O(n)`` 且使用 ``O(1)`` 空间；四项区间摘要为 ``O(n)`` 时间和 ``O(log n)`` 递归栈，不计返回结果。
+分治为什么需要四项区间摘要
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-九语言实现
-----------
+若把数组分为左右两段，一个区间的最优子数组只有三种位置：完全在左段、完全在右段、跨越中点。为了在常数
+时间合并两段，需要每段返回：
 
-C
-~
+.. code-block:: text
 
-.. code-block:: c
+   total   整段总和
+   prefix  必须从区间左端开始的最大和
+   suffix  必须在区间右端结束的最大和
+   best    区间内部任意非空子数组的最大和
 
-   int maxSubArray(int *nums,int n){int ending=nums[0],best=nums[0];for(int i=1;i<n;i++){ending=nums[i]>ending+nums[i]?nums[i]:ending+nums[i];if(ending>best)best=ending;}return best;}
+跨界最优值只能是 ``left.suffix + right.prefix``。其余三项也能由左右摘要常数时间得到。递归树有 ``O(n)``
+个节点，每个节点只做常数工作，因此 ``divideAndConquer`` 的时间也是 ``O(n)``，递归栈为 ``O(log n)``。
 
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def maxSubArray(self, nums: list[int]) -> int:
-           ending = best = nums[0]
-           for value in nums[1:]:
-               ending = max(value, ending + value)
-               best = max(best, ending)
-           return best
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public int maxSubArray(int[] nums){int ending=nums[0],best=nums[0];for(int i=1;i<nums.length;i++){ending=Math.max(nums[i],ending+nums[i]);best=Math.max(best,ending);}return best;}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn max_sub_array(nums:Vec<i32>)->i32{let mut ending=nums[0];let mut best=ending;for &v in &nums[1..]{ending=v.max(ending+v);best=best.max(ending);}best}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func maxSubArray(nums []int)int{ending,best:=nums[0],nums[0];for _,v:=range nums[1:]{if ending+v>v{ending+=v}else{ending=v};if ending>best{best=ending}};return best}
-
-TypeScript
+复杂度来源
 ~~~~~~~~~~
 
-.. code-block:: typescript
+``enumerateAndSum`` 为 ``O(n³)``；``extendRight`` 为 ``O(n²)``。``prefixMinimum`` 与 ``kadane`` 都只扫描一次，
+时间 ``O(n)``、额外空间 ``O(1)``。分治摘要为 ``O(n)`` 时间、``O(log n)`` 栈空间。
 
-   function maxSubArray(nums:number[]):number{let ending=nums[0],best=nums[0];for(let i=1;i<nums.length;i++){ending=Math.max(nums[i],ending+nums[i]);best=Math.max(best,ending);}return best;}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public int MaxSubArray(int[] nums){int ending=nums[0],best=nums[0];for(int i=1;i<nums.Length;i++){ending=Math.Max(nums[i],ending+nums[i]);best=Math.Max(best,ending);}return best;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function max_sub_array(nums::Vector{Int})
-       ending=best=nums[1]
-       for value in nums[2:end];ending=max(value,ending+value);best=max(best,ending);end
-       best
-   end
-
-R
-~
-
-.. code-block:: r
-
-   max_sub_array <- function(nums){ending<-nums[[1L]];best<-ending;if(length(nums)>1L)for(value in nums[-1L]){ending<-max(value,ending+value);best<-max(best,ending)};best}
+主入口调用 ``kadane``。它不修改输入，只保留当前结尾最大和与全局最大和。
