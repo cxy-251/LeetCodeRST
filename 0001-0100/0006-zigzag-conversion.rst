@@ -8,102 +8,116 @@
 :难度: Medium
 :主题: 字符串、模拟、周期、索引映射
 :原题: `LeetCode 0006 <https://leetcode.com/problems/zigzag-conversion/>`_
-:重点: 往返行轨迹、按行读取、单行退化情况、字符覆盖完整性
+:重点: 从往返行轨迹提取周期，再按最终行序直接访问原字符串，删除中间行缓冲区
 
 题目重述
 --------
 
-给定字符串 ``s`` 和行数 ``numRows``，把字符依次沿各行向下书写，到达最后一行后再沿斜线向上书写，回到第一行后重复这一过程。完成排列后，按从上到下、每行从左到右的顺序连接字符并返回结果；图形排版中的填充空格不属于结果，每个输入字符只保留一次。
+给定字符串 ``s`` 和正整数 ``numRows``，依次把字符写入若干行：先从第 0 行向下移动到最后一行，再沿斜线向上移动回第 0 行，如此反复。完成排列后，按照从上到下、每行从左到右的顺序连接所有字符并返回。
 
-``s`` 的长度和 ``numRows`` 均位于 ``[1, 1000]``。字符串只包含英文字母、逗号和句点。当 ``numRows = 1`` 或行数不少于字符数时，结果与原字符串相同。
+排版中的空白位置不属于结果，每个输入字符必须恰好出现一次。字符串长度和 ``numRows`` 均位于 ``[1, 1000]``；字符串只包含英文字母、逗号和句点。
 
 自建示例
 --------
 
-四行排列：
-
-.. code-block:: text
-
-   输入：s = "ABCDEFGHIJK", numRows = 4
-   输出："AGBFHCEIKDJ"
-   解释：四行依次读出 "AG"、"BFH"、"CEIK"、"DJ"，连接后得到结果。
-
-单行退化情况：
-
-.. code-block:: text
-
-   输入：s = "CODE", numRows = 1
-   输出："CODE"
-   解释：只有一行，所有字符保持原顺序。
-
-行数多于字符数：
-
-.. code-block:: text
-
-   输入：s = "HI", numRows = 5
-   输出："HI"
-   解释：每个字符至多占一行，按行读取时顺序不变。
+* 三行经典排列：``s = "PAYPALISHIRING"``、``numRows = 3``，各行为 ``"PAHN"``、``"APLSIIG"``、``"YIR"``，返回 ``"PAHNAPLSIIGYIR"``；
+* 四行未完整周期：``s = "ABCDEFGHIJK"``、``numRows = 4``，各行为 ``"AG"``、``"BFH"``、``"CEIK"``、``"DJ"``，返回 ``"AGBFHCEIKDJ"``；
+* 两行排列：``s = "ABCDE"``、``numRows = 2``，行号交替为 ``0, 1, 0, 1, 0``，返回 ``"ACEBD"``；
+* 单行退化：``s = "CODE"``、``numRows = 1``，返回 ``"CODE"``；
+* 行数不少于字符数：``s = "HI"``、``numRows = 5``，返回 ``"HI"``。
 
 C++ 实现
 --------
 
 .. code-block:: cpp
 
-   #include <algorithm>
    #include <string>
    #include <vector>
 
    class Solution {
    private:
-       std::string simulateRows(
+       std::string simulatePath(
            const std::string& s,
-           int num_rows
+           int numRows
        ) {
            if (
-               num_rows == 1 ||
-               num_rows >= static_cast<int>(s.size())
+               numRows == 1 ||
+               numRows >= static_cast<int>(s.size())
            ) {
                return s;
            }
 
-           std::vector<std::string> rows(num_rows);
+           std::vector<std::string> rows(numRows);
            int row = 0;
-           int step = 1;
+           int direction = 1;
 
            for (char ch : s) {
                rows[row].push_back(ch);
 
                if (row == 0) {
-                   step = 1;   // 顶行之后只能向下
-               } else if (row == num_rows - 1) {
-                   step = -1;  // 末行之后只能向上
+                   direction = 1;
+               } else if (row == numRows - 1) {
+                   direction = -1;
                }
 
-               row += step;
+               row += direction;
            }
 
            std::string result;
            result.reserve(s.size());
+
            for (const std::string& current : rows) {
                result += current;
            }
+
+           return result;
+       }
+
+       std::string groupByCycle(
+           const std::string& s,
+           int numRows
+       ) {
+           const int length = static_cast<int>(s.size());
+           if (numRows == 1 || numRows >= length) {
+               return s;
+           }
+
+           const int cycle = 2 * numRows - 2;
+           std::vector<std::string> rows(numRows);
+
+           for (int index = 0; index < length; ++index) {
+               const int offset = index % cycle;
+               const int row = offset < numRows
+                   ? offset
+                   : cycle - offset;
+
+               rows[row].push_back(s[index]);
+           }
+
+           std::string result;
+           result.reserve(s.size());
+
+           for (const std::string& current : rows) {
+               result += current;
+           }
+
            return result;
        }
 
        std::string readByCycle(
            const std::string& s,
-           int num_rows
+           int numRows
        ) {
            const int length = static_cast<int>(s.size());
-           if (num_rows == 1 || num_rows >= length) {
+           if (numRows == 1 || numRows >= length) {
                return s;
            }
 
-           const int cycle = 2 * num_rows - 2;
+           const int cycle = 2 * numRows - 2;
            std::string result;
            result.reserve(s.size());
 
-           for (int row = 0; row < num_rows; ++row) {
+           for (int row = 0; row < numRows; ++row) {
                for (
                    int vertical = row;
                    vertical < length;
@@ -113,14 +127,13 @@ C++ 实现
 
                    const int diagonal =
                        vertical + cycle - 2 * row;
+
                    if (
                        row > 0 &&
-                       row < num_rows - 1 &&
+                       row < numRows - 1 &&
                        diagonal < length
                    ) {
-                       result.push_back(
-                           s[diagonal]
-                       );  // 中间行同一周期中的上升位置
+                       result.push_back(s[diagonal]);
                    }
                }
            }
@@ -137,200 +150,96 @@ C++ 实现
 题解
 ----
 
-先按路径模拟字符所属行
-~~~~~~~~~~~~~~~~~~~~~~
+路径模拟
+~~~~~~~~
 
-最直观的实现不需要真的创建带空格的二维图形，只需要为每一行准备一个字符串缓冲区。扫描输入时
-维护两个状态：
+最直接的做法不需要创建带空格的二维图形，只要为每一行保存一个字符串。扫描输入时维护当前行 ``row`` 和移动方向 ``direction``：向下时为 ``1``，向上时为 ``-1``。
 
-.. code-block:: text
+字符写入当前行后，只有两个转向点需要处理：到达第 0 行后只能向下，到达最后一行后只能向上。于是行号依次变化为：
 
-   row   = 当前字符应该写入的行
-   step  = 下一次行号变化，向下为 +1，向上为 -1
+``0, 1, 2, ..., numRows - 1, numRows - 2, ..., 1, 0, ...``
 
-当前字符写入 ``rows[row]`` 后：
+``simulatePath`` 直接复现这条轨迹，每个字符只写入一个行缓冲区。最后连接全部行即可得到答案。这一版已经把二维排版压缩为“字符属于哪一行”，但仍需保存所有中间行，并维护会在端点翻转的方向状态。
 
-* 位于第 0 行时，把 ``step`` 设为 ``+1``；
-* 位于最后一行时，把 ``step`` 设为 ``-1``；
-* 随后执行 ``row += step``，得到下一个字符所属行。
+周期行号
+~~~~~~~~
 
-因此行号按照下面的序列往返：
-
-.. code-block:: text
-
-   0, 1, 2, ..., numRows - 1, numRows - 2, ..., 1, 0, 1, ...
-
-``simulateRows`` 完全复现题目中的绘制路径。最后依次连接各行缓冲区，就得到按行读取结果。
-
-行号与方向如何演化
-~~~~~~~~~~~~~~~~~~
-
-使用 ``s = "ABCDEFGHIJK"``、``numRows = 4``。此时一个周期包含 6 个位置：
-
-.. list-table::
-   :header-rows: 1
-
-   * - 输入下标
-     - 字符
-     - 所属行
-     - 周期内位置
-     - 写入后方向
-   * - 0
-     - ``A``
-     - 0
-     - 0
-     - 向下
-   * - 1
-     - ``B``
-     - 1
-     - 1
-     - 向下
-   * - 2
-     - ``C``
-     - 2
-     - 2
-     - 向下
-   * - 3
-     - ``D``
-     - 3
-     - 3
-     - 转为向上
-   * - 4
-     - ``E``
-     - 2
-     - 4
-     - 向上
-   * - 5
-     - ``F``
-     - 1
-     - 5
-     - 向上
-   * - 6
-     - ``G``
-     - 0
-     - 0
-     - 转为向下
-   * - 7
-     - ``H``
-     - 1
-     - 1
-     - 向下
-   * - 8
-     - ``I``
-     - 2
-     - 2
-     - 向下
-   * - 9
-     - ``J``
-     - 3
-     - 3
-     - 转为向上
-   * - 10
-     - ``K``
-     - 2
-     - 4
-     - 向上
-
-这个表已经能够生成答案，但它还需要保存所有行缓冲区。主解法进一步利用行号序列的周期性，直接
-按照最终输出顺序访问原字符串。
-
-为什么周期长度是 ``2 * numRows - 2``
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-令行数为 ``r``。从第 0 行向下走到第 ``r - 1`` 行，需要 ``r - 1`` 次行号变化；从最后一行
-向上回到第 0 行，又需要 ``r - 1`` 次变化。因此回到与周期起点相同的行和方向之前，共经过：
+往返轨迹会重复。设行数为 ``r``，从第 0 行到第 ``r - 1`` 行需要 ``r - 1`` 次移动，再回到第 0 行还需要 ``r - 1`` 次，因此一个完整周期包含：
 
 .. math::
 
-   cycle = (r - 1) + (r - 1) = 2r - 2
+   cycle = 2r - 2
 
 个字符位置。
 
-例如 ``r = 4`` 时，周期内行号为：
-
-.. code-block:: text
-
-   周期位置：0  1  2  3  4  5
-   所属行：  0  1  2  3  2  1
-
-下一个位置 6 又回到第 0 行，开始相同轨迹。``numRows = 1`` 时公式会得到 0，因此该退化情况必须
-在计算周期前直接返回。
-
-从周期轨迹推导每一行的竖列位置
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-按最终答案读取时，外层循环固定一行 ``row``。每个周期的下降阶段都会在该行出现一次，它们的
-下标为：
+对于输入下标 ``index``，令 ``offset = index % cycle``。周期的前 ``r`` 个位置属于下降阶段，行号与偏移相同；其余位置属于上升阶段，行号关于周期末端对称：
 
 .. math::
 
-   vertical = row + k \cdot cycle,\quad k = 0,1,2,\ldots
+   row =
+   \begin{cases}
+   offset, & offset < r \\
+   cycle - offset, & offset \ge r
+   \end{cases}
 
-这些位置在图形中位于每个周期的竖直下降部分，所以代码把它们称为 ``vertical``。第一行的下标
-是 ``0, cycle, 2 * cycle, ...``；最后一行则从 ``numRows - 1`` 开始，每次增加一个周期。
+例如 ``r = 4`` 时，周期偏移 ``0, 1, 2, 3, 4, 5`` 对应行号 ``0, 1, 2, 3, 2, 1``。
 
-中间行的斜线位置从哪里得到
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+``groupByCycle`` 用这个公式替换 ``row`` 和 ``direction`` 的逐步更新。方向翻转、端点判断和行号累加全部消失，每个字符可以直接计算所属行。不过代码仍然需要 ``rows`` 保存分组结果，最终再连接一次。
 
-中间行既在下降阶段出现一次，也在上升阶段出现一次。固定第 ``k`` 个周期和行 ``row``：
+按行读取
+~~~~~~~~
 
-* 下降位置的周期内偏移是 ``row``；
-* 上升位置关于周期末端对称，周期内偏移是 ``cycle - row``。
+题目最终需要的是“先读第 0 行，再读第 1 行”，因此还可以跳过字符分组，直接计算每一行在原字符串中的下标。
 
-因此上升斜线位置是：
+固定一行 ``row``。每个周期的下降阶段都会在该行出现一次，对应下标为：
 
 .. math::
 
-   diagonal = k \cdot cycle + (cycle - row)
+   vertical = row + k \cdot cycle
 
-而当前下降位置为 ``vertical = k * cycle + row``，代入后得到代码使用的形式：
+其中 ``k = 0, 1, 2, ...``。这些是代码中的 ``vertical`` 位置。
+
+第一行和最后一行在每个周期中只出现一次。中间行还会在上升阶段出现一次，其周期内偏移为 ``cycle - row``。由当前下降位置可得：
 
 .. math::
 
    diagonal = vertical + cycle - 2 \cdot row
 
-对于第 0 行，公式得到下一个周期的竖列位置；对于最后一行，公式得到当前竖列位置本身。它们都是
-转向点，下降位置和上升位置重合，因此只有 ``0 < row < numRows - 1`` 的中间行追加斜线字符。
+因此中间行的读取顺序是 ``vertical``、``diagonal``、下一个周期的 ``vertical``。对于 ``0 < row < numRows - 1``：
 
-周期索引如何生成示例答案
-~~~~~~~~~~~~~~~~~~~~~~~~
+.. math::
 
-对于 ``numRows = 4``，``cycle = 6``：
+   vertical_k < diagonal_k < vertical_{k+1}
 
-.. list-table::
-   :header-rows: 1
+所以这正是该行从左到右的字符顺序。第一行和最后一行跳过 ``diagonal``，避免把下一周期位置或当前竖列位置重复加入。
 
-   * - 行
-     - 竖列位置
-     - 有效斜线位置
-     - 本行读取顺序
-     - 本行结果
-   * - 0
-     - ``0, 6``
-     - 无
-     - ``0, 6``
-     - ``AG``
-   * - 1
-     - ``1, 7``
-     - ``5``
-     - ``1, 5, 7``
-     - ``BFH``
-   * - 2
-     - ``2, 8``
-     - ``4, 10``
-     - ``2, 4, 8, 10``
-     - ``CEIK``
-   * - 3
-     - ``3, 9``
-     - 无
-     - ``3, 9``
-     - ``DJ``
+索引推演
+~~~~~~~~
 
-依次连接四行得到 ``AGBFHCEIKDJ``。第二个周期没有走完，但范围检查仍会读取有效的下标 10，
-并跳过超出字符串末尾的候选位置。
+以 ``s = "ABCDEFGHIJK"``、``numRows = 4`` 为例，``cycle = 6``：
 
-解法对比与主解法选择
-~~~~~~~~~~~~~~~~~~~~
+* 第 0 行读取下标 ``0, 6``，得到 ``AG``；
+* 第 1 行读取下标 ``1, 5, 7``，得到 ``BFH``；
+* 第 2 行读取下标 ``2, 4, 8, 10``，得到 ``CEIK``；
+* 第 3 行读取下标 ``3, 9``，得到 ``DJ``。
+
+连接各行得到 ``AGBFHCEIKDJ``。最后一个周期不完整时，``vertical < length`` 和 ``diagonal < length`` 会自然忽略越界位置。
+
+任意输入下标都能唯一写成 ``k * cycle + offset``。下降阶段位置由某一行的 ``vertical`` 公式读取，上升阶段位置由某一中间行的 ``diagonal`` 公式读取；两个转向点只属于第一行或最后一行。于是每个字符都被覆盖，并且不会重复。
+
+代码演进
+~~~~~~~~
+
+``simulatePath`` 按输入顺序逐字符移动，保存 ``row``、``direction`` 和全部行缓冲区。它直接对应题目描述，但方向变化属于运行时状态。
+
+``groupByCycle`` 发现行号序列具有固定周期，用 ``index % cycle`` 直接计算行号。方向状态、端点翻转和逐步移动被删除，仍保留行缓冲区以完成最终重排。
+
+``readByCycle`` 进一步从“每个字符属于哪一行”改为“每一行包含哪些原始下标”。``rows``、逐字符行号计算和最后的行连接全部消失，代码直接按答案顺序向 ``result`` 追加字符。
+
+三种实现时间复杂度相同，优化重点不是减少字符访问次数，而是逐步删除中间状态和临时存储。公开入口采用 ``readByCycle``。
+
+复杂度分析
+~~~~~~~~~~
 
 .. list-table::
    :header-rows: 1
@@ -338,401 +247,27 @@ C++ 实现
    * - 方法
      - 时间复杂度
      - 工作空间
-     - 核心状态
-   * - 路径模拟与行缓冲区
+     - 主要状态
+   * - 方向模拟
      - ``O(n)``
      - ``O(n)``
-     - 当前行、移动方向、每行已写字符
-   * - 周期索引直接读取
+     - 当前行、方向、行缓冲区
+   * - 周期分组
+     - ``O(n)``
+     - ``O(n)``
+     - 周期偏移、行缓冲区
+   * - 周期直读
      - ``O(n)``
      - ``O(1)``
-     - 当前行、竖列位置、斜线位置
+     - 当前行、竖列和斜线下标
 
-两种方法都只处理每个输入字符一次。路径模拟更直接地表现绘制过程；周期索引直接按照最终答案的
-顺序写入一个结果缓冲区，省去所有中间行字符串，因此作为本文 C++ 主解法。
+三种方法都恰好处理 ``n`` 个输入字符。空间复杂度不计返回字符串：前两种方法的各行合计保存 ``n`` 个字符，周期直读只维护常数个整数。
 
-为什么周期索引会覆盖每个字符且只覆盖一次
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+边界处理
+~~~~~~~~
 
-任意输入下标 ``position`` 都可以唯一写成：
-
-.. math::
-
-   position = k \cdot cycle + offset,\quad 0 \le offset < cycle
-
-若 ``offset <= numRows - 1``，该位置属于下降阶段，所在行就是 ``offset``，会被该行的竖列公式
-枚举。若 ``offset > numRows - 1``，该位置属于上升阶段，所在行是 ``cycle - offset``，会被该
-中间行的斜线公式枚举。
-
-周期起点和周期中点分别对应第一行与最后一行，只由竖列公式读取；其他周期偏移只会匹配一个中间
-行的一种位置。由于 ``k`` 和 ``offset`` 的分解唯一，每个输入字符恰好被追加一次。
-
-为什么同一行先读竖列再读斜线
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-对于中间行 ``row``，第 ``k`` 个周期中的两个位置为：
-
-.. code-block:: text
-
-   vertical_k = row + k * cycle
-   diagonal_k = vertical_k + cycle - 2 * row
-
-并且满足：
-
-.. math::
-
-   vertical_k < diagonal_k < vertical_{k+1}
-
-第一个不等式来自 ``row < numRows - 1``，第二个来自 ``row > 0``。因此在同一行的图形中，当前
-周期竖列字符位于左侧，斜线字符位于其右侧，下一个周期竖列字符更靠右。代码按
-“竖列、斜线、下一竖列”的顺序追加，正好等于该行从左到右的读取顺序。
-
-复杂度来源
-~~~~~~~~~~
-
-``simulateRows`` 扫描 ``n`` 个字符并最终连接总长度为 ``n`` 的行缓冲区，时间复杂度为 ``O(n)``。
-各行合计保存 ``n`` 个字符，因此除返回结果外的工作空间为 ``O(n)``。
-
-``readByCycle`` 的外层按行遍历，内层产生的竖列和斜线位置合计恰好覆盖 ``n`` 个输入位置。每次
-只执行常数次索引计算和追加，时间复杂度为 ``O(n)``。除返回字符串本身的 ``O(n)`` 空间外，只
-维护行号和少量整数，工作空间为 ``O(1)``。
-
-九语言实现
-----------
-
-题目字符范围允许按单字节或语言基础字符单位处理。C、C++、Rust 和 Go 按字节访问；Java、
-TypeScript 和 C# 按 UTF-16 代码单元访问；Python、Julia 与 R 按各自常见字符序列访问。所有
-实现都使用同一周期、竖列和斜线公式。
-
-C
-~
-
-C 版本为返回结果分配独立字符串；成功返回后由调用者或平台负责释放。
-
-.. code-block:: c
-
-   #include <stdlib.h>
-   #include <string.h>
-
-   char* convert(char* s, int numRows) {
-       const int length = (int)strlen(s);
-       char* result = malloc((size_t)length + 1);
-       if (result == NULL) {
-           return NULL;
-       }
-
-       if (numRows == 1 || numRows >= length) {
-           memcpy(result, s, (size_t)length + 1);
-           return result;
-       }
-
-       const int cycle = 2 * numRows - 2;
-       int write = 0;
-
-       for (int row = 0; row < numRows; ++row) {
-           for (
-               int vertical = row;
-               vertical < length;
-               vertical += cycle
-           ) {
-               result[write++] = s[vertical];
-
-               const int diagonal =
-                   vertical + cycle - 2 * row;
-               if (
-                   row > 0 &&
-                   row < numRows - 1 &&
-                   diagonal < length
-               ) {
-                   result[write++] = s[diagonal];
-               }
-           }
-       }
-
-       result[write] = '\0';
-       return result;
-   }
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def convert(self, s: str, numRows: int) -> str:
-           if numRows == 1 or numRows >= len(s):
-               return s
-
-           cycle = 2 * numRows - 2
-           result: list[str] = []
-
-           for row in range(numRows):
-               for vertical in range(row, len(s), cycle):
-                   result.append(s[vertical])
-
-                   diagonal = vertical + cycle - 2 * row
-                   if (
-                       0 < row < numRows - 1
-                       and diagonal < len(s)
-                   ):
-                       result.append(s[diagonal])
-
-           return "".join(result)
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {
-       public String convert(String s, int numRows) {
-           if (numRows == 1 || numRows >= s.length()) {
-               return s;
-           }
-
-           int cycle = 2 * numRows - 2;
-           StringBuilder result = new StringBuilder(s.length());
-
-           for (int row = 0; row < numRows; row++) {
-               for (
-                   int vertical = row;
-                   vertical < s.length();
-                   vertical += cycle
-               ) {
-                   result.append(s.charAt(vertical));
-
-                   int diagonal =
-                       vertical + cycle - 2 * row;
-                   if (
-                       row > 0 &&
-                       row < numRows - 1 &&
-                       diagonal < s.length()
-                   ) {
-                       result.append(s.charAt(diagonal));
-                   }
-               }
-           }
-
-           return result.toString();
-       }
-   }
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {
-       pub fn convert(s: String, num_rows: i32) -> String {
-           let bytes = s.as_bytes();
-           let rows = num_rows as usize;
-
-           if rows == 1 || rows >= bytes.len() {
-               return s;
-           }
-
-           let cycle = 2 * rows - 2;
-           let mut result = Vec::with_capacity(bytes.len());
-
-           for row in 0..rows {
-               let mut vertical = row;
-               while vertical < bytes.len() {
-                   result.push(bytes[vertical]);
-
-                   let diagonal = vertical + cycle - 2 * row;
-                   if row > 0
-                       && row + 1 < rows
-                       && diagonal < bytes.len()
-                   {
-                       result.push(bytes[diagonal]);
-                   }
-
-                   vertical += cycle;
-               }
-           }
-
-           // 题目字符范围允许按 UTF-8 字节重新组成字符串。
-           String::from_utf8(result).expect("结果保持有效 UTF-8")
-       }
-   }
-
-Go
-~~
-
-.. code-block:: go
-
-   func convert(s string, numRows int) string {
-       if numRows == 1 || numRows >= len(s) {
-           return s
-       }
-
-       cycle := 2*numRows - 2
-       result := make([]byte, 0, len(s))
-
-       for row := 0; row < numRows; row++ {
-           for vertical := row; vertical < len(s); vertical += cycle {
-               result = append(result, s[vertical])
-
-               diagonal := vertical + cycle - 2*row
-               if row > 0 && row < numRows-1 && diagonal < len(s) {
-                   result = append(result, s[diagonal])
-               }
-           }
-       }
-
-       return string(result)
-   }
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function convert(s: string, numRows: number): string {
-       if (numRows === 1 || numRows >= s.length) {
-           return s;
-       }
-
-       const cycle = 2 * numRows - 2;
-       const result: string[] = [];
-
-       for (let row = 0; row < numRows; row += 1) {
-           for (
-               let vertical = row;
-               vertical < s.length;
-               vertical += cycle
-           ) {
-               result.push(s[vertical]);
-
-               const diagonal = vertical + cycle - 2 * row;
-               if (
-                   row > 0 &&
-                   row < numRows - 1 &&
-                   diagonal < s.length
-               ) {
-                   result.push(s[diagonal]);
-               }
-           }
-       }
-
-       return result.join("");
-   }
-
-C#
-~~
-
-.. code-block:: csharp
-
-   using System.Text;
-
-   public class Solution {
-       public string Convert(string s, int numRows) {
-           if (numRows == 1 || numRows >= s.Length) {
-               return s;
-           }
-
-           int cycle = 2 * numRows - 2;
-           var result = new StringBuilder(s.Length);
-
-           for (int row = 0; row < numRows; row++) {
-               for (
-                   int vertical = row;
-                   vertical < s.Length;
-                   vertical += cycle
-               ) {
-                   result.Append(s[vertical]);
-
-                   int diagonal =
-                       vertical + cycle - 2 * row;
-                   if (
-                       row > 0 &&
-                       row < numRows - 1 &&
-                       diagonal < s.Length
-                   ) {
-                       result.Append(s[diagonal]);
-                   }
-               }
-           }
-
-           return result.ToString();
-       }
-   }
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function zigzag_convert(s::String, num_rows::Int)::String
-       chars = collect(s)
-       length_s = length(chars)
-
-       if num_rows == 1 || num_rows >= length_s
-           return s
-       end
-
-       cycle = 2 * num_rows - 2
-       result = Char[]
-       sizehint!(result, length_s)
-
-       # row 和 vertical 使用零基公式，访问 chars 时转换为一基下标。
-       for row in 0:(num_rows - 1)
-           vertical = row
-           while vertical < length_s
-               push!(result, chars[vertical + 1])
-
-               diagonal = vertical + cycle - 2 * row
-               if (
-                   row > 0 &&
-                   row < num_rows - 1 &&
-                   diagonal < length_s
-               )
-                   push!(result, chars[diagonal + 1])
-               end
-
-               vertical += cycle
-           end
-       end
-
-       return join(result)
-   end
-
-R
-~
-
-.. code-block:: r
-
-   zigzag_convert <- function(s, num_rows) {
-       chars <- strsplit(s, "", fixed = TRUE)[[1]]
-       length_s <- length(chars)
-
-       if (num_rows == 1L || num_rows >= length_s) {
-           return(s)
-       }
-
-       cycle <- 2L * num_rows - 2L
-       result <- character(length_s)
-       write <- 1L
-
-       for (row in 0:(num_rows - 1L)) {
-           vertical <- row
-           while (vertical < length_s) {
-               result[[write]] <- chars[[vertical + 1L]]
-               write <- write + 1L
-
-               diagonal <- vertical + cycle - 2L * row
-               if (
-                   row > 0L &&
-                   row < num_rows - 1L &&
-                   diagonal < length_s
-               ) {
-                   result[[write]] <- chars[[diagonal + 1L]]
-                   write <- write + 1L
-               }
-
-               vertical <- vertical + cycle
-           }
-       }
-
-       paste(result, collapse = "")
-   }
+* ``numRows = 1`` 时周期公式会得到 ``0``，必须在计算周期前直接返回原字符串；
+* ``numRows >= s.size()`` 时每个字符至多占一行，按行读取顺序与输入顺序相同；
+* ``numRows = 2`` 时没有中间行，算法只读取竖列位置，不会追加斜线字符；
+* 最后一个周期可以不完整，所有候选下标都经过长度检查；
+* 返回结果预留 ``s.size()`` 容量，避免追加字符时反复扩容。
