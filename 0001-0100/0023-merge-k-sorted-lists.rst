@@ -8,42 +8,27 @@
 :难度: Hard
 :主题: 链表、归并、分治、优先队列
 :原题: `LeetCode 0023 <https://leetcode.com/problems/merge-k-sorted-lists/>`_
-:重点: 多条非递减链表、保留全部节点值、空链表、返回统一有序结果
+:重点: 将两路归并扩展到多路归并，并控制每个节点参与比较的次数
 
 题目重述
 --------
 
-给定由 ``k`` 条单链表组成的数组 ``lists``，每条链表都按节点值非递减排列。将所有链表中的节点值合并为一条同样按非递减顺序排列的链表，并返回结果头节点。
+给定一个链表数组 ``lists``，其中每条单链表都按节点值非递减排列。把所有链表中的节点合并为一条非递减链表，
+返回合并后的头节点。
 
-``k`` 位于 ``[0, 10^4]``；每条链表的节点数量位于 ``[0, 500]``；所有链表的节点总数不超过 ``10^4``；节点值位于 ``[-10^4, 10^4]``。数组、其中的链表或最终结果都可能为空。
-结果链表通过重新连接输入链表中的原节点得到，所有节点都应保留，不需要复制成新的值节点。
+输入数组可以为空，数组中的任意链表也可以为空。``lists`` 的长度位于 ``[0, 10^4]``，所有链表的节点总数
+不超过 ``10^4``，节点值位于 ``[-10^4, 10^4]``。结果应保留所有节点，包括值相同的不同节点；可以重新连接
+原节点，无需创建对应的新节点。
 
 自建示例
 --------
 
-三条非空链表：
-
-.. code-block:: text
-
-   输入：lists = [[1, 4, 7], [2, 5], [3, 6, 9]]
-   输出：[1, 2, 3, 4, 5, 6, 7, 9]
-   解释：结果包含三条输入链表的全部节点值，并保持非递减顺序。
-
-包含空链表与重复值：
-
-.. code-block:: text
-
-   输入：lists = [[], [-2, 3, 3], [0, 3]]
-   输出：[-2, 0, 3, 3, 3]
-   解释：空链表不提供节点，三个值为 3 的节点都应保留。
-
-没有任何链表：
-
-.. code-block:: text
-
-   输入：lists = []
-   输出：[]
-   解释：输入数组为空，因此返回空链表。
+* 一般情况：``lists = [[1, 4, 7], [2, 5], [3, 6, 9]]``，返回
+  ``[1, 2, 3, 4, 5, 6, 7, 9]``；
+* 包含空链表：``lists = [[], [-2, 3, 3], [0, 3]]``，返回 ``[-2, 0, 3, 3, 3]``；
+* 输入数组为空：``lists = []``，返回空链表；
+* 所有链表均为空：``lists = [[], [], []]``，返回空链表；
+* 只有一条链表：``lists = [[-1, 2, 2]]``，直接返回这条链表。
 
 C++ 实现
 --------
@@ -55,48 +40,70 @@ C++ 实现
 
    class Solution {
    private:
-       ListNode* mergeTwo(ListNode* a, ListNode* b) {
+       struct GreaterNode {
+           bool operator()(const ListNode* left, const ListNode* right) const {
+               return left->val > right->val;
+           }
+       };
+
+       ListNode* mergeTwo(ListNode* first, ListNode* second) {
            ListNode dummy(0);
            ListNode* tail = &dummy;
-           while (a != nullptr && b != nullptr) {
-               if (a->val <= b->val) { tail->next = a; a = a->next; }
-               else { tail->next = b; b = b->next; }
+           while (first != nullptr && second != nullptr) {
+               if (first->val <= second->val) {
+                   tail->next = first;
+                   first = first->next;
+               } else {
+                   tail->next = second;
+                   second = second->next;
+               }
                tail = tail->next;
            }
-           tail->next = a != nullptr ? a : b;
+           tail->next = first != nullptr ? first : second;
            return dummy.next;
        }
 
-       ListNode* sequential(std::vector<ListNode*> lists) {
+       ListNode* mergeSequentially(const std::vector<ListNode*>& lists) {
            ListNode* merged = nullptr;
-           for (ListNode* head : lists) merged = mergeTwo(merged, head);
+           for (ListNode* head : lists) {
+               merged = mergeTwo(merged, head);
+           }
            return merged;
        }
 
-       ListNode* divideAndConquer(std::vector<ListNode*> lists) {
-           if (lists.empty()) return nullptr;
-           for (int interval = 1; interval < static_cast<int>(lists.size()); interval *= 2) {
-               for (int i = 0; i + interval < static_cast<int>(lists.size()); i += 2 * interval) {
-                   lists[i] = mergeTwo(lists[i], lists[i + interval]);
+       ListNode* mergeByIntervals(std::vector<ListNode*> lists) {
+           const int count = static_cast<int>(lists.size());
+           if (count == 0) {
+               return nullptr;
+           }
+           for (int interval = 1; interval < count; interval *= 2) {
+               for (int start = 0; start + interval < count; start += 2 * interval) {
+                   lists[start] = mergeTwo(lists[start], lists[start + interval]);
                }
            }
            return lists[0];
        }
 
-       ListNode* heapMerge(const std::vector<ListNode*>& lists) {
-           auto greater = [](ListNode* a, ListNode* b) { return a->val > b->val; };
-           std::priority_queue<ListNode*, std::vector<ListNode*>, decltype(greater)> heap(greater);
-           for (ListNode* head : lists) if (head != nullptr) heap.push(head);
+       ListNode* mergeWithHeap(const std::vector<ListNode*>& lists) {
+           std::priority_queue<ListNode*, std::vector<ListNode*>, GreaterNode> candidates;
+           for (ListNode* head : lists) {
+               if (head != nullptr) {
+                   candidates.push(head);
+               }
+           }
 
            ListNode dummy(0);
            ListNode* tail = &dummy;
-           while (!heap.empty()) {
-               ListNode* node = heap.top();
-               heap.pop();
+           while (!candidates.empty()) {
+               ListNode* node = candidates.top();
+               candidates.pop();
                ListNode* next = node->next;
+
                tail->next = node;
                tail = node;
-               if (next != nullptr) heap.push(next);
+               if (next != nullptr) {
+                   candidates.push(next);
+               }
            }
            tail->next = nullptr;
            return dummy.next;
@@ -104,237 +111,84 @@ C++ 实现
 
    public:
        ListNode* mergeKLists(std::vector<ListNode*>& lists) {
-           return heapMerge(lists);
+           return mergeByIntervals(lists);
        }
    };
 
 题解
 ----
 
-顺序两两归并为什么会重复搬运早期节点
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+两路归并是基本操作
+~~~~~~~~~~~~~~~~~~
 
-先合并前两条，再把结果与第三条合并，会让早期进入结果的节点在后续每次归并中再次被扫描。链表长度相近时，最坏
-时间可接近 ``O(Nk)``。
+任意一条有序链表的最小未处理节点都在当前表头。合并两条链表时，全局最小未处理节点只能是两个表头中较小的
+一个；把它接入结果并推进对应指针后，剩余问题仍是两条有序链表的归并。
 
-归并树如何让每个节点只经历对数层
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+``mergeTwo`` 复用输入节点，每轮恰好消耗一个表头。某条链表耗尽后，另一条剩余部分已经有序，并且其中所有值
+都不小于已接入结果的最后一个值，所以可以整体连接。若两条链表共有 ``x`` 个节点，该操作耗时 ``O(x)``。
 
-把链表两两配对形成归并树，每层所有归并处理的节点总数为 ``N``，层数为 ``ceil(log2 k)``，因此时间为
-``O(N log k)``。它直接复用 0021 的双路归并。
+顺序累加为何可能退化
+~~~~~~~~~~~~~~~~~~~~
 
-为什么全局下一个节点只需在 k 个表头中寻找
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+最直接的扩展是先合并第 0、1 条链表，再把结果与第 2 条合并，依次处理全部链表。``mergeSequentially`` 的结果
+始终正确，但早期进入结果的节点会在以后每次归并中被重新扫描。
 
-每条链表内部有序，尚未输出部分的最小值必然是当前头节点。任何更深节点都不小于本链表头，所以全局最小未处理
-节点一定属于最多 ``k`` 个当前头节点。最小堆正好维护这个候选集合。
+假设 ``k`` 条链表长度接近，节点总数为 ``N``。第 ``i`` 次归并要扫描前 ``i`` 条链表积累出的长结果，总代价
+近似为：
 
-堆顶弹出与后继入堆如何恢复候选覆盖
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. math::
 
-弹出某条链表的头节点后，它的后继才成为该链表新的最小未处理节点。提前把后继放入堆没有必要；不把后继加入又会
-失去该链表候选。每次弹出一个节点、加入至多一个后继，使每条未耗尽链表在堆中始终恰有一个候选。
+   \frac{N}{k}(1+2+\cdots+k)=O(Nk)
 
-主解法状态演化
-~~~~~~~~~~~~~~
+问题不在两路归并本身，而在归并顺序极不平衡：一个不断增长的长链表反复与短链表合并。
 
-.. list-table::
-   :header-rows: 1
+分治如何限制重复扫描
+~~~~~~~~~~~~~~~~~~~~
 
-   * - 弹出
-     - 加入后继
-     - 堆中候选值
-     - 结果尾部
-   * - 1
-     - 4
-     - 2, 3, 4
-     - 1
-   * - 2
-     - 5
-     - 3, 4, 5
-     - 2
-   * - 3
-     - 6
-     - 4, 5, 6
-     - 3
-   * - 4
-     - 7
-     - 5, 6, 7
-     - 4
+``mergeByIntervals`` 先合并相邻的单条链表，再合并相邻的两条链表结果，之后合并四条、八条，直到只剩一个
+结果。``interval`` 表示当前每个已归并分组覆盖的原链表数量。
 
-为什么堆顶是全局最小未处理节点
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+在同一层中，各次两路归并处理的节点集合互不重叠，所以这一层总共只扫描 ``N`` 个节点。每经过一层，分组规模
+至少翻倍，因此最多有 ``ceil(log2 k)`` 层。每个节点每层至多参与一次归并，总时间为 ``O(N log k)``。
 
-堆保存每条链表的最小未处理节点。任意未处理节点都不小于其所在链表的候选，而堆顶又不大于所有候选，因此没有
-任何未处理节点小于堆顶。把堆顶追加到结果不会破坏非递减顺序。
+不能配成一对的尾部分组会留到下一层。它已经有序，之后再与相邻分组归并即可，因此 ``k`` 不是二的幂也不会
+遗漏任何链表。公开入口采用这一方法，它直接复用了第 21 题的两路归并，并重新连接原节点。
 
-节点链接与所有权
-~~~~~~~~~~~~~~~~
+最小堆维护当前候选
+~~~~~~~~~~~~~~~~~~
 
-在复用节点时先保存 ``next``，再把当前节点接到结果尾部，避免丢失原链表后缀。本文 C++ 主解法的堆直接保存
-当前节点指针；弹出节点后把保存的后继重新放入堆，实际链表节点始终沿着结果链复用。
+多路归并也可以直接决定结果的下一个节点。每条未耗尽链表的最小节点仍是其表头，所以全局最小未处理节点一定在
+这些表头之中。``mergeWithHeap`` 把每条非空链表的当前表头放入最小堆，堆顶就是下一项。
 
-复杂度来源
+弹出某条链表的表头后，它的后继才成为该链表新的最小未处理节点，因此只需把这个后继加入堆。循环过程中，每条
+未耗尽链表在堆中恰有一个代表：
+
+* 不需要放入更深节点，因为它们不小于本链表当前表头；
+* 不能缺少当前表头，否则该链表的最小值可能被遗漏；
+* 堆顶不大于所有链表代表，也就不大于任何未处理节点。
+
+因此每次弹出的节点都可以安全接在结果尾部。相同值的节点仍是不同指针，会分别入堆和出堆，不会被去重。
+
+分治与最小堆的关系
+~~~~~~~~~~~~~~~~~~
+
+两种主流方法都让一个节点只承担 ``O(log k)`` 级别的比较成本：
+
+* 分治让节点沿平衡归并树逐层向上，每层最多被扫描一次；
+* 最小堆让节点入堆、出堆各一次，每次堆操作处理最多 ``k`` 个候选。
+
+分治只反复调用简单的两路归并，常数较小；最小堆能够随时明确给出所有链表中的当前最小节点。两者都复用原链表
+节点，区别主要在候选组织方式，而不是最终复杂度。
+
+复杂度分析
 ~~~~~~~~~~
 
-每个节点恰好入堆、出堆一次，堆大小不超过 ``k``，时间 ``O(N log k)``，堆空间 ``O(k)``。分治方法时间相同；
-顺序归并最坏 ``O(Nk)``。输出链表复用原节点，不计为额外空间。
+设 ``N`` 为全部节点数，``k`` 为链表数量。
 
-九语言实现
-----------
+``mergeSequentially`` 最坏时间复杂度为 ``O(Nk)``，除调用参数外只使用 ``O(1)`` 指针空间。
 
-C
-~
+``mergeByIntervals`` 的时间复杂度为 ``O(N log k)``。实现复制了长度为 ``k`` 的头指针数组，工作空间为
+``O(k)``；链表节点本身没有复制。
 
-.. code-block:: c
-
-   static void swap_node(struct ListNode** a, struct ListNode** b) { struct ListNode* t=*a; *a=*b; *b=t; }
-   static void push(struct ListNode** h,int* n,struct ListNode* x) {
-       int i=(*n)++; h[i]=x;
-       while(i>0){int p=(i-1)/2;if(h[p]->val<=h[i]->val)break;swap_node(&h[p],&h[i]);i=p;}
-   }
-   static struct ListNode* pop(struct ListNode** h,int* n) {
-       struct ListNode* root=h[0]; h[0]=h[--(*n)]; int i=0;
-       for(;;){int l=2*i+1,r=l+1,s=i;if(l<*n&&h[l]->val<h[s]->val)s=l;if(r<*n&&h[r]->val<h[s]->val)s=r;if(s==i)break;swap_node(&h[i],&h[s]);i=s;}
-       return root;
-   }
-   struct ListNode* mergeKLists(struct ListNode** lists,int k) {
-       struct ListNode** heap=malloc((size_t)(k?k:1)*sizeof(*heap));int size=0;
-       for(int i=0;i<k;++i)if(lists[i])push(heap,&size,lists[i]);
-       struct ListNode dummy={0,NULL},*tail=&dummy;
-       while(size){struct ListNode* x=pop(heap,&size);struct ListNode* next=x->next;tail->next=x;tail=x;if(next)push(heap,&size,next);}
-       tail->next=NULL;free(heap);return dummy.next;
-   }
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def mergeKLists(self, lists):
-           import heapq
-           heap = []
-           for index, node in enumerate(lists):
-               if node: heapq.heappush(heap, (node.val, index, node))
-           dummy = tail = ListNode()
-           while heap:
-               _, index, node = heapq.heappop(heap)
-               next_node = node.next
-               tail.next = node; tail = node
-               if next_node: heapq.heappush(heap, (next_node.val, index, next_node))
-           tail.next = None
-           return dummy.next
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {
-       public ListNode mergeKLists(ListNode[] lists) {
-           PriorityQueue<ListNode> heap=new PriorityQueue<>((a,b)->Integer.compare(a.val,b.val));
-           for(ListNode node:lists) if(node!=null) heap.offer(node);
-           ListNode dummy=new ListNode(0),tail=dummy;
-           while(!heap.isEmpty()){ListNode node=heap.poll(),next=node.next;tail.next=node;tail=node;if(next!=null)heap.offer(next);}
-           tail.next=null;return dummy.next;
-       }
-   }
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {
-       pub fn merge_k_lists(mut lists: Vec<Option<Box<ListNode>>>) -> Option<Box<ListNode>> {
-           use std::cmp::Reverse; use std::collections::BinaryHeap;
-           let mut heap: BinaryHeap<Reverse<(i32,usize)>>=BinaryHeap::new();
-           for (i,node) in lists.iter().enumerate(){if let Some(x)=node.as_ref(){heap.push(Reverse((x.val,i)));}}
-           let mut dummy=Box::new(ListNode::new(0)); let mut tail=&mut dummy;
-           while let Some(Reverse((_,i)))=heap.pop(){
-               let mut node=lists[i].take().unwrap(); lists[i]=node.next.take();
-               if let Some(next)=lists[i].as_ref(){heap.push(Reverse((next.val,i)));}
-               tail.next=Some(node); tail=tail.next.as_mut().unwrap();
-           }
-           dummy.next
-       }
-   }
-
-Go
-~~
-
-.. code-block:: go
-
-   type nodeHeap []*ListNode
-   func (h nodeHeap) Len() int{return len(h)}; func(h nodeHeap)Less(i,j int)bool{return h[i].Val<h[j].Val}
-   func(h nodeHeap)Swap(i,j int){h[i],h[j]=h[j],h[i]};func(h *nodeHeap)Push(x any){*h=append(*h,x.(*ListNode))}
-   func(h *nodeHeap)Pop()any{old:=*h;n:=len(old);x:=old[n-1];*h=old[:n-1];return x}
-   func mergeKLists(lists []*ListNode)*ListNode{
-       h:=&nodeHeap{};heap.Init(h);for _,x:=range lists{if x!=nil{heap.Push(h,x)}}
-       dummy:=&ListNode{};tail:=dummy
-       for h.Len()>0{x:=heap.Pop(h).(*ListNode);next:=x.Next;tail.Next=x;tail=x;if next!=nil{heap.Push(h,next)}}
-       tail.Next=nil;return dummy.Next
-   }
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function mergeKLists(lists: Array<ListNode|null>): ListNode|null {
-       const heap: ListNode[]=[];
-       const push=(x:ListNode)=>{heap.push(x);for(let i=heap.length-1;i>0;){let p=(i-1)>>1;if(heap[p].val<=heap[i].val)break;[heap[p],heap[i]]=[heap[i],heap[p]];i=p;}};
-       const pop=()=>{const root=heap[0],last=heap.pop()!;if(heap.length){heap[0]=last;for(let i=0;;){let l=i*2+1,r=l+1,s=i;if(l<heap.length&&heap[l].val<heap[s].val)s=l;if(r<heap.length&&heap[r].val<heap[s].val)s=r;if(s===i)break;[heap[i],heap[s]]=[heap[s],heap[i]];i=s;}}return root;};
-       for(const x of lists)if(x)push(x);const dummy=new ListNode(),tailRef={node:dummy};
-       while(heap.length){const x=pop(),next=x.next;tailRef.node.next=x;tailRef.node=x;if(next)push(next);}
-       tailRef.node.next=null;return dummy.next;
-   }
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {
-       public ListNode MergeKLists(ListNode[] lists) {
-           var heap=new PriorityQueue<ListNode,int>();
-           foreach(var x in lists) if(x!=null) heap.Enqueue(x,x.val);
-           var dummy=new ListNode();var tail=dummy;
-           while(heap.Count>0){var x=heap.Dequeue();var next=x.next;tail.next=x;tail=x;if(next!=null)heap.Enqueue(next,next.val);}
-           tail.next=null;return dummy.next;
-       }
-   }
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function merge_k_lists(lists)
-       heap=Tuple{Int,Int}[]
-       for (i,x) in pairs(lists); x!==nothing && push!(heap,(x.val,i)); end
-       dummy=ListNode(0,nothing);tail=dummy
-       while !isempty(heap)
-           sort!(heap,by=first,rev=true);_,i=pop!(heap);x=lists[i];lists[i]=x.next
-           tail.next=x;tail=x;lists[i]!==nothing && push!(heap,(lists[i].val,i))
-       end
-       tail.next=nothing;dummy.next
-   end
-
-R
-~
-
-.. code-block:: r
-
-   merge_k_lists <- function(lists) {
-       heap <- list()
-       for (i in seq_along(lists)) if (!is.null(lists[[i]])) heap[[length(heap)+1L]] <- c(lists[[i]]$val,i)
-       dummy <- new_list_node(0,NULL); tail <- dummy
-       while (length(heap)>0L) {
-           order_index <- which.min(vapply(heap,`[[`,numeric(1),1L)); entry <- heap[[order_index]]; heap[[order_index]] <- NULL
-           i <- as.integer(entry[[2L]]); node <- lists[[i]]; lists[[i]] <- node$next; tail$next <- node; tail <- node
-           if (!is.null(lists[[i]])) heap[[length(heap)+1L]] <- c(lists[[i]]$val,i)
-       }
-       tail$next <- NULL; dummy$next
-   }
+``mergeWithHeap`` 中每个节点入堆、出堆各一次，堆大小不超过非空链表数，时间复杂度为 ``O(N log k)``，
+工作空间为 ``O(k)``。返回链表复用输入节点，结果本身不计入额外空间。
