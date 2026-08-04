@@ -8,43 +8,30 @@
 :难度: Medium
 :主题: 数组、回溯、组合搜索、剪枝
 :原题: `LeetCode 0039 <https://leetcode.com/problems/combination-sum/>`_
-:重点: 候选值互异、同一值可重复使用、组合按数值去重、和等于目标
+:重点: 从枚举有序选择序列，推导到只生成非递减组合，并允许同一候选值重复使用
 
 题目重述
 --------
 
-给定由互不相同正整数组成的数组 ``candidates`` 和正整数 ``target``，找出所有元素之和恰好等于 ``target`` 的不同组合。
+给定一个由互不相同正整数组成的数组 ``candidates`` 和一个正整数 ``target``，找出所有元素之和恰好等于
+``target`` 的不同组合。
 
-每个候选值可以在同一个组合中使用任意多次。组合只按所含数值及其出现次数区分，内部顺序不同不算新的组合；答案顺序不作要求。
+每个候选值可以在同一个组合中使用任意多次。组合只由各数值的使用次数决定，内部排列顺序不产生新答案；例如
+``[2, 2, 3]``、``[2, 3, 2]`` 和 ``[3, 2, 2]`` 属于同一个组合。答案顺序不限。
 
-``candidates`` 的长度位于 ``[1, 30]``，每个候选值位于 ``[2, 40]``，``target`` 位于 ``[1, 40]``。题目保证满足条件的不同组合数量少于 150。
+``candidates`` 的长度位于 ``[1, 30]``，每个候选值位于 ``[2, 40]``，``target`` 位于 ``[1, 40]``。题目保证
+不同合法组合的数量少于 150。
 
 自建示例
 --------
 
-同一候选值可多次使用：
-
-.. code-block:: text
-
-   输入：candidates = [2, 3, 7], target = 12
-   输出：[[2, 2, 2, 2, 2, 2], [2, 3, 7], [3, 3, 3, 3]]
-   解释：三个组合的和都为 12；同一候选值可以重复选择。答案顺序可以不同。
-
-目标小于所有候选值：
-
-.. code-block:: text
-
-   输入：candidates = [5, 8, 11], target = 3
-   输出：[]
-   解释：候选值均为正数且都大于目标，不存在合法组合。
-
-三种不同组合：
-
-.. code-block:: text
-
-   输入：candidates = [4, 6, 9], target = 18
-   输出：[[4, 4, 4, 6], [6, 6, 6], [9, 9]]
-   解释：这些是全部数值组合；例如 [6, 4, 4, 4] 与 [4, 4, 4, 6] 视为同一个组合。
+* ``candidates = [2, 3, 6, 7]``、``target = 7``，返回 ``[[2, 2, 3], [7]]``；
+* ``candidates = [2, 3, 5]``、``target = 8``，返回
+  ``[[2, 2, 2, 2], [2, 3, 3], [3, 5]]``；
+* ``candidates = [3]``、``target = 9``，返回 ``[[3, 3, 3]]``，说明同一候选可以重复使用；
+* ``candidates = [5, 8, 11]``、``target = 3``，返回 ``[]``，因为所有候选都大于目标；
+* ``candidates = [4, 6, 9]``、``target = 18``，返回
+  ``[[4, 4, 4, 6], [6, 6, 6], [9, 9]]``，排列不同不会重复计入。
 
 C++ 实现
 --------
@@ -52,210 +39,267 @@ C++ 实现
 .. code-block:: cpp
 
    #include <algorithm>
+   #include <set>
    #include <vector>
 
    class Solution {
    private:
-       void chooseCounts(const std::vector<int>& values,int index,int remaining,
-                         std::vector<int>& path,std::vector<std::vector<int>>& result){
-           if(remaining==0){result.push_back(path);return;}
-           if(index==static_cast<int>(values.size()))return;
-           int value=values[index];
-           for(int count=0;count*value<=remaining;count++){
-               for(int i=0;i<count;i++)path.push_back(value);
-               chooseCounts(values,index+1,remaining-count*value,path,result);
-               for(int i=0;i<count;i++)path.pop_back();
+       void enumerateSequences(
+           const std::vector<int>& values,
+           int remaining,
+           std::vector<int>& path,
+           std::set<std::vector<int>>& uniqueCombinations
+       ) {
+           if (remaining == 0) {
+               std::vector<int> canonical = path;
+               std::sort(canonical.begin(), canonical.end());
+               uniqueCombinations.insert(canonical);
+               return;
            }
-       }
 
-       void backtrack(const std::vector<int>& values,int start,int remaining,
-                      std::vector<int>& path,std::vector<std::vector<int>>& result){
-           if(remaining==0){result.push_back(path);return;}
-           for(int i=start;i<static_cast<int>(values.size());i++){
-               if(values[i]>remaining)break;
-               path.push_back(values[i]);
-               backtrack(values,i,remaining-values[i],path,result);
+           for (int value : values) {
+               if (value > remaining) {
+                   break;
+               }
+               path.push_back(value);
+               enumerateSequences(values, remaining - value, path, uniqueCombinations);
                path.pop_back();
            }
        }
 
-       std::vector<std::vector<int>> sortedBacktracking(std::vector<int> candidates,int target){
-           std::sort(candidates.begin(),candidates.end());
-           std::vector<std::vector<int>> result;std::vector<int> path;
-           backtrack(candidates,0,target,path,result);return result;
+       std::vector<std::vector<int>> enumerateAndDeduplicate(
+           std::vector<int> candidates,
+           int target
+       ) {
+           std::sort(candidates.begin(), candidates.end());
+           std::set<std::vector<int>> uniqueCombinations;
+           std::vector<int> path;
+           enumerateSequences(candidates, target, path, uniqueCombinations);
+           return {uniqueCombinations.begin(), uniqueCombinations.end()};
+       }
+
+       void enumerateCounts(
+           const std::vector<int>& values,
+           int index,
+           int remaining,
+           std::vector<int>& path,
+           std::vector<std::vector<int>>& result
+       ) {
+           if (remaining == 0) {
+               result.push_back(path);
+               return;
+           }
+           if (index == static_cast<int>(values.size())) {
+               return;
+           }
+
+           const int value = values[index];
+           const int maximumCount = remaining / value;
+           const int originalSize = static_cast<int>(path.size());
+           for (int count = 0; count <= maximumCount; ++count) {
+               path.resize(originalSize);
+               path.insert(path.end(), count, value);
+               enumerateCounts(
+                   values,
+                   index + 1,
+                   remaining - count * value,
+                   path,
+                   result
+               );
+           }
+           path.resize(originalSize);
+       }
+
+       std::vector<std::vector<int>> countByCandidate(
+           std::vector<int> candidates,
+           int target
+       ) {
+           std::sort(candidates.begin(), candidates.end());
+           std::vector<std::vector<int>> result;
+           std::vector<int> path;
+           enumerateCounts(candidates, 0, target, path, result);
+           return result;
+       }
+
+       void orderedSearch(
+           const std::vector<int>& values,
+           int start,
+           int remaining,
+           std::vector<int>& path,
+           std::vector<std::vector<int>>& result
+       ) {
+           if (remaining == 0) {
+               result.push_back(path);
+               return;
+           }
+
+           for (int index = start;
+                index < static_cast<int>(values.size());
+                ++index) {
+               const int value = values[index];
+               if (value > remaining) {
+                   break;
+               }
+
+               path.push_back(value);
+               orderedSearch(values, index, remaining - value, path, result);
+               path.pop_back();
+           }
+       }
+
+       std::vector<std::vector<int>> orderedBacktracking(
+           std::vector<int> candidates,
+           int target
+       ) {
+           std::sort(candidates.begin(), candidates.end());
+           std::vector<std::vector<int>> result;
+           std::vector<int> path;
+           orderedSearch(candidates, 0, target, path, result);
+           return result;
        }
 
    public:
-       std::vector<std::vector<int>> combinationSum(std::vector<int>& candidates,int target){
-           return sortedBacktracking(candidates,target);
+       std::vector<std::vector<int>> combinationSum(
+           std::vector<int>& candidates,
+           int target
+       ) {
+           return orderedBacktracking(candidates, target);
        }
    };
 
 题解
 ----
 
-无序选择为什么产生排列重复
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+直接枚举选择序列
+~~~~~~~~~~~~~~~~
 
-若每层都从全部候选重新选择，组合 ``[2,3,7]`` 会以多种顺序到达同一叶节点。使用 ``start`` 限制后续下标不小于
-当前选择，使路径保持非递减，每个数值多重集合只有一个排列表示。
+最直接的搜索把状态写成“还差多少”：初始 ``remaining = target``，每层可以选择任意一个不超过剩余值的候选，随后
+递归搜索 ``remaining - value``。所有候选都是正数，所以剩余值严格下降，搜索一定终止；降到零时，当前路径的和
+恰好等于目标。
 
-剩余目标如何成为递归状态
+问题在于这棵树生成的是有顺序的选择序列。对 ``candidates = [2, 3]``、``target = 7``，会出现三条成功路径：
+
+.. code-block:: text
+
+   2 -> 2 -> 3
+   2 -> 3 -> 2
+   3 -> 2 -> 2
+
+它们对应同一个组合 ``[2, 2, 3]``。``enumerateAndDeduplicate`` 在叶节点把路径排序，再放入集合，因此结果正确；
+大量等价排列已经被完整搜索，最后才被删除，搜索和集合比较都属于重复工作。
+
+按每种候选的使用次数搜索
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-``remaining`` 是尚需凑出的和。选择 ``values[i]`` 后进入 ``remaining-values[i]``；由于允许重复使用，下一层仍从
-``i`` 开始，而不是 ``i+1``。达到零时记录答案。
+组合不关心选取顺序，只关心每个候选用了多少次。``countByCandidate`` 因此依次处理候选值，并为当前值枚举使用次数
+``0..remaining / value``，随后进入下一个候选。
 
-正数与排序如何支持剪枝
+一条搜索路径实际上确定了一个次数向量。例如 ``values = [2, 3, 5]``、``target = 8`` 时，组合
+``[2, 3, 3]`` 对应：
+
+.. code-block:: text
+
+   2 使用 1 次
+   3 使用 2 次
+   5 使用 0 次
+
+候选值互不相同，所以一个次数向量只对应一个组合；每个组合也有唯一的次数向量，因此这种方法无需集合去重。它的
+不足是每层还要显式枚举“当前候选取零次、一次、两次……”，并反复批量追加与删除相同值。
+
+把次数枚举改写为逐元素选择
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+逐元素回溯可以把“当前候选再多取一次”和“转向后面的候选”统一在一个循环中。先将候选升序排列，并给递归状态增加
+``start``：下一次只能选择下标不小于 ``start`` 的候选。
+
+因此路径中的候选下标永不下降，数值序列也保持非递减。选择 ``values[index]`` 后，递归仍传入 ``index``，因为
+同一候选允许继续使用；循环进入下一下标时，搜索自然转向更大的候选。
+
+.. code-block:: text
+
+   选择 2 后递归起点仍为 2 的下标：可以继续选 2、3、5
+   选择 3 后递归起点变为 3 的下标：可以继续选 3、5，不能回到 2
+   选择 5 后递归起点变为 5 的下标：只能继续选 5
+
+若题目规定每个候选只能使用一次，递归起点才应改为 ``index + 1``；本题传入 ``index`` 是允许重复使用的关键。
+
+非递减路径为何恰好去重
 ~~~~~~~~~~~~~~~~~~~~~~
 
-所有候选为正数，剩余值只会下降。排序后若当前候选已经大于 ``remaining``，后续候选更大，整段循环都可结束。
-若允许非正数，重复选择可能不减少剩余值，搜索无法用相同终止逻辑。
+任意合法组合都能唯一写成非递减序列。假设组合中下标 ``i`` 的候选使用若干次，再使用更大下标的候选；
+``orderedSearch`` 可以在 ``i`` 处重复选择任意次，再由循环转到更大下标，所以这条规范序列一定能够生成。
 
-选择与撤销
-~~~~~~~~~~
+反过来，搜索路径的下标从不下降，同一多重集合的其他排列都不可能出现。候选值本身互不相同，因此也不会有两个
+不同下标表示同一个数值。每个组合由唯一一条路径生成，既不遗漏，也不需要结果集合去重。
 
-路径追加候选后递归，返回时删除末位。这样每个兄弟分支从同一父路径出发。记录答案时复制路径，后续撤销不会修改
-已保存组合。
+正数与排序如何产生剪枝
+~~~~~~~~~~~~~~~~~~~~~~
+
+所有候选都是正数，因此选择一个值后 ``remaining`` 必然减小；若某条路径的剩余值无法再由候选凑出，它最终会因没有
+可选值而返回。
+
+排序后，循环遇到 ``value > remaining`` 时，当前值已经无法选择，后面的值只会更大，因此可以直接 ``break``，
+一次排除整个后缀。若候选包含零或负数，剩余值未必下降，重复使用还可能形成无限搜索，本题的正数条件是终止与剪枝
+成立的基础。
+
+选择、递归与撤销
+~~~~~~~~~~~~~~~~
+
+``path`` 表示当前递归路径已经选取的组合。进入子树前追加候选，子树返回后删除末尾，使下一个兄弟分支重新从同一父
+状态开始。``remaining`` 按值传递，无需手动恢复。
+
+当 ``remaining == 0`` 时，代码复制当前 ``path`` 到结果中。保存的是独立副本，因此后续 ``pop_back`` 不会修改
+已经记录的答案。
 
 状态演化
 ~~~~~~~~
 
-对 ``[2,3,7]``、目标 12 的一条路径：
+对 ``candidates = [2, 3, 5]``、``target = 8``，生成 ``[2, 3, 3]`` 的路径如下：
 
-.. code-block:: text
+.. list-table::
+   :header-rows: 1
 
-   remaining=12, path=[]
-   选择 2 -> remaining=10, path=[2]
-   选择 3 -> remaining=7,  path=[2,3]
-   选择 7 -> remaining=0,  path=[2,3,7]
+   * - ``path``
+     - ``start`` 可选值
+     - ``remaining``
+     - 动作
+   * - ``[]``
+     - ``2, 3, 5``
+     - 8
+     - 选择 2
+   * - ``[2]``
+     - ``2, 3, 5``
+     - 6
+     - 转向 3
+   * - ``[2, 3]``
+     - ``3, 5``
+     - 3
+     - 再次选择 3
+   * - ``[2, 3, 3]``
+     - ``3, 5``
+     - 0
+     - 记录答案
 
-在路径 ``[2,3]`` 后仍从 3 的下标开始，所以可以继续选 3 或更大值，但不会回到 2，避免生成
-``[3,2,7]``。
+在选择 3 后，递归不会再访问 2，因此不会生成 ``[3, 2, 3]`` 或 ``[3, 3, 2]``。
 
-为什么所有组合恰好生成一次
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+代码演进
+~~~~~~~~
 
-任意合法组合可以唯一排序为非递减序列。回溯允许在同一下标重复选择，并允许之后移动到更大下标，因此必然存在一条
-路径生成该序列。路径下标从不下降，其他排列不可能出现；候选值又互不相同，所以没有第二条路径生成同一序列。
+三种方法依次删除两类重复工作：
 
-按候选次数枚举的替代模型
-~~~~~~~~~~~~~~~~~~~~~~~~
+#. ``enumerateAndDeduplicate`` 搜索全部有序选择序列，再把等价排列规范化并交给集合删除；
+#. ``countByCandidate`` 直接枚举每个候选的使用次数，从搜索空间中消除排列重复；
+#. ``orderedBacktracking`` 用非递减路径隐式表达使用次数，一次选择一个元素，并利用排序在候选过大时停止循环。
 
-另一种写法对每个候选枚举使用次数 ``0..remaining/value``，然后进入下一候选。它直接把状态表示成“每种值取多少个”，
-同样不会重复，但循环会为每个次数反复追加和撤销元素。逐元素回溯更紧凑。
+公开入口采用第三种方法。它最直接对应“选择一个候选、继续使用它或转向更大候选”的搜索过程，路径本身已经是答案的
+唯一规范表示。
 
-复杂度来源
+复杂度分析
 ~~~~~~~~~~
 
-搜索复杂度取决于答案和被剪枝的中间状态；粗略上界可写为 ``O(k^(target/min))``。每个答案复制长度最多
-``target/min``。递归深度与路径长度同阶，除输出外工作空间为 ``O(target/min)``。
+设候选数量为 ``m``，最小候选值为 ``a``，任意路径长度最多为 ``d = target / a``。回溯问题的搜索规模依赖候选值与
+目标，最坏情况下呈指数增长，可粗略上界为 ``O(m^d)`` 个搜索节点；排序需要 ``O(m log m)``。
 
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   static int cmp_int(const void* a,const void* b){int x=*(const int*)a,y=*(const int*)b;return(x>y)-(x<y);}
-   static void dfs(int* a,int n,int start,int remaining,int* path,int depth,int*** result,int** cols,int* size){
-       if(remaining==0){(*result)[*size]=malloc((size_t)depth*sizeof(int));memcpy((*result)[*size],path,(size_t)depth*sizeof(int));(*cols)[(*size)++]=depth;return;}
-       for(int i=start;i<n&&a[i]<=remaining;i++){path[depth]=a[i];dfs(a,n,i,remaining-a[i],path,depth+1,result,cols,size);}
-   }
-   int** combinationSum(int* candidates,int n,int target,int* returnSize,int** returnColumnSizes){
-       qsort(candidates,n,sizeof(int),cmp_int);int capacity=256;int** result=malloc((size_t)capacity*sizeof(int*));int* cols=malloc((size_t)capacity*sizeof(int));int* path=malloc((size_t)(target/2+1)*sizeof(int));*returnSize=0;dfs(candidates,n,0,target,path,0,&result,&cols,returnSize);free(path);*returnColumnSizes=cols;return result;
-   }
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def combinationSum(self,candidates:list[int],target:int)->list[list[int]]:
-           candidates.sort();result=[];path=[]
-           def dfs(start,remaining):
-               if remaining==0:result.append(path.copy());return
-               for i in range(start,len(candidates)):
-                   if candidates[i]>remaining:break
-                   path.append(candidates[i]);dfs(i,remaining-candidates[i]);path.pop()
-           dfs(0,target);return result
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {
-       public List<List<Integer>> combinationSum(int[] candidates,int target){Arrays.sort(candidates);List<List<Integer>> result=new ArrayList<>();dfs(candidates,0,target,new ArrayList<>(),result);return result;}
-       private void dfs(int[] a,int start,int remaining,List<Integer> path,List<List<Integer>> result){if(remaining==0){result.add(new ArrayList<>(path));return;}for(int i=start;i<a.length&&a[i]<=remaining;i++){path.add(a[i]);dfs(a,i,remaining-a[i],path,result);path.remove(path.size()-1);}}
-   }
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {
-       pub fn combination_sum(mut candidates:Vec<i32>,target:i32)->Vec<Vec<i32>>{
-           fn dfs(a:&[i32],start:usize,remaining:i32,path:&mut Vec<i32>,out:&mut Vec<Vec<i32>>){if remaining==0{out.push(path.clone());return}for i in start..a.len(){if a[i]>remaining{break}path.push(a[i]);dfs(a,i,remaining-a[i],path,out);path.pop();}}
-           candidates.sort_unstable();let mut out=Vec::new();dfs(&candidates,0,target,&mut Vec::new(),&mut out);out
-       }
-   }
-
-Go
-~~
-
-.. code-block:: go
-
-   func combinationSum(candidates []int,target int)[][]int{
-       sort.Ints(candidates);result:=[][]int{};path:=[]int{};var dfs func(int,int)
-       dfs=func(start,remaining int){if remaining==0{copyPath:=append([]int(nil),path...);result=append(result,copyPath);return};for i:=start;i<len(candidates)&&candidates[i]<=remaining;i++{path=append(path,candidates[i]);dfs(i,remaining-candidates[i]);path=path[:len(path)-1]}}
-       dfs(0,target);return result
-   }
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function combinationSum(candidates:number[],target:number):number[][]{
-       candidates.sort((a,b)=>a-b);const result:number[][]=[],path:number[]=[];
-       const dfs=(start:number,remaining:number)=>{if(remaining===0){result.push([...path]);return;}for(let i=start;i<candidates.length&&candidates[i]<=remaining;i++){path.push(candidates[i]);dfs(i,remaining-candidates[i]);path.pop();}};dfs(0,target);return result;
-   }
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {
-       public IList<IList<int>> CombinationSum(int[] candidates,int target){Array.Sort(candidates);var result=new List<IList<int>>();Dfs(candidates,0,target,new List<int>(),result);return result;}
-       void Dfs(int[] a,int start,int remaining,List<int> path,List<IList<int>> result){if(remaining==0){result.Add(new List<int>(path));return;}for(int i=start;i<a.Length&&a[i]<=remaining;i++){path.Add(a[i]);Dfs(a,i,remaining-a[i],path,result);path.RemoveAt(path.Count-1);}}
-   }
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function combination_sum(candidates::Vector{Int},target::Int)
-       sort!(candidates);result=Vector{Vector{Int}}();path=Int[]
-       function dfs(start,remaining)
-           if remaining==0;push!(result,copy(path));return;end
-           for i in start:length(candidates);candidates[i]>remaining&&break;push!(path,candidates[i]);dfs(i,remaining-candidates[i]);pop!(path);end
-       end;dfs(1,target);result
-   end
-
-R
-~
-
-.. code-block:: r
-
-   combination_sum <- function(candidates,target) {
-       candidates<-sort(candidates);result<-list();path<-integer()
-       dfs<-function(start,remaining){if(remaining==0){result[[length(result)+1L]]<<-path;return()};for(i in start:length(candidates)){if(candidates[[i]]>remaining)break;path<<-c(path,candidates[[i]]);dfs(i,remaining-candidates[[i]]);path<<-head(path,-1L)}}
-       dfs(1L,target);result
-   }
+每个合法组合复制到结果时还需要与其长度成正比的时间，因此更准确地说，总时间至少包含全部输出元素的数量。递归栈与
+当前路径最多保存 ``d`` 个值，除返回结果外的额外空间为 ``O(d)``。直接序列方法还要保存规范化集合，并搜索大量
+排列重复；按次数方法的递归深度为 ``O(m)``，路径长度仍最多为 ``O(d)``。
