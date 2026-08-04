@@ -6,44 +6,27 @@
 
 :题号: 0028
 :难度: Easy
-:主题: 字符串、模式匹配、KMP
+:主题: 字符串、模式匹配、前缀函数、KMP
 :原题: `LeetCode 0028 <https://leetcode.com/problems/find-the-index-of-the-first-occurrence-in-a-string/>`_
-:重点: 连续子串、首次出现、零基下标、未找到返回 -1
+:重点: 从逐起点重新匹配，推导到复用已匹配后缀，并用前缀函数在失配时跳过不可能起点
 
 题目重述
 --------
 
-给定两个字符串 ``haystack`` 和 ``needle``，在 ``haystack`` 中寻找与 ``needle`` 完全相同的连续子串，返回第一次出现位置的零基起始下标；若不存在，返回 ``-1``。
+给定字符串 ``haystack`` 和 ``needle``，在 ``haystack`` 中寻找第一次出现的、与 ``needle`` 完全相同的连续
+子串，并返回该子串的零基起始下标；若不存在这样的子串，返回 ``-1``。
 
-``haystack`` 和 ``needle`` 的长度均位于 ``[1, 10^4]``，并且只包含小写英文字母。
-因此当前有效输入中的 ``needle`` 不为空；代码保留空模式返回 ``0`` 的防御性分支，若在题目约束之外调用也保持常见字符串查找语义。
+匹配必须覆盖 ``needle`` 的全部字符，且字符顺序和大小写都必须完全相同。若 ``needle`` 在文本中出现多次，
+只返回起始下标最小的一次。两个字符串长度均位于 ``[1, 10^4]``，只包含小写英文字母。
 
 自建示例
 --------
 
-模式出现多次：
-
-.. code-block:: text
-
-   输入：haystack = "abracadabra", needle = "abra"
-   输出：0
-   解释："abra" 分别从下标 0 和 7 开始出现，应返回较早的下标 0。
-
-首次匹配位于中间：
-
-.. code-block:: text
-
-   输入：haystack = "mississippi", needle = "issip"
-   输出：4
-   解释：从下标 4 开始的连续五个字符是 "issip"。
-
-模式不存在：
-
-.. code-block:: text
-
-   输入：haystack = "algorithm", needle = "rhythm"
-   输出：-1
-   解释：文本中没有与 needle 完全相同的连续子串。
+* 首位置命中：``haystack = "abracadabra"``、``needle = "abra"``，返回 ``0``；
+* 多次出现：``haystack = "mississippi"``、``needle = "issi"``，分别从下标 ``1`` 和 ``4`` 开始出现，返回 ``1``；
+* 需要复用前缀：``haystack = "abababaca"``、``needle = "ababaca"``，返回 ``2``；
+* 模式比文本长：``haystack = "abc"``、``needle = "abcd"``，返回 ``-1``；
+* 不存在：``haystack = "algorithm"``、``needle = "rhythm"``，返回 ``-1``。
 
 C++ 实现
 --------
@@ -55,227 +38,231 @@ C++ 实现
 
    class Solution {
    private:
-       int libraryFind(const std::string& text, const std::string& pattern) {
-           auto pos = text.find(pattern);
-           return pos == std::string::npos ? -1 : static_cast<int>(pos);
-       }
-
-       int naive(const std::string& text, const std::string& pattern) {
-           if (pattern.empty()) return 0;
-           if (pattern.size() > text.size()) return -1;
-           for (int start = 0; start + static_cast<int>(pattern.size()) <= static_cast<int>(text.size()); ++start) {
+       int naiveSearch(const std::string& text, const std::string& pattern) {
+           const int n = static_cast<int>(text.size());
+           const int m = static_cast<int>(pattern.size());
+           for (int start = 0; start + m <= n; ++start) {
                int offset = 0;
-               while (offset < static_cast<int>(pattern.size()) &&
-                      text[start + offset] == pattern[offset]) ++offset;
-               if (offset == static_cast<int>(pattern.size())) return start;
+               while (offset < m && text[start + offset] == pattern[offset]) {
+                   ++offset;
+               }
+               if (offset == m) {
+                   return start;
+               }
            }
            return -1;
        }
 
        std::vector<int> buildPrefix(const std::string& pattern) {
-           std::vector<int> prefix(pattern.size());
-           for (int i = 1; i < static_cast<int>(pattern.size()); ++i) {
-               int matched = prefix[i - 1];
-               while (matched > 0 && pattern[i] != pattern[matched]) matched = prefix[matched - 1];
-               if (pattern[i] == pattern[matched]) ++matched;
-               prefix[i] = matched;
+           const int m = static_cast<int>(pattern.size());
+           std::vector<int> prefix(m, 0);
+           for (int index = 1; index < m; ++index) {
+               int matched = prefix[index - 1];
+               while (matched > 0 && pattern[index] != pattern[matched]) {
+                   matched = prefix[matched - 1];
+               }
+               if (pattern[index] == pattern[matched]) {
+                   ++matched;
+               }
+               prefix[index] = matched;
            }
            return prefix;
        }
 
-       int kmp(const std::string& text, const std::string& pattern) {
-           if (pattern.empty()) return 0;
-           auto prefix = buildPrefix(pattern);
+       int kmpSearch(const std::string& text, const std::string& pattern) {
+           const std::vector<int> prefix = buildPrefix(pattern);
            int matched = 0;
-           for (int i = 0; i < static_cast<int>(text.size()); ++i) {
-               while (matched > 0 && text[i] != pattern[matched]) matched = prefix[matched - 1];
-               if (text[i] == pattern[matched]) ++matched;
-               if (matched == static_cast<int>(pattern.size())) return i - matched + 1;
+           for (int index = 0; index < static_cast<int>(text.size()); ++index) {
+               while (matched > 0 && text[index] != pattern[matched]) {
+                   matched = prefix[matched - 1];
+               }
+               if (text[index] == pattern[matched]) {
+                   ++matched;
+               }
+               if (matched == static_cast<int>(pattern.size())) {
+                   return index - matched + 1;
+               }
            }
            return -1;
        }
 
    public:
        int strStr(std::string haystack, std::string needle) {
-           return kmp(haystack, needle);
+           return kmpSearch(haystack, needle);
        }
    };
 
 题解
 ----
 
-朴素起点枚举为何最坏重复比较
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+逐起点验证
+~~~~~~~~~~
 
-文本长度 ``n``、模式长度 ``m`` 时，合法起点只有 ``0`` 到 ``n-m``。朴素方法按递增起点逐字符验证，第一个成功
-位置必然最早；但重复模式可能在每个起点匹配很长前缀后才失配，最坏 ``O(nm)``。
+设文本长度为 ``n``，模式长度为 ``m``。一个完整匹配只能从 ``0`` 到 ``n - m`` 开始。最直接的方法是依次选择
+每个合法起点 ``start``，再从模式下标 ``0`` 开始逐字符比较。
 
-前缀函数保存哪些可复用字符
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+``naiveSearch`` 按起点递增顺序检查，因此第一次成功一定是最早出现位置。每个候选要么在某处失配，要么完成全部
+``m`` 次比较；所有合法起点都被覆盖，所以不会漏解。
 
-``prefix[i]`` 是模式前缀 ``pattern[0:i+1]`` 的最长相等真前后缀长度。若已匹配部分失配，文本后缀中仍可能保留
-一个等于模式前缀的片段；回退到 ``prefix[matched-1]`` 就能复用它，而不是把匹配长度清零。
+问题在于，相邻起点之间可能重复比较相同字符。以 ``text = "abababaca"``、``pattern = "ababaca"`` 为例，
+从起点 ``0`` 已经匹配 ``ababa`` 后，在下一字符处失配。若把模式完全移到起点 ``1`` 并从头开始，就丢弃了
+已经确认的文本后缀信息。重复结构较强时，许多起点都会先匹配很长前缀再失配，最坏时间达到 ``O(nm)``。
+
+失配后的有效起点
+~~~~~~~~~~~~~~~~
+
+假设当前已经连续匹配了模式前 ``matched`` 个字符：
+
+.. code-block:: text
+
+   文本已读后缀：pattern[0 .. matched)
+
+下一文本字符与 ``pattern[matched]`` 失配时，不能继续保留完整的 ``matched`` 个字符。新的候选匹配若仍然利用
+已经读过的文本，它的模式前缀必须等于这段已匹配文本的某个后缀。
+
+而已匹配文本本身等于 ``pattern[0 .. matched)``，所以问题转化为：在这个模式前缀中，寻找一个同时也是后缀的
+最长真前缀。若其长度为 ``fallback``，则文本末尾 ``fallback`` 个字符已经等于
+``pattern[0 .. fallback)``，无需重新读取，可以继续尝试匹配 ``pattern[fallback]``。
+
+只考虑真前缀，是因为长度仍为 ``matched`` 的候选刚刚已经失配。寻找最长者则能保留最多已确认字符；若它仍然
+失配，再继续尝试更短边界。
+
+前缀函数
+~~~~~~~~
+
+定义 ``prefix[index]`` 为模式子串 ``pattern[0 .. index]`` 的最长相等真前后缀长度。这里“前后缀相等”表示：
+
+* 前缀从模式下标 ``0`` 开始；
+* 后缀在下标 ``index`` 结束；
+* 二者内容相同；
+* 长度小于当前子串总长度。
+
+例如模式 ``ababaca`` 的前缀函数为：
 
 .. list-table::
    :header-rows: 1
 
-   * - 已匹配模式
-     - 失配
-     - ``matched`` 回退
-     - 保留依据
-   * - ``abab``
-     - 新字符无法匹配 ``c``
-     - 4 -> 2
-     - 后缀 ``ab`` 等于模式前缀 ``ab``
-   * - ``ab``
-     - 重新比较当前字符
-     - 2 -> 3
-     - 当前字符匹配模式下标 2
+   * - ``index``
+     - 字符
+     - 当前子串
+     - ``prefix[index]``
+     - 最长边界
+   * - 0
+     - ``a``
+     - ``a``
+     - 0
+     - 空
+   * - 1
+     - ``b``
+     - ``ab``
+     - 0
+     - 空
+   * - 2
+     - ``a``
+     - ``aba``
+     - 1
+     - ``a``
+   * - 3
+     - ``b``
+     - ``abab``
+     - 2
+     - ``ab``
+   * - 4
+     - ``a``
+     - ``ababa``
+     - 3
+     - ``aba``
+   * - 5
+     - ``c``
+     - ``ababac``
+     - 0
+     - 空
+   * - 6
+     - ``a``
+     - ``ababaca``
+     - 1
+     - ``a``
 
-为什么构造前缀函数也使用相同回退
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+因此，当已经匹配 ``ababa``，即 ``matched = 5``，下一字符失配时，可以先回退到
+``prefix[4] = 3``。已匹配文本末尾的 ``aba`` 与模式开头的 ``aba`` 相同，新的候选无需从长度零重新开始。
 
-计算 ``prefix[i]`` 时，已知 ``pattern[0:matched]`` 等于当前位置之前的后缀。若新字符失配，更长边界不成立，但该
-边界本身的最长边界仍可能成立，因此继续跳到 ``prefix[matched-1]``。每次回退严格缩短候选长度。
+前缀函数的构造
+~~~~~~~~~~~~~~
 
-为什么文本指针不回退
-~~~~~~~~~~~~~~~~~~~~
+计算 ``prefix[index]`` 时，``prefix[index - 1]`` 已经给出前一个模式前缀的最长边界长度，记为 ``matched``。
+若 ``pattern[index] == pattern[matched]``，就在原边界两端追加同一个字符，新边界长度增加一。
 
-回退后的模式前缀已经等于文本已读部分的后缀，之前文本字符无需重新读取。文本下标始终向右；``matched`` 的总增加
-与总回退都是线性数量，所以扫描为 ``O(n)``。
+若二者不相等，当前长度 ``matched`` 无法扩展。下一候选不能随意减一，因为只有当前边界自身的相等前后缀，才
+可能继续作为整个子串的相等前后缀。该候选长度正是 ``prefix[matched - 1]``：
 
-为什么第一次完整匹配就是最早起点
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. code-block:: text
 
-文本从左到右处理。匹配长度首次达到 ``m`` 时，结束位置最早，对应起点 ``i-m+1``。若存在更早完整匹配，它应在
-更早的结束位置已经触发返回。
+   matched = prefix[matched - 1]
 
-复杂度来源
+回退后仍使用同一个 ``pattern[index]`` 重新比较。若继续失配，就沿前缀函数链尝试更短边界；若最终退到零，
+只需判断当前字符能否与模式首字符形成长度为一的边界。
+
+这个构造过程与文本匹配使用同一种状态转换：都在失配时寻找“当前已匹配内容的最长可复用后缀”。区别只是构造
+阶段的字符来自模式本身。
+
+文本扫描
+~~~~~~~~
+
+``kmpSearch`` 令 ``matched`` 表示处理当前文本字符之前，文本已读前缀的末尾有多少个字符等于模式前缀。
+处理 ``text[index]`` 时：
+
+#. 若它与 ``pattern[matched]`` 不同，沿前缀函数缩短 ``matched``；
+#. 每次回退后仍用同一个 ``text[index]`` 重新比较，因为该字符尚未被任何新候选消费；
+#. 若字符相等，令 ``matched`` 增加一；
+#. 若 ``matched == m``，模式已经在当前位置结束。
+
+以 ``text = "abababaca"``、``pattern = "ababaca"`` 为例：文本前五个字符使 ``matched`` 达到 ``5``。
+处理下标 ``5`` 的字符 ``b`` 时，它与模式下标 ``5`` 的 ``c`` 失配，于是回退到 ``prefix[4] = 3``。
+此时同一个文本字符 ``b`` 与模式下标 ``3`` 的 ``b`` 匹配，``matched`` 变为 ``4``；之后继续匹配
+``a``、``c``、``a``，最终在文本下标 ``8`` 完成匹配，起点为 ``8 - 7 + 1 = 2``。
+
+文本下标没有退回到旧起点之后重新扫描。前缀函数已经证明，被跳过的更长候选必然失配，而保留下来的模式前缀
+已经与文本已读后缀相等。
+
+首次出现位置
+~~~~~~~~~~~~
+
+文本按下标从左到右处理。第一次出现 ``matched == m`` 时，得到的是结束位置最小的完整匹配。所有匹配长度都为
+``m``，结束位置越小，起始位置 ``index - m + 1`` 也越小，因此可以立即返回。
+
+如果模式比文本长，扫描过程中 ``matched`` 不可能达到 ``m``，最终自然返回 ``-1``，无需单独分支。
+
+代码演进
+~~~~~~~~
+
+``naiveSearch`` 为每个候选起点重新从模式首字符开始比较。一次失配会把已经匹配的全部前缀信息清空，文本字符
+可能在后续起点中被重复读取。
+
+KMP 先用 ``buildPrefix`` 为模式的每个前缀记录最长可复用边界。``kmpSearch`` 失配时不再枚举下一个文本起点，
+而是沿边界链直接跳过已经证明不可能的候选；文本下标始终向右，只调整模式已匹配长度。
+
+公开入口采用 ``kmpSearch``。它把逐起点的重复比较替换为一次模式预处理和一次文本扫描，在重复结构明显的输入上
+仍保持线性时间。
+
+复杂度分析
 ~~~~~~~~~~
 
-前缀函数 ``O(m)``，文本扫描 ``O(n)``，总时间 ``O(n+m)``，额外空间 ``O(m)``。朴素方法空间 ``O(1)``，最坏
-``O(nm)``；标准库方法隐藏具体实现。
+.. list-table::
+   :header-rows: 1
 
-九语言实现
-----------
+   * - 方法
+     - 时间复杂度
+     - 工作空间
+     - 主要代价
+   * - 逐起点验证
+     - ``O(nm)``
+     - ``O(1)``
+     - 相邻起点可能重复比较相同文本字符
+   * - KMP
+     - ``O(n+m)``
+     - ``O(m)``
+     - 构造前缀函数并单向扫描文本
 
-C
-~
-
-.. code-block:: c
-
-   int strStr(char* text, char* pattern) {
-       int n=(int)strlen(text),m=(int)strlen(pattern);if(m==0)return 0;
-       int* pi=calloc((size_t)m,sizeof(int));
-       for(int i=1;i<m;i++){int j=pi[i-1];while(j>0&&pattern[i]!=pattern[j])j=pi[j-1];if(pattern[i]==pattern[j])j++;pi[i]=j;}
-       int j=0;for(int i=0;i<n;i++){while(j>0&&text[i]!=pattern[j])j=pi[j-1];if(text[i]==pattern[j])j++;if(j==m){free(pi);return i-m+1;}}
-       free(pi);return -1;
-   }
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def strStr(self, text: str, pattern: str) -> int:
-           if not pattern: return 0
-           pi = [0] * len(pattern)
-           for i in range(1, len(pattern)):
-               j = pi[i - 1]
-               while j and pattern[i] != pattern[j]: j = pi[j - 1]
-               if pattern[i] == pattern[j]: j += 1
-               pi[i] = j
-           j = 0
-           for i, char in enumerate(text):
-               while j and char != pattern[j]: j = pi[j - 1]
-               if char == pattern[j]: j += 1
-               if j == len(pattern): return i - j + 1
-           return -1
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {
-       public int strStr(String text,String pattern){
-           if(pattern.isEmpty())return 0;int m=pattern.length();int[] pi=new int[m];
-           for(int i=1;i<m;i++){int j=pi[i-1];while(j>0&&pattern.charAt(i)!=pattern.charAt(j))j=pi[j-1];if(pattern.charAt(i)==pattern.charAt(j))j++;pi[i]=j;}
-           int j=0;for(int i=0;i<text.length();i++){while(j>0&&text.charAt(i)!=pattern.charAt(j))j=pi[j-1];if(text.charAt(i)==pattern.charAt(j))j++;if(j==m)return i-m+1;}return -1;
-       }
-   }
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {
-       pub fn str_str(text:String,pattern:String)->i32{
-           if pattern.is_empty(){return 0}let t=text.as_bytes();let p=pattern.as_bytes();let mut pi=vec![0;p.len()];
-           for i in 1..p.len(){let mut j=pi[i-1];while j>0&&p[i]!=p[j]{j=pi[j-1];}if p[i]==p[j]{j+=1;}pi[i]=j;}
-           let mut j=0;for i in 0..t.len(){while j>0&&t[i]!=p[j]{j=pi[j-1];}if t[i]==p[j]{j+=1;}if j==p.len(){return (i+1-j) as i32;}}-1
-       }
-   }
-
-Go
-~~
-
-.. code-block:: go
-
-   func strStr(text,pattern string)int{
-       if len(pattern)==0{return 0};pi:=make([]int,len(pattern))
-       for i:=1;i<len(pattern);i++{j:=pi[i-1];for j>0&&pattern[i]!=pattern[j]{j=pi[j-1]};if pattern[i]==pattern[j]{j++};pi[i]=j}
-       j:=0;for i:=0;i<len(text);i++{for j>0&&text[i]!=pattern[j]{j=pi[j-1]};if text[i]==pattern[j]{j++};if j==len(pattern){return i-j+1}};return -1
-   }
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function strStr(text:string,pattern:string):number{
-       if(pattern.length===0)return 0;const pi=new Array(pattern.length).fill(0);
-       for(let i=1;i<pattern.length;i++){let j=pi[i-1];while(j>0&&pattern[i]!==pattern[j])j=pi[j-1];if(pattern[i]===pattern[j])j++;pi[i]=j;}
-       let j=0;for(let i=0;i<text.length;i++){while(j>0&&text[i]!==pattern[j])j=pi[j-1];if(text[i]===pattern[j])j++;if(j===pattern.length)return i-j+1;}return -1;
-   }
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {
-       public int StrStr(string text,string pattern){
-           if(pattern.Length==0)return 0;int[] pi=new int[pattern.Length];
-           for(int i=1;i<pattern.Length;i++){int j=pi[i-1];while(j>0&&pattern[i]!=pattern[j])j=pi[j-1];if(pattern[i]==pattern[j])j++;pi[i]=j;}
-           int matched=0;for(int i=0;i<text.Length;i++){while(matched>0&&text[i]!=pattern[matched])matched=pi[matched-1];if(text[i]==pattern[matched])matched++;if(matched==pattern.Length)return i-matched+1;}return -1;
-       }
-   }
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function str_str(text::String, pattern::String)
-       isempty(pattern) && return 0
-       t=collect(text);p=collect(pattern);pi=zeros(Int,length(p))
-       for i in 2:length(p);j=pi[i-1];while j>0&&p[i]!=p[j+1];j=pi[j];end;if p[i]==p[j+1];j+=1;end;pi[i]=j;end
-       j=0;for i in eachindex(t);while j>0&&t[i]!=p[j+1];j=pi[j];end;if t[i]==p[j+1];j+=1;end;if j==length(p);return i-j;end;end;-1
-   end
-
-R
-~
-
-.. code-block:: r
-
-   str_str <- function(text, pattern) {
-       t <- strsplit(text,"",fixed=TRUE)[[1]]; p <- strsplit(pattern,"",fixed=TRUE)[[1]]
-       m <- length(p); if (m == 0L) return(0L); pi <- integer(m)
-       if (m >= 2L) for (i in 2:m) { j <- pi[[i-1L]]; while (j>0L && p[[i]]!=p[[j+1L]]) j<-pi[[j]]; if(p[[i]]==p[[j+1L]])j<-j+1L; pi[[i]]<-j }
-       j <- 0L
-       for (i in seq_along(t)) { while(j>0L&&t[[i]]!=p[[j+1L]])j<-pi[[j]];if(t[[i]]==p[[j+1L]])j<-j+1L;if(j==m)return(i-j) }
-       -1L
-   }
+构造前缀函数时，``index`` 只向右移动，``matched`` 的每次回退都会严格减小；其总比较次数为 ``O(m)``。
+文本扫描同理，文本下标只前进，``matched`` 的增长与回退总量为线性级别，因此扫描为 ``O(n)``。前缀数组保存
+``m`` 个整数，工作空间为 ``O(m)``。
