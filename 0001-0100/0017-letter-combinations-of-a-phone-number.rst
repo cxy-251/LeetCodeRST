@@ -8,41 +8,27 @@
 :难度: Medium
 :主题: 字符串、回溯、笛卡尔积
 :原题: `LeetCode 0017 <https://leetcode.com/problems/letter-combinations-of-a-phone-number/>`_
-:重点: 电话按键映射、每位选择一个字母、组合数量、结果顺序不限定
+:重点: 逐位扩展前缀、复用回溯路径、由分支数乘积确定输出规模
 
 题目重述
 --------
 
-给定一个只包含数字 ``2`` 到 ``9`` 的字符串 ``digits``，按照电话键盘映射返回所有可能的字母组合：``2 -> abc``、``3 -> def``、``4 -> ghi``、``5 -> jkl``、``6 -> mno``、``7 -> pqrs``、``8 -> tuv``、``9 -> wxyz``。
+给定一个只包含数字 ``2`` 到 ``9`` 的字符串 ``digits``，按照电话键盘映射返回所有可能的字母组合：
 
-每个数字必须从自己的字母集合中选择恰好一个字母，组合中的字符顺序与数字顺序一致。当前题面约束 ``digits`` 的长度位于 ``[1, 4]``，因此有效输入不会为空；答案顺序不限。实现仍保留空字符串保护，若在题目约束之外传入空串则返回空列表。
+``2 -> abc``、``3 -> def``、``4 -> ghi``、``5 -> jkl``、``6 -> mno``、``7 -> pqrs``、
+``8 -> tuv``、``9 -> wxyz``。
+
+每个数字必须选择恰好一个对应字母，组合中的字符顺序必须与数字顺序一致。若 ``digits`` 为空，返回空列表。
+结果顺序不限。
 
 自建示例
 --------
 
-一个三字母按键和一个四字母按键：
-
-.. code-block:: text
-
-   输入：digits = "27"
-   输出：["ap", "aq", "ar", "as", "bp", "bq", "br", "bs", "cp", "cq", "cr", "cs"]
-   解释：第一位从 a、b、c 中选择，第二位从 p、q、r、s 中选择，共有 3 * 4 = 12 种组合。输出顺序可以不同。
-
-单个数字：
-
-.. code-block:: text
-
-   输入：digits = "8"
-   输出：["t", "u", "v"]
-   解释：数字 8 对应三个字母，每个字母单独形成一个组合。
-
-四字母按键：
-
-.. code-block:: text
-
-   输入：digits = "9"
-   输出：['w', 'x', 'y', 'z']
-   解释：数字 9 对应四个字母，每个字母单独形成一个组合。
+* 两个三字母按键：``digits = "23"``，返回 ``["ad", "ae", "af", "bd", "be", "bf", "cd", "ce", "cf"]``；
+* 三字母与四字母按键：``digits = "27"``，共有 ``3 * 4 = 12`` 个组合；
+* 单个数字：``digits = "8"``，返回 ``["t", "u", "v"]``；
+* 重复数字：``digits = "22"``，两个位置独立选择，共有 ``3 * 3 = 9`` 个组合；
+* 空输入：``digits = ""``，返回 ``[]``。
 
 C++ 实现
 --------
@@ -51,37 +37,35 @@ C++ 实现
 
    #include <array>
    #include <string>
-   #include <utility>
    #include <vector>
 
    class Solution {
    private:
        const std::array<std::string, 10> letters{
-           "", "", "abc", "def", "ghi",
-           "jkl", "mno", "pqrs", "tuv", "wxyz"
+           "", "", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"
        };
 
        std::vector<std::string> iterativeProduct(const std::string& digits) {
-           if (digits.empty()) return {};
+           if (digits.empty()) {
+               return {};
+           }
            std::vector<std::string> result{""};
            for (char digit : digits) {
+               const std::string& choices = letters[digit - '0'];
                std::vector<std::string> next;
+               next.reserve(result.size() * choices.size());
                for (const std::string& prefix : result) {
-                   for (char letter : letters[digit - '0']) {
+                   for (char letter : choices) {
                        next.push_back(prefix + letter);
                    }
                }
-               result = std::move(next);
+               result.swap(next);
            }
            return result;
        }
 
-       void backtrack(
-           const std::string& digits,
-           int index,
-           std::string& path,
-           std::vector<std::string>& result
-       ) {
+       void backtrack(const std::string& digits, int index, std::string& path,
+                      std::vector<std::string>& result) {
            if (index == static_cast<int>(digits.size())) {
                result.push_back(path);
                return;
@@ -93,9 +77,16 @@ C++ 实现
            }
        }
 
-       std::vector<std::string> recursiveProduct(const std::string& digits) {
-           if (digits.empty()) return {};
+       std::vector<std::string> backtrackingProduct(const std::string& digits) {
+           if (digits.empty()) {
+               return {};
+           }
+           int combinationCount = 1;
+           for (char digit : digits) {
+               combinationCount *= static_cast<int>(letters[digit - '0'].size());
+           }
            std::vector<std::string> result;
+           result.reserve(combinationCount);
            std::string path;
            path.reserve(digits.size());
            backtrack(digits, 0, path, result);
@@ -104,304 +95,90 @@ C++ 实现
 
    public:
        std::vector<std::string> letterCombinations(std::string digits) {
-           return recursiveProduct(digits);
+           return backtrackingProduct(digits);
        }
    };
 
 题解
 ----
 
-组合集合为什么是多个字母集的笛卡尔积
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+组合结构
+~~~~~~~~
 
-第 ``i`` 个数字只能从对应按键字母中选择一个字符。合法组合由每个位置各选一次组成，因此答案是这些字母集按
-输入顺序形成的笛卡尔积。若有 ``k`` 个数字，每个数字提供 3 或 4 个字母，输出数量就是各分支数的乘积。
+第 ``i`` 个数字只决定答案中第 ``i`` 个字符的可选集合。例如 ``digits = "27"`` 时：
 
-迭代方法如何逐层扩展已有前缀
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+* 第 0 位从 ``abc`` 中选择；
+* 第 1 位从 ``pqrs`` 中选择。
 
-开始时只有空前缀。处理一个数字时，把每个旧前缀分别追加该按键的每个字母，形成下一层前缀集合。处理完前
-``i`` 个数字后，``result`` 恰好包含这 ``i`` 个位置的全部组合。它直接保存每层全部中间字符串。
+每个完整答案都必须从每个集合中各取一个字符，因此答案就是这些按键字母集合按输入顺序形成的笛卡尔积。
+若各位置分别有 ``b0, b1, ..., bk-1`` 个选择，答案数量为：
 
-回溯状态为什么只需要位置和路径
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+``N = b0 * b1 * ... * bk-1``。
 
-``index`` 表示下一个待处理数字，``path`` 保存前 ``index`` 个数字已经选择的字母。映射由当前数字唯一决定，
-无需访问标记。每层枚举当前按键字母，追加一个字符后进入下一层。
+这意味着算法无法少于 ``N`` 次生成工作，因为这些答案本身都必须返回。
 
-选择与撤销如何复用同一缓冲区
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+逐层扩展
+~~~~~~~~
 
-追加字符后递归，返回时删除末位，路径就恢复到进入本层前的状态。下一个字母从相同父前缀出发，不会混入上一
-分支。路径长度始终等于 ``index``；到达输入末尾时复制路径，得到一个独立答案。
+``iterativeProduct`` 从唯一的空前缀 ``""`` 开始。处理一个数字时，把当前每个前缀分别追加该按键的所有字母，
+得到下一层前缀集合。
 
-递归树局部展开
-~~~~~~~~~~~~~~
+处理完前 ``i`` 个数字后，``result`` 恰好包含这 ``i`` 个位置的全部组合：
 
-.. code-block:: text
+* 初始时处理了零个位置，空前缀是唯一组合；
+* 假设当前已经包含前 ``i`` 位的全部组合；
+* 给每个前缀分别追加第 ``i`` 位的全部合法字母，就得到前 ``i + 1`` 位的全部组合，且没有重复。
 
-   ""
-   ├─ a
-   │  ├─ ap
-   │  ├─ aq
-   │  ├─ ar
-   │  └─ as
-   ├─ b
-   │  └─ bp ... bs
-   └─ c
-      └─ cp ... cs
+这种方法直接保存每一层的全部中间字符串。结构直观，但 ``prefix + letter`` 会为每个新节点构造一个新字符串。
 
-为什么回溯覆盖全部组合且不重复
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+回溯状态
+~~~~~~~~
 
-每个完整组合都有唯一的逐位选择序列。回溯在每层遍历该数字的全部字母，并对每个选择枚举所有后续位置，所以
-任意选择序列都有对应根到叶路径。不同组合至少在一层选择不同字母，路径不同，因此不会重复。
+回溯只需要两个核心状态：
 
-实现为什么保留空输入保护
-~~~~~~~~~~~~~~~~~~~~~~~~
+* ``index``：下一个需要选择字母的数字位置；
+* ``path``：前 ``index`` 个位置已经选出的前缀。
 
-当前题面要求输入至少包含一个数字，空串不是有效测试数据。实现仍在入口处返回空列表，避免在约束外调用时把空路径
-误当成一个组合 ``[""]``；这属于防御性行为，不改变有效输入的答案。
+当前位置的选择集合由 ``digits[index]`` 唯一确定。不同位置可以选择相同字母，因此不需要访问标记，也不存在
+“某个字母已经使用过”的限制。
 
-复杂度来源
-~~~~~~~~~~
+每次选择一个字母后执行三步：
 
-设答案数量为 ``N``，数字长度为 ``k``。复制每个答案需要 ``O(k)``，总时间 ``O(Nk)``；返回结果占
-``O(Nk)``。工作路径和递归栈均为 ``O(k)``。
+``追加字母 -> 递归处理下一位 -> 删除末尾字母``。
 
-九语言实现
-----------
+递归返回时删除刚加入的字符，``path`` 就恢复为进入本层前的父前缀。下一次循环可以复用同一个字符串缓冲区，
+不会混入上一分支的选择。
 
-C
-~
-
-.. code-block:: c
-
-   #include <stdlib.h>
-   #include <string.h>
-
-   static const char* MAP[] = {"","","abc","def","ghi","jkl","mno","pqrs","tuv","wxyz"};
-
-   static void dfs(const char* digits, int length, int index, char* path,
-                   char** result, int* count) {
-       if (index == length) {
-           path[length] = '\0';
-           result[*count] = malloc((size_t)length + 1);
-           memcpy(result[*count], path, (size_t)length + 1);
-           ++*count;
-           return;
-       }
-       const char* choices = MAP[digits[index] - '0'];
-       for (int i = 0; choices[i] != '\0'; ++i) {
-           path[index] = choices[i];
-           dfs(digits, length, index + 1, path, result, count);
-       }
-   }
-
-   char** letterCombinations(char* digits, int* returnSize) {
-       int length = (int)strlen(digits);
-       if (length == 0) { *returnSize = 0; return NULL; }
-       int capacity = 1;
-       for (int i = 0; i < length; ++i) capacity *= (int)strlen(MAP[digits[i]-'0']);
-       char** result = malloc((size_t)capacity * sizeof(char*));
-       char* path = malloc((size_t)length + 1);
-       *returnSize = 0;
-       dfs(digits, length, 0, path, result, returnSize);
-       free(path);
-       return result;
-   }
-
-Python
+叶节点
 ~~~~~~
 
-.. code-block:: python
+当 ``index == digits.size()`` 时，每个数字都已经贡献一个字符，此时 ``path`` 的长度恰好等于输入长度，可以
+复制到结果中。
 
-   class Solution:
-       def letterCombinations(self, digits: str) -> list[str]:
-           if not digits:
-               return []
-           mapping = ["", "", "abc", "def", "ghi", "jkl", "mno", "pqrs", "tuv", "wxyz"]
-           result, path = [], []
-           def dfs(index: int) -> None:
-               if index == len(digits):
-                   result.append("".join(path))
-                   return
-               for letter in mapping[int(digits[index])]:
-                   path.append(letter)
-                   dfs(index + 1)
-                   path.pop()
-           dfs(0)
-           return result
+每个合法组合对应唯一的一条逐位选择路径；回溯在每一层遍历当前按键的全部字母，所以所有路径都会到达一次。
+不同组合至少在一个位置选择不同，因此不会生成重复答案。
 
-Java
-~~~~
+空输入
+~~~~~~
 
-.. code-block:: java
+若直接从空前缀开始回溯，空输入会立即到达叶节点并产生 ``[""]``。题目要求的结果是空列表，因此两个入口
+都先单独处理 ``digits.empty()``，把“没有数字”与“已经为所有数字完成选择”区分开。
 
-   class Solution {
-       private static final String[] MAP = {
-           "","","abc","def","ghi","jkl","mno","pqrs","tuv","wxyz"
-       };
-       public List<String> letterCombinations(String digits) {
-           List<String> result = new ArrayList<>();
-           if (digits.isEmpty()) return result;
-           dfs(digits, 0, new StringBuilder(), result);
-           return result;
-       }
-       private void dfs(String digits, int index, StringBuilder path, List<String> result) {
-           if (index == digits.length()) {
-               result.add(path.toString());
-               return;
-           }
-           for (char letter : MAP[digits.charAt(index)-'0'].toCharArray()) {
-               path.append(letter);
-               dfs(digits, index + 1, path, result);
-               path.deleteCharAt(path.length() - 1);
-           }
-       }
-   }
+代码演进
+~~~~~~~~
 
-Rust
-~~~~
+``iterativeProduct`` 用一个结果数组保存当前整层前缀，再构造下一层数组。它把笛卡尔积的逐层展开直接写成循环。
 
-.. code-block:: rust
+``backtrackingProduct`` 删除中间层数组，只保留一个可变 ``path``。内部节点只执行追加与撤销，完整字符串只在
+叶节点复制。``combinationCount`` 由各按键分支数的乘积得到，用于提前预留结果容量，不参与搜索逻辑。
 
-   impl Solution {
-       pub fn letter_combinations(digits: String) -> Vec<String> {
-           if digits.is_empty() { return vec![]; }
-           let map = ["","","abc","def","ghi","jkl","mno","pqrs","tuv","wxyz"];
-           fn dfs(d: &[u8], index: usize, map: &[&str;10], path: &mut String, out: &mut Vec<String>) {
-               if index == d.len() { out.push(path.clone()); return; }
-               for letter in map[(d[index]-b'0') as usize].chars() {
-                   path.push(letter);
-                   dfs(d, index + 1, map, path, out);
-                   path.pop();
-               }
-           }
-           let mut result = Vec::new();
-           dfs(digits.as_bytes(), 0, &map, &mut String::new(), &mut result);
-           result
-       }
-   }
+公开入口采用 ``backtrackingProduct``。它与组合树结构一一对应，并把除最终答案外的工作状态压缩到一条当前路径。
 
-Go
-~~
-
-.. code-block:: go
-
-   func letterCombinations(digits string) []string {
-       if len(digits) == 0 { return []string{} }
-       mapping := []string{"","","abc","def","ghi","jkl","mno","pqrs","tuv","wxyz"}
-       result := []string{}
-       path := make([]byte, len(digits))
-       var dfs func(int)
-       dfs = func(index int) {
-           if index == len(digits) { result = append(result, string(path)); return }
-           for _, letter := range []byte(mapping[digits[index]-'0']) {
-               path[index] = letter
-               dfs(index + 1)
-           }
-       }
-       dfs(0)
-       return result
-   }
-
-TypeScript
+复杂度分析
 ~~~~~~~~~~
 
-.. code-block:: typescript
+设数字长度为 ``k``，答案数量为 ``N``。每个答案长度为 ``k``，复制到结果需要 ``O(k)``，因此两种方法的
+总时间复杂度都是 ``O(Nk)``，返回结果占 ``O(Nk)`` 空间。
 
-   function letterCombinations(digits: string): string[] {
-       if (!digits.length) return [];
-       const map = ["","","abc","def","ghi","jkl","mno","pqrs","tuv","wxyz"];
-       const result: string[] = [], path: string[] = [];
-       const dfs = (index: number): void => {
-           if (index === digits.length) { result.push(path.join("")); return; }
-           for (const letter of map[Number(digits[index])]) {
-               path.push(letter);
-               dfs(index + 1);
-               path.pop();
-           }
-       };
-       dfs(0);
-       return result;
-   }
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {
-       private readonly string[] map = {
-           "","","abc","def","ghi","jkl","mno","pqrs","tuv","wxyz"
-       };
-       public IList<string> LetterCombinations(string digits) {
-           var result = new List<string>();
-           if (digits.Length == 0) return result;
-           Dfs(digits, 0, new System.Text.StringBuilder(), result);
-           return result;
-       }
-       private void Dfs(string digits, int index, System.Text.StringBuilder path, List<string> result) {
-           if (index == digits.Length) { result.Add(path.ToString()); return; }
-           foreach (char letter in map[digits[index]-'0']) {
-               path.Append(letter);
-               Dfs(digits, index + 1, path, result);
-               path.Length -= 1;
-           }
-       }
-   }
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function letter_combinations(digits::String)
-       isempty(digits) && return String[]
-       mapping = ["","","abc","def","ghi","jkl","mno","pqrs","tuv","wxyz"]
-       digit_chars = collect(digits)
-       path = Char[]
-       result = String[]
-       function dfs(index)
-           if index > length(digit_chars)
-               push!(result, join(path))
-               return
-           end
-           digit = Int(digit_chars[index] - '0')
-           for letter in mapping[digit + 1]
-               push!(path, letter)
-               dfs(index + 1)
-               pop!(path)
-           end
-       end
-       dfs(1)
-       result
-   end
-
-R
-~
-
-.. code-block:: r
-
-   letterCombinations <- function(digits) {
-       if (nchar(digits) == 0L) return(character())
-       mapping <- c("","","abc","def","ghi","jkl","mno","pqrs","tuv","wxyz")
-       d <- strsplit(digits, "", fixed = TRUE)[[1]]
-       result <- character()
-       path <- character()
-       dfs <- function(index) {
-           if (index > length(d)) {
-               result <<- c(result, paste(path, collapse = ""))
-               return()
-           }
-           letters <- strsplit(mapping[[as.integer(d[[index]]) + 1L]], "", fixed = TRUE)[[1]]
-           for (letter in letters) {
-               path <<- c(path, letter)
-               dfs(index + 1L)
-               path <<- path[-length(path)]
-           }
-       }
-       dfs(1L)
-       result
-   }
+迭代方法还保存当前层和下一层的中间字符串。回溯方法除返回结果外只使用长度为 ``k`` 的路径和递归栈，工作
+空间为 ``O(k)``。最坏情况下每个数字有四个字母，``N = 4^k``，时间可写为 ``O(k * 4^k)``。
