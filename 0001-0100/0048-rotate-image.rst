@@ -6,16 +6,16 @@
 
 :题号: 0048
 :难度: Medium
-:主题: 矩阵、坐标映射、转置、原地变换
+:主题: 矩阵、坐标映射、原地置换
 :原题: `LeetCode 0048 <https://leetcode.com/problems/rotate-image/>`_
-:重点: 顺时针坐标映射、四元环、转置与行反转、覆盖安全
+:重点: 从额外矩阵按目标坐标写入，推导到四元环轮换与转置后水平翻转
 
 题目重述
 --------
 
-给定 ``n × n`` 整数方阵 ``matrix``，将图像顺时针旋转 90 度。必须直接修改原矩阵，不能分配另一个 ``n × n`` 矩阵保存完整结果。
+给定一个 ``n x n`` 整数方阵 ``matrix``，把整幅图像顺时针旋转 ``90`` 度。
 
-约束为 ``1 <= n <= 20``、``-1000 <= matrix[i][j] <= 1000``。
+必须直接修改原矩阵，不能再分配另一个 ``n x n`` 矩阵保存旋转结果。
 
 自建示例
 --------
@@ -23,9 +23,9 @@
 .. code-block:: text
 
    输入：
-   [ 1, 2, 3, 4]
-   [ 5, 6, 7, 8]
-   [ 9,10,11,12]
+   [1, 2, 3, 4]
+   [5, 6, 7, 8]
+   [9,10,11,12]
    [13,14,15,16]
 
    修改后：
@@ -34,7 +34,13 @@
    [15,11, 7,3]
    [16,12, 8,4]
 
-原矩阵第一列从下到上成为结果第一行。
+原矩阵第一列从下到上成为结果第一行，第二列从下到上成为结果第二行。
+
+边界情况：
+
+* ``[[7]]`` 旋转后仍为 ``[[7]]``；
+* ``[[1,2],[3,4]]`` 旋转后为 ``[[3,1],[4,2]]``；
+* 奇数阶矩阵的中心元素不移动。
 
 C++ 实现
 --------
@@ -47,176 +53,205 @@ C++ 实现
 
    class Solution {
    private:
-       void extraMatrix(std::vector<std::vector<int>>& matrix) {
+       void copyByCoordinateMapping(std::vector<std::vector<int>>& matrix) {
            const int n = static_cast<int>(matrix.size());
            std::vector<std::vector<int>> rotated(n, std::vector<int>(n));
-           for (int r = 0; r < n; ++r)
-               for (int c = 0; c < n; ++c)
-                   rotated[c][n - 1 - r] = matrix[r][c];
+
+           for (int row = 0; row < n; ++row) {
+               for (int col = 0; col < n; ++col) {
+                   rotated[col][n - 1 - row] = matrix[row][col];
+               }
+           }
            matrix = std::move(rotated);
        }
 
-       void fourWayCycles(std::vector<std::vector<int>>& matrix) {
+       void rotateFourWayCycles(std::vector<std::vector<int>>& matrix) {
            const int n = static_cast<int>(matrix.size());
+
            for (int layer = 0; layer < n / 2; ++layer) {
-               int last = n - 1 - layer;
+               const int last = n - 1 - layer;
                for (int offset = 0; offset < last - layer; ++offset) {
-                   int top = matrix[layer][layer + offset];
-                   matrix[layer][layer + offset] = matrix[last - offset][layer];
-                   matrix[last - offset][layer] = matrix[last][last - offset];
-                   matrix[last][last - offset] = matrix[layer + offset][last];
+                   const int top = matrix[layer][layer + offset];
+
+                   matrix[layer][layer + offset] =
+                       matrix[last - offset][layer];
+                   matrix[last - offset][layer] =
+                       matrix[last][last - offset];
+                   matrix[last][last - offset] =
+                       matrix[layer + offset][last];
                    matrix[layer + offset][last] = top;
                }
            }
        }
 
-       void transposeAndReverse(std::vector<std::vector<int>>& matrix) {
+       void transposeThenReverseRows(std::vector<std::vector<int>>& matrix) {
            const int n = static_cast<int>(matrix.size());
-           for (int r = 0; r < n; ++r)
-               for (int c = r + 1; c < n; ++c)
-                   std::swap(matrix[r][c], matrix[c][r]);
-           for (auto& row : matrix) std::reverse(row.begin(), row.end());
+
+           for (int row = 0; row < n; ++row) {
+               for (int col = row + 1; col < n; ++col) {
+                   std::swap(matrix[row][col], matrix[col][row]);
+               }
+           }
+
+           for (auto& row : matrix) {
+               std::reverse(row.begin(), row.end());
+           }
        }
 
    public:
        void rotate(std::vector<std::vector<int>>& matrix) {
-           transposeAndReverse(matrix);
+           transposeThenReverseRows(matrix);
        }
    };
 
 题解
 ----
 
-目标坐标映射是什么
-~~~~~~~~~~~~~~~~~~
-
-零基坐标 ``(r,c)`` 顺时针旋转后位于：
-
-.. code-block:: text
-
-   (r,c) -> (c,n-1-r)
-
-额外矩阵可直接按该公式写入，但使用 ``O(n²)`` 空间，不满足原地要求。
-
-四次映射为什么形成一个环
+先写出每个元素的目标坐标
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-连续应用旋转映射四次会回到原位置。一个非中心元素属于四元环：上边、右边、下边、左边相互搬运。分层遍历只处理每个环一次，可用一个临时变量完成原地轮换，但四组坐标较容易写错。
+设原坐标为 ``(row, col)``。顺时针旋转后：
 
-旋转如何拆成两个简单变换
+.. code-block:: text
+
+   新行 = col
+   新列 = n - 1 - row
+
+所以完整映射为：
+
+.. math::
+
+   (row,col) \longrightarrow (col,n-1-row)
+
+例如四阶矩阵中的 ``matrix[0][1]`` 位于第一行第二列，旋转后进入 ``matrix[1][3]``。
+
+``copyByCoordinateMapping`` 直接按这个公式写入新矩阵。每个原坐标有唯一目标坐标，不同原坐标也不会映射到同一位置，
+所以它一定得到正确结果。这是最直接的基线，问题只在于额外使用了 ``O(n^2)`` 空间。
+
+为什么不能直接写回原矩阵
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-先沿主对角线转置：
+若执行：
+
+.. code-block:: cpp
+
+   matrix[col][n - 1 - row] = matrix[row][col];
+
+目标位置可能仍保存着尚未搬走的原始元素。一次赋值会覆盖后续需要读取的数据，因此原地算法必须把互相依赖的位置作为
+一个整体同时轮换，或者把旋转拆成若干不会丢失数据的交换操作。
+
+连续四次映射形成四元环
+~~~~~~~~~~~~~~~~~~~~~~
+
+从一个坐标开始连续应用旋转映射：
 
 .. code-block:: text
 
-   (r,c) -> (c,r)
+   (row, col)
+       -> (col, n-1-row)
+       -> (n-1-row, n-1-col)
+       -> (n-1-col, row)
+       -> (row, col)
 
-再反转每一行，把列坐标 ``r`` 变为 ``n-1-r``：
+除奇数阶矩阵的中心点外，每个位置都属于一个长度为四的环。环内四个值必须同时顺时针移动。
 
-.. code-block:: text
-
-   (c,r) -> (c,n-1-r)
-
-复合映射正是顺时针旋转目标。两个阶段都由成对交换完成，不会丢失尚未读取的值。
-
-三阶矩阵状态
-~~~~~~~~~~~~
+对当前层左上边的一点：
 
 .. code-block:: text
 
-   原矩阵          转置后          每行反转后
-   1 2 3           1 4 7           7 4 1
-   4 5 6     ->    2 5 8     ->    8 5 2
-   7 8 9           3 6 9           9 6 3
+   top    = (layer,          layer + offset)
+   right  = (layer + offset, last)
+   bottom = (last,           last - offset)
+   left   = (last - offset,  layer)
 
-转置为何只遍历主对角线上方
+顺时针旋转后，左边值进入上边，上边值进入右边，右边值进入下边，下边值进入左边。保存一个 ``top`` 临时值后，
+即可完成四次赋值而不丢失数据。
+
+为什么分层遍历不会重复处理
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-交换 ``matrix[r][c]`` 与 ``matrix[c][r]`` 时，若遍历整个矩阵，同一对元素会被交换两次并恢复原状。只取 ``c > r``，每个非对角元素对恰好处理一次；主对角线元素无需移动。
+外层 ``layer`` 表示当前正方形边框。每处理完一圈，就进入内一圈。
 
-为什么两个阶段都保持原地安全
+对某一层，只把上边从左到右的前 ``边长 - 1`` 个位置作为四元环代表：
+
+.. code-block:: text
+
+   offset = 0, 1, ..., last - layer - 1
+
+右上角不能再次作为新的代表，否则它所属的四元环会重复处理。每个非中心位置恰好落在某一层，并且在该层恰好属于
+一个由上边代表的四元环，因此所有元素都移动一次且仅一次。
+
+奇数阶矩阵最中心位置单独形成长度为一的环，旋转后仍在原处，所以循环只处理 ``n / 2`` 层。
+
+把旋转拆成两个简单置换
+~~~~~~~~~~~~~~~~~~~~~~
+
+四元环直接执行目标映射。另一条路线是寻找两个更容易实现的变换，使它们的复合结果等于目标映射。
+
+第一步沿主对角线转置：
+
+.. code-block:: text
+
+   (row, col) -> (col, row)
+
+第二步水平翻转每一行：
+
+.. code-block:: text
+
+   (col, row) -> (col, n - 1 - row)
+
+复合后正好得到：
+
+.. code-block:: text
+
+   (row, col) -> (col, n - 1 - row)
+
+因此“转置后反转每一行”与顺时针旋转完全等价。
+
+状态演化
+~~~~~~~~
+
+对三阶矩阵：
+
+.. code-block:: text
+
+   原矩阵          主对角线转置后     每行反转后
+   1 2 3           1 4 7              7 4 1
+   4 5 6     ->    2 5 8       ->     8 5 2
+   7 8 9           3 6 9              9 6 3
+
+最终矩阵的每个位置都符合顺时针坐标映射。
+
+转置为什么只处理主对角线上方
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-转置使用对称位置互换，交换前同时取得两个值；行反转也只交换行内两端。每个动作是可逆置换，既不覆盖未保存数据，也不创建或删除元素。所有坐标经过复合置换后恰好到达目标位置。
+转置需要交换 ``matrix[row][col]`` 与 ``matrix[col][row]``。
 
-复杂度来源
+若遍历整个矩阵，一对对称位置会先交换一次，随后又交换回来。限制 ``col > row`` 后：
+
+* 主对角线元素保持不动；
+* 每对非对角线元素只交换一次；
+* 所有需要转置的位置都被覆盖。
+
+两个阶段为何都不会覆盖数据
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+转置和行反转都只由两两交换组成。交换会同时保存两个位置的原值，再把它们互换，不会像单向赋值那样丢失尚未读取
+的数据。
+
+两步都是矩阵位置上的双射：转置不会重复或遗漏元素，行反转也不会重复或遗漏元素。两个双射复合后仍是双射，并且复合
+坐标已经证明等于顺时针旋转坐标，所以最终矩阵正确。
+
+三种方法的关系
+~~~~~~~~~~~~~~
+
+#. ``copyByCoordinateMapping`` 最直接：按目标坐标写入新矩阵，用空间换取简单的数据依赖；
+#. ``rotateFourWayCycles`` 观察到旋转置换由若干四元环组成，用一个临时变量逐环原地执行；
+#. ``transposeThenReverseRows`` 把同一坐标映射分解为两种简单交换，代码更短，作为公开入口。
+
+复杂度分析
 ~~~~~~~~~~
 
-三个方法都处理 ``n²`` 个矩阵元素，时间 ``O(n²)``。额外矩阵方法空间 ``O(n²)``；四元环和转置加反转仅使用临时变量，额外空间 ``O(1)``。
+矩阵共有 ``n^2`` 个元素，三种方法都需要处理同阶数量的位置，时间复杂度均为 ``O(n^2)``。
 
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   void rotate(int **matrix,int n,int *cols){(void)cols;for(int r=0;r<n;r++)for(int c=r+1;c<n;c++){int t=matrix[r][c];matrix[r][c]=matrix[c][r];matrix[c][r]=t;}for(int r=0;r<n;r++)for(int l=0,h=n-1;l<h;l++,h--){int t=matrix[r][l];matrix[r][l]=matrix[r][h];matrix[r][h]=t;}}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def rotate(self, matrix: list[list[int]]) -> None:
-           n=len(matrix)
-           for r in range(n):
-               for c in range(r+1,n): matrix[r][c],matrix[c][r]=matrix[c][r],matrix[r][c]
-           for row in matrix: row.reverse()
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public void rotate(int[][]m){int n=m.length;for(int r=0;r<n;r++)for(int c=r+1;c<n;c++){int t=m[r][c];m[r][c]=m[c][r];m[c][r]=t;}for(int[]row:m)for(int l=0,h=n-1;l<h;l++,h--){int t=row[l];row[l]=row[h];row[h]=t;}}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn rotate(m:&mut Vec<Vec<i32>>){let n=m.len();for r in 0..n{for c in r+1..n{let t=m[r][c];m[r][c]=m[c][r];m[c][r]=t}}for row in m.iter_mut(){row.reverse()}}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func rotate(m [][]int){n:=len(m);for r:=0;r<n;r++{for c:=r+1;c<n;c++{m[r][c],m[c][r]=m[c][r],m[r][c]}};for _,row:=range m{for l,h:=0,n-1;l<h;l,h=l+1,h-1{row[l],row[h]=row[h],row[l]}}}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function rotate(m:number[][]):void{const n=m.length;for(let r=0;r<n;r++)for(let c=r+1;c<n;c++)[m[r][c],m[c][r]]=[m[c][r],m[r][c]];for(const row of m)row.reverse();}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public void Rotate(int[][]m){int n=m.Length;for(int r=0;r<n;r++)for(int c=r+1;c<n;c++)(m[r][c],m[c][r])=(m[c][r],m[r][c]);foreach(var row in m)Array.Reverse(row);}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function rotate!(m::Matrix{Int})
-       n=size(m,1)
-       for r in 1:n,c in r+1:n;m[r,c],m[c,r]=m[c,r],m[r,c];end
-       for r in 1:n;reverse!(@view m[r,:]);end
-       m
-   end
-
-R
-~
-
-.. code-block:: r
-
-   rotate_image <- function(m){n<-nrow(m);if(n>=2L)for(r in 1:n)if(r<n)for(c in (r+1L):n){temporary<-m[r,c];m[r,c]<-m[c,r];m[c,r]<-temporary};m[,n:1,drop=FALSE]}
+额外矩阵方法使用 ``O(n^2)`` 空间。四元环和转置加行反转只使用少量临时变量，额外空间为 ``O(1)``。
