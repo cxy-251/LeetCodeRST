@@ -6,14 +6,19 @@
 
 :题号: 0049
 :难度: Medium
-:主题: 字符串、哈希表、规范签名、字符频次
+:主题: 字符串、哈希表、规范键、字符频次
 :原题: `LeetCode 0049 <https://leetcode.com/problems/group-anagrams/>`_
-:重点: 异位词等价关系、排序签名、频次签名、完整分组
+:重点: 从反复比较是否为异位词，推导到为每个字符串计算唯一组签名并一次归组
 
 题目重述
 --------
 
-给定小写英文字母字符串数组 ``strs``，把互为字母异位词的字符串放入同一组。两个字符串互为异位词，当且仅当它们包含完全相同的字符及出现次数。每个输入字符串都必须出现在恰好一个分组中；组间和组内顺序均不限，重复字符串不能丢失。
+给定一个字符串数组 ``strs``，其中每个字符串只包含小写英文字母。请把互为字母异位词的字符串放入同一组，
+并返回所有分组。
+
+两个字符串互为字母异位词，当且仅当它们包含完全相同的字母，并且每种字母的出现次数也完全相同。
+字符串内部字母的排列顺序不影响所属分组。每个输入字符串都必须保留一次；若相同字符串在输入中出现多次，
+结果中也必须保留相同次数。分组之间以及同一组内部的顺序均不限。
 
 约束为 ``1 <= strs.length <= 10^4``、``0 <= strs[i].length <= 100``。
 
@@ -22,17 +27,11 @@
 
 .. code-block:: text
 
-   输入：strs = ["arc","car","rat","tar","elbow","below","arc"]
-   输出：[["arc","car","arc"],["rat","tar"],["elbow","below"]]
+   输入：strs = ["arc", "car", "rat", "tar", "elbow", "below", "arc", ""]
+   输出：[["arc", "car", "arc"], ["rat", "tar"], ["elbow", "below"], [""]]
 
-``"arc"`` 出现两次，因此对应分组中也必须保留两次；输出分组与组内次序可以不同。
-
-.. code-block:: text
-
-   输入：strs = ["","b",""]
-   输出：[["",""],["b"]]
-
-两个空字符串具有相同字符频次，应进入同一组。
+``"arc"`` 与 ``"car"`` 的三个字母及次数相同，因此属于同一组；输入中的第二个 ``"arc"`` 仍须保留。
+空字符串的 26 种字母次数全为零，也有唯一签名。
 
 C++ 实现
 --------
@@ -48,198 +47,217 @@ C++ 实现
 
    class Solution {
    private:
-       bool areAnagrams(const std::string& a, const std::string& b) {
-           if (a.size() != b.size()) return false;
-           std::array<int,26> count{};
-           for (char ch : a) ++count[ch - 'a'];
-           for (char ch : b) if (--count[ch - 'a'] < 0) return false;
+       bool haveSameFrequency(const std::string& first, const std::string& second) {
+           if (first.size() != second.size()) return false;
+
+           std::array<int, 26> count{};
+           for (char ch : first) ++count[ch - 'a'];
+           for (char ch : second) {
+               if (--count[ch - 'a'] < 0) return false;
+           }
            return true;
        }
 
-       std::vector<std::vector<std::string>> pairwise(const std::vector<std::string>& words) {
+       std::vector<std::vector<std::string>> pairwiseGrouping(
+           const std::vector<std::string>& words
+       ) {
            std::vector<std::vector<std::string>> groups;
-           for (const auto& word : words) {
+
+           for (const std::string& word : words) {
                bool placed = false;
                for (auto& group : groups) {
-                   if (areAnagrams(word, group[0])) { group.push_back(word); placed = true; break; }
+                   if (!haveSameFrequency(word, group.front())) continue;
+                   group.push_back(word);
+                   placed = true;
+                   break;
                }
                if (!placed) groups.push_back({word});
            }
            return groups;
        }
 
-       std::vector<std::vector<std::string>> sortedKey(const std::vector<std::string>& words) {
-           std::unordered_map<std::string,std::vector<std::string>> groups;
-           for (const auto& word : words) {
-               std::string key = word;
-               std::sort(key.begin(), key.end());
-               groups[key].push_back(word);
+       std::vector<std::vector<std::string>> sortedSignatureGrouping(
+           const std::vector<std::string>& words
+       ) {
+           std::unordered_map<std::string, int> groupIndex;
+           std::vector<std::vector<std::string>> groups;
+
+           for (const std::string& word : words) {
+               std::string signature = word;
+               std::sort(signature.begin(), signature.end());
+
+               auto [it, inserted] = groupIndex.emplace(
+                   signature,
+                   static_cast<int>(groups.size())
+               );
+               if (inserted) groups.push_back({});
+               groups[it->second].push_back(word);
            }
-           std::vector<std::vector<std::string>> result;
-           for (auto& entry : groups) result.push_back(std::move(entry.second));
-           return result;
+           return groups;
        }
 
-       std::string frequencyKey(const std::string& word) {
-           std::array<int,26> count{};
+       std::string buildFrequencySignature(const std::string& word) {
+           std::array<int, 26> count{};
            for (char ch : word) ++count[ch - 'a'];
-           std::string key;
-           for (int value : count) { key.push_back('#'); key += std::to_string(value); }
-           return key;
+
+           std::string signature;
+           for (int frequency : count) {
+               signature.push_back('#');
+               signature += std::to_string(frequency);
+           }
+           return signature;
        }
 
-       std::vector<std::vector<std::string>> countKey(const std::vector<std::string>& words) {
-           std::unordered_map<std::string,int> index;
-           std::vector<std::vector<std::string>> result;
-           for (const auto& word : words) {
-               std::string key = frequencyKey(word);
-               auto [it, inserted] = index.emplace(key, static_cast<int>(result.size()));
-               if (inserted) result.push_back({});
-               result[it->second].push_back(word);
+       std::vector<std::vector<std::string>> frequencySignatureGrouping(
+           const std::vector<std::string>& words
+       ) {
+           std::unordered_map<std::string, int> groupIndex;
+           std::vector<std::vector<std::string>> groups;
+
+           for (const std::string& word : words) {
+               std::string signature = buildFrequencySignature(word);
+               auto [it, inserted] = groupIndex.emplace(
+                   std::move(signature),
+                   static_cast<int>(groups.size())
+               );
+               if (inserted) groups.push_back({});
+               groups[it->second].push_back(word);
            }
-           return result;
+           return groups;
        }
 
    public:
-       std::vector<std::vector<std::string>> groupAnagrams(std::vector<std::string>& strs) {
-           return countKey(strs);
+       std::vector<std::vector<std::string>> groupAnagrams(
+           std::vector<std::string>& strs
+       ) {
+           return frequencySignatureGrouping(strs);
        }
    };
 
 题解
 ----
 
-为什么两两比较会重复统计
+直接方法：逐组询问是否属于同一类
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+最直接的做法是维护已经建立的分组。处理新字符串时，把它依次与每组的一个代表字符串比较：若字符频次相同，
+就追加到该组；所有组都不匹配时再新建一组。
+
+代表字符串足以判断组别，因为“互为异位词”是等价关系。同一组中的字符串都与代表具有相同的 26 维频次，
+因此彼此也具有相同频次。
+
+这个方法的问题不是判断错误，而是重复计算。若前面已经形成 ``g`` 个组，新字符串最坏要执行 ``g`` 次频次比较；
+当大部分字符串互不相同时，组数会接近字符串数量，整体退化为平方级。
+
+从比较关系改成计算组身份
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-把每个新字符串与已有组代表逐一比较，需要反复构造或检查字符频次；组数接近输入数时会退化到平方级。需要为每个字符串一次性计算与排列顺序无关的规范签名。
+两两比较每次都在回答：
 
-排序字符串为何是合法签名
+.. code-block:: text
+
+   当前字符串与这个代表是否属于同一组？
+
+更有效的方向是为每个字符串直接计算一个 ``signature``：
+
+.. code-block:: text
+
+   两个字符串互为异位词  <=>  两个 signature 完全相同
+
+这样每个字符串只需计算一次签名，再通过哈希表直接找到所属分组，无需逐个尝试已有代表。
+
+方法一：排序后的字符串作为签名
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+把字符串中的字符排序，所有排列差异都会被消除。例如：
+
+.. code-block:: text
+
+   arc -> acr
+   car -> acr
+   rat -> art
+
+若两个字符串互为异位词，它们拥有相同的字符及次数，排序结果必然相同。反过来，排序结果相同意味着每个位置的字符
+完全一致，因此原字符串的字符多重集合也一致。排序字符串由此成为充要的规范表示。
+
+该方法简单且适用于字符集合不固定的情况。长度为 ``k`` 的字符串需要 ``O(k log k)`` 时间生成签名。
+
+方法二：字符频次向量作为签名
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+本题只包含 26 个小写英文字母，可以直接建立固定长度频次数组：
+
+.. code-block:: text
+
+   count[0] 记录 a 的数量
+   count[1] 记录 b 的数量
+   ...
+   count[25] 记录 z 的数量
+
+两个字符串互为异位词，当且仅当这 26 个分量逐项相等。生成频次只需顺序扫描字符串，不需要排序。
+
+C++ 的 ``unordered_map`` 默认不能直接把 ``std::array<int, 26>`` 作为键，因此代码把频次数组序列化成字符串。
+每个分量前都加入 ``#`` 分隔符：
+
+.. code-block:: text
+
+   [1, 11, 0, ...] -> #1#11#0...
+   [11, 1, 0, ...] -> #11#1#0...
+
+不能直接把十进制数字无分隔地拼接，否则 ``[1,11]`` 与 ``[11,1]`` 都可能变成 ``111``，从而错误合组。
+
+哈希表为什么只保存组下标
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-异位词排序后得到相同字符序列；非异位词至少有一个字符或次数不同，排序结果不同。因此排序后的字符串可直接作为哈希键。长度为 ``k`` 的字符串计算键需 ``O(k log k)``。
+``groupIndex[signature]`` 保存该签名对应的结果组下标。首次看到某个签名时，先在 ``groups`` 末尾建立空组，
+再把新下标登记到哈希表；以后相同签名直接追加到原组。
 
-频次向量为何更直接
-~~~~~~~~~~~~~~~~~~
-
-题目字符域固定为 26 个小写字母。长度 26 的向量中，第 ``d`` 项记录对应字母次数。两个字符串互为异位词，当且仅当 26 项逐项相等；计算只需扫描字符串一次。
-
-签名如何安全序列化
-~~~~~~~~~~~~~~~~~~
-
-直接拼接十进制次数会产生歧义，例如 ``[1,11]`` 与 ``[11,1]``。在每项前加入分隔符，形成 ``#1#11...``，即可保留维度边界。也可在支持结构哈希的语言中直接使用数组或元组键。
-
-哈希表状态如何形成分组
-~~~~~~~~~~~~~~~~~~~~~~
-
-``index[key]`` 保存签名对应的结果组下标。首次出现签名时新建空组并登记编号；之后相同签名的字符串直接追加。字符串本身不被排序或修改，所以重复字符串和原始内容都完整保留。
+也可以让哈希表直接保存 ``vector<string>``，最后再遍历哈希表搬运结果。保存组下标可以在读取输入时直接构造最终
+二维数组，并且不会依赖哈希表的遍历顺序。
 
 状态演化
 ~~~~~~~~
+
+处理 ``["eat", "tea", "tan", "ate", ""]`` 时：
 
 .. list-table::
    :header-rows: 1
 
    * - 字符串
-     - 签名关系
-     - 动作
+     - 频次签名关系
+     - 操作
    * - ``eat``
-     - 新签名
-     - 建立组 0
+     - 首次出现
+     - 建立组 0，加入 ``eat``
    * - ``tea``
      - 与 ``eat`` 相同
-     - 追加到组 0
+     - 加入组 0
    * - ``tan``
-     - 新签名
-     - 建立组 1
+     - 首次出现
+     - 建立组 1，加入 ``tan``
    * - ``ate``
      - 与 ``eat`` 相同
-     - 追加到组 0
+     - 加入组 0
+   * - 空字符串
+     - 26 项全为 0
+     - 建立组 2
 
 为什么分组不重不漏
 ~~~~~~~~~~~~~~~~~~
 
-每个输入字符串恰好计算一次签名并追加一次，因此不会遗漏或复制。签名相等当且仅当异位词关系成立，所以同组内任意字符串互为异位词，不同组签名不同，不能互为异位词。
+每个输入字符串在外层循环中恰好处理一次，并且只追加到一个签名对应的组，所以不会遗漏，也不会被额外复制。
+相同字符串重复出现时，每次循环都会再次追加，因此输入中的重复次数完整保留。
+
+同组字符串具有相同签名，也就具有相同的 26 项频次，必然互为异位词。不同组的签名至少有一个频次分量不同，
+不可能互为异位词。因此哈希键建立的分区与题目要求的异位词分区完全一致。
 
 复杂度来源
 ~~~~~~~~~~
 
-设字符串总字符数为 ``C``、字符串数量为 ``n``、最长长度为 ``k``。排序键时间 ``O(n*k log k)``；频次键时间 ``O(C)``，键和结果索引额外空间 ``O(n)``，不计返回字符串引用。
+设字符串数量为 ``n``，总字符数为 ``C``，最长字符串长度为 ``k``。
 
-九语言实现
-----------
+逐组比较在组数接近 ``n`` 时需要 ``O(n²k)`` 时间。排序签名方法需要
+``O(sum(len(word) * log len(word)))`` 时间，可粗略写成 ``O(nk log k)``。
 
-C
-~
-
-.. code-block:: c
-
-   static void key_of(const char*s,char*key){int count[26]={0};for(int i=0;s[i];i++)count[s[i]-'a']++;int pos=0;for(int i=0;i<26;i++)pos+=sprintf(key+pos,"#%d",count[i]);}
-   char***groupAnagrams(char**strs,int n,int*returnSize,int**returnColumnSizes){char**keys=malloc((size_t)n*sizeof(char*));char***groups=malloc((size_t)n*sizeof(char**));int*sizes=calloc((size_t)n,sizeof(int)),groupCount=0;for(int i=0;i<n;i++){char key[300];key_of(strs[i],key);int g=-1;for(int j=0;j<groupCount;j++)if(strcmp(keys[j],key)==0){g=j;break;}if(g<0){g=groupCount++;keys[g]=strdup(key);groups[g]=malloc((size_t)n*sizeof(char*));}groups[g][sizes[g]++]=strs[i];}for(int i=0;i<groupCount;i++)free(keys[i]);free(keys);*returnSize=groupCount;*returnColumnSizes=sizes;return groups;}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def groupAnagrams(self, strs: list[str]) -> list[list[str]]:
-           groups = {}
-           for word in strs:
-               count = [0] * 26
-               for ch in word: count[ord(ch)-97] += 1
-               groups.setdefault(tuple(count), []).append(word)
-           return list(groups.values())
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public List<List<String>> groupAnagrams(String[]strs){Map<String,List<String>>groups=new HashMap<>();for(String word:strs){int[]count=new int[26];for(char ch:word.toCharArray())count[ch-'a']++;StringBuilder key=new StringBuilder();for(int v:count)key.append('#').append(v);groups.computeIfAbsent(key.toString(),k->new ArrayList<>()).add(word);}return new ArrayList<>(groups.values());}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn group_anagrams(strs:Vec<String>)->Vec<Vec<String>>{use std::collections::HashMap;let mut groups:HashMap<[u16;26],Vec<String>>=HashMap::new();for word in strs{let mut key=[0u16;26];for b in word.bytes(){key[(b-b'a')as usize]+=1}groups.entry(key).or_default().push(word)}groups.into_values().collect()}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func groupAnagrams(strs []string)[][]string{groups:=map[[26]int][]string{};for _,word:=range strs{var key[26]int;for _,ch:=range []byte(word){key[ch-'a']++};groups[key]=append(groups[key],word)};result:=[][]string{};for _,group:=range groups{result=append(result,group)};return result}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function groupAnagrams(strs:string[]):string[][]{const groups=new Map<string,string[]>();for(const word of strs){const count=Array(26).fill(0);for(const ch of word)count[ch.charCodeAt(0)-97]++;const key=count.join("#");if(!groups.has(key))groups.set(key,[]);groups.get(key)!.push(word);}return [...groups.values()];}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public IList<IList<string>> GroupAnagrams(string[]strs){var groups=new Dictionary<string,IList<string>>();foreach(string word in strs){int[]count=new int[26];foreach(char ch in word)count[ch-'a']++;string key=string.Join("#",count);if(!groups.ContainsKey(key))groups[key]=new List<string>();groups[key].Add(word);}return groups.Values.ToList();}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function group_anagrams(words::Vector{String})
-       groups=Dict{NTuple{26,Int},Vector{String}}()
-       for word in words;count=zeros(Int,26);for ch in word;count[Int(ch)-Int('a')+1]+=1;end;key=Tuple(count);push!(get!(groups,key,String[]),word);end
-       collect(values(groups))
-   end
-
-R
-~
-
-.. code-block:: r
-
-   group_anagrams <- function(words){groups<-list();indices<-new.env(hash=TRUE,parent=emptyenv());for(word in words){count<-integer(26);chars<-strsplit(word,"")[[1]];if(length(chars)>0L)for(ch in chars){i<-utf8ToInt(ch)-96L;count[[i]]<-count[[i]]+1L};key<-paste(count,collapse="#");if(!exists(key,indices,inherits=FALSE)){groups[[length(groups)+1L]]<-character();assign(key,length(groups),indices)};g<-get(key,indices);groups[[g]]<-c(groups[[g]],word)};groups}
+频次签名扫描全部字符需要 ``O(C)``，每个字符串还要序列化固定的 26 个计数，因此总时间为 ``O(C + n)``。
+不计返回结果中的字符串存储，哈希键、分组索引和临时频次数组使用 ``O(n)`` 额外空间；26 维计数属于常量空间。
