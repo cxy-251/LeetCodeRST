@@ -6,16 +6,16 @@
 
 :题号: 0053
 :难度: Medium
-:主题: 数组、前缀和、动态规划、分治
+:主题: 数组、动态规划、前缀和
 :原题: `LeetCode 0053 <https://leetcode.com/problems/maximum-subarray/>`_
-:重点: 从重复计算区间和，推导到只保留以前一位置结尾的最优非空子数组
+:重点: 从枚举连续区间，推导到只保留以前一位置结尾的最优非空子数组
 
 题目重述
 --------
 
-给定整数数组 ``nums``，从中选择一个至少包含一个元素的连续子数组，返回该子数组的最大元素和。
+给定整数数组 ``nums``，选择一个至少包含一个元素的连续子数组，返回该子数组的最大元素和。
 
-子数组必须连续且不能为空。数组全部为负数时，答案不是 0，而是其中最大的单个元素。
+子数组必须连续且不能为空。因此数组全部为负数时，答案是最大的单个元素，而不是空子数组的和 0。
 
 约束为 ``1 <= nums.length <= 10^5``、``-10^4 <= nums[i] <= 10^4``。
 
@@ -27,8 +27,8 @@
    输入：nums = [-4,2,3,-8,5,6,-2]
    输出：11
 
-最大和子数组为 ``[5,6]``，元素和为 ``11``。虽然前面的 ``[2,3]`` 也是正和区间，连接中间的 ``-8``
-后只得到 ``8``，不如从 ``5`` 重新开始。
+最大和子数组为 ``[5,6]``，元素和为 ``11``。前面的正和区间 ``[2,3]`` 若跨过 ``-8`` 再连接
+``[5,6]``，总和只有 ``8``，因此应从 ``5`` 重新开始。
 
 .. code-block:: text
 
@@ -42,7 +42,8 @@
    输入：nums = [4,-1,2,1,-7,3]
    输出：6
 
-最大和子数组为 ``[4,-1,2,1]``。局部出现负数并不表示必须立即截断；只要此前累计贡献仍为正，继续连接仍可能更优。
+最大和子数组为 ``[4,-1,2,1]``。区间中出现负数并不表示必须截断；只要此前累计贡献仍为正，连接它仍可能
+优于从当前位置重新开始。
 
 C++ 实现
 --------
@@ -55,20 +56,7 @@ C++ 实现
 
    class Solution {
    private:
-       int enumerateAndSum(const std::vector<int>& nums) {
-           const int n = static_cast<int>(nums.size());
-           int best = INT_MIN;
-           for (int left = 0; left < n; ++left) {
-               for (int right = left; right < n; ++right) {
-                   int sum = 0;
-                   for (int i = left; i <= right; ++i) sum += nums[i];
-                   best = std::max(best, sum);
-               }
-           }
-           return best;
-       }
-
-       int extendRight(const std::vector<int>& nums) {
+       int enumerateSubarrays(const std::vector<int>& nums) {
            const int n = static_cast<int>(nums.size());
            int best = INT_MIN;
            for (int left = 0; left < n; ++left) {
@@ -77,6 +65,18 @@ C++ 实现
                    sum += nums[right];
                    best = std::max(best, sum);
                }
+           }
+           return best;
+       }
+
+       int dynamicProgramming(const std::vector<int>& nums) {
+           const int n = static_cast<int>(nums.size());
+           std::vector<int> ending(n);
+           ending[0] = nums[0];
+           int best = ending[0];
+           for (int i = 1; i < n; ++i) {
+               ending[i] = std::max(nums[i], ending[i - 1] + nums[i]);
+               best = std::max(best, ending[i]);
            }
            return best;
        }
@@ -103,34 +103,6 @@ C++ 实现
            return best;
        }
 
-       struct Segment {
-           int total;
-           int prefix;
-           int suffix;
-           int best;
-       };
-
-       Segment divide(const std::vector<int>& nums, int left, int right) {
-           if (left == right) {
-               int value = nums[left];
-               return {value, value, value, value};
-           }
-
-           int middle = left + (right - left) / 2;
-           Segment a = divide(nums, left, middle);
-           Segment b = divide(nums, middle + 1, right);
-           return {
-               a.total + b.total,
-               std::max(a.prefix, a.total + b.prefix),
-               std::max(b.suffix, b.total + a.suffix),
-               std::max({a.best, b.best, a.suffix + b.prefix})
-           };
-       }
-
-       int divideAndConquer(const std::vector<int>& nums) {
-           return divide(nums, 0, static_cast<int>(nums.size()) - 1).best;
-       }
-
    public:
        int maxSubArray(std::vector<int>& nums) {
            return kadane(nums);
@@ -140,81 +112,71 @@ C++ 实现
 题解
 ----
 
-第一步：完整枚举定义中的所有候选
+从定义出发：枚举所有连续子数组
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-连续子数组由左端点 ``left`` 和右端点 ``right`` 唯一确定。最直接的方法枚举所有 ``left <= right``，再扫描
-``[left,right]`` 求和。
-
-数组共有 ``O(n²)`` 个非空区间，每个区间求和最坏需要 ``O(n)``，因此 ``enumerateAndSum`` 的时间为
-``O(n³)``。它完整表达了题意，也暴露出真正的浪费：相邻区间共享绝大多数元素，却反复从头求和。
-
-第二步：固定左端点时复用上一个区间和
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-固定 ``left`` 后，右端点从左向右移动：
+连续子数组由左端点 ``left`` 和右端点 ``right`` 唯一确定。固定左端点后，右端点每向右移动一格，只需把
+新元素加入累计和：
 
 .. code-block:: text
 
    sum(left, right) = sum(left, right - 1) + nums[right]
 
-因此只需维护一个累计和。``extendRight`` 仍枚举全部 ``O(n²)`` 个区间，但每个区间只做常数工作，时间降为
-``O(n²)``，额外空间为 ``O(1)``。
+``enumerateSubarrays`` 因而能枚举全部候选，并避免为每个区间重新扫描求和。数组共有 ``O(n²)`` 个非空连续
+子数组，所以该方法时间为 ``O(n²)``、额外空间为 ``O(1)``。
 
-进一步优化不能再只加速“某个已选区间的求和”，而要避免枚举全部左右端点。
+它的瓶颈已经不是求和，而是仍然显式枚举每一对左右端点。要继续优化，需要把许多左端点候选压缩成一个足够
+继续向右扩展的状态。
 
-第三步：固定右端点时只需要此前最小前缀
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+固定右端点后，候选只分为两类
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-定义前缀和 ``prefix[k]`` 为前 ``k`` 个元素之和，则区间 ``[left,right]`` 的和为：
-
-.. code-block:: text
-
-   prefix[right + 1] - prefix[left]
-
-固定 ``right`` 后，``prefix[right + 1]`` 已确定。要使区间和最大，只需在此前的
-``prefix[0..right]`` 中选择最小值。因此扫描时维护：
+定义：
 
 .. code-block:: text
 
-   prefix         当前前缀和
-   minimumPrefix  当前前缀之前出现过的最小前缀和
-
-代码必须先用 ``prefix - minimumPrefix`` 更新答案，再把当前 ``prefix`` 纳入后续候选。这样左端点一定不晚于
-当前元素，得到的始终是非空区间。
-
-以 ``[-4,2,3,-8,5,6,-2]`` 为例，前缀和依次为：
-
-.. code-block:: text
-
-   0, -4, -2, 1, -7, -2, 4, 2
-
-处理前缀 ``4`` 时，此前最小前缀是 ``-7``，差值 ``4 - (-7) = 11``，对应 ``[5,6]``。
-
-第四步：把左端点选择压缩成“是否连接上一段”
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-前缀最小值从左端点角度求解。还可以从右端点角度建立更直接的动态规划状态：
-
-.. code-block:: text
-
-   endingHere = 必须以当前位置 i 结尾的非空连续子数组最大和
+   ending[i] = 必须以 i 作为右端点的非空连续子数组最大和
 
 任何以 ``i`` 结尾的非空连续子数组只有两类：
 
-1. 只包含 ``nums[i]``，从当前位置重新开始；
-2. 把 ``nums[i]`` 接到某个以 ``i-1`` 结尾的非空连续子数组后面。
+1. 只包含 ``nums[i]``，即从当前位置重新开始；
+2. 在某个以 ``i-1`` 结尾的非空连续子数组后追加 ``nums[i]``。
 
-第二类中，只需连接以 ``i-1`` 结尾的最大和。若连接一个更差的旧区间，再加上相同的 ``nums[i]``，结果仍然
-更差。因此转移完整压缩为：
+第二类中，只需要保留 ``ending[i-1]``。因为所有候选都追加同一个 ``nums[i]``，此前和更大的区间追加后仍然
+更大，其他以 ``i-1`` 结尾的区间不可能反超。因此：
 
 .. code-block:: text
 
-   endingHere = max(nums[i], previousEnding + nums[i])
-   best       = max(best, endingHere)
+   ending[i] = max(nums[i], ending[i-1] + nums[i])
 
-``previousEnding`` 为负时，连接它会降低当前和，所以重新开始；它为非负时，连接不会比单独使用当前元素差。
-这不是额外的贪心假设，而是上述两个完整候选取最大后的直接结论。
+这一步把“当前右端点对应的全部左端点”压缩成一个数。
+
+为什么还需要全局答案
+~~~~~~~~~~~~~~~~~~~~
+
+``ending[i]`` 强制子数组在 ``i`` 结束，但全局最优子数组未必延伸到数组末尾。因此还要维护：
+
+.. code-block:: text
+
+   best = max(best, ending[i])
+
+每个非空连续子数组都有唯一右端点。对每个右端点只保留该类中的最大和，再在所有右端点之间取最大值，就覆盖
+了全部候选。
+
+负贡献前缀为什么可以丢弃
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+转移式也可以写成：
+
+.. code-block:: text
+
+   ending[i] = nums[i] + max(0, ending[i-1])
+
+当 ``ending[i-1]`` 为负时，把它接到 ``nums[i]`` 前面只会降低结果，因此应从 ``nums[i]`` 重新开始；当它为
+正时，连接它能提高结果；等于 0 时，两种选择相同。
+
+这里删除的不是“包含负数的区间”。一个区间内部可以含负数，例如 ``[4,-1,2,1]``。真正可以删除的是总贡献
+已经为负的整个前缀。
 
 状态演化
 ~~~~~~~~
@@ -225,7 +187,7 @@ C++ 实现
    :header-rows: 1
 
    * - 当前值
-     - 连接旧区间
+     - 连接上一段
      - 重新开始
      - ``endingHere``
      - ``best``
@@ -265,9 +227,15 @@ C++ 实现
      - 9
      - 11
 
-在 ``-8`` 处，最佳结尾和变为 ``-3``。它仍必须被保留，因为状态要求区间以当前位置结尾；全局答案
-``best`` 则继续保留此前的 ``5``。下一步遇到 ``5`` 时，算法比较连接后的 ``2`` 与重新开始的 ``5``，从而
-丢弃负贡献前缀。
+在 ``-8`` 处，``endingHere`` 必须表示以该位置结尾的最优区间，所以它变为 ``-3``；全局答案 ``best``
+仍保留此前的 ``5``。下一步遇到 ``5`` 时，连接旧区间得到 ``2``，重新开始得到 ``5``，负贡献前缀被自然
+丢弃。
+
+从 DP 数组到 Kadane 状态压缩
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``ending[i]`` 只依赖 ``ending[i-1]``，不需要保存整张数组。用变量 ``endingHere`` 覆盖上一状态，即得到主入口
+调用的 ``kadane``：时间仍为 ``O(n)``，额外空间从 ``O(n)`` 降为 ``O(1)``。
 
 为什么必须用首元素初始化
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -275,39 +243,26 @@ C++ 实现
 题目要求子数组非空。若把 ``endingHere`` 和 ``best`` 初始化为 0，输入 ``[-9,-2,-7]`` 会错误返回不存在的空
 子数组之和 0。
 
-使用 ``nums[0]`` 初始化后，每个 ``endingHere`` 都对应一个真实非空区间，每个 ``best`` 也来自真实候选，
-全负数组自然返回最大的单个元素。
+使用 ``nums[0]`` 初始化后，每个状态始终对应一个真实的非空区间，全负数组自然返回最大的单个元素。
 
-为什么 Kadane 不重不漏
-~~~~~~~~~~~~~~~~~~~~~~
-
-归纳假设 ``previousEnding`` 是所有以 ``i-1`` 结尾区间中的最大和。任何以 ``i`` 结尾的区间，要么长度为 1，
-要么删除末尾 ``nums[i]`` 后成为一个以 ``i-1`` 结尾的区间。两类候选分别由转移式的两项覆盖，因此
-``endingHere`` 正确。
-
-每个非空连续子数组都有唯一右端点。``best`` 依次比较每个右端点对应的最优区间，所以最终覆盖全部候选，
-得到全局最大和。
-
-分治为什么需要四项区间摘要
+等价的线性视角：最小前缀和
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-若把数组分为左右两段，一个区间的最优子数组只有三种位置：完全在左段、完全在右段、跨越中点。为了在常数
-时间合并两段，需要每段返回：
+定义 ``prefix[k]`` 为前 ``k`` 个元素之和，则：
 
 .. code-block:: text
 
-   total   整段总和
-   prefix  必须从区间左端开始的最大和
-   suffix  必须在区间右端结束的最大和
-   best    区间内部任意非空子数组的最大和
+   sum(left, right) = prefix[right + 1] - prefix[left]
 
-跨界最优值只能是 ``left.suffix + right.prefix``。其余三项也能由左右摘要常数时间得到。递归树有 ``O(n)``
-个节点，每个节点只做常数工作，因此 ``divideAndConquer`` 的时间也是 ``O(n)``，递归栈为 ``O(log n)``。
+固定右端点后，当前前缀已经确定。要使区间和最大，只需减去此前出现过的最小前缀。因此
+``prefixMinimum`` 维护当前前缀和与此前最小前缀和，也能在线性时间求解。
+
+代码先用 ``prefix - minimumPrefix`` 更新答案，再把当前 ``prefix`` 纳入最小值。这个顺序保证被减去的前缀
+严格位于当前右端点之前，候选区间始终非空。
 
 复杂度来源
 ~~~~~~~~~~
 
-``enumerateAndSum`` 为 ``O(n³)``；``extendRight`` 为 ``O(n²)``。``prefixMinimum`` 与 ``kadane`` 都只扫描一次，
-时间 ``O(n)``、额外空间 ``O(1)``。分治摘要为 ``O(n)`` 时间、``O(log n)`` 栈空间。
-
-主入口调用 ``kadane``。它不修改输入，只保留当前结尾最大和与全局最大和。
+``enumerateSubarrays`` 枚举 ``O(n²)`` 个区间，时间 ``O(n²)``、额外空间 ``O(1)``。
+``dynamicProgramming``、``prefixMinimum`` 和 ``kadane`` 都只扫描一次，时间 ``O(n)``；其中 DP 数组使用
+``O(n)`` 空间，后两种方法使用 ``O(1)`` 额外空间。主入口调用 ``kadane``，且不修改输入数组。
