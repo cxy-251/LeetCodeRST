@@ -8,48 +8,28 @@
 :难度: Medium
 :主题: 链表、双指针、虚拟头节点
 :原题: `LeetCode 0019 <https://leetcode.com/problems/remove-nth-node-from-end-of-list/>`_
-:重点: 倒数位置、删除头节点、返回新头节点、有效 n 保证
+:重点: 虚拟头节点统一删除操作，固定快慢指针间距定位待删节点前驱
 
 题目重述
 --------
 
-给定一个非空单链表的头节点 ``head`` 和整数 ``n``，删除链表中倒数第 ``n`` 个节点，并返回删除后的链表头节点。
+给定非空单链表的头节点 ``head`` 和整数 ``n``，删除链表中倒数第 ``n`` 个节点，并返回删除后的头节点。
 
-链表节点数量位于 ``[1, 30]``，每个节点值位于 ``[0, 100]``，并且 ``1 <= n <= 链表长度``。删除头节点时，返回值应指向原来的第二个节点；若链表只有一个节点，删除后返回空链表。
+链表长度位于 ``[1, 30]``，节点值位于 ``[0, 100]``，并保证 ``1 <= n <= 链表长度``。若删除的是原头节点，
+返回值应指向原第二个节点；若链表只有一个节点，删除后返回 ``nullptr``。
 
 自建示例
 --------
 
-删除中间节点：
-
-.. code-block:: text
-
-   输入：head = [4, 7, 1, 9, 6], n = 2
-   输出：[4, 7, 1, 6]
-   解释：从末尾数第二个节点的值为 9，删除后前一个节点 1 直接连接节点 6。
-
-删除头节点：
-
-.. code-block:: text
-
-   输入：head = [8, 3, 5], n = 3
-   输出：[3, 5]
-   解释：倒数第三个节点就是头节点 8。
-
-删除唯一节点：
-
-.. code-block:: text
-
-   输入：head = [2], n = 1
-   输出：[]
-   解释：唯一节点同时也是倒数第一个节点，删除后链表为空。
+* 删除中间节点：``head = [4, 7, 1, 9, 6]``、``n = 2``，返回 ``[4, 7, 1, 6]``；
+* 删除尾节点：``head = [3, 8, 5]``、``n = 1``，返回 ``[3, 8]``；
+* 删除头节点：``head = [8, 3, 5]``、``n = 3``，返回 ``[3, 5]``；
+* 删除唯一节点：``head = [2]``、``n = 1``，返回空链表。
 
 C++ 实现
 --------
 
 .. code-block:: cpp
-
-   #include <vector>
 
    // LeetCode 提供 ListNode 定义。
    class Solution {
@@ -59,27 +39,11 @@ C++ 实现
            for (ListNode* node = head; node != nullptr; node = node->next) {
                ++length;
            }
-
            ListNode dummy(0, head);
            ListNode* previous = &dummy;
            for (int step = 0; step < length - n; ++step) {
                previous = previous->next;
            }
-
-           ListNode* removed = previous->next;
-           previous->next = removed->next;
-           delete removed;
-           return dummy.next;
-       }
-
-       ListNode* nodeStack(ListNode* head, int n) {
-           ListNode dummy(0, head);
-           std::vector<ListNode*> nodes;
-           for (ListNode* node = &dummy; node != nullptr; node = node->next) {
-               nodes.push_back(node);
-           }
-
-           ListNode* previous = nodes[nodes.size() - n - 1];
            ListNode* removed = previous->next;
            previous->next = removed->next;
            delete removed;
@@ -88,18 +52,15 @@ C++ 实现
 
        ListNode* gapPointers(ListNode* head, int n) {
            ListNode dummy(0, head);
-           ListNode* fast = &dummy;
+           ListNode* fast = head;
            ListNode* slow = &dummy;
-
-           for (int step = 0; step <= n; ++step) {
+           for (int step = 0; step < n; ++step) {
                fast = fast->next;
            }
-
            while (fast != nullptr) {
                fast = fast->next;
                slow = slow->next;
            }
-
            ListNode* removed = slow->next;
            slow->next = removed->next;
            delete removed;
@@ -115,241 +76,71 @@ C++ 实现
 题解
 ----
 
-倒数位置如何转换为正向前驱位置
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+倒数位置
+~~~~~~~~
 
-链表长度为 ``length`` 时，倒数第 ``n`` 个节点是从零开始的正向下标 ``length-n``。两次遍历方法先计算长度，
-再从虚拟头节点前进 ``length-n`` 步，停在待删节点前驱。它直接表达位置关系，但扫描链表两次。
+若链表长度为 ``length``，倒数第 ``n`` 个节点的正向下标是 ``length - n``，其中头节点下标为 ``0``。
+删除单链表节点时需要修改其前驱的 ``next``，所以真正要定位的是该节点前面的一个位置。
 
-为什么需要虚拟头节点
-~~~~~~~~~~~~~~~~~~~~
+``twoPasses`` 第一次遍历计算长度，第二次从虚拟头节点前进 ``length - n`` 步。此时 ``previous->next``
+就是待删节点。这个方法直接使用下标换算，时间为 ``O(length)``，但链表被完整扫描两轮。
 
-若删除原头节点，真实链表中没有它的前驱。虚拟节点 ``dummy`` 指向 ``head``，使每个可能删除的节点都拥有统一
-前驱：删除头节点时前驱就是 ``dummy``。最终返回 ``dummy.next``，无需为 ``n == length`` 单独分支。
-
-栈方法如何保存全部前驱候选
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-把 ``dummy`` 和所有真实节点依次压入数组。末尾空指针不保存时，待删节点前驱位于
-``nodes.size()-n-1``。它用 ``O(length)`` 空间换取直接随机定位，仍需一次建栈和一次删除。
-
-固定间距如何在一次遍历中定位前驱
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-快慢指针都从 ``dummy`` 开始。先让 ``fast`` 前进 ``n+1`` 次，使 ``fast`` 与 ``slow`` 之间隔着 ``n`` 个真实
-节点。随后两者同步前进；当 ``fast`` 到达空指针时，``slow->next`` 到链表末尾恰有 ``n`` 个节点，因此
-``slow->next`` 就是倒数第 ``n`` 个节点，``slow`` 是其前驱。
-
-指针状态演化
-~~~~~~~~~~~~
-
-对 ``4 -> 7 -> 1 -> 9 -> 6``、``n=2``，用 ``D`` 表示虚拟头：
-
-.. list-table::
-   :header-rows: 1
-
-   * - 阶段
-     - ``fast``
-     - ``slow``
-     - 说明
-   * - 初始
-     - ``D``
-     - ``D``
-     - 同一起点
-   * - 快指针前进 3 次
-     - ``1``
-     - ``D``
-     - 间隔 ``n+1`` 条 next 边
-   * - 同步 1 次
-     - ``9``
-     - ``4``
-     - 间距保持
-   * - 同步 2 次
-     - ``6``
-     - ``7``
-     - 间距保持
-   * - 同步 3 次
-     - ``null``
-     - ``1``
-     - ``slow->next`` 为待删节点 9
-
-为什么 fast 到尾时 slow 恰在删除前驱
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-初始间距建立后，两指针每轮同时跨过一条边，间距不变。当 ``fast`` 越过尾节点到达 ``null`` 时，从
-``slow`` 到 ``null`` 仍有 ``n+1`` 条边，因此从 ``slow->next`` 到 ``null`` 有 ``n`` 条边，也就是
-``slow->next`` 在倒数第 ``n`` 个位置。
-
-删除操作如何保持链表连通
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-令 ``removed = slow->next``，执行 ``slow->next = removed->next``，前驱直接连接后继。除待删节点外，其他节点
-相对顺序不变；C++ 实现随后释放已经摘下的 ``removed`` 节点。
-
-复杂度来源
+虚拟头节点
 ~~~~~~~~~~
 
-两次遍历和快慢指针都为 ``O(length)`` 时间、``O(1)`` 工作空间；快慢指针只完成一次从头到尾的整体扫描。
-栈方法时间 ``O(length)``、空间 ``O(length)``。
+删除普通节点时，前驱是真实链表中的前一个节点；删除头节点时，真实链表中不存在前驱。若直接从 ``head``
+开始处理，就需要为 ``n == length`` 单独修改返回值。
 
-九语言实现
-----------
+令 ``dummy.next = head`` 后，原头节点也拥有统一前驱 ``dummy``。无论删除哪个节点，都执行同一组操作：
 
-C
-~
+.. code-block:: cpp
 
-.. code-block:: c
+   ListNode* removed = previous->next;
+   previous->next = removed->next;
 
-   #include <stdlib.h>
+最终返回 ``dummy.next``。删除头节点时它自动变为原第二个节点，删除唯一节点时自动变为 ``nullptr``。
 
-   struct ListNode* removeNthFromEnd(struct ListNode* head, int n) {
-       struct ListNode dummy = {0, head};
-       struct ListNode* fast = &dummy;
-       struct ListNode* slow = &dummy;
-       for (int step = 0; step <= n; ++step) fast = fast->next;
-       while (fast != NULL) { fast = fast->next; slow = slow->next; }
-       struct ListNode* removed = slow->next;
-       slow->next = removed->next;
-       free(removed);
-       return dummy.next;
-   }
+固定间距
+~~~~~~~~
 
-Python
-~~~~~~
+两次遍历中的 ``length - n`` 可以通过两个同步移动的指针隐式得到。
 
-.. code-block:: python
+``fast`` 从真实头节点出发，先前进 ``n`` 步；``slow`` 从虚拟头节点出发。此时：
 
-   class Solution:
-       def removeNthFromEnd(self, head: Optional[ListNode], n: int) -> Optional[ListNode]:
-           dummy = ListNode(0, head)
-           fast = slow = dummy
-           for _ in range(n + 1):
-               fast = fast.next
-           while fast is not None:
-               fast = fast.next
-               slow = slow.next
-           slow.next = slow.next.next
-           return dummy.next
+* ``fast`` 后面还有多少个真实节点；
+* ``slow`` 就需要再前进多少步，才能到达待删节点的前驱。
 
-Java
-~~~~
+随后两者同步前进。当 ``fast`` 到达 ``nullptr`` 时，``slow`` 恰好停在待删节点前面。
 
-.. code-block:: java
+以长度为 ``5``、``n = 2`` 为例，快指针先走两步后位于正向下标 ``2``。它还需要三步到达 ``nullptr``，
+慢指针也同步走三步：从虚拟头节点到下标 ``2`` 的节点。该节点正是倒数第二个节点的前驱。
 
-   class Solution {
-       public ListNode removeNthFromEnd(ListNode head, int n) {
-           ListNode dummy = new ListNode(0, head);
-           ListNode fast = dummy, slow = dummy;
-           for (int step = 0; step <= n; step++) fast = fast.next;
-           while (fast != null) { fast = fast.next; slow = slow.next; }
-           slow.next = slow.next.next;
-           return dummy.next;
-       }
-   }
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {
-       pub fn remove_nth_from_end(
-           head: Option<Box<ListNode>>,
-           n: i32,
-       ) -> Option<Box<ListNode>> {
-           let mut dummy = Box::new(ListNode { val: 0, next: head });
-           let mut length = 0usize;
-           let mut cursor = dummy.next.as_ref();
-           while let Some(node) = cursor { length += 1; cursor = node.next.as_ref(); }
-
-           let mut previous = &mut dummy;
-           for _ in 0..(length - n as usize) {
-               previous = previous.next.as_mut().unwrap();
-           }
-           let mut removed = previous.next.take().unwrap();
-           previous.next = removed.next.take();
-           dummy.next
-       }
-   }
-
-Go
-~~
-
-.. code-block:: go
-
-   func removeNthFromEnd(head *ListNode, n int) *ListNode {
-       dummy := &ListNode{Next: head}; fast, slow := dummy, dummy
-       for step := 0; step <= n; step++ { fast = fast.Next }
-       for fast != nil { fast = fast.Next; slow = slow.Next }
-       slow.Next = slow.Next.Next
-       return dummy.Next
-   }
-
-TypeScript
+间距不变量
 ~~~~~~~~~~
 
-.. code-block:: typescript
+快指针先走 ``n`` 步后，从 ``slow->next`` 到 ``fast`` 之间始终包含 ``n`` 个真实节点。同步移动不会改变这个
+数量。
 
-   function removeNthFromEnd(head: ListNode | null, n: number): ListNode | null {
-       const dummy = new ListNode(0, head);
-       let fast: ListNode | null = dummy, slow: ListNode = dummy;
-       for (let step = 0; step <= n; ++step) fast = fast!.next;
-       while (fast !== null) { fast = fast.next; slow = slow.next!; }
-       slow.next = slow.next!.next;
-       return dummy.next;
-   }
+当 ``fast == nullptr`` 时，从 ``slow->next`` 到链表末尾正好还有 ``n`` 个节点。因此 ``slow->next``
+就是倒数第 ``n`` 个节点，``slow`` 就是删除所需的前驱。
 
-C#
-~~
+这个关系也覆盖两个边界：
 
-.. code-block:: csharp
+* ``n = 1`` 时，快指针先走一步，最终慢指针停在尾节点前驱；
+* ``n = length`` 时，快指针预先走到 ``nullptr``，慢指针保持在 ``dummy``，因此删除头节点。
 
-   public class Solution {
-       public ListNode RemoveNthFromEnd(ListNode head, int n) {
-           var dummy = new ListNode(0, head); ListNode fast = dummy, slow = dummy;
-           for (int step = 0; step <= n; step++) fast = fast.next;
-           while (fast != null) { fast = fast.next; slow = slow.next; }
-           slow.next = slow.next.next;
-           return dummy.next;
-       }
-   }
+代码演进
+~~~~~~~~
 
-Julia
-~~~~~
+``twoPasses`` 显式计算 ``length``，再根据 ``length - n`` 定位前驱。
 
-.. code-block:: julia
+``gapPointers`` 删除长度变量和第二次独立定位。快指针先走 ``n`` 步，把“距离链表末尾还有多少步”传递给慢
+指针；同步阶段结束时，慢指针直接得到前驱。
 
-   mutable struct ListNode
-       val::Int
-       next::Union{ListNode,Nothing}
-   end
+公开入口采用 ``gapPointers``。两个方法都借助虚拟头节点统一删除头节点与普通节点，区别只在前驱如何定位。
 
-   function remove_nth_from_end(head::Union{ListNode,Nothing}, n::Int)
-       dummy = ListNode(0, head); fast = dummy; slow = dummy
-       for _ in 0:n
-           fast = fast.next
-       end
-       while fast !== nothing
-           fast = fast.next
-           slow = slow.next
-       end
-       slow.next = slow.next.next
-       dummy.next
-   end
+复杂度分析
+~~~~~~~~~~
 
-R
-~
-
-.. code-block:: r
-
-   removeNthFromEnd <- function(head, n) {
-       node <- function(value, next_node = NULL) {
-           result <- new.env(parent = emptyenv())
-           result$value <- value; result$next <- next_node; result
-       }
-       dummy <- node(0, head); fast <- dummy; slow <- dummy
-       for (step in 0:n) fast <- fast$next
-       while (!is.null(fast)) { fast <- fast$next; slow <- slow$next }
-       slow$next <- slow$next$next
-       dummy$next
-   }
+两种方法的时间复杂度均为 ``O(length)``，工作空间均为 ``O(1)``。两次遍历方法先计算长度再定位，固定间距
+方法只进行一次连续的整体扫描。返回链表不属于额外空间。
