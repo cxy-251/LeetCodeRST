@@ -49,8 +49,7 @@ C++ 实现
            int i = 0;
            int j = 0;
            while (i < static_cast<int>(nums1.size()) || j < static_cast<int>(nums2.size())) {
-               if (j == static_cast<int>(nums2.size()) ||
-                   (i < static_cast<int>(nums1.size()) && nums1[i] <= nums2[j])) {
+               if (j == static_cast<int>(nums2.size()) || (i < static_cast<int>(nums1.size()) && nums1[i] <= nums2[j])) {
                    merged.push_back(nums1[i++]);
                } else {
                    merged.push_back(nums2[j++]);
@@ -73,8 +72,7 @@ C++ 实现
            int current = 0;
            for (int step = 0; step <= middle; ++step) {
                previous = current;
-               if (j == static_cast<int>(nums2.size()) ||
-                   (i < static_cast<int>(nums1.size()) && nums1[i] <= nums2[j])) {
+               if (j == static_cast<int>(nums2.size()) || (i < static_cast<int>(nums1.size()) && nums1[i] <= nums2[j])) {
                    current = nums1[i++];
                } else {
                    current = nums2[j++];
