@@ -6,14 +6,17 @@
 
 :题号: 0051
 :难度: Hard
-:主题: 回溯、约束状态、位掩码、棋盘构造
+:主题: 数组、回溯、约束传播、位掩码
 :原题: `LeetCode 0051 <https://leetcode.com/problems/n-queens/>`_
-:重点: 行列约束、两类对角线、不同棋盘、完整结果输出
+:重点: 从逐行扫描已有皇后，推导到持续维护列与两类对角线的占用状态
 
 题目重述
 --------
 
-给定整数 ``n``，在 ``n × n`` 棋盘上放置 ``n`` 个皇后，使任意两个皇后都不在同一行、同一列或同一条对角线上。返回所有不同的合法棋盘，答案顺序不限。每个棋盘由 ``n`` 个长度为 ``n`` 的字符串组成，``'Q'`` 表示皇后，``'.'`` 表示空格。
+给定整数 ``n``，在 ``n × n`` 棋盘上放置 ``n`` 个皇后，使任意两个皇后都不在同一行、同一列或
+同一条对角线上。返回所有不同的合法棋盘，答案顺序不限。
+
+每个棋盘由 ``n`` 个长度为 ``n`` 的字符串组成：``'Q'`` 表示皇后，``'.'`` 表示空位置。
 
 约束为 ``1 <= n <= 9``。
 
@@ -22,175 +25,325 @@
 
 .. code-block:: text
 
-   输入：n = 5
+   输入：n = 4
    输出：
    [
-     ["Q....","..Q..","....Q",".Q...","...Q."],
-     ["Q....","...Q.",".Q...","....Q","..Q.."],
-     [".Q...","...Q.","Q....","..Q..","....Q"],
-     [".Q...","....Q","..Q..","Q....","...Q."],
-     ["..Q..","Q....","...Q.",".Q...","....Q"],
-     ["..Q..","....Q",".Q...","...Q.","Q...."],
-     ["...Q.","Q....","..Q..","....Q",".Q..."],
-     ["...Q.",".Q...","....Q","..Q..","Q...."],
-     ["....Q",".Q...","...Q.","Q....","..Q.."],
-     ["....Q","..Q..","Q....","...Q.",".Q..."]
+     [".Q..", "...Q", "Q...", "..Q."],
+     ["..Q.", "Q...", "...Q", ".Q.."]
    ]
 
-共有 10 个合法棋盘；每个棋盘的每一行都恰有一个皇后。
+第一块棋盘的皇后列序列为 ``[1,3,0,2]``。每行恰有一个皇后，四个列号互不相同，两类对角线
+编号也都互不相同。
+
+.. code-block:: text
+
+   输入：n = 1
+   输出：[["Q"]]
+
+单个格子本身就是唯一合法棋盘。
 
 C++ 实现
 --------
 
 .. code-block:: cpp
 
+   #include <cstdlib>
    #include <string>
    #include <vector>
 
    class Solution {
    private:
        std::vector<std::string> buildBoard(const std::vector<int>& placement) {
-           int n = static_cast<int>(placement.size());
+           const int n = static_cast<int>(placement.size());
            std::vector<std::string> board(n, std::string(n, '.'));
-           for (int row = 0; row < n; ++row) board[row][placement[row]] = 'Q';
+           for (int row = 0; row < n; ++row) {
+               board[row][placement[row]] = 'Q';
+           }
            return board;
        }
 
-       void booleanDfs(int row, std::vector<int>& placement,
-                       std::vector<char>& columns,
-                       std::vector<char>& down,
-                       std::vector<char>& up,
-                       std::vector<std::vector<std::string>>& result) {
-           int n = static_cast<int>(placement.size());
-           if (row == n) { result.push_back(buildBoard(placement)); return; }
-           for (int col = 0; col < n; ++col) {
-               int d = row - col + n - 1;
-               int u = row + col;
-               if (columns[col] || down[d] || up[u]) continue;
-               placement[row] = col;
-               columns[col] = down[d] = up[u] = true;
-               booleanDfs(row + 1, placement, columns, down, up, result);
-               columns[col] = down[d] = up[u] = false;
+       bool isSafeByScanning(
+           const std::vector<int>& placement,
+           int row,
+           int column
+       ) {
+           for (int previousRow = 0; previousRow < row; ++previousRow) {
+               int previousColumn = placement[previousRow];
+               if (previousColumn == column) return false;
+               if (std::abs(previousRow - row) ==
+                   std::abs(previousColumn - column)) {
+                   return false;
+               }
            }
+           return true;
+       }
+
+       void scanDfs(
+           int row,
+           std::vector<int>& placement,
+           std::vector<std::vector<std::string>>& result
+       ) {
+           const int n = static_cast<int>(placement.size());
+           if (row == n) {
+               result.push_back(buildBoard(placement));
+               return;
+           }
+
+           for (int column = 0; column < n; ++column) {
+               if (!isSafeByScanning(placement, row, column)) continue;
+               placement[row] = column;
+               scanDfs(row + 1, placement, result);
+           }
+       }
+
+       std::vector<std::vector<std::string>> scanPreviousQueens(int n) {
+           std::vector<std::vector<std::string>> result;
+           std::vector<int> placement(n, -1);
+           scanDfs(0, placement, result);
+           return result;
+       }
+
+       void occupancyDfs(
+           int row,
+           std::vector<int>& placement,
+           std::vector<char>& columns,
+           std::vector<char>& mainDiagonals,
+           std::vector<char>& antiDiagonals,
+           std::vector<std::vector<std::string>>& result
+       ) {
+           const int n = static_cast<int>(placement.size());
+           if (row == n) {
+               result.push_back(buildBoard(placement));
+               return;
+           }
+
+           for (int column = 0; column < n; ++column) {
+               int main = row - column + n - 1;
+               int anti = row + column;
+               if (columns[column] || mainDiagonals[main] ||
+                   antiDiagonals[anti]) {
+                   continue;
+               }
+
+               placement[row] = column;
+               columns[column] = true;
+               mainDiagonals[main] = true;
+               antiDiagonals[anti] = true;
+
+               occupancyDfs(
+                   row + 1,
+                   placement,
+                   columns,
+                   mainDiagonals,
+                   antiDiagonals,
+                   result
+               );
+
+               columns[column] = false;
+               mainDiagonals[main] = false;
+               antiDiagonals[anti] = false;
+           }
+       }
+
+       std::vector<std::vector<std::string>> occupancyArrays(int n) {
+           std::vector<std::vector<std::string>> result;
+           std::vector<int> placement(n, -1);
+           std::vector<char> columns(n, false);
+           std::vector<char> mainDiagonals(2 * n - 1, false);
+           std::vector<char> antiDiagonals(2 * n - 1, false);
+
+           occupancyDfs(
+               0,
+               placement,
+               columns,
+               mainDiagonals,
+               antiDiagonals,
+               result
+           );
+           return result;
+       }
+
+       int columnOfBit(int bit) {
+           int column = 0;
+           while ((1 << column) != bit) ++column;
+           return column;
+       }
+
+       void bitmaskDfs(
+           int row,
+           int fullMask,
+           int columns,
+           int mainAttacks,
+           int antiAttacks,
+           std::vector<int>& placement,
+           std::vector<std::vector<std::string>>& result
+       ) {
+           const int n = static_cast<int>(placement.size());
+           if (row == n) {
+               result.push_back(buildBoard(placement));
+               return;
+           }
+
+           int available = fullMask &
+               ~(columns | mainAttacks | antiAttacks);
+           while (available != 0) {
+               int bit = available & -available;
+               available -= bit;
+               placement[row] = columnOfBit(bit);
+
+               bitmaskDfs(
+                   row + 1,
+                   fullMask,
+                   columns | bit,
+                   ((mainAttacks | bit) << 1) & fullMask,
+                   (antiAttacks | bit) >> 1,
+                   placement,
+                   result
+               );
+           }
+       }
+
+       std::vector<std::vector<std::string>> bitMasks(int n) {
+           std::vector<std::vector<std::string>> result;
+           std::vector<int> placement(n, -1);
+           int fullMask = (1 << n) - 1;
+           bitmaskDfs(0, fullMask, 0, 0, 0, placement, result);
+           return result;
        }
 
    public:
        std::vector<std::vector<std::string>> solveNQueens(int n) {
-           std::vector<std::vector<std::string>> result;
-           std::vector<int> placement(n);
-           std::vector<char> columns(n), down(2 * n - 1), up(2 * n - 1);
-           booleanDfs(0, placement, columns, down, up, result);
-           return result;
+           return occupancyArrays(n);
        }
    };
 
 题解
 ----
 
-合法棋盘有 ``n`` 个皇后，而同一行不能放两个，所以每一行必然恰好放一个。递归层数可以直接当作 ``row``，每层只决定这一行的列；``placement[row]`` 保存这条搜索路径上的列序列，不再枚举“这个格子放不放皇后”的无效状态。
+先把搜索空间缩成每行一个决定
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-对候选位置 ``(row, col)``，列冲突由 ``col`` 判断；同一条 ``\`` 对角线的 ``row - col`` 相同，同一条 ``/`` 对角线的 ``row + col`` 相同。``row - col`` 的范围是 ``[-(n-1), n-1]``，加上 ``n-1`` 后可以作为 ``down`` 数组下标；``row + col`` 直接落在 ``[0, 2n-2]``，对应 ``up`` 数组。三张布尔表保存当前路径已经占用的列和对角线，因此每次尝试只需常数时间判断。
+最直接的建模可以对每个格子决定“放或不放”，但绝大多数中间状态既没有放满 ``n`` 个皇后，也很早就
+违反行约束。
 
-主入口调用的是 ``booleanDfs``：通过检查后写入 ``placement[row]``，同时把三个占用标记设为真；递归返回后再把同一组标记恢复为假。恢复动作必须和选择动作完全对应，否则某个失败分支留下的列或对角线会错误剪掉后续合法分支。到达 ``row == n`` 时，列序列已经包含每一行的选择，``buildBoard`` 再把它转换成题目要求的字符串棋盘。
+合法棋盘共有 ``n`` 个皇后，同一行又不能出现两个皇后。棋盘恰好有 ``n`` 行，因此每一行必须恰好
+放置一个皇后。递归层 ``row`` 可以直接表示“正在决定第几行”，本层只需枚举这一行的列号。
 
-用自建的 ``n = 5`` 示例看一条成功路径：列序列 ``[0,2,4,1,3]`` 生成第一块棋盘。它不是因为预先知道答案才被保留，而是每一步都通过列、``row-col`` 和 ``row+col`` 三项检查；如果某一行没有可选列，递归回退并撤销上一行的标记，继续尝试其他列。
+``placement[row] = column`` 保存当前路径。到达 ``row == n`` 时，所有行均已确定，再把列序列转换成
+字符串棋盘。搜索过程中不必反复修改完整棋盘。
 
-为什么不重不漏
-~~~~~~~~~~~~~~~~
+第一种方法：回看此前皇后
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-每个合法棋盘在每一行只有一个列选择，因此对应唯一的 ``placement`` 序列。算法逐行尝试全部列，只剪掉与已放皇后冲突的选择；合法序列不会被剪掉，所有到达叶子的序列也都满足三类约束。不同序列至少有一行的列不同，构造出的棋盘也不同，所以既不漏解也不重复。
+准备把皇后放在 ``(row,column)`` 时，只需与此前各行的皇后比较：
 
-代码中只保留实际入口使用的布尔状态搜索；把候选约束放在三张表中，比每次尝试重新扫描之前所有行更直接，也使代码中的状态与上面的证明一一对应。
+.. code-block:: text
 
-输出本身需要为每个方案写出 ``n²`` 个字符。若合法方案数为 ``S``，按当前“每层扫描全部列”的代码写法，搜索和构造的时间可写为 ``O(n · n! + S n²)`` 的上界量级，实际搜索会受到列和对角线剪枝；不计返回结果，递归栈、列序列和三张状态表共使用 ``O(n)`` 额外空间。
+   previousColumn == column
+       同列冲突
 
-九语言实现
-----------
+   abs(previousRow-row) == abs(previousColumn-column)
+       对角线冲突
 
-C
-~
+同行冲突已经由“每层只处理一行”自动消除。该方法直接对应定义，也不会漏掉任何约束，但每次候选判断
+都要扫描此前最多 ``row`` 个皇后。
 
-.. code-block:: c
+冲突检查真正依赖哪三个编号
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   static void dfs(int row,int n,bool*cols,bool*down,bool*up,int*place,char****out,int*size,int*cap){
-       if(row==n){if(*size==*cap){*cap*=2;*out=realloc(*out,(size_t)*cap*sizeof(char**));}char**b=malloc((size_t)n*sizeof(char*));for(int r=0;r<n;r++){b[r]=malloc((size_t)n+1);memset(b[r],'.',(size_t)n);b[r][place[r]]='Q';b[r][n]='\0';}(*out)[(*size)++]=b;return;}
-       for(int c=0;c<n;c++){int d=row-c+n-1,u=row+c;if(cols[c]||down[d]||up[u])continue;place[row]=c;cols[c]=down[d]=up[u]=true;dfs(row+1,n,cols,down,up,place,out,size,cap);cols[c]=down[d]=up[u]=false;}}
-   char***solveNQueens(int n,int*returnSize,int**returnColumnSizes){bool*cols=calloc(n,sizeof(bool)),*down=calloc(2*n-1,sizeof(bool)),*up=calloc(2*n-1,sizeof(bool));int*place=malloc((size_t)n*sizeof(int)),size=0,cap=4;char***out=malloc((size_t)cap*sizeof(char**));dfs(0,n,cols,down,up,place,&out,&size,&cap);int*sizes=malloc((size_t)size*sizeof(int));for(int i=0;i<size;i++)sizes[i]=n;free(cols);free(down);free(up);free(place);*returnSize=size;*returnColumnSizes=sizes;return out;}
+此前皇后的具体坐标并非每次都要重新读取。候选位置只会被三类已占用线路攻击：
 
-Python
-~~~~~~
+.. code-block:: text
 
-.. code-block:: python
+   列：column
+   主对角线 \：row - column
+   副对角线 /：row + column
 
-   class Solution:
-       def solveNQueens(self, n: int) -> list[list[str]]:
-           result, placement = [], [-1] * n
-           columns, down, up = set(), set(), set()
-           def dfs(row: int) -> None:
-               if row == n:
-                   result.append(["." * c + "Q" + "." * (n-c-1) for c in placement]); return
-               for col in range(n):
-                   if col in columns or row-col in down or row+col in up: continue
-                   placement[row]=col; columns.add(col); down.add(row-col); up.add(row+col)
-                   dfs(row+1)
-                   columns.remove(col); down.remove(row-col); up.remove(row+col)
-           dfs(0); return result
+同一条 ``\`` 对角线上的格子具有相同 ``row-column``；同一条 ``/`` 对角线上的格子具有相同
+``row+column``。
 
-Java
-~~~~
+``row-column`` 的范围是 ``[-(n-1),n-1]``，加上 ``n-1`` 后落入 ``[0,2n-2]``。另一类编号
+``row+column`` 本来就处于同一范围。因此一张长度为 ``n`` 的列数组和两张长度为 ``2n-1`` 的
+对角线数组足以保存全部冲突状态。
 
-.. code-block:: java
+第二种方法：持续维护占用状态
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   class Solution {List<List<String>> out=new ArrayList<>();int n;int[] place;boolean[] cols,down,up;
-       void dfs(int r){if(r==n){List<String>b=new ArrayList<>();for(int c:place){char[]row=new char[n];Arrays.fill(row,'.');row[c]='Q';b.add(new String(row));}out.add(b);return;}for(int c=0;c<n;c++){int d=r-c+n-1,u=r+c;if(cols[c]||down[d]||up[u])continue;place[r]=c;cols[c]=down[d]=up[u]=true;dfs(r+1);cols[c]=down[d]=up[u]=false;}}
-       public List<List<String>> solveNQueens(int n){this.n=n;place=new int[n];cols=new boolean[n];down=new boolean[2*n-1];up=new boolean[2*n-1];dfs(0);return out;}}
+主方法在选择 ``(row,column)`` 时，把对应的列、主对角线和副对角线同时标记为已占用。下一层只做
+三次数组查询，合法性判断由 ``O(row)`` 降为 ``O(1)``。
 
-Rust
-~~~~
+递归返回后必须撤销同一组三个标记。这不是清理工作，而是回溯状态定义的一部分：兄弟分支应从完全相同
+的父状态开始。若遗漏一次撤销，已经离开当前路径的皇后仍会错误阻塞后续候选。
 
-.. code-block:: rust
+对 ``n = 4`` 的一条成功路径：
 
-   impl Solution {pub fn solve_n_queens(n:i32)->Vec<Vec<String>>{fn dfs(r:usize,n:usize,p:&mut Vec<usize>,c:&mut Vec<bool>,d:&mut Vec<bool>,u:&mut Vec<bool>,o:&mut Vec<Vec<String>>){if r==n{o.push(p.iter().map(|&x|".".repeat(x)+"Q"+&".".repeat(n-x-1)).collect());return}for x in 0..n{let a=r+n-1-x;let b=r+x;if c[x]||d[a]||u[b]{continue}p[r]=x;c[x]=true;d[a]=true;u[b]=true;dfs(r+1,n,p,c,d,u,o);c[x]=false;d[a]=false;u[b]=false}}let n=n as usize;let mut o=vec![];dfs(0,n,&mut vec![0;n],&mut vec![false;n],&mut vec![false;2*n-1],&mut vec![false;2*n-1],&mut o);o}}
+.. list-table::
+   :header-rows: 1
 
-Go
-~~
+   * - 行
+     - 选择列
+     - 主对角线编号 ``row-column+n-1``
+     - 副对角线编号 ``row+column``
+   * - 0
+     - 1
+     - 2
+     - 1
+   * - 1
+     - 3
+     - 1
+     - 4
+   * - 2
+     - 0
+     - 5
+     - 2
+   * - 3
+     - 2
+     - 4
+     - 5
 
-.. code-block:: go
+三组编号分别互不重复，所以列序列 ``[1,3,0,2]`` 构成合法棋盘。
 
-   func solveNQueens(n int)[][]string{out:=[][]string{};place:=make([]int,n);cols:=make([]bool,n);down:=make([]bool,2*n-1);up:=make([]bool,2*n-1);var dfs func(int);dfs=func(r int){if r==n{b:=make([]string,n);for i,c:=range place{row:=make([]byte,n);for j:=range row{row[j]='.'};row[c]='Q';b[i]=string(row)};out=append(out,b);return};for c:=0;c<n;c++{d,u:=r-c+n-1,r+c;if cols[c]||down[d]||up[u]{continue};place[r]=c;cols[c],down[d],up[u]=true,true,true;dfs(r+1);cols[c],down[d],up[u]=false,false,false}};dfs(0);return out}
+第三种方法：把三张表压成位掩码
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-TypeScript
+当 ``n <= 9`` 时，一个整数的低 ``n`` 位就能表示一行的全部列。位为 1 表示该列已经被占用或被
+对角线攻击：
+
+.. code-block:: text
+
+   available = fullMask & ~(columns | mainAttacks | antiAttacks)
+
+``available`` 中的每个置位都是当前行的合法列。表达式 ``available & -available`` 每次取出最低置位，
+从而只遍历合法候选。
+
+进入下一行时，列攻击位置不变。若第 ``column`` 位放入皇后，则它的 ``\`` 对角线在下一行攻击
+``column+1``，所以左移一位；``/`` 对角线攻击 ``column-1``，所以右移一位。位掩码法没有改变搜索树，
+只把三张布尔表和逐列检查压缩成整数运算。
+
+为什么所有棋盘恰好生成一次
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+任意合法棋盘在每一行都有唯一皇后列，因此对应唯一的 ``placement`` 序列。算法逐行枚举全部列，只跳过
+与当前路径已有皇后冲突的候选，所以该合法序列的每一步都会被保留，最终必然到达叶子。
+
+反过来，任何到达 ``row == n`` 的路径都通过了列和两类对角线检查，又由递归层保证每行恰有一个皇后，
+因此一定是合法棋盘。两个不同路径至少有一行列号不同，构造出的棋盘也不同，所以不会产生重复答案。
+
+边界情况
+~~~~~~~~
+
+``n = 1`` 时，根层唯一列立即形成答案。``n = 2`` 和 ``n = 3`` 的每条路径都会在放满所有行之前
+失去合法候选，因此自然返回空结果，不需要特殊分支。
+
+复杂度来源
 ~~~~~~~~~~
 
-.. code-block:: typescript
+忽略对角线剪枝，逐行选择不同列的搜索树规模以 ``n!`` 为上界量级。扫描法的每次候选检查还需回看
+``O(n)`` 个皇后，可写成 ``O(n² · n!)`` 的宽松上界。
 
-   function solveNQueens(n:number):string[][]{const out:string[][]=[],p=Array(n).fill(0),c=Array(n).fill(false),d=Array(2*n-1).fill(false),u=Array(2*n-1).fill(false);const dfs=(r:number)=>{if(r===n){out.push(p.map(x=>".".repeat(x)+"Q"+".".repeat(n-x-1)));return;}for(let x=0;x<n;x++){const a=r-x+n-1,b=r+x;if(c[x]||d[a]||u[b])continue;p[r]=x;c[x]=d[a]=u[b]=true;dfs(r+1);c[x]=d[a]=u[b]=false;}};dfs(0);return out;}
+占用数组法每个搜索节点扫描 ``n`` 列，搜索部分为 ``O(n · n!)`` 的宽松上界；位掩码法只枚举合法位，
+状态转移数以 ``O(n!)`` 为上界量级。若合法棋盘数为 ``S``，构造并复制输出还必须写入 ``S · n²``
+个字符。
 
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {List<IList<string>> o=new();int n;int[]p;bool[]c,d,u;void Dfs(int r){if(r==n){var b=new List<string>();foreach(int x in p)b.Add(new string('.',x)+"Q"+new string('.',n-x-1));o.Add(b);return;}for(int x=0;x<n;x++){int a=r-x+n-1,b=r+x;if(c[x]||d[a]||u[b])continue;p[r]=x;c[x]=d[a]=u[b]=true;Dfs(r+1);c[x]=d[a]=u[b]=false;}}public IList<IList<string>> SolveNQueens(int n){this.n=n;p=new int[n];c=new bool[n];d=new bool[2*n-1];u=new bool[2*n-1];Dfs(0);return o;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function solve_n_queens(n::Int)
-       out=Vector{Vector{String}}();p=zeros(Int,n);cols=falses(n);down=falses(2n-1);up=falses(2n-1)
-       function dfs(r)
-           if r>n;push!(out,[repeat(".",c-1)*"Q"*repeat(".",n-c) for c in p]);return;end
-           for c in 1:n;d=r-c+n;u=r+c-1;if cols[c]||down[d]||up[u];continue;end;p[r]=c;cols[c]=down[d]=up[u]=true;dfs(r+1);cols[c]=down[d]=up[u]=false;end
-       end;dfs(1);out
-   end
-
-R
-~
-
-.. code-block:: r
-
-   solve_n_queens <- function(n){out<-list();p<-integer(n);cols<-rep(FALSE,n);down<-rep(FALSE,2*n-1);up<-rep(FALSE,2*n-1)
-     dfs<-function(r){if(r>n){out[[length(out)+1L]]<<-vapply(p,function(c)paste0(strrep(".",c-1L),"Q",strrep(".",n-c)),"");return()};for(c in seq_len(n)){d<-r-c+n;u<-r+c-1L;if(cols[[c]]||down[[d]]||up[[u]])next;p[[r]]<<-c;cols[[c]]<<-down[[d]]<<-up[[u]]<<-TRUE;dfs(r+1L);cols[[c]]<<-down[[d]]<<-up[[u]]<<-FALSE}}
-     dfs(1L);out}
+不计返回结果，三种方法的递归深度与列序列均为 ``O(n)``；占用数组和位掩码也只使用 ``O(n)`` 或更少的
+额外状态。
