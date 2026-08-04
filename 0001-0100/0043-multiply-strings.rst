@@ -8,31 +8,44 @@
 :难度: Medium
 :主题: 字符串、竖式乘法、位权对齐、进位
 :原题: `LeetCode 0043 <https://leetcode.com/problems/multiply-strings/>`_
-:重点: 乘积位数上界、结果槽位、局部进位、前导零处理
+:重点: 从逐行部分积推导到固定结果槽位，并把乘法贡献与十进制进位分开处理
 
 题目重述
 --------
 
-给定两个表示非负整数的十进制字符串 ``num1`` 和 ``num2``，返回它们乘积的十进制字符串。不能把整个字符串转换成内置整数，也不能使用任意精度整数库。除字符串 ``"0"`` 外，输入和输出都没有前导零。
+给定两个表示非负整数的十进制字符串 ``num1`` 和 ``num2``，返回它们乘积的十进制字符串。
 
-约束为 ``1 <= num1.length, num2.length <= 200``，字符只可能是数字 ``0`` 到 ``9``。
+不能把整个字符串直接转换成内置整数，也不能使用任意精度整数库。输入只包含字符 ``'0'`` 到 ``'9'``；除字符串
+``"0"`` 外，输入没有前导零，输出也必须使用同样的规范形式。
+
+``num1`` 和 ``num2`` 的长度均位于 ``[1, 200]``。
 
 自建示例
 --------
 
-.. code-block:: text
-
-   输入：num1 = "314", num2 = "27"
-   输出："8478"
-
-``314 * 27 = 314 * 20 + 314 * 7 = 6280 + 2198 = 8478``。
+需要连续进位：
 
 .. code-block:: text
 
-   输入：num1 = "500", num2 = "0"
+   输入：num1 = "99", num2 = "99"
+   输出："9801"
+   解释：四个数字位乘积会汇入相邻槽位，统一进位后得到 9801。
+
+乘积中保留真实的零：
+
+.. code-block:: text
+
+   输入：num1 = "1000", num2 = "205"
+   输出："205000"
+   解释：结果中间和末尾的零具有十进制位权，不能删除。
+
+任一因数为零：
+
+.. code-block:: text
+
+   输入：num1 = "0", num2 = "873421"
    输出："0"
-
-任一因数为零时，结果必须规范化为单个字符 ``"0"``。
+   解释：结果必须规范化为单个字符 "0"。
 
 C++ 实现
 --------
@@ -45,237 +58,283 @@ C++ 实现
 
    class Solution {
    private:
-       std::string addStrings(const std::string& a, const std::string& b) {
-           int i = static_cast<int>(a.size()) - 1;
-           int j = static_cast<int>(b.size()) - 1;
+       std::string addDecimalStrings(
+           const std::string& first,
+           const std::string& second
+       ) {
+           int left = static_cast<int>(first.size()) - 1;
+           int right = static_cast<int>(second.size()) - 1;
            int carry = 0;
-           std::string result;
-           while (i >= 0 || j >= 0 || carry) {
-               int sum = carry;
-               if (i >= 0) sum += a[i--] - '0';
-               if (j >= 0) sum += b[j--] - '0';
-               result.push_back(static_cast<char>('0' + sum % 10));
-               carry = sum / 10;
+           std::string sum;
+
+           while (left >= 0 || right >= 0 || carry != 0) {
+               int value = carry;
+               if (left >= 0) {
+                   value += first[left] - '0';
+                   --left;
+               }
+               if (right >= 0) {
+                   value += second[right] - '0';
+                   --right;
+               }
+               sum.push_back(static_cast<char>('0' + value % 10));
+               carry = value / 10;
            }
-           std::reverse(result.begin(), result.end());
-           return result;
+
+           std::reverse(sum.begin(), sum.end());
+           return sum;
        }
 
-       std::string partialProducts(const std::string& a, const std::string& b) {
+       std::string multiplyByOneDigit(
+           const std::string& number,
+           int digit,
+           int decimalShift
+       ) {
+           if (digit == 0) {
+               return "0";
+           }
+
+           int carry = 0;
+           std::string product;
+           for (int index = static_cast<int>(number.size()) - 1;
+                index >= 0;
+                --index) {
+               const int value = (number[index] - '0') * digit + carry;
+               product.push_back(static_cast<char>('0' + value % 10));
+               carry = value / 10;
+           }
+           if (carry != 0) {
+               product.push_back(static_cast<char>('0' + carry));
+           }
+
+           std::reverse(product.begin(), product.end());
+           product.append(decimalShift, '0');
+           return product;
+       }
+
+       std::string partialProductRows(
+           const std::string& first,
+           const std::string& second
+       ) {
+           if (first == "0" || second == "0") {
+               return "0";
+           }
+
+           const std::string* multiplicand = &first;
+           const std::string* multiplier = &second;
+           if (multiplicand->size() < multiplier->size()) {
+               std::swap(multiplicand, multiplier);
+           }
+
            std::string result = "0";
-           for (int j = static_cast<int>(b.size()) - 1, zeros = 0; j >= 0; --j, ++zeros) {
-               int carry = 0;
-               std::string row(zeros, '0');
-               for (int i = static_cast<int>(a.size()) - 1; i >= 0; --i) {
-                   int product = (a[i] - '0') * (b[j] - '0') + carry;
-                   row.push_back(static_cast<char>('0' + product % 10));
-                   carry = product / 10;
-               }
-               if (carry) row.push_back(static_cast<char>('0' + carry));
-               std::reverse(row.begin(), row.end());
-               result = addStrings(result, row);
+           int decimalShift = 0;
+           for (int index = static_cast<int>(multiplier->size()) - 1;
+                index >= 0;
+                --index, ++decimalShift) {
+               const int digit = (*multiplier)[index] - '0';
+               const std::string row = multiplyByOneDigit(
+                   *multiplicand,
+                   digit,
+                   decimalShift
+               );
+               result = addDecimalStrings(result, row);
            }
            return result;
        }
 
-       std::string resultArray(const std::string& a, const std::string& b) {
-           if (a == "0" || b == "0") return "0";
-           const int m = static_cast<int>(a.size());
-           const int n = static_cast<int>(b.size());
-           std::vector<int> digits(m + n, 0);
-           for (int i = m - 1; i >= 0; --i) {
-               for (int j = n - 1; j >= 0; --j) {
-                   int sum = digits[i + j + 1] + (a[i] - '0') * (b[j] - '0');
-                   digits[i + j + 1] = sum % 10;
-                   digits[i + j] += sum / 10;
+       std::string accumulateBySlots(
+           const std::string& first,
+           const std::string& second
+       ) {
+           if (first == "0" || second == "0") {
+               return "0";
+           }
+
+           const int firstLength = static_cast<int>(first.size());
+           const int secondLength = static_cast<int>(second.size());
+           std::vector<int> slots(firstLength + secondLength, 0);
+
+           for (int firstIndex = firstLength - 1; firstIndex >= 0; --firstIndex) {
+               const int firstDigit = first[firstIndex] - '0';
+               for (int secondIndex = secondLength - 1;
+                    secondIndex >= 0;
+                    --secondIndex) {
+                   const int secondDigit = second[secondIndex] - '0';
+                   slots[firstIndex + secondIndex + 1] += firstDigit * secondDigit;
                }
            }
+
+           for (int index = firstLength + secondLength - 1; index > 0; --index) {
+               slots[index - 1] += slots[index] / 10;
+               slots[index] %= 10;
+           }
+
+           int firstNonZero = 0;
+           while (firstNonZero < static_cast<int>(slots.size()) &&
+                  slots[firstNonZero] == 0) {
+               ++firstNonZero;
+           }
+
            std::string result;
-           int first = 0;
-           while (first < m + n && digits[first] == 0) ++first;
-           for (; first < m + n; ++first) result.push_back(static_cast<char>('0' + digits[first]));
+           for (int index = firstNonZero;
+                index < static_cast<int>(slots.size());
+                ++index) {
+               result.push_back(static_cast<char>('0' + slots[index]));
+           }
            return result.empty() ? "0" : result;
        }
 
    public:
        std::string multiply(std::string num1, std::string num2) {
-           return resultArray(num1, num2);
+           return accumulateBySlots(num1, num2);
        }
    };
 
 题解
 ----
 
-从重复加法到竖式部分积
+为什么不能先转换成整数
 ~~~~~~~~~~~~~~~~~~~~~~
 
-把一个数重复相加另一个数次，循环次数与数值大小相关，不适合长字符串。十进制竖式只需枚举 ``m*n`` 对数字位；逐行部分积方法已经把工作限制到输入位数，但需要反复构造字符串并执行字符串加法。
+长度最多为 200 的十进制字符串远超任何固定宽度整数。题目要求操作的是数字字符本身，而不是寻找更大的内置类型。
+真正可复用的结构是小学竖式：每次只把两个一位数字相乘，再按十进制位权对齐结果。
 
-为什么乘积最多有 m+n 位
-~~~~~~~~~~~~~~~~~~~~~~~
-
-``m`` 位数小于 ``10^m``，``n`` 位数小于 ``10^n``，乘积小于 ``10^(m+n)``，所以最多 ``m+n`` 位。结果数组固定为这个长度，首槽可能为 0。
-
-两个数字位影响哪些槽位
+逐行部分积建立直接解法
 ~~~~~~~~~~~~~~~~~~~~~~
 
-字符串下标从高位到低位。``a[i]`` 与 ``b[j]`` 的乘积最低位进入 ``i+j+1``，进位进入 ``i+j``：
+竖式乘法可以直接翻译为两步：
+
+#. 用第二个数的某一位乘完整的第一个数，得到一行部分积；
+#. 根据该位距离个位的距离，在行尾补零，再把所有部分积相加。
+
+例如 ``314 * 27``：
 
 .. code-block:: text
 
-   product = digit1 * digit2 + digits[i+j+1]
-   digits[i+j+1] = product % 10
-   digits[i+j]  += product / 10
+        314
+   ×     27
+   --------
+       2198
+      6280
+   --------
+      8478
 
-这个位置关系等价于竖式中个位、十位、百位的位权对齐。
+``partialProductRows`` 就是这个模型。它已经不依赖数值大小，只依赖字符串长度；为了减少部分积行数，代码让较短的
+字符串充当逐位乘数。
 
-局部进位为何不会丢失
-~~~~~~~~~~~~~~~~~~~~
+这套方法仍反复构造部分积字符串，并在每加入一行时重新执行一次十进制加法。每一位乘积最终只属于某个固定十进制
+位置，可以直接累加到共享槽位中，省去中间字符串。
 
-从右下角向左上角枚举。更新 ``digits[i+j+1]`` 时，该槽位已经汇集右侧组合传来的贡献；取模留下最终个位，商累加到更高槽位。更高槽位稍后还会参与新的 ``sum``，因此多次贡献会继续被规范化。
+为什么只需要 m+n 个槽位
+~~~~~~~~~~~~~~~~~~~~~~~
 
-314 乘 27 的关键累加
-~~~~~~~~~~~~~~~~~~~~
+设两个非零数的长度分别为 ``m`` 和 ``n``。它们分别小于 ``10^m`` 和 ``10^n``，所以乘积小于
+``10^(m+n)``，最多占 ``m+n`` 位。
+
+因此建立长度为 ``m+n`` 的数组。数组下标 ``k`` 表示从最高位开始的第 ``k`` 个十进制槽位；最终最高槽位可能为
+零，这正对应乘积实际只有 ``m+n-1`` 位。
+
+数字位为什么累加到 i+j+1
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+``first[i]`` 距离个位有 ``m-1-i`` 位，``second[j]`` 距离个位有 ``n-1-j`` 位。二者乘积的位权为：
+
+.. math::
+
+   10^{(m-1-i)+(n-1-j)}=10^{m+n-2-i-j}
+
+长度 ``m+n`` 的结果数组中，下标 ``k`` 对应位权 ``10^{m+n-1-k}``。令两者相等可得：
+
+.. math::
+
+   k=i+j+1
+
+所以每一对数字位只需执行：
+
+.. code-block:: cpp
+
+   slots[i + j + 1] += firstDigit * secondDigit;
+
+此时槽位可能大于 9，它只是尚未规范化的十进制系数。
+
+为什么可以最后统一进位
+~~~~~~~~~~~~~~~~~~~~~~
+
+把所有一位乘积累加完后，从最右槽位向左处理。若某个槽位值为 ``value``，写成：
+
+.. math::
+
+   value=10\times(value/10)+(value\bmod10)
+
+保留 ``value % 10`` 作为当前位，把 ``value / 10`` 加到左边一位，表示的总数完全不变。由于从右向左处理，当前槽位
+右侧已经全部规范化，而传给左侧的进位会在稍后的迭代中继续处理。
+
+乘积最多为 ``m+n`` 位，因此处理到下标 1 后，最左槽位一定已经是合法的一位数字，不需要再扩展数组。
+
+``99 * 99`` 的槽位演化
+~~~~~~~~~~~~~~~~~~~~~~
+
+先只累加四个数字位乘积：
+
+.. code-block:: text
+
+   9×9 -> slots[3] += 81
+   9×9 -> slots[2] += 81
+   9×9 -> slots[2] += 81
+   9×9 -> slots[1] += 81
+
+得到未进位数组：
+
+.. code-block:: text
+
+   [0, 81, 162, 81]
+
+再从右向左规范化：
 
 .. list-table::
    :header-rows: 1
 
-   * - 当前数字对
-     - ``digits[i+j+1]`` 旧值
-     - ``sum``
-     - 更新后的数组
-   * - ``4 × 7``
-     - 0
-     - 28
-     - ``[0,0,0,2,8]``
-   * - ``4 × 2``
-     - 2
-     - 10
-     - ``[0,0,1,0,8]``
-   * - ``1 × 7``
-     - 0
-     - 7
-     - ``[0,0,1,7,8]``
-   * - ``1 × 2``
-     - 1
-     - 3
-     - ``[0,0,3,7,8]``
-   * - ``3 × 7``
-     - 3
-     - 24
-     - ``[0,2,4,7,8]``
-   * - ``3 × 2``
-     - 2
+   * - 处理槽位
+     - 向左进位
+     - 当前位保留
+     - 数组
+   * - 3
      - 8
-     - ``[0,8,4,7,8]``
+     - 1
+     - ``[0, 81, 170, 1]``
+   * - 2
+     - 17
+     - 0
+     - ``[0, 98, 0, 1]``
+   * - 1
+     - 9
+     - 8
+     - ``[9, 8, 0, 1]``
 
-数组按代码的 ``i=m-1..0``、``j=n-1..0`` 顺序更新，最终跳过首个零得到自建示例的
-``"8478"``。表中第二、第五行的旧槽贡献说明了为什么不能只把每一对数字的乘积直接写入一个位置。
+最终得到 ``"9801"``。
 
-为什么只删除结果数组开头的零
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+为什么不会漏算或重复计算
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-中间或末尾的零具有真实位权，不能删除。结果数组最前端的零仅来自 ``m+n`` 位上界未被占满；从首个非零槽开始输出即可。一方为 ``"0"`` 时提前返回避免得到空字符串。
+十进制展开中，乘积由所有数字位对 ``(i,j)`` 的乘积之和组成。双重循环恰好访问每一对下标一次，并依据位权公式把
+它加入唯一槽位，因此没有数字位对被遗漏或重复。
 
-复杂度来源
+随后进位只把同一数值从非规范系数表示改写成每位 ``0..9`` 的标准十进制表示，不增加也不删除任何数值。最终输出的
+字符串因此与原乘积完全相同。
+
+前导零与真实零
+~~~~~~~~~~~~~~
+
+任一输入为 ``"0"`` 时直接返回 ``"0"``。两个非零输入的槽位数组可能只在最高端存在未使用的零，从第一个非零槽位
+开始输出即可。
+
+结果内部和末尾的零都对应真实位权，例如 ``1000 * 205 = 205000``，不能在输出过程中删除。
+
+复杂度分析
 ~~~~~~~~~~
 
-部分积和统一数组都执行 ``O(mn)`` 个数字乘法。统一数组使用 ``O(m+n)`` 空间，并避免多次字符串相加；输出转换再花 ``O(m+n)``。
+设两个字符串长度为 ``m`` 和 ``n``。部分积方法执行 ``O(mn)`` 次一位乘法，但还会反复创建和相加长度至多
+``m+n`` 的字符串。
 
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   char *multiply(char *a, char *b) {
-       if ((a[0]=='0'&&a[1]=='\0')||(b[0]=='0'&&b[1]=='\0')) { char *z=malloc(2);strcpy(z,"0");return z; }
-       int m=(int)strlen(a),n=(int)strlen(b);int *d=calloc((size_t)(m+n),sizeof(int));
-       for(int i=m-1;i>=0;--i)for(int j=n-1;j>=0;--j){int s=d[i+j+1]+(a[i]-'0')*(b[j]-'0');d[i+j+1]=s%10;d[i+j]+=s/10;}
-       int first=0;while(first<m+n&&d[first]==0)++first;char *r=malloc((size_t)(m+n-first+1));int k=0;
-       for(;first<m+n;++first)r[k++]=(char)('0'+d[first]);r[k]='\0';free(d);return r;
-   }
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def multiply(self, a: str, b: str) -> str:
-           if a == "0" or b == "0": return "0"
-           digits = [0] * (len(a) + len(b))
-           for i in range(len(a)-1, -1, -1):
-               for j in range(len(b)-1, -1, -1):
-                   total = digits[i+j+1] + int(a[i]) * int(b[j])
-                   digits[i+j+1] = total % 10
-                   digits[i+j] += total // 10
-           first = 0
-           while first < len(digits) and digits[first] == 0: first += 1
-           return "".join(map(str, digits[first:]))
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {
-       public String multiply(String a,String b){if(a.equals("0")||b.equals("0"))return "0";int m=a.length(),n=b.length();int[] d=new int[m+n];
-           for(int i=m-1;i>=0;i--)for(int j=n-1;j>=0;j--){int s=d[i+j+1]+(a.charAt(i)-'0')*(b.charAt(j)-'0');d[i+j+1]=s%10;d[i+j]+=s/10;}
-           StringBuilder r=new StringBuilder();int first=0;while(first<d.length&&d[first]==0)first++;for(;first<d.length;first++)r.append(d[first]);return r.toString();}
-   }
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {
-       pub fn multiply(a:String,b:String)->String{if a=="0"||b=="0"{return "0".into()}let x=a.as_bytes();let y=b.as_bytes();let mut d=vec![0i32;x.len()+y.len()];
-           for i in (0..x.len()).rev(){for j in (0..y.len()).rev(){let s=d[i+j+1]+((x[i]-b'0')as i32)*((y[j]-b'0')as i32);d[i+j+1]=s%10;d[i+j]+=s/10;}}
-           let first=d.iter().position(|&v|v!=0).unwrap_or(d.len());d[first..].iter().map(|v|char::from(b'0'+*v as u8)).collect()}
-   }
-
-Go
-~~
-
-.. code-block:: go
-
-   func multiply(a,b string)string{if a=="0"||b=="0"{return "0"};d:=make([]int,len(a)+len(b));for i:=len(a)-1;i>=0;i--{for j:=len(b)-1;j>=0;j--{s:=d[i+j+1]+int(a[i]-'0')*int(b[j]-'0');d[i+j+1]=s%10;d[i+j]+=s/10}};first:=0;for first<len(d)&&d[first]==0{first++};r:=make([]byte,len(d)-first);for i:=first;i<len(d);i++{r[i-first]=byte('0'+d[i])};return string(r)}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function multiply(a:string,b:string):string{if(a==="0"||b==="0")return "0";const d=Array(a.length+b.length).fill(0);for(let i=a.length-1;i>=0;i--)for(let j=b.length-1;j>=0;j--){const s=d[i+j+1]+Number(a[i])*Number(b[j]);d[i+j+1]=s%10;d[i+j]+=Math.floor(s/10);}let first=0;while(first<d.length&&d[first]===0)first++;return d.slice(first).join("");}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public string Multiply(string a,string b){if(a=="0"||b=="0")return "0";int[] d=new int[a.Length+b.Length];for(int i=a.Length-1;i>=0;i--)for(int j=b.Length-1;j>=0;j--){int s=d[i+j+1]+(a[i]-'0')*(b[j]-'0');d[i+j+1]=s%10;d[i+j]+=s/10;}int first=0;while(first<d.Length&&d[first]==0)first++;var r=new System.Text.StringBuilder();for(;first<d.Length;first++)r.Append(d[first]);return r.ToString();}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function multiply_strings(a::String,b::String)::String
-       (a=="0"||b=="0")&&return "0";x=collect(a);y=collect(b);d=zeros(Int,length(x)+length(y))
-       for i in length(x):-1:1,j in length(y):-1:1;s=d[i+j]+(Int(x[i])-Int('0'))*(Int(y[j])-Int('0'));d[i+j]=s%10;d[i+j-1]+=s÷10;end
-       first=findfirst(!=(0),d);first===nothing ? "0" : join(d[first:end])
-   end
-
-R
-~
-
-.. code-block:: r
-
-   multiply_strings <- function(a,b){if(a=="0"||b=="0")return("0");x<-strsplit(a,"")[[1]];y<-strsplit(b,"")[[1]];m<-length(x);n<-length(y);d<-integer(m+n)
-     for(i in m:1)for(j in n:1){s<-d[[i+j]]+as.integer(x[[i]])*as.integer(y[[j]]);d[[i+j]]<-s%%10L;d[[i+j-1L]]<-d[[i+j-1L]]+s%/%10L}
-     first<-which(d!=0L)[1];paste0(d[first:length(d)],collapse="")
-   }
+主方法访问全部 ``mn`` 对数字位，再用 ``O(m+n)`` 时间统一进位和输出，所以总时间为 ``O(mn)``。结果槽位数组与
+输出字符串均占 ``O(m+n)`` 空间。
