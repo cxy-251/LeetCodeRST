@@ -38,11 +38,7 @@ C++ 实现
 
    class Solution {
    private:
-       bool isPalindrome(
-           const std::string& s,
-           int left,
-           int right
-       ) {
+       bool isPalindrome(const std::string& s, int left, int right) {
            while (left < right) {
                if (s[left] != s[right]) {
                    return false;
@@ -50,100 +46,65 @@ C++ 实现
                ++left;
                --right;
            }
-
            return true;
        }
 
        std::string enumerateSubstrings(const std::string& s) {
            int bestStart = 0;
            int bestLength = 1;
-
-           for (int left = 0;
-                left < static_cast<int>(s.size());
-                ++left) {
-               for (int right = left;
-                    right < static_cast<int>(s.size());
-                    ++right) {
+           for (int left = 0; left < static_cast<int>(s.size()); ++left) {
+               for (int right = left; right < static_cast<int>(s.size()); ++right) {
                    const int length = right - left + 1;
-
-                   if (
-                       length > bestLength &&
-                       isPalindrome(s, left, right)
-                   ) {
+                   if (length > bestLength && isPalindrome(s, left, right)) {
                        bestStart = left;
                        bestLength = length;
                    }
                }
            }
-
            return s.substr(bestStart, bestLength);
        }
 
        std::string dynamicProgramming(const std::string& s) {
            const int n = static_cast<int>(s.size());
-           std::vector<std::vector<char>> dp(
-               n,
-               std::vector<char>(n, false)
-           );
-
+           std::vector<std::vector<char>> dp(n, std::vector<char>(n, false));
            int bestStart = 0;
            int bestLength = 1;
-
            for (int length = 1; length <= n; ++length) {
                for (int left = 0; left + length <= n; ++left) {
                    const int right = left + length - 1;
-
-                   dp[left][right] =
-                       s[left] == s[right] &&
-                       (length <= 2 || dp[left + 1][right - 1]);
-
+                   dp[left][right] = s[left] == s[right] && (length <= 2 || dp[left + 1][right - 1]);
                    if (dp[left][right] && length > bestLength) {
                        bestStart = left;
                        bestLength = length;
                    }
                }
            }
-
            return s.substr(bestStart, bestLength);
        }
 
-       std::pair<int, int> expand(
-           const std::string& s,
-           int left,
-           int right
-       ) {
-           while (
-               left >= 0 &&
-               right < static_cast<int>(s.size()) &&
-               s[left] == s[right]
-           ) {
+       std::pair<int, int> expand(const std::string& s, int left, int right) {
+           while (left >= 0 && right < static_cast<int>(s.size()) && s[left] == s[right]) {
                --left;
                ++right;
            }
-
            return {left + 1, right - left - 1};
        }
 
        std::string expandAroundCenters(const std::string& s) {
            int bestStart = 0;
            int bestLength = 1;
-
-           for (int center = 0;
-                center < static_cast<int>(s.size());
-                ++center) {
+           for (int center = 0; center < static_cast<int>(s.size()); ++center) {
                const auto odd = expand(s, center, center);
                if (odd.second > bestLength) {
                    bestStart = odd.first;
                    bestLength = odd.second;
                }
-
                const auto even = expand(s, center, center + 1);
                if (even.second > bestLength) {
                    bestStart = even.first;
                    bestLength = even.second;
                }
            }
-
            return s.substr(bestStart, bestLength);
        }
 
@@ -151,49 +112,34 @@ C++ 实现
            std::string transformed;
            transformed.reserve(s.size() * 2 + 1);
            transformed.push_back('#');
-
            for (char ch : s) {
                transformed.push_back(ch);
                transformed.push_back('#');
            }
-
            const int n = static_cast<int>(transformed.size());
            std::vector<int> radius(n, 0);
-
            int center = 0;
            int rightBoundary = -1;
            int bestCenter = 0;
            int bestRadius = 0;
-
            for (int index = 0; index < n; ++index) {
                if (index <= rightBoundary) {
                    const int mirror = 2 * center - index;
-                   radius[index] = std::min(
-                       radius[mirror],
-                       rightBoundary - index
-                   );
+                   radius[index] = std::min(radius[mirror], rightBoundary - index);
                }
-
-               while (
-                   index - radius[index] - 1 >= 0 &&
-                   index + radius[index] + 1 < n &&
-                   transformed[index - radius[index] - 1] ==
-                       transformed[index + radius[index] + 1]
-               ) {
+               while (index - radius[index] - 1 >= 0 && index + radius[index] + 1 < n &&
+                      transformed[index - radius[index] - 1] == transformed[index + radius[index] + 1]) {
                    ++radius[index];
                }
-
                if (index + radius[index] > rightBoundary) {
                    center = index;
                    rightBoundary = index + radius[index];
                }
-
                if (radius[index] > bestRadius) {
                    bestCenter = index;
                    bestRadius = radius[index];
                }
            }
-
            const int bestStart = (bestCenter - bestRadius) / 2;
            return s.substr(bestStart, bestRadius);
        }
