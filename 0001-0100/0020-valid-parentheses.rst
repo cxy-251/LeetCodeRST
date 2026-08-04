@@ -8,41 +8,29 @@
 :难度: Easy
 :主题: 字符串、栈、括号匹配
 :原题: `LeetCode 0020 <https://leetcode.com/problems/valid-parentheses/>`_
-:重点: 类型对应、正确闭合顺序、全部括号必须配对
+:重点: 用栈保存尚未完成的闭合顺序，让每个右括号只匹配最近的未闭合左括号
 
 题目重述
 --------
 
-给定只包含 ``()``、``[]``、``{}`` 三类括号字符的字符串 ``s``，判断它是否有效。
+给定一个只包含 ``(``、``)``、``[``、``]``、``{``、``}`` 的字符串 ``s``，判断其中的括号是否有效。
 
-有效字符串必须同时满足：每个左括号都由同类型右括号闭合；括号按照正确的嵌套顺序闭合；每个右括号都有对应的左括号。``s`` 的长度位于 ``[1, 10^4]``。
+有效字符串必须满足：
+
+* 每个左括号都有同类型的右括号；
+* 每个右括号都有对应的左括号；
+* 内层括号必须先于外层括号闭合。
+
+字符串长度位于 ``[1, 10^4]``。只需要判断整体是否合法，不需要返回配对位置。
 
 自建示例
 --------
 
-多种括号正确嵌套：
-
-.. code-block:: text
-
-   输入：s = "([]{})"
-   输出：true
-   解释：圆括号包围一组方括号和一组花括号，三类括号都按正确顺序闭合。
-
-类型交叉：
-
-.. code-block:: text
-
-   输入：s = "([)]"
-   输出：false
-   解释：读到右圆括号时，最近尚未闭合的是左方括号，类型不对应。
-
-缺少右括号：
-
-.. code-block:: text
-
-   输入：s = "(()"
-   输出：false
-   解释：扫描结束后仍有一个左圆括号没有被闭合。
+* 正确嵌套：``s = "([]{})"``，返回 ``true``；
+* 正确并列：``s = "()[]{}"``，返回 ``true``；
+* 类型交叉：``s = "([)]"``，读到 ``)`` 时最近未闭合的是 ``[``，返回 ``false``；
+* 多余右括号：``s = "())"``，最后一个 ``)`` 没有可匹配的左括号，返回 ``false``；
+* 左括号未闭合：``s = "(([]"``，扫描结束后仍有两个外层括号未关闭，返回 ``false``。
 
 C++ 实现
 --------
@@ -54,44 +42,44 @@ C++ 实现
 
    class Solution {
    private:
+       void eraseAll(std::string& s, const std::string& pair) {
+           for (std::size_t position = s.find(pair); position != std::string::npos; position = s.find(pair)) {
+               s.erase(position, pair.size());
+           }
+       }
+
        bool repeatedlyErase(std::string s) {
-           bool changed = true;
-           while (changed) {
-               changed = false;
-               const std::string pairs[] = {"()", "[]", "{}"};
-               for (const std::string& pair : pairs) {
-                   std::size_t position;
-                   while ((position = s.find(pair)) != std::string::npos) {
-                       s.erase(position, 2);
-                       changed = true;
-                   }
-               }
+           std::size_t previousSize = 0;
+           while (s.size() != previousSize) {
+               previousSize = s.size();
+               eraseAll(s, "()");
+               eraseAll(s, "[]");
+               eraseAll(s, "{}");
            }
            return s.empty();
        }
 
        bool stackScan(const std::string& s) {
-           std::vector<char> stack;
-           stack.reserve(s.size());
-
+           if (s.size() % 2 != 0) {
+               return false;
+           }
+           std::vector<char> expectedClosings;
+           expectedClosings.reserve(s.size() / 2);
            for (char current : s) {
-               if (current == '(' || current == '[' || current == '{') {
-                   stack.push_back(current);
-                   continue;
-               }
-
-               if (stack.empty()) return false;
-               const char opening = stack.back();
-               stack.pop_back();
-
-               if ((current == ')' && opening != '(') ||
-                   (current == ']' && opening != '[') ||
-                   (current == '}' && opening != '{')) {
-                   return false;
+               if (current == '(') {
+                   expectedClosings.push_back(')');
+               } else if (current == '[') {
+                   expectedClosings.push_back(']');
+               } else if (current == '{') {
+                   expectedClosings.push_back('}');
+               } else {
+                   if (expectedClosings.empty() || expectedClosings.back() != current) {
+                       return false;
+                   }
+                   expectedClosings.pop_back();
                }
            }
-
-           return stack.empty();
+           return expectedClosings.empty();
        }
 
    public:
@@ -103,277 +91,55 @@ C++ 实现
 题解
 ----
 
-反复删除相邻配对为什么能够作为基准
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+最内层配对
+~~~~~~~~~~
 
-任意合法嵌套结构都至少包含一个相邻的最内层括号对。不断删除 ``()``、``[]``、``{}`` 后，合法字符串最终变空；
-非法字符串会留下无法删除的字符。这种方法直观，但每次查找和删除都可能移动大量字符，最坏达到 ``O(n^2)``。
+合法括号结构只要还不为空，就一定存在一个没有包围其他括号的最内层配对。这个配对在字符串中必然相邻，形式
+只能是 ``()``、``[]`` 或 ``{}``。
 
-为什么闭括号必须匹配最近的未闭合左括号
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+``repeatedlyErase`` 不断删除这三种相邻配对。合法字符串会从内到外逐层消失；非法字符串最终会留下无法继续
+删除的字符。这个方法说明了问题的递归结构，但字符串查找和删除会反复扫描、搬移字符。
 
-嵌套结构遵循后进先出。读到闭括号时，最后出现且尚未关闭的左括号位于最内层，必须先被关闭；更早的左括号在
-外层，不能越过内层括号提前配对。栈顶正好保存这个唯一合法候选。
+未闭合层级
+~~~~~~~~~~
 
-栈扫描维护什么状态
-~~~~~~~~~~~~~~~~~~
+从左向右扫描时，已经闭合的部分无需继续保存，真正影响后续判断的只有尚未闭合的左括号。
 
-遇到左括号就入栈。遇到闭括号时：
+遇到左括号后，代码不保存左括号本身，而是压入它将来需要的右括号：
 
-#. 栈为空说明没有可匹配左括号，立即失败；
-#. 弹出栈顶；
-#. 检查类型是否对应，不对应立即失败。
+* 读到 ``(``，压入 ``)``；
+* 读到 ``[``，压入 ``]``；
+* 读到 ``{``，压入 ``}``。
 
-扫描过程中，栈从底到顶保存所有尚未关闭的左括号，顺序与它们在字符串中的嵌套层级一致。
+因此栈从底到顶保存了所有未完成层级的闭合顺序，栈顶就是下一个右括号唯一允许匹配的字符。
 
-状态演化
+最近优先
 ~~~~~~~~
 
-对 ``{[()()]}``：
+假设先读到外层左括号 ``A``，随后又读到内层左括号 ``B``。在 ``B`` 尚未闭合时，右括号不能越过它去关闭
+``A``，否则两组括号会交叉。因此最后进入的左括号必须最先闭合，括号匹配天然服从后进先出。
 
-.. list-table::
-   :header-rows: 1
+读到右括号时只需检查栈顶：
 
-   * - 字符
-     - 扫描前栈
-     - 动作
-     - 扫描后栈
-   * - ``{``
-     - 空
-     - 入栈
-     - ``{``
-   * - ``[``
-     - ``{``
-     - 入栈
-     - ``{[``
-   * - ``(``
-     - ``{[``
-     - 入栈
-     - ``{[(``
-   * - ``)``
-     - ``{[(``
-     - 匹配 ``(``
-     - ``{[``
-   * - ``(``
-     - ``{[``
-     - 入栈
-     - ``{[(``
-   * - ``)``
-     - ``{[(``
-     - 匹配 ``(``
-     - ``{[``
-   * - ``]``
-     - ``{[``
-     - 匹配 ``[``
-     - ``{``
-   * - ``}``
-     - ``{``
-     - 匹配 ``{``
-     - 空
+* 栈为空，说明右括号左侧没有尚未闭合的对象；
+* 栈顶与当前字符不同，说明当前右括号试图跳过内层结构或关闭错误类型；
+* 栈顶相同，弹出它，表示最内层结构已经完整闭合。
 
-为什么出现空栈或类型不符可以立即失败
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+前两种错误都无法由后续字符修复，可以立即返回 ``false``。
 
-闭括号之前没有未闭合左括号时，任何后续字符都无法在它左侧补入配对。栈顶类型不符时，该闭括号也不能跳过
-最近左括号去匹配更外层节点，否则最近左括号将跨越配对，破坏嵌套顺序。因此两种失败都不可恢复。
+结束条件
+~~~~~~~~
 
-为什么扫描结束后栈必须为空
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+扫描任意前缀后，栈始终精确保存该前缀中尚未闭合的层级。所有右括号都通过栈顶检查，只能保证没有多余、
+错序或类型错误的右括号；扫描结束时还必须要求栈为空，才能保证不存在缺少右括号的左括号。
 
-扫描期间所有闭括号已正确匹配，只能说明不存在多余或错序闭括号。若栈仍有左括号，它们没有对应闭括号，字符串
-仍不完整。只有扫描结束且栈为空，三项有效条件才同时满足。
+奇数长度不可能被分成若干括号对，``stackScan`` 在扫描前直接排除。公开入口采用该方法，每个字符只参与一次
+入栈或出栈。
 
-复杂度来源
+复杂度分析
 ~~~~~~~~~~
 
-栈方法每个字符入栈或出栈至多一次，时间 ``O(n)``，最坏全是左括号时栈空间 ``O(n)``。反复删除方法因字符串
-查找与移动最坏为 ``O(n^2)``。
+``repeatedlyErase`` 的字符串查找与删除可能反复移动剩余字符，最坏时间复杂度为 ``O(n²)``，字符串副本占
+``O(n)`` 空间。
 
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   #include <stdbool.h>
-   #include <stdlib.h>
-   #include <string.h>
-
-   bool isValid(char* s) {
-       int length = (int)strlen(s), top = 0;
-       char* stack = malloc((size_t)length);
-       for (int i = 0; i < length; ++i) {
-           char current = s[i];
-           if (current == '(' || current == '[' || current == '{') {
-               stack[top++] = current;
-           } else {
-               if (top == 0) { free(stack); return false; }
-               char opening = stack[--top];
-               if ((current == ')' && opening != '(') ||
-                   (current == ']' && opening != '[') ||
-                   (current == '}' && opening != '{')) {
-                   free(stack); return false;
-               }
-           }
-       }
-       bool answer = top == 0;
-       free(stack);
-       return answer;
-   }
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def isValid(self, s: str) -> bool:
-           pairs = {")": "(", "]": "[", "}": "{"}
-           stack = []
-           for current in s:
-               if current in "([{":
-                   stack.append(current)
-               elif not stack or stack.pop() != pairs[current]:
-                   return False
-           return not stack
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {
-       public boolean isValid(String s) {
-           char[] stack = new char[s.length()];
-           int top = 0;
-           for (char current : s.toCharArray()) {
-               if (current == '(' || current == '[' || current == '{') {
-                   stack[top++] = current;
-               } else {
-                   if (top == 0) return false;
-                   char opening = stack[--top];
-                   if ((current == ')' && opening != '(') ||
-                       (current == ']' && opening != '[') ||
-                       (current == '}' && opening != '{')) return false;
-               }
-           }
-           return top == 0;
-       }
-   }
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {
-       pub fn is_valid(s: String) -> bool {
-           let mut stack = Vec::with_capacity(s.len());
-           for current in s.bytes() {
-               match current {
-                   b'(' | b'[' | b'{' => stack.push(current),
-                   b')' => if stack.pop() != Some(b'(') { return false; },
-                   b']' => if stack.pop() != Some(b'[') { return false; },
-                   b'}' => if stack.pop() != Some(b'{') { return false; },
-                   _ => unreachable!(),
-               }
-           }
-           stack.is_empty()
-       }
-   }
-
-Go
-~~
-
-.. code-block:: go
-
-   func isValid(s string) bool {
-       stack := make([]byte, 0, len(s))
-       pairs := map[byte]byte{')':'(', ']':'[', '}':'{'}
-       for i := 0; i < len(s); i++ {
-           current := s[i]
-           if current == '(' || current == '[' || current == '{' {
-               stack = append(stack, current)
-           } else {
-               if len(stack) == 0 || stack[len(stack)-1] != pairs[current] { return false }
-               stack = stack[:len(stack)-1]
-           }
-       }
-       return len(stack) == 0
-   }
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function isValid(s: string): boolean {
-       const stack: string[] = [];
-       const pairs: Record<string,string> = {")":"(", "]":"[", "}":"{"};
-       for (const current of s) {
-           if (current === "(" || current === "[" || current === "{") stack.push(current);
-           else if (!stack.length || stack.pop() !== pairs[current]) return false;
-       }
-       return stack.length === 0;
-   }
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {
-       public bool IsValid(string s) {
-           var stack = new Stack<char>();
-           foreach (char current in s) {
-               if (current == '(' || current == '[' || current == '{') stack.Push(current);
-               else {
-                   if (stack.Count == 0) return false;
-                   char opening = stack.Pop();
-                   if ((current == ')' && opening != '(') ||
-                       (current == ']' && opening != '[') ||
-                       (current == '}' && opening != '{')) return false;
-               }
-           }
-           return stack.Count == 0;
-       }
-   }
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function is_valid(s::String)::Bool
-       stack = Char[]
-       pairs = Dict(')'=>'(', ']'=>'[', '}'=>'{')
-       for current in s
-           if current in ('(', '[', '{')
-               push!(stack, current)
-           elseif isempty(stack) || pop!(stack) != pairs[current]
-               return false
-           end
-       end
-       isempty(stack)
-   end
-
-R
-~
-
-.. code-block:: r
-
-   isValid <- function(s) {
-       chars <- strsplit(s, "", fixed = TRUE)[[1]]
-       stack <- character(); pairs <- c(")"="(", "]"="[", "}"="{")
-       for (current in chars) {
-           if (current %in% c("(", "[", "{")) {
-               stack <- c(stack, current)
-           } else {
-               if (length(stack) == 0L || tail(stack, 1L) != pairs[[current]]) return(FALSE)
-               stack <- head(stack, -1L)
-           }
-       }
-       length(stack) == 0L
-   }
+``stackScan`` 的时间复杂度为 ``O(n)``。最坏情况下前半段全部是左括号，栈需要 ``O(n)`` 工作空间。
