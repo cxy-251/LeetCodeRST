@@ -6,16 +6,18 @@
 
 :题号: 0054
 :难度: Medium
-:主题: 矩阵、边界模拟、方向状态、分层遍历
+:主题: 矩阵、模拟、边界收缩
 :原题: `LeetCode 0054 <https://leetcode.com/problems/spiral-matrix/>`_
-:重点: 顺时针顺序、四边界收缩、单行单列、每格访问一次
+:重点: 从方向模拟与访问标记，推导到用四条边界表示尚未输出的矩形
 
 题目重述
 --------
 
-给定 ``m × n`` 整数矩阵 ``matrix``，从左上角开始，按向右、向下、向左、向上的顺时针螺旋顺序返回所有元素。输出必须包含矩阵中的每个位置且恰好一次。
+给定一个 ``m × n`` 整数矩阵 ``matrix``，从左上角开始，按照向右、向下、向左、向上的顺时针
+螺旋顺序返回矩阵中的所有元素。
 
-约束为 ``1 <= m, n <= 10``、``-100 <= matrix[i][j] <= 100``。
+每个位置必须恰好输出一次。矩阵不一定是方阵，约束为 ``1 <= m, n <= 10``，
+``-100 <= matrix[row][col] <= 100``。
 
 自建示例
 --------
@@ -23,14 +25,28 @@
 .. code-block:: text
 
    输入：
-   [[1,2,3],
-    [4,5,6],
-    [7,8,9],
+   [[ 1, 2, 3],
+    [ 4, 5, 6],
+    [ 7, 8, 9],
     [10,11,12]]
 
    输出：[1,2,3,6,9,12,11,10,7,4,5,8]
 
-先遍历外层边界，最后访问内部剩余的 ``5`` 和 ``8``。
+外圈输出后，尚未访问的区域是单列 ``[[5],[8]]``，继续从上向下输出。
+
+.. code-block:: text
+
+   输入：[[4,5,6,7]]
+   输出：[4,5,6,7]
+
+只有一行时，上边已经包含全部元素，不能再反向输出一次下边。
+
+.. code-block:: text
+
+   输入：[[2],[3],[4]]
+   输出：[2,3,4]
+
+只有一列时，右边已经包含除首元素外的其余元素，不能再向上输出一次左边。
 
 C++ 实现
 --------
@@ -41,55 +57,112 @@ C++ 实现
 
    class Solution {
    private:
-       std::vector<int> directionVisited(const std::vector<std::vector<int>>& matrix) {
-           int rows = matrix.size(), cols = matrix[0].size();
-           std::vector<std::vector<char>> visited(rows, std::vector<char>(cols));
-           int dr[4] = {0, 1, 0, -1};
-           int dc[4] = {1, 0, -1, 0};
-           int row = 0, col = 0, direction = 0;
+       std::vector<int> simulateWithVisited(
+           const std::vector<std::vector<int>>& matrix
+       ) {
+           const int rows = static_cast<int>(matrix.size());
+           const int columns = static_cast<int>(matrix[0].size());
+           const int row_step[4] = {0, 1, 0, -1};
+           const int column_step[4] = {1, 0, -1, 0};
+           std::vector<std::vector<char>> visited(
+               rows,
+               std::vector<char>(columns, false)
+           );
            std::vector<int> result;
-           for (int count = 0; count < rows * cols; ++count) {
-               result.push_back(matrix[row][col]);
-               visited[row][col] = true;
-               int nr = row + dr[direction], nc = col + dc[direction];
-               if (nr < 0 || nr >= rows || nc < 0 || nc >= cols || visited[nr][nc]) {
+           result.reserve(rows * columns);
+
+           int row = 0;
+           int column = 0;
+           int direction = 0;
+           for (int count = 0; count < rows * columns; ++count) {
+               result.push_back(matrix[row][column]);
+               visited[row][column] = true;
+
+               int next_row = row + row_step[direction];
+               int next_column = column + column_step[direction];
+               bool blocked = next_row < 0 || next_row >= rows ||
+                              next_column < 0 || next_column >= columns ||
+                              visited[next_row][next_column];
+               if (blocked) {
                    direction = (direction + 1) % 4;
-                   nr = row + dr[direction]; nc = col + dc[direction];
+                   next_row = row + row_step[direction];
+                   next_column = column + column_step[direction];
                }
-               row = nr; col = nc;
+               row = next_row;
+               column = next_column;
            }
            return result;
        }
 
-       void peel(const std::vector<std::vector<int>>& matrix,
-                 int top, int bottom, int left, int right,
-                 std::vector<int>& result) {
+       void peelRecursively(
+           const std::vector<std::vector<int>>& matrix,
+           int top,
+           int bottom,
+           int left,
+           int right,
+           std::vector<int>& result
+       ) {
            if (top > bottom || left > right) return;
-           for (int col = left; col <= right; ++col) result.push_back(matrix[top][col]);
-           for (int row = top + 1; row <= bottom; ++row) result.push_back(matrix[row][right]);
-           if (top < bottom)
-               for (int col = right - 1; col >= left; --col) result.push_back(matrix[bottom][col]);
-           if (left < right)
-               for (int row = bottom - 1; row > top; --row) result.push_back(matrix[row][left]);
-           peel(matrix, top + 1, bottom - 1, left + 1, right - 1, result);
+
+           for (int column = left; column <= right; ++column) {
+               result.push_back(matrix[top][column]);
+           }
+           for (int row = top + 1; row <= bottom; ++row) {
+               result.push_back(matrix[row][right]);
+           }
+           if (top < bottom) {
+               for (int column = right - 1; column >= left; --column) {
+                   result.push_back(matrix[bottom][column]);
+               }
+           }
+           if (left < right) {
+               for (int row = bottom - 1; row > top; --row) {
+                   result.push_back(matrix[row][left]);
+               }
+           }
+
+           peelRecursively(
+               matrix,
+               top + 1,
+               bottom - 1,
+               left + 1,
+               right - 1,
+               result
+           );
        }
 
-       std::vector<int> fourBoundaries(const std::vector<std::vector<int>>& matrix) {
-           int top = 0, bottom = matrix.size() - 1;
-           int left = 0, right = matrix[0].size() - 1;
+       std::vector<int> shrinkBoundaries(
+           const std::vector<std::vector<int>>& matrix
+       ) {
+           int top = 0;
+           int bottom = static_cast<int>(matrix.size()) - 1;
+           int left = 0;
+           int right = static_cast<int>(matrix[0].size()) - 1;
            std::vector<int> result;
            result.reserve(matrix.size() * matrix[0].size());
+
            while (top <= bottom && left <= right) {
-               for (int col = left; col <= right; ++col) result.push_back(matrix[top][col]);
+               for (int column = left; column <= right; ++column) {
+                   result.push_back(matrix[top][column]);
+               }
                ++top;
-               for (int row = top; row <= bottom; ++row) result.push_back(matrix[row][right]);
+
+               for (int row = top; row <= bottom; ++row) {
+                   result.push_back(matrix[row][right]);
+               }
                --right;
+
                if (top <= bottom) {
-                   for (int col = right; col >= left; --col) result.push_back(matrix[bottom][col]);
+                   for (int column = right; column >= left; --column) {
+                       result.push_back(matrix[bottom][column]);
+                   }
                    --bottom;
                }
+
                if (left <= right) {
-                   for (int row = bottom; row >= top; --row) result.push_back(matrix[row][left]);
+                   for (int row = bottom; row >= top; --row) {
+                       result.push_back(matrix[row][left]);
+                   }
                    ++left;
                }
            }
@@ -98,153 +171,119 @@ C++ 实现
 
    public:
        std::vector<int> spiralOrder(std::vector<std::vector<int>>& matrix) {
-           return fourBoundaries(matrix);
+           return shrinkBoundaries(matrix);
        }
    };
 
 题解
 ----
 
-方向模拟为何需要 visited
-~~~~~~~~~~~~~~~~~~~~~~~
+直接方法：沿当前方向移动
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-按右、下、左、上的方向移动很直观，但仅检查矩阵边界不足以判断转向，因为内部位置也可能已经访问。``visited`` 记录每个格子，使移动统一，却额外使用 ``O(mn)`` 空间。
+最直接的模拟状态包括当前位置和当前方向。方向按右、下、左、上的顺序循环；下一格越界或已经访问时，
+顺时针转向一次。
 
-剩余元素为何始终是矩形
+只检查越界不够。例如走完矩阵外圈后，当前位置仍可能向某个矩阵内部坐标移动，但那个坐标已经在外圈中
+输出过。``simulateWithVisited`` 因而需要一张 ``m × n`` 的布尔表，才能区分“尚未访问的内部格子”和
+“已经经过的外圈格子”。
+
+这种方法直接复现移动过程，时间为 ``O(mn)``，访问表额外占用 ``O(mn)`` 空间。继续优化的关键不是让
+转向判断更快，而是判断访问表中是否存在可以被更小状态完整表达的结构。
+
+访问一圈后为什么仍是矩形
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+初始未输出区域是整个矩形。依次输出它的上边、右边、下边和左边后，被删除的恰好是最外面一圈；
+剩余位置仍是一个矩形，只是四条边各向内收缩一格。
+
+因此，无需记录每一个格子是否访问，只需维护当前未输出矩形：
+
+.. code-block:: text
+
+   行范围：[top, bottom]
+   列范围：[left, right]
+
+循环开始时保持以下不变量：这两个闭区间的笛卡尔积恰好包含所有尚未输出的位置，矩形之外的所有位置
+已经按螺旋顺序输出且只输出一次。
+
+一轮为什么按上、右、下、左处理
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+当前矩形非空时，上边一定存在，可以从 ``left`` 到 ``right`` 输出，随后执行 ``top++``，表示整条上边
+已经移出未处理区域。
+
+新的矩形若仍有位置，原来的右边中尚未输出的部分从新 ``top`` 延伸到 ``bottom``。输出后执行
+``right--``。到这里，剩余区域可能已经退化为空，因此下边和左边必须分别重新检查边界。
+
+.. code-block:: text
+
+   输出上边后：top++
+   输出右边后：right--
+   若 top <= bottom：输出下边，bottom--
+   若 left <= right：输出左边，left++
+
+每次边界更新都表示对应整条边已经永久离开未处理矩形。下一轮只处理更内层矩形，不需要访问标记。
+
+为什么下边和左边需要守卫
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+当剩余区域只有一行时，上边已经输出这一行全部元素。``top++`` 后会出现 ``top > bottom``；若仍输出
+下边，就会把同一行反向输出一次。
+
+当剩余区域只有一列时，上边输出首元素，右边继续输出这一列的其余元素。``right--`` 后会出现
+``left > right``；若仍输出左边，就会把同一列向上重复输出。
+
+这两个守卫不是特殊补丁，而是每处理一条边后重新确认未处理矩形是否还具有对应的另一条平行边。
+
+自建示例中的边界演化
 ~~~~~~~~~~~~~~~~~~~~
 
-完成最外层上、右、下、左四条边后，未访问位置恰好是去掉一圈后的内部矩形。用 ``top``、``bottom``、``left``、``right`` 描述它，就不再需要逐格访问标记。
-
-边界更新顺序
-~~~~~~~~~~~~
-
-每轮先输出上边并增加 ``top``，再输出右边并减少 ``right``。此时剩余矩形可能已经为空，因此输出下边前检查 ``top <= bottom``；输出左边前检查 ``left <= right``。
+对 ``4 × 3`` 示例，第一轮状态如下：
 
 .. list-table::
    :header-rows: 1
 
    * - 阶段
      - 输出
-     - 更新后边界
+     - 更新后的未处理矩形
    * - 上边
      - ``1,2,3``
-     - ``top = 1``
+     - 行 ``[1,3]``，列 ``[0,2]``
    * - 右边
      - ``6,9,12``
-     - ``right = 1``
+     - 行 ``[1,3]``，列 ``[0,1]``
    * - 下边
      - ``11,10``
-     - ``bottom = 2``
+     - 行 ``[1,2]``，列 ``[0,1]``
    * - 左边
      - ``7,4``
-     - ``left = 1``
-   * - 内层
-     - ``5,8``
-     - 矩形耗尽
+     - 行 ``[1,2]``，列 ``[1,1]``
 
-单行为什么不能再走下边
-~~~~~~~~~~~~~~~~~~~~~~
+第二轮只剩单列 ``[5,8]``。上边输出 ``5``，右边输出 ``8``，随后列范围为空，左边被守卫跳过。
 
-若剩余区域只有一行，上边已经输出这行全部元素，``top`` 增加后会超过 ``bottom``。缺少守卫时，下边会反向重复输出同一行。单列情况同理，右边已经输出剩余列，左边必须跳过。
+为什么每个位置恰好输出一次
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-每个元素为何恰好输出一次
-~~~~~~~~~~~~~~~~~~~~~~
+一轮中的四段只取当前矩形的边界。上边和右边共享的右上角在输出上边后通过 ``top++`` 被排除；
+右边和下边共享的右下角在输出右边后通过 ``right--`` 被排除。下边和左边的两个角也由循环端点与边界
+更新排除，退化为单行或单列时再由守卫阻止重复。
 
-每条边只访问当前剩余矩形的边界，输出后立刻把该边移出矩形。不同轮次处理的矩形互相嵌套且边界不重合；循环结束条件表示没有剩余位置，因此不重不漏。
+每输出一条边，就把它从未处理矩形中删除，因此已经输出的位置不会进入后续轮次。循环只在未处理矩形
+为空时结束，所以所有位置最终都会被输出。
 
 递归剥层与迭代边界的关系
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-递归方法一次处理外圈，再调用内部矩形；它与四边界循环状态完全一致。迭代避免 ``O(min(m,n))`` 调用栈，更适合作为主实现。
+``peelRecursively`` 先输出当前外圈，再递归处理
+``[top+1,bottom-1] × [left+1,right-1]``。它与四边界循环使用相同的不变量；差别只是递归把每一圈
+保存在调用栈中。
+
+主入口选择 ``shrinkBoundaries``，因为它保留同样的结构，又不需要 ``O(min(m,n))`` 的递归栈。
 
 复杂度来源
 ~~~~~~~~~~
 
-每个元素访问一次，时间 ``O(mn)``。四边界方法除返回数组外只用常数状态；visited 方法额外使用 ``O(mn)``，递归剥层使用 ``O(min(m,n))`` 栈。
-
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   int*spiralOrder(int**a,int rows,int*cols,int*returnSize){int n=cols[0],top=0,bottom=rows-1,left=0,right=n-1,k=0;int*out=malloc((size_t)rows*n*sizeof(int));while(top<=bottom&&left<=right){for(int c=left;c<=right;c++)out[k++]=a[top][c];top++;for(int r=top;r<=bottom;r++)out[k++]=a[r][right];right--;if(top<=bottom){for(int c=right;c>=left;c--)out[k++]=a[bottom][c];bottom--;}if(left<=right){for(int r=bottom;r>=top;r--)out[k++]=a[r][left];left++;}}*returnSize=k;return out;}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def spiralOrder(self, matrix: list[list[int]]) -> list[int]:
-           top, bottom, left, right = 0, len(matrix)-1, 0, len(matrix[0])-1
-           result = []
-           while top <= bottom and left <= right:
-               result.extend(matrix[top][left:right+1]); top += 1
-               for row in range(top, bottom+1): result.append(matrix[row][right])
-               right -= 1
-               if top <= bottom:
-                   result.extend(reversed(matrix[bottom][left:right+1])); bottom -= 1
-               if left <= right:
-                   for row in range(bottom, top-1, -1): result.append(matrix[row][left])
-                   left += 1
-           return result
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public List<Integer> spiralOrder(int[][]a){List<Integer>o=new ArrayList<>();int t=0,b=a.length-1,l=0,r=a[0].length-1;while(t<=b&&l<=r){for(int c=l;c<=r;c++)o.add(a[t][c]);t++;for(int i=t;i<=b;i++)o.add(a[i][r]);r--;if(t<=b){for(int c=r;c>=l;c--)o.add(a[b][c]);b--;}if(l<=r){for(int i=b;i>=t;i--)o.add(a[i][l]);l++;}}return o;}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn spiral_order(a:Vec<Vec<i32>>)->Vec<i32>{let(mut t,mut b,mut l,mut r)=(0i32,a.len()as i32-1,0i32,a[0].len()as i32-1);let mut o=vec![];while t<=b&&l<=r{for c in l..=r{o.push(a[t as usize][c as usize])}t+=1;for i in t..=b{o.push(a[i as usize][r as usize])}r-=1;if t<=b{for c in(l..=r).rev(){o.push(a[b as usize][c as usize])}b-=1}if l<=r{for i in(t..=b).rev(){o.push(a[i as usize][l as usize])}l+=1}}o}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func spiralOrder(a [][]int)[]int{t,b,l,r:=0,len(a)-1,0,len(a[0])-1;o:=[]int{};for t<=b&&l<=r{for c:=l;c<=r;c++{o=append(o,a[t][c])};t++;for i:=t;i<=b;i++{o=append(o,a[i][r])};r--;if t<=b{for c:=r;c>=l;c--{o=append(o,a[b][c])};b--};if l<=r{for i:=b;i>=t;i--{o=append(o,a[i][l])};l++}};return o}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function spiralOrder(a:number[][]):number[]{let t=0,b=a.length-1,l=0,r=a[0].length-1;const o:number[]=[];while(t<=b&&l<=r){for(let c=l;c<=r;c++)o.push(a[t][c]);t++;for(let i=t;i<=b;i++)o.push(a[i][r]);r--;if(t<=b){for(let c=r;c>=l;c--)o.push(a[b][c]);b--;}if(l<=r){for(let i=b;i>=t;i--)o.push(a[i][l]);l++;}}return o;}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public IList<int> SpiralOrder(int[][]a){var o=new List<int>();int t=0,b=a.Length-1,l=0,r=a[0].Length-1;while(t<=b&&l<=r){for(int c=l;c<=r;c++)o.Add(a[t][c]);t++;for(int i=t;i<=b;i++)o.Add(a[i][r]);r--;if(t<=b){for(int c=r;c>=l;c--)o.Add(a[b][c]);b--;}if(l<=r){for(int i=b;i>=t;i--)o.Add(a[i][l]);l++;}}return o;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function spiral_order(a)
-       t=1;b=size(a,1);l=1;r=size(a,2);o=Int[]
-       while t<=b&&l<=r
-           for c in l:r;push!(o,a[t,c]);end;t+=1
-           for i in t:b;push!(o,a[i,r]);end;r-=1
-           if t<=b;for c in r:-1:l;push!(o,a[b,c]);end;b-=1;end
-           if l<=r;for i in b:-1:t;push!(o,a[i,l]);end;l+=1;end
-       end;o
-   end
-
-R
-~
-
-.. code-block:: r
-
-   spiral_order <- function(a){t<-1L;b<-nrow(a);l<-1L;r<-ncol(a);o<-integer();while(t<=b&&l<=r){o<-c(o,a[t,l:r]);t<-t+1L;if(t<=b)o<-c(o,a[t:b,r]);r<-r-1L;if(t<=b&&l<=r){o<-c(o,a[b,seq.int(r,l)]);b<-b-1L};if(l<=r&&t<=b){o<-c(o,a[seq.int(b,t),l]);l<-l+1L}};o}
+矩阵共有 ``mn`` 个位置，每个位置恰好追加一次，因此时间为 ``O(mn)``。主方法除返回数组外只保存四条
+边界和循环变量，额外空间为 ``O(1)``。方向模拟额外使用 ``O(mn)`` 访问表；递归剥层额外使用
+``O(min(m,n))`` 调用栈。
