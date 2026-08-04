@@ -7,7 +7,6 @@
 :题号: 1502
 :难度: Easy
 :主题: 数组、全排列、排序、等差数列、位置映射
-:访问状态: Public
 :原题: `LeetCode 1502 <https://leetcode.com/problems/can-make-arithmetic-progression-from-sequence/>`_
 :重点: 从枚举所有排列，逐步推导到排序后的唯一候选，再利用最小值和最大值直接验证每个元素的位置
 
