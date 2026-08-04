@@ -6,33 +6,32 @@
 
 :题号: 0041
 :难度: Hard
-:主题: 数组、原地哈希、循环置换、鸽巢原理
+:主题: 数组、哈希集合、原地哈希、循环置换
 :原题: `LeetCode 0041 <https://leetcode.com/problems/first-missing-positive/>`_
-:重点: 答案范围、值到下标映射、重复值停止条件、线性原地处理
+:重点: 从记录正整数是否出现，推导到用数组下标充当值域槽位，并在线性时间内完成原地归位
 
 题目重述
 --------
 
-给定未排序整数数组 ``nums``，返回其中没有出现的最小正整数。算法必须在 ``O(n)`` 时间内完成，并且只使用 ``O(1)`` 额外空间；允许原地修改数组。
+给定一个未排序整数数组 ``nums``，返回其中没有出现的最小正整数。
 
-约束为 ``1 <= nums.length <= 10^5``，每个元素都在 32 位有符号整数范围内。
+算法必须满足：
+
+* 时间复杂度为 ``O(n)``；
+* 只使用 ``O(1)`` 额外空间；
+* 允许原地修改 ``nums``。
+
+数组长度位于 ``[1, 10^5]``，元素可以是任意 32 位有符号整数，因此可能包含负数、零、重复正数以及远大于数组
+长度的数。
 
 自建示例
 --------
 
-.. code-block:: text
-
-   输入：nums = [2,5,-3,1,2]
-   输出：3
-
-数组中出现了 ``1`` 和 ``2``，没有出现 ``3``；负数、重复的 ``2`` 和大于数组长度的 ``5`` 都不会改变答案。
-
-.. code-block:: text
-
-   输入：nums = [1,2,4,5]
-   输出：3
-
-从 ``1`` 开始检查时，首个缺失正整数是 ``3``。
+* ``nums = [3, 4, -1, 1]``，返回 ``2``；值 ``1`` 已出现，值 ``2`` 没有出现；
+* ``nums = [1, 2, 0]``，返回 ``3``；值 ``1`` 和 ``2`` 都存在；
+* ``nums = [7, 8, 9, 11, 12]``，返回 ``1``；所有元素都大于数组长度，最小正整数 ``1`` 缺失；
+* ``nums = [1, 1, 2, 2]``，返回 ``3``；重复值不会占据新的正整数；
+* ``nums = [1, 2, 3, 4]``，返回 ``5``；长度为 ``4`` 的数组包含 ``1`` 到 ``4``，答案为 ``n + 1``。
 
 C++ 实现
 --------
@@ -49,264 +48,213 @@ C++ 实现
            std::sort(nums.begin(), nums.end());
            int expected = 1;
            for (int value : nums) {
-               if (value == expected) ++expected;
-               else if (value > expected) break;
+               if (value < expected) {
+                   continue;
+               }
+               if (value == expected) {
+                   ++expected;
+                   continue;
+               }
+               break;
            }
            return expected;
        }
 
-       int hashSet(const std::vector<int>& nums) {
-           std::unordered_set<int> seen(nums.begin(), nums.end());
-           for (int value = 1;; ++value) {
-               if (!seen.count(value)) return value;
-           }
-       }
-
-       int cyclicPlacement(std::vector<int>& nums) {
+       int recordWithHashSet(const std::vector<int>& nums) {
+           std::unordered_set<int> present;
            const int n = static_cast<int>(nums.size());
-           for (int i = 0; i < n; ++i) {
-               while (nums[i] >= 1 && nums[i] <= n &&
-                      nums[nums[i] - 1] != nums[i]) {
-                   std::swap(nums[i], nums[nums[i] - 1]);
+           for (int value : nums) {
+               if (value >= 1 && value <= n) {
+                   present.insert(value);
                }
            }
-           for (int i = 0; i < n; ++i) {
-               if (nums[i] != i + 1) return i + 1;
+           for (int candidate = 1; candidate <= n; ++candidate) {
+               if (!present.contains(candidate)) {
+                   return candidate;
+               }
+           }
+           return n + 1;
+       }
+
+       int placeValuesIntoOwnSlots(std::vector<int>& nums) {
+           const int n = static_cast<int>(nums.size());
+           for (int index = 0; index < n; ++index) {
+               while (nums[index] >= 1 && nums[index] <= n) {
+                   const int target = nums[index] - 1;
+                   if (nums[target] == nums[index]) {
+                       break;
+                   }
+                   std::swap(nums[index], nums[target]);
+               }
+           }
+
+           for (int index = 0; index < n; ++index) {
+               if (nums[index] != index + 1) {
+                   return index + 1;
+               }
            }
            return n + 1;
        }
 
    public:
        int firstMissingPositive(std::vector<int>& nums) {
-           return cyclicPlacement(nums);
+           return placeValuesIntoOwnSlots(nums);
        }
    };
 
 题解
 ----
 
-为什么答案只可能在 1 到 n+1
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-长度为 ``n`` 的数组最多容纳 ``n`` 个不同正整数。若 ``1..n`` 中有缺口，最小缺失值位于该范围；若它们全部存在，答案只能是 ``n+1``。因此非正数和大于 ``n`` 的值都不需要建立槽位。
-
-数组如何充当哈希表
-~~~~~~~~~~~~~~~~~~
-
-把值 ``x`` 映射到下标 ``x-1``。最终若某个有效值出现，就尽量把它送到自己的槽位：1 放在 0，2 放在 1，依此类推。完成后从左到右第一处 ``nums[i] != i+1`` 就表示值 ``i+1`` 未出现。
-
-为什么一个位置要使用 while
+先从排序后的连续正整数开始
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-一次交换会把当前位置的新值带回来。这个新值也可能属于 ``1..n`` 且仍未就位，所以必须继续处理，直到当前位置为无效值、已经正确，或目标槽位已有相同值。
+最直接的方法是排序，再从 ``expected = 1`` 开始扫描：
 
-重复值为何必须停止交换
-~~~~~~~~~~~~~~~~~~~~~~
+* 当前值小于 ``expected``，它是非正数或重复值，跳过；
+* 当前值等于 ``expected``，说明这个正整数存在，令 ``expected`` 加一；
+* 当前值大于 ``expected``，有序性保证后面不会再出现 ``expected``，立即返回。
 
-若 ``nums[i] == nums[nums[i]-1]``，目标槽位已经保存同值。继续交换不会改变数组，会形成死循环。该条件同时表达“这个值已经被记录”，多余副本无需再移动。
+该方法正确地抓住了答案含义：需要从 ``1`` 开始寻找第一个没有出现的值。排序改变了原数组的组织方式，需要
+``O(n log n)`` 时间，不能满足题目的线性要求。
+
+集合把问题改写为存在性查询
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+线性方法可以先把所有相关正整数放入哈希集合，再依次查询 ``1, 2, 3, ...``。这里无需记录所有整数，只需记录
+``[1, n]`` 内的值。
+
+为什么答案只可能位于 ``[1, n + 1]``？长度为 ``n`` 的数组若没有完整包含 ``1`` 到 ``n``，答案就在这个范围内；
+若 ``1`` 到 ``n`` 全部出现，最小缺失正整数只能是 ``n + 1``。负数、零和大于 ``n`` 的值都不可能成为更小答案，
+也不能证明某个 ``1..n`` 已经出现。
+
+``recordWithHashSet`` 已达到 ``O(n)`` 时间，但集合需要 ``O(n)`` 额外空间。下一步不是改变搜索目标，而是寻找现成的
+``n`` 个槽位保存同样的存在性信息。
+
+数组本身就是值域为 1 到 n 的哈希表
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+数组有下标 ``0`` 到 ``n - 1``，而需要记录的值恰好是 ``1`` 到 ``n``。可以建立一一映射：
+
+.. code-block:: text
+
+   值 1 -> 下标 0
+   值 2 -> 下标 1
+   ...
+   值 x -> 下标 x - 1
+   ...
+   值 n -> 下标 n - 1
+
+若值 ``x`` 出现，就尽量把一个 ``x`` 放到 ``nums[x - 1]``。整理结束后，槽位 ``index`` 中若不是 ``index + 1``，
+就说明值 ``index + 1`` 没有出现。
+
+这不是把数组整体排序。负数、零、大于 ``n`` 的值和多余重复值可以留在任意位置；算法只要求每个出现过的有效值有
+一个副本进入自己的槽位。
+
+为什么当前位置需要反复交换
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+假设当前位置保存值 ``x``，且 ``x`` 属于 ``[1, n]``，但不在槽位 ``x - 1``。把它交换到目标槽位后，当前位置会
+得到原目标槽位中的另一个值。这个新值也可能有效且尚未归位，因此不能立刻移动到下一个下标。
+
+例如：
+
+.. code-block:: text
+
+   [3, 4, -1, 1]
+    ^
+
+值 ``3`` 应进入下标 ``2``，交换后得到 ``[-1, 4, 3, 1]``。处理下标 ``1`` 时，值 ``4`` 进入下标 ``3``，
+当前位置又得到 ``1``；还要继续把 ``1`` 送入下标 ``0``。所以每个外层位置使用 ``while``，直到当前值：
+
+* 不在 ``[1, n]`` 内；
+* 已经位于自己的槽位；
+* 或目标槽位已经保存相同值。
+
+重复值为何必须停止
+~~~~~~~~~~~~~~~~~~
+
+对 ``nums = [1, 1, 2, 2]``，第二个 ``1`` 的目标槽位下标 ``0`` 已经保存 ``1``。交换两个相同值不会改变数组，
+若继续循环就会永远停留在同一状态。
+
+因此代码先检查：
+
+.. code-block:: cpp
+
+   if (nums[target] == nums[index]) {
+       break;
+   }
+
+这个条件同时处理两种情况：当前值已经正确就位，以及目标槽位已有同值副本。前者无需移动，后者说明该值的存在性
+已经被记录，多余副本可以留在当前位置。
 
 状态演化
 ~~~~~~~~
 
+对 ``[3, 4, -1, 1]``：
+
 .. list-table::
    :header-rows: 1
 
-   * - 当前数组
-     - 当前值
+   * - 当前下标
+     - 当前数组
      - 动作
-   * - ``[3,4,-1,1]``
-     - 3
-     - 与槽位 2 交换，得到 ``[-1,4,3,1]``
-   * - ``[-1,4,3,1]``
-     - 4
-     - 与槽位 3 交换，得到 ``[-1,1,3,4]``
-   * - ``[-1,1,3,4]``
-     - 1
-     - 与槽位 0 交换，得到 ``[1,-1,3,4]``
+   * - 0
+     - ``[3, 4, -1, 1]``
+     - 值 3 与槽位 2 交换
+   * - 0
+     - ``[-1, 4, 3, 1]``
+     - 当前值 -1 无需归位，处理下一下标
+   * - 1
+     - ``[-1, 4, 3, 1]``
+     - 值 4 与槽位 3 交换
+   * - 1
+     - ``[-1, 1, 3, 4]``
+     - 新值 1 与槽位 0 交换
+   * - 1
+     - ``[1, -1, 3, 4]``
+     - 当前值 -1 无需归位
    * - 最终扫描
-     - 下标 1 不是值 2
-     - 返回 2
+     - ``[1, -1, 3, 4]``
+     - 下标 1 未保存值 2，返回 2
 
-为什么总交换次数仍是线性
-~~~~~~~~~~~~~~~~~~~~~~~~
+每次成功交换都固定一个槽位
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-每次有效交换至少把一个 ``1..n`` 的值放入最终槽位。一个槽位一旦保存正确值，不会再被不同值合法占据；重复副本又会被停止条件拦截。因此成功交换至多 ``n`` 次，外层扫描和最终扫描也各为 ``O(n)``。
+成功交换时，当前有效值 ``x`` 被放入目标槽位 ``x - 1``。这个正确值以后不会再被其他不同值合法移走：另一个值
+``y`` 的目标槽位是 ``y - 1``；只有重复的 ``x`` 也会指向 ``x - 1``，而重复停止条件会阻止它交换。
 
-为什么首次错位就是最小缺失值
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+因此每次成功交换至少新增一个永久正确的槽位，成功交换总数最多为 ``n``。虽然代码包含两层循环，内层 ``while``
+在整个执行过程中合计只会成功交换线性次，不能简单按 ``n * n`` 计算。
 
-整理结束后，若值 ``x`` 出现，它的目标槽位要么保存 ``x``，要么目标槽位已保存同值。于是扫描到第一处错位 ``i`` 时，所有更小值 ``1..i`` 都已在对应槽位，而 ``i+1`` 没有任何副本能进入槽位 ``i``，它正是最小缺失正整数。若无错位，``1..n`` 全部存在，返回 ``n+1``。
+首次错位为何就是最小缺失正整数
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-复杂度来源
+整理完成后，若有效值 ``x`` 在原数组中出现过：
+
+* 第一个被处理的 ``x`` 会进入槽位 ``x - 1``；
+* 后续重复的 ``x`` 看到目标槽位已有 ``x`` 后停止。
+
+所以 ``nums[x - 1] == x`` 当且仅当值 ``x`` 被记录。最终从左到右扫描，第一处
+``nums[index] != index + 1`` 表明 ``index + 1`` 未出现；更小的槽位都正确，说明所有更小正整数均存在，因此它正是
+最小缺失正整数。若所有槽位都正确，``1`` 到 ``n`` 全部存在，返回 ``n + 1``。
+
+代码演进
+~~~~~~~~
+
+``sortAndScan`` 通过排序把相同值聚集并恢复正整数顺序，正确但需要 ``O(n log n)`` 时间。
+
+``recordWithHashSet`` 不再排序，只记录 ``[1, n]`` 中每个值是否出现，把时间降为 ``O(n)``，代价是 ``O(n)``
+额外空间。
+
+``placeValuesIntoOwnSlots`` 保留同样的存在性模型，把集合中的键 ``x`` 映射为数组槽位 ``x - 1``。原数组因此成为
+固定值域哈希表，同时满足线性时间和常量额外空间，公开入口采用该方法。
+
+复杂度分析
 ~~~~~~~~~~
 
-排序方法为 ``O(n log n)``；哈希集合为 ``O(n)`` 时间和 ``O(n)`` 空间；循环置换为 ``O(n)`` 时间、``O(1)`` 额外空间。
+设数组长度为 ``n``。
 
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   int firstMissingPositive(int *nums, int n) {
-       for (int i = 0; i < n; ++i) {
-           while (nums[i] >= 1 && nums[i] <= n &&
-                  nums[nums[i] - 1] != nums[i]) {
-               int target = nums[i] - 1;
-               int temporary = nums[i];
-               nums[i] = nums[target];
-               nums[target] = temporary;
-           }
-       }
-       for (int i = 0; i < n; ++i) if (nums[i] != i + 1) return i + 1;
-       return n + 1;
-   }
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def firstMissingPositive(self, nums: list[int]) -> int:
-           n = len(nums)
-           for i in range(n):
-               while 1 <= nums[i] <= n and nums[nums[i] - 1] != nums[i]:
-                   target = nums[i] - 1
-                   nums[i], nums[target] = nums[target], nums[i]
-           for i, value in enumerate(nums):
-               if value != i + 1:
-                   return i + 1
-           return n + 1
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {
-       public int firstMissingPositive(int[] nums) {
-           int n = nums.length;
-           for (int i = 0; i < n; i++) {
-               while (nums[i] >= 1 && nums[i] <= n && nums[nums[i] - 1] != nums[i]) {
-                   int target = nums[i] - 1;
-                   int temp = nums[i]; nums[i] = nums[target]; nums[target] = temp;
-               }
-           }
-           for (int i = 0; i < n; i++) if (nums[i] != i + 1) return i + 1;
-           return n + 1;
-       }
-   }
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {
-       pub fn first_missing_positive(mut nums: Vec<i32>) -> i32 {
-           let n = nums.len();
-           for i in 0..n {
-               while nums[i] >= 1 && nums[i] <= n as i32 &&
-                     nums[nums[i] as usize - 1] != nums[i] {
-                   let target = nums[i] as usize - 1;
-                   nums.swap(i, target);
-               }
-           }
-           for i in 0..n { if nums[i] != i as i32 + 1 { return i as i32 + 1; } }
-           n as i32 + 1
-       }
-   }
-
-Go
-~~
-
-.. code-block:: go
-
-   func firstMissingPositive(nums []int) int {
-       n := len(nums)
-       for i := 0; i < n; i++ {
-           for nums[i] >= 1 && nums[i] <= n && nums[nums[i]-1] != nums[i] {
-               target := nums[i] - 1
-               nums[i], nums[target] = nums[target], nums[i]
-           }
-       }
-       for i, value := range nums { if value != i+1 { return i+1 } }
-       return n+1
-   }
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function firstMissingPositive(nums: number[]): number {
-       const n = nums.length;
-       for (let i = 0; i < n; i++) {
-           while (nums[i] >= 1 && nums[i] <= n && nums[nums[i] - 1] !== nums[i]) {
-               const target = nums[i] - 1;
-               [nums[i], nums[target]] = [nums[target], nums[i]];
-           }
-       }
-       for (let i = 0; i < n; i++) if (nums[i] !== i + 1) return i + 1;
-       return n + 1;
-   }
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {
-       public int FirstMissingPositive(int[] nums) {
-           int n = nums.Length;
-           for (int i = 0; i < n; ++i) {
-               while (nums[i] >= 1 && nums[i] <= n && nums[nums[i] - 1] != nums[i]) {
-                   int target = nums[i] - 1;
-                   (nums[i], nums[target]) = (nums[target], nums[i]);
-               }
-           }
-           for (int i = 0; i < n; ++i) if (nums[i] != i + 1) return i + 1;
-           return n + 1;
-       }
-   }
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function first_missing_positive!(nums::Vector{Int})::Int
-       n = length(nums)
-       for i in eachindex(nums)
-           while 1 <= nums[i] <= n && nums[nums[i]] != nums[i]
-               target = nums[i]
-               nums[i], nums[target] = nums[target], nums[i]
-           end
-       end
-       for i in eachindex(nums)
-           nums[i] != i && return i
-       end
-       n + 1
-   end
-
-R
-~
-
-.. code-block:: r
-
-   first_missing_positive <- function(nums) {
-     n <- length(nums)
-     if (n > 0L) for (i in seq_len(n)) {
-       while (nums[[i]] >= 1L && nums[[i]] <= n && nums[[nums[[i]]]] != nums[[i]]) {
-         target <- nums[[i]]
-         temporary <- nums[[i]]
-         nums[[i]] <- nums[[target]]
-         nums[[target]] <- temporary
-       }
-     }
-     if (n > 0L) for (i in seq_len(n)) if (nums[[i]] != i) return(i)
-     n + 1L
-   }
+* 排序扫描：排序需要 ``O(n log n)`` 时间；当前实现按值传参保存原数组，因此额外复制 ``O(n)`` 空间；
+* 哈希集合：建表和查询共 ``O(n)`` 期望时间，额外空间 ``O(n)``；
+* 原地归位：外层扫描、最多 ``n`` 次成功交换和最终扫描合计 ``O(n)`` 时间，只使用下标与临时变量，额外空间
+  ``O(1)``。
