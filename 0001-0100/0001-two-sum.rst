@@ -8,35 +8,28 @@
 :难度: Easy
 :主题: 数组、哈希表、排序、双指针
 :原题: `LeetCode 0001 <https://leetcode.com/problems/two-sum/>`_
-:重点: 二元组搜索空间、补数等价转换、单调排除、历史前缀索引
+:重点: 从枚举下标对推导到补数查询，再分别利用有序性和历史前缀索引消除重复搜索
 
 题目重述
 --------
 
-给定整数数组 ``nums`` 和整数 ``target``，需要找到两个不同下标 ``i`` 和 ``j``，使
-``nums[i] + nums[j] == target``，并返回这两个零基下标。
+给定整数数组 ``nums`` 和整数 ``target``，需要找到两个不同下标 ``i`` 和 ``j``，使 ``nums[i] + nums[j] == target``，并返回这两个零基下标。
 
-数组长度范围为 ``[2, 10^4]``，元素和目标值位于 ``[-10^9, 10^9]``。题目不保证数组有序，
-也不要求返回的两个下标按升序排列。平台保证恰好存在一个有效答案，同一个位置不能使用两次。
+每个位置最多使用一次。数组不保证有序，返回的两个下标也不要求按升序排列。题目保证恰好存在一个有效答案。
+
+约束条件：
+
+* ``2 <= nums.length <= 10^4``；
+* ``-10^9 <= nums[i] <= 10^9``；
+* ``-10^9 <= target <= 10^9``。
 
 自建示例
 --------
 
-普通补数命中：
-
-.. code-block:: text
-
-   输入：nums = [4, 1, 9, 5], target = 10
-   输出：[1, 2]
-   解释：nums[1] + nums[2] = 1 + 9 = 10
-
-相同数值来自不同位置：
-
-.. code-block:: text
-
-   输入：nums = [4, 1, 4, 10], target = 8
-   输出：[0, 2]
-   解释：两个 4 的数值相同，但下标不同；当前位置不能与自己配对。
+* 普通命中：``nums = [4, 1, 9, 5]``、``target = 10``，下标 ``1`` 和 ``2`` 对应的数值之和为 ``10``，返回 ``[1, 2]``；
+* 相同数值：``nums = [4, 1, 4, 10]``、``target = 8``，两个 ``4`` 来自不同位置，返回 ``[0, 2]``；
+* 负数参与：``nums = [-3, 7, 2, 11]``、``target = 4``，返回 ``[0, 1]``；
+* 最小规模：``nums = [-5, 100]``、``target = 95``，数组只有两个元素，返回 ``[0, 1]``。
 
 C++ 实现
 --------
@@ -58,11 +51,15 @@ C++ 实现
                for (int right = left + 1;
                     right < static_cast<int>(nums.size());
                     ++right) {
-                   if (nums[left] + nums[right] == target) {
+                   const long long sum =
+                       static_cast<long long>(nums[left]) + nums[right];
+
+                   if (sum == target) {
                        return {left, right};
                    }
                }
            }
+
            return {};
        }
 
@@ -76,7 +73,7 @@ C++ 实现
            for (int index = 0;
                 index < static_cast<int>(nums.size());
                 ++index) {
-               items.emplace_back(nums[index], index);  // 排序副本同时保留原始下标
+               items.emplace_back(nums[index], index);
            }
 
            std::sort(items.begin(), items.end());
@@ -92,10 +89,11 @@ C++ 实现
                if (sum == target) {
                    return {items[left].second, items[right].second};
                }
+
                if (sum < target) {
-                   ++left;  // 当前左值与区间最大值配对仍过小，可排除该左值
+                   ++left;
                } else {
-                   --right;  // 当前右值与区间最小值配对仍过大，可排除该右值
+                   --right;
                }
            }
 
@@ -113,13 +111,13 @@ C++ 实现
                 index < static_cast<int>(nums.size());
                 ++index) {
                const int need = target - nums[index];
-               const auto found = seen.find(need);  // 查询范围只包含历史前缀
+               const auto found = seen.find(need);
 
                if (found != seen.end()) {
                    return {found->second, index};
                }
 
-               seen[nums[index]] = index;  // 保存一个可用的历史下标
+               seen[nums[index]] = index;
            }
 
            return {};
@@ -127,94 +125,59 @@ C++ 实现
 
    public:
        std::vector<int> twoSum(std::vector<int>& nums, int target) {
-           return onePassHash(nums, target);  // 标准入口采用期望 O(n) 的主解法
+           return onePassHash(nums, target);
        }
    };
 
 题解
 ----
 
-原始搜索空间：所有不同下标对
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+原始搜索空间
+~~~~~~~~~~~~
 
-最直接的思路是检查所有 ``i < j`` 的下标对。长度为 ``n`` 的数组共有：
+最直接的方法是枚举所有 ``i < j`` 的下标对。长度为 ``n`` 的数组共有 ``n(n - 1) / 2`` 个不同下标对，``bruteForce`` 恰好把这些候选全部检查一次，因此不会漏掉答案。
 
-.. math::
+一次候选检查只需要常数时间，真正的问题是候选数量达到二次规模。固定一个位置后，代码仍要逐个访问其他位置，反复寻找能够与当前值组成 ``target`` 的元素。
 
-   \binom{n}{2} = \frac{n(n - 1)}{2}
+这里的重复工作不是加法本身，而是“在剩余元素中寻找指定数值”。
 
-个候选对。``bruteForce`` 的外层固定左下标，内层枚举其后的右下标，每个不同下标对
-恰好检查一次，因此一定能覆盖答案。
+补数转换
+~~~~~~~~
 
-它的重复工作在于：固定一个新位置后，仍然要逐个访问其他位置，反复询问“目标补数
-是否存在”。数组本身没有提供按数值直接定位下标的能力，所以一次补数查找需要线性扫描，
-全部候选合计形成二次时间。
+条件 ``nums[i] + nums[j] == target`` 可以改写为 ``nums[i] == target - nums[j]``。当当前位置 ``j`` 已经确定时，另一个位置需要保存的数值也随之确定，这个数值就是补数 ``target - nums[j]``。
 
-等价转换：从求和条件到补数查询
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+问题因此从“枚举两个未知位置”转变为：顺序选择一个当前位置，再查询它的补数是否存在，以及补数位于哪个下标。
 
-对任意两个位置，题目条件：
+接下来有两条不同的优化路线：排序通过有序性批量排除候选，哈希表则直接为已经扫描过的元素建立按数值查询的索引。
 
-.. math::
+排序双指针
+~~~~~~~~~~
 
-   nums[i] + nums[j] = target
+数组无序时，当前和过大或过小都不能说明应该移动哪个位置。``sortAndTwoPointers`` 先建立 ``(数值, 原始下标)`` 副本并按数值排序，让剩余候选区间具有单调性，同时保留最终需要返回的原始下标。
 
-可以改写为：
+令 ``left`` 指向剩余区间最小值，``right`` 指向最大值：
 
-.. math::
+* 当前和小于 ``target`` 时，最小值与区间最大值配对仍然过小，它与更小的右侧元素配对只会更小，因此可以排除当前 ``left``；
+* 当前和大于 ``target`` 时，最大值与区间最小值配对仍然过大，它与更大的左侧元素配对只会更大，因此可以排除当前 ``right``；
+* 当前和等于 ``target`` 时，两个元素保存的原始下标就是答案。
 
-   nums[i] = target - nums[j]
+暴力法每次只排除一个下标对，排序双指针每次移动都排除以某个端点为一端的一整组候选。代价是先排序，并额外保存原始下标。
 
-当扫描到当前下标 ``j`` 时，当前值已经确定，真正需要回答的问题变成：
+历史前缀索引
+~~~~~~~~~~~~
 
-   前缀 ``[0, j)`` 中是否出现过数值 ``target - nums[j]``；若出现，它位于哪个下标？
+排序方案利用单调性减少候选，还可以进一步直接解决“寻找补数”这个瓶颈。
 
-这一步转换把“枚举两个位置”拆成“顺序选择当前位置”和“查询一个指定数值”。排序双指针
-通过排序获得可批量排除候选的单调性；一次遍历哈希表则直接为历史前缀建立按数值查询的
-索引。
+扫描到 ``index`` 时，只在已经处理过的前缀 ``[0, index)`` 中寻找 ``need = target - nums[index]``。使用 ``unordered_map`` 保存“数值到历史下标”的映射后，补数查询由线性搜索变为期望常数时间。
 
-排序双指针：利用单调性排除整组候选
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+查询必须发生在写入当前元素之前。这样，``seen`` 中只包含更早的位置，命中后得到的下标天然与 ``index`` 不同；查询失败后再写入当前值，使它从下一轮开始成为历史前缀的一部分。
 
-``sortAndTwoPointers`` 先复制出 ``(数值, 原始下标)``。排序会改变元素位置，而题目要求
-返回原始下标，所以排序对象必须同时保存原始位置；当前实现对副本排序，调用者的输入数组
-保持原状。
+映射的值只需要是该数值的一个有效历史下标。当前实现覆盖旧下标并保存最近一次出现位置，不影响正确性，因为题目只要求返回任意一组合法下标。
 
-排序后令 ``left`` 指向剩余区间最小值，``right`` 指向最大值：
+状态演化
+~~~~~~~~
 
-* 若当前和小于 ``target``，那么固定 ``items[left]``，它与区间最大值
-  ``items[right]`` 配对仍然过小；改用区间内任何更小的右值只会让和继续减小。因此所有
-  以当前 ``left`` 为一端的剩余候选都不可能成为答案，可以一次性右移 ``left``；
-* 若当前和大于 ``target``，固定 ``items[right]``，它与区间最小值
-  ``items[left]`` 配对仍然过大；改用任何更大的左值只会让和继续增大。因此所有以当前
-  ``right`` 为一端的剩余候选都可以一次性排除，左移 ``right``；
-* 若当前和等于 ``target``，两个元素保存的原始下标就是答案。
-
-两个指针每次移动都基于有序性排除一整组不可能候选，而不是只检查并放弃一个下标对。
-
-哈希表：为历史前缀建立反向索引
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-主解法需要同时回答“补数是否出现过”和“补数位于哪个下标”。集合只能回答成员是否存在，
-无法直接返回题目要求的下标，因此使用映射：
-
-.. code-block:: text
-
-   键：已经处理过的数值
-   值：该数值在历史前缀中的一个下标
-
-处理 ``index`` 之前，``seen`` 只描述前缀 ``[0, index)``。算法先查询 ``need``，命中时
-表中的下标一定小于当前下标，两者天然是不同位置；查询未命中后再写入当前值，使当前元素
-从下一轮开始进入历史前缀。
-
-算法成立只要求 ``seen[value]`` 保存一个有效的历史下标。保存第一次出现位置、最近一次
-出现位置或其他历史位置都能组成合法下标对。当前 C++ 实现直接覆盖旧值，因此保存最近一次
-历史下标；查询与写入的先后顺序才是避免当前位置匹配自己的关键条件。
-
-主解法状态演化
-~~~~~~~~~~~~~~
-
-使用自建示例 ``nums = [4, 1, 4, 10]``、``target = 8``：
+以 ``nums = [4, 1, 4, 10]``、``target = 8`` 为例：
 
 .. list-table::
    :header-rows: 1
@@ -240,11 +203,27 @@ C++ 实现
      - ``{4: 0, 1: 1}``
      - 命中 ``4 -> 0``，返回 ``[0, 2]``
 
-第一轮处理下标 0 时，哈希表仍为空，所以该位置不能匹配自己。第二个 4 到达时，第一个 4
-已经属于历史前缀，查询才能得到两个不同下标。
+处理第一个 ``4`` 时，哈希表仍为空，所以它不能与自己配对。处理第二个 ``4`` 时，第一个 ``4`` 已经进入历史前缀，两个不同位置才形成答案。
 
-解法对比与主解法选择
-~~~~~~~~~~~~~~~~~~~~
+代码演进
+~~~~~~~~
+
+``bruteForce`` 使用两层循环显式枚举两个未知位置。发现第二个位置的数值其实由第一个位置和 ``target`` 唯一确定后，问题转化为补数查询。
+
+``sortAndTwoPointers`` 通过排序获得单调性，把内层逐个尝试改成移动左右端点。代码仍然需要构造副本和排序，因为它依赖全局有序关系来批量排除候选。
+
+``onePassHash`` 不再调整原数组顺序，而是边扫描边为历史前缀建立反向索引。排序、副本、左右指针全部消失，只剩一次遍历、一次补数查询和一次历史状态写入。
+
+因此三种实现对应三层认识：
+
+* 不利用结构时，枚举全部下标对；
+* 利用有序性时，一次排除整组候选；
+* 为补数建立索引时，直接定位历史位置。
+
+公开入口采用 ``onePassHash``，因为它不修改输入，不需要排序，并能在期望线性时间内返回原始下标。
+
+复杂度分析
+~~~~~~~~~~
 
 .. list-table::
    :header-rows: 1
@@ -252,345 +231,27 @@ C++ 实现
    * - 方法
      - 时间复杂度
      - 工作空间
-     - 优化依据
+     - 主要代价
    * - 暴力枚举
      - ``O(n²)``
      - ``O(1)``
-     - 逐个检查全部 ``n(n - 1) / 2`` 个下标对
+     - 检查全部不同下标对
    * - 排序双指针
      - ``O(n log n)``
      - ``O(n)``
-     - 利用有序性批量排除固定左端或右端的候选
+     - 构造并排序带原始下标的副本
    * - 一次遍历哈希表
      - 期望 ``O(n)``
      - ``O(n)``
-     - 把历史前缀中的补数查询变为期望常数时间
+     - 保存历史数值到下标的映射
 
-本文 C++ 主解法采用一次遍历哈希表。它在顺序扫描过程中直接维护题目需要的反向索引，不
-需要排序，也能立即返回原始下标。
+哈希表查询和写入的平均时间为 ``O(1)``，因此主解法的期望总时间为 ``O(n)``。极端哈希冲突下的最坏时间取决于容器实现，不能简单视为严格线性。
 
-为什么历史前缀查询不会重复位置或遗漏答案
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+边界处理
+~~~~~~~~
 
-在每轮处理 ``index`` 之前，维持以下性质：``seen`` 中每个键都来自前缀
-``[0, index)``，其值是该键在该前缀中的一个有效下标。
-
-初始时 ``index = 0``，历史前缀为空，``seen`` 也为空，性质成立。若当前补数未命中，
-写入 ``nums[index] -> index`` 后，映射覆盖的范围扩展到 ``[0, index]``，正好成为下一轮
-需要的历史前缀，性质继续成立。
-
-假设唯一答案位于 ``a < b``。处理 ``b`` 之前，位置 ``a`` 已经进入历史前缀，所以
-``seen`` 中保存着数值 ``nums[a]`` 的某个历史下标。此时：
-
-.. math::
-
-   need = target - nums[b] = nums[a]
-
-查询必然命中。返回的旧下标小于 ``b``，与当前下标不同；键值等于 ``need``，所以两处数值
-之和等于 ``target``，返回结果合法。由答案的较大下标 ``b`` 必然被扫描到，算法也不会遗漏
-答案。
-
-复杂度来源
-~~~~~~~~~~
-
-``bruteForce`` 检查 ``n(n - 1) / 2`` 个候选对，每次只做常数工作，因此时间复杂度为
-``O(n²)``，工作空间为 ``O(1)``。
-
-``sortAndTwoPointers`` 构造 ``n`` 个 ``(数值, 原始下标)`` 对需要 ``O(n)`` 时间和空间；
-排序需要 ``O(n log n)`` 时间；两个指针总共至多移动 ``n - 1`` 次，需要 ``O(n)`` 时间。
-总时间由排序主导，为 ``O(n log n)``，工作空间为 ``O(n)``。
-
-``onePassHash`` 对每个元素执行一次哈希查询，并在未返回时执行一次写入。标准哈希表的查询
-和写入期望为 ``O(1)``，因此总时间为期望 ``O(n)``；最多保存 ``n`` 个不同键，工作空间为
-``O(n)``。极端碰撞时，实际最坏时间取决于容器的冲突处理策略。返回结果固定包含两个下标，
-结果空间为 ``O(1)``。
-
-九语言实现
-----------
-
-C
-~
-
-C 标准库没有哈希表，下面使用开放寻址和线性探测。容量取不小于 ``2n`` 的最小二次幂，
-最多插入 ``n`` 个不同键，因此装载率不超过一半。表中没有删除操作，探测遇到空槽即可确定
-目标键不存在。
-
-.. code-block:: c
-
-   #include <stdint.h>
-   #include <stdlib.h>
-
-   typedef struct {
-       int key;
-       int index;
-       unsigned char used;
-   } HashEntry;
-
-   static size_t hash_int(int key) {
-       uint32_t value = (uint32_t)key;
-       value ^= value >> 16;
-       value *= 0x7feb352dU;
-       value ^= value >> 15;
-       return (size_t)value;
-   }
-
-   static size_t find_slot(
-       const HashEntry* table,
-       size_t capacity,
-       int key
-   ) {
-       size_t slot = hash_int(key) & (capacity - 1U);
-
-       while (table[slot].used && table[slot].key != key) {
-           slot = (slot + 1U) & (capacity - 1U);  // 线性探测下一个槽位
-       }
-
-       return slot;
-   }
-
-   int* twoSum(
-       int* nums,
-       int numsSize,
-       int target,
-       int* returnSize
-   ) {
-       *returnSize = 0;
-
-       size_t capacity = 1U;
-       while (capacity < (size_t)numsSize * 2U) {
-           capacity <<= 1U;  // 二次幂容量支持位掩码取模
-       }
-
-       HashEntry* table = calloc(capacity, sizeof(HashEntry));
-       if (table == NULL) {
-           return NULL;
-       }
-
-       for (int index = 0; index < numsSize; ++index) {
-           const int need = target - nums[index];
-           const size_t need_slot = find_slot(table, capacity, need);
-
-           if (table[need_slot].used) {
-               int* answer = malloc(2U * sizeof(int));
-               if (answer == NULL) {
-                   free(table);
-                   return NULL;
-               }
-
-               answer[0] = table[need_slot].index;
-               answer[1] = index;
-               *returnSize = 2;
-
-               free(table);
-               return answer;
-           }
-
-           const size_t value_slot =
-               find_slot(table, capacity, nums[index]);
-           table[value_slot].key = nums[index];
-           table[value_slot].index = index;  // 当前实现保存最近一次历史下标
-           table[value_slot].used = 1U;
-       }
-
-       free(table);
-       return NULL;
-   }
-
-开放寻址表在装载率不超过一半时保持较短的期望探测序列，因此平均总时间为 ``O(n)``；
-极端碰撞时，单次探测可能达到 ``O(n)``，总时间可能退化为 ``O(n²)``。表占用 ``O(n)``
-空间，成功返回的数组由调用者负责释放。
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def twoSum(
-           self,
-           nums: list[int],
-           target: int,
-       ) -> list[int]:
-           seen: dict[int, int] = {}
-
-           for index, value in enumerate(nums):
-               need = target - value
-               if need in seen:
-                   return [seen[need], index]
-
-               seen[value] = index  # 保存最近一次历史下标
-
-           return []
-
-Java
-~~~~
-
-.. code-block:: java
-
-   import java.util.HashMap;
-   import java.util.Map;
-
-   class Solution {
-       public int[] twoSum(int[] nums, int target) {
-           Map<Integer, Integer> seen = new HashMap<>();
-
-           for (int index = 0; index < nums.length; index++) {
-               int need = target - nums[index];
-
-               if (seen.containsKey(need)) {
-                   return new int[] {seen.get(need), index};
-               }
-
-               seen.put(nums[index], index);  // 保存最近一次历史下标
-           }
-
-           return new int[0];
-       }
-   }
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   use std::collections::HashMap;
-
-   impl Solution {
-       pub fn two_sum(nums: Vec<i32>, target: i32) -> Vec<i32> {
-           let mut seen: HashMap<i32, i32> =
-               HashMap::with_capacity(nums.len());
-
-           for (index, value) in nums.into_iter().enumerate() {
-               let need = target - value;
-
-               if let Some(&old_index) = seen.get(&need) {
-                   return vec![old_index, index as i32];
-               }
-
-               seen.insert(value, index as i32);  // 保存最近一次历史下标
-           }
-
-           Vec::new()
-       }
-   }
-
-Go
-~~
-
-.. code-block:: go
-
-   func twoSum(nums []int, target int) []int {
-       seen := make(map[int]int, len(nums))
-
-       for index, value := range nums {
-           need := target - value
-           if oldIndex, ok := seen[need]; ok {
-               return []int{oldIndex, index}
-           }
-
-           seen[value] = index // 保存最近一次历史下标
-       }
-
-       return []int{}
-   }
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function twoSum(nums: number[], target: number): number[] {
-       const seen = new Map<number, number>();
-
-       for (let index = 0; index < nums.length; index += 1) {
-           const value = nums[index];
-           const need = target - value;
-           const oldIndex = seen.get(need);
-
-           if (oldIndex !== undefined) { // 下标 0 也是有效查询结果
-               return [oldIndex, index];
-           }
-
-           seen.set(value, index); // 保存最近一次历史下标
-       }
-
-       return [];
-   }
-
-C#
-~~
-
-.. code-block:: csharp
-
-   using System;
-   using System.Collections.Generic;
-
-   public class Solution {
-       public int[] TwoSum(int[] nums, int target) {
-           var seen = new Dictionary<int, int>();
-
-           for (int index = 0; index < nums.Length; index++) {
-               int need = target - nums[index];
-
-               if (seen.TryGetValue(need, out int oldIndex)) {
-                   return new[] {oldIndex, index};
-               }
-
-               seen[nums[index]] = index; // 保存最近一次历史下标
-           }
-
-           return Array.Empty<int>();
-       }
-   }
-
-Julia
-~~~~~
-
-Julia 的循环下标从一开始，映射中保存和最终返回的下标统一转换为题目要求的零基下标。
-
-.. code-block:: julia
-
-   function two_sum(
-       nums::Vector{Int},
-       target::Int,
-   )::Vector{Int}
-       seen = Dict{Int, Int}()
-
-       for (index, value) in pairs(nums)
-           need = target - value
-           if haskey(seen, need)
-               return [seen[need], index - 1] # 返回零基下标
-           end
-
-           seen[value] = index - 1 # 保存最近一次历史下标
-       end
-
-       return Int[]
-   end
-
-R
-~
-
-R 使用环境作为哈希表，并将整数转换为环境键。循环采用一基下标，映射中保存和最终返回的
-下标统一转换为零基下标。
-
-.. code-block:: r
-
-   two_sum <- function(nums, target) {
-       seen <- new.env(hash = TRUE, parent = emptyenv())
-
-       for (index in seq_along(nums)) {
-           value <- nums[[index]]
-           need_key <- as.character(target - value)
-
-           if (exists(need_key, envir = seen, inherits = FALSE)) {
-               old_index <- get(need_key, envir = seen, inherits = FALSE)
-               return(c(old_index, index - 1L)) # 返回零基下标
-           }
-
-           value_key <- as.character(value)
-           assign(value_key, index - 1L, envir = seen) # 保存最近一次历史下标
-       }
-
-       integer(0)
-   }
+* 数组只有两个元素时，只要它们构成题目保证的唯一答案，三种方法都会直接返回这两个下标；
+* 两个答案元素数值相同时，先查询后写入可以保证使用两个不同位置；
+* 数组包含负数时，补数转换和哈希查询方式不变；
+* 排序方案对副本排序，因此不会改变调用者传入的 ``nums``；
+* C++ 实现使用 ``long long`` 计算两个元素之和，避免更大数据范围下的加法溢出。
