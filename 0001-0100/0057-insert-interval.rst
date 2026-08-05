@@ -6,16 +6,22 @@
 
 :题号: 0057
 :难度: Medium
-:主题: 区间、线性扫描、闭区间合并、有序序列
+:主题: 数组、区间、线性扫描
 :原题: `LeetCode 0057 <https://leetcode.com/problems/insert-interval/>`_
-:重点: 有序不重叠输入、新区间插入、连续重叠合并、结果顺序
+:重点: 从插入后重新排序合并，推导到利用有序不重叠条件完成三段扫描
 
 题目重述
 --------
 
-给定按起点升序排列且彼此不重叠的闭区间数组 ``intervals``，以及一个闭区间 ``newInterval``。把新区间插入数组，并合并所有重叠区间，使返回结果仍按起点升序排列且彼此不重叠。
+给定若干闭区间 ``intervals``，它们已经按左端点升序排列，并且彼此不重叠。另给一个闭区间
+``newInterval``。
 
-约束为 ``0 <= intervals.length <= 10^4``，所有端点都在 ``0..10^5`` 范围内，并满足每个区间起点不大于终点。
+把新区间插入原序列，合并所有重叠区间，返回仍按左端点升序排列且彼此不重叠的结果。
+
+闭区间共享端点时也算重叠。例如 ``[1,4]`` 与 ``[4,6]`` 应合并为 ``[1,6]``。
+
+约束为 ``0 <= intervals.length <= 10^4``，所有端点均在 ``[0,10^5]`` 内，每个区间的左端点不大于
+右端点。
 
 自建示例
 --------
@@ -25,7 +31,15 @@
    输入：intervals = [[1,3],[7,9],[12,15]], newInterval = [4,13]
    输出：[[1,3],[4,15]]
 
-新区间与 ``[7,9]``、``[12,15]`` 连续重叠，合并为 ``[4,15]``；它与 ``[1,3]`` 之间仍有空隙。
+``[1,3]`` 完全在新区间左侧；新区间依次与 ``[7,9]``、``[12,15]`` 重叠，最终扩张为 ``[4,15]``。
+
+.. code-block:: text
+
+   输入：intervals = [[1,2],[3,5],[6,7],[8,10],[12,16]], newInterval = [4,8]
+   输出：[[1,2],[3,10],[12,16]]
+
+新区间先与 ``[3,5]`` 重叠并扩张为 ``[3,8]``，随后继续吸收 ``[6,7]`` 和与右端点 8 接触的
+``[8,10]``。
 
 .. code-block:: text
 
@@ -44,58 +58,52 @@ C++ 实现
 
    class Solution {
    private:
-       std::vector<std::vector<int>> appendSortMerge(
+       std::vector<std::vector<int>> appendSortAndMerge(
            std::vector<std::vector<int>> intervals,
-           const std::vector<int>& inserted
+           const std::vector<int>& newInterval
        ) {
-           intervals.push_back(inserted);
+           intervals.push_back(newInterval);
            std::sort(intervals.begin(), intervals.end());
+
            std::vector<std::vector<int>> result;
            for (const auto& interval : intervals) {
-               if (result.empty() || interval[0] > result.back()[1]) result.push_back(interval);
-               else result.back()[1] = std::max(result.back()[1], interval[1]);
+               if (result.empty() || interval[0] > result.back()[1]) {
+                   result.push_back(interval);
+               } else {
+                   result.back()[1] = std::max(result.back()[1], interval[1]);
+               }
            }
            return result;
        }
 
-       std::vector<std::vector<int>> binaryThenScan(
+       std::vector<std::vector<int>> scanThreeParts(
            const std::vector<std::vector<int>>& intervals,
-           const std::vector<int>& inserted
+           const std::vector<int>& newInterval
        ) {
-           int position = std::lower_bound(
-               intervals.begin(), intervals.end(), inserted,
-               [](const auto& interval, const auto& value) { return interval[0] < value[0]; }
-           ) - intervals.begin();
-           std::vector<std::vector<int>> all = intervals;
-           all.insert(all.begin() + position, inserted);
            std::vector<std::vector<int>> result;
-           for (const auto& interval : all) {
-               if (result.empty() || interval[0] > result.back()[1]) result.push_back(interval);
-               else result.back()[1] = std::max(result.back()[1], interval[1]);
-           }
-           return result;
-       }
+           result.reserve(intervals.size() + 1);
 
-       std::vector<std::vector<int>> threePhases(
-           const std::vector<std::vector<int>>& intervals,
-           const std::vector<int>& inserted
-       ) {
-           std::vector<std::vector<int>> result;
            int index = 0;
-           int start = inserted[0], end = inserted[1];
+           int mergedStart = newInterval[0];
+           int mergedEnd = newInterval[1];
+           const int size = static_cast<int>(intervals.size());
 
-           while (index < static_cast<int>(intervals.size()) && intervals[index][1] < start)
-               result.push_back(intervals[index++]);
-
-           while (index < static_cast<int>(intervals.size()) && intervals[index][0] <= end) {
-               start = std::min(start, intervals[index][0]);
-               end = std::max(end, intervals[index][1]);
+           while (index < size && intervals[index][1] < mergedStart) {
+               result.push_back(intervals[index]);
                ++index;
            }
-           result.push_back({start, end});
 
-           while (index < static_cast<int>(intervals.size()))
-               result.push_back(intervals[index++]);
+           while (index < size && intervals[index][0] <= mergedEnd) {
+               mergedStart = std::min(mergedStart, intervals[index][0]);
+               mergedEnd = std::max(mergedEnd, intervals[index][1]);
+               ++index;
+           }
+           result.push_back({mergedStart, mergedEnd});
+
+           while (index < size) {
+               result.push_back(intervals[index]);
+               ++index;
+           }
            return result;
        }
 
@@ -104,159 +112,170 @@ C++ 实现
            std::vector<std::vector<int>>& intervals,
            std::vector<int>& newInterval
        ) {
-           return threePhases(intervals, newInterval);
+           return scanThreeParts(intervals, newInterval);
        }
    };
 
 题解
 ----
 
-追加后再通用合并浪费了什么
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+直接复用 0056：插入、排序、统一合并
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-把新区间加入后重新排序并统一合并当然可以得到正确结果，但忽略了原数组已经有序且互不重叠。重新排序需要 ``O(n log n)``，而新区间只会影响一个连续区段。
+不利用本题的额外条件时，可以先把 ``newInterval`` 追加到数组，再按左端点排序，最后使用 0056 的区间合并
+方法。
 
-三个阶段如何由相对位置得到
-~~~~~~~~~~~~~~~~~~~~~~~~
+``appendSortAndMerge`` 一定正确，因为追加后的问题就是普通的“合并所有重叠区间”。它的时间为
+``O(n log n)``，主要成本来自重新排序。
 
-令当前合并段初始为 ``[start,end] = newInterval``。原区间按起点递增，因此依次属于：
+这个方法浪费了两个已经给出的事实：原区间本来就有序，而且原区间之间本来就不重叠。新区间只可能改变一段
+连续区域，不需要重新整理全部区间。
 
-#. ``interval.end < start``：完全在左侧，直接复制；
-#. ``interval.start <= end``：与合并段重叠，扩张两端；
-#. ``interval.start > end``：完全在右侧，剩余区间全部直接复制。
-
-闭区间为何使用严格分离条件
+新区间把原序列分成哪三部分
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-左侧完全分离要求 ``interval.end < start``；若二者相等，共享端点，仍应进入重叠阶段。右侧同理，只有 ``interval.start > end`` 才完全分离。
+令当前待合并区间为：
+
+.. code-block:: text
+
+   merged = [mergedStart, mergedEnd]
+
+开始时它就是 ``newInterval``。从左到右扫描原区间，每个区间只会属于以下三类之一。
+
+第一部分：完全在 merged 左侧
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+若当前区间满足：
+
+.. code-block:: text
+
+   interval.end < mergedStart
+
+它与 ``merged`` 之间存在严格空隙，可以直接加入结果。
+
+这里必须使用 ``<``。若 ``interval.end == mergedStart``，两个闭区间共享端点，应该进入合并阶段。
+
+第二部分：与 merged 重叠
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+跳过全部左侧区间后，只要当前区间满足：
+
+.. code-block:: text
+
+   interval.start <= mergedEnd
+
+它就与 ``merged`` 相交或接触，应更新：
+
+.. code-block:: text
+
+   mergedStart = min(mergedStart, interval.start)
+   mergedEnd   = max(mergedEnd, interval.end)
+
+右端点扩张后，原本更靠右的区间也可能进入重叠范围，因此必须继续扫描，直到遇到第一个
+``interval.start > mergedEnd`` 的区间。
+
+第三部分：完全在 merged 右侧
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+一旦出现：
+
+.. code-block:: text
+
+   interval.start > mergedEnd
+
+当前合并段已经结束。由于原数组按左端点升序排列，所有后续区间的左端点只会更大，也不可能再与
+``merged`` 重叠。
+
+因此只需提交一次 ``merged``，再把剩余区间原样复制到结果末尾。
+
+为什么重叠区间一定连续出现
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+原数组有序且彼此不重叠。设扫描到第一个位于右侧的区间 ``intervals[k]``，满足：
+
+.. code-block:: text
+
+   intervals[k].start > mergedEnd
+
+对于任意 ``j > k``，排序保证：
+
+.. code-block:: text
+
+   intervals[j].start >= intervals[k].start > mergedEnd
+
+所以进入右侧部分后，不可能再次遇到重叠区间。左侧、重叠、右侧三部分在数组中必然按顺序连续出现，扫描
+不需要回退。
 
 状态演化
 ~~~~~~~~
 
+对：
+
+.. code-block:: text
+
+   intervals   = [[1,2],[3,5],[6,7],[8,10],[12,16]]
+   newInterval = [4,8]
+
+扫描过程为：
+
 .. list-table::
    :header-rows: 1
 
-   * - 读取区间
-     - 当前合并段
+   * - 当前区间
+     - 合并前 ``merged``
      - 动作
+     - 合并后 ``merged``
    * - ``[1,2]``
      - ``[4,8]``
-     - 完全在左侧，复制
+     - ``2 < 4``，直接输出
+     - ``[4,8]``
    * - ``[3,5]``
+     - ``[4,8]``
+     - 重叠，向左扩张
      - ``[3,8]``
-     - 重叠，左端扩张
    * - ``[6,7]``
      - ``[3,8]``
-     - 被当前段包含
+     - 完全包含
+     - ``[3,8]``
    * - ``[8,10]``
+     - ``[3,8]``
+     - 共享端点，向右扩张
      - ``[3,10]``
-     - 共享端点，右端扩张
    * - ``[12,16]``
      - ``[3,10]``
-     - 进入右侧阶段
+     - ``12 > 10``，进入右侧部分
+     - ``[3,10]``
 
-为什么重叠区间必然连续出现
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+最终结果为 ``[[1,2],[3,10],[12,16]]``。
 
-原区间起点递增且互不重叠。某个区间起点超过当前合并段右端后，后续起点只会更大，不可能重新相交。因此中间重叠区间构成一个连续块，线性扫描无需回退。
+为什么结果仍然有序且互不重叠
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-为什么合并段只提交一次
-~~~~~~~~~~~~~~~~~~~~
+左侧部分的每个区间都满足 ``interval.end < mergedStart``，所以它们与最终合并段严格分离。中间所有重叠区间
+与新区间被替换为一个覆盖相同并集的 ``merged``。
 
-左侧区间与新区间完全分离；中段所有相交区间通过取最小左端和最大右端形成一个覆盖段；进入右侧前提交该段，之后再复制剩余区间。这样结果天然有序且互不重叠。
+右侧第一个区间满足 ``interval.start > mergedEnd``，后续区间又保持原有的有序、不重叠性质。因此结果依次由
+左侧原区间、一个合并段、右侧原区间组成，天然有序且彼此不重叠。
 
-二分定位为什么不能替代线性合并
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+每个原区间恰好在三个循环中的一个被处理，新区间始终包含在 ``merged`` 中，所以结果没有遗漏。合并只发生在
+有交集或共享端点的闭区间之间，也不会填入原覆盖范围之外的空隙。
 
-二分可找到按起点插入的大致位置，但新区间可能向左或向右覆盖多个区间，仍需扫描这些区间。由于最终要复制 ``n`` 个结果元素，整体 ``O(n)`` 已经最优，额外二分收益有限。
+边界情况
+~~~~~~~~
 
-为什么结果覆盖范围完全相同
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+``intervals`` 为空时，前两个循环都不执行，直接加入 ``newInterval``。
 
-每个原区间恰好被复制或并入合并段，新区间也从始至终属于该段。合并只把有交集的闭区间替换为它们的最小覆盖区间，所以并集不变；三个阶段又互不遗漏。
+新区间位于所有区间之前时，左侧循环为空，重叠阶段可能为空，先加入新区间，再复制全部原区间。新区间位于
+所有区间之后时，先复制全部原区间，再加入新区间。
+
+新区间被某个原区间完全包含时，合并后的两个端点都保持为原区间端点；新区间覆盖多个原区间时，重叠循环会
+持续扩张，直到完整吸收这段连续区间。
 
 复杂度来源
 ~~~~~~~~~~
 
-三阶段扫描访问每个区间一次，时间 ``O(n)``；不计返回结果，只使用索引和两个端点，额外空间 ``O(1)``。追加排序方法为 ``O(n log n)``。
+``scanThreeParts`` 对每个原区间最多访问一次，时间为 ``O(n)``。返回结果本身最多包含 ``n+1`` 个区间；不计
+返回结果，只使用索引和两个端点，额外空间为 ``O(1)``。
 
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   int**insert(int**a,int n,int*cols,int*newI,int newSize,int*returnSize,int**returnCols){int**o=malloc((size_t)(n+1)*sizeof(int*));int k=0,i=0,s=newI[0],e=newI[1];while(i<n&&a[i][1]<s){o[k]=malloc(2*sizeof(int));o[k][0]=a[i][0];o[k++][1]=a[i++][1];}while(i<n&&a[i][0]<=e){if(a[i][0]<s)s=a[i][0];if(a[i][1]>e)e=a[i][1];i++;}o[k]=malloc(2*sizeof(int));o[k][0]=s;o[k++][1]=e;while(i<n){o[k]=malloc(2*sizeof(int));o[k][0]=a[i][0];o[k++][1]=a[i++][1];}int*sizes=malloc((size_t)k*sizeof(int));for(i=0;i<k;i++)sizes[i]=2;*returnSize=k;*returnCols=sizes;return o;}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def insert(self, intervals: list[list[int]], newInterval: list[int]) -> list[list[int]]:
-           result, index = [], 0
-           start, end = newInterval
-           while index < len(intervals) and intervals[index][1] < start:
-               result.append(intervals[index][:]); index += 1
-           while index < len(intervals) and intervals[index][0] <= end:
-               start = min(start, intervals[index][0]); end = max(end, intervals[index][1]); index += 1
-           result.append([start, end])
-           result.extend(interval[:] for interval in intervals[index:])
-           return result
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public int[][] insert(int[][]a,int[]v){List<int[]>o=new ArrayList<>();int i=0,s=v[0],e=v[1];while(i<a.length&&a[i][1]<s)o.add(new int[]{a[i][0],a[i++][1]});while(i<a.length&&a[i][0]<=e){s=Math.min(s,a[i][0]);e=Math.max(e,a[i][1]);i++;}o.add(new int[]{s,e});while(i<a.length)o.add(new int[]{a[i][0],a[i++][1]});return o.toArray(new int[o.size()][]);}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn insert(a:Vec<Vec<i32>>,v:Vec<i32>)->Vec<Vec<i32>>{let(mut o,mut i,mut s,mut e)=(vec![],0,v[0],v[1]);while i<a.len()&&a[i][1]<s{o.push(a[i].clone());i+=1}while i<a.len()&&a[i][0]<=e{s=s.min(a[i][0]);e=e.max(a[i][1]);i+=1}o.push(vec![s,e]);while i<a.len(){o.push(a[i].clone());i+=1}o}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func insert(a [][]int,v []int)[][]int{o:=[][]int{};i,s,e:=0,v[0],v[1];for i<len(a)&&a[i][1]<s{o=append(o,[]int{a[i][0],a[i][1]});i++};for i<len(a)&&a[i][0]<=e{if a[i][0]<s{s=a[i][0]};if a[i][1]>e{e=a[i][1]};i++};o=append(o,[]int{s,e});for i<len(a){o=append(o,[]int{a[i][0],a[i][1]});i++};return o}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function insert(a:number[][],v:number[]):number[][]{const o:number[][]=[];let i=0,s=v[0],e=v[1];while(i<a.length&&a[i][1]<s)o.push([...a[i++]]);while(i<a.length&&a[i][0]<=e){s=Math.min(s,a[i][0]);e=Math.max(e,a[i][1]);i++;}o.push([s,e]);while(i<a.length)o.push([...a[i++]]);return o;}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public int[][] Insert(int[][]a,int[]v){var o=new List<int[]>();int i=0,s=v[0],e=v[1];while(i<a.Length&&a[i][1]<s)o.Add(new[]{a[i][0],a[i++][1]});while(i<a.Length&&a[i][0]<=e){s=Math.Min(s,a[i][0]);e=Math.Max(e,a[i][1]);i++;}o.Add(new[]{s,e});while(i<a.Length)o.Add(new[]{a[i][0],a[i++][1]});return o.ToArray();}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function insert_interval(a,v)
-       o=Vector{Vector{Int}}();i=1;s=v[1];e=v[2]
-       while i<=length(a)&&a[i][2]<s;push!(o,copy(a[i]));i+=1;end
-       while i<=length(a)&&a[i][1]<=e;s=min(s,a[i][1]);e=max(e,a[i][2]);i+=1;end
-       push!(o,[s,e]);while i<=length(a);push!(o,copy(a[i]));i+=1;end;o
-   end
-
-R
-~
-
-.. code-block:: r
-
-   insert_interval <- function(a,v){out<-list();i<-1L;s<-v[[1L]];e<-v[[2L]];n<-if(is.null(dim(a)))0L else nrow(a);while(i<=n&&a[i,2]<s){out[[length(out)+1L]]<-a[i,];i<-i+1L};while(i<=n&&a[i,1]<=e){s<-min(s,a[i,1]);e<-max(e,a[i,2]);i<-i+1L};out[[length(out)+1L]]<-c(s,e);while(i<=n){out[[length(out)+1L]]<-a[i,];i<-i+1L};do.call(rbind,out)}
+追加、排序再合并的方法时间为 ``O(n log n)``，并因按值接收参数而使用 ``O(n)`` 输入副本空间。主入口调用
+``scanThreeParts``，且不修改原区间和新区间。
