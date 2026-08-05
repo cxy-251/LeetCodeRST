@@ -6,33 +6,28 @@
 
 :题号: 0070
 :难度: Easy
-:主题: 动态规划、计数、斐波那契
+:主题: 动态规划、计数、斐波那契、矩阵快速幂
 :原题: `LeetCode 0070 <https://leetcode.com/problems/climbing-stairs/>`_
-:重点: 每次走一或两级、最后一步分类、方案计数、滚动状态
+:重点: 从枚举步长序列，推导到只保留相邻两个方案数，再用矩阵快速幂加速状态推进
 
 题目重述
 --------
 
-共有 ``n`` 级楼梯，每次可以向上走 1 级或 2 级。返回恰好到达第 ``n`` 级的不同走法数量；两种走法只要步长序列不同，就视为不同。
+共有 ``n`` 级楼梯。每次只能向上走 1 级或 2 级，需要返回恰好到达第 ``n`` 级的不同走法数量。
 
-约束为 ``1 <= n <= 45``。
+走法由完整步长序列决定。只要两个序列中至少一个位置选择的步长不同，就视为两种不同走法。
+
+约束条件：
+
+* ``1 <= n <= 45``。
 
 自建示例
 --------
 
-.. code-block:: text
-
-   输入：n = 4
-   输出：5
-
-五种走法为 ``1+1+1+1``、``1+1+2``、``1+2+1``、``2+1+1`` 和 ``2+2``。
-
-.. code-block:: text
-
-   输入：n = 6
-   输出：13
-
-到达第 6 级的方案数等于到达第 5 级与第 4 级的方案数之和，即 ``8 + 5``。
+* ``n = 1``：只有 ``1``，返回 ``1``；
+* ``n = 4``：走法为 ``1+1+1+1``、``1+1+2``、``1+2+1``、``2+1+1`` 和 ``2+2``，返回 ``5``；
+* ``n = 6``：到达第 6 级的方案数为到达第 5 级与第 4 级的方案数之和，即 ``8 + 5 = 13``；
+* ``n = 45``：返回 ``1836311903``，仍位于 32 位有符号整数范围内。
 
 C++ 实现
 --------
@@ -43,46 +38,78 @@ C++ 实现
 
    class Solution {
    private:
+       struct Matrix {
+           long long a00;
+           long long a01;
+           long long a10;
+           long long a11;
+       };
+
        int plainRecursion(int step) {
-           if (step <= 2) return step;
+           if (step <= 2) {
+               return step;
+           }
            return plainRecursion(step - 1) + plainRecursion(step - 2);
        }
 
        int memoDfs(int step, std::vector<int>& memo) {
-           if (step <= 2) return step;
-           if (memo[step] != 0) return memo[step];
-           return memo[step] = memoDfs(step - 1, memo) + memoDfs(step - 2, memo);
+           if (step <= 2) {
+               return step;
+           }
+           if (memo[step] != 0) {
+               return memo[step];
+           }
+           memo[step] = memoDfs(step - 1, memo) + memoDfs(step - 2, memo);
+           return memo[step];
+       }
+
+       int memoizedRecursion(int n) {
+           std::vector<int> memo(n + 1, 0);
+           return memoDfs(n, memo);
+       }
+
+       int tableDp(int n) {
+           if (n <= 2) {
+               return n;
+           }
+           std::vector<int> ways(n + 1, 0);
+           ways[1] = 1;
+           ways[2] = 2;
+           for (int step = 3; step <= n; ++step) {
+               ways[step] = ways[step - 1] + ways[step - 2];
+           }
+           return ways[n];
        }
 
        int rollingDp(int n) {
-           if (n <= 2) return n;
-           int previous_two = 1;
-           int previous_one = 2;
-           for (int step = 3; step <= n; ++step) {
-               int current = previous_one + previous_two;
-               previous_two = previous_one;
-               previous_one = current;
+           if (n <= 2) {
+               return n;
            }
-           return previous_one;
+           int previousTwo = 1;
+           int previousOne = 2;
+           for (int step = 3; step <= n; ++step) {
+               const int current = previousOne + previousTwo;
+               previousTwo = previousOne;
+               previousOne = current;
+           }
+           return previousOne;
        }
 
-       struct Matrix {
-           long long a00, a01, a10, a11;
-       };
-
-       Matrix multiply(const Matrix& a, const Matrix& b) {
+       Matrix multiply(const Matrix& left, const Matrix& right) {
            return {
-               a.a00*b.a00 + a.a01*b.a10,
-               a.a00*b.a01 + a.a01*b.a11,
-               a.a10*b.a00 + a.a11*b.a10,
-               a.a10*b.a01 + a.a11*b.a11
+               left.a00 * right.a00 + left.a01 * right.a10,
+               left.a00 * right.a01 + left.a01 * right.a11,
+               left.a10 * right.a00 + left.a11 * right.a10,
+               left.a10 * right.a01 + left.a11 * right.a11
            };
        }
 
        Matrix power(Matrix base, int exponent) {
-           Matrix result{1,0,0,1};
+           Matrix result{1, 0, 0, 1};
            while (exponent > 0) {
-               if (exponent & 1) result = multiply(result, base);
+               if ((exponent & 1) != 0) {
+                   result = multiply(result, base);
+               }
                base = multiply(base, base);
                exponent >>= 1;
            }
@@ -90,9 +117,11 @@ C++ 实现
        }
 
        int matrixPower(int n) {
-           if (n <= 2) return n;
-           Matrix transition{1,1,1,0};
-           Matrix factor = power(transition, n - 2);
+           if (n <= 2) {
+               return n;
+           }
+           const Matrix transition{1, 1, 1, 0};
+           const Matrix factor = power(transition, n - 2);
            return static_cast<int>(factor.a00 * 2 + factor.a01);
        }
 
@@ -105,44 +134,50 @@ C++ 实现
 题解
 ----
 
-递归选择树为什么重复
-~~~~~~~~~~~~~~~~~~
+最后一步分类
+~~~~~~~~~~~~
 
-从剩余级数分别尝试走 1 或 2，会反复计算相同的 ``climb(step)``。例如求第 5 级时，第 3 级子问题同时出现在第 4 级和第 3 级分支中，朴素递归形成指数级树。
+设 ``ways(step)`` 表示恰好到达第 ``step`` 级的走法数量。任意完整走法的最后一步只有两种可能：
 
-最后一步如何完整分类
-~~~~~~~~~~~~~~~~~~~~
+* 从第 ``step - 1`` 级走 1 级；
+* 从第 ``step - 2`` 级走 2 级。
 
-任何恰好到达第 ``step`` 级的走法，最后一步只能是：
-
-* 从 ``step-1`` 走 1 级；
-* 从 ``step-2`` 走 2 级。
-
-两类由最后步长区分，互不重叠且覆盖全部走法：
+删除最后一步后，两类走法分别与到达 ``step - 1`` 和 ``step - 2`` 的走法一一对应。两类由最后步长区分，互不重叠，并覆盖全部合法走法，因此：
 
 .. code-block:: text
 
-   ways(step) = ways(step-1) + ways(step-2)
+   ways(step) = ways(step - 1) + ways(step - 2)
 
-基础状态为何是 1 和 2
-~~~~~~~~~~~~~~~~~~~~
+基础状态为 ``ways(1) = 1`` 和 ``ways(2) = 2``。也可以定义 ``ways(0) = 1``，表示尚未迈步的空序列，此时同一转移从第 2 级开始成立。
 
-到第 1 级只有 ``[1]``；到第 2 级有 ``[1,1]`` 和 ``[2]``。也可定义 ``ways(0)=1`` 表示空步长序列，此时同一转移从第 2 级开始成立。
+递归搜索树
+~~~~~~~~~~
 
-n = 5 的状态滚动
-~~~~~~~~~~~~~~~~
+``plainRecursion`` 直接按照最后一步分类递归计算。它准确表达了问题结构，但同一个级数会在不同分支中被反复求解。
+
+例如计算 ``ways(5)`` 时，``ways(3)`` 同时出现在 ``ways(4)`` 与 ``ways(3)`` 两条分支中。随着 ``n`` 增大，重复子树快速增长，朴素递归的时间复杂度达到指数级。
+
+状态结果复用
+~~~~~~~~~~~~
+
+``memoizedRecursion`` 为每个级数保存一次计算结果。第一次访问 ``ways(step)`` 时继续递归，之后再次访问同一状态时直接返回缓存值。
+
+级数只可能位于 ``1`` 到 ``n``，因此最多计算 ``n`` 个不同状态。记忆化保留递归结构，同时把时间复杂度降为线性；代价是保存 ``O(n)`` 个结果以及递归调用栈。
+
+自底向上填表
+~~~~~~~~~~~~
+
+递推只依赖更小级数，所以可以按 ``3, 4, ..., n`` 的顺序主动计算。``tableDp`` 使用 ``ways[step]`` 保存每一级的方案数，不再需要递归调用。
+
+以 ``n = 6`` 为例：
 
 .. list-table::
    :header-rows: 1
 
-   * - 目标级数
-     - ``previous_two``
-     - ``previous_one``
-     - ``current``
-   * - 初始对应 1、2
-     - 1
-     - 2
-     - —
+   * - ``step``
+     - ``ways(step - 2)``
+     - ``ways(step - 1)``
+     - ``ways(step)``
    * - 3
      - 1
      - 2
@@ -155,108 +190,88 @@ n = 5 的状态滚动
      - 3
      - 5
      - 8
+   * - 6
+     - 5
+     - 8
+     - 13
 
-为什么只需要两个变量
-~~~~~~~~~~~~~~~~~~~~
+填表顺序保证计算当前状态时，它依赖的两个状态已经完成。
 
-当前状态只依赖前两个状态。算出 ``current`` 后，更早状态再不会参与后续转移，可以令 ``previous_two=previous_one``、``previous_one=current``，无需保存完整数组。
+滚动状态
+~~~~~~~~
 
-更新顺序为什么不能直接覆盖
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+计算 ``ways(step)`` 只需要 ``ways(step - 1)`` 与 ``ways(step - 2)``。当前值生成后，更早的状态不会再参与后续转移，因此完整数组可以压缩为两个变量：
 
-若先把 ``previous_one`` 覆盖为新值，再计算或更新 ``previous_two``，会丢失旧的第 ``step-1`` 状态。先保存 ``current``，再按从旧到新的顺序平移，能保持两个变量语义一致。
+* ``previousTwo`` 保存 ``ways(step - 2)``；
+* ``previousOne`` 保存 ``ways(step - 1)``；
+* ``current`` 保存两者之和。
 
-记忆化与迭代的关系
-~~~~~~~~~~~~~~~~~~
+更新时先计算 ``current``，再把旧的 ``previousOne`` 移到 ``previousTwo``，最后把 ``current`` 写入 ``previousOne``。这个顺序避免在使用旧状态之前将其覆盖。
 
-记忆化递归保留“最后一步”的递归结构，并确保每个级数只计算一次；迭代 DP 按级数从小到大主动填充相同状态。两者转移完全一致，迭代省去缓存和调用栈。
+``rollingDp`` 与表格 DP 执行相同的状态转移，时间仍为 ``O(n)``，工作空间降为 ``O(1)``。公开入口选择这一方法，因为题目规模下它已经足够快，且状态含义直接。
 
-为什么是斐波那契型序列
-~~~~~~~~~~~~~~~~~~~~
+矩阵状态推进
+~~~~~~~~~~~~
 
-转移与斐波那契相同，但初值为 ``ways(1)=1``、``ways(2)=2``，因此 ``ways(n)=F(n+1)``。矩阵 ``[[1,1],[1,0]]`` 可用快速幂在 ``O(log n)`` 时间推进状态。
+递推可以写成矩阵形式：
 
-为什么不会遗漏或重复走法
-~~~~~~~~~~~~~~~~~~~~~~~~
+.. code-block:: text
 
-按最后一步分类，每条走法唯一属于 1 级结尾或 2 级结尾集合。删除最后一步后分别与到达 ``step-1``、``step-2`` 的走法一一对应，所以求和既不重复也不遗漏。
+   [ways(step)    ]   [1 1] [ways(step - 1)]
+   [ways(step - 1)] = [1 0] [ways(step - 2)]
 
-复杂度来源
+因此：
+
+.. code-block:: text
+
+   [ways(n)    ]             [ways(2)]
+   [ways(n - 1)] = T^(n - 2) [ways(1)]
+
+其中 ``T = [[1, 1], [1, 0]]``。``matrixPower`` 使用二进制快速幂计算 ``T^(n - 2)``，把状态推进次数从 ``O(n)`` 降为 ``O(log n)``。
+
+矩阵元素使用 ``long long`` 完成中间乘法。题目保证 ``n <= 45``，最终答案不超过 ``1836311903``，转换回 ``int`` 安全。
+
+方法关系
+~~~~~~~~
+
+五种实现使用同一个最后一步递推，差异只在状态的计算与保存方式：
+
+* 朴素递归重复展开相同子问题；
+* 记忆化递归缓存每个级数；
+* 表格 DP 按级数顺序计算全部状态；
+* 滚动 DP 只保留当前转移需要的两个状态；
+* 矩阵快速幂把多次相同线性转移合并为幂运算。
+
+复杂度分析
 ~~~~~~~~~~
 
-朴素递归为 ``O(2^n)``。记忆化与滚动 DP 时间 ``O(n)``；前者空间 ``O(n)``，后者 ``O(1)``。矩阵快速幂时间 ``O(log n)``、额外空间 ``O(1)``。
+.. list-table::
+   :header-rows: 1
 
-九语言实现
-----------
+   * - 方法
+     - 时间复杂度
+     - 工作空间
+   * - 朴素递归
+     - ``O(2^n)``
+     - ``O(n)`` 调用栈
+   * - 记忆化递归
+     - ``O(n)``
+     - ``O(n)``
+   * - 表格 DP
+     - ``O(n)``
+     - ``O(n)``
+   * - 滚动 DP
+     - ``O(n)``
+     - ``O(1)``
+   * - 矩阵快速幂
+     - ``O(log n)``
+     - ``O(1)``
 
-C
-~
+边界处理
+~~~~~~~~
 
-.. code-block:: c
-
-   int climbStairs(int n){if(n<=2)return n;int two=1,one=2;for(int step=3;step<=n;step++){int current=one+two;two=one;one=current;}return one;}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def climbStairs(self, n: int) -> int:
-           if n <= 2: return n
-           previous_two, previous_one = 1, 2
-           for _ in range(3, n + 1): previous_two, previous_one = previous_one, previous_one + previous_two
-           return previous_one
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public int climbStairs(int n){if(n<=2)return n;int two=1,one=2;for(int step=3;step<=n;step++){int current=one+two;two=one;one=current;}return one;}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn climb_stairs(n:i32)->i32{if n<=2{return n}let(mut two,mut one)=(1,2);for _ in 3..=n{(two,one)=(one,one+two)}one}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func climbStairs(n int)int{if n<=2{return n};two,one:=1,2;for step:=3;step<=n;step++{two,one=one,one+two};return one}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function climbStairs(n:number):number{if(n<=2)return n;let two=1,one=2;for(let step=3;step<=n;step++)[two,one]=[one,one+two];return one;}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public int ClimbStairs(int n){if(n<=2)return n;int two=1,one=2;for(int step=3;step<=n;step++){int current=one+two;two=one;one=current;}return one;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function climb_stairs(n::Int)
-       n<=2&&return n;two=1;one=2
-       for _ in 3:n;two,one=one,one+two;end
-       one
-   end
-
-R
-~
-
-.. code-block:: r
-
-   climb_stairs <- function(n){if(n<=2L)return(n);two<-1L;one<-2L;for(step in 3:n){current<-one+two;two<-one;one<-current};one}
+* ``n = 1`` 时直接返回 ``1``；
+* ``n = 2`` 时直接返回 ``2``，无需进入递推循环；
+* 滚动循环从第 3 级开始，两个变量始终对应连续的前置状态；
+* 矩阵方法对 ``n <= 2`` 单独返回，避免出现负指数；
+* 约束上界确保所有答案均可由 ``int`` 表示。
