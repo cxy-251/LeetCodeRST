@@ -6,14 +6,15 @@
 
 :题号: 0059
 :难度: Medium
-:主题: 矩阵、边界模拟、螺旋构造、坐标状态
+:主题: 矩阵、模拟、边界收缩
 :原题: `LeetCode 0059 <https://leetcode.com/problems/spiral-matrix-ii/>`_
-:重点: 递增写入、顺时针螺旋、四边界收缩、中心区域
+:重点: 从逐格转向写入，推导到用四条边界描述尚未填充的矩形
 
 题目重述
 --------
 
-给定正整数 ``n``，生成一个 ``n × n`` 矩阵，把整数 ``1`` 到 ``n^2`` 按顺时针螺旋顺序依次写入，并返回该矩阵。
+给定正整数 ``n``，构造一个 ``n × n`` 矩阵，把整数 ``1`` 到 ``n²`` 按照从左上角开始、顺时针向内旋转的
+螺旋顺序依次写入，并返回该矩阵。
 
 约束为 ``1 <= n <= 20``。
 
@@ -24,12 +25,29 @@
 
    输入：n = 4
    输出：
-   [[1,2,3,4],
-    [12,13,14,5],
-    [11,16,15,6],
-    [10,9,8,7]]
+   [[ 1, 2, 3, 4],
+    [12,13,14, 5],
+    [11,16,15, 6],
+    [10, 9, 8, 7]]
 
-数字从左上角的 1 开始沿外圈顺时针递增，最后在内部写入 16。
+先写完外圈的 ``1..12``，再在内部 ``2 × 2`` 矩形中写入 ``13..16``。
+
+.. code-block:: text
+
+   输入：n = 3
+   输出：
+   [[1,2,3],
+    [8,9,4],
+    [7,6,5]]
+
+奇数阶矩阵最终只剩中心位置，最后写入 ``9``。
+
+.. code-block:: text
+
+   输入：n = 1
+   输出：[[1]]
+
+起始位置同时也是唯一位置。
 
 C++ 实现
 --------
@@ -40,217 +58,207 @@ C++ 实现
 
    class Solution {
    private:
-       std::vector<std::vector<int>> directionSimulation(int n) {
-           std::vector<std::vector<int>> matrix(n, std::vector<int>(n));
-           int dr[4] = {0, 1, 0, -1};
-           int dc[4] = {1, 0, -1, 0};
-           int row = 0, col = 0, direction = 0;
-           for (int value = 1; value <= n * n; ++value) {
-               matrix[row][col] = value;
-               int nr = row + dr[direction], nc = col + dc[direction];
-               if (nr < 0 || nr >= n || nc < 0 || nc >= n || matrix[nr][nc] != 0) {
+       std::vector<std::vector<int>> simulateDirections(int n) {
+           std::vector<std::vector<int>> matrix(n, std::vector<int>(n, 0));
+           const int rowStep[4] = {0, 1, 0, -1};
+           const int columnStep[4] = {1, 0, -1, 0};
+           const int total = n * n;
+
+           int row = 0;
+           int column = 0;
+           int direction = 0;
+
+           for (int value = 1; value <= total; ++value) {
+               matrix[row][column] = value;
+               if (value == total) break;
+
+               int nextRow = row + rowStep[direction];
+               int nextColumn = column + columnStep[direction];
+               bool blocked = nextRow < 0 || nextRow >= n ||
+                              nextColumn < 0 || nextColumn >= n ||
+                              matrix[nextRow][nextColumn] != 0;
+
+               if (blocked) {
                    direction = (direction + 1) % 4;
-                   nr = row + dr[direction]; nc = col + dc[direction];
+                   nextRow = row + rowStep[direction];
+                   nextColumn = column + columnStep[direction];
                }
-               row = nr; col = nc;
+
+               row = nextRow;
+               column = nextColumn;
            }
            return matrix;
        }
 
-       std::vector<std::vector<int>> layerCoordinates(int n) {
-           std::vector<std::vector<int>> matrix(n, std::vector<int>(n));
+       std::vector<std::vector<int>> shrinkBoundaries(int n) {
+           std::vector<std::vector<int>> matrix(n, std::vector<int>(n, 0));
+           int top = 0;
+           int bottom = n - 1;
+           int left = 0;
+           int right = n - 1;
            int value = 1;
-           for (int layer = 0; layer < (n + 1) / 2; ++layer) {
-               int last = n - 1 - layer;
-               if (layer == last) { matrix[layer][layer] = value++; continue; }
-               for (int col = layer; col < last; ++col) matrix[layer][col] = value++;
-               for (int row = layer; row < last; ++row) matrix[row][last] = value++;
-               for (int col = last; col > layer; --col) matrix[last][col] = value++;
-               for (int row = last; row > layer; --row) matrix[row][layer] = value++;
-           }
-           return matrix;
-       }
 
-       std::vector<std::vector<int>> fourBoundaries(int n) {
-           std::vector<std::vector<int>> matrix(n, std::vector<int>(n));
-           int top = 0, bottom = n - 1, left = 0, right = n - 1;
-           int value = 1;
            while (top <= bottom && left <= right) {
-               for (int col = left; col <= right; ++col) matrix[top][col] = value++;
+               for (int column = left; column <= right; ++column) {
+                   matrix[top][column] = value++;
+               }
                ++top;
-               for (int row = top; row <= bottom; ++row) matrix[row][right] = value++;
+               if (top > bottom) break;
+
+               for (int row = top; row <= bottom; ++row) {
+                   matrix[row][right] = value++;
+               }
                --right;
-               if (top <= bottom) {
-                   for (int col = right; col >= left; --col) matrix[bottom][col] = value++;
-                   --bottom;
+               if (left > right) break;
+
+               for (int column = right; column >= left; --column) {
+                   matrix[bottom][column] = value++;
                }
-               if (left <= right) {
-                   for (int row = bottom; row >= top; --row) matrix[row][left] = value++;
-                   ++left;
+               --bottom;
+               if (top > bottom) break;
+
+               for (int row = bottom; row >= top; --row) {
+                   matrix[row][left] = value++;
                }
+               ++left;
            }
            return matrix;
        }
 
    public:
        std::vector<std::vector<int>> generateMatrix(int n) {
-           return fourBoundaries(n);
+           return shrinkBoundaries(n);
        }
    };
 
 题解
 ----
 
-如何把螺旋读取改成螺旋写入
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+从定义出发：按方向逐格写入
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-螺旋读取与螺旋构造使用同一组方向和边界顺序。区别只在于：读取时消费已有格子，构造时先建立空矩阵，把每次访问替换为写入当前 ``value``，随后令 ``value++``。
+最直接的方法真实模拟一支笔在矩阵中移动。当前位置写入 ``value`` 后，尝试沿当前方向进入下一格；下一格越界
+或已经写过时，方向按右、下、左、上的顺序顺时针旋转一次。
 
-方向模拟如何判断转向
-~~~~~~~~~~~~~~~~~~
+矩阵初始值为 0，而题目写入的值是 ``1..n²``，所以：
 
-矩阵初始为 0，而合法写入值从 1 开始，因此 ``matrix[next] != 0`` 可以兼作访问标记。下一位置越界或已写入时顺时针转向。该方法直观，但把“0 表示未写入”与题目值域绑定。
+.. code-block:: text
 
-四边界为何更稳定
+   matrix[nextRow][nextColumn] == 0
+
+恰好表示下一位置尚未写入。输出矩阵本身就能兼作访问状态，不需要另外分配 ``visited`` 数组。
+
+``simulateDirections`` 在写入 ``n²`` 后立即结束，不再计算下一坐标。这样 ``row`` 和 ``column`` 始终表示一个
+真实待写位置，不会在循环结束前暂时变成越界坐标。
+
+方向模拟保留了哪些多余状态
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+逐格模拟需要维护当前位置、当前方向，并在每一步检查下一格是否越界或已写入。但完成一整圈后，尚未写入的
+位置并不是任意散布的集合，而始终形成一个更小的矩形。
+
+初始未写区域是：
+
+.. code-block:: text
+
+   行范围：[0, n-1]
+   列范围：[0, n-1]
+
+写完它的上边、右边、下边和左边后，剩余区域变成：
+
+.. code-block:: text
+
+   行范围：[1, n-2]
+   列范围：[1, n-2]
+
+因此，“哪些位置已经写过”的全部结构可以压缩为四条边界，不必继续逐格判断转向。
+
+四条边界表示什么
 ~~~~~~~~~~~~~~~~
 
-尚未写入的位置始终构成矩形。每轮依次写上边、右边、下边、左边，并将对应边界向内移动。它不依赖哨兵值，也不需要方向数组。
+维护：
 
-状态演化
-~~~~~~~~
+.. code-block:: text
+
+   top     尚未写入矩形的最上行
+   bottom  尚未写入矩形的最下行
+   left    尚未写入矩形的最左列
+   right   尚未写入矩形的最右列
+
+每轮开始时保持不变量：闭区间 ``[top,bottom] × [left,right]`` 恰好包含全部尚未写入的位置；矩形之外的
+位置已经按照正确的螺旋顺序写入 ``1..value-1``。
+
+一轮为什么按上、右、下、左写入
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+当前矩形非空时，上边一定存在。先从左到右写入上边，再执行 ``top++``，把整条上边移出未写区域。
+
+若矩形仍非空，继续从上到下写右边，再执行 ``right--``。随后依次写下边和左边：
+
+.. code-block:: text
+
+   上边：left  -> right，随后 top++
+   右边：top   -> bottom，随后 right--
+   下边：right -> left，随后 bottom--
+   左边：bottom -> top，随后 left++
+
+四段方向首尾相接，正好形成当前矩形的顺时针外圈。下一轮处理严格位于其内部的矩形。
+
+为什么每条边后都要检查矩形是否为空
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+奇数阶矩阵最终会退化成一个中心点。上边循环写入该点后，``top`` 会超过 ``bottom``；若继续写下边，就会
+覆盖中心点并消耗一个本不应存在的新值。
+
+虽然本题始终是正方形，内层仍可能在某一步退化为空。每写完一条边就重新检查行范围或列范围，可以让
+``n = 1``、奇数中心点和所有普通外圈使用同一套代码，不需要单独判断中心。
+
+四阶矩阵的边界演化
+~~~~~~~~~~~~~~~~~~
+
+第一轮从 ``value = 1`` 开始：
 
 .. list-table::
    :header-rows: 1
 
    * - 阶段
      - 写入值
-     - 三阶矩阵位置
+     - 写入后剩余矩形
    * - 上边
-     - ``1,2,3``
-     - ``(0,0)..(0,2)``
+     - ``1,2,3,4``
+     - 行 ``[1,3]``，列 ``[0,3]``
    * - 右边
-     - ``4,5``
-     - ``(1,2),(2,2)``
+     - ``5,6,7``
+     - 行 ``[1,3]``，列 ``[0,2]``
    * - 下边
-     - ``6,7``
-     - ``(2,1),(2,0)``
+     - ``8,9,10``
+     - 行 ``[1,2]``，列 ``[0,2]``
    * - 左边
-     - ``8``
-     - ``(1,0)``
-   * - 中心
-     - ``9``
-     - ``(1,1)``
+     - ``11,12``
+     - 行 ``[1,2]``，列 ``[1,2]``
 
-为什么守卫仍然必要
-~~~~~~~~~~~~~~~~~~
+第二轮只处理内部 ``2 × 2`` 矩形，依次写入 ``13,14,15,16``。
 
-奇数阶矩阵最终只剩中心点，上边写入后剩余矩形立即耗尽；若继续执行下边或左边，会重复覆盖中心。更新 ``top`` 和 ``right`` 后重新检查边界，可统一处理中心、单行及单列。
+为什么每个位置和每个值都恰好出现一次
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-按圈坐标方法的取舍
-~~~~~~~~~~~~~~~~~~
+每条边写完后立即从未写矩形中删除，所以已经写入的位置不会进入后续边界。循环只在行范围或列范围为空时
+结束，因此矩阵中的全部 ``n²`` 个位置都会被处理，且每个位置只处理一次。
 
-已知 ``layer`` 时可以计算该圈四条边的坐标范围，避免在循环中维护四个边界。但四段循环的端点需要刻意排除角点，中心层还需单独处理；四边界写法更直接，也更易验证。
+``value`` 初始为 1，每写一个位置后增加 1。位置共写入 ``n²`` 次，所以写入值依次恰好是 ``1..n²``，没有
+遗漏、重复或越界。
 
-值与位置为什么一一对应
-~~~~~~~~~~~~~~~~~~~~~~
-
-每次边界遍历只写当前剩余矩形的一条尚未处理边，写完后把它移出矩形。所有位置恰好访问一次；``value`` 每次访问后增加 1，从初始 1 到最后 ``n²``，因此每个目标值也恰好写入一次。
-
-为什么最终矩阵满足螺旋顺序
+为什么整体顺序是顺时针螺旋
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-同一轮四条边按右、下、左、上的方向连接成外圈；下一轮处理严格位于其内部的矩形。外圈先于内圈且每圈内部顺时针，因此整个写入序列正是顺时针螺旋顺序。
+同一轮依次沿右、下、左、上四个方向写完当前外圈；下一轮只处理该圈内部。于是所有外圈值都早于内圈值，
+每一圈内部又保持顺时针连续，合起来正是题目要求的顺时针向内螺旋顺序。
 
 复杂度来源
 ~~~~~~~~~~
 
-必须写入 ``n²`` 个位置，时间 ``O(n²)``。除返回矩阵外，四边界方法只使用常数变量，算法额外空间 ``O(1)``；方向方法同样复用输出矩阵作为访问状态。
+返回矩阵本身包含 ``n²`` 个位置，任何算法都至少需要 ``Ω(n²)`` 时间完成写入。两种方法都恰好写每个位置
+一次，时间为 ``O(n²)``，达到该下界。
 
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   int**generateMatrix(int n,int*returnSize,int**returnCols){int**a=malloc((size_t)n*sizeof(int*));int*sizes=malloc((size_t)n*sizeof(int));for(int i=0;i<n;i++){a[i]=calloc((size_t)n,sizeof(int));sizes[i]=n;}int t=0,b=n-1,l=0,r=n-1,v=1;while(t<=b&&l<=r){for(int c=l;c<=r;c++)a[t][c]=v++;t++;for(int i=t;i<=b;i++)a[i][r]=v++;r--;if(t<=b){for(int c=r;c>=l;c--)a[b][c]=v++;b--;}if(l<=r){for(int i=b;i>=t;i--)a[i][l]=v++;l++;}}*returnSize=n;*returnCols=sizes;return a;}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def generateMatrix(self, n: int) -> list[list[int]]:
-           matrix = [[0] * n for _ in range(n)]
-           top, bottom, left, right, value = 0, n-1, 0, n-1, 1
-           while top <= bottom and left <= right:
-               for col in range(left, right+1): matrix[top][col] = value; value += 1
-               top += 1
-               for row in range(top, bottom+1): matrix[row][right] = value; value += 1
-               right -= 1
-               if top <= bottom:
-                   for col in range(right, left-1, -1): matrix[bottom][col] = value; value += 1
-                   bottom -= 1
-               if left <= right:
-                   for row in range(bottom, top-1, -1): matrix[row][left] = value; value += 1
-                   left += 1
-           return matrix
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public int[][] generateMatrix(int n){int[][]a=new int[n][n];int t=0,b=n-1,l=0,r=n-1,v=1;while(t<=b&&l<=r){for(int c=l;c<=r;c++)a[t][c]=v++;t++;for(int i=t;i<=b;i++)a[i][r]=v++;r--;if(t<=b){for(int c=r;c>=l;c--)a[b][c]=v++;b--;}if(l<=r){for(int i=b;i>=t;i--)a[i][l]=v++;l++;}}return a;}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn generate_matrix(n:i32)->Vec<Vec<i32>>{let n=n as usize;let mut a=vec![vec![0;n];n];let(mut t,mut b,mut l,mut r,mut v)=(0i32,n as i32-1,0i32,n as i32-1,1);while t<=b&&l<=r{for c in l..=r{a[t as usize][c as usize]=v;v+=1}t+=1;for i in t..=b{a[i as usize][r as usize]=v;v+=1}r-=1;if t<=b{for c in(l..=r).rev(){a[b as usize][c as usize]=v;v+=1}b-=1}if l<=r{for i in(t..=b).rev(){a[i as usize][l as usize]=v;v+=1}l+=1}}a}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func generateMatrix(n int)[][]int{a:=make([][]int,n);for i:=range a{a[i]=make([]int,n)};t,b,l,r,v:=0,n-1,0,n-1,1;for t<=b&&l<=r{for c:=l;c<=r;c++{a[t][c]=v;v++};t++;for i:=t;i<=b;i++{a[i][r]=v;v++};r--;if t<=b{for c:=r;c>=l;c--{a[b][c]=v;v++};b--};if l<=r{for i:=b;i>=t;i--{a[i][l]=v;v++};l++}};return a}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function generateMatrix(n:number):number[][]{const a=Array.from({length:n},()=>Array(n).fill(0));let t=0,b=n-1,l=0,r=n-1,v=1;while(t<=b&&l<=r){for(let c=l;c<=r;c++)a[t][c]=v++;t++;for(let i=t;i<=b;i++)a[i][r]=v++;r--;if(t<=b){for(let c=r;c>=l;c--)a[b][c]=v++;b--;}if(l<=r){for(let i=b;i>=t;i--)a[i][l]=v++;l++;}}return a;}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public int[][] GenerateMatrix(int n){var a=new int[n][];for(int i=0;i<n;i++)a[i]=new int[n];int t=0,b=n-1,l=0,r=n-1,v=1;while(t<=b&&l<=r){for(int c=l;c<=r;c++)a[t][c]=v++;t++;for(int i=t;i<=b;i++)a[i][r]=v++;r--;if(t<=b){for(int c=r;c>=l;c--)a[b][c]=v++;b--;}if(l<=r){for(int i=b;i>=t;i--)a[i][l]=v++;l++;}}return a;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function generate_matrix(n::Int)
-       a=zeros(Int,n,n);t=1;b=n;l=1;r=n;v=1
-       while t<=b&&l<=r
-           for c in l:r;a[t,c]=v;v+=1;end;t+=1
-           for i in t:b;a[i,r]=v;v+=1;end;r-=1
-           if t<=b;for c in r:-1:l;a[b,c]=v;v+=1;end;b-=1;end
-           if l<=r;for i in b:-1:t;a[i,l]=v;v+=1;end;l+=1;end
-       end;a
-   end
-
-R
-~
-
-.. code-block:: r
-
-   generate_matrix <- function(n){a<-matrix(0L,n,n);t<-1L;b<-n;l<-1L;r<-n;v<-1L;while(t<=b&&l<=r){for(c in l:r){a[t,c]<-v;v<-v+1L};t<-t+1L;if(t<=b)for(i in t:b){a[i,r]<-v;v<-v+1L};r<-r-1L;if(t<=b&&l<=r){for(c in seq.int(r,l)){a[b,c]<-v;v<-v+1L};b<-b-1L};if(l<=r&&t<=b){for(i in seq.int(b,t)){a[i,l]<-v;v<-v+1L};l<-l+1L}};a}
+不计必须返回的矩阵，方向模拟和四边界方法都只使用常数个变量，额外空间为 ``O(1)``。主入口调用
+``shrinkBoundaries``，因为它直接表达未写区域的矩形结构，不依赖 0 作为访问标记。
