@@ -8,54 +8,56 @@
 :难度: Medium
 :主题: 数组、运动模拟、等价变换、贪心
 :原题: `LeetCode 1503 <https://leetcode.com/problems/last-moment-before-all-ants-fall-out-of-a-plank/>`_
-:重点: 从逐时刻模拟碰撞，推导到相遇反向与直接穿过等价，最后只计算每只蚂蚁到对应端点的距离
+:重点: 从逐时刻模拟碰撞，推导到忽略身份后的轨迹穿越，再在线聚合最晚掉落时刻
 
 题目重述
 --------
 
-一块长度为 ``n`` 的木板覆盖坐标区间 ``[0, n]``。木板上有若干只蚂蚁，每只蚂蚁每秒移动一个单位：
+长度为 ``n`` 的木板覆盖坐标区间 ``[0,n]``。木板上有若干只蚂蚁，每只蚂蚁每秒移动一个单位：
 
-* 数组 ``left`` 给出初始向左移动的蚂蚁位置；
-* 数组 ``right`` 给出初始向右移动的蚂蚁位置。
+* ``left`` 保存初始向左移动的蚂蚁位置；
+* ``right`` 保存初始向右移动的蚂蚁位置。
 
-不同蚂蚁的初始位置互不相同。两只相向而行的蚂蚁相遇时，会立即同时反向，反向过程不消耗时间。蚂蚁到达坐标 ``0`` 或 ``n`` 时立即掉下木板。
+所有初始位置互不相同。两只相向而行的蚂蚁相遇时，会立即同时反向，反向不消耗时间。蚂蚁到达坐标
+``0`` 或 ``n`` 时立即掉下木板。
 
-需要返回最后一只蚂蚁掉下木板的时刻。若某只蚂蚁初始就在即将离开的端点，例如位于 ``0`` 且向左移动，则它在时刻 ``0`` 掉落。
+返回最后一只蚂蚁掉下木板的时刻。位于 ``0`` 且向左移动，或位于 ``n`` 且向右移动的蚂蚁，会在
+时刻 0 掉落。
 
-约束条件：
+约束为 ``1 <= n <= 10^4``，所有位置位于 ``[0,n]``，并且木板上至少有一只蚂蚁。
 
-* ``1 <= n <= 10^4``；
-* 所有位置都位于 ``[0, n]``；
-* ``left`` 与 ``right`` 中的全部位置互不重复；
-* 木板上至少有一只蚂蚁。
-
-测试用例
+自建示例
 --------
 
-* 多次相遇：``n = 4, left = [4, 3], right = [0, 1]``，最后掉落时刻为 ``4``；
-* 只有向左蚂蚁：``n = 7, left = [5], right = []``，到左端距离为 ``5``，返回 ``5``；
-* 只有向右蚂蚁：``n = 7, left = [], right = [2]``，到右端距离为 ``5``，返回 ``5``；
-* 初始立即掉落：``n = 5, left = [0], right = [5]``，两只蚂蚁都在时刻 ``0`` 掉落；
-* 中点相遇：``n = 4, left = [3], right = [1]``，两只蚂蚁在坐标 ``2`` 相遇，最后掉落时刻为 ``3``。
+.. code-block:: text
 
-方法一：半步物理模拟
---------------------
+   输入：n = 4, left = [4,3], right = [0,1]
+   输出：4
 
-最直接的想法是按照题意模拟所有蚂蚁的移动、相遇、反向和掉落。
+忽略身份后，位置 4 的向左轨迹需要 4 秒到达左端，位置 0 的向右轨迹需要 4 秒到达右端。
 
-碰撞不一定发生在整数时刻。例如两只蚂蚁分别位于相邻整数位置并相向移动，它们会在半秒后相遇。为了避免浮点数，可以把所有坐标扩大两倍，并以半秒为一个时间步：
+.. code-block:: text
 
-* 原坐标 ``position`` 变为 ``2 * position``；
-* 木板右端变为 ``2 * n``；
-* 每经过半秒，蚂蚁在扩大后的坐标上移动 ``1``；
-* 两只存活蚂蚁出现在同一扩大坐标时，同时反向。
+   输入：n = 7, left = [5], right = [2]
+   输出：5
 
-每个半步都需要扫描所有蚂蚁，并记录同一位置上的碰撞。由于最后掉落时刻不会超过 ``n`` 秒，最多模拟 ``2n`` 个半步。
+向左蚂蚁的掉落时间为 5，向右蚂蚁的掉落时间为 ``7 - 2 = 5``。
 
-C++ 实现一
-~~~~~~~~~~
+.. code-block:: text
+
+   输入：n = 5, left = [0], right = [5]
+   输出：0
+
+两只蚂蚁都位于各自移动方向的端点，立即掉落。
+
+C++ 实现
+--------
 
 .. code-block:: cpp
+
+   #include <algorithm>
+   #include <unordered_map>
+   #include <vector>
 
    class Solution {
    private:
@@ -65,9 +67,13 @@ C++ 实现一
            bool alive;
        };
 
-   public:
-       int getLastMoment(int n, vector<int>& left, vector<int>& right) {
-           vector<Ant> ants;
+       int simulateHalfSteps(
+           int n,
+           const std::vector<int>& left,
+           const std::vector<int>& right
+       ) {
+           std::vector<Ant> ants;
+           ants.reserve(left.size() + right.size());
 
            for (int position : left) {
                ants.push_back({position * 2, -1, true});
@@ -78,13 +84,12 @@ C++ 实现一
 
            const int end2 = n * 2;
            int aliveCount = static_cast<int>(ants.size());
-           int lastMoment2 = 0;
+           int elapsedHalfSteps = 0;
 
            for (Ant& ant : ants) {
                const bool fallsImmediately =
                    (ant.position2 == 0 && ant.direction == -1) ||
                    (ant.position2 == end2 && ant.direction == 1);
-
                if (fallsImmediately) {
                    ant.alive = false;
                    --aliveCount;
@@ -92,7 +97,7 @@ C++ 实现一
            }
 
            while (aliveCount > 0) {
-               ++lastMoment2;
+               ++elapsedHalfSteps;
 
                for (Ant& ant : ants) {
                    if (ant.alive) {
@@ -101,25 +106,22 @@ C++ 实现一
                }
 
                for (Ant& ant : ants) {
-                   if (!ant.alive) {
-                       continue;
-                   }
-
+                   if (!ant.alive) continue;
                    if (ant.position2 == 0 || ant.position2 == end2) {
                        ant.alive = false;
                        --aliveCount;
                    }
                }
 
-               unordered_map<int, vector<int>> collisionGroups;
-
-               for (int i = 0; i < static_cast<int>(ants.size()); ++i) {
-                   if (ants[i].alive) {
-                       collisionGroups[ants[i].position2].push_back(i);
+               std::unordered_map<int, std::vector<int>> collisionGroups;
+               for (int index = 0; index < static_cast<int>(ants.size()); ++index) {
+                   if (ants[index].alive) {
+                       collisionGroups[ants[index].position2].push_back(index);
                    }
                }
 
-               for (auto& [position, indices] : collisionGroups) {
+               for (auto& entry : collisionGroups) {
+                   std::vector<int>& indices = entry.second;
                    if (indices.size() == 2) {
                        ants[indices[0]].direction *= -1;
                        ants[indices[1]].direction *= -1;
@@ -127,140 +129,174 @@ C++ 实现一
                }
            }
 
-           return lastMoment2 / 2;
+           return elapsedHalfSteps / 2;
        }
-   };
 
-这一版忠实还原了物理过程，也能处理半秒相遇。但代码需要维护位置、方向、存活状态和碰撞分组，真正困难的部分全部来自“追踪每只蚂蚁的身份”。
-
-下一步应先判断：题目是否真的关心哪一只蚂蚁沿哪条轨迹离开。
-
-方法二：穿越等价
-----------------
-
-观察两只相向而行的蚂蚁。相遇前，一只向右，另一只向左；相遇后，它们交换方向。
-
-若给蚂蚁贴上身份标签，看起来是两只蚂蚁分别反向。但所有蚂蚁速度相同，忽略身份后，这与两只蚂蚁保持原方向、直接穿过彼此完全等价：
-
-* 真实过程保留了两条离开碰撞点的轨迹，只是由另一只蚂蚁接着走；
-* 穿越模型也保留相同的两条轨迹；
-* 任意时刻木板上的位置集合相同；
-* 所有掉落时刻也完全相同。
-
-题目只询问最后掉落时刻，不询问具体是哪只蚂蚁掉落。因此可以删除全部碰撞处理，把每只蚂蚁看成始终沿初始方向直行。
-
-于是：
-
-* 初始向左、位于 ``position`` 的蚂蚁需要 ``position`` 秒到达左端；
-* 初始向右、位于 ``position`` 的蚂蚁需要 ``n - position`` 秒到达右端。
-
-先记录所有掉落时间，再取最大值即可。
-
-C++ 实现二
-~~~~~~~~~~
-
-.. code-block:: cpp
-
-   class Solution {
-   public:
-       int getLastMoment(int n, vector<int>& left, vector<int>& right) {
-           vector<int> fallMoments;
-           fallMoments.reserve(left.size() + right.size());
+       int collectFallTimes(
+           int n,
+           const std::vector<int>& left,
+           const std::vector<int>& right
+       ) {
+           std::vector<int> fallTimes;
+           fallTimes.reserve(left.size() + right.size());
 
            for (int position : left) {
-               fallMoments.push_back(position);
+               fallTimes.push_back(position);
            }
-
            for (int position : right) {
-               fallMoments.push_back(n - position);
+               fallTimes.push_back(n - position);
            }
 
-           return *max_element(fallMoments.begin(), fallMoments.end());
+           return *std::max_element(fallTimes.begin(), fallTimes.end());
        }
-   };
 
-与实现一相比，位置更新、半步计时、碰撞分组、方向反转和存活状态全部消失。优化来自模型变化，而不是对模拟代码做局部加速。
-
-这版已经把时间复杂度降到线性，但它仍保存了所有掉落时刻，而题目最终只需要其中的最大值。
-
-方法三：边扫描边聚合
---------------------
-
-既然每只蚂蚁的掉落时间可以独立计算，而最终答案只是最大值，就没有必要建立 ``fallMoments`` 数组。
-
-扫描 ``left`` 时，用 ``position`` 更新答案；扫描 ``right`` 时，用 ``n - position`` 更新答案。每个掉落时间只计算一次，并立即合并到当前最大值中。
-
-C++ 实现三
-~~~~~~~~~~
-
-.. code-block:: cpp
-
-   class Solution {
-   public:
-       int getLastMoment(int n, vector<int>& left, vector<int>& right) {
+       int aggregateMaximum(
+           int n,
+           const std::vector<int>& left,
+           const std::vector<int>& right
+       ) {
            int lastMoment = 0;
 
            for (int position : left) {
-               lastMoment = max(lastMoment, position);
+               lastMoment = std::max(lastMoment, position);
            }
-
            for (int position : right) {
-               lastMoment = max(lastMoment, n - position);
+               lastMoment = std::max(lastMoment, n - position);
            }
 
            return lastMoment;
        }
+
+   public:
+       int getLastMoment(
+           int n,
+           std::vector<int>& left,
+           std::vector<int>& right
+       ) {
+           return aggregateMaximum(n, left, right);
+       }
    };
 
-实现三与实现二使用同一个等价模型，进一步删除了保存所有中间结果的数组。代码现在只保留题目真正需要的状态：当前已知的最晚掉落时刻。
+题解
+----
 
-代码分析
---------
+逐时刻模拟
+~~~~~~~~~~
 
-第一版按照题目表面描述编程。由于碰撞可能发生在半秒时刻，代码先扩大坐标，再维护每只蚂蚁的位置、方向和存活状态。外层时间循环不断推进运动，内部还要检测碰撞。代码复杂的根源是持续追踪蚂蚁身份。
+直接方法按照题意维护每只蚂蚁的位置、方向和存活状态。碰撞可能发生在半秒时刻，因此
+``simulateHalfSteps`` 把坐标扩大两倍，并用半秒作为一个离散时间步：
 
-第二版发现，相遇反向只相当于两只蚂蚁交换身份。题目不关心身份，因此可以把碰撞改写为直接穿过。这个思路变化一次性删除了整个动态模拟过程，每只蚂蚁的掉落时间变成由初始位置直接计算的静态值。
+.. code-block:: text
 
-第三版继续审查输出需求：只需要最晚时刻，不需要完整的掉落时间列表。因此代码删除 ``fallMoments``，把“先收集、后求最大值”改成“计算一个、合并一个”。
+   原位置 position  -> 2 * position
+   木板右端 n       -> 2 * n
+   每个半步位移     -> 1
 
-三份代码的变化对应三层认识：
+每轮先移动全部存活蚂蚁，再删除到达端点的蚂蚁，最后按位置分组并让相遇的两只蚂蚁同时反向。
+这种实现完整保留了物理过程，也能覆盖整数时刻和半整数时刻的碰撞。
 
-* 直接还原物理过程时，需要模拟时间与碰撞；
-* 忽略身份后，碰撞可以消失，每条轨迹独立到达端点；
-* 只保留目标统计量后，所有中间掉落时间也可以消失。
+身份状态的代价
+~~~~~~~~~~~~~~
 
-复杂度分析
-----------
+木板长度为 ``n``，所有蚂蚁最迟在 ``n`` 秒内掉落，因此模拟至多执行 ``2n`` 个半步。每个半步都要扫描
+蚂蚁并建立碰撞分组，主要成本来自持续追踪每只蚂蚁的身份。
 
-方法一：半步物理模拟
-~~~~~~~~~~~~~~~~~~~~
+题目只询问最后掉落时刻，不询问某个身份最终从哪一端离开。删除身份信息后，碰撞可以使用更简单的等价模型。
 
-设蚂蚁总数为 ``k``。最多模拟 ``2n`` 个半步，每个半步扫描蚂蚁并建立碰撞分组：
+轨迹穿越等价
+~~~~~~~~~~~~
 
-* 平均时间复杂度为 ``O(nk)``；
-* 额外空间复杂度为 ``O(k)``。
+两只速度相同、方向相反的蚂蚁相遇后同时反向。若保留身份，可以理解为两只蚂蚁分别沿另一条轨迹继续移动；
+若忽略身份，则与它们保持原方向直接穿过完全等价。
 
-方法二：穿越等价
-~~~~~~~~~~~~~~~~
+两个模型在任意时刻拥有相同的位置集合：
 
-每只蚂蚁只计算一次掉落时刻：
+.. code-block:: text
 
-* 时间复杂度为 ``O(k)``；
-* 额外空间复杂度为 ``O(k)``。
+   真实模型：身份 A 接续身份 B 的出射轨迹，身份 B 接续身份 A 的出射轨迹
+   穿越模型：两条轨迹保持方向继续延伸
 
-方法三：边扫描边聚合
-~~~~~~~~~~~~~~~~~~~~
+碰撞只交换了轨迹由哪个身份占据，没有改变轨迹本身。所有到达端点的时刻因此完全相同，最后掉落时刻也不变。
 
-每只蚂蚁只参与一次最大值更新：
+静态掉落时间
+~~~~~~~~~~~~
 
-* 时间复杂度为 ``O(k)``；
-* 额外空间复杂度为 ``O(1)``。
+穿越模型删除了全部碰撞。每条轨迹从初始位置直线移动到对应端点：
+
+.. code-block:: text
+
+   向左轨迹 position  -> 掉落时间 position
+   向右轨迹 position  -> 掉落时间 n - position
+
+``collectFallTimes`` 计算并保存所有轨迹的掉落时间，再取最大值。每只蚂蚁只处理一次，时间已经降为线性。
+
+在线聚合
+~~~~~~~~
+
+题目只需要所有掉落时间的最大值，不需要保存完整列表。``aggregateMaximum`` 在计算每个时间后立即更新
+``lastMoment``：
+
+.. code-block:: text
+
+   lastMoment = max(lastMoment, 当前轨迹的掉落时间)
+
+扫描结束时，不变量是：``lastMoment`` 等于所有已处理轨迹中的最晚掉落时刻。处理下一条轨迹只需一次最大值
+更新，最终得到全部轨迹的最大值，额外空间降为常数。
+
+状态演化
+~~~~~~~~
+
+对 ``n = 4, left = [4,3], right = [0,1]``：
+
+.. list-table::
+   :header-rows: 1
+
+   * - 轨迹
+     - 掉落时间
+     - 更新后 ``lastMoment``
+   * - 向左，位置 4
+     - 4
+     - 4
+   * - 向左，位置 3
+     - 3
+     - 4
+   * - 向右，位置 0
+     - ``4 - 0 = 4``
+     - 4
+   * - 向右，位置 1
+     - ``4 - 1 = 3``
+     - 4
+
+真实过程中会发生多次碰撞，但穿越模型中的四条轨迹分别在时刻 3 或 4 到达端点，所以答案为 4。
+
+三种方法的关系
+~~~~~~~~~~~~~~
+
+半步模拟保留位置、方向、存活状态和碰撞关系；穿越等价删除身份与碰撞，只保留每条轨迹的静态掉落时间；
+在线聚合继续删除中间时间数组，只保留当前最大值。
+
+三步优化依次减少状态：
+
+.. code-block:: text
+
+   动态物理状态 -> 独立轨迹时间 -> 一个最大值
+
+公开入口调用 ``aggregateMaximum``，因为它直接表达题目真正需要的统计量。
 
 边界处理
---------
+~~~~~~~~
 
-* ``left`` 为空时，只计算所有向右蚂蚁的 ``n - position``；
-* ``right`` 为空时，只计算所有向左蚂蚁的 ``position``；
-* 位于 ``0`` 且向左、或位于 ``n`` 且向右的蚂蚁，其掉落时刻为 ``0``；
-* 大量碰撞不会改变答案，因为碰撞只交换身份，不改变轨迹集合；
-* 最晚掉落时刻一定不超过 ``n``，返回 ``int`` 足够。
+``left`` 为空时只扫描向右轨迹，``right`` 为空时只扫描向左轨迹。题目保证至少存在一只蚂蚁，因此主方法
+一定会处理至少一个位置。
+
+位置 0 的向左轨迹和位置 ``n`` 的向右轨迹贡献时间 0。大量碰撞不会影响结果，因为碰撞只交换身份，不改变
+轨迹集合。任意掉落时间都位于 ``[0,n]``，使用 ``int`` 足够。
+
+复杂度分析
+~~~~~~~~~~
+
+设蚂蚁总数为 ``k``。半步模拟最多执行 ``2n`` 轮，每轮扫描并分组全部蚂蚁，平均时间为 ``O(nk)``，
+额外空间为 ``O(k)``。
+
+保存掉落时间的方法访问每只蚂蚁一次，时间为 ``O(k)``，数组占用 ``O(k)`` 空间。主方法同样为
+``O(k)`` 时间，只维护当前最大值，额外空间为 ``O(1)``。
