@@ -8,31 +8,44 @@
 :难度: Medium
 :主题: 字符串、动态规划、状态压缩
 :原题: `LeetCode 0072 <https://leetcode.com/problems/edit-distance/>`_
-:重点: 插入删除替换、前缀状态、空串边界、最少操作数
+:重点: 从枚举编辑序列，推导到前缀最优状态，再压缩为一行
 
 题目重述
 --------
 
-给定字符串 ``word1`` 和 ``word2``，每次可以插入一个字符、删除一个字符或替换一个字符。返回把 ``word1`` 转换为 ``word2`` 所需的最少操作次数。
+给定两个字符串 ``word1`` 和 ``word2``，允许对 ``word1`` 重复执行以下操作：
 
-约束为 ``0 <= word1.length, word2.length <= 500``，两个字符串只包含小写英文字母。
+* 插入一个字符；
+* 删除一个字符；
+* 替换一个字符。
+
+返回把 ``word1`` 转换成 ``word2`` 所需的最少操作次数。
+
+字符串长度可以为 0，最大为 500；字符串只包含小写英文字母。
 
 自建示例
 --------
 
 .. code-block:: text
 
-   输入：word1 = "stone", word2 = "money"
-   输出：4
-
-可以把 ``s`` 替换为 ``m``、``t`` 替换为 ``o``、``o`` 替换为 ``n``、``n`` 替换为 ``e``，再把 ``e`` 替换为 ``y``，共 5 次操作；更优做法是删除 ``s``、``t``，并插入 ``m``、``y``，共 4 次操作。
-
-.. code-block:: text
-
    输入：word1 = "abc", word2 = "yabd"
    输出：2
 
-在开头插入 ``y``，再把 ``c`` 替换为 ``d``。
+先在开头插入 ``y``，再把 ``c`` 替换为 ``d``。
+
+.. code-block:: text
+
+   输入：word1 = "stone", word2 = "money"
+   输出：4
+
+可以删除 ``s`` 和 ``t`` 得到 ``one``，再在首尾分别插入 ``m`` 和 ``y``。
+
+.. code-block:: text
+
+   输入：word1 = "", word2 = "code"
+   输出：4
+
+空串只能连续插入四个字符才能得到目标字符串。
 
 C++ 实现
 --------
@@ -45,60 +58,205 @@ C++ 实现
 
    class Solution {
    private:
-       int plainRecursion(const std::string& a, const std::string& b, int i, int j) {
-           if (i == 0) return j;
-           if (j == 0) return i;
-           if (a[i - 1] == b[j - 1]) return plainRecursion(a, b, i - 1, j - 1);
-           return 1 + std::min({
-               plainRecursion(a, b, i - 1, j - 1),
-               plainRecursion(a, b, i - 1, j),
-               plainRecursion(a, b, i, j - 1)
-           });
+       int plainRecursion(
+           const std::string& source,
+           const std::string& target,
+           int sourceLength,
+           int targetLength
+       ) {
+           if (sourceLength == 0) {
+               return targetLength;
+           }
+           if (targetLength == 0) {
+               return sourceLength;
+           }
+
+           if (source[sourceLength - 1] == target[targetLength - 1]) {
+               return plainRecursion(
+                   source,
+                   target,
+                   sourceLength - 1,
+                   targetLength - 1
+               );
+           }
+
+           int replaceCost = plainRecursion(
+               source,
+               target,
+               sourceLength - 1,
+               targetLength - 1
+           );
+           int deleteCost = plainRecursion(
+               source,
+               target,
+               sourceLength - 1,
+               targetLength
+           );
+           int insertCost = plainRecursion(
+               source,
+               target,
+               sourceLength,
+               targetLength - 1
+           );
+
+           return 1 + std::min({replaceCost, deleteCost, insertCost});
        }
 
-       int memoDfs(const std::string& a, const std::string& b, int i, int j,
-                   std::vector<std::vector<int>>& memo) {
-           if (i == 0) return j;
-           if (j == 0) return i;
-           int& cached = memo[i][j];
-           if (cached != -1) return cached;
-           if (a[i - 1] == b[j - 1]) return cached = memoDfs(a, b, i - 1, j - 1, memo);
-           return cached = 1 + std::min({
-               memoDfs(a, b, i - 1, j - 1, memo),
-               memoDfs(a, b, i - 1, j, memo),
-               memoDfs(a, b, i, j - 1, memo)
-           });
+       int memoDfs(
+           const std::string& source,
+           const std::string& target,
+           int sourceLength,
+           int targetLength,
+           std::vector<std::vector<int>>& memo
+       ) {
+           if (sourceLength == 0) {
+               return targetLength;
+           }
+           if (targetLength == 0) {
+               return sourceLength;
+           }
+
+           int& cached = memo[sourceLength][targetLength];
+           if (cached != -1) {
+               return cached;
+           }
+
+           if (source[sourceLength - 1] == target[targetLength - 1]) {
+               cached = memoDfs(
+                   source,
+                   target,
+                   sourceLength - 1,
+                   targetLength - 1,
+                   memo
+               );
+               return cached;
+           }
+
+           int replaceCost = memoDfs(
+               source,
+               target,
+               sourceLength - 1,
+               targetLength - 1,
+               memo
+           );
+           int deleteCost = memoDfs(
+               source,
+               target,
+               sourceLength - 1,
+               targetLength,
+               memo
+           );
+           int insertCost = memoDfs(
+               source,
+               target,
+               sourceLength,
+               targetLength - 1,
+               memo
+           );
+
+           cached = 1 + std::min({replaceCost, deleteCost, insertCost});
+           return cached;
        }
 
-       int tableDp(const std::string& a, const std::string& b) {
-           int m = a.size(), n = b.size();
-           std::vector<std::vector<int>> dp(m + 1, std::vector<int>(n + 1));
-           for (int i = 0; i <= m; ++i) dp[i][0] = i;
-           for (int j = 0; j <= n; ++j) dp[0][j] = j;
-           for (int i = 1; i <= m; ++i)
-               for (int j = 1; j <= n; ++j)
-                   dp[i][j] = a[i - 1] == b[j - 1]
-                       ? dp[i - 1][j - 1]
-                       : 1 + std::min({dp[i - 1][j - 1], dp[i - 1][j], dp[i][j - 1]});
-           return dp[m][n];
+       int memoizedDistance(
+           const std::string& source,
+           const std::string& target
+       ) {
+           int sourceLength = static_cast<int>(source.size());
+           int targetLength = static_cast<int>(target.size());
+           std::vector<std::vector<int>> memo(
+               sourceLength + 1,
+               std::vector<int>(targetLength + 1, -1)
+           );
+           return memoDfs(
+               source,
+               target,
+               sourceLength,
+               targetLength,
+               memo
+           );
        }
 
-       int rollingDp(const std::string& a, const std::string& b) {
-           if (b.size() > a.size()) return rollingDp(b, a);
-           int m = a.size(), n = b.size();
-           std::vector<int> dp(n + 1);
-           for (int j = 0; j <= n; ++j) dp[j] = j;
-           for (int i = 1; i <= m; ++i) {
+       int tableDp(
+           const std::string& source,
+           const std::string& target
+       ) {
+           int sourceLength = static_cast<int>(source.size());
+           int targetLength = static_cast<int>(target.size());
+           std::vector<std::vector<int>> dp(
+               sourceLength + 1,
+               std::vector<int>(targetLength + 1)
+           );
+
+           for (int i = 0; i <= sourceLength; ++i) {
+               dp[i][0] = i;
+           }
+           for (int j = 0; j <= targetLength; ++j) {
+               dp[0][j] = j;
+           }
+
+           for (int i = 1; i <= sourceLength; ++i) {
+               for (int j = 1; j <= targetLength; ++j) {
+                   if (source[i - 1] == target[j - 1]) {
+                       dp[i][j] = dp[i - 1][j - 1];
+                       continue;
+                   }
+
+                   int replaceCost = dp[i - 1][j - 1];
+                   int deleteCost = dp[i - 1][j];
+                   int insertCost = dp[i][j - 1];
+                   dp[i][j] = 1 + std::min({
+                       replaceCost,
+                       deleteCost,
+                       insertCost
+                   });
+               }
+           }
+
+           return dp[sourceLength][targetLength];
+       }
+
+       int rollingDp(
+           const std::string& source,
+           const std::string& target
+       ) {
+           if (target.size() > source.size()) {
+               return rollingDp(target, source);
+           }
+
+           int sourceLength = static_cast<int>(source.size());
+           int targetLength = static_cast<int>(target.size());
+           std::vector<int> dp(targetLength + 1);
+
+           for (int j = 0; j <= targetLength; ++j) {
+               dp[j] = j;
+           }
+
+           for (int i = 1; i <= sourceLength; ++i) {
                int diagonal = dp[0];
                dp[0] = i;
-               for (int j = 1; j <= n; ++j) {
+
+               for (int j = 1; j <= targetLength; ++j) {
                    int up = dp[j];
-                   if (a[i - 1] == b[j - 1]) dp[j] = diagonal;
-                   else dp[j] = 1 + std::min({diagonal, up, dp[j - 1]});
+
+                   if (source[i - 1] == target[j - 1]) {
+                       dp[j] = diagonal;
+                   } else {
+                       int replaceCost = diagonal;
+                       int deleteCost = up;
+                       int insertCost = dp[j - 1];
+                       dp[j] = 1 + std::min({
+                           replaceCost,
+                           deleteCost,
+                           insertCost
+                       });
+                   }
+
                    diagonal = up;
                }
            }
-           return dp[n];
+
+           return dp[targetLength];
        }
 
    public:
@@ -110,144 +268,99 @@ C++ 实现
 题解
 ----
 
-递归为什么重复
-~~~~~~~~~~~~~~
+枚举编辑序列
+~~~~~~~~~~~~
 
-从两个字符串末尾考虑，字符不同时可尝试替换、删除或插入。不同操作序列会反复到达相同的前缀长度对 ``(i,j)``，朴素递归形成指数级分支。
+从两个字符串的末尾观察。若末字符相同，可以直接匹配它们，继续处理两侧更短的前缀。
+末字符不同时，最后一次操作只有三种可能：替换、删除或插入。
 
-前缀状态保存什么
-~~~~~~~~~~~~~~~~
+朴素递归会分别尝试三种操作。多个操作序列会反复到达相同的前缀长度对，因而产生大量重复计算。
 
-定义 ``dp[i][j]`` 为把 ``word1`` 前 ``i`` 个字符变成 ``word2`` 前 ``j`` 个字符的最少操作数。状态只关心已处理前缀，不需要保存具体操作历史。
+前缀状态
+~~~~~~~~
 
-空串边界为何是长度
-~~~~~~~~~~~~~~~~~~
+定义 ``dp[i][j]`` 为把 ``word1`` 的前 ``i`` 个字符转换成 ``word2`` 的前 ``j`` 个字符所需的最少操作数。
+具体操作历史不会影响剩余问题，前缀长度已经包含转移所需的全部信息。
 
-把长度为 ``i`` 的前缀变为空串只能删除 ``i`` 次；把空串变成长度为 ``j`` 的前缀只能插入 ``j`` 次，所以 ``dp[i][0]=i``、``dp[0][j]=j``。
-
-三种末操作如何对应旧状态
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-若末字符相同，不需要新操作，直接继承 ``dp[i-1][j-1]``。若不同：替换来自左上；删除 ``word1`` 末字符来自上方；向 ``word1`` 末尾插入目标字符来自左方。
+当一侧前缀为空时，操作数由另一侧长度唯一确定：
 
 .. code-block:: text
 
-   dp[i][j] = 1 + min(
-       dp[i-1][j-1],  替换
-       dp[i-1][j],    删除
-       dp[i][j-1]     插入
-   )
+   dp[i][0] = i    删除 i 个字符
+   dp[0][j] = j    插入 j 个字符
 
-为什么只看最后一步就完整
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-任意最优编辑序列的最后一步必属于三类之一。删除最后一步后，剩余部分必须是对应前缀子问题的最优解，否则替换为更短编辑序列可继续改进原答案。
-
-一维数组中三个旧值在哪里
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-逐行从左向右更新：覆盖前 ``dp[j]`` 是上方；更新后的 ``dp[j-1]`` 是左方；变量 ``diagonal`` 保存覆盖前的左上。每轮结束把旧上方交给下一列作为新对角。
-
-.. list-table::
-   :header-rows: 1
-
-   * - 名称
-     - 二维位置
-     - 一维来源
-   * - 替换/匹配
-     - ``dp[i-1][j-1]``
-     - ``diagonal``
-   * - 删除
-     - ``dp[i-1][j]``
-     - 覆盖前 ``dp[j]``
-   * - 插入
-     - ``dp[i][j-1]``
-     - 更新后 ``dp[j-1]``
-
-为什么交换字符串可节省空间
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-滚动数组长度由第二个字符串决定。若让较短字符串作为列，空间从 ``O(n)`` 收缩为 ``O(min(m,n))``；编辑距离对交换两个字符串对称，结果不变。
-
-复杂度来源
+末操作分类
 ~~~~~~~~~~
 
-朴素递归指数级；记忆化和二维 DP 为 ``O(mn)`` 时间、``O(mn)`` 空间；一维压缩仍为 ``O(mn)`` 时间，空间 ``O(min(m,n))``。
+若 ``word1[i-1]`` 与 ``word2[j-1]`` 相同，末字符无需编辑：
 
-九语言实现
-----------
+.. code-block:: text
 
-C
-~
+   dp[i][j] = dp[i-1][j-1]
 
-.. code-block:: c
+若末字符不同，三种操作与旧状态一一对应：
 
-   int minDistance(char*a,char*b){int m=strlen(a),n=strlen(b);int*dp=malloc((n+1)*sizeof(int));for(int j=0;j<=n;j++)dp[j]=j;for(int i=1;i<=m;i++){int diag=dp[0];dp[0]=i;for(int j=1;j<=n;j++){int up=dp[j];dp[j]=a[i-1]==b[j-1]?diag:1+fmin(diag,fmin(up,dp[j-1]));diag=up;}}int ans=dp[n];free(dp);return ans;}
+.. code-block:: text
 
-Python
+   replace: dp[i-1][j-1]
+   delete:  dp[i-1][j]
+   insert:  dp[i][j-1]
+
+   dp[i][j] = 1 + min(replace, delete, insert)
+
+替换同时消耗两个末字符；删除只消耗源字符串末字符；插入目标末字符后，只需继续完成当前源前缀到更短目标前缀的转换。
+
+记忆化消除重复
+~~~~~~~~~~~~~~
+
+递归状态只由 ``(i,j)`` 决定，共有 ``(m+1)(n+1)`` 个。为每个状态缓存第一次计算的结果后，后续递归直接复用，指数级搜索被压缩为有限状态图。
+
+二维表格
+~~~~~~~~
+
+每个状态只依赖左上、上方和左方，因此可以按行从左到右填表。计算 ``dp[i][j]`` 时，这三个前驱状态都已经完成。
+
+以 ``"abc"`` 转换为 ``"yabd"`` 为例，状态表为：
+
+.. code-block:: text
+
+       ""  y  a  b  d
+   ""   0  1  2  3  4
+   a    1  1  1  2  3
+   b    2  2  2  1  2
+   c    3  3  3  2  2
+
+右下角的 2 对应一次插入和一次替换。
+
+一维滚动
+~~~~~~~~
+
+逐行更新时，一维数组中的三个值分别表示：
+
+* 覆盖前的 ``dp[j]`` 是二维表中的上方状态；
+* 更新后的 ``dp[j-1]`` 是当前行左方状态；
+* ``diagonal`` 保存覆盖前的左上状态。
+
+当前格计算完成后，把旧上方值交给 ``diagonal``，供下一列使用。完整二维表因此压缩为一行。
+
+较短字符串作为列
+~~~~~~~~~~~~~~~~
+
+滚动数组长度由列数决定。编辑距离在交换两个字符串后不变，因此先让较短字符串作为列，可把空间降为
+``O(min(m,n))``。
+
+正确性
 ~~~~~~
 
-.. code-block:: python
+任意编辑序列的最后一步必然属于匹配、替换、删除或插入之一。删除最后一步后，剩余操作对应一个严格更小的前缀状态；若该前缀不是最优解，就能替换成更短序列并改进原方案。
 
-   class Solution:
-       def minDistance(self, a: str, b: str) -> int:
-           if len(b)>len(a): a,b=b,a
-           dp=list(range(len(b)+1))
-           for i,x in enumerate(a,1):
-               diagonal=dp[0];dp[0]=i
-               for j,y in enumerate(b,1):
-                   up=dp[j];dp[j]=diagonal if x==y else 1+min(diagonal,up,dp[j-1]);diagonal=up
-           return dp[-1]
+状态转移枚举了所有可能的最后一步，并对每类取最优值，因此每个 ``dp[i][j]`` 都是对应前缀的最少编辑次数。最终状态 ``dp[m][n]`` 即为完整字符串的编辑距离。
 
-Java
-~~~~
+复杂度
+~~~~~~
 
-.. code-block:: java
+设两个字符串长度分别为 ``m`` 和 ``n``：
 
-   class Solution {public int minDistance(String a,String b){int[]dp=new int[b.length()+1];for(int j=0;j<dp.length;j++)dp[j]=j;for(int i=1;i<=a.length();i++){int diag=dp[0];dp[0]=i;for(int j=1;j<=b.length();j++){int up=dp[j];dp[j]=a.charAt(i-1)==b.charAt(j-1)?diag:1+Math.min(diag,Math.min(up,dp[j-1]));diag=up;}}return dp[b.length()];}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn min_distance(a:String,b:String)->i32{let(a,b)=(a.as_bytes(),b.as_bytes());let mut dp:Vec<i32>=(0..=b.len()as i32).collect();for i in 1..=a.len(){let mut diag=dp[0];dp[0]=i as i32;for j in 1..=b.len(){let up=dp[j];dp[j]=if a[i-1]==b[j-1]{diag}else{1+diag.min(up.min(dp[j-1]))};diag=up}}dp[b.len()]}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func minDistance(a,b string)int{dp:=make([]int,len(b)+1);for j:=range dp{dp[j]=j};for i:=1;i<=len(a);i++{diag:=dp[0];dp[0]=i;for j:=1;j<=len(b);j++{up:=dp[j];if a[i-1]==b[j-1]{dp[j]=diag}else{dp[j]=1+min(diag,min(up,dp[j-1]))};diag=up}};return dp[len(b)]}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function minDistance(a:string,b:string):number{const dp=Array.from({length:b.length+1},(_,i)=>i);for(let i=1;i<=a.length;i++){let diag=dp[0];dp[0]=i;for(let j=1;j<=b.length;j++){const up=dp[j];dp[j]=a[i-1]===b[j-1]?diag:1+Math.min(diag,up,dp[j-1]);diag=up;}}return dp[b.length];}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public int MinDistance(string a,string b){int[]dp=new int[b.Length+1];for(int j=0;j<dp.Length;j++)dp[j]=j;for(int i=1;i<=a.Length;i++){int diag=dp[0];dp[0]=i;for(int j=1;j<=b.Length;j++){int up=dp[j];dp[j]=a[i-1]==b[j-1]?diag:1+Math.Min(diag,Math.Min(up,dp[j-1]));diag=up;}}return dp[^1];}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function min_distance(a::String,b::String)
-       x=collect(a);y=collect(b);dp=collect(0:length(y))
-       for i in eachindex(x);diag=dp[1];dp[1]=i;for j in eachindex(y);up=dp[j+1];dp[j+1]=x[i]==y[j] ? diag : 1+min(diag,up,dp[j]);diag=up;end;end
-       dp[end]
-   end
-
-R
-~
-
-.. code-block:: r
-
-   min_distance <- function(a,b){x<-strsplit(a,"",fixed=TRUE)[[1]];y<-strsplit(b,"",fixed=TRUE)[[1]];dp<-0:length(y);if(length(x)>0)for(i in seq_along(x)){diag<-dp[[1]];dp[[1]]<-i;if(length(y)>0)for(j in seq_along(y)){up<-dp[[j+1L]];dp[[j+1L]]<-if(x[[i]]==y[[j]])diag else 1L+min(diag,up,dp[[j]]);diag<-up}};dp[[length(dp)]]}
+* 朴素递归为指数级时间，递归深度为 ``O(m+n)``；
+* 记忆化与二维 DP 的时间、空间均为 ``O(mn)``；
+* 一维滚动 DP 的时间为 ``O(mn)``，空间为 ``O(min(m,n))``。
