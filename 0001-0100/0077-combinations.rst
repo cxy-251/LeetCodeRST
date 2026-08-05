@@ -8,12 +8,16 @@
 :难度: Medium
 :主题: 回溯、组合、容量剪枝
 :原题: `LeetCode 0077 <https://leetcode.com/problems/combinations/>`_
-:重点: 从 ``1..n`` 选择、恰好 ``k`` 个、组合去重、答案规模
+:重点: 从枚举全部子集，推导到递增路径回溯，再利用剩余容量收紧候选上界
 
 题目重述
 --------
 
-给定整数 ``n`` 和 ``k``，返回从整数集合 ``1..n`` 中选出恰好 ``k`` 个不同整数的所有组合。组合内部顺序不重要，答案顺序不限，每个组合只能返回一次。
+给定两个整数 ``n`` 和 ``k``，从集合 ``{1, 2, ..., n}`` 中选出恰好 ``k`` 个不同整数，
+返回所有可能的组合。
+
+组合只关心选中了哪些整数，不关心排列顺序。例如 ``[1, 3]`` 与 ``[3, 1]`` 表示同一个组合，
+只能返回一次。答案中的组合顺序不限，每个组合内部的元素顺序也不限。
 
 约束为 ``1 <= n <= 20``、``1 <= k <= n``。
 
@@ -22,10 +26,17 @@
 
 .. code-block:: text
 
-   输入：n = 5, k = 2
-   输出：[[1,2],[1,3],[1,4],[1,5],[2,3],[2,4],[2,5],[3,4],[3,5],[4,5]]
+   输入：n = 4, k = 3
+   输出：[[1,2,3],[1,2,4],[1,3,4],[2,3,4]]
 
-从 5 个整数中选择 2 个，共有 ``C(5,2) = 10`` 个组合；输出顺序可以不同。
+四个整数中任取三个，共有 ``C(4,3)=4`` 个组合。
+
+.. code-block:: text
+
+   输入：n = 3, k = 1
+   输出：[[1],[2],[3]]
+
+每个单独的整数都构成一个合法组合。
 
 C++ 实现
 --------
@@ -36,21 +47,43 @@ C++ 实现
 
    class Solution {
    private:
+       int countBits(int mask) {
+           int count = 0;
+           while (mask != 0) {
+               mask &= mask - 1;
+               ++count;
+           }
+           return count;
+       }
+
        std::vector<std::vector<int>> maskEnumeration(int n, int k) {
            std::vector<std::vector<int>> result;
-           for (int mask = 0; mask < (1 << n); ++mask) {
-               if (__builtin_popcount(static_cast<unsigned>(mask)) != k) continue;
-               std::vector<int> current;
-               for (int bit = 0; bit < n; ++bit)
-                   if (mask & (1 << bit)) current.push_back(bit + 1);
-               result.push_back(current);
+           const int limit = 1 << n;
+
+           for (int mask = 0; mask < limit; ++mask) {
+               if (countBits(mask) != k) {
+                   continue;
+               }
+
+               std::vector<int> combination;
+               for (int bit = 0; bit < n; ++bit) {
+                   if ((mask & (1 << bit)) != 0) {
+                       combination.push_back(bit + 1);
+                   }
+               }
+               result.push_back(combination);
            }
            return result;
        }
 
-       void plainDfs(int start, int n, int k, std::vector<int>& path,
+       void plainDfs(int start, int n, int k,
+                     std::vector<int>& path,
                      std::vector<std::vector<int>>& result) {
-           if (static_cast<int>(path.size()) == k) { result.push_back(path); return; }
+           if (static_cast<int>(path.size()) == k) {
+               result.push_back(path);
+               return;
+           }
+
            for (int value = start; value <= n; ++value) {
                path.push_back(value);
                plainDfs(value + 1, n, k, path, result);
@@ -58,12 +91,18 @@ C++ 实现
            }
        }
 
-       void prunedDfs(int start, int n, int k, std::vector<int>& path,
+       void prunedDfs(int start, int n, int k,
+                      std::vector<int>& path,
                       std::vector<std::vector<int>>& result) {
-           if (static_cast<int>(path.size()) == k) { result.push_back(path); return; }
-           int needed = k - path.size();
-           int last_start = n - needed + 1;
-           for (int value = start; value <= last_start; ++value) {
+           if (static_cast<int>(path.size()) == k) {
+               result.push_back(path);
+               return;
+           }
+
+           const int needed = k - static_cast<int>(path.size());
+           const int lastStart = n - needed + 1;
+
+           for (int value = start; value <= lastStart; ++value) {
                path.push_back(value);
                prunedDfs(value + 1, n, k, path, result);
                path.pop_back();
@@ -74,6 +113,7 @@ C++ 实现
        std::vector<std::vector<int>> combine(int n, int k) {
            std::vector<std::vector<int>> result;
            std::vector<int> path;
+           path.reserve(k);
            prunedDfs(1, n, k, path, result);
            return result;
        }
@@ -82,39 +122,62 @@ C++ 实现
 题解
 ----
 
-枚举所有子集浪费了什么
-~~~~~~~~~~~~~~~~~~~~
+全部子集枚举
+~~~~~~~~~~~~
 
-``1..n`` 有 ``2^n`` 个子集，位掩码方法生成后再筛选长度 ``k``，会访问大量尺寸不合格的候选。回溯可以在路径达到 ``k`` 时立即提交，不再扩展。
+``1..n`` 的每个子集都可由一个 ``n`` 位掩码表示：第 ``bit`` 位为 1，表示选择 ``bit+1``。
+枚举 ``0`` 到 ``2^n-1``，再保留恰好含 ``k`` 个置位的掩码，可以直接得到全部组合。
 
-start 如何消除排列重复
-~~~~~~~~~~~~~~~~~~~~~~
+这种方法先访问所有 ``2^n`` 个子集，其中大量子集的大小并非 ``k``。它说明问题可以归结为选择集合，
+但没有利用“只需要长度为 ``k`` 的结果”这一条件。
 
-路径保存严格递增的已选数字。选择 ``value`` 后只从 ``value+1`` 继续，因此集合 ``{1,3,5}`` 只会以 ``[1,3,5]`` 生成，不会出现 ``[3,1,5]`` 等排列。
+递增路径
+~~~~~~~~
 
-选择与撤销
+回溯路径保存当前已经选择的整数。参数 ``start`` 表示下一层只能从 ``start`` 及其右侧继续选择。
+选择 ``value`` 后，递归入口变为 ``value+1``，所以路径始终严格递增。
+
+严格递增同时解决两个问题：
+
+* 同一个整数不会被再次选择；
+* 同一个集合只会生成唯一的递增排列。
+
+例如组合 ``{1,3,5}`` 只会沿 ``1 -> 3 -> 5`` 到达，不会生成 ``3 -> 1 -> 5`` 等排列。
+
+选择与恢复
 ~~~~~~~~~~
 
-每层先把候选压入路径，递归处理包含它的所有组合，返回后弹出，恢复父层前缀。保存答案时复制当前路径，后续撤销不会修改已提交结果。
+每次循环执行三个步骤：把候选加入 ``path``，递归枚举包含该候选的全部后续组合，随后弹出该候选。
+弹出后，路径恢复到进入本轮循环前的状态，下一候选可以复用同一个容器。
 
-剩余容量如何剪枝
-~~~~~~~~~~~~~~~~
+当路径长度达到 ``k`` 时，当前路径已经是完整组合。此时复制到结果并立即返回，避免继续加入多余元素。
 
-当前还需要 ``needed = k-path.size()`` 个数字。若本层从 ``value`` 开始，包含它在内至少要有 ``needed`` 个候选，因此最大起点满足：
+容量剪枝
+~~~~~~~~
+
+无剪枝回溯仍会进入一些不可能填满 ``k`` 个元素的分支。设当前路径还需要：
 
 .. code-block:: text
 
+   needed = k - path.size()
+
+若本层选择 ``value``，从 ``value`` 到 ``n`` 至少要留下 ``needed`` 个可选整数，因此必须满足：
+
+.. code-block:: text
+
+   n - value + 1 >= needed
    value <= n - needed + 1
 
-更大的起点即使选完右侧全部数字也无法填满路径。
+所以循环终点可以从 ``n`` 收紧为 ``lastStart = n-needed+1``。超过该上界的候选即使把右侧元素全部选中，
+也无法填满路径。
 
 .. list-table::
    :header-rows: 1
 
-   * - 路径
-     - needed
-     - 允许起点上界
-   * - ``[]``，n=5,k=3
+   * - 当前路径
+     - 还需数量
+     - 本层最大候选
+   * - ``[]``，``n=5,k=3``
      - 3
      - 3
    * - ``[1]``
@@ -125,102 +188,27 @@ start 如何消除排列重复
      - 5
    * - ``[1,4,5]``
      - 0
-     - 提交
+     - 提交结果
 
-为什么不会漏解
-~~~~~~~~~~~~~~
-
-任意大小为 ``k`` 的组合都有唯一递增序列。它的每个前缀都拥有足够的剩余数字，因此不会被容量剪枝；算法会按序选择该序列中的每个值并到达叶子。
-
-为什么不会重复
-~~~~~~~~~~~~~~
-
-不同递归路径对应不同严格递增序列。组合的递增表示唯一，因此两个叶子不可能表示同一集合。
-
-输出复杂度为何不可忽略
-~~~~~~~~~~~~~~~~~~~~~~
-
-共有 ``C(n,k)`` 个答案，每个答案需要复制 ``k`` 个整数，任何算法至少需要 ``Theta(C(n,k)*k)`` 时间和输出空间。回溯工作空间只保存长度至多 ``k`` 的路径。
-
-复杂度来源
-~~~~~~~~~~
-
-位掩码筛选为 ``O(2^n*n)``。剪枝回溯的输出主导时间为 ``O(C(n,k)*k)``，不计结果时递归路径空间 ``O(k)``。
-
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   static void dfs(int start,int n,int k,int*path,int depth,int***out,int*size,int*cap){if(depth==k){if(*size==*cap){*cap*=2;*out=realloc(*out,*cap*sizeof(int*));}int*row=malloc(k*sizeof(int));memcpy(row,path,k*sizeof(int));(*out)[(*size)++]=row;return;}int needed=k-depth,last=n-needed+1;for(int v=start;v<=last;v++){path[depth]=v;dfs(v+1,n,k,path,depth+1,out,size,cap);}}
-   int**combine(int n,int k,int*returnSize,int**returnCols){int size=0,cap=4;int**out=malloc(cap*sizeof(int*));int*path=malloc(k*sizeof(int));dfs(1,n,k,path,0,&out,&size,&cap);int*cols=malloc(size*sizeof(int));for(int i=0;i<size;i++)cols[i]=k;free(path);*returnSize=size;*returnCols=cols;return out;}
-
-Python
+完整性
 ~~~~~~
 
-.. code-block:: python
+任意合法组合都有唯一的递增表示 ``a1 < a2 < ... < ak``。算法从 1 开始，在第 ``i`` 层选择 ``ai``，
+随后只搜索更大的整数，因此存在一条递归路径能够依次选中整个组合。
 
-   class Solution:
-       def combine(self, n: int, k: int) -> list[list[int]]:
-           result=[];path=[]
-           def dfs(start):
-               if len(path)==k:result.append(path.copy());return
-               needed=k-len(path)
-               for value in range(start,n-needed+2):path.append(value);dfs(value+1);path.pop()
-           dfs(1);return result
+容量剪枝只排除“剩余元素数量不足”的起点。合法组合的每个前缀后都至少保留了完成该组合所需的元素，
+所以这条路径不会被剪掉。
 
-Java
-~~~~
+唯一性
+~~~~~~
 
-.. code-block:: java
+每条叶子路径都是严格递增序列。一个集合只有一种严格递增排列，因此不同叶子不可能表示同一个组合，
+结果中不会出现重复项。
 
-   class Solution {List<List<Integer>>out=new ArrayList<>();List<Integer>path=new ArrayList<>();void dfs(int start,int n,int k){if(path.size()==k){out.add(new ArrayList<>(path));return;}int last=n-(k-path.size())+1;for(int v=start;v<=last;v++){path.add(v);dfs(v+1,n,k);path.remove(path.size()-1);}}public List<List<Integer>> combine(int n,int k){dfs(1,n,k);return out;}}
+复杂度
+~~~~~~
 
-Rust
-~~~~
+位掩码方法枚举 ``2^n`` 个子集，并可能扫描 ``n`` 位，时间 ``O(2^n * n)``。
 
-.. code-block:: rust
-
-   impl Solution {pub fn combine(n:i32,k:i32)->Vec<Vec<i32>>{fn dfs(start:i32,n:i32,k:usize,path:&mut Vec<i32>,out:&mut Vec<Vec<i32>>){if path.len()==k{out.push(path.clone());return}let last=n-(k-path.len())as i32+1;for v in start..=last{path.push(v);dfs(v+1,n,k,path,out);path.pop();}}let mut out=vec![];dfs(1,n,k as usize,&mut vec![],&mut out);out}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func combine(n,k int)[][]int{out:=[][]int{};path:=[]int{};var dfs func(int);dfs=func(start int){if len(path)==k{row:=append([]int(nil),path...);out=append(out,row);return};last:=n-(k-len(path))+1;for v:=start;v<=last;v++{path=append(path,v);dfs(v+1);path=path[:len(path)-1]}};dfs(1);return out}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function combine(n:number,k:number):number[][]{const out:number[][]=[],path:number[]=[];const dfs=(start:number)=>{if(path.length===k){out.push([...path]);return;}const last=n-(k-path.length)+1;for(let v=start;v<=last;v++){path.push(v);dfs(v+1);path.pop();}};dfs(1);return out;}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {List<IList<int>>o=new();List<int>p=new();void Dfs(int start,int n,int k){if(p.Count==k){o.Add(new List<int>(p));return;}int last=n-(k-p.Count)+1;for(int v=start;v<=last;v++){p.Add(v);Dfs(v+1,n,k);p.RemoveAt(p.Count-1);}}public IList<IList<int>> Combine(int n,int k){Dfs(1,n,k);return o;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function combine(n::Int,k::Int)
-       out=Vector{Vector{Int}}();path=Int[]
-       function dfs(start);length(path)==k&&(push!(out,copy(path));return);last=n-(k-length(path))+1;for v in start:last;push!(path,v);dfs(v+1);pop!(path);end;end
-       dfs(1);out
-   end
-
-R
-~
-
-.. code-block:: r
-
-   combine_values <- function(n,k){out<-list();path<-integer();dfs<-function(start){if(length(path)==k){out[[length(out)+1L]]<<-path;return()};last<-n-(k-length(path))+1L;if(start<=last)for(v in start:last){path<<-c(path,v);dfs(v+1L);path<<-head(path,-1L)}};dfs(1L);out}
+剪枝回溯输出 ``C(n,k)`` 个组合，每个组合复制 ``k`` 个整数，输出主导时间为
+``O(C(n,k) * k)``。递归路径最多保存 ``k`` 个整数，不计返回结果时额外空间为 ``O(k)``。
