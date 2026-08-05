@@ -8,14 +8,15 @@
 :难度: Hard
 :主题: 字符串、滑动窗口、频次计数
 :原题: `LeetCode 0076 <https://leetcode.com/problems/minimum-window-substring/>`_
-:重点: 重复字符需求、可行窗口、最短连续子串、无解处理
+:重点: 从枚举所有子串，推导到维护字符缺口的线性滑动窗口
 
 题目重述
 --------
 
-给定字符串 ``s`` 和 ``t``，寻找 ``s`` 中最短的连续子串，使该子串包含 ``t`` 中全部字符及其重复次数。字符区分大小写；若不存在满足条件的子串，返回空字符串。若有多个同样短的答案，返回其中任意一个即可。
+给定字符串 ``s`` 和 ``t``，寻找 ``s`` 中最短的连续子串，使该子串包含 ``t`` 中的全部字符，
+并且每个字符的出现次数不少于其在 ``t`` 中的出现次数。字符区分大小写。
 
-约束为 ``1 <= s.length, t.length <= 10^5``，两个字符串只包含英文字母。
+若不存在满足条件的子串，返回空字符串。约束为 ``1 <= s.length, t.length <= 10^5``，两个字符串只包含英文字母。
 
 自建示例
 --------
@@ -25,14 +26,22 @@
    输入：s = "CABAA", t = "AABC"
    输出："CABA"
 
-``t`` 需要两个 ``A``、一个 ``B`` 和一个 ``C``；``"CABA"`` 长度为 4，恰好满足全部频次，已经不可能再短。
+``t`` 需要两个 ``A``、一个 ``B`` 和一个 ``C``。``"CABA"`` 恰好满足全部频次，长度已经等于 ``t`` 的长度，
+因此不可能存在更短答案。
+
+.. code-block:: text
+
+   输入：s = "ADOBECODEBANC", t = "ABC"
+   输出："BANC"
+
+窗口第一次覆盖 ``ABC`` 时仍然较长；继续移动左右边界后，最短覆盖窗口缩小为 ``"BANC"``。
 
 .. code-block:: text
 
    输入：s = "abc", t = "AA"
    输出：""
 
-``s`` 中只有一个 ``A``，无法满足重复次数要求。
+``s`` 中没有足够的 ``A``，任何窗口都无法满足重复次数要求。
 
 C++ 实现
 --------
@@ -45,74 +54,175 @@ C++ 实现
 
    class Solution {
    private:
-       bool covers(const std::string& s, int left, int right,
-                   const std::array<int,128>& required) {
-           std::array<int,128> count{};
-           for (int i = left; i <= right; ++i) ++count[static_cast<unsigned char>(s[i])];
-           for (int c = 0; c < 128; ++c) if (count[c] < required[c]) return false;
+       static constexpr int ALPHABET = 128;
+
+       bool covers(const std::string& s,
+                   int left,
+                   int right,
+                   const std::array<int, ALPHABET>& required) {
+           std::array<int, ALPHABET> count{};
+
+           for (int index = left; index <= right; ++index) {
+               unsigned char ch = static_cast<unsigned char>(s[index]);
+               ++count[ch];
+           }
+
+           for (int ch = 0; ch < ALPHABET; ++ch) {
+               if (count[ch] < required[ch]) {
+                   return false;
+               }
+           }
            return true;
        }
 
-       std::string bruteForce(const std::string& s, const std::string& t) {
-           std::array<int,128> required{};
-           for (char ch : t) ++required[static_cast<unsigned char>(ch)];
-           int best_start = 0, best_length = INT_MAX;
-           for (int left = 0; left < static_cast<int>(s.size()); ++left)
-               for (int right = left; right < static_cast<int>(s.size()); ++right)
-                   if (right - left + 1 < best_length && covers(s, left, right, required)) {
-                       best_start = left; best_length = right - left + 1; break;
-                   }
-           return best_length == INT_MAX ? "" : s.substr(best_start, best_length);
-       }
+       std::string bruteForce(const std::string& s,
+                              const std::string& t) {
+           if (t.size() > s.size()) {
+               return "";
+           }
 
-       std::string formedKinds(const std::string& s, const std::string& t) {
-           std::array<int,128> required{}, window{};
-           int kinds = 0;
-           for (char ch : t) if (++required[static_cast<unsigned char>(ch)] == 1) ++kinds;
-           int formed = 0, left = 0, best_start = 0, best_length = INT_MAX;
-           for (int right = 0; right < static_cast<int>(s.size()); ++right) {
-               unsigned char ch = s[right];
-               if (++window[ch] == required[ch] && required[ch] > 0) ++formed;
-               while (formed == kinds) {
-                   if (right - left + 1 < best_length) {
-                       best_start = left; best_length = right - left + 1;
+           std::array<int, ALPHABET> required{};
+           for (char raw : t) {
+               unsigned char ch = static_cast<unsigned char>(raw);
+               ++required[ch];
+           }
+
+           int bestStart = 0;
+           int bestLength = INT_MAX;
+
+           for (int left = 0; left < static_cast<int>(s.size()); ++left) {
+               for (int right = left;
+                    right < static_cast<int>(s.size());
+                    ++right) {
+                   int length = right - left + 1;
+                   if (length >= bestLength) {
+                       break;
                    }
-                   unsigned char drop = s[left++];
-                   if (required[drop] > 0) {
-                       if (window[drop] == required[drop]) --formed;
-                       --window[drop];
-                   } else {
-                       --window[drop];
+                   if (covers(s, left, right, required)) {
+                       bestStart = left;
+                       bestLength = length;
+                       break;
                    }
                }
            }
-           return best_length == INT_MAX ? "" : s.substr(best_start, best_length);
+
+           if (bestLength == INT_MAX) {
+               return "";
+           }
+           return s.substr(bestStart, bestLength);
        }
 
-       std::string missingCount(const std::string& s, const std::string& t) {
-           std::array<int,128> need{};
-           for (char ch : t) ++need[static_cast<unsigned char>(ch)];
-           int missing = t.size();
-           int left = 0, best_start = 0, best_length = INT_MAX;
-           for (int right = 0; right < static_cast<int>(s.size()); ++right) {
-               unsigned char ch = s[right];
-               if (need[ch] > 0) --missing;
-               --need[ch];
+       std::string formedKinds(const std::string& s,
+                               const std::string& t) {
+           if (t.size() > s.size()) {
+               return "";
+           }
+
+           std::array<int, ALPHABET> required{};
+           std::array<int, ALPHABET> window{};
+           int requiredKinds = 0;
+
+           for (char raw : t) {
+               unsigned char ch = static_cast<unsigned char>(raw);
+               if (++required[ch] == 1) {
+                   ++requiredKinds;
+               }
+           }
+
+           int formedKindsCount = 0;
+           int left = 0;
+           int bestStart = 0;
+           int bestLength = INT_MAX;
+
+           for (int right = 0;
+                right < static_cast<int>(s.size());
+                ++right) {
+               unsigned char added = static_cast<unsigned char>(s[right]);
+               ++window[added];
+
+               if (required[added] > 0 &&
+                   window[added] == required[added]) {
+                   ++formedKindsCount;
+               }
+
+               while (formedKindsCount == requiredKinds) {
+                   int length = right - left + 1;
+                   if (length < bestLength) {
+                       bestStart = left;
+                       bestLength = length;
+                   }
+
+                   unsigned char removed =
+                       static_cast<unsigned char>(s[left]);
+                   ++left;
+
+                   if (required[removed] > 0 &&
+                       window[removed] == required[removed]) {
+                       --formedKindsCount;
+                   }
+                   --window[removed];
+               }
+           }
+
+           if (bestLength == INT_MAX) {
+               return "";
+           }
+           return s.substr(bestStart, bestLength);
+       }
+
+       std::string missingCount(const std::string& s,
+                                const std::string& t) {
+           if (t.size() > s.size()) {
+               return "";
+           }
+
+           std::array<int, ALPHABET> need{};
+           for (char raw : t) {
+               unsigned char ch = static_cast<unsigned char>(raw);
+               ++need[ch];
+           }
+
+           int missing = static_cast<int>(t.size());
+           int left = 0;
+           int bestStart = 0;
+           int bestLength = INT_MAX;
+
+           for (int right = 0;
+                right < static_cast<int>(s.size());
+                ++right) {
+               unsigned char added = static_cast<unsigned char>(s[right]);
+
+               if (need[added] > 0) {
+                   --missing;
+               }
+               --need[added];
+
                while (missing == 0) {
-                   if (right - left + 1 < best_length) {
-                       best_start = left; best_length = right - left + 1;
+                   int length = right - left + 1;
+                   if (length < bestLength) {
+                       bestStart = left;
+                       bestLength = length;
                    }
-                   unsigned char drop = s[left++];
-                   ++need[drop];
-                   if (need[drop] > 0) ++missing;
+
+                   unsigned char removed =
+                       static_cast<unsigned char>(s[left]);
+                   ++left;
+                   ++need[removed];
+
+                   if (need[removed] > 0) {
+                       ++missing;
+                   }
                }
            }
-           return best_length == INT_MAX ? "" : s.substr(best_start, best_length);
+
+           if (bestLength == INT_MAX) {
+               return "";
+           }
+           return s.substr(bestStart, bestLength);
        }
 
    public:
        std::string minWindow(std::string s, std::string t) {
-           if (t.size() > s.size()) return "";
            return missingCount(s, t);
        }
    };
@@ -120,146 +230,95 @@ C++ 实现
 题解
 ----
 
-枚举窗口重复了什么
-~~~~~~~~~~~~~~~~
+暴力枚举
+~~~~~~~~
 
-固定每个左端点再向右寻找覆盖，会多次统计重叠区间中的相同字符。滑动窗口让右端只负责加入字符，左端只负责移出字符，每个位置最多经过两个指针各一次。
+直接方法枚举每个左端点和右端点，再重新统计当前子串的字符频次。固定左端点后，第一个满足要求的右端点
+已经给出该左端点对应的最短窗口，因此找到后可以停止继续扩张。
 
-need 的正零负含义
-~~~~~~~~~~~~~~~~~
+不同候选窗口大量重叠，重复统计使该方法最坏达到立方级。优化的关键是让窗口边界单调移动，并在加入或移出一个字符时增量更新状态。
 
-初始化 ``need[c]`` 为 ``t`` 中字符数量。窗口加入字符时减一：正数表示仍缺副本，零表示刚好满足，负数表示窗口中有多余副本。
+窗口状态
+~~~~~~~~
 
-missing 为什么按字符总数计
-~~~~~~~~~~~~~~~~~~~~~~~~~
+窗口右端负责加入字符，左端负责移出字符。右端扩张到窗口可行后，继续扩张只会让窗口更长；此时应持续右移左端，
+直到再移除一个字符就会破坏可行性。
 
-``missing`` 初始为 ``t.length``。加入字符前若 ``need[ch] > 0``，该字符填补一个真实缺口，``missing`` 减一；若 ``need[ch] <= 0``，它只是多余副本，不改变可行性。
+这样，对于每个固定右端点，算法都会检查以该位置结尾的最短可行窗口。全局最短答案必然属于这些候选之一。
 
-右端扩张后的状态
-~~~~~~~~~~~~~~~~
+字符种类计数
+~~~~~~~~~~~~
+
+一种直接状态是分别维护 ``required`` 和 ``window``。当某种字符的窗口频次第一次达到需求频次时，
+``formedKindsCount`` 增加；当左端移除字符使该频次低于需求时，计数减少。
+
+窗口有效当且仅当：
+
+.. code-block:: text
+
+   formedKindsCount == requiredKinds
+
+这种写法清楚地区分“有多少种字符已经达标”，但需要两张频次数组和两个种类计数变量。
+
+字符缺口计数
+~~~~~~~~~~~~
+
+还可以让 ``need[ch]`` 同时表示需求与窗口余额。初始化时，它等于 ``t`` 中 ``ch`` 的数量；窗口加入字符后减一：
+
+* ``need[ch] > 0``：窗口仍缺少该字符；
+* ``need[ch] == 0``：窗口恰好满足该字符需求；
+* ``need[ch] < 0``：窗口含有多余副本。
+
+``missing`` 记录所有字符副本的总缺口，初始为 ``t.length``。加入字符前若 ``need[ch] > 0``，
+该字符填补了一个真实缺口，所以 ``missing`` 减一；多余副本不改变 ``missing``。
+
+窗口收缩
+~~~~~~~~
+
+当 ``missing == 0`` 时，当前窗口已经覆盖 ``t``。算法先提交当前长度，再移除左端字符：
+
+.. code-block:: text
+
+   ++need[removed]
+
+若更新后的 ``need[removed] > 0``，窗口从满足需求变成缺少一个副本，``missing`` 增加，收缩结束。
+若值仍不大于 0，移除的只是多余副本，窗口仍然可行，可以继续缩短。
+
+状态跟踪
+~~~~~~~~
+
+以 ``s = "CABAA"``、``t = "AABC"`` 为例：
 
 .. list-table::
    :header-rows: 1
 
-   * - 读取字符
-     - 关键 need
-     - missing
+   * - 加入字符
+     - 关键余额
+     - ``missing``
+     - 窗口状态
    * - ``C``
-     - ``C:0``
+     - ``C: 0``
      - 3
+     - 缺两个 A 和一个 B
    * - ``A``
-     - ``A:1``
+     - ``A: 1``
      - 2
+     - 缺一个 A 和一个 B
    * - ``B``
-     - ``B:0``
+     - ``B: 0``
      - 1
+     - 只缺一个 A
    * - ``A``
-     - ``A:0``
-     - 0，窗口 ``CABA`` 可行
+     - ``A: 0``
+     - 0
+     - ``CABA`` 可行
 
-窗口可行后为何必须持续收缩
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+此时移除左端 ``C`` 后，``need['C']`` 重新变为正数，窗口立即失效。因此 ``CABA`` 是该右端点对应的最短可行窗口。
 
-固定右端时，最短可行窗口一定由左端尽量右移得到。每次在删除前提交当前区间，再把左字符归还给 ``need``；只要归还后没有形成正缺口，窗口仍可继续缩小。
-
-删除字符何时破坏可行性
-~~~~~~~~~~~~~~~~~~~~~~
-
-移出 ``drop`` 后执行 ``++need[drop]``。若新值大于 0，说明窗口从满足或超额变成缺少一个副本，``missing`` 增加，收缩停止。若新值仍不大于 0，删掉的是多余副本。
-
-为什么不会错过更短答案
-~~~~~~~~~~~~~~~~~~~~~~
-
-每个右端到达时，算法枚举了以该右端结尾的所有可行窗口中从宽到窄的序列，直到再删一个字符就不可行。因此每个右端的最短可行窗口都被提交；全局最短必在其中。
-
-字符种类计数与总缺口计数的关系
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-``formedKinds`` 统计有多少字符种类达到所需频次；``missingCount`` 统计还缺多少字符副本。两者等价，后者无需维护窗口频次数组和种类总数，更新更直接。
-
-复杂度来源
-~~~~~~~~~~
-
-暴力方法最坏高于平方级。滑动窗口中左右指针各单调移动 ``O(|s|)`` 次，加上初始化 ``O(|t|)``，总时间 ``O(|s|+|t|)``。ASCII 频次数组大小固定，额外空间 ``O(1)``。
-
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   char*minWindow(char*s,char*t){int need[128]={0};for(int i=0;t[i];i++)need[(unsigned char)t[i]]++;int missing=strlen(t),left=0,best=-1,len=INT_MAX;for(int right=0;s[right];right++){unsigned char c=s[right];if(need[c]>0)missing--;need[c]--;while(missing==0){if(right-left+1<len){best=left;len=right-left+1;}unsigned char d=s[left++];need[d]++;if(need[d]>0)missing++;}}if(best<0)return strdup("");char*out=malloc(len+1);memcpy(out,s+best,len);out[len]='\0';return out;}
-
-Python
+复杂度
 ~~~~~~
 
-.. code-block:: python
+暴力方法最坏时间为 ``O(|s|^3)``。两种滑动窗口方法中，左右指针都只单调经过 ``s`` 一次，
+初始化需求需要 ``O(|t|)``，总时间为 ``O(|s| + |t|)``。
 
-   class Solution:
-       def minWindow(self, s: str, t: str) -> str:
-           need={};
-           for ch in t:need[ch]=need.get(ch,0)+1
-           missing=len(t);left=0;best=(0,float('inf'))
-           for right,ch in enumerate(s):
-               if need.get(ch,0)>0:missing-=1
-               need[ch]=need.get(ch,0)-1
-               while missing==0:
-                   if right-left+1<best[1]:best=(left,right-left+1)
-                   drop=s[left];left+=1;need[drop]=need.get(drop,0)+1
-                   if need[drop]>0:missing+=1
-           return '' if best[1]==float('inf') else s[best[0]:best[0]+best[1]]
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public String minWindow(String s,String t){int[]need=new int[128];for(char c:t.toCharArray())need[c]++;int missing=t.length(),left=0,start=0,len=Integer.MAX_VALUE;for(int right=0;right<s.length();right++){char c=s.charAt(right);if(need[c]>0)missing--;need[c]--;while(missing==0){if(right-left+1<len){start=left;len=right-left+1;}char d=s.charAt(left++);if(++need[d]>0)missing++;}}return len==Integer.MAX_VALUE?"":s.substring(start,start+len);}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn min_window(s:String,t:String)->String{let b=s.as_bytes();let mut need=[0i32;128];for &c in t.as_bytes(){need[c as usize]+=1}let(mut missing,mut left,mut start,mut len)=(t.len()as i32,0,0,usize::MAX);for right in 0..b.len(){let c=b[right]as usize;if need[c]>0{missing-=1}need[c]-=1;while missing==0{if right-left+1<len{start=left;len=right-left+1}let d=b[left]as usize;left+=1;need[d]+=1;if need[d]>0{missing+=1}}}if len==usize::MAX{"".into()}else{s[start..start+len].into()}}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func minWindow(s,t string)string{need:=[128]int{};for i:=range t{need[t[i]]++};missing,left,start,length:=len(t),0,0,len(s)+1;for right:=range s{c:=s[right];if need[c]>0{missing--};need[c]--;for missing==0{if right-left+1<length{start,length=left,right-left+1};d:=s[left];left++;need[d]++;if need[d]>0{missing++}}};if length>len(s){return ""};return s[start:start+length]}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function minWindow(s:string,t:string):string{const need=Array(128).fill(0);for(const c of t)need[c.charCodeAt(0)]++;let missing=t.length,left=0,start=0,len=Infinity;for(let right=0;right<s.length;right++){const c=s.charCodeAt(right);if(need[c]>0)missing--;need[c]--;while(missing===0){if(right-left+1<len){start=left;len=right-left+1;}const d=s.charCodeAt(left++);if(++need[d]>0)missing++;}}return len===Infinity?'':s.slice(start,start+len);}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public string MinWindow(string s,string t){int[]need=new int[128];foreach(char c in t)need[c]++;int missing=t.Length,left=0,start=0,len=int.MaxValue;for(int right=0;right<s.Length;right++){char c=s[right];if(need[c]>0)missing--;need[c]--;while(missing==0){if(right-left+1<len){start=left;len=right-left+1;}char d=s[left++];if(++need[d]>0)missing++;}}return len==int.MaxValue?"":s.Substring(start,len);}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function min_window(s::String,t::String)
-       b=codeunits(s);need=zeros(Int,128);for c in codeunits(t);need[c+1]+=1;end;missing=ncodeunits(t);left=1;start=1;best=typemax(Int)
-       for right in eachindex(b);c=b[right]+1;if need[c]>0;missing-=1;end;need[c]-=1;while missing==0;if right-left+1<best;start=left;best=right-left+1;end;d=b[left]+1;left+=1;need[d]+=1;if need[d]>0;missing+=1;end;end;end
-       best==typemax(Int) ? "" : String(b[start:start+best-1])
-   end
-
-R
-~
-
-.. code-block:: r
-
-   min_window <- function(s,t){x<-utf8ToInt(s);y<-utf8ToInt(t);need<-integer(128);for(c in y)need[[c+1L]]<-need[[c+1L]]+1L;missing<-length(y);left<-1L;start<-1L;best<-Inf;for(right in seq_along(x)){c<-x[[right]]+1L;if(need[[c]]>0L)missing<-missing-1L;need[[c]]<-need[[c]]-1L;while(missing==0L){if(right-left+1L<best){start<-left;best<-right-left+1L};d<-x[[left]]+1L;left<-left+1L;need[[d]]<-need[[d]]+1L;if(need[[d]]>0L)missing<-missing+1L}};if(is.infinite(best))"" else intToUtf8(x[start:(start+best-1L)])}
+英文字母属于固定大小字符集，频次数组占用常量空间；除返回字符串外，额外空间为 ``O(1)``。
