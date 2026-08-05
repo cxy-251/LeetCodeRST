@@ -8,14 +8,22 @@
 :难度: Medium
 :主题: 矩阵、原地标记、分阶段更新
 :原题: `LeetCode 0073 <https://leetcode.com/problems/set-matrix-zeroes/>`_
-:重点: 原始零位置、整行整列清零、原地修改、常量空间进阶
+:重点: 从保存原矩阵，推导到行列标记，再复用首行首列实现常量额外空间
 
 题目重述
 --------
 
-给定 ``m × n`` 整数矩阵 ``matrix``。如果某个位置的原始值为 0，就把该位置所在的整行和整列都设为 0。必须直接修改输入矩阵。新增的零只是修改结果，不能继续触发额外行列。
+给定一个 ``m × n`` 整数矩阵 ``matrix``。只要输入矩阵中的某个单元格原始值为 0，就必须把该单元格
+所在的整行和整列全部设为 0。
 
-约束为 ``1 <= m, n <= 200``，矩阵元素处于 32 位有符号整数范围内。使用 ``O(1)`` 额外空间是附加挑战，不是输出语义的一部分。
+算法必须直接修改输入矩阵，不返回新矩阵。修改过程中产生的新零不能继续触发其他行列，否则会扩大
+原始零的影响范围。
+
+约束如下：
+
+* ``1 <= m, n <= 200``；
+* ``-2^31 <= matrix[row][col] <= 2^31 - 1``；
+* 进阶目标是只使用 ``O(1)`` 额外空间。
 
 自建示例
 --------
@@ -23,16 +31,30 @@
 .. code-block:: text
 
    输入：
-   [[1,2,0,4],
-    [5,6,7,8],
-    [0,10,11,12]]
+   [[1, 2, 0, 4],
+    [5, 6, 7, 8],
+    [0, 10, 11, 12]]
 
    修改后：
-   [[0,0,0,0],
-    [0,6,0,8],
-    [0,0,0,0]]
+   [[0, 0, 0, 0],
+    [0, 6, 0, 8],
+    [0, 0, 0, 0]]
 
-原始零位于第 0 行第 2 列和第 2 行第 0 列，因此这两行与这两列全部清零。
+原始零位于第 0 行第 2 列和第 2 行第 0 列，因此第 0、2 行以及第 0、2 列需要清零。
+
+.. code-block:: text
+
+   输入：
+   [[1, 2, 3],
+    [4, 0, 6],
+    [7, 8, 9]]
+
+   修改后：
+   [[1, 0, 3],
+    [0, 0, 0],
+    [7, 0, 9]]
+
+中间的原始零只影响第 1 行和第 1 列。
 
 C++ 实现
 --------
@@ -43,190 +65,178 @@ C++ 实现
 
    class Solution {
    private:
-       void copyAndCheck(std::vector<std::vector<int>>& matrix) {
-           auto original = matrix;
-           int rows = matrix.size(), cols = matrix[0].size();
-           for (int row = 0; row < rows; ++row)
-               for (int col = 0; col < cols; ++col)
-                   if (original[row][col] == 0) {
-                       for (int c = 0; c < cols; ++c) matrix[row][c] = 0;
-                       for (int r = 0; r < rows; ++r) matrix[r][col] = 0;
+       void copyAndExpand(std::vector<std::vector<int>>& matrix) {
+           const std::vector<std::vector<int>> original = matrix;
+           const int rows = static_cast<int>(matrix.size());
+           const int cols = static_cast<int>(matrix[0].size());
+
+           for (int row = 0; row < rows; ++row) {
+               for (int col = 0; col < cols; ++col) {
+                   if (original[row][col] != 0) {
+                       continue;
                    }
+
+                   for (int currentCol = 0; currentCol < cols; ++currentCol) {
+                       matrix[row][currentCol] = 0;
+                   }
+                   for (int currentRow = 0; currentRow < rows; ++currentRow) {
+                       matrix[currentRow][col] = 0;
+                   }
+               }
+           }
        }
 
        void markerArrays(std::vector<std::vector<int>>& matrix) {
-           int rows = matrix.size(), cols = matrix[0].size();
-           std::vector<char> zero_row(rows), zero_col(cols);
-           for (int row = 0; row < rows; ++row)
-               for (int col = 0; col < cols; ++col)
-                   if (matrix[row][col] == 0) zero_row[row] = zero_col[col] = true;
-           for (int row = 0; row < rows; ++row)
-               for (int col = 0; col < cols; ++col)
-                   if (zero_row[row] || zero_col[col]) matrix[row][col] = 0;
+           const int rows = static_cast<int>(matrix.size());
+           const int cols = static_cast<int>(matrix[0].size());
+           std::vector<bool> zeroRow(rows, false);
+           std::vector<bool> zeroCol(cols, false);
+
+           for (int row = 0; row < rows; ++row) {
+               for (int col = 0; col < cols; ++col) {
+                   if (matrix[row][col] == 0) {
+                       zeroRow[row] = true;
+                       zeroCol[col] = true;
+                   }
+               }
+           }
+
+           for (int row = 0; row < rows; ++row) {
+               for (int col = 0; col < cols; ++col) {
+                   if (zeroRow[row] || zeroCol[col]) {
+                       matrix[row][col] = 0;
+                   }
+               }
+           }
        }
 
-       void firstRowAndColumn(std::vector<std::vector<int>>& matrix) {
-           int rows = matrix.size(), cols = matrix[0].size();
-           bool first_row_zero = false, first_col_zero = false;
-           for (int col = 0; col < cols; ++col) if (matrix[0][col] == 0) first_row_zero = true;
-           for (int row = 0; row < rows; ++row) if (matrix[row][0] == 0) first_col_zero = true;
+       void boundaryMarkers(std::vector<std::vector<int>>& matrix) {
+           const int rows = static_cast<int>(matrix.size());
+           const int cols = static_cast<int>(matrix[0].size());
+           bool zeroFirstRow = false;
+           bool zeroFirstCol = false;
 
-           for (int row = 1; row < rows; ++row)
-               for (int col = 1; col < cols; ++col)
-                   if (matrix[row][col] == 0) matrix[row][0] = matrix[0][col] = 0;
+           for (int col = 0; col < cols; ++col) {
+               if (matrix[0][col] == 0) {
+                   zeroFirstRow = true;
+               }
+           }
+           for (int row = 0; row < rows; ++row) {
+               if (matrix[row][0] == 0) {
+                   zeroFirstCol = true;
+               }
+           }
 
-           for (int row = 1; row < rows; ++row)
-               for (int col = 1; col < cols; ++col)
-                   if (matrix[row][0] == 0 || matrix[0][col] == 0) matrix[row][col] = 0;
+           for (int row = 1; row < rows; ++row) {
+               for (int col = 1; col < cols; ++col) {
+                   if (matrix[row][col] == 0) {
+                       matrix[row][0] = 0;
+                       matrix[0][col] = 0;
+                   }
+               }
+           }
 
-           if (first_row_zero) for (int col = 0; col < cols; ++col) matrix[0][col] = 0;
-           if (first_col_zero) for (int row = 0; row < rows; ++row) matrix[row][0] = 0;
+           for (int row = 1; row < rows; ++row) {
+               for (int col = 1; col < cols; ++col) {
+                   if (matrix[row][0] == 0 || matrix[0][col] == 0) {
+                       matrix[row][col] = 0;
+                   }
+               }
+           }
+
+           if (zeroFirstRow) {
+               for (int col = 0; col < cols; ++col) {
+                   matrix[0][col] = 0;
+               }
+           }
+           if (zeroFirstCol) {
+               for (int row = 0; row < rows; ++row) {
+                   matrix[row][0] = 0;
+               }
+           }
        }
 
    public:
        void setZeroes(std::vector<std::vector<int>>& matrix) {
-           firstRowAndColumn(matrix);
+           boundaryMarkers(matrix);
        }
    };
 
 题解
 ----
 
-为什么不能边发现边扩散
-~~~~~~~~~~~~~~~~~~~~
+直接扩散的污染问题
+~~~~~~~~~~~~~~~~~~
 
-若读到零后立刻清空整行整列，新写入的零会在后续扫描中被误认为原始零，触发额外行列。因此必须先完整记录触发集合，再统一写入结果。
+扫描矩阵时若发现一个零便立即清空对应行列，后续扫描会把新写入的零误认为原始零。例如原始零只在
+``(1, 1)``，清空第 1 行后，扫描到该行其他位置的新零时可能继续清空额外列。
 
-行列标记数组保存什么
-~~~~~~~~~~~~~~~~~~~~
+最直接的修正是先复制完整矩阵，只根据副本中的零修改原矩阵。这样语义正确，但每个原始零都可能重新
+遍历一整行和一整列，最坏时间为 ``O(mn(m+n))``，副本还需要 ``O(mn)`` 空间。
 
-``zero_row[row]`` 表示该行含原始零，``zero_col[col]`` 表示该列含原始零。第二次扫描时，只要任一标记为真就写零。它把原始矩阵快照压缩成 ``O(m+n)`` 个布尔见证。
+行列触发集合
+~~~~~~~~~~~~
 
-为什么可以复用首行首列
-~~~~~~~~~~~~~~~~~~~~~~
+最终是否清零只取决于两个事实：当前行是否含原始零，以及当前列是否含原始零。由此可把完整副本压缩为
+两个标记数组：
 
-每行只需要一个标记槽，每列也只需要一个标记槽。``matrix[row][0]`` 可表示行标记，``matrix[0][col]`` 可表示列标记；内部零只负责把对应两个槽写成 0。
+.. code-block:: text
 
-matrix[0][0] 为什么不够
-~~~~~~~~~~~~~~~~~~~~~~~
+   zeroRow[row] = 第 row 行是否出现原始零
+   zeroCol[col] = 第 col 列是否出现原始零
 
-左上角同时属于首行和首列，一个值无法独立表示“首行原本有零”和“首列原本有零”。因此在覆盖标记区前先用两个布尔值保存这两项事实。
+第一次扫描只收集标记，第二次扫描再统一写零。每个位置只处理常数次，时间降为 ``O(mn)``，额外空间为
+``O(m+n)``。
 
-分阶段顺序
+首行首列复用
+~~~~~~~~~~~~
+
+矩阵本身已经为每一行和每一列提供了一个可复用的存储位置：
+
+.. code-block:: text
+
+   matrix[row][0] 作为第 row 行的清零标记
+   matrix[0][col] 作为第 col 列的清零标记
+
+扫描内部区域 ``row >= 1``、``col >= 1`` 时，若遇到原始零，就把对应首列和首行位置写成 0。标记完成后，
+内部单元格只需检查这两个标记槽。
+
+边界状态分离
+~~~~~~~~~~~~
+
+``matrix[0][0]`` 同时属于首行和首列，单独一个值无法区分以下两种事实：
+
+* 首行原本含零；
+* 首列原本含零。
+
+因此在首行首列被用作标记区之前，先用 ``zeroFirstRow`` 和 ``zeroFirstCol`` 分别保存这两个状态。两个
+布尔值的数量与矩阵规模无关，仍属于 ``O(1)`` 额外空间。
+
+分阶段更新
 ~~~~~~~~~~
 
-.. list-table::
-   :header-rows: 1
+原地方案必须按固定顺序执行：
 
-   * - 阶段
-     - 读取范围
-     - 动作
-   * - 保存边界
-     - 首行、首列
-     - 记录两个布尔值
-   * - 写标记
-     - 内部区域
-     - 原始零写入首行首列
-   * - 清内部
-     - 内部区域
-     - 根据标记归零
-   * - 清边界
-     - 首行、首列
-     - 根据布尔值归零
+.. code-block:: text
 
-为什么内部必须先于首行首列清零
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   1. 保存首行、首列原始状态
+   2. 扫描内部区域并写入行列标记
+   3. 根据标记清零内部区域
+   4. 根据两个布尔值清零首行、首列
 
-首行首列在第二阶段仍充当标记区。若提前把它们整体归零，会把所有行列都标记为需要归零。先完成内部写入，再处理边界，标记信息才不会被破坏。
+首行首列在第 3 步结束前仍承担标记作用。若提前清零边界，标记会被污染，内部区域可能全部被错误清零。
 
-为什么只由原始零触发
-~~~~~~~~~~~~~~~~~~~~
-
-标记阶段只读取尚未被批量修改的内部矩阵；之后不再根据新值创建标记。首行首列原始零又提前保存，因此触发集合与输入完全一致。
-
-复杂度来源
+扫描不变量
 ~~~~~~~~~~
 
-三次线性扫描仍为 ``O(mn)`` 时间。首行首列方法只使用两个布尔值，额外空间 ``O(1)``；标记数组方法为 ``O(m+n)``。
+写标记阶段处理完内部前缀后，首列和首行中的零准确记录该前缀出现过原始零的行与列。此阶段不批量
+修改内部值，因此尚未扫描的位置仍保持原始数据。
 
-九语言实现
-----------
+清零阶段开始时，全部触发行列已经固定。每个内部位置在且仅在其行标记或列标记为零时被改写，因此新零
+不会再产生新的标记。最后恢复首行首列的独立状态，所得矩阵正好反映所有原始零的影响范围。
 
-C
-~
-
-.. code-block:: c
-
-   void setZeroes(int**a,int rows,int*cols){int n=cols[0];bool fr=false,fc=false;for(int c=0;c<n;c++)if(a[0][c]==0)fr=true;for(int r=0;r<rows;r++)if(a[r][0]==0)fc=true;for(int r=1;r<rows;r++)for(int c=1;c<n;c++)if(a[r][c]==0)a[r][0]=a[0][c]=0;for(int r=1;r<rows;r++)for(int c=1;c<n;c++)if(a[r][0]==0||a[0][c]==0)a[r][c]=0;if(fr)for(int c=0;c<n;c++)a[0][c]=0;if(fc)for(int r=0;r<rows;r++)a[r][0]=0;}
-
-Python
+复杂度
 ~~~~~~
 
-.. code-block:: python
-
-   class Solution:
-       def setZeroes(self, a: list[list[int]]) -> None:
-           rows,cols=len(a),len(a[0]);fr=any(x==0 for x in a[0]);fc=any(a[r][0]==0 for r in range(rows))
-           for r in range(1,rows):
-               for c in range(1,cols):
-                   if a[r][c]==0:a[r][0]=a[0][c]=0
-           for r in range(1,rows):
-               for c in range(1,cols):
-                   if a[r][0]==0 or a[0][c]==0:a[r][c]=0
-           if fr:a[0]=[0]*cols
-           if fc:
-               for r in range(rows):a[r][0]=0
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public void setZeroes(int[][]a){int m=a.length,n=a[0].length;boolean fr=false,fc=false;for(int x:a[0])if(x==0)fr=true;for(int[]row:a)if(row[0]==0)fc=true;for(int r=1;r<m;r++)for(int c=1;c<n;c++)if(a[r][c]==0){a[r][0]=0;a[0][c]=0;}for(int r=1;r<m;r++)for(int c=1;c<n;c++)if(a[r][0]==0||a[0][c]==0)a[r][c]=0;if(fr)Arrays.fill(a[0],0);if(fc)for(int[]row:a)row[0]=0;}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn set_zeroes(a:&mut Vec<Vec<i32>>){let(m,n)=(a.len(),a[0].len());let fr=a[0].contains(&0);let fc=(0..m).any(|r|a[r][0]==0);for r in 1..m{for c in 1..n{if a[r][c]==0{a[r][0]=0;a[0][c]=0}}}for r in 1..m{for c in 1..n{if a[r][0]==0||a[0][c]==0{a[r][c]=0}}}if fr{a[0].fill(0)}if fc{for row in a{row[0]=0}}}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func setZeroes(a [][]int){m,n:=len(a),len(a[0]);fr,fc:=false,false;for _,x:=range a[0]{if x==0{fr=true}};for r:=0;r<m;r++{if a[r][0]==0{fc=true}};for r:=1;r<m;r++{for c:=1;c<n;c++{if a[r][c]==0{a[r][0],a[0][c]=0,0}}};for r:=1;r<m;r++{for c:=1;c<n;c++{if a[r][0]==0||a[0][c]==0{a[r][c]=0}}};if fr{for c:=0;c<n;c++{a[0][c]=0}};if fc{for r:=0;r<m;r++{a[r][0]=0}}}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function setZeroes(a:number[][]):void{const m=a.length,n=a[0].length;const fr=a[0].includes(0),fc=a.some(r=>r[0]===0);for(let r=1;r<m;r++)for(let c=1;c<n;c++)if(a[r][c]===0)a[r][0]=a[0][c]=0;for(let r=1;r<m;r++)for(let c=1;c<n;c++)if(a[r][0]===0||a[0][c]===0)a[r][c]=0;if(fr)a[0].fill(0);if(fc)for(const row of a)row[0]=0;}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public void SetZeroes(int[][]a){int m=a.Length,n=a[0].Length;bool fr=Array.Exists(a[0],x=>x==0),fc=Array.Exists(a,r=>r[0]==0);for(int r=1;r<m;r++)for(int c=1;c<n;c++)if(a[r][c]==0)a[r][0]=a[0][c]=0;for(int r=1;r<m;r++)for(int c=1;c<n;c++)if(a[r][0]==0||a[0][c]==0)a[r][c]=0;if(fr)Array.Fill(a[0],0);if(fc)foreach(var row in a)row[0]=0;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function set_zeroes!(a)
-       m,n=size(a);fr=any(a[1,:].==0);fc=any(a[:,1].==0)
-       for r in 2:m,c in 2:n;if a[r,c]==0;a[r,1]=a[1,c]=0;end;end
-       for r in 2:m,c in 2:n;if a[r,1]==0||a[1,c]==0;a[r,c]=0;end;end
-       fr&&(a[1,:].=0);fc&&(a[:,1].=0);a
-   end
-
-R
-~
-
-.. code-block:: r
-
-   set_zeroes <- function(a){m<-nrow(a);n<-ncol(a);fr<-any(a[1,]==0);fc<-any(a[,1]==0);if(m>1&&n>1)for(r in 2:m)for(c in 2:n)if(a[r,c]==0){a[r,1]<-0;a[1,c]<-0};if(m>1&&n>1)for(r in 2:m)for(c in 2:n)if(a[r,1]==0||a[1,c]==0)a[r,c]<-0;if(fr)a[1,]<-0;if(fc)a[,1]<-0;a}
+矩阵副本方法最坏时间为 ``O(mn(m+n))``，空间为 ``O(mn)``。行列标记数组方法时间为 ``O(mn)``，空间为
+``O(m+n)``。首行首列复用方法同样为 ``O(mn)`` 时间，只使用两个布尔值，额外空间为 ``O(1)``。
