@@ -8,14 +8,14 @@
 :难度: Hard
 :主题: 矩阵、动态柱高、单调栈
 :原题: `LeetCode 0085 <https://leetcode.com/problems/maximal-rectangle/>`_
-:重点: 全 1 轴对齐矩形、逐行柱高、连续列宽、最大面积
+:重点: 从枚举上下边界，推导到逐行维护柱高，并在线性时间结算最大矩形
 
 题目重述
 --------
 
-给定只包含字符 ``'0'`` 和 ``'1'`` 的 ``rows × cols`` 矩阵 ``matrix``，返回全部由 ``'1'`` 组成的最大轴对齐矩形面积。
+给定一个只包含字符 ``'0'`` 和 ``'1'`` 的二维矩阵 ``matrix``，寻找全部由 ``'1'`` 组成的最大轴对齐矩形，返回其面积。
 
-约束为 ``1 <= rows, cols <= 200``。
+矩形必须覆盖连续若干行和连续若干列。矩阵行数和列数均不超过 200。
 
 自建示例
 --------
@@ -23,13 +23,31 @@
 .. code-block:: text
 
    输入：
-   [["1","1","0","1"],
-    ["1","1","1","1"],
-    ["0","1","1","1"]]
+   matrix = [["1","1","0","1"],
+             ["1","1","1","1"],
+             ["0","1","1","1"]]
 
    输出：6
 
-最后两行的第 1 到第 3 列组成一个高 2、宽 3 的全 1 矩形，面积为 6。
+最后两行的第 1 到第 3 列组成高 2、宽 3 的全 1 矩形。
+
+.. code-block:: text
+
+   输入：
+   matrix = [["1","0","1"],
+             ["1","1","1"],
+             ["1","1","1"]]
+
+   输出：6
+
+后两行的三列全部为 1，形成高 2、宽 3 的矩形。
+
+.. code-block:: text
+
+   输入：matrix = [["0","0"],["0","0"]]
+   输出：0
+
+矩阵中没有可用格子，最大面积为 0。
 
 C++ 实现
 --------
@@ -42,44 +60,121 @@ C++ 实现
    class Solution {
    private:
        int enumerateTopBottom(const std::vector<std::vector<char>>& matrix) {
-           int rows = matrix.size(), cols = matrix[0].size(), best = 0;
+           if (matrix.empty() || matrix[0].empty()) {
+               return 0;
+           }
+
+           const int rows = static_cast<int>(matrix.size());
+           const int cols = static_cast<int>(matrix[0].size());
+           int best = 0;
+
            for (int top = 0; top < rows; ++top) {
                std::vector<char> valid(cols, true);
+
                for (int bottom = top; bottom < rows; ++bottom) {
                    int width = 0;
+
                    for (int col = 0; col < cols; ++col) {
                        valid[col] = valid[col] && matrix[bottom][col] == '1';
                        width = valid[col] ? width + 1 : 0;
-                       best = std::max(best, width * (bottom - top + 1));
+                       int height = bottom - top + 1;
+                       best = std::max(best, width * height);
                    }
                }
            }
+
+           return best;
+       }
+
+       int dynamicBoundaries(const std::vector<std::vector<char>>& matrix) {
+           if (matrix.empty() || matrix[0].empty()) {
+               return 0;
+           }
+
+           const int cols = static_cast<int>(matrix[0].size());
+           std::vector<int> heights(cols, 0);
+           std::vector<int> left(cols, 0);
+           std::vector<int> right(cols, cols);
+           int best = 0;
+
+           for (const auto& row : matrix) {
+               int current_left = 0;
+
+               for (int col = 0; col < cols; ++col) {
+                   if (row[col] == '1') {
+                       ++heights[col];
+                       left[col] = std::max(left[col], current_left);
+                   } else {
+                       heights[col] = 0;
+                       left[col] = 0;
+                       current_left = col + 1;
+                   }
+               }
+
+               int current_right = cols;
+
+               for (int col = cols - 1; col >= 0; --col) {
+                   if (row[col] == '1') {
+                       right[col] = std::min(right[col], current_right);
+                   } else {
+                       right[col] = cols;
+                       current_right = col;
+                   }
+               }
+
+               for (int col = 0; col < cols; ++col) {
+                   int width = right[col] - left[col];
+                   best = std::max(best, heights[col] * width);
+               }
+           }
+
            return best;
        }
 
        int histogramArea(const std::vector<int>& heights) {
            std::vector<int> stack{-1};
-           int best = 0, n = heights.size();
-           for (int right = 0; right <= n; ++right) {
-               int current = right == n ? 0 : heights[right];
-               while (stack.back() != -1 && heights[stack.back()] > current) {
-                   int middle = stack.back(); stack.pop_back();
-                   best = std::max(best, heights[middle] * (right - stack.back() - 1));
+           const int size = static_cast<int>(heights.size());
+           int best = 0;
+
+           for (int right = 0; right <= size; ++right) {
+               int current_height = right == size ? 0 : heights[right];
+
+               while (stack.back() != -1 &&
+                      heights[stack.back()] > current_height) {
+                   int middle = stack.back();
+                   stack.pop_back();
+
+                   int width = right - stack.back() - 1;
+                   int area = heights[middle] * width;
+                   best = std::max(best, area);
                }
+
                stack.push_back(right);
            }
+
            return best;
        }
 
        int rowHistograms(const std::vector<std::vector<char>>& matrix) {
-           if (matrix.empty()) return 0;
-           std::vector<int> heights(matrix[0].size());
+           if (matrix.empty() || matrix[0].empty()) {
+               return 0;
+           }
+
+           std::vector<int> heights(matrix[0].size(), 0);
            int best = 0;
+
            for (const auto& row : matrix) {
-               for (int col = 0; col < static_cast<int>(row.size()); ++col)
-                   heights[col] = row[col] == '1' ? heights[col] + 1 : 0;
+               for (int col = 0; col < static_cast<int>(row.size()); ++col) {
+                   if (row[col] == '1') {
+                       ++heights[col];
+                   } else {
+                       heights[col] = 0;
+                   }
+               }
+
                best = std::max(best, histogramArea(heights));
            }
+
            return best;
        }
 
@@ -92,150 +187,89 @@ C++ 实现
 题解
 ----
 
-为什么固定矩形底边
-~~~~~~~~~~~~~~~~
-
-任意全一矩形都有唯一底边行。处理某行 ``row`` 时，对每列维护向上连续 ``'1'`` 数量 ``heights[col]``，所有以该行为底边的矩形便转化为柱状图中的连续区间。
-
-柱高如何更新
+上下边界枚举
 ~~~~~~~~~~~~
 
-若当前格为 ``'1'``，连续高度在上一行基础上加一；若为 ``'0'``，任何以当前行为底且经过该列的矩形都被截断，高度必须清零。
+最直接的做法是枚举矩形的上边界 ``top`` 和下边界 ``bottom``。对每一列维护 ``valid[col]``，表示这两行之间该列是否全部为 1。
+
+固定上下边界后，问题只剩下寻找最长连续合法列。扫描列时维护当前连续宽度，即可得到以当前列为右边界的最大矩形。
+
+同一组行之间的列状态能够增量更新，因此时间为 ``O(rows² * cols)``，空间为 ``O(cols)``。重复枚举不同上边界仍然较慢。
+
+固定底边
+~~~~~~~~
+
+任意合法矩形都有唯一的底边行。处理当前行时，定义：
 
 .. code-block:: text
 
-   heights[col] = matrix[row][col] == '1' ? heights[col] + 1 : 0
+   heights[col] = 以当前行为底，在该列向上连续出现 1 的数量
 
-示例状态
-~~~~~~~~
+当前格为 1 时，高度在上一行基础上加一；当前格为 0 时，所有经过该格的矩形都被截断，高度清零。
 
 .. list-table::
    :header-rows: 1
 
-   * - 处理行
+   * - 当前行
      - heights
      - 当前柱状图最大面积
-   * - 0
+   * - ``[1,1,0,1]``
      - ``[1,1,0,1]``
      - 2
-   * - 1
+   * - ``[1,1,1,1]``
      - ``[2,2,1,2]``
      - 4
-   * - 2
+   * - ``[0,1,1,1]``
      - ``[0,3,2,3]``
      - 6
 
-二维矩形为什么会变成柱状图
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+此时，每一行都产生一个柱状图。以当前行为底的全 1 矩形，与该柱状图中的矩形一一对应。
 
-固定底边后，连续列区间能组成矩形的最大高度等于该区间柱高最小值，正是柱状图最大矩形模型。单调栈会为每个限制高度找到左右首个更矮位置并结算面积。
+左右边界维护
+~~~~~~~~~~~~
 
-每个二维矩形为何被覆盖
-~~~~~~~~~~~~~~~~~~~~~~
+``dynamicBoundaries`` 为每列同时维护高度、最远左边界和最远右边界。
 
-任意合法矩形在处理其底边行时，覆盖列的柱高都至少等于矩形高度，因此对应一个柱状图候选。反过来，柱状图高度 ``h``、宽度 ``w`` 的候选表示这些列向上连续 ``h`` 行均为 1，映射回矩阵一定合法。
+从左向右扫描时，``current_left`` 是最近一个 0 的右侧位置；从右向左扫描时，``current_right`` 是最近一个 0 的位置。连续多行的边界需要取交集：
 
-为什么不需要保存历史矩阵
-~~~~~~~~~~~~~~~~~~~~~~~~
+.. code-block:: text
 
-下一行高度只依赖上一行同列高度和当前字符，一维 ``heights`` 已包含所有必要纵向信息。更早行内容无需保留。
+   left[col]  = max(left[col], current_left)
+   right[col] = min(right[col], current_right)
 
-上下边界枚举重复了什么
-~~~~~~~~~~~~~~~~~~~~~~
+于是当前列作为限制高度时，可形成的面积为：
 
-枚举每对 ``top,bottom`` 并检查连续合法列需要 ``O(rows²*cols)``。动态柱高把所有不同 ``top`` 对同一底边的纵向信息压缩到一个高度值，再用线性单调栈同时处理所有可能上边界。
+.. code-block:: text
 
-复杂度来源
-~~~~~~~~~~
+   heights[col] * (right[col] - left[col])
 
-每行更新柱高 ``O(cols)``，单调栈同为 ``O(cols)``，总时间 ``O(rows*cols)``。柱高和栈使用 ``O(cols)`` 空间。
+每行执行三次线性扫描，总时间为 ``O(rows * cols)``。
 
-九语言实现
-----------
+柱状图单调栈
+~~~~~~~~~~~~
 
-C
-~
+另一条线性路线是直接复用柱状图最大矩形。栈中保存高度非递减的柱子下标。遇到更矮柱时，栈顶柱第一次获得完整右边界，可以立即结算。
 
-.. code-block:: c
+弹出 ``middle`` 后：
 
-   static int hist(int*h,int n){int*st=malloc((n+2)*sizeof(int)),top=0,best=0;st[0]=-1;for(int r=0;r<=n;r++){int cur=r==n?0:h[r];while(st[top]!=-1&&h[st[top]]>cur){int m=st[top--],area=h[m]*(r-st[top]-1);if(area>best)best=area;}st[++top]=r;}free(st);return best;}
-   int maximalRectangle(char**a,int rows,int*cols){if(rows==0)return 0;int n=cols[0],*h=calloc(n,sizeof(int)),best=0;for(int r=0;r<rows;r++){for(int c=0;c<n;c++)h[c]=a[r][c]=='1'?h[c]+1:0;int area=hist(h,n);if(area>best)best=area;}free(h);return best;}
+.. code-block:: text
 
-Python
-~~~~~~
+   right boundary = 当前下标 right
+   left boundary  = 弹栈后的新栈顶
+   width          = right - stack.top - 1
 
-.. code-block:: python
+栈底的 ``-1`` 统一处理矩形延伸到最左侧的情况。遍历结束时使用虚拟高度 0，迫使仍在栈中的柱子全部结算。
 
-   class Solution:
-       def maximalRectangle(self, matrix: list[list[str]]) -> int:
-           if not matrix:return 0
-           heights=[0]*len(matrix[0]);best=0
-           for row in matrix:
-               for c,ch in enumerate(row):heights[c]=heights[c]+1 if ch=='1' else 0
-               stack=[-1]
-               for right in range(len(heights)+1):
-                   current=0 if right==len(heights) else heights[right]
-                   while stack[-1]!=-1 and heights[stack[-1]]>current:
-                       middle=stack.pop();best=max(best,heights[middle]*(right-stack[-1]-1))
-                   stack.append(right)
-           return best
+矩形对应关系
+~~~~~~~~~~~~
 
-Java
-~~~~
+任意二维全 1 矩形在处理其底边时，覆盖列的高度都不小于矩形高度，因此一定会成为该行柱状图中的候选。
 
-.. code-block:: java
+反过来，柱状图中高度 ``h``、宽度 ``w`` 的候选说明这些连续列向上至少 ``h`` 行都为 1，所以映射回矩阵后必然是合法矩形。
 
-   class Solution {public int maximalRectangle(char[][]a){if(a.length==0)return 0;int[]h=new int[a[0].length];int best=0;for(char[]row:a){for(int c=0;c<h.length;c++)h[c]=row[c]=='1'?h[c]+1:0;int[]st=new int[h.length+2];int top=0;st[0]=-1;for(int r=0;r<=h.length;r++){int cur=r==h.length?0:h[r];while(st[top]!=-1&&h[st[top]]>cur){int m=st[top--];best=Math.max(best,h[m]*(r-st[top]-1));}st[++top]=r;}}return best;}}
+状态压缩
+~~~~~~~~
 
-Rust
-~~~~
+下一行的柱高只依赖上一行同列柱高和当前字符，不需要保存所有历史行。二维纵向信息被压缩到一维 ``heights`` 中。
 
-.. code-block:: rust
-
-   impl Solution {pub fn maximal_rectangle(a:Vec<Vec<char>>)->i32{if a.is_empty(){return 0}let mut h=vec![0;a[0].len()];let mut best=0;for row in a{for c in 0..h.len(){h[c]=if row[c]=='1'{h[c]+1}else{0}}let mut st:Vec<i32>=vec![-1];for r in 0..=h.len(){let cur=if r==h.len(){0}else{h[r]};while *st.last().unwrap()!=-1&&h[*st.last().unwrap()as usize]>cur{let m=st.pop().unwrap()as usize;best=best.max(h[m]*(r as i32-*st.last().unwrap()-1));}st.push(r as i32);}}best}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func maximalRectangle(a [][]byte)int{if len(a)==0{return 0};h:=make([]int,len(a[0]));best:=0;for _,row:=range a{for c:=range h{if row[c]=='1'{h[c]++}else{h[c]=0}};st:=[]int{-1};for r:=0;r<=len(h);r++{cur:=0;if r<len(h){cur=h[r]};for st[len(st)-1]!=-1&&h[st[len(st)-1]]>cur{m:=st[len(st)-1];st=st[:len(st)-1];area:=h[m]*(r-st[len(st)-1]-1);if area>best{best=area}};st=append(st,r)}};return best}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function maximalRectangle(a:string[][]):number{if(!a.length)return 0;const h=Array(a[0].length).fill(0);let best=0;for(const row of a){for(let c=0;c<h.length;c++)h[c]=row[c]==='1'?h[c]+1:0;const st=[-1];for(let r=0;r<=h.length;r++){const cur=r===h.length?0:h[r];while(st[st.length-1]!==-1&&h[st[st.length-1]]>cur){const m=st.pop()!;best=Math.max(best,h[m]*(r-st[st.length-1]-1));}st.push(r);}}return best;}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public int MaximalRectangle(char[][]a){if(a.Length==0)return 0;int[]h=new int[a[0].Length];int best=0;foreach(var row in a){for(int c=0;c<h.Length;c++)h[c]=row[c]=='1'?h[c]+1:0;var st=new List<int>{-1};for(int r=0;r<=h.Length;r++){int cur=r==h.Length?0:h[r];while(st[^1]!=-1&&h[st[^1]]>cur){int m=st[^1];st.RemoveAt(st.Count-1);best=Math.Max(best,h[m]*(r-st[^1]-1));}st.Add(r);}}return best;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function maximal_rectangle(a)
-       isempty(a)&&return 0;h=zeros(Int,size(a,2));best=0
-       for row in 1:size(a,1)
-           for c in eachindex(h);h[c]=a[row,c]=='1' ? h[c]+1 : 0;end
-           stack=Int[0]
-           for right in 1:length(h)+1
-               current=right>length(h) ? 0 : h[right]
-               while stack[end]!=0&&h[stack[end]]>current;middle=pop!(stack);best=max(best,h[middle]*(right-stack[end]-1));end
-               push!(stack,right)
-           end
-       end;best
-   end
-
-R
-~
-
-.. code-block:: r
-
-   maximal_rectangle <- function(a){if(length(a)==0L)return(0L);h<-integer(ncol(a));best<-0L;for(row in seq_len(nrow(a))){for(c in seq_along(h))h[[c]]<-if(a[row,c]=='1')h[[c]]+1L else 0L;stack<-0L;for(right in seq_len(length(h)+1L)){current<-if(right>length(h))0L else h[[right]];while(tail(stack,1)!=0L&&h[[tail(stack,1)]]>current){middle<-tail(stack,1);stack<-head(stack,-1);best<-max(best,h[[middle]]*(right-tail(stack,1)-1L))};stack<-c(stack,right)}};best}
+上下边界枚举需要 ``O(rows² * cols)`` 时间。左右边界方法和逐行单调栈方法都需要 ``O(rows * cols)`` 时间、``O(cols)`` 额外空间。
