@@ -8,14 +8,18 @@
 :难度: Medium
 :主题: 有序数组、双指针、原地覆盖
 :原题: `LeetCode 0080 <https://leetcode.com/problems/remove-duplicates-from-sorted-array-ii/>`_
-:重点: 每值最多保留两次、有效前缀、原地修改、常量空间
+:重点: 从额外缓冲过滤，推导到重复段覆盖，再压缩为倒数第二项比较
 
 题目重述
 --------
 
-给定非递减整数数组 ``nums``，原地删除多余重复项，使每个不同值最多出现两次。返回有效前缀长度 ``k``；调用者只检查 ``nums[0:k]``，其后的内容无要求。必须使用 ``O(1)`` 额外空间。
+给定一个按非递减顺序排列的整数数组 ``nums``，原地删除多余的重复项，使每个不同值最多出现两次。
+返回处理后的有效长度 ``k``，并保证 ``nums`` 的前 ``k`` 个元素恰好是过滤后的结果。``k`` 之后的内容
+不作要求。
 
-约束为 ``1 <= nums.length <= 3 * 10^4``、``-10^4 <= nums[i] <= 10^4``。
+算法必须直接修改输入数组，并使用 ``O(1)`` 额外空间。
+
+约束为 ``1 <= nums.length <= 3 * 10^4``，``-10^4 <= nums[i] <= 10^4``。
 
 自建示例
 --------
@@ -23,49 +27,104 @@
 .. code-block:: text
 
    输入：nums = [0,0,0,1,1,1,1,2,3,3]
-   输出：k = 7，nums 前 7 项为 [0,0,1,1,2,3,3]
+   输出：k = 7
+   有效前缀：[0,0,1,1,2,3,3]
 
-值 0 和 1 都只保留前两次，值 2 保留一次，值 3 保留两次。
+值 0 和 1 各保留前两个副本，值 2 保留一次，值 3 保留两次。
+
+.. code-block:: text
+
+   输入：nums = [1,1,2,2,3]
+   输出：k = 5
+   有效前缀：[1,1,2,2,3]
+
+所有重复次数都不超过两次，因此数组保持不变。
+
+.. code-block:: text
+
+   输入：nums = [5,5,5,5]
+   输出：k = 2
+   有效前缀：[5,5]
+
+同一数值连续出现四次，只保留最前面的两个副本。
 
 C++ 实现
 --------
 
 .. code-block:: cpp
 
+   #include <algorithm>
    #include <vector>
 
    class Solution {
    private:
-       int segmentCounting(std::vector<int>& nums) {
-           int write = 0, read = 0;
-           while (read < static_cast<int>(nums.size())) {
-               int value = nums[read];
-               int count = 0;
-               while (read < static_cast<int>(nums.size()) && nums[read] == value) {
-                   ++read; ++count;
+       int bufferedFilter(std::vector<int>& nums) {
+           std::vector<int> filtered;
+           filtered.reserve(nums.size());
+
+           for (int value : nums) {
+               if (filtered.size() < 2 ||
+                   value != filtered[filtered.size() - 2]) {
+                   filtered.push_back(value);
                }
-               int keep = count < 2 ? count : 2;
-               while (keep-- > 0) nums[write++] = value;
            }
+
+           std::copy(filtered.begin(), filtered.end(), nums.begin());
+           return static_cast<int>(filtered.size());
+       }
+
+       int segmentCounting(std::vector<int>& nums) {
+           const int size = static_cast<int>(nums.size());
+           int read = 0;
+           int write = 0;
+
+           while (read < size) {
+               const int value = nums[read];
+               int count = 0;
+
+               while (read < size && nums[read] == value) {
+                   ++read;
+                   ++count;
+               }
+
+               const int keep = std::min(count, 2);
+               for (int copy = 0; copy < keep; ++copy) {
+                   nums[write++] = value;
+               }
+           }
+
            return write;
        }
 
        int explicitRunCount(std::vector<int>& nums) {
-           int write = 0, run = 0;
-           for (int read = 0; read < static_cast<int>(nums.size()); ++read) {
-               if (read == 0 || nums[read] != nums[read - 1]) run = 1;
-               else ++run;
-               if (run <= 2) nums[write++] = nums[read];
+           const int size = static_cast<int>(nums.size());
+           int write = 0;
+           int runLength = 0;
+
+           for (int read = 0; read < size; ++read) {
+               if (read == 0 || nums[read] != nums[read - 1]) {
+                   runLength = 1;
+               } else {
+                   ++runLength;
+               }
+
+               if (runLength <= 2) {
+                   nums[write++] = nums[read];
+               }
            }
+
            return write;
        }
 
        int compareSecondLast(std::vector<int>& nums) {
            int write = 0;
+
            for (int value : nums) {
-               if (write < 2 || value != nums[write - 2])
+               if (write < 2 || value != nums[write - 2]) {
                    nums[write++] = value;
+               }
            }
+
            return write;
        }
 
@@ -78,141 +137,101 @@ C++ 实现
 题解
 ----
 
-有序性带来了什么
-~~~~~~~~~~~~~~~~
+额外缓冲
+~~~~~~~~
 
-相同值连续出现。处理当前重复段时，只需保留它的前两个副本；一旦进入更大值，旧值永远不会再次出现。因此无需哈希计数或全局集合。
+最直接的方法是把允许保留的元素依次写入新数组，再复制回 ``nums``。缓冲数组始终保持合法，因此当前值只需
+与其中倒数第二项比较。这个方案容易验证，但额外空间为 ``O(n)``，未满足题目的原地要求。
 
-读写指针保存什么
-~~~~~~~~~~~~~~~~
+有序数组中的相同值必然连续，所以不需要哈希表记录每个值的总次数。接下来只需把缓冲数组中的写入位置
+移回原数组。
 
-``write`` 同时表示有效前缀长度和下一个写入位置。每轮读取当前值前，``nums[0:write]`` 已是扫描前缀按规则过滤后的稳定结果，且每个值最多出现两次。
+分段原地覆盖
+~~~~~~~~~~~~
 
-为什么前两个元素总能保留
-~~~~~~~~~~~~~~~~~~~~~~
+``segmentCounting`` 用 ``read`` 找出一个完整重复段，设其长度为 ``count``，然后把该值写入
+``min(count, 2)`` 次。处理完一个重复段后，后续元素一定更大，旧值不会再次出现。
 
-当 ``write < 2`` 时，有效前缀不足两个元素，不可能已经保存当前值两个副本，因此直接写入。
+``write`` 始终指向有效前缀之后的第一个位置。每个重复段都恰好保留前两个副本，因此扫描完成时，
+``nums[0:write]`` 已是所需结果。
 
-为什么比较倒数第二项足够
-~~~~~~~~~~~~~~~~~~~~~~~~
+显式重复次数
+~~~~~~~~~~~~
 
-当 ``write >= 2`` 时，若 ``value == nums[write-2]``，由于有效前缀和输入都非递减，``nums[write-1]`` 也只能等于该值，所以当前值将成为第三个或更后的副本，应跳过。
+无需等到重复段结束才写入。``explicitRunCount`` 从左到右维护当前值在所属重复段中的序号：
 
-若 ``value != nums[write-2]``，当前值在有效前缀末尾最多只出现一次，写入后仍满足最多两次。
+* 遇到新值时，``runLength`` 重置为 1；
+* 遇到相同值时，``runLength`` 增加；
+* 只有 ``runLength <= 2`` 时才写入。
+
+这种写法把分段统计改成单层循环，但仍显式维护当前重复次数。
+
+倒数第二项条件
+~~~~~~~~~~~~~~
+
+有效前缀本身按非递减顺序排列，并且每个值最多出现两次。准备写入 ``value`` 时分为两种情况：
+
+* ``write < 2``：有效前缀不足两个元素，当前值不可能已经出现两次，可以直接保留；
+* ``write >= 2``：比较 ``value`` 与 ``nums[write - 2]``。
+
+若两者相等，由于有效前缀非递减，``nums[write - 1]`` 也等于 ``value``。有效前缀末尾已经有两个该值，
+当前副本必须丢弃。
+
+若两者不等，当前值在有效前缀末尾最多出现一次，写入后仍符合“最多两次”。这样便把显式计数压缩成一次
+固定距离比较。
 
 .. list-table::
    :header-rows: 1
 
-   * - 读取值
-     - write 前缀
+   * - 当前读取值
+     - 写入前的有效前缀
+     - 判断
      - 动作
-   * - 0
+   * - 第一个 0
      - ``[]``
+     - ``write < 2``
      - 保留
-   * - 0
+   * - 第二个 0
      - ``[0]``
+     - ``write < 2``
      - 保留
    * - 第三个 0
      - ``[0,0]``
-     - 与倒数第二项相同，跳过
-   * - 1
+     - 等于倒数第二项
+     - 丢弃
+   * - 第一个 1
      - ``[0,0]``
-     - 不同，保留
-   * - 第三个及后续 1
-     - ``[...,1,1]``
-     - 跳过
+     - 不等于倒数第二项
+     - 保留
+   * - 第三个 1
+     - ``[0,0,1,1]``
+     - 等于倒数第二项
+     - 丢弃
 
-为什么覆盖不会破坏未读输入
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+原地覆盖安全性
+~~~~~~~~~~~~~~
 
-``write`` 从不超过已读取元素数量。写入位置位于当前读取位置或其左侧；当前 ``value`` 已由循环变量保存，即使覆盖当前槽也不会影响本轮，未来尚未读取位置不会被改写。
+扫描任意前缀时，写入的元素数量不会超过已读取元素数量，因此 ``write`` 总是不大于当前读取位置之后的
+边界。写入只会发生在当前读取位置或其左侧，不会覆盖尚未读取的元素。
 
-显式 run 计数与倒数第二项的关系
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+范围循环先把当前元素复制到局部变量 ``value``，再修改数组。即使写入位置恰好等于当前读取位置，本轮判断
+使用的值也不会改变。
 
-``explicitRunCount`` 直接记录当前重复段内第几个副本；倒数第二项方法把这个计数隐含在有效前缀末尾，只需一次比较，代码可推广为“每值最多保留 ``limit`` 次”时比较 ``nums[write-limit]``。
+方法推广
+~~~~~~~~
 
-为什么结果稳定且完整
-~~~~~~~~~~~~~~~~~~~~
+若规则改为“每个值最多保留 ``limit`` 次”，同一逻辑可写成：
 
-输入从左到右扫描，允许保留的副本按原顺序写入；每段恰好保留 ``min(count,2)`` 个，因此没有遗漏应保留元素，也没有多保留副本。
+.. code-block:: cpp
 
-复杂度来源
-~~~~~~~~~~
+   if (write < limit || value != nums[write - limit]) {
+       nums[write++] = value;
+   }
 
-三种方法都扫描数组一次，时间 ``O(n)``。只使用下标和少量计数，额外空间 ``O(1)``；有效前缀之外的值无需清理。
+有序性保证：与距离 ``limit`` 的元素相同，就说明有效前缀末尾已经存在 ``limit`` 个当前值。
 
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   int removeDuplicates(int*a,int n){int write=0;for(int read=0;read<n;read++)if(write<2||a[read]!=a[write-2])a[write++]=a[read];return write;}
-
-Python
+复杂度
 ~~~~~~
 
-.. code-block:: python
-
-   class Solution:
-       def removeDuplicates(self, a: list[int]) -> int:
-           write=0
-           for value in a:
-               if write<2 or value!=a[write-2]:a[write]=value;write+=1
-           return write
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public int removeDuplicates(int[]a){int write=0;for(int value:a)if(write<2||value!=a[write-2])a[write++]=value;return write;}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn remove_duplicates(a:&mut Vec<i32>)->i32{let mut write=0;for read in 0..a.len(){let value=a[read];if write<2||value!=a[write-2]{a[write]=value;write+=1}}write as i32}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func removeDuplicates(a []int)int{write:=0;for _,value:=range a{if write<2||value!=a[write-2]{a[write]=value;write++}};return write}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function removeDuplicates(a:number[]):number{let write=0;for(const value of a)if(write<2||value!==a[write-2])a[write++]=value;return write;}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public int RemoveDuplicates(int[]a){int write=0;foreach(int value in a)if(write<2||value!=a[write-2])a[write++]=value;return write;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function remove_duplicates!(a)
-       write=0
-       for value in a;if write<2||value!=a[write-1];write+=1;a[write]=value;end;end
-       write
-   end
-
-R
-~
-
-.. code-block:: r
-
-   remove_duplicates_twice <- function(a){write<-0L;for(value in a)if(write<2L||value!=a[[write-1L]]){write<-write+1L;a[[write]]<-value};list(k=write,nums=a)}
+缓冲方法时间 ``O(n)``、额外空间 ``O(n)``。三种原地方法都只扫描数组一次，时间 ``O(n)``，额外空间
+``O(1)``。返回值 ``write`` 即有效前缀长度，后续位置无需清理。
