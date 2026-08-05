@@ -6,14 +6,17 @@
 
 :题号: 0062
 :难度: Medium
-:主题: 动态规划、网格、组合计数、滚动数组
+:主题: 动态规划、滚动数组、组合计数
 :原题: `LeetCode 0062 <https://leetcode.com/problems/unique-paths/>`_
-:重点: 右移与下移、最后一步分类、边界路径、组合计数
+:重点: 从枚举移动序列，推导到网格状态复用与固定步数的组合选择
 
 题目重述
 --------
 
-机器人位于 ``m × n`` 网格左上角，每步只能向右或向下移动一格。返回到达右下角的不同路径数量。
+机器人位于 ``m × n`` 网格的左上角 ``(0,0)``。每一步只能向右或向下移动一格，求到达右下角
+``(m-1,n-1)`` 的不同路径数量。
+
+两条路径只要移动序列不同，就视为不同路径。
 
 约束为 ``1 <= m, n <= 100``，并保证答案不超过 ``2 * 10^9``。
 
@@ -22,17 +25,25 @@
 
 .. code-block:: text
 
-   输入：m = 4, n = 5
-   输出：35
+   输入：m = 3, n = 4
+   输出：10
 
-每条路径包含 3 次向下和 4 次向右，共有 ``C(7,3) = 35`` 种排列。
+每条路径必须执行 2 次向下和 3 次向右，共 5 步。选择其中哪 2 个位置执行向下，共有
+``C(5,2) = 10`` 种路径。
 
 .. code-block:: text
 
-   输入：m = 2, n = 6
-   输出：6
+   输入：m = 1, n = 6
+   输出：1
 
-唯一一次向下移动可以放在 6 个不同位置。
+只有一行时只能连续向右，路径唯一。
+
+.. code-block:: text
+
+   输入：m = 4, n = 5
+   输出：35
+
+每条路径包含 3 次向下和 4 次向右，因此共有 ``C(7,3) = 35`` 种排列。
 
 C++ 实现
 --------
@@ -44,68 +55,105 @@ C++ 实现
 
    class Solution {
    private:
-       int plainRecursion(int row, int col, int m, int n) {
-           if (row == m - 1 || col == n - 1) return 1;
-           return plainRecursion(row + 1, col, m, n) +
-                  plainRecursion(row, col + 1, m, n);
+       int enumeratePaths(int row, int column, int rows, int columns) {
+           if (row == rows - 1 && column == columns - 1) return 1;
+
+           int paths = 0;
+           if (row + 1 < rows) {
+               paths += enumeratePaths(row + 1, column, rows, columns);
+           }
+           if (column + 1 < columns) {
+               paths += enumeratePaths(row, column + 1, rows, columns);
+           }
+           return paths;
        }
 
-       int tableDp(int m, int n) {
-           std::vector<std::vector<int>> ways(m, std::vector<int>(n, 1));
-           for (int row = 1; row < m; ++row)
-               for (int col = 1; col < n; ++col)
-                   ways[row][col] = ways[row - 1][col] + ways[row][col - 1];
-           return ways[m - 1][n - 1];
+       int tableDp(int rows, int columns) {
+           std::vector<std::vector<int>> ways(
+               rows,
+               std::vector<int>(columns, 1)
+           );
+
+           for (int row = 1; row < rows; ++row) {
+               for (int column = 1; column < columns; ++column) {
+                   ways[row][column] = ways[row - 1][column] +
+                                       ways[row][column - 1];
+               }
+           }
+           return ways[rows - 1][columns - 1];
        }
 
-       int rollingDp(int m, int n) {
-           if (n > m) std::swap(m, n);
-           std::vector<int> dp(n, 1);
-           for (int row = 1; row < m; ++row)
-               for (int col = 1; col < n; ++col)
-                   dp[col] += dp[col - 1];
-           return dp[n - 1];
+       int rollingDp(int rows, int columns) {
+           if (columns > rows) std::swap(rows, columns);
+           std::vector<int> ways(columns, 1);
+
+           for (int row = 1; row < rows; ++row) {
+               for (int column = 1; column < columns; ++column) {
+                   ways[column] += ways[column - 1];
+               }
+           }
+           return ways[columns - 1];
        }
 
-       int combinatorics(int m, int n) {
-           int choose = std::min(m - 1, n - 1);
-           int total = m + n - 2;
-           long long result = 1;
-           for (int i = 1; i <= choose; ++i)
-               result = result * (total - choose + i) / i;
-           return static_cast<int>(result);
+       int countByCombinations(int rows, int columns) {
+           const int totalSteps = rows + columns - 2;
+           const int chosenSteps = std::min(rows - 1, columns - 1);
+
+           long long combinations = 1;
+           for (int selected = 1; selected <= chosenSteps; ++selected) {
+               combinations = combinations *
+                              (totalSteps - chosenSteps + selected) /
+                              selected;
+           }
+           return static_cast<int>(combinations);
        }
 
    public:
        int uniquePaths(int m, int n) {
-           return rollingDp(m, n);
+           return countByCombinations(m, n);
        }
    };
 
 题解
 ----
 
-递归树为什么重复
-~~~~~~~~~~~~~~~~
+从定义出发：枚举每一种移动序列
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-从每个格子分别尝试向右和向下会形成路径树。不同前缀经常到达同一格子，而从该格子到终点的剩余方案完全相同，朴素递归会反复计算同一子问题。
+位于 ``(row,column)`` 时，若下方仍在网格内，可以向下；若右方仍在网格内，可以向右。递归分别尝试两种
+选择，到达右下角时找到一条完整路径。
 
-最后一步如何完整分类
-~~~~~~~~~~~~~~~~~~~~
+``enumeratePaths`` 与题意完全一致，但不同移动前缀会反复到达同一位置。例如从 ``(0,0)`` 先右后下，或
+先下后右，都会到达 ``(1,1)``。从 ``(1,1)`` 到终点的剩余路径与此前如何到达无关，却会在递归树中被重复
+计算。
 
-记 ``ways[row][col]`` 为到达当前格的路径数。除起点外，最后一步只能从上方或左方进入；两类路径最后方向不同，因此互不重叠，又覆盖全部合法路径：
+递归树的深度固定为 ``m+n-2``，分支数量随网格增大快速增长。要消除重复，状态应由当前位置决定，而不是由
+完整移动历史决定。
+
+二维动态规划：复用同一位置的答案
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+定义：
 
 .. code-block:: text
 
-   ways[row][col] = ways[row-1][col] + ways[row][col-1]
+   ways[row][column] = 从起点到达 (row,column) 的路径数量
 
-边界为什么全部初始化为 1
-~~~~~~~~~~~~~~~~~~~~~~
+对于内部位置，最后一步只有两种来源：
 
-第一行只能一直向右，第一列只能一直向下，因此每个边界格恰有一条路径。单格网格的空移动序列也计作一条路径，初始化自然覆盖该边界。
+#. 从 ``(row-1,column)`` 向下进入；
+#. 从 ``(row,column-1)`` 向右进入。
 
-3 × 4 状态表
-~~~~~~~~~~~~~
+两类路径的最后一步方向不同，互不重叠；任何合法路径的最后一步又必属于其中一类，因此：
+
+.. code-block:: text
+
+   ways[row][column] = ways[row-1][column] + ways[row][column-1]
+
+第一行只能一直向右，第一列只能一直向下，所以它们的状态都为 1。``1 × 1`` 网格中，机器人已经位于终点，
+不移动也构成唯一方案，同样由初始化覆盖。
+
+以 ``3 × 4`` 网格为例：
 
 .. code-block:: text
 
@@ -113,111 +161,78 @@ C++ 实现
    1  2  3  4
    1  3  6 10
 
-每个内部值都是上方与左方之和，右下角得到 10。
+每个内部状态只计算一次，右下角得到全部路径数。
 
-一维压缩为何成立
-~~~~~~~~~~~~~~~~
+一维数组如何保存足够的信息
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-逐行扫描时，更新前的 ``dp[col]`` 保存上一行同列值，即上方路径数；当前行的 ``dp[col-1]`` 已更新，是左方路径数。因此执行 ``dp[col] += dp[col-1]`` 正好完成二维转移。
+计算当前行时，转移只依赖上一行同列和当前行左侧，不再需要更早的行。因此可以让 ``ways[column]`` 同时承担
+两种含义：
 
-为什么必须从左向右更新
-~~~~~~~~~~~~~~~~~~~~
+* 更新前，它是上一行同列的路径数；
+* 更新后，它是当前行同列的路径数。
 
-若从右向左，``dp[col-1]`` 仍是上一行值，不是当前行左方状态，会把两个旧状态相加。左到右顺序保证每次读取一个旧上方值和一个新左方值。
-
-组合公式如何直接计数
-~~~~~~~~~~~~~~~~~~~~
-
-任意路径都包含 ``m-1`` 次向下与 ``n-1`` 次向右，总步数 ``m+n-2``。选择其中哪些位置放较少的一类步长即可：
+从左向右执行：
 
 .. code-block:: text
 
-   C(m+n-2, min(m-1,n-1))
+   ways[column] += ways[column-1]
 
-逐步乘除避免先计算巨大阶乘；题目保证最终答案在 32 位范围内，中间使用 64 位。
+右侧的 ``ways[column]`` 尚未更新，仍表示上方状态；左侧的 ``ways[column-1]`` 已经更新，表示当前行左方
+状态，二者正好对应二维转移。
 
-为什么动态规划不重不漏
-~~~~~~~~~~~~~~~~~~~~
+更新顺序不能反过来。若从右向左扫描，左侧状态仍属于上一行，会错误地把两个旧状态相加。代码把较短维度
+作为一维数组长度，使辅助空间降为 ``O(min(m,n))``。
 
-每条到达当前格的路径按最后一步唯一归入上方或左方集合。边界正确，转移对行列归纳成立；因此右下角状态等于全部路径数。
+路径为什么可以直接变成组合计数
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+无论路径如何弯曲，从左上角到右下角都必须恰好执行：
+
+.. code-block:: text
+
+   向下 m-1 次
+   向右 n-1 次
+   总计 m+n-2 步
+
+因此，一条路径可以唯一编码为长度 ``m+n-2`` 的移动序列。只要从全部位置中选择 ``m-1`` 个位置放置向下
+移动，其余位置就只能放置向右移动；反过来，任何这样的选择都会生成一条合法路径。
+
+这建立了路径与位置集合之间的一一对应，所以答案为：
+
+.. code-block:: text
+
+   C(m+n-2, m-1) = C(m+n-2, n-1)
+
+选择较小的 ``min(m-1,n-1)`` 计算，可以减少乘除次数。
+
+为什么逐步乘除不会产生截断误差
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+令 ``total = m+n-2``，``choose = min(m-1,n-1)``。代码逐步计算：
+
+.. code-block:: text
+
+   C(total-choose+selected, selected)
+
+第 ``selected`` 轮开始前保存的是前一项组合数，乘上新分子再除以 ``selected`` 后，结果恰好是下一项组合数，
+所以每轮结果都是整数，不依赖浮点数，也不会出现整数除法截断。
+
+题目保证最终答案不超过 ``2 * 10^9``。这些中间组合数单调增长且不超过最终答案；乘法发生在 ``long long``
+中，在本题约束下也不会溢出。
+
+组合方法为什么覆盖全部路径且没有重复
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+每条路径的向下步骤位置构成唯一集合，因此两条不同路径不可能映射到同一个选择。每个大小为 ``m-1`` 的位置
+集合又唯一确定一串向下与向右动作，并且动作总数恰好把机器人送到右下角。因此组合数既没有遗漏，也没有重复。
+
+主入口选择 ``countByCombinations``，因为它直接利用路径中两类步数固定这一最终结构，不需要建立整个网格状态。
 
 复杂度来源
 ~~~~~~~~~~
 
-朴素递归为指数级。二维 DP 时间 ``O(mn)``、空间 ``O(mn)``；一维 DP 时间 ``O(mn)``、空间 ``O(min(m,n))``；组合方法时间 ``O(min(m,n))``、空间 ``O(1)``。
+朴素递归的路径树为指数规模。二维动态规划时间 ``O(mn)``、空间 ``O(mn)``；滚动数组时间 ``O(mn)``、
+空间 ``O(min(m,n))``。
 
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   int uniquePaths(int m,int n){if(n>m){int t=m;m=n;n=t;}int*dp=malloc((size_t)n*sizeof(int));for(int c=0;c<n;c++)dp[c]=1;for(int r=1;r<m;r++)for(int c=1;c<n;c++)dp[c]+=dp[c-1];int answer=dp[n-1];free(dp);return answer;}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def uniquePaths(self, m: int, n: int) -> int:
-           if n > m: m, n = n, m
-           dp = [1] * n
-           for _ in range(1, m):
-               for col in range(1, n): dp[col] += dp[col - 1]
-           return dp[-1]
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public int uniquePaths(int m,int n){if(n>m){int t=m;m=n;n=t;}int[]dp=new int[n];Arrays.fill(dp,1);for(int r=1;r<m;r++)for(int c=1;c<n;c++)dp[c]+=dp[c-1];return dp[n-1];}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn unique_paths(mut m:i32,mut n:i32)->i32{if n>m{std::mem::swap(&mut m,&mut n)}let mut dp=vec![1;n as usize];for _ in 1..m{for c in 1..n as usize{dp[c]+=dp[c-1]}}dp[n as usize-1]}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func uniquePaths(m int,n int)int{if n>m{m,n=n,m};dp:=make([]int,n);for i:=range dp{dp[i]=1};for r:=1;r<m;r++{for c:=1;c<n;c++{dp[c]+=dp[c-1]}};return dp[n-1]}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function uniquePaths(m:number,n:number):number{if(n>m)[m,n]=[n,m];const dp=Array(n).fill(1);for(let r=1;r<m;r++)for(let c=1;c<n;c++)dp[c]+=dp[c-1];return dp[n-1];}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public int UniquePaths(int m,int n){if(n>m)(m,n)=(n,m);int[]dp=Enumerable.Repeat(1,n).ToArray();for(int r=1;r<m;r++)for(int c=1;c<n;c++)dp[c]+=dp[c-1];return dp[n-1];}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function unique_paths(m::Int,n::Int)
-       n>m&&((m,n)=(n,m));dp=ones(Int,n)
-       for _ in 2:m, col in 2:n;dp[col]+=dp[col-1];end
-       dp[end]
-   end
-
-R
-~
-
-.. code-block:: r
-
-   unique_paths <- function(m,n){if(n>m){tmp<-m;m<-n;n<-tmp};dp<-rep(1,n);if(m>1L&&n>1L)for(row in 2:m)for(col in 2:n)dp[[col]]<-dp[[col]]+dp[[col-1L]];dp[[n]]}
+组合方法循环 ``min(m-1,n-1)`` 次，时间 ``O(min(m,n))``、额外空间 ``O(1)``。
