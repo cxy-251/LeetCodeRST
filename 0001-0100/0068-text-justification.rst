@@ -8,24 +8,55 @@
 :难度: Hard
 :主题: 字符串、贪心、文本排版、商余分配
 :原题: `LeetCode 0068 <https://leetcode.com/problems/text-justification/>`_
-:重点: 每行尽量多装单词、普通行两端对齐、左侧优先、末行左对齐
+:重点: 从逐个试放单词，推导到唯一行边界与商余空格分配
 
 题目重述
 --------
 
-给定单词数组 ``words`` 和行宽 ``maxWidth``，按原顺序把单词排成若干行，每行必须尽可能容纳更多单词，最终每行长度都恰好为 ``maxWidth``。普通行在单词间分配空格并实现两端对齐；若空格不能均分，左侧间隔应比右侧多。最后一行使用单个空格分隔单词，并在末尾补空格；只有一个单词的普通行也在词后补空格。
+给定按顺序排列的单词数组 ``words`` 和正整数 ``maxWidth``，把所有单词排成若干行并返回结果。
+每行字符串长度必须恰好为 ``maxWidth``，单词顺序不能改变，并且每行必须尽可能容纳更多单词。
 
-约束为 ``1 <= words.length <= 300``、``1 <= words[i].length <= 20``、``1 <= maxWidth <= 100``，并保证每个单词长度不超过 ``maxWidth``。
+除最后一行外，普通行需要两端对齐：
+
+* 空格只放在相邻单词之间；
+* 各间隔的空格数应尽量相等；
+* 无法均分时，左侧间隔比右侧间隔多一个空格。
+
+最后一行使用单个空格分隔单词，剩余空格全部补在末尾。若普通行只有一个单词，也把该单词放在
+行首并在末尾补空格。
+
+约束条件：
+
+* ``1 <= words.length <= 300``；
+* ``1 <= words[i].length <= 20``；
+* ``words[i]`` 只包含英文字母和符号；
+* ``1 <= maxWidth <= 100``；
+* 每个单词的长度都不超过 ``maxWidth``。
 
 自建示例
 --------
 
 .. code-block:: text
 
-   输入：words = ["a","bb","ccc","dddd"], maxWidth = 11
-   输出：["a   bb  ccc","dddd       "]
+   输入：words = ["a", "bb", "ccc", "dddd"], maxWidth = 11
+   输出：["a   bb  ccc", "dddd       "]
 
-第一行的单词字符总数为 6，需要把 5 个空格分到两个间隔，左侧得到 3 个、右侧得到 2 个；最后一行左对齐并在末尾补空格。
+第一行的单词字符总数为 6，需要分配 5 个空格。两个间隔分别得到 3 个和 2 个空格；最后一行
+左对齐并在末尾补空格。
+
+.. code-block:: text
+
+   输入：words = ["one", "two", "three"], maxWidth = 7
+   输出：["one two", "three  "]
+
+前两个单词连同一个最小间隔恰好占满第一行。最后一个单词独占末行，右侧补两个空格。
+
+.. code-block:: text
+
+   输入：words = ["abcdefgh", "i", "j"], maxWidth = 8
+   输出：["abcdefgh", "i j     "]
+
+第一个单词已经占满整行。末行使用单个空格连接 ``i`` 和 ``j``，其余位置补空格。
 
 C++ 实现
 --------
@@ -37,80 +68,134 @@ C++ 实现
 
    class Solution {
    private:
-       std::vector<std::string> temporaryLine(const std::vector<std::string>& words, int width) {
-           std::vector<std::vector<std::string>> groups;
-           std::vector<std::string> current;
-           int letters = 0;
-           for (const auto& word : words) {
-               if (!current.empty() && letters + static_cast<int>(current.size()) + static_cast<int>(word.size()) > width) {
-                   groups.push_back(current); current.clear(); letters = 0;
-               }
-               current.push_back(word); letters += word.size();
-           }
-           groups.push_back(current);
-           std::vector<std::string> result;
-           for (int line = 0; line < static_cast<int>(groups.size()); ++line) {
-               int total_letters = 0;
-               for (const auto& word : groups[line]) total_letters += word.size();
-               bool left = line + 1 == static_cast<int>(groups.size()) || groups[line].size() == 1;
-               std::string output;
-               if (left) {
-                   for (int i = 0; i < static_cast<int>(groups[line].size()); ++i) {
-                       if (i) output.push_back(' '); output += groups[line][i];
-                   }
-               } else {
-                   int gaps = groups[line].size() - 1;
-                   int spaces = width - total_letters;
-                   for (int i = 0; i < static_cast<int>(groups[line].size()); ++i) {
-                       output += groups[line][i];
-                       if (i < gaps) output.append(spaces / gaps + (i < spaces % gaps), ' ');
-                   }
-               }
-               output.append(width - output.size(), ' '); result.push_back(output);
-           }
-           return result;
-       }
-
-       std::string formatLine(const std::vector<std::string>& words, int start, int end,
-                              int letters, int width, bool last) {
-           int count = end - start;
+       std::string formatLine(
+           const std::vector<std::string>& words,
+           int start,
+           int end,
+           int letters,
+           int width,
+           bool isLast
+       ) {
+           const int count = end - start;
            std::string line;
-           if (last || count == 1) {
-               for (int i = start; i < end; ++i) {
-                   if (i > start) line.push_back(' ');
-                   line += words[i];
+           line.reserve(width);
+
+           if (isLast || count == 1) {
+               for (int index = start; index < end; ++index) {
+                   if (index > start) {
+                       line.push_back(' ');
+                   }
+                   line += words[index];
                }
-               line.append(width - line.size(), ' ');
+               line.append(width - static_cast<int>(line.size()), ' ');
                return line;
            }
-           int gaps = count - 1;
-           int total_spaces = width - letters;
-           int base = total_spaces / gaps;
-           int extra = total_spaces % gaps;
-           for (int i = start; i < end; ++i) {
-               line += words[i];
-               if (i + 1 < end) line.append(base + (i - start < extra), ' ');
+
+           const int gaps = count - 1;
+           const int totalSpaces = width - letters;
+           const int baseSpaces = totalSpaces / gaps;
+           const int extraSpaces = totalSpaces % gaps;
+
+           for (int index = start; index < end; ++index) {
+               line += words[index];
+               if (index + 1 < end) {
+                   const int gapIndex = index - start;
+                   const int spaces = baseSpaces +
+                                      (gapIndex < extraSpaces ? 1 : 0);
+                   line.append(spaces, ' ');
+               }
            }
            return line;
        }
 
-       std::vector<std::string> greedyWithFormatter(const std::vector<std::string>& words, int width) {
+       std::vector<std::string> groupThenFormat(
+           const std::vector<std::string>& words,
+           int width
+       ) {
+           std::vector<std::vector<std::string>> groups;
+           std::vector<std::string> current;
+           int letters = 0;
+
+           for (const std::string& word : words) {
+               const int minimumLength = letters +
+                                         static_cast<int>(current.size()) +
+                                         static_cast<int>(word.size());
+               if (!current.empty() && minimumLength > width) {
+                   groups.push_back(current);
+                   current.clear();
+                   letters = 0;
+               }
+
+               current.push_back(word);
+               letters += static_cast<int>(word.size());
+           }
+           groups.push_back(current);
+
+           std::vector<std::string> result;
+           result.reserve(groups.size());
+
+           for (int lineIndex = 0;
+                lineIndex < static_cast<int>(groups.size());
+                ++lineIndex) {
+               int groupLetters = 0;
+               for (const std::string& word : groups[lineIndex]) {
+                   groupLetters += static_cast<int>(word.size());
+               }
+
+               const bool isLast =
+                   lineIndex + 1 == static_cast<int>(groups.size());
+               result.push_back(formatLine(
+                   groups[lineIndex],
+                   0,
+                   static_cast<int>(groups[lineIndex].size()),
+                   groupLetters,
+                   width,
+                   isLast
+               ));
+           }
+           return result;
+       }
+
+       std::vector<std::string> greedyWithFormatter(
+           const std::vector<std::string>& words,
+           int width
+       ) {
            std::vector<std::string> result;
            int start = 0;
+
            while (start < static_cast<int>(words.size())) {
-               int end = start, letters = 0;
-               while (end < static_cast<int>(words.size()) &&
-                      letters + static_cast<int>(words[end].size()) + (end - start) <= width) {
-                   letters += words[end].size(); ++end;
+               int end = start;
+               int letters = 0;
+
+               while (end < static_cast<int>(words.size())) {
+                   const int minimumLength = letters +
+                                             static_cast<int>(words[end].size()) +
+                                             (end - start);
+                   if (minimumLength > width) {
+                       break;
+                   }
+                   letters += static_cast<int>(words[end].size());
+                   ++end;
                }
-               result.push_back(formatLine(words, start, end, letters, width, end == static_cast<int>(words.size())));
+
+               result.push_back(formatLine(
+                   words,
+                   start,
+                   end,
+                   letters,
+                   width,
+                   end == static_cast<int>(words.size())
+               ));
                start = end;
            }
            return result;
        }
 
    public:
-       std::vector<std::string> fullJustify(std::vector<std::string>& words, int maxWidth) {
+       std::vector<std::string> fullJustify(
+           std::vector<std::string>& words,
+           int maxWidth
+       ) {
            return greedyWithFormatter(words, maxWidth);
        }
    };
@@ -118,169 +203,133 @@ C++ 实现
 题解
 ----
 
-为什么先确定行再分空格
-~~~~~~~~~~~~~~~~~~~~
+行边界搜索
+~~~~~~~~~~
 
-某行能否继续加入单词只取决于单词字符总数和最少一个的间隔；而最终空格宽度取决于这一行最终包含多少单词。把“选词”和“格式化”分开，可以避免边试排边回滚复杂字符串。
+处理一行时，先只决定这一行包含哪些连续单词，不立即构造空格。设当前行候选区间为
+``[start, end)``，其中单词字符总数为 ``letters``。
 
-最大装行条件如何得到
-~~~~~~~~~~~~~~~~~~~~
-
-当前行已有 ``end-start`` 个单词、字符总数为 ``letters``。加入下一个单词后，至少需要 ``end-start`` 个单空格间隔，因此条件是：
-
-.. code-block:: text
-
-   letters + next_word_length + (end - start) <= maxWidth
-
-一旦失败，更后的单词仍必须排在下一行，贪心选择当前最多单词不会影响后续顺序。
-
-普通行的空格如何分配
-~~~~~~~~~~~~~~~~~~~~
-
-设单词数量 ``count``、间隔 ``gaps=count-1``，需要分配：
+准备加入 ``words[end]`` 时，原有 ``end - start`` 个单词与新单词之间至少需要
+``end - start`` 个单空格，因此加入后的最小长度为：
 
 .. code-block:: text
 
-   total_spaces = maxWidth - letters
-   base  = total_spaces / gaps
-   extra = total_spaces % gaps
+   letters + words[end].length + (end - start)
 
-每个间隔先放 ``base`` 个空格，前 ``extra`` 个间隔再多放一个，正好满足左侧优先。
+该值不超过 ``maxWidth`` 时，新单词可以进入当前行；首次超过宽度时，当前 ``end`` 就是唯一合法行尾。
 
-商余状态跟踪
-~~~~~~~~~~~~
+最大装行不变量
+~~~~~~~~~~~~~~
+
+内层循环结束时，区间 ``[start, end)`` 满足两个条件：
+
+* 区间内全部单词使用最少间隔时能够放入当前行；
+* 若仍有下一个单词，把它加入后即使每个间隔只放一个空格也会超宽。
+
+题目要求保持顺序并尽可能多装单词。仍可容纳时提前换行会违反要求；最少间隔已经超宽时，增加或重新分配
+空格也无法容纳下一个单词。因此该贪心条件直接确定每一行的边界。
+
+普通行空格分配
+~~~~~~~~~~~~~~
+
+普通行包含 ``count`` 个单词，共有 ``gaps = count - 1`` 个间隔。单词字符总数为 ``letters``，所以必须分配：
+
+.. code-block:: text
+
+   totalSpaces = maxWidth - letters
+
+对总空格数做商余分解：
+
+.. code-block:: text
+
+   baseSpaces  = totalSpaces / gaps
+   extraSpaces = totalSpaces % gaps
+
+每个间隔先获得 ``baseSpaces`` 个空格，最左侧的 ``extraSpaces`` 个间隔再各获得一个。这样所有间隔
+只可能相差一个空格，并且较多的空格全部位于左侧。
+
+商余分配不变量
+~~~~~~~~~~~~~~
+
+以 ``a, bb, ccc`` 和宽度 11 为例：
 
 .. list-table::
    :header-rows: 1
 
    * - 项目
      - 数值
-   * - 单词
-     - ``a, bb, ccc``
-   * - 字符数
-     - ``1+2+3 = 6``
+   * - 单词字符数
+     - ``1 + 2 + 3 = 6``
    * - 空格总数
-     - ``11-6 = 5``
+     - ``11 - 6 = 5``
    * - 间隔数
      - 2
    * - 商与余数
-     - ``base=2, extra=1``
-   * - 分配
-     - 左间隔 3，右间隔 2
+     - ``baseSpaces = 2``、``extraSpaces = 1``
+   * - 最终间隔
+     - 3 个空格、2 个空格
 
-为什么左侧多一个是唯一规则实现
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+因为 ``totalSpaces = baseSpaces * gaps + extraSpaces``，全部空格都会被使用且不会重复。前
+``extraSpaces`` 个间隔多放一个空格，正好实现左侧优先。
 
-总空格写成 ``base*gaps + extra``，其中 ``0 <= extra < gaps``。任何相邻间隔差最多为 1 的分配都必须有 ``extra`` 个间隔取 ``base+1``；题目指定左侧优先，因此它们只能是最左边的 ``extra`` 个。
+末行与独占行
+~~~~~~~~~~~~
 
-末行为什么不能两端对齐
-~~~~~~~~~~~~~~~~~~~~~~
+最后一行不参与商余分配。它先用单个空格连接单词，再把剩余空格全部补到末尾。
 
-最后一行规定单词间只放一个空格，剩余空格全部补在末尾。若仍使用商余分配，会把额外空格塞入单词间，违反左对齐规则。
+只有一个单词的普通行也采用相同格式。此时 ``gaps`` 为 0，没有可分配的单词间隔；把单词放在左侧并在
+末尾补满，是满足固定宽度的唯一形式。统一处理这两类行也避免了除以零。
 
-单词独占行为何与末行同处理
-~~~~~~~~~~~~~~~~~~~~~~~~
+状态演化
+~~~~~~~~
 
-只有一个单词时 ``gaps=0``，两端对齐无法做除法，也没有间隔可分。把单词放在左侧并在末尾补满，是唯一满足固定宽度的形式。
+以 ``words = ["a", "bb", "ccc", "dddd"]``、``maxWidth = 11`` 为例：
 
-为什么每行长度恰好等于 maxWidth
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. list-table::
+   :header-rows: 1
 
-普通行写入 ``letters + total_spaces`` 个字符，正好等于宽度。左对齐行先用单空格连接，再补 ``width-line.size()`` 个尾空格，也恰好达到宽度。
+   * - 尝试加入
+     - 最小长度
+     - 结果
+   * - ``a``
+     - 1
+     - 加入第一行
+   * - ``bb``
+     - ``1 + 2 + 1 = 4``
+     - 加入第一行
+   * - ``ccc``
+     - ``3 + 3 + 2 = 8``
+     - 加入第一行
+   * - ``dddd``
+     - ``6 + 4 + 3 = 13``
+     - 超宽，结束第一行
 
-最大装行贪心为什么正确
-~~~~~~~~~~~~~~~~~~~~~~
+第一行随后把 5 个空格分成 3 和 2，得到 ``"a   bb  ccc"``。第二行是末行，生成
+``"dddd       "``。
 
-题目要求保持单词顺序，并规定每行尽可能容纳单词。若下一个单词连同最少间隔已经超宽，则任何合法格式都不能把它放入当前行；若仍可容纳，提前换行会违反最大装行要求。因此行边界由该条件唯一确定。
+两种组织方式
+~~~~~~~~~~~~
 
-复杂度来源
+``groupThenFormat`` 先把所有行保存为二维单词数组，再逐行计算字符数和格式。这一版把分组与输出完全分开，
+便于直接观察每行的单词集合，但会复制全部单词并保存中间分组。
+
+``greedyWithFormatter`` 只维护当前行的起止下标和字符数。行边界确定后立即调用 ``formatLine``，不保存全部
+中间分组。公开入口采用这一版，因为它保留相同的贪心逻辑，同时减少中间状态。
+
+复杂度分析
 ~~~~~~~~~~
 
-每个单词在选行和输出时各处理常数次，输出字符总数为行数乘宽度。时间 ``O(total_characters + output_size)``；除返回结果和当前行字符串外，额外空间 ``O(maxWidth)``。
+设全部单词字符数为 ``C``，输出行数为 ``L``。主方法每个单词在选行和格式化阶段各访问常数次，并写出
+``L * maxWidth`` 个输出字符，因此时间复杂度为 ``O(C + L * maxWidth)``。
 
-九语言实现
-----------
+返回结果本身需要 ``O(L * maxWidth)`` 空间。除返回结果和当前正在构造的一行外，主方法只维护常数个下标与
+计数，额外工作空间为 ``O(maxWidth)``。先分组方案还需要复制全部单词，额外空间为 ``O(C)``。
 
-C
-~
+边界处理
+~~~~~~~~
 
-.. code-block:: c
-
-   char**fullJustify(char**w,int n,int width,int*returnSize){char**out=malloc((size_t)n*sizeof(char*));int count=0,start=0;while(start<n){int end=start,letters=0;while(end<n&&letters+(int)strlen(w[end])+(end-start)<=width){letters+=(int)strlen(w[end]);end++;}int words=end-start,gaps=words-1,last=end==n;char*line=malloc((size_t)width+1);memset(line,' ',(size_t)width);line[width]='\0';int pos=0;if(last||words==1){for(int i=start;i<end;i++){if(i>start)pos++;int len=(int)strlen(w[i]);memcpy(line+pos,w[i],(size_t)len);pos+=len;}}else{int spaces=width-letters,base=spaces/gaps,extra=spaces%gaps;for(int i=start;i<end;i++){int len=(int)strlen(w[i]);memcpy(line+pos,w[i],(size_t)len);pos+=len;if(i+1<end)pos+=base+((i-start)<extra);}}out[count++]=line;start=end;}*returnSize=count;return out;}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def fullJustify(self, words: list[str], width: int) -> list[str]:
-           result, start = [], 0
-           while start < len(words):
-               end, letters = start, 0
-               while end < len(words) and letters + len(words[end]) + end-start <= width:
-                   letters += len(words[end]); end += 1
-               count, last = end-start, end == len(words)
-               if last or count == 1:
-                   line = " ".join(words[start:end]).ljust(width)
-               else:
-                   spaces, gaps = width-letters, count-1
-                   base, extra = divmod(spaces, gaps)
-                   line = "".join(words[i] + (" " * (base + (i-start < extra)) if i+1 < end else "") for i in range(start,end))
-               result.append(line); start = end
-           return result
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public List<String> fullJustify(String[]w,int width){List<String>out=new ArrayList<>();int start=0;while(start<w.length){int end=start,letters=0;while(end<w.length&&letters+w[end].length()+end-start<=width)letters+=w[end++].length();int count=end-start;boolean last=end==w.length;StringBuilder line=new StringBuilder();if(last||count==1){for(int i=start;i<end;i++){if(i>start)line.append(' ');line.append(w[i]);}while(line.length()<width)line.append(' ');}else{int spaces=width-letters,gaps=count-1,base=spaces/gaps,extra=spaces%gaps;for(int i=start;i<end;i++){line.append(w[i]);if(i+1<end)line.append(" ".repeat(base+(i-start<extra?1:0)));}}out.add(line.toString());start=end;}return out;}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn full_justify(w:Vec<String>,width:i32)->Vec<String>{let width=width as usize;let(mut out,mut start)=(vec![],0);while start<w.len(){let(mut end,mut letters)=(start,0);while end<w.len()&&letters+w[end].len()+end-start<=width{letters+=w[end].len();end+=1}let count=end-start;let mut line=String::new();if end==w.len()||count==1{line=w[start..end].join(" ");line.push_str(&" ".repeat(width-line.len()));}else{let spaces=width-letters;let(base,extra)=(spaces/(count-1),spaces%(count-1));for i in start..end{line.push_str(&w[i]);if i+1<end{line.push_str(&" ".repeat(base+usize::from(i-start<extra)));}}}out.push(line);start=end}out}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func fullJustify(w []string,width int)[]string{out:=[]string{};for start:=0;start<len(w);{end,letters:=start,0;for end<len(w)&&letters+len(w[end])+end-start<=width{letters+=len(w[end]);end++};count:=end-start;var b strings.Builder;if end==len(w)||count==1{b.WriteString(strings.Join(w[start:end]," "));b.WriteString(strings.Repeat(" ",width-b.Len()))}else{spaces,gaps:=width-letters,count-1;base,extra:=spaces/gaps,spaces%gaps;for i:=start;i<end;i++{b.WriteString(w[i]);if i+1<end{add:=base;if i-start<extra{add++};b.WriteString(strings.Repeat(" ",add))}}};out=append(out,b.String());start=end};return out}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function fullJustify(w:string[],width:number):string[]{const out:string[]=[];for(let start=0;start<w.length;){let end=start,letters=0;while(end<w.length&&letters+w[end].length+end-start<=width)letters+=w[end++].length;const count=end-start,last=end===w.length;let line="";if(last||count===1)line=w.slice(start,end).join(" ").padEnd(width);else{const spaces=width-letters,gaps=count-1,base=Math.floor(spaces/gaps),extra=spaces%gaps;for(let i=start;i<end;i++){line+=w[i];if(i+1<end)line+=" ".repeat(base+(i-start<extra?1:0));}}out.push(line);start=end;}return out;}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public IList<string> FullJustify(string[]w,int width){var o=new List<string>();for(int start=0;start<w.Length;){int end=start,letters=0;while(end<w.Length&&letters+w[end].Length+end-start<=width)letters+=w[end++].Length;int count=end-start;var b=new System.Text.StringBuilder();if(end==w.Length||count==1){b.Append(string.Join(" ",w[start..end]));b.Append(' ',width-b.Length);}else{int spaces=width-letters,gaps=count-1,base=spaces/gaps,extra=spaces%gaps;for(int i=start;i<end;i++){b.Append(w[i]);if(i+1<end)b.Append(' ',base+(i-start<extra?1:0));}}o.Add(b.ToString());start=end;}return o;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function full_justify(words,width)
-       out=String[];start=1
-       while start<=length(words);stop=start;letters=0;while stop<=length(words)&&letters+length(words[stop])+(stop-start)<=width;letters+=length(words[stop]);stop+=1;end;count=stop-start
-           if stop>length(words)||count==1;line=join(words[start:stop-1]," ");line*=repeat(" ",width-length(line));else;spaces=width-letters;base=spaces÷(count-1);extra=spaces%(count-1);parts=String[];for i in start:stop-1;push!(parts,words[i]);i+1<stop&&push!(parts,repeat(" ",base+(i-start<extra)));end;line=join(parts);end
-           push!(out,line);start=stop
-       end;out
-   end
-
-R
-~
-
-.. code-block:: r
-
-   full_justify <- function(words,width){out<-character();start<-1L;n<-length(words);while(start<=n){end<-start;letters<-0L;while(end<=n&&letters+nchar(words[[end]])+(end-start)<=width){letters<-letters+nchar(words[[end]]);end<-end+1L};count<-end-start;if(end>n||count==1L){line<-paste(words[start:(end-1L)],collapse=" ");line<-paste0(line,strrep(" ",width-nchar(line)))}else{spaces<-width-letters;gaps<-count-1L;base<-spaces%/%gaps;extra<-spaces%%gaps;parts<-character();for(i in 0:(count-1L)){parts<-c(parts,words[[start+i]]);if(i<gaps)parts<-c(parts,strrep(" ",base+as.integer(i<extra)))};line<-paste0(parts,collapse="")};out<-c(out,line);start<-end};out}
+* 单个单词长度恰好等于 ``maxWidth`` 时，该行不需要补空格；
+* 普通行只有一个单词时，直接在右侧补满，避免 ``gaps = 0`` 的除法；
+* 最后一行始终使用单空格连接，不执行两端对齐；
+* 下一单词无法放入当前行时，当前行至少已有一个单词，因为每个单词长度都不超过 ``maxWidth``；
+* 普通行写入的字符数为 ``letters + totalSpaces``，左对齐行补到 ``maxWidth``，所有输出行长度均精确。
