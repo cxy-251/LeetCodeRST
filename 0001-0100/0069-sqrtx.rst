@@ -8,14 +8,19 @@
 :难度: Easy
 :主题: 数学、二分查找、牛顿迭代、整数边界
 :原题: `LeetCode 0069 <https://leetcode.com/problems/sqrtx/>`_
-:重点: 平方根下取整、整数溢出、单调边界、最后可行值
+:重点: 从逐个试探平方根，推导到单调边界二分与整数牛顿迭代
 
 题目重述
 --------
 
-给定非负整数 ``x``，返回 ``sqrt(x)`` 向下取整后的整数。不能使用内置指数函数或运算符，例如 ``pow(x, 0.5)``。
+给定非负整数 ``x``，返回 ``sqrt(x)`` 向下取整后的整数。不能使用内置指数函数或运算符，
+例如 ``pow(x, 0.5)``。
 
-约束为 ``0 <= x <= 2^31 - 1``。答案 ``r`` 满足 ``r^2 <= x < (r + 1)^2``。
+约束为 ``0 <= x <= 2^31 - 1``。返回值 ``r`` 必须满足：
+
+.. code-block:: text
+
+   r^2 <= x < (r + 1)^2
 
 自建示例
 --------
@@ -25,54 +30,74 @@
    输入：x = 50
    输出：7
 
-``7^2 = 49 <= 50``，而 ``8^2 = 64 > 50``。
+``7^2 = 49 <= 50``，而 ``8^2 = 64 > 50``，所以向下取整后得到 ``7``。
 
 .. code-block:: text
 
    输入：x = 2147395600
    输出：46340
 
-该输入恰好等于 ``46340^2``。
+该输入恰好等于 ``46340^2``，因此返回 ``46340``。
+
+.. code-block:: text
+
+   输入：x = 8
+   输出：2
+
+``sqrt(8)`` 位于 ``2`` 与 ``3`` 之间，向下取整后得到 ``2``。
 
 C++ 实现
 --------
 
 .. code-block:: cpp
 
-   #include <algorithm>
-
    class Solution {
    private:
        int linearSearch(int x) {
-           if (x < 2) return x;
+           if (x < 2) {
+               return x;
+           }
+
            int answer = 1;
-           for (int candidate = 2; candidate <= x / candidate; ++candidate)
+           for (int candidate = 2;
+                candidate <= x / candidate;
+                ++candidate) {
                answer = candidate;
+           }
+           return answer;
+       }
+
+       int binaryLastTrue(int x) {
+           if (x < 2) {
+               return x;
+           }
+
+           int left = 1;
+           int right = x / 2 + 1;
+           int answer = 1;
+
+           while (left <= right) {
+               const int middle = left + (right - left) / 2;
+               if (middle <= x / middle) {
+                   answer = middle;
+                   left = middle + 1;
+               } else {
+                   right = middle - 1;
+               }
+           }
            return answer;
        }
 
        int newtonIteration(int x) {
-           if (x < 2) return x;
-           long long estimate = x;
-           while (estimate > x / estimate)
-               estimate = (estimate + x / estimate) / 2;
-           return static_cast<int>(estimate);
-       }
-
-       int binaryLastTrue(int x) {
-           if (x < 2) return x;
-           int left = 1, right = x / 2 + 1;
-           int answer = 1;
-           while (left <= right) {
-               int mid = left + (right - left) / 2;
-               if (mid <= x / mid) {
-                   answer = mid;
-                   left = mid + 1;
-               } else {
-                   right = mid - 1;
-               }
+           if (x < 2) {
+               return x;
            }
-           return answer;
+
+           long long estimate = x;
+           while (estimate > x / estimate) {
+               estimate = (estimate + x / estimate) / 2;
+           }
+           return static_cast<int>(estimate);
        }
 
    public:
@@ -84,161 +109,135 @@ C++ 实现
 题解
 ----
 
-向下取整意味着寻找什么
-~~~~~~~~~~~~~~~~~~~~
+逐个验证候选值
+~~~~~~~~~~~~~~
 
-目标不是判断某个整数是否恰好平方为 ``x``，而是寻找满足 ``candidate² <= x`` 的最大整数。谓词随候选增大只会从真变为假，因此是标准“最后一个真值”边界。
+向下取整平方根不是寻找一个一定满足 ``candidate^2 == x`` 的整数，而是寻找满足
+``candidate^2 <= x`` 的最大整数。
 
-为什么不能直接比较 mid * mid
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+``linearSearch`` 从 ``1`` 开始递增候选值。只要当前候选仍合法，就把它记录为答案；第一个不合法值之后的
+所有整数平方只会更大，因此无需继续检查。
 
-``x`` 最大接近 ``2³¹``，而二分中间值的平方可能超过 32 位范围。对正数 ``mid``，以下比较完全等价：
+候选最多增长到 ``sqrt(x)`` 附近，时间复杂度为 ``O(sqrt(x))``。这一步直接对应定义，也揭示了可用于优化的
+单调结构。
+
+除法形式的平方判断
+~~~~~~~~~~~~~~~~~~
+
+若直接计算 ``candidate * candidate``，乘积可能超过 32 位有符号整数范围。对于正整数 ``candidate``，下面两种
+判断等价：
 
 .. code-block:: text
 
-   mid * mid <= x
-   mid <= x / mid
+   candidate^2 <= x
+   candidate <= x / candidate
 
-整数除法向下取整不会改变真假关系，并避免乘法溢出。
+整数除法向下取整。若 ``candidate^2 <= x``，则商至少为 ``candidate``；若平方大于 ``x``，则商必小于
+``candidate``。代码因此不需要执行可能溢出的乘法。
 
-二分区间如何维护
-~~~~~~~~~~~~~~~~
+最后真值边界
+~~~~~~~~~~~~
 
-当 ``mid <= x/mid`` 时，``mid`` 是合法候选，但可能还有更大合法值，因此记录它并令 ``left=mid+1``。否则 ``mid`` 及更大值全部非法，令 ``right=mid-1``。
+定义谓词：
 
-x = 27 的状态跟踪
-~~~~~~~~~~~~~~~~~
+.. code-block:: text
+
+   valid(candidate) = candidate <= x / candidate
+
+候选值从小到大时，``valid`` 只会从 ``true`` 变为 ``false``。目标就是最后一个使谓词为真的整数，可以使用
+二分查找。
+
+当 ``middle`` 合法时，它已经是一个可行答案，同时右侧仍可能存在更大的合法值，因此记录 ``middle``，并令
+``left = middle + 1``。当 ``middle`` 非法时，它及其右侧全部非法，因此令 ``right = middle - 1``。
+
+``answer`` 始终保存已经验证过的最大合法候选。循环结束时搜索区间为空，所有更大的候选都已排除，
+``answer`` 就是向下取整平方根。
+
+搜索区间
+~~~~~~~~
+
+``x`` 为 ``0`` 或 ``1`` 时，平方根就是自身，代码直接返回。
+
+对于 ``x >= 2``，平方根不会超过 ``x / 2 + 1``，因此二分区间可以初始化为：
+
+.. code-block:: text
+
+   [1, x / 2 + 1]
+
+即使使用更宽的 ``[1, x]``，结果仍正确；较紧的右边界只减少常数级搜索范围。
+
+边界演化
+~~~~~~~~
+
+以 ``x = 27`` 为例：
 
 .. list-table::
    :header-rows: 1
 
-   * - ``left..right``
-     - ``mid``
+   * - 区间
+     - 中点
      - 判断
-     - 动作
-   * - ``1..14``
+     - 更新
+   * - ``[1, 14]``
      - 7
-     - ``7 > 27/7``
-     - 右边界变 6
-   * - ``1..6``
+     - ``7 > 27 / 7``
+     - ``right = 6``
+   * - ``[1, 6]``
      - 3
-     - ``3 <= 27/3``
-     - 记录 3，左边界变 4
-   * - ``4..6``
+     - ``3 <= 27 / 3``
+     - 记录 3，``left = 4``
+   * - ``[4, 6]``
      - 5
-     - ``5 <= 27/5``
-     - 记录 5，左边界变 6
-   * - ``6..6``
+     - ``5 <= 27 / 5``
+     - 记录 5，``left = 6``
+   * - ``[6, 6]``
      - 6
-     - ``6 > 27/6``
-     - 右边界变 5，结束
+     - ``6 > 27 / 6``
+     - ``right = 5``
 
-最终记录的最后合法值为 5。
+搜索结束后，最后一个合法候选为 ``5``。
 
-为什么初始右边界可以取 x/2+1
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+整数牛顿迭代
+~~~~~~~~~~~~
 
-对 ``x >= 2``，平方根不会超过 ``x/2+1``。使用更紧右边界减少一次常数范围；即使直接使用 ``x``，二分复杂度仍为 ``O(log x)``。
+方程 ``r^2 = x`` 的牛顿更新式为：
 
-answer 变量保存什么不变量
-~~~~~~~~~~~~~~~~~~~~~~~~
+.. code-block:: text
 
-``answer`` 始终是已经验证过的最大合法候选。搜索结束时 ``left > right``，所有比 ``answer`` 大的候选都已被排除，因此它正是向下取整平方根。
+   next = (estimate + x / estimate) / 2
 
-牛顿迭代为何收敛
-~~~~~~~~~~~~~~~~
+``newtonIteration`` 从 ``estimate = x`` 开始。只要 ``estimate > x / estimate``，当前估计的平方就大于 ``x``，
+仍需继续缩小。
 
-对方程 ``r²=x``，迭代 ``r=(r+x/r)/2`` 会把过大的估计快速拉向平方根。使用整数除法时，当 ``estimate <= x/estimate`` 就已不大于真实平方根；从上方开始迭代，停止值就是下取整结果。
+在该条件下，``x / estimate < estimate``，所以新的整数估计严格小于旧值。实数算术中的两项平均值不会低于
+``sqrt(x)``；向下取整后也不会越过目标整数的下界。估计值因此从上方单调下降，最终停在
+``floor(sqrt(x))``。
 
-线性试探为何仍可作为基准
-~~~~~~~~~~~~~~~~~~~~~~~~
+停止时满足 ``estimate <= x / estimate``，即 ``estimate^2 <= x``。若它还能再增加 1，牛顿序列就不会从上方
+越过该更大合法整数，因此当前值正是最大合法整数。
 
-从 1 递增并保存最后合法值直接对应定义，但需要 ``O(sqrt(x))`` 次判断。它说明边界目标，再由单调性导出二分优化。
+方法关系
+~~~~~~~~
 
-为什么结果满足两侧不等式
-~~~~~~~~~~~~~~~~~~~~~~~~
+线性试探按顺序检查所有候选值，直接建立“最后一个合法整数”的目标。二分查找利用合法性随候选值单调变化，
+跳过大部分候选。牛顿迭代不再维护显式搜索区间，而是利用方程结构快速缩小过大的估计。
 
-算法返回最大的合法整数，所以 ``answer² <= x``。若 ``(answer+1)² <= x``，它也应被判为合法，与最大性矛盾，因此 ``x < (answer+1)²``。
+公开入口选择 ``binaryLastTrue``。它的边界不变量明确，只使用整数除法，并能稳定处理 ``2^31 - 1`` 附近的输入。
 
-复杂度来源
+复杂度分析
 ~~~~~~~~~~
 
-线性方法时间 ``O(sqrt(x))``；二分为 ``O(log x)``；牛顿迭代通常为 ``O(log x)`` 轮且收敛更快。三者额外空间均为 ``O(1)``。
+设输入为 ``x``：
 
-九语言实现
-----------
+* 线性试探时间 ``O(sqrt(x))``，额外空间 ``O(1)``；
+* 二分查找时间 ``O(log x)``，额外空间 ``O(1)``；
+* 牛顿迭代使用常数空间，迭代轮数不超过 ``O(log x)``，实际通常更少。
 
-C
-~
+边界处理
+~~~~~~~~
 
-.. code-block:: c
-
-   int mySqrt(int x){if(x<2)return x;int left=1,right=x/2+1,answer=1;while(left<=right){int mid=left+(right-left)/2;if(mid<=x/mid){answer=mid;left=mid+1;}else right=mid-1;}return answer;}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def mySqrt(self, x: int) -> int:
-           if x < 2: return x
-           left, right, answer = 1, x // 2 + 1, 1
-           while left <= right:
-               mid = left + (right - left) // 2
-               if mid <= x // mid: answer, left = mid, mid + 1
-               else: right = mid - 1
-           return answer
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public int mySqrt(int x){if(x<2)return x;int left=1,right=x/2+1,answer=1;while(left<=right){int mid=left+(right-left)/2;if(mid<=x/mid){answer=mid;left=mid+1;}else right=mid-1;}return answer;}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn my_sqrt(x:i32)->i32{if x<2{return x}let(mut left,mut right,mut answer)=(1,x/2+1,1);while left<=right{let mid=left+(right-left)/2;if mid<=x/mid{answer=mid;left=mid+1}else{right=mid-1}}answer}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func mySqrt(x int)int{if x<2{return x};left,right,answer:=1,x/2+1,1;for left<=right{mid:=left+(right-left)/2;if mid<=x/mid{answer=mid;left=mid+1}else{right=mid-1}};return answer}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function mySqrt(x:number):number{if(x<2)return x;let left=1,right=Math.floor(x/2)+1,answer=1;while(left<=right){const mid=left+Math.floor((right-left)/2);if(mid<=Math.floor(x/mid)){answer=mid;left=mid+1;}else right=mid-1;}return answer;}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public int MySqrt(int x){if(x<2)return x;int left=1,right=x/2+1,answer=1;while(left<=right){int mid=left+(right-left)/2;if(mid<=x/mid){answer=mid;left=mid+1;}else right=mid-1;}return answer;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function my_sqrt(x::Int)
-       x<2&&return x;left=1;right=x÷2+1;answer=1
-       while left<=right;mid=left+(right-left)÷2;if mid<=x÷mid;answer=mid;left=mid+1;else;right=mid-1;end;end
-       answer
-   end
-
-R
-~
-
-.. code-block:: r
-
-   my_sqrt <- function(x){if(x<2L)return(x);left<-1L;right<-x%/%2L+1L;answer<-1L;while(left<=right){mid<-left+(right-left)%/%2L;if(mid<=x%/%mid){answer<-mid;left<-mid+1L}else right<-mid-1L};answer}
+* ``x = 0`` 或 ``x = 1`` 时直接返回自身；
+* 完全平方数会被识别为最后一个合法候选；
+* 非完全平方数返回小于真实平方根的最大整数；
+* 平方比较使用 ``candidate <= x / candidate``，避免 32 位乘法溢出；
+* 牛顿法只在 ``x >= 2`` 时执行，因此除数 ``estimate`` 始终为正。
