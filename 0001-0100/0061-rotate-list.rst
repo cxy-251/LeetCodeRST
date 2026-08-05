@@ -6,14 +6,26 @@
 
 :题号: 0061
 :难度: Medium
-:主题: 单链表、模运算、链表旋转、断点重连
+:主题: 链表、双指针、模运算
 :原题: `LeetCode 0061 <https://leetcode.com/problems/rotate-list/>`_
-:重点: 有效旋转次数、新头新尾、空链表、超大 ``k``
+:重点: 从逐次移动尾节点，推导到确定唯一切口并通过成环断开完成旋转
 
 题目重述
 --------
 
-给定单链表 ``head`` 和非负整数 ``k``，把链表向右旋转 ``k`` 次。一次右旋会把当前尾节点移动到链表最前方，返回旋转后的头节点。
+给定单链表 ``head`` 和非负整数 ``k``，把链表向右旋转 ``k`` 次并返回新的头节点。
+
+一次右旋会把当前尾节点移动到链表最前方。例如：
+
+.. code-block:: text
+
+   1 -> 2 -> 3 -> 4
+
+右旋一次后变为：
+
+.. code-block:: text
+
+   4 -> 1 -> 2 -> 3
 
 链表节点数在 ``0..500`` 范围内，节点值在 ``-100..100`` 范围内，``0 <= k <= 2 * 10^9``。
 
@@ -25,14 +37,21 @@
    输入：1 -> 2 -> 3 -> 4 -> 5 -> 6，k = 8
    输出：5 -> 6 -> 1 -> 2 -> 3 -> 4
 
-链表长度为 6，``8 mod 6 = 2``，实际只需右旋两次。
+链表长度为 6，``8 % 6 = 2``，因此只需把最后两个节点整体移到前面。
 
 .. code-block:: text
 
-   输入：空链表，k = 7
+   输入：7 -> 8 -> 9，k = 6
+   输出：7 -> 8 -> 9
+
+``6 % 3 = 0``，完整旋转两圈后顺序不变。
+
+.. code-block:: text
+
+   输入：空链表，k = 5
    输出：空链表
 
-没有节点时，任意旋转次数都不改变结果。
+空链表没有可移动节点，直接返回空指针。
 
 C++ 实现
 --------
@@ -41,12 +60,17 @@ C++ 实现
 
    class Solution {
    private:
-       ListNode* rotateOneByOne(ListNode* head, int k) {
+       ListNode* moveTailToFrontRepeatedly(ListNode* head, int k) {
            if (!head || !head->next) return head;
+
            while (k-- > 0) {
                ListNode* previous = nullptr;
                ListNode* tail = head;
-               while (tail->next) { previous = tail; tail = tail->next; }
+               while (tail->next) {
+                   previous = tail;
+                   tail = tail->next;
+               }
+
                previous->next = nullptr;
                tail->next = head;
                head = tail;
@@ -54,36 +78,58 @@ C++ 实现
            return head;
        }
 
-       ListNode* splitWithTwoPointers(ListNode* head, int k) {
+       ListNode* splitAndReconnect(ListNode* head, int k) {
            if (!head || !head->next) return head;
+
            int length = 0;
-           for (ListNode* node = head; node; node = node->next) ++length;
+           for (ListNode* node = head; node; node = node->next) {
+               ++length;
+           }
+
            int shift = k % length;
            if (shift == 0) return head;
+
            ListNode* fast = head;
-           for (int step = 0; step < shift; ++step) fast = fast->next;
+           for (int step = 0; step < shift; ++step) {
+               fast = fast->next;
+           }
+
            ListNode* slow = head;
-           while (fast->next) { fast = fast->next; slow = slow->next; }
-           ListNode* new_head = slow->next;
+           while (fast->next) {
+               fast = fast->next;
+               slow = slow->next;
+           }
+
+           ListNode* newHead = slow->next;
            slow->next = nullptr;
            fast->next = head;
-           return new_head;
+           return newHead;
        }
 
        ListNode* makeCycleAndCut(ListNode* head, int k) {
            if (!head || !head->next) return head;
+
            int length = 1;
            ListNode* tail = head;
-           while (tail->next) { tail = tail->next; ++length; }
+           while (tail->next) {
+               tail = tail->next;
+               ++length;
+           }
+
            int shift = k % length;
            if (shift == 0) return head;
+
            tail->next = head;
-           int steps_to_new_tail = length - shift - 1;
-           ListNode* new_tail = head;
-           while (steps_to_new_tail-- > 0) new_tail = new_tail->next;
-           ListNode* new_head = new_tail->next;
-           new_tail->next = nullptr;
-           return new_head;
+
+           int stepsToNewTail = length - shift - 1;
+           ListNode* newTail = head;
+           while (stepsToNewTail-- > 0) {
+               newTail = newTail->next;
+           }
+
+           ListNode* newHead = newTail->next;
+           newTail->next = nullptr;
+           return newHead;
        }
 
    public:
@@ -95,157 +141,139 @@ C++ 实现
 题解
 ----
 
-为什么逐次右旋会重复扫描
-~~~~~~~~~~~~~~~~~~~~~~
+从定义出发：每次把尾节点移到头部
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-每次把尾节点移到头部，都要重新找到尾节点和它的前驱，单次 ``O(n)``。执行 ``k`` 次最坏为 ``O(kn)``，且 ``k`` 可能远大于链表长度。
+最直接的方法完全照着题意执行一次右旋：
 
-有效旋转次数为何是 k % n
+#. 从头扫描到尾节点，同时记录尾节点的前驱；
+#. 令前驱的 ``next`` 变为空，摘下尾节点；
+#. 令尾节点指向旧头，并把它作为新头。
+
+``moveTailToFrontRepeatedly`` 重复这个过程 ``k`` 次。每次寻找尾节点都需要 ``O(n)``，总时间最坏为
+``O(kn)``。当 ``k`` 接近 ``2 * 10^9`` 时，这种方法无法接受。
+
+旋转次数为什么可以先取模
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
-长度为 ``n`` 的链表右旋 ``n`` 次会恢复原顺序。设 ``shift = k % n``，只需处理余数；``shift == 0`` 时任何断链和成环都没有必要。
-
-旋转等价于在哪里切开
-~~~~~~~~~~~~~~~~~~~~
-
-右旋 ``shift`` 位后，原链表最后 ``shift`` 个节点成为前缀。因此新尾是原链表第 ``n-shift-1`` 个零基节点，新头是它的下一个节点。
+长度为 ``n`` 的链表右旋 ``n`` 次后，每个节点都会回到原位置。因此旋转具有周期 ``n``：
 
 .. code-block:: text
 
-   原链表：A -> B
-   A 长度 n-shift，B 长度 shift
-   结果：B -> A
+   shift = k % n
 
-为什么临时成环简化链接
-~~~~~~~~~~~~~~~~~~~~
+真正改变结果的只有余数 ``shift``。若余数为 0，结果就是原链表，不应再修改任何指针。
 
-先令原尾 ``tail->next = head``，链表成为一个包含全部节点的环。此时只需找到新尾并把它的 ``next`` 断开；断开位置之后自然是新头。相比先断再接，成环法不会暂时丢失后半段入口。
+取模前必须先处理空链表，因为 ``n = 0`` 时不能执行模运算。单节点链表也可以直接返回，它无论怎样旋转都不变。
 
-状态跟踪
+旋转本质上是在唯一位置切开
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+设有效右移量为 ``shift``。原链表可以分成两段：
+
+.. code-block:: text
+
+   A 长度为 n - shift
+   B 长度为 shift
+
+   原顺序：A -> B
+   新顺序：B -> A
+
+所以不需要真的把尾节点逐个搬到前面。只需找到 ``A`` 的最后一个节点，也就是新尾；它的下一个节点就是新头。
+
+按零基下标计算，新尾位于：
+
+.. code-block:: text
+
+   n - shift - 1
+
+例如长度为 6、``shift = 2`` 时，新尾下标为 ``6 - 2 - 1 = 3``，即节点 4；它的下一个节点 5 成为新头。
+
+成环为什么让重连只剩一次断开
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+若先令旧尾指向旧头：
+
+.. code-block:: text
+
+   tail->next = head
+
+全部节点就构成一个环。环上没有固定起点，任何节点都可以成为头。此时找到新尾后，只需：
+
+.. code-block:: text
+
+   newHead = newTail->next
+   newTail->next = nullptr
+
+一次断开同时完成两件事：断开位置之后自然成为新头，旧尾又已经通过环连接到旧头，因此不需要另外保存后半段再拼接。
+
+状态演化
 ~~~~~~~~
+
+以 ``1 -> 2 -> 3 -> 4 -> 5``、``k = 2`` 为例：
 
 .. list-table::
    :header-rows: 1
 
-   * - 状态
-     - 位置
-     - 链接动作
-   * - 长度
-     - ``n = 5``
+   * - 阶段
+     - 状态
+     - 含义
+   * - 统计长度
+     - ``length = 5``
+     - 旧尾是节点 5
+   * - 计算位移
      - ``shift = 2``
-   * - 临时环
-     - 尾节点 5
+     - 最后两个节点移到前面
+   * - 临时成环
      - ``5.next = 1``
-   * - 新尾
-     - 下标 ``5-2-1 = 2``，节点 3
-     - 新头为节点 4
-   * - 断环
-     - 节点 3
-     - ``3.next = null``
-   * - 结果
-     - 节点 4
-     - ``4->5->1->2->3``
+     - 所有节点进入同一个环
+   * - 定位新尾
+     - 下标 ``5 - 2 - 1 = 2``，节点 3
+     - 节点 4 将成为新头
+   * - 断开
+     - ``3.next = nullptr``
+     - 得到 ``4 -> 5 -> 1 -> 2 -> 3``
 
-双指针方法为何等价
+双指针为什么找到同一个切口
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``splitAndReconnect`` 让 ``fast`` 比 ``slow`` 先走 ``shift`` 步，然后两者同步前进，直到 ``fast`` 到达旧尾。
+此时从 ``slow`` 后面到旧尾恰好有 ``shift`` 个节点，所以 ``slow`` 就是新尾。
+
+该方法随后先断开 ``slow->next``，再令旧尾连接旧头。它与成环法找到的是同一个切口；成环法的指针关系更集中，
+因此作为主实现。
+
+为什么节点不重不漏
 ~~~~~~~~~~~~~~~~~~
 
-让 ``fast`` 先领先 ``shift`` 个节点，再同时移动到 ``fast`` 到达旧尾。此时 ``slow`` 恰好位于新尾，距离关系与 ``n-shift-1`` 完全相同。该方法不临时成环，但需要先计算长度才能取模。
+成环前，原链表包含全部 ``n`` 个节点且每个节点出现一次。连接旧尾和旧头只新增一条边，没有创建或删除节点。
+随后在新尾处删除一条边，环重新变成一条链。
 
-节点为什么不重不漏
-~~~~~~~~~~~~~~~~~~
+因为只删除一条边，所有节点仍在同一个连通结构中；因为结构不再成环，从新头沿 ``next`` 最终会在新尾结束。
+因此结果恰好包含原来的全部节点，每个节点仍只出现一次。
 
-成环前所有节点构成一条链；连接尾到头只增加一条边，没有创建或删除节点。随后断开环上的一条边，仍得到包含全部 ``n`` 个节点的一条链。每个节点入度和出度关系仅在旧尾、新尾、旧头三处调整。
+指针更新顺序为什么重要
+~~~~~~~~~~~~~~~~~~~~~~
 
-链接更新顺序为何重要
-~~~~~~~~~~~~~~~~~~~~
+必须先保存：
 
-必须先保存 ``new_head = new_tail->next``，再令 ``new_tail->next = nullptr``。若先断开而没有保存新头，后半段入口会丢失；若成环后忘记断开，返回结构会永久成环。
+.. code-block:: text
+
+   newHead = newTail->next
+
+再执行：
+
+.. code-block:: text
+
+   newTail->next = nullptr
+
+若先断开而没有保存新头，就会失去新头入口。若连接成环后忘记断开，返回的将不是合法单链表，而是无限循环的环。
 
 复杂度来源
 ~~~~~~~~~~
 
-逐次右旋为 ``O(kn)``。双指针和成环法都扫描常数遍，时间 ``O(n)``、额外空间 ``O(1)``。
+主方法第一次扫描统计长度并找到旧尾，第二次最多走 ``n-1`` 步寻找新尾，因此时间为 ``O(n)``，额外空间为
+``O(1)``。
 
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   struct ListNode* rotateRight(struct ListNode*head,int k){if(!head||!head->next)return head;int n=1;struct ListNode*tail=head;while(tail->next){tail=tail->next;n++;}int shift=k%n;if(!shift)return head;tail->next=head;struct ListNode*newTail=head;for(int i=0;i<n-shift-1;i++)newTail=newTail->next;struct ListNode*newHead=newTail->next;newTail->next=NULL;return newHead;}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def rotateRight(self, head: Optional[ListNode], k: int) -> Optional[ListNode]:
-           if not head or not head.next: return head
-           length, tail = 1, head
-           while tail.next: tail = tail.next; length += 1
-           shift = k % length
-           if shift == 0: return head
-           tail.next = head
-           new_tail = head
-           for _ in range(length - shift - 1): new_tail = new_tail.next
-           new_head = new_tail.next; new_tail.next = None
-           return new_head
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public ListNode rotateRight(ListNode head,int k){if(head==null||head.next==null)return head;int n=1;ListNode tail=head;while(tail.next!=null){tail=tail.next;n++;}int shift=k%n;if(shift==0)return head;tail.next=head;ListNode newTail=head;for(int i=0;i<n-shift-1;i++)newTail=newTail.next;ListNode newHead=newTail.next;newTail.next=null;return newHead;}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn rotate_right(mut head:Option<Box<ListNode>>,k:i32)->Option<Box<ListNode>>{let mut nodes=Vec::new();while let Some(mut node)=head{head=node.next.take();nodes.push(node);}let n=nodes.len();if n==0{return None}let shift=k as usize%n;if shift>0{let mut suffix=nodes.split_off(n-shift);suffix.extend(nodes);nodes=suffix;}let mut result=None;for mut node in nodes.into_iter().rev(){node.next=result;result=Some(node);}result}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func rotateRight(head *ListNode,k int)*ListNode{if head==nil||head.Next==nil{return head};n,tail:=1,head;for tail.Next!=nil{tail=tail.Next;n++};shift:=k%n;if shift==0{return head};tail.Next=head;newTail:=head;for i:=0;i<n-shift-1;i++{newTail=newTail.Next};newHead:=newTail.Next;newTail.Next=nil;return newHead}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function rotateRight(head:ListNode|null,k:number):ListNode|null{if(!head||!head.next)return head;let n=1,tail=head;while(tail.next){tail=tail.next;n++;}const shift=k%n;if(!shift)return head;tail.next=head;let newTail=head;for(let i=0;i<n-shift-1;i++)newTail=newTail.next!;const newHead=newTail.next;newTail.next=null;return newHead;}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public ListNode RotateRight(ListNode head,int k){if(head==null||head.next==null)return head;int n=1;ListNode tail=head;while(tail.next!=null){tail=tail.next;n++;}int shift=k%n;if(shift==0)return head;tail.next=head;ListNode newTail=head;for(int i=0;i<n-shift-1;i++)newTail=newTail.next;ListNode newHead=newTail.next;newTail.next=null;return newHead;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function rotate_right(head,k)
-       (head===nothing||head.next===nothing)&&return head
-       n=1;tail=head
-       while tail.next!==nothing;tail=tail.next;n+=1;end
-       shift=k%n;shift==0&&return head;tail.next=head;newtail=head
-       for _ in 1:n-shift-1;newtail=newtail.next;end
-       newhead=newtail.next;newtail.next=nothing;newhead
-   end
-
-R
-~
-
-.. code-block:: r
-
-   rotate_right <- function(values,k){n<-length(values);if(n<=1L)return(values);shift<-k%%n;if(shift==0L)return(values);c(tail(values,shift),head(values,n-shift))}
+任何正确方法在最坏情况下都必须检查到链表尾部，才能知道长度和切口位置，因此需要 ``Ω(n)`` 时间；主方法达到
+这个下界。逐次右旋方法则为 ``O(kn)``。
