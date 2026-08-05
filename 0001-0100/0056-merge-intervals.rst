@@ -86,7 +86,7 @@ C++ 实现
        }
 
        std::vector<std::vector<int>> sortAndMerge(
-           std::vector<std::vector<int>> intervals
+           std::vector<std::vector<int>>& intervals
        ) {
            std::sort(
                intervals.begin(),
@@ -244,6 +244,5 @@ C++ 实现
 
 排序需要 ``O(n log n)`` 时间，之后每个区间只扫描一次，耗时 ``O(n)``，总时间为 ``O(n log n)``。
 
-不计返回结果，额外空间取决于排序实现；C++ 的 ``std::sort`` 通常使用 ``O(log n)`` 调用栈。代码按值接收
-``sortAndMerge`` 的参数，因此还会复制输入区间；这使辅助实现不修改调用者数据。主算法本身只需要当前结果
-末尾这一段状态。
+主方法直接在输入数组上排序。不计返回结果，额外空间由 ``std::sort`` 的调用栈决定，通常为 ``O(log n)``。
+扫描阶段只使用常数个局部变量；返回数组最多保存 ``n`` 个区间。
