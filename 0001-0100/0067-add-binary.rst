@@ -8,14 +8,15 @@
 :难度: Easy
 :主题: 字符串、二进制、双指针、进位
 :原题: `LeetCode 0067 <https://leetcode.com/problems/add-binary/>`_
-:重点: 低位对齐、逐位相加、最高位进位、规范输出
+:重点: 从左侧补零的逐位相加，推导到无需补齐长度的双指针进位扫描
 
 题目重述
 --------
 
-给定两个非空二进制字符串 ``a`` 和 ``b``，返回它们相加后的二进制字符串。除字符串 ``"0"`` 外，输入没有前导零。
+给定两个非空二进制字符串 ``a`` 和 ``b``，返回它们相加后的二进制字符串。
 
-约束为 ``1 <= a.length, b.length <= 10^4``，字符只可能是 ``'0'`` 或 ``'1'``。
+两个输入都只包含字符 ``'0'`` 和 ``'1'``。除字符串 ``"0"`` 外，输入没有前导零。字符串长度均在
+``[1, 10^4]`` 内，因此不能先转换为固定宽度整数再计算。
 
 自建示例
 --------
@@ -25,14 +26,22 @@
    输入：a = "10101", b = "111"
    输出："11100"
 
-``10101₂ = 21``，``111₂ = 7``，两者之和 ``28`` 的二进制表示为 ``11100``。
+两个字符串按最低位对齐。``10101₂ = 21``，``111₂ = 7``，两者之和为 ``28``，对应二进制
+``11100``。
 
 .. code-block:: text
 
    输入：a = "1000", b = "1000"
    输出："10000"
 
-最高位相加后产生新的进位。
+最高位相加后仍留下进位，因此结果比输入多一位。
+
+.. code-block:: text
+
+   输入：a = "0", b = "0"
+   输出："0"
+
+没有任何进位，结果保持单个零。
 
 C++ 实现
 --------
@@ -45,199 +54,183 @@ C++ 实现
    class Solution {
    private:
        std::string padAndAdd(std::string a, std::string b) {
-           if (a.size() < b.size()) a.insert(a.begin(), b.size() - a.size(), '0');
-           if (b.size() < a.size()) b.insert(b.begin(), a.size() - b.size(), '0');
+           if (a.size() < b.size()) {
+               a.insert(a.begin(), b.size() - a.size(), '0');
+           }
+           if (b.size() < a.size()) {
+               b.insert(b.begin(), a.size() - b.size(), '0');
+           }
+
            std::string result(a.size(), '0');
            int carry = 0;
-           for (int i = static_cast<int>(a.size()) - 1; i >= 0; --i) {
-               int total = a[i] - '0' + b[i] - '0' + carry;
-               result[i] = '0' + total % 2;
+
+           for (int index = static_cast<int>(a.size()) - 1;
+                index >= 0;
+                --index) {
+               const int total =
+                   (a[index] - '0') + (b[index] - '0') + carry;
+               result[index] = static_cast<char>('0' + total % 2);
                carry = total / 2;
            }
-           if (carry) result.insert(result.begin(), '1');
+
+           if (carry != 0) {
+               result.insert(result.begin(), '1');
+           }
            return result;
        }
 
-       std::string reversePointers(const std::string& a, const std::string& b) {
-           int i = static_cast<int>(a.size()) - 1;
-           int j = static_cast<int>(b.size()) - 1;
+       std::string addWithTwoPointers(
+           const std::string& a,
+           const std::string& b
+       ) {
+           int first = static_cast<int>(a.size()) - 1;
+           int second = static_cast<int>(b.size()) - 1;
            int carry = 0;
+
            std::string reversed;
            reversed.reserve(std::max(a.size(), b.size()) + 1);
-           while (i >= 0 || j >= 0 || carry) {
+
+           while (first >= 0 || second >= 0 || carry != 0) {
                int total = carry;
-               if (i >= 0) total += a[i--] - '0';
-               if (j >= 0) total += b[j--] - '0';
-               reversed.push_back('0' + total % 2);
+               if (first >= 0) {
+                   total += a[first] - '0';
+                   --first;
+               }
+               if (second >= 0) {
+                   total += b[second] - '0';
+                   --second;
+               }
+
+               reversed.push_back(static_cast<char>('0' + total % 2));
                carry = total / 2;
            }
+
            std::reverse(reversed.begin(), reversed.end());
            return reversed;
        }
 
    public:
        std::string addBinary(std::string a, std::string b) {
-           return reversePointers(a, b);
+           return addWithTwoPointers(a, b);
        }
    };
 
 题解
 ----
 
-为什么固定宽整数不可用
-~~~~~~~~~~~~~~~~~~~~
+固定宽度转换
+~~~~~~~~~~~~
 
-输入长度可达到上万位，任何普通整数都会溢出。字符串已经给出逐位表示，按二进制竖式计算可以让每轮状态始终保持在常数范围。
+输入最多包含一万位二进制数字，远超常见整数类型的表示范围。即使最终操作只是加法，转换阶段也已经发生
+溢出。字符串本身就是逐位表示，因此应直接模拟二进制竖式加法。
 
-为什么从字符串末尾开始
-~~~~~~~~~~~~~~~~~~~~
+左侧补零
+~~~~~~~~
 
-不同长度数字按最低位对齐，而最低位位于字符串末尾。两个下标分别从末尾向左移动；某个字符串耗尽后，该侧数字位视为 0，无需在前面实际补零。
+两个二进制数相加时按最低位对齐。最直接的实现先在较短字符串左侧补零，使两者长度相同，然后使用同一个
+下标从右向左处理。
 
-每轮如何拆分结果位与进位
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-两个输入位和旧进位都只可能是 0 或 1，因此 ``total`` 只可能为 0 到 3：
+每轮读取两个输入位和旧进位。三者都只可能是 ``0`` 或 ``1``，所以总和只可能位于 ``[0, 3]``：
 
 .. code-block:: text
 
-   result_bit = total % 2
-   carry      = total / 2
+   resultBit = total % 2
+   carry     = total / 2
 
-模 2 得当前位，整除 2 得传向更高位的进位。
+模二得到当前结果位，整除二得到传向更高位的进位。扫描完成后若 ``carry == 1``，就在结果前面增加一个
+最高位 ``1``。
 
-1011 + 110 的状态跟踪
-~~~~~~~~~~~~~~~~~~~~~
+这种方法的下标关系直观，但补零会复制并扩展输入字符串。补出的零只用于表示“该侧已经没有数位”，可以用
+指针越界条件代替。
+
+双指针对齐
+~~~~~~~~~~
+
+``addWithTwoPointers`` 分别让 ``first`` 和 ``second`` 指向两个字符串的末尾。每轮按以下顺序处理：
+
+#. 以旧 ``carry`` 初始化 ``total``；
+#. 对仍未越界的输入读取当前位；
+#. 写入 ``total % 2``；
+#. 更新 ``carry = total / 2``；
+#. 两个指针各自向左移动。
+
+某个指针越界后，该侧本轮不再贡献数位，效果与左侧补零完全相同。两个字符串长度不同不会产生额外分支，也
+不需要构造对齐后的副本。
+
+进位不变量
+~~~~~~~~~~
+
+每轮开始时，两个指针右侧的输入后缀已经全部处理。``reversed`` 保存这些低位对应的正确结果，只是顺序为
+从低位到高位；``carry`` 保存已处理后缀向当前更高位产生的唯一影响。
+
+当前两位与旧进位相加后，``total % 2`` 正是本位结果，``total / 2`` 正是下一轮需要的进位。因此处理一位后，
+同一不变量继续成立。
+
+循环条件包含 ``carry != 0``。当两个输入指针都越界但仍有最高位进位时，循环会再执行一次并写入字符
+``'1'``。若没有进位，循环立即结束，不会产生多余前导零。
+
+状态演化
+~~~~~~~~
+
+以 ``a = "1011"``、``b = "110"`` 为例：
 
 .. list-table::
    :header-rows: 1
 
-   * - 输入位
+   * - 当前输入位
      - 旧进位
      - ``total``
-     - 结果位 / 新进位
+     - 写入低位
+     - 新进位
    * - ``1 + 0``
      - 0
      - 1
-     - ``1 / 0``
+     - 1
+     - 0
    * - ``1 + 1``
      - 0
      - 2
-     - ``0 / 1``
+     - 0
+     - 1
    * - ``0 + 1``
      - 1
      - 2
-     - ``0 / 1``
+     - 0
+     - 1
    * - ``1 + 0``
      - 1
      - 2
-     - ``0 / 1``
-   * - 输入耗尽
+     - 0
+     - 1
+   * - 输入均耗尽
      - 1
      - 1
-     - ``1 / 0``
+     - 1
+     - 0
 
-低位依次产生 ``10001`` 的反向序列，反转后得到答案。
+追加顺序为从低位到高位，缓冲区得到 ``"10001"``；整体反转后仍为 ``"10001"``，即正确答案。
 
-循环条件为何包含 carry
-~~~~~~~~~~~~~~~~~~~~~~
+反向构造
+~~~~~~~~
 
-两个下标都越界时，最高位仍可能留下进位。例如 ``1111 + 1``。循环条件包含 ``carry``，可自然再生成一个最高位 1，而不需要循环后的额外分支。
+竖式加法天然从最低位产生字符，而结果字符串要求最高位在前。向字符串末尾追加字符具有常数摊还成本，完成
+后再整体反转一次，总工作仍为线性。
 
-为什么结果先反向构造
-~~~~~~~~~~~~~~~~~~~~
+若每轮直接在字符串头部插入新字符，已有内容会被反复后移，最坏会产生平方级字符移动。反向追加再反转避免了
+这一代价。
 
-竖式从最低位产生字符，而字符串需要高位在前。向缓冲区末尾追加是常数摊还成本；完成后整体反转一次为 ``O(m+n)``。若每轮在字符串头插入，会反复移动已有字符，退化为平方级。
+方法关系
+~~~~~~~~
 
-补零方法与双指针方法的取舍
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+``padAndAdd`` 通过实际补零统一两个输入的下标。``addWithTwoPointers`` 把“缺失位等于零”编码为指针越界，
+删除了输入扩展过程。两种方法使用完全相同的本位公式和进位状态，主入口选择双指针实现。
 
-左侧补零后两个字符串下标一致，代码直观，但需要复制和扩展输入。双指针把缺失位按 0 处理，不创建补零字符串，状态更少。
-
-为什么输出没有多余前导零
-~~~~~~~~~~~~~~~~~~~~~~
-
-输入规范。最高输出位要么来自最高非零输入位，要么来自最终进位；只有两数都为 0 时产生单个 0。因此不会形成额外前导零。
-
-复杂度来源
+复杂度分析
 ~~~~~~~~~~
 
-双指针访问每个输入位一次并反转结果，时间 ``O(m+n)``。结果最多 ``max(m,n)+1`` 位；除返回字符串外额外状态 ``O(1)``。
+设两个字符串长度分别为 ``m`` 和 ``n``。
 
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   char*addBinary(char*a,char*b){int i=(int)strlen(a)-1,j=(int)strlen(b)-1,carry=0,k=0,cap=(i>j?i:j)+3;char*out=malloc((size_t)cap);while(i>=0||j>=0||carry){int total=carry+(i>=0?a[i--]-'0':0)+(j>=0?b[j--]-'0':0);out[k++]=(char)('0'+total%2);carry=total/2;}for(int l=0,r=k-1;l<r;l++,r--){char t=out[l];out[l]=out[r];out[r]=t;}out[k]='\0';return out;}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def addBinary(self, a: str, b: str) -> str:
-           i, j, carry, output = len(a)-1, len(b)-1, 0, []
-           while i >= 0 or j >= 0 or carry:
-               total = carry
-               if i >= 0: total += ord(a[i])-48; i -= 1
-               if j >= 0: total += ord(b[j])-48; j -= 1
-               output.append(str(total % 2)); carry = total // 2
-           return "".join(reversed(output))
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public String addBinary(String a,String b){int i=a.length()-1,j=b.length()-1,carry=0;StringBuilder out=new StringBuilder();while(i>=0||j>=0||carry!=0){int total=carry+(i>=0?a.charAt(i--)-'0':0)+(j>=0?b.charAt(j--)-'0':0);out.append(total%2);carry=total/2;}return out.reverse().toString();}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn add_binary(a:String,b:String)->String{let(x,y)=(a.as_bytes(),b.as_bytes());let(mut i,mut j,mut carry)=(x.len()as i32-1,y.len()as i32-1,0u8);let mut out=Vec::new();while i>=0||j>=0||carry>0{let mut total=carry;if i>=0{total+=x[i as usize]-b'0';i-=1}if j>=0{total+=y[j as usize]-b'0';j-=1}out.push(b'0'+total%2);carry=total/2;}out.reverse();String::from_utf8(out).unwrap()}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func addBinary(a,b string)string{i,j,carry:=len(a)-1,len(b)-1,0;out:=[]byte{};for i>=0||j>=0||carry>0{total:=carry;if i>=0{total+=int(a[i]-'0');i--};if j>=0{total+=int(b[j]-'0');j--};out=append(out,byte('0'+total%2));carry=total/2};for l,r:=0,len(out)-1;l<r;l,r=l+1,r-1{out[l],out[r]=out[r],out[l]};return string(out)}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function addBinary(a:string,b:string):string{let i=a.length-1,j=b.length-1,carry=0;const out:string[]=[];while(i>=0||j>=0||carry){let total=carry;if(i>=0)total+=Number(a[i--]);if(j>=0)total+=Number(b[j--]);out.push(String(total%2));carry=Math.floor(total/2);}return out.reverse().join("");}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public string AddBinary(string a,string b){int i=a.Length-1,j=b.Length-1,carry=0;var outp=new System.Text.StringBuilder();while(i>=0||j>=0||carry!=0){int total=carry+(i>=0?a[i--]-'0':0)+(j>=0?b[j--]-'0':0);outp.Append(total%2);carry=total/2;}char[]chars=outp.ToString().ToCharArray();Array.Reverse(chars);return new string(chars);}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function add_binary(a::String,b::String)
-       x=collect(a);y=collect(b);i=length(x);j=length(y);carry=0;out=Char[]
-       while i>=1||j>=1||carry>0;total=carry;if i>=1;total+=Int(x[i]-'0');i-=1;end;if j>=1;total+=Int(y[j]-'0');j-=1;end;push!(out,Char(Int('0')+total%2));carry=total÷2;end
-       String(reverse(out))
-   end
-
-R
-~
-
-.. code-block:: r
-
-   add_binary <- function(a,b){x<-strsplit(a,"",fixed=TRUE)[[1L]];y<-strsplit(b,"",fixed=TRUE)[[1L]];i<-length(x);j<-length(y);carry<-0L;out<-character();while(i>=1L||j>=1L||carry>0L){total<-carry;if(i>=1L){total<-total+as.integer(x[[i]]);i<-i-1L};if(j>=1L){total<-total+as.integer(y[[j]]);j<-j-1L};out<-c(out,as.character(total%%2L));carry<-total%/%2L};paste0(rev(out),collapse="")}
+* 左侧补零需要 ``O(m+n)`` 时间，并为补齐后的输入和结果使用 ``O(m+n)`` 空间；
+* 双指针方法访问每个输入位一次，再反转结果，时间为 ``O(m+n)``；
+* 双指针方法除返回字符串外只维护常数个整数状态，额外工作空间为 ``O(1)``；
+* 返回字符串长度最多为 ``max(m,n)+1``。
