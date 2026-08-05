@@ -6,16 +6,20 @@
 
 :题号: 0056
 :难度: Medium
-:主题: 区间、排序、贪心、扫描
+:主题: 数组、排序、区间、贪心
 :原题: `LeetCode 0056 <https://leetcode.com/problems/merge-intervals/>`_
-:重点: 闭区间重叠、起点排序、覆盖端点扩张、互不重叠输出
+:重点: 从无序区间的反复比较，推导到按左端点排序后只维护当前覆盖段
 
 题目重述
 --------
 
-给定闭区间数组 ``intervals``，合并所有相互重叠的区间，返回覆盖范围相同且彼此不重叠的区间列表。两个闭区间共享端点时也视为重叠。
+给定若干闭区间 ``intervals[i] = [start_i, end_i]``，合并所有存在重叠的区间，返回若干彼此不重叠的闭区间，
+并且它们覆盖的点集与原输入完全相同。
 
-约束为 ``1 <= intervals.length <= 10^4``，每个区间满足 ``0 <= start <= end <= 10^4``。
+闭区间共享端点时交集非空，因此 ``[1,4]`` 与 ``[4,6]`` 也必须合并为 ``[1,6]``。返回顺序不限。
+
+约束为 ``1 <= intervals.length <= 10^4``，每个区间满足
+``0 <= start_i <= end_i <= 10^4``。
 
 自建示例
 --------
@@ -25,14 +29,22 @@
    输入：intervals = [[2,4],[3,7],[9,12],[11,15]]
    输出：[[2,7],[9,15]]
 
-前两个区间合并为 ``[2,7]``，后两个区间合并为 ``[9,15]``。
+``[2,4]`` 与 ``[3,7]`` 重叠，``[9,12]`` 与 ``[11,15]`` 重叠。
 
 .. code-block:: text
 
-   输入：intervals = [[0,2],[2,3],[8,9]]
-   输出：[[0,3],[8,9]]
+   输入：intervals = [[1,4],[4,5],[5,8],[10,12]]
+   输出：[[1,8],[10,12]]
 
-``[0,2]`` 与 ``[2,3]`` 共享端点 2，因此需要合并。
+前三个区间通过共享端点形成一条连续覆盖链。即使 ``[1,4]`` 与 ``[5,8]`` 不直接重叠，它们仍会经过
+``[4,5]`` 合并到同一结果区间。
+
+.. code-block:: text
+
+   输入：intervals = [[1,10],[2,3],[4,7]]
+   输出：[[1,10]]
+
+后两个区间完全包含在第一个区间内，不会扩大最终覆盖范围。
 
 C++ 实现
 --------
@@ -40,63 +52,72 @@ C++ 实现
 .. code-block:: cpp
 
    #include <algorithm>
-   #include <utility>
    #include <vector>
 
    class Solution {
    private:
-       std::vector<std::vector<int>> repeatPairMerge(std::vector<std::vector<int>> intervals) {
-           bool changed = true;
-           while (changed) {
-               changed = false;
-               for (int i = 0; i < static_cast<int>(intervals.size()) && !changed; ++i) {
+       bool overlaps(
+           const std::vector<int>& first,
+           const std::vector<int>& second
+       ) {
+           return first[0] <= second[1] && second[0] <= first[1];
+       }
+
+       std::vector<std::vector<int>> repeatedlyMergePairs(
+           std::vector<std::vector<int>> intervals
+       ) {
+           bool merged = true;
+           while (merged) {
+               merged = false;
+               for (int i = 0; i < static_cast<int>(intervals.size()); ++i) {
                    for (int j = i + 1; j < static_cast<int>(intervals.size()); ++j) {
-                       if (intervals[i][1] < intervals[j][0] || intervals[j][1] < intervals[i][0]) continue;
+                       if (!overlaps(intervals[i], intervals[j])) continue;
+
                        intervals[i][0] = std::min(intervals[i][0], intervals[j][0]);
                        intervals[i][1] = std::max(intervals[i][1], intervals[j][1]);
                        intervals.erase(intervals.begin() + j);
-                       changed = true;
+                       merged = true;
                        break;
                    }
+                   if (merged) break;
                }
            }
            return intervals;
        }
 
-       std::vector<std::vector<int>> eventSweep(const std::vector<std::vector<int>>& intervals) {
-           std::vector<std::pair<int,int>> events;
-           for (const auto& interval : intervals) {
-               events.push_back({interval[0], 1});
-               events.push_back({interval[1], -1});
-           }
-           std::sort(events.begin(), events.end(), [](auto a, auto b) {
-               return a.first != b.first ? a.first < b.first : a.second > b.second;
-           });
-           std::vector<std::vector<int>> result;
-           int active = 0, start = 0;
-           for (auto [position, delta] : events) {
-               if (active == 0 && delta == 1) start = position;
-               active += delta;
-               if (active == 0) result.push_back({start, position});
-           }
-           return result;
-       }
+       std::vector<std::vector<int>> sortAndMerge(
+           std::vector<std::vector<int>> intervals
+       ) {
+           std::sort(
+               intervals.begin(),
+               intervals.end(),
+               [](const std::vector<int>& first, const std::vector<int>& second) {
+                   if (first[0] != second[0]) return first[0] < second[0];
+                   return first[1] < second[1];
+               }
+           );
 
-       std::vector<std::vector<int>> sortAndMerge(std::vector<std::vector<int>> intervals) {
-           std::sort(intervals.begin(), intervals.end());
            std::vector<std::vector<int>> result;
-           for (const auto& interval : intervals) {
-               if (result.empty() || interval[0] > result.back()[1]) {
-                   result.push_back(interval);
+           result.push_back(intervals[0]);
+
+           for (int i = 1; i < static_cast<int>(intervals.size()); ++i) {
+               const int nextStart = intervals[i][0];
+               const int nextEnd = intervals[i][1];
+               std::vector<int>& current = result.back();
+
+               if (nextStart > current[1]) {
+                   result.push_back(intervals[i]);
                } else {
-                   result.back()[1] = std::max(result.back()[1], interval[1]);
+                   current[1] = std::max(current[1], nextEnd);
                }
            }
            return result;
        }
 
    public:
-       std::vector<std::vector<int>> merge(std::vector<std::vector<int>>& intervals) {
+       std::vector<std::vector<int>> merge(
+           std::vector<std::vector<int>>& intervals
+       ) {
            return sortAndMerge(intervals);
        }
    };
@@ -104,147 +125,125 @@ C++ 实现
 题解
 ----
 
-反复两两合并为何代价高
+从定义出发：反复寻找任意重叠区间
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+两个闭区间 ``[a,b]`` 与 ``[c,d]`` 重叠，当且仅当：
+
+.. code-block:: text
+
+   a <= d 且 c <= b
+
+找到一对重叠区间后，可以把它们替换为：
+
+.. code-block:: text
+
+   [min(a,c), max(b,d)]
+
+``repeatedlyMergePairs`` 直接按这个定义工作：在无序列表中寻找一对重叠区间，合并并删除其中一个，然后
+重新开始扫描，直到不存在重叠对。
+
+为什么一次两两扫描不够
 ~~~~~~~~~~~~~~~~~~~~~~
 
-无序区间中，每次合并都可能改变与其他区间的关系，需要重新比较。最坏会进行平方级甚至更多重复检查。关键是先建立一种顺序，让已经结束的覆盖段可以永久提交。
+合并会扩大区间，进而产生原本没有被发现的新重叠关系。例如：
 
-按起点排序带来了什么
-~~~~~~~~~~~~~~~~~~~~
+.. code-block:: text
 
-排序后，后续区间起点不会减小。若当前合并段为 ``[start,end]``：
+   [1,4] 与 [4,5] 合并为 [1,5]
+   扩张后的 [1,5] 又与 [5,8] 重叠
 
-* ``next.start <= end`` 时，两闭区间重叠，扩张 ``end``；
-* ``next.start > end`` 时，当前段与所有后续区间都不可能再相交，可以安全写入结果。
+因此，无序状态下不能在比较完一对区间后永久排除它们。每次扩张都可能迫使算法重新检查此前区间，形成大量
+重复工作。
 
-状态演化
-~~~~~~~~
+列表最多发生 ``n-1`` 次合并，每次可能扫描 ``O(n²)`` 对区间，所以该直接方法可达到 ``O(n³)`` 时间；
+此外，中间删除元素还会移动后续区间。问题的关键不是更快地判断两区间是否重叠，而是先建立一种顺序，使
+已经完成的区间可以永久提交。
+
+按左端点排序改变了什么
+~~~~~~~~~~~~~~~~~~~~~~
+
+按左端点从小到大排序后，后续区间的左端点不会再减小。设已经合并出的当前覆盖段为：
+
+.. code-block:: text
+
+   current = [currentStart, currentEnd]
+
+下一个区间为 ``[nextStart,nextEnd]``，只可能出现两种情况。
+
+第一种：``nextStart <= currentEnd``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+两个闭区间重叠或共享端点，应合并。因为已经按左端点排序，必有
+``currentStart <= nextStart``，所以合并后的左端点仍然是 ``currentStart``，只需更新：
+
+.. code-block:: text
+
+   currentEnd = max(currentEnd, nextEnd)
+
+新区间若完全被包含，右端点不变；若向右伸出，则当前覆盖段随之扩张。
+
+第二种：``nextStart > currentEnd``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+当前覆盖段与下一个区间完全分离。更重要的是，排序保证所有更晚区间的左端点都满足：
+
+.. code-block:: text
+
+   laterStart >= nextStart > currentEnd
+
+所以当前覆盖段不可能再与任何后续区间重叠，可以永久写入结果。随后把下一个区间作为新的当前覆盖段。
+
+为什么传递重叠不会遗漏
+~~~~~~~~~~~~~~~~~~~~~~
+
+对 ``[[1,4],[4,5],[5,8]]``：
 
 .. list-table::
    :header-rows: 1
 
    * - 新区间
-     - 当前段
-     - 动作
-   * - ``[1,3]``
-     - ``[1,3]``
-     - 建立当前段
-   * - ``[2,6]``
-     - ``[1,6]``
-     - 起点不超过 3，扩张右端
-   * - ``[8,10]``
-     - ``[8,10]``
-     - 提交 ``[1,6]``，建立新区间
-   * - ``[15,18]``
-     - ``[15,18]``
-     - 提交 ``[8,10]``
-   * - 扫描结束
+     - 合并前当前段
+     - 判断
+     - 合并后当前段
+   * - ``[1,4]``
      - —
-     - 提交最后一段
+     - 建立当前段
+     - ``[1,4]``
+   * - ``[4,5]``
+     - ``[1,4]``
+     - ``4 <= 4``
+     - ``[1,5]``
+   * - ``[5,8]``
+     - ``[1,5]``
+     - ``5 <= 5``
+     - ``[1,8]``
 
-包含关系为何只更新右端
-~~~~~~~~~~~~~~~~~~~~~~
+算法比较的不是新区间与最初的 ``[1,4]``，而是与已经扩张到 ``[1,5]`` 的当前覆盖段比较。因此由多个区间
+连接形成的传递重叠链，会被连续吸收到同一个结果区间中。
 
-排序保证当前段起点不晚于新区间起点，因此合并后的左端仍是当前左端。若新区间完全包含在当前段中，``max(end,next.end)`` 不改变状态；若它向右延伸，只需更新右端。
-
-端点接触为什么要合并
-~~~~~~~~~~~~~~~~~~~~
-
-区间是闭区间。``next.start == current.end`` 时共享同一个点，交集非空，所以重叠条件使用 ``<=``。只有 ``next.start > current.end`` 才完全分离。
-
-当前段为何可以直接保存在结果末尾
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-实现可以把结果末尾作为尚未完成的当前段。遇到重叠时原地扩张末尾右端；遇到分离时追加新区间。返回结构保存独立的区间快照，不依赖后续输入变化。
-
-扫描线方法的取舍
-~~~~~~~~~~~~~~~~
-
-把每个端点转为进入和离开事件，可通过活动区间计数恢复覆盖并集。它适合覆盖层数等扩展问题，但本题只需并集，排序区间本身状态更少。
-
-为什么合并结果完整且互不重叠
+为什么结果保持相同覆盖范围
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-每个输入区间按顺序被加入当前组或启动新组，因此没有遗漏。新组只在起点严格大于旧组右端时建立，所以结果相邻区间不重叠；组内所有相连区间通过不断取最大右端形成恰好相同的覆盖并集。
+合并重叠区间时，用 ``[currentStart, max(currentEnd,nextEnd)]`` 替代二者。由于两区间之间没有空隙，这个新区间
+覆盖的点恰好等于原两区间覆盖点的并集，既不会丢点，也不会填入原本不存在的空隙。
+
+每个输入区间按排序顺序恰好处理一次：它要么扩张当前覆盖段，要么启动一个新覆盖段，因此没有遗漏。新段只在
+``nextStart > currentEnd`` 时建立，所以结果中相邻区间严格分离，不会残留可继续合并的区间。
+
+为什么结果末尾可以充当当前段
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+代码把 ``result.back()`` 直接作为尚未完成的当前覆盖段。遇到重叠时只扩张其右端点；遇到分离时追加新区间。
+
+这样无需额外保存 ``currentStart`` 和 ``currentEnd``。虽然结果末尾在扫描期间仍可能变化，但它之前的所有区间
+都已经由排序证明不可能与后续区间重叠，因此不会再被修改。
 
 复杂度来源
 ~~~~~~~~~~
 
-排序为 ``O(n log n)``，扫描为 ``O(n)``；不计返回结果，额外空间取决于排序实现，通常为 ``O(log n)``。两两方法最坏平方级，事件扫描需要 ``O(n)`` 事件空间。
+排序需要 ``O(n log n)`` 时间，之后每个区间只扫描一次，耗时 ``O(n)``，总时间为 ``O(n log n)``。
 
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   static int cmp(const void*a,const void*b){int*x=*(int**)a,*y=*(int**)b;return x[0]!=y[0]?x[0]-y[0]:x[1]-y[1];}
-   int**merge(int**a,int n,int*cols,int*returnSize,int**returnCols){qsort(a,(size_t)n,sizeof(int*),cmp);int**out=malloc((size_t)n*sizeof(int*));int k=0;for(int i=0;i<n;i++){if(k==0||a[i][0]>out[k-1][1]){out[k]=malloc(2*sizeof(int));out[k][0]=a[i][0];out[k][1]=a[i][1];k++;}else if(a[i][1]>out[k-1][1])out[k-1][1]=a[i][1];}int*s=malloc((size_t)k*sizeof(int));for(int i=0;i<k;i++)s[i]=2;*returnSize=k;*returnCols=s;return out;}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def merge(self, intervals: list[list[int]]) -> list[list[int]]:
-           intervals.sort()
-           result = []
-           for start, end in intervals:
-               if not result or start > result[-1][1]: result.append([start, end])
-               else: result[-1][1] = max(result[-1][1], end)
-           return result
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public int[][] merge(int[][]a){Arrays.sort(a,(x,y)->x[0]!=y[0]?Integer.compare(x[0],y[0]):Integer.compare(x[1],y[1]));List<int[]>o=new ArrayList<>();for(int[]v:a){if(o.isEmpty()||v[0]>o.get(o.size()-1)[1])o.add(new int[]{v[0],v[1]});else o.get(o.size()-1)[1]=Math.max(o.get(o.size()-1)[1],v[1]);}return o.toArray(new int[o.size()][]);}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn merge(mut a:Vec<Vec<i32>>)->Vec<Vec<i32>>{a.sort();let mut o:Vec<Vec<i32>>=vec![];for v in a{if o.is_empty()||v[0]>o.last().unwrap()[1]{o.push(v)}else{let last=o.last_mut().unwrap();last[1]=last[1].max(v[1]);}}o}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func merge(a [][]int)[][]int{sort.Slice(a,func(i,j int)bool{if a[i][0]==a[j][0]{return a[i][1]<a[j][1]};return a[i][0]<a[j][0]});o:=[][]int{};for _,v:=range a{if len(o)==0||v[0]>o[len(o)-1][1]{o=append(o,[]int{v[0],v[1]})}else if v[1]>o[len(o)-1][1]{o[len(o)-1][1]=v[1]}};return o}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function merge(a:number[][]):number[][]{a.sort((x,y)=>x[0]-y[0]||x[1]-y[1]);const o:number[][]=[];for(const v of a){if(!o.length||v[0]>o[o.length-1][1])o.push([...v]);else o[o.length-1][1]=Math.max(o[o.length-1][1],v[1]);}return o;}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public int[][] Merge(int[][]a){Array.Sort(a,(x,y)=>x[0]!=y[0]?x[0].CompareTo(y[0]):x[1].CompareTo(y[1]));var o=new List<int[]>();foreach(var v in a){if(o.Count==0||v[0]>o[^1][1])o.Add(new[]{v[0],v[1]});else o[^1][1]=Math.Max(o[^1][1],v[1]);}return o.ToArray();}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function merge_intervals(a)
-       sort!(a,by=x->(x[1],x[2]));o=Vector{Vector{Int}}()
-       for v in a;if isempty(o)||v[1]>o[end][2];push!(o,copy(v));else;o[end][2]=max(o[end][2],v[2]);end;end;o
-   end
-
-R
-~
-
-.. code-block:: r
-
-   merge_intervals <- function(a){a<-a[order(a[,1],a[,2]),,drop=FALSE];out<-list();for(i in seq_len(nrow(a))){v<-a[i,];if(length(out)==0L||v[[1]]>out[[length(out)]][[2]])out[[length(out)+1L]]<-c(v[[1]],v[[2]])else out[[length(out)]][[2]]<-max(out[[length(out)]][[2]],v[[2]])};do.call(rbind,out)}
+不计返回结果，额外空间取决于排序实现；C++ 的 ``std::sort`` 通常使用 ``O(log n)`` 调用栈。代码按值接收
+``sortAndMerge`` 的参数，因此还会复制输入区间；这使辅助实现不修改调用者数据。主算法本身只需要当前结果
+末尾这一段状态。
