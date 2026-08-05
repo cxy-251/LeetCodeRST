@@ -8,14 +8,21 @@
 :难度: Medium
 :主题: 回溯、位掩码、迭代扩展、幂集
 :原题: `LeetCode 0078 <https://leetcode.com/problems/subsets/>`_
-:重点: 空集与全集、每个位置至多一次、全部子集、无重复答案
+:重点: 从逐个元素二选一，推导到递增下标回溯与迭代倍增
 
 题目重述
 --------
 
-给定元素互不相同的整数数组 ``nums``，返回它的所有子集。答案必须包含空集和全集；每个输入元素在一个子集中最多出现一次，所有子集都必须不同，答案顺序不限。
+给定一个元素互不相同的整数数组 ``nums``，返回由这些元素组成的全部子集。
 
-约束为 ``1 <= nums.length <= 10``、``-10 <= nums[i] <= 10``，并保证所有元素不同。
+每个元素在一个子集中最多使用一次。结果必须包含空集与全集，不能出现重复子集，
+子集内部顺序和答案整体顺序均不限。
+
+约束如下：
+
+* ``1 <= nums.length <= 10``；
+* ``-10 <= nums[i] <= 10``；
+* ``nums`` 中所有元素互不相同。
 
 自建示例
 --------
@@ -25,197 +32,211 @@
    输入：nums = [2,5,9]
    输出：[[],[2],[5],[9],[2,5],[2,9],[5,9],[2,5,9]]
 
-三个不同元素各有“选择”或“不选择”两种状态，因此共有 ``2^3 = 8`` 个子集；输出次序可以不同。
+三个元素分别可以选择或不选择，因此共有 ``2^3 = 8`` 个子集。
+
+.. code-block:: text
+
+   输入：nums = [-1,4]
+   输出：[[],[-1],[4],[-1,4]]
+
+空集同样是合法子集，负数不会改变枚举规则。
+
+.. code-block:: text
+
+   输入：nums = [7]
+   输出：[[],[7]]
+
+单个元素只有不选择与选择两种状态。
 
 C++ 实现
 --------
 
 .. code-block:: cpp
 
-   #include <utility>
+   #include <cstddef>
    #include <vector>
 
    class Solution {
    private:
-       std::vector<std::vector<int>> bitmask(const std::vector<int>& nums) {
-           int n = nums.size();
+       std::vector<std::vector<int>> bitmaskEnumeration(
+           const std::vector<int>& nums
+       ) {
+           const int n = static_cast<int>(nums.size());
+           const int total = 1 << n;
            std::vector<std::vector<int>> result;
-           for (int mask = 0; mask < (1 << n); ++mask) {
-               std::vector<int> current;
-               for (int bit = 0; bit < n; ++bit)
-                   if (mask & (1 << bit)) current.push_back(nums[bit]);
-               result.push_back(current);
+           result.reserve(total);
+
+           for (int mask = 0; mask < total; ++mask) {
+               std::vector<int> subset;
+               for (int bit = 0; bit < n; ++bit) {
+                   if ((mask & (1 << bit)) != 0) {
+                       subset.push_back(nums[bit]);
+                   }
+               }
+               result.push_back(subset);
            }
            return result;
        }
 
-       std::vector<std::vector<int>> iterativeExpansion(const std::vector<int>& nums) {
+       void binaryDecisionDfs(
+           const std::vector<int>& nums,
+           int index,
+           std::vector<int>& path,
+           std::vector<std::vector<int>>& result
+       ) {
+           if (index == static_cast<int>(nums.size())) {
+               result.push_back(path);
+               return;
+           }
+
+           binaryDecisionDfs(nums, index + 1, path, result);
+
+           path.push_back(nums[index]);
+           binaryDecisionDfs(nums, index + 1, path, result);
+           path.pop_back();
+       }
+
+       std::vector<std::vector<int>> binaryDecision(
+           const std::vector<int>& nums
+       ) {
+           std::vector<std::vector<int>> result;
+           std::vector<int> path;
+           result.reserve(1U << nums.size());
+           binaryDecisionDfs(nums, 0, path, result);
+           return result;
+       }
+
+       void increasingIndexDfs(
+           const std::vector<int>& nums,
+           int start,
+           std::vector<int>& path,
+           std::vector<std::vector<int>>& result
+       ) {
+           result.push_back(path);
+
+           for (int index = start;
+                index < static_cast<int>(nums.size());
+                ++index) {
+               path.push_back(nums[index]);
+               increasingIndexDfs(nums, index + 1, path, result);
+               path.pop_back();
+           }
+       }
+
+       std::vector<std::vector<int>> increasingIndexBacktracking(
+           const std::vector<int>& nums
+       ) {
+           std::vector<std::vector<int>> result;
+           std::vector<int> path;
+           result.reserve(1U << nums.size());
+           increasingIndexDfs(nums, 0, path, result);
+           return result;
+       }
+
+       std::vector<std::vector<int>> iterativeExpansion(
+           const std::vector<int>& nums
+       ) {
            std::vector<std::vector<int>> result(1);
+           result.reserve(1U << nums.size());
+
            for (int value : nums) {
-               int old_size = result.size();
-               for (int i = 0; i < old_size; ++i) {
-                   auto next = result[i];
+               const std::size_t old_size = result.size();
+               for (std::size_t index = 0; index < old_size; ++index) {
+                   std::vector<int> next = result[index];
                    next.push_back(value);
-                   result.push_back(std::move(next));
+                   result.push_back(next);
                }
            }
            return result;
        }
 
-       void dfs(const std::vector<int>& nums, int start, std::vector<int>& path,
-                std::vector<std::vector<int>>& result) {
-           result.push_back(path);
-           for (int index = start; index < static_cast<int>(nums.size()); ++index) {
-               path.push_back(nums[index]);
-               dfs(nums, index + 1, path, result);
-               path.pop_back();
-           }
-       }
-
    public:
        std::vector<std::vector<int>> subsets(std::vector<int>& nums) {
-           std::vector<std::vector<int>> result;
-           std::vector<int> path;
-           dfs(nums, 0, path, result);
-           return result;
+           return increasingIndexBacktracking(nums);
        }
    };
 
 题解
 ----
 
-每个元素为什么对应一个二元选择
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+二元选择
+~~~~~~~~
 
-对子集而言，每个输入元素只有“选择”或“不选择”两种状态，``n`` 个独立选择形成 ``2^n`` 个子集。位掩码的第 ``i`` 位可直接表示是否选择 ``nums[i]``。
+每个元素只有两种状态：加入子集，或不加入子集。``n`` 个独立的二元选择形成
+``2^n`` 个结果，这也是答案数量无法进一步减少的原因。
 
-为什么回溯节点本身就是答案
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+位掩码直接把第 ``i`` 位解释为是否选择 ``nums[i]``。从 ``0`` 枚举到
+``2^n-1``，每个二进制模式都唯一对应一个子集。该方法结构直接，但每个掩码都要重新扫描
+全部 ``n`` 个位置。
 
-组合题只有长度达到 ``k`` 的叶子是答案；本题允许任意长度，因此空路径、内部路径和叶子路径都代表合法子集。递归入口先保存路径，再继续扩展。
+二叉决策树
+~~~~~~~~~~
 
-start 保存什么
-~~~~~~~~~~~~~~
+递归也可直接表达二元选择。处理下标 ``index`` 时，先进入“不选择当前元素”的分支，
+再把当前元素加入 ``path``，进入“选择当前元素”的分支。
 
-``start`` 是下一次允许选择的最小输入下标。选择下标 ``index`` 后递归到 ``index+1``，路径下标严格递增，同一个元素不会重复使用。
+只有处理完全部元素时才提交路径，因此二叉树的 ``2^n`` 个叶子分别对应全部子集。
+选择分支返回后执行 ``pop_back``，恢复父节点的路径状态。
 
-为什么递增下标保证唯一
-~~~~~~~~~~~~~~~~~~~~~~
+递增下标回溯
+~~~~~~~~~~~~
 
-任意子集都对应唯一的输入下标递增序列。算法只生成递增序列，因此不会把同一集合以不同排列重复生成；元素互不相同，无需额外去重。
+另一种回溯方式把当前路径本身立即视为一个答案，再枚举下一项可以选择的下标。
+``start`` 表示下一次选择的最小下标；选择 ``index`` 后递归到 ``index+1``，所以路径中的
+输入下标始终严格递增。
 
-迭代扩展为何每次翻倍
-~~~~~~~~~~~~~~~~~~~~
+空路径在根节点被提交，因此空集自然进入答案。每次增加一个元素后形成的新路径也立即提交，
+所以内部节点和叶子节点都会产生子集。
 
-加入新元素 ``value`` 前已有一组旧子集。所有新子集分为不含 ``value`` 的旧子集，以及在每个旧子集后加入 ``value`` 的副本，两组数量相等且互不重叠。
+唯一生成
+~~~~~~~~
+
+任意子集都有唯一的输入下标递增序列。递增下标回溯只沿这种规范顺序选择元素，
+同一个集合不会以不同排列再次生成。
+
+输入元素互不相同，因此不同的下标集合必然对应不同的值集合，无需排序或额外去重结构。
+
+迭代倍增
+~~~~~~~~
+
+初始结果只含空集。处理新元素 ``value`` 时，已有子集分成两类：
+
+* 不含 ``value`` 的旧子集；
+* 在每个旧子集后加入 ``value`` 得到的新子集。
+
+因此每处理一个元素，结果数量翻倍。循环开始时保存 ``old_size``，只复制本轮之前已经存在的
+子集，避免继续遍历刚追加的新子集。
 
 .. list-table::
    :header-rows: 1
 
    * - 已处理元素
-     - 子集数量
-     - 新增子集
+     - 旧子集
+     - 本轮新增
    * - 无
-     - 1
      - ``[]``
-   * - 2
-     - 2
+     - 无
+   * - ``2``
+     - ``[]``
      - ``[2]``
-   * - 2,5
-     - 4
+   * - ``2,5``
+     - ``[]``, ``[2]``
      - ``[5]``, ``[2,5]``
-   * - 2,5,9
-     - 8
-     - 旧四个子集各加 9
+   * - ``2,5,9``
+     - 前四个子集
+     - 前四个子集分别加入 ``9``
 
-为什么保存答案必须复制路径
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+路径快照
+~~~~~~~~
 
-回溯使用同一个可变 ``path`` 执行选择和撤销。若结果只保存引用，后续 ``pop`` 会改写已提交答案。每次进入节点必须保存独立快照。
+回溯过程始终复用同一个 ``path``。提交答案时必须复制当前内容；随后执行的选择和撤销只修改
+工作路径，不会影响已保存的子集。
 
-为什么不重不漏
-~~~~~~~~~~~~~~
-
-对任意子集，按照其元素在输入中的下标递增选择，存在唯一递归路径到达它，因此不会遗漏。不同节点的递增下标序列不同，对应不同子集，因此不会重复。
-
-复杂度来源
-~~~~~~~~~~
-
-输出有 ``2^n`` 个子集，复制所有元素的总量为 ``Theta(n*2^n)``，三种方法时间和输出空间均达到该下界。回溯工作空间 ``O(n)``。
-
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   static void dfs(int*nums,int n,int start,int*path,int depth,int***out,int**cols,int*size){int*row=malloc(depth*sizeof(int));memcpy(row,path,depth*sizeof(int));(*out)[*size]=row;(*cols)[(*size)++]=depth;for(int i=start;i<n;i++){path[depth]=nums[i];dfs(nums,n,i+1,path,depth+1,out,cols,size);}}
-   int**subsets(int*nums,int n,int*returnSize,int**returnCols){int total=1<<n;int**out=malloc(total*sizeof(int*));int*cols=malloc(total*sizeof(int));int*path=malloc(n*sizeof(int));int size=0;dfs(nums,n,0,path,0,&out,&cols,&size);free(path);*returnSize=size;*returnCols=cols;return out;}
-
-Python
+复杂度
 ~~~~~~
 
-.. code-block:: python
+共有 ``2^n`` 个子集，所有子集包含的元素总数为 ``n * 2^(n-1)``，因此完整输出至少需要
+``Theta(n * 2^n)`` 时间与输出空间。
 
-   class Solution:
-       def subsets(self, nums: list[int]) -> list[list[int]]:
-           result=[];path=[]
-           def dfs(start):
-               result.append(path.copy())
-               for i in range(start,len(nums)):path.append(nums[i]);dfs(i+1);path.pop()
-           dfs(0);return result
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {List<List<Integer>>o=new ArrayList<>();List<Integer>p=new ArrayList<>();void dfs(int[]a,int start){o.add(new ArrayList<>(p));for(int i=start;i<a.length;i++){p.add(a[i]);dfs(a,i+1);p.remove(p.size()-1);}}public List<List<Integer>> subsets(int[]a){dfs(a,0);return o;}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn subsets(a:Vec<i32>)->Vec<Vec<i32>>{fn dfs(a:&[i32],start:usize,p:&mut Vec<i32>,o:&mut Vec<Vec<i32>>){o.push(p.clone());for i in start..a.len(){p.push(a[i]);dfs(a,i+1,p,o);p.pop();}}let mut o=vec![];dfs(&a,0,&mut vec![],&mut o);o}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func subsets(a []int)[][]int{o:=[][]int{};p:=[]int{};var dfs func(int);dfs=func(start int){o=append(o,append([]int(nil),p...));for i:=start;i<len(a);i++{p=append(p,a[i]);dfs(i+1);p=p[:len(p)-1]}};dfs(0);return o}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function subsets(a:number[]):number[][]{const o:number[][]=[],p:number[]=[];const dfs=(start:number)=>{o.push([...p]);for(let i=start;i<a.length;i++){p.push(a[i]);dfs(i+1);p.pop();}};dfs(0);return o;}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {List<IList<int>>o=new();List<int>p=new();void Dfs(int[]a,int start){o.Add(new List<int>(p));for(int i=start;i<a.Length;i++){p.Add(a[i]);Dfs(a,i+1);p.RemoveAt(p.Count-1);}}public IList<IList<int>> Subsets(int[]a){Dfs(a,0);return o;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function subsets_values(a)
-       o=Vector{Vector{Int}}();p=Int[]
-       function dfs(start);push!(o,copy(p));for i in start:length(a);push!(p,a[i]);dfs(i+1);pop!(p);end;end
-       dfs(1);o
-   end
-
-R
-~
-
-.. code-block:: r
-
-   subsets_values <- function(a){out<-list();path<-numeric();dfs<-function(start){out[[length(out)+1L]]<<-path;if(start<=length(a))for(i in start:length(a)){path<<-c(path,a[[i]]);dfs(i+1L);path<<-head(path,-1L)}};dfs(1L);out}
+四种方法的时间复杂度均为 ``O(n * 2^n)``。除返回结果外，位掩码和迭代方法的临时子集最长为
+``O(n)``；两种递归方法的路径与调用栈为 ``O(n)``。
