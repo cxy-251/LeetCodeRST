@@ -6,26 +6,43 @@
 
 :题号: 0096
 :难度: Medium
-:主题: 动态规划、Catalan 数、二叉搜索树
+:主题: 二叉搜索树、动态规划、记忆化搜索、Catalan 数
 :原题: `LeetCode 0096 <https://leetcode.com/problems/unique-binary-search-trees/>`_
-:重点: ``1..n`` 全部使用、根节点划分、左右结构乘法、总数计算
+:重点: 从枚举根节点的重复递归，推导到按节点数量计数和 Catalan 递推
 
 题目重述
 --------
 
-给定整数 ``n``，计算由数值 ``1..n`` 各使用一次可以构成多少棵结构不同的二叉搜索树。只返回数量，不需要构造具体树。
+给定整数 ``n``，计算由数值 ``1..n`` 各使用一次可以构成多少棵结构不同的二叉搜索树。
 
-约束为 ``1 <= n <= 19``。
+二叉搜索树要求任意节点左子树中的值都小于该节点，右子树中的值都大于该节点。只需返回树的数量，
+不需要构造具体树。
+
+约束为 ``1 <= n <= 19``，答案保证位于 32 位有符号整数范围内。
 
 自建示例
 --------
 
 .. code-block:: text
 
+   输入：n = 1
+   输出：1
+
+只有一个节点时，只能构成一棵树。
+
+.. code-block:: text
+
+   输入：n = 3
+   输出：5
+
+以 1、2、3 为根时，左右子树结构数乘积依次为 ``1*2``、``1*1``、``2*1``，总数为 5。
+
+.. code-block:: text
+
    输入：n = 4
    输出：14
 
-依次选择 1、2、3、4 为根时，左右子树数量乘积分别为 ``1*5``、``1*2``、``2*1``、``5*1``，总数为 ``14``。
+四个根位置的贡献依次为 ``1*5``、``1*2``、``2*1``、``5*1``。
 
 C++ 实现
 --------
@@ -38,69 +55,131 @@ C++ 实现
    private:
        long long plainRecursion(int nodes) {
            if (nodes <= 1) return 1;
+
            long long total = 0;
-           for (int left_nodes = 0; left_nodes < nodes; ++left_nodes)
-               total += plainRecursion(left_nodes) *
-                        plainRecursion(nodes - 1 - left_nodes);
+           for (int leftNodes = 0; leftNodes < nodes; ++leftNodes) {
+               int rightNodes = nodes - 1 - leftNodes;
+               total += plainRecursion(leftNodes) *
+                        plainRecursion(rightNodes);
+           }
            return total;
        }
 
-       int dynamicProgramming(int n) {
+       long long memoDfs(int nodes, std::vector<long long>& memo) {
+           if (nodes <= 1) return 1;
+
+           long long& cached = memo[nodes];
+           if (cached != -1) return cached;
+
+           cached = 0;
+           for (int leftNodes = 0; leftNodes < nodes; ++leftNodes) {
+               int rightNodes = nodes - 1 - leftNodes;
+               cached += memoDfs(leftNodes, memo) *
+                         memoDfs(rightNodes, memo);
+           }
+           return cached;
+       }
+
+       int memoizedRecursion(int n) {
+           std::vector<long long> memo(n + 1, -1);
+           return static_cast<int>(memoDfs(n, memo));
+       }
+
+       int bottomUpDp(int n) {
            std::vector<long long> count(n + 1);
            count[0] = 1;
-           for (int nodes = 1; nodes <= n; ++nodes)
-               for (int left_nodes = 0; left_nodes < nodes; ++left_nodes)
-                   count[nodes] += count[left_nodes] *
-                                   count[nodes - 1 - left_nodes];
+
+           for (int nodes = 1; nodes <= n; ++nodes) {
+               for (int leftNodes = 0; leftNodes < nodes; ++leftNodes) {
+                   int rightNodes = nodes - 1 - leftNodes;
+                   count[nodes] += count[leftNodes] * count[rightNodes];
+               }
+           }
            return static_cast<int>(count[n]);
        }
 
-       int catalanFormula(int n) {
+       int catalanRecurrence(int n) {
            long long value = 1;
-           for (int k = 0; k < n; ++k)
+           for (int k = 0; k < n; ++k) {
                value = value * 2 * (2 * k + 1) / (k + 2);
+           }
            return static_cast<int>(value);
        }
 
    public:
        int numTrees(int n) {
-           return dynamicProgramming(n);
+           return bottomUpDp(n);
        }
    };
 
 题解
 ----
 
-为什么具体键值不影响结构数
-~~~~~~~~~~~~~~~~~~~~~~~~
+数量状态
+~~~~~~~~
 
-BST 中序遍历严格递增。对于任意 ``nodes`` 个互异有序键，只要保持相对大小关系，相同树形会得到唯一合法标号。因此状态不需要记录区间起点，只需记录节点数量。
+对任意 ``nodes`` 个互异且有序的键，BST 的中序遍历顺序已经确定。把一组连续键整体平移，或替换为另一组
+保持相对大小关系的键，不会改变可选树形。
 
-固定根后如何拆分
-~~~~~~~~~~~~~~~~
+因此状态只需记录节点数量：
 
-若根在有序序列中的位置使左侧有 ``left_nodes`` 个键，则右侧有 ``nodes-1-left_nodes`` 个键。左结构和右结构独立选择，每个左树都能与每个右树组合，因此该根位置贡献两侧数量的乘积。
+.. code-block:: text
+
+   count[nodes] = 使用 nodes 个有序键能够形成的不同 BST 数量
+
+不需要记录具体值域的起点和终点。
+
+根节点划分
+~~~~~~~~~~
+
+在 ``nodes`` 个键中选择排名为 ``leftNodes + 1`` 的键作为根后：
+
+.. code-block:: text
+
+   左子树节点数 = leftNodes
+   右子树节点数 = nodes - 1 - leftNodes
+
+左、右子树可以独立选择结构，所以固定根位置的组合数为两侧数量的乘积。枚举所有根位置得到：
 
 .. code-block:: text
 
    count[nodes] = sum(
-       count[left_nodes] * count[nodes-1-left_nodes]
+       count[leftNodes] * count[nodes - 1 - leftNodes]
    )
 
-空树为何计数为一
-~~~~~~~~~~~~~~~~
+任意非空 BST 都有唯一根位置，并进一步确定唯一的左、右子树结构对，因此各项覆盖全部合法树且互不重复。
 
-``count[0]=1`` 表示唯一的“空子树选择”。叶节点左右都为空，它的贡献是 ``1*1``。若把空树数量设为 0，所有包含空侧的合法 BST 都无法生成。
-
-状态演化
+空树状态
 ~~~~~~~~
+
+``count[0] = 1`` 表示一侧为空时存在一种合法选择。叶节点左右都为空，其结构数应为 ``1 * 1``；若空树计数为
+0，所有带空子树的合法结构都会被错误消除。
+
+裸递归
+~~~~~~
+
+最直接的递归对每种根位置分别递归计算左右节点数。它准确表达了根节点划分，但相同的节点数量会在不同分支中
+被反复计算。例如计算 ``count[5]`` 时，``count[2]`` 会从多个根位置重复出现，递归树因此快速膨胀。
+
+记忆化搜索
+~~~~~~~~~~
+
+节点数量只有 ``0..n`` 共 ``n+1`` 种。缓存 ``memo[nodes]`` 后，每个数量只完整枚举一次根位置；后续访问
+直接返回已有结果。
+
+记忆化保留了自顶向下的推导方式，同时把重复子问题压缩成有限状态。
+
+自底向上
+~~~~~~~~
+
+计算 ``count[nodes]`` 时，左右节点数都严格小于 ``nodes``。按节点数从小到大填表即可保证所有依赖已经完成：
 
 .. list-table::
    :header-rows: 1
 
    * - 节点数
      - 根位置贡献
-     - ``count``
+     - 结构数
    * - 0
      - 空树
      - 1
@@ -113,99 +192,29 @@ BST 中序遍历严格递增。对于任意 ``nodes`` 个互异有序键，只�
    * - 3
      - ``1*2 + 1*1 + 2*1``
      - 5
+   * - 4
+     - ``1*5 + 1*2 + 2*1 + 5*1``
+     - 14
 
-为什么按节点数递增填表
-~~~~~~~~~~~~~~~~~~~~~~
+公开入口采用该方案，因为状态与 BST 根节点划分直接对应，边界和转移都容易验证。
 
-计算 ``count[nodes]`` 时，两侧节点数都小于 ``nodes``，因此外层从 1 到 ``n`` 递增后，所有依赖已经完成。每个状态只写一次，不会像裸递归那样反复计算相同节点数。
+Catalan 递推
+~~~~~~~~~~~~
 
-为什么不重不漏
-~~~~~~~~~~~~~~
+上述序列正是 Catalan 数，还可以使用相邻项关系：
 
-任意非空 BST 有唯一根位置，决定唯一左右节点数，因此必计入某一项。固定根后，任意左右结构对产生唯一整树；不同根位置或不同结构对不可能产生相同树，所以各乘积项互不重叠。
+.. code-block:: text
 
-Catalan 公式的取舍
-~~~~~~~~~~~~~~~~
+   C(0) = 1
+   C(k+1) = C(k) * 2 * (2k+1) / (k+2)
 
-该递推正是 Catalan 数，可用 ``C_(k+1)=C_k*2*(2k+1)/(k+2)`` 在线性时间计算。整除在数学上成立，但固定宽实现需要谨慎安排乘除和溢出；DP 与 BST 根划分直接对应，更适合作为主解法。
+它把时间降为 ``O(n)``、额外空间降为 ``O(1)``。整数除法在数学上能够整除，但固定宽整数实现仍需使用足够宽的
+中间类型并谨慎安排乘除顺序。动态规划更直接地体现题目的结构来源。
 
-复杂度来源
-~~~~~~~~~~
-
-裸递归指数级。DP 有 ``n`` 个状态，每个状态枚举 ``O(n)`` 个根位置，时间 ``O(n²)``、空间 ``O(n)``。乘法公式时间 ``O(n)``、空间 ``O(1)``。
-
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   int numTrees(int n){long long dp[20]={0};dp[0]=1;for(int nodes=1;nodes<=n;nodes++)for(int left=0;left<nodes;left++)dp[nodes]+=dp[left]*dp[nodes-1-left];return(int)dp[n];}
-
-Python
+复杂度
 ~~~~~~
 
-.. code-block:: python
+裸递归会重复展开相同节点数量，时间为指数级，递归深度 ``O(n)``。
 
-   class Solution:
-       def numTrees(self, n: int) -> int:
-           dp = [0] * (n + 1); dp[0] = 1
-           for nodes in range(1, n + 1):
-               for left in range(nodes):
-                   dp[nodes] += dp[left] * dp[nodes - 1 - left]
-           return dp[n]
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public int numTrees(int n){long[]dp=new long[n+1];dp[0]=1;for(int nodes=1;nodes<=n;nodes++)for(int left=0;left<nodes;left++)dp[nodes]+=dp[left]*dp[nodes-1-left];return(int)dp[n];}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn num_trees(n:i32)->i32{let n=n as usize;let mut dp=vec![0i64;n+1];dp[0]=1;for nodes in 1..=n{for left in 0..nodes{dp[nodes]+=dp[left]*dp[nodes-1-left];}}dp[n]as i32}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func numTrees(n int)int{dp:=make([]int64,n+1);dp[0]=1;for nodes:=1;nodes<=n;nodes++{for left:=0;left<nodes;left++{dp[nodes]+=dp[left]*dp[nodes-1-left]}};return int(dp[n])}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function numTrees(n:number):number{const dp=Array(n+1).fill(0);dp[0]=1;for(let nodes=1;nodes<=n;nodes++)for(let left=0;left<nodes;left++)dp[nodes]+=dp[left]*dp[nodes-1-left];return dp[n];}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public int NumTrees(int n){long[]dp=new long[n+1];dp[0]=1;for(int nodes=1;nodes<=n;nodes++)for(int left=0;left<nodes;left++)dp[nodes]+=dp[left]*dp[nodes-1-left];return(int)dp[n];}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function num_trees(n::Int)
-       dp=zeros(Int64,n+1);dp[1]=1
-       for nodes in 1:n,left in 0:nodes-1;dp[nodes+1]+=dp[left+1]*dp[nodes-left];end
-       Int(dp[n+1])
-   end
-
-R
-~
-
-.. code-block:: r
-
-   num_trees <- function(n){dp<-numeric(n+1L);dp[[1L]]<-1;for(nodes in seq_len(n))for(left in 0:(nodes-1L))dp[[nodes+1L]]<-dp[[nodes+1L]]+dp[[left+1L]]*dp[[nodes-left]];as.integer(dp[[n+1L]])}
+记忆化搜索和自底向上 DP 都有 ``n`` 个非空状态，每个状态枚举至多 ``n`` 个根位置，时间 ``O(n^2)``，
+缓存或数组空间 ``O(n)``。Catalan 相邻项递推时间 ``O(n)``，额外空间 ``O(1)``。
