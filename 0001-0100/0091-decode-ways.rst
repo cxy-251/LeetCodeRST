@@ -8,14 +8,16 @@
 :难度: Medium
 :主题: 字符串、动态规划、记忆化搜索、滚动状态
 :原题: `LeetCode 0091 <https://leetcode.com/problems/decode-ways/>`_
-:重点: 一位与两位编码、零的限制、完整切分、方案计数
+:重点: 从枚举一位与两位切分，推导到只保留前两个前缀状态
 
 题目重述
 --------
 
-数字 ``1`` 到 ``26`` 分别映射到字母 ``A`` 到 ``Z``。给定非空数字字符串 ``s``，返回把整个字符串切分成合法编码的不同方案数。一位编码只能是 ``1..9``，两位编码只能是 ``10..26``，字符 ``0`` 不能单独解码。
+数字 ``1`` 到 ``26`` 分别映射到字母 ``A`` 到 ``Z``。给定一个只包含数字的非空字符串 ``s``，
+返回把整个字符串切分为合法编码的方案数。
 
-约束为 ``1 <= s.length <= 100``，字符只可能是数字；题目保证答案位于 32 位有符号整数范围内。
+一位编码只能是 ``1..9``，两位编码只能是 ``10..26``。字符 ``0`` 不能单独解码，也不能作为两位编码的首位。
+题目保证最终答案位于 32 位有符号整数范围内。
 
 自建示例
 --------
@@ -25,14 +27,21 @@
    输入：s = "1212"
    输出：5
 
-五种切分为 ``1|2|1|2``、``12|1|2``、``1|21|2``、``1|2|12`` 和 ``12|12``。
+合法切分为 ``1|2|1|2``、``12|1|2``、``1|21|2``、``1|2|12`` 和 ``12|12``。
+
+.. code-block:: text
+
+   输入：s = "101"
+   输出：1
+
+只有 ``10|1`` 合法；``1|01`` 中的 ``0`` 不能单独解码。
 
 .. code-block:: text
 
    输入：s = "230"
    输出：0
 
-``0`` 不能单独使用，而 ``30`` 又不在 ``10..26`` 范围内。
+``0`` 不能单独解码，而 ``30`` 超出 ``10..26``。
 
 C++ 实现
 --------
@@ -44,55 +53,88 @@ C++ 实现
 
    class Solution {
    private:
-       int plainDfs(const std::string& s, int index) {
-           if (index == static_cast<int>(s.size())) return 1;
-           if (s[index] == '0') return 0;
-           int total = plainDfs(s, index + 1);
-           if (index + 1 < static_cast<int>(s.size())) {
-               int value = (s[index] - '0') * 10 + s[index + 1] - '0';
-               if (value <= 26) total += plainDfs(s, index + 2);
-           }
-           return total;
+       bool validPair(char first, char second) {
+           int value = (first - '0') * 10 + (second - '0');
+           return 10 <= value && value <= 26;
        }
 
-       int memoDfs(const std::string& s, int index, std::vector<int>& memo) {
-           if (index == static_cast<int>(s.size())) return 1;
-           if (s[index] == '0') return 0;
-           if (memo[index] != -1) return memo[index];
-           int total = memoDfs(s, index + 1, memo);
-           if (index + 1 < static_cast<int>(s.size())) {
-               int value = (s[index] - '0') * 10 + s[index + 1] - '0';
-               if (value <= 26) total += memoDfs(s, index + 2, memo);
+       int plainRecursion(const std::string& s, int index) {
+           if (index == static_cast<int>(s.size())) {
+               return 1;
            }
-           return memo[index] = total;
+           if (s[index] == '0') {
+               return 0;
+           }
+
+           int ways = plainRecursion(s, index + 1);
+           if (index + 1 < static_cast<int>(s.size()) &&
+               validPair(s[index], s[index + 1])) {
+               ways += plainRecursion(s, index + 2);
+           }
+           return ways;
        }
 
-       int prefixDp(const std::string& s) {
-           int n = s.size();
+       int memoDfs(const std::string& s, int index,
+                   std::vector<int>& memo) {
+           if (index == static_cast<int>(s.size())) {
+               return 1;
+           }
+           if (s[index] == '0') {
+               return 0;
+           }
+           if (memo[index] != -1) {
+               return memo[index];
+           }
+
+           int ways = memoDfs(s, index + 1, memo);
+           if (index + 1 < static_cast<int>(s.size()) &&
+               validPair(s[index], s[index + 1])) {
+               ways += memoDfs(s, index + 2, memo);
+           }
+           memo[index] = ways;
+           return ways;
+       }
+
+       int memoizedSearch(const std::string& s) {
+           std::vector<int> memo(s.size(), -1);
+           return memoDfs(s, 0, memo);
+       }
+
+       int tableDp(const std::string& s) {
+           int n = static_cast<int>(s.size());
            std::vector<int> dp(n + 1);
            dp[0] = 1;
+
            for (int length = 1; length <= n; ++length) {
-               if (s[length - 1] != '0') dp[length] += dp[length - 1];
-               if (length >= 2) {
-                   int value = (s[length - 2] - '0') * 10 + s[length - 1] - '0';
-                   if (10 <= value && value <= 26) dp[length] += dp[length - 2];
+               if (s[length - 1] != '0') {
+                   dp[length] += dp[length - 1];
+               }
+               if (length >= 2 &&
+                   validPair(s[length - 2], s[length - 1])) {
+                   dp[length] += dp[length - 2];
                }
            }
            return dp[n];
        }
 
        int rollingDp(const std::string& s) {
-           int previous_two = 1;
-           int previous_one = s[0] == '0' ? 0 : 1;
-           for (int length = 2; length <= static_cast<int>(s.size()); ++length) {
+           int twoBack = 1;
+           int oneBack = s[0] == '0' ? 0 : 1;
+
+           for (int length = 2;
+                length <= static_cast<int>(s.size()); ++length) {
                int current = 0;
-               if (s[length - 1] != '0') current += previous_one;
-               int value = (s[length - 2] - '0') * 10 + s[length - 1] - '0';
-               if (10 <= value && value <= 26) current += previous_two;
-               previous_two = previous_one;
-               previous_one = current;
+               if (s[length - 1] != '0') {
+                   current += oneBack;
+               }
+               if (validPair(s[length - 2], s[length - 1])) {
+                   current += twoBack;
+               }
+
+               twoBack = oneBack;
+               oneBack = current;
            }
-           return previous_one;
+           return oneBack;
        }
 
    public:
@@ -101,42 +143,63 @@ C++ 实现
        }
    };
 
-题解
-----
+解题思路
+--------
 
-朴素递归枚举什么
-~~~~~~~~~~~~~~~~
+递归切分
+~~~~~~~~
 
-从下标 ``index`` 开始，若当前字符不是 ``0``，可以消费一位；若当前两位在 ``10..26``，还可以消费两位。递归树完整枚举所有切分方式，但同一后缀会从多个上层切分重复到达，最坏呈指数增长。
+从下标 ``index`` 开始，下一段编码只有两种长度：
 
-前缀状态如何消除重复
-~~~~~~~~~~~~~~~~~~~~
+* 当前字符不是 ``0`` 时，可以把它作为一位编码，递归处理 ``index + 1``；
+* 当前两位处于 ``10..26`` 时，可以把它们作为两位编码，递归处理 ``index + 2``。
 
-定义 ``dp[length]``：前 ``length`` 个字符的合法完整解码方案数。加入末尾字符后，最后一个编码只有两种互斥来源：
+到达字符串末尾表示此前所有字符都已被合法切分，因此返回 1。遇到 ``0`` 则当前后缀无法从一位编码开始，返回 0。
+
+同一个后缀会被不同切分路径重复计算。例如处理 ``1212`` 时，下标 2 既可能由 ``1|2`` 到达，也可能由 ``12`` 到达，
+裸递归因此最坏呈指数增长。
+
+后缀记忆化
+~~~~~~~~~~
+
+``memo[index]`` 保存后缀 ``s[index:]`` 的解码方案数。状态只由起始下标决定，因为此前如何切分不会改变剩余字符。
+每个下标首次计算后写入缓存，后续直接复用，把重复递归压缩为线性数量的状态。
+
+前缀动态规划
+~~~~~~~~~~~~
+
+定义 ``dp[length]`` 为前 ``length`` 个字符的完整解码方案数。最后一个编码只能占一位或两位：
 
 .. code-block:: text
 
-   一位贡献：s[length-1] != '0'        -> dp[length-1]
-   两位贡献：10 <= s[length-2:length] <= 26 -> dp[length-2]
+   s[length-1] 可以单独解码
+       dp[length] += dp[length-1]
 
-两类方案最后一个编码长度不同，不会重复；任意合法解码的最后一个编码又必属于其中一类，因此转移完整。
+   s[length-2:length] 属于 10..26
+       dp[length] += dp[length-2]
 
-空前缀为何有一种方案
-~~~~~~~~~~~~~~~~~~~~
+两类方案的最后一个编码长度不同，因此互不重复。任意完整解码也必然以其中一种编码结束，所以转移没有遗漏。
 
-``dp[0] = 1`` 表示“不选择任何编码”这一种空划分。它不是实际字母，而是乘法与递推的单位元：首字符合法时，一位贡献来自 ``dp[0]``；前两位构成合法双字符编码时，两位贡献同样来自 ``dp[0]``。
+空前缀状态
+~~~~~~~~~~
 
-零如何强制切分
-~~~~~~~~~~~~~~
+``dp[0] = 1`` 表示空前缀只有一种空切分。它让首个合法一位编码从 ``dp[0]`` 获得一个方案，也让前两个字符组成
+合法两位编码时从 ``dp[0]`` 获得一个方案。
 
-``0`` 不能单独编码，所以一位贡献必须跳过。只有前一位与它组成 ``10`` 或 ``20`` 时，两位贡献才存在。于是：
+零的约束
+~~~~~~~~
 
-* ``06`` 的首位状态为 0，后续也无法恢复；
-* ``30`` 的两位值超过 26，两个贡献都为 0；
-* ``10`` 只能来自 ``dp[0]``，恰好一种方案。
+字符 ``0`` 会同时限制两条转移：
 
-``11106`` 的状态演化
-~~~~~~~~~~~~~~~~~~~~
+* 当前字符为 ``0`` 时，不能接收 ``dp[length-1]`` 的一位贡献；
+* 只有 ``10`` 或 ``20`` 才能接收 ``dp[length-2]`` 的两位贡献。
+
+因此 ``06`` 从首字符开始就是 0 种方案，``30`` 的两条转移都无效，而 ``10`` 恰好只保留 ``10`` 这一种切分。
+
+状态演化
+~~~~~~~~
+
+以 ``11106`` 为例：
 
 .. list-table::
    :header-rows: 1
@@ -170,94 +233,14 @@ C++ 实现
      - 0
      - 2
 
-为什么滚动数组可以覆盖二维历史
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+滚动压缩
+~~~~~~~~
 
-计算 ``dp[length]`` 只读取前一项和前两项，更早状态不会再被访问。用 ``previous_one`` 和 ``previous_two`` 保存这两个值即可把空间从 ``O(n)`` 压缩为 ``O(1)``；更新时必须先计算 ``current``，再整体向前滚动，避免覆盖仍要读取的旧状态。
+计算 ``dp[length]`` 只依赖 ``dp[length-1]`` 和 ``dp[length-2]``。用 ``oneBack``、``twoBack`` 保存这两个状态，
+先算出 ``current``，再整体向前滚动，即可把额外空间从 ``O(n)`` 降为 ``O(1)``。
 
-为什么最终状态表示完整解码
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-每个状态只统计恰好消费对应前缀的划分，没有允许跳过字符。归纳地，一位和两位转移都从已完整解码的更短前缀接上一个合法编码，因此 ``dp[n]`` 中每个方案都消费全部字符；反之任意完整解码按最后编码长度必被某个转移计入。
-
-复杂度来源
-~~~~~~~~~~
-
-裸递归最坏指数级；记忆化、完整 DP 和滚动 DP 都只处理 ``n`` 个位置，时间 ``O(n)``。记忆化和完整 DP 使用 ``O(n)`` 空间，滚动实现额外空间 ``O(1)``。
-
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   int numDecodings(char *s){int n=(int)strlen(s),two=1,one=s[0]=='0'?0:1;for(int len=2;len<=n;len++){int cur=0;if(s[len-1]!='0')cur+=one;int v=(s[len-2]-'0')*10+s[len-1]-'0';if(v>=10&&v<=26)cur+=two;two=one;one=cur;}return one;}
-
-Python
+复杂度
 ~~~~~~
 
-.. code-block:: python
-
-   class Solution:
-       def numDecodings(self, s: str) -> int:
-           two, one = 1, int(s[0] != "0")
-           for i in range(1, len(s)):
-               current = one if s[i] != "0" else 0
-               if 10 <= int(s[i-1:i+1]) <= 26: current += two
-               two, one = one, current
-           return one
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public int numDecodings(String s){int two=1,one=s.charAt(0)=='0'?0:1;for(int i=1;i<s.length();i++){int cur=s.charAt(i)=='0'?0:one;int v=(s.charAt(i-1)-'0')*10+s.charAt(i)-'0';if(v>=10&&v<=26)cur+=two;two=one;one=cur;}return one;}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn num_decodings(s:String)->i32{let b=s.as_bytes();let(mut two,mut one)=(1,if b[0]==b'0'{0}else{1});for i in 1..b.len(){let mut cur=if b[i]==b'0'{0}else{one};let v=(b[i-1]-b'0')as i32*10+(b[i]-b'0')as i32;if(10..=26).contains(&v){cur+=two}two=one;one=cur;}one}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func numDecodings(s string)int{two,one:=1,0;if s[0]!='0'{one=1};for i:=1;i<len(s);i++{cur:=0;if s[i]!='0'{cur=one};v:=int(s[i-1]-'0')*10+int(s[i]-'0');if v>=10&&v<=26{cur+=two};two,one=one,cur};return one}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function numDecodings(s:string):number{let two=1,one=s[0]==='0'?0:1;for(let i=1;i<s.length;i++){let cur=s[i]==='0'?0:one;const v=(s.charCodeAt(i-1)-48)*10+s.charCodeAt(i)-48;if(v>=10&&v<=26)cur+=two;two=one;one=cur;}return one;}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public int NumDecodings(string s){int two=1,one=s[0]=='0'?0:1;for(int i=1;i<s.Length;i++){int cur=s[i]=='0'?0:one,v=(s[i-1]-'0')*10+s[i]-'0';if(v>=10&&v<=26)cur+=two;two=one;one=cur;}return one;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function num_decodings(s::String)
-       b=codeunits(s);two=1;one=b[1]==UInt8('0') ? 0 : 1
-       for i in 2:length(b);cur=b[i]==UInt8('0') ? 0 : one;v=(b[i-1]-UInt8('0'))*10+(b[i]-UInt8('0'));if 10<=v<=26;cur+=two;end;two,one=one,cur;end
-       one
-   end
-
-R
-~
-
-.. code-block:: r
-
-   num_decodings <- function(s){d<-utf8ToInt(s)-48L;two<-1L;one<-if(d[[1L]]==0L)0L else 1L;if(length(d)>1L)for(i in 2:length(d)){cur<-if(d[[i]]==0L)0L else one;v<-d[[i-1L]]*10L+d[[i]];if(v>=10L&&v<=26L)cur<-cur+two;two<-one;one<-cur};one}
+裸递归最坏为指数时间，递归深度 ``O(n)``。记忆化搜索和两种动态规划均为 ``O(n)`` 时间；记忆化与完整表使用
+``O(n)`` 空间，滚动动态规划使用 ``O(1)`` 额外空间。
