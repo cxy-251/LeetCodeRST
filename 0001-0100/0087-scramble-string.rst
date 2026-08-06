@@ -6,16 +6,17 @@
 
 :题号: 0087
 :难度: Hard
-:主题: 字符串、区间动态规划、记忆化搜索
+:主题: 字符串、记忆化搜索、区间动态规划
 :原题: `LeetCode 0087 <https://leetcode.com/problems/scramble-string/>`_
-:重点: 递归二分、左右交换、子串对应、字符频次剪枝
+:重点: 从递归枚举切分，推导到三维状态缓存与区间动态规划
 
 题目重述
 --------
 
-给定两个等长字符串 ``s1`` 和 ``s2``。可以把一个非空字符串递归地切成两个非空子串，并在每个切分节点选择保持左右顺序或交换左右子串，再对子串继续执行相同操作。判断 ``s2`` 是否是 ``s1`` 的扰乱字符串。
+给定两个字符串 ``s1`` 和 ``s2``。对一个长度大于 1 的字符串，可以在任意位置把它切成两个非空子串，
+然后选择保持左右顺序或交换左右子串，再对两个子串递归执行相同操作。
 
-约束为 ``1 <= s1.length = s2.length <= 30``，两个字符串只包含小写英文字母。
+判断 ``s2`` 能否由 ``s1`` 经过上述操作得到。两个字符串只包含小写英文字母，长度均不超过 30。
 
 自建示例
 --------
@@ -25,14 +26,21 @@
    输入：s1 = "abc", s2 = "bca"
    输出：true
 
-把 ``abc`` 切为 ``a | bc``，交换两部分后得到 ``bc | a``，即 ``bca``。
+把 ``abc`` 切为 ``a | bc``，交换两个部分后得到 ``bc | a``，即 ``bca``。
 
 .. code-block:: text
 
    输入：s1 = "abcd", s2 = "bdac"
    输出：false
 
-两者字符频次相同，但不存在能同时满足左右子串对应关系的递归切分。
+两个字符串字符频次相同，但不存在一棵递归切分树，使每个节点都能通过保持或交换两个孩子完成对应。
+
+.. code-block:: text
+
+   输入：s1 = "great", s2 = "rgeat"
+   输出：true
+
+可以把 ``great`` 切为 ``gr | eat``。左侧 ``gr`` 交换为 ``rg``，右侧 ``eat`` 保持不变。
 
 C++ 实现
 --------
@@ -41,237 +49,275 @@ C++ 实现
 
    #include <array>
    #include <string>
-   #include <utility>
    #include <vector>
 
    class Solution {
    private:
-       std::string first, second;
+       std::string first;
+       std::string second;
+       std::vector<std::array<int, 26>> first_prefix;
+       std::vector<std::array<int, 26>> second_prefix;
        std::vector<std::vector<std::vector<int>>> memo;
 
-       bool sameCharacters(int i, int j, int length) {
-           std::array<int,26> count{};
-           for (int offset = 0; offset < length; ++offset) {
-               ++count[first[i + offset] - 'a'];
-               --count[second[j + offset] - 'a'];
+       void buildPrefixCounts() {
+           int n = static_cast<int>(first.size());
+           first_prefix.assign(n + 1, {});
+           second_prefix.assign(n + 1, {});
+
+           for (int index = 0; index < n; ++index) {
+               first_prefix[index + 1] = first_prefix[index];
+               second_prefix[index + 1] = second_prefix[index];
+               ++first_prefix[index + 1][first[index] - 'a'];
+               ++second_prefix[index + 1][second[index] - 'a'];
            }
-           for (int value : count) if (value != 0) return false;
+       }
+
+       bool sameCharacters(int first_start, int second_start, int length) const {
+           for (int letter = 0; letter < 26; ++letter) {
+               int first_count = first_prefix[first_start + length][letter] -
+                                 first_prefix[first_start][letter];
+               int second_count = second_prefix[second_start + length][letter] -
+                                  second_prefix[second_start][letter];
+               if (first_count != second_count) {
+                   return false;
+               }
+           }
            return true;
        }
 
-       bool equalRange(int i, int j, int length) {
-           for (int offset = 0; offset < length; ++offset)
-               if (first[i + offset] != second[j + offset]) return false;
+       bool equalRange(int first_start, int second_start, int length) const {
+           for (int offset = 0; offset < length; ++offset) {
+               if (first[first_start + offset] != second[second_start + offset]) {
+                   return false;
+               }
+           }
            return true;
        }
 
-       bool plainDfs(int i, int j, int length) {
-           if (equalRange(i, j, length)) return true;
-           if (!sameCharacters(i, j, length)) return false;
+       bool plainRecursion(int first_start, int second_start, int length) {
+           if (equalRange(first_start, second_start, length)) {
+               return true;
+           }
+           if (!sameCharacters(first_start, second_start, length)) {
+               return false;
+           }
+
            for (int split = 1; split < length; ++split) {
-               if (plainDfs(i, j, split) && plainDfs(i + split, j + split, length - split)) return true;
-               if (plainDfs(i, j + length - split, split) &&
-                   plainDfs(i + split, j, length - split)) return true;
+               bool keep_order =
+                   plainRecursion(first_start, second_start, split) &&
+                   plainRecursion(first_start + split,
+                                  second_start + split,
+                                  length - split);
+
+               bool swap_order =
+                   plainRecursion(first_start,
+                                  second_start + length - split,
+                                  split) &&
+                   plainRecursion(first_start + split,
+                                  second_start,
+                                  length - split);
+
+               if (keep_order || swap_order) {
+                   return true;
+               }
            }
            return false;
        }
 
-       bool memoDfs(int i, int j, int length) {
-           int& cached = memo[i][j][length];
-           if (cached != -1) return cached;
-           if (equalRange(i, j, length)) return cached = 1;
-           if (!sameCharacters(i, j, length)) return cached = 0;
-           for (int split = 1; split < length; ++split) {
-               bool keep = memoDfs(i, j, split) && memoDfs(i + split, j + split, length - split);
-               bool swap = memoDfs(i, j + length - split, split) &&
-                           memoDfs(i + split, j, length - split);
-               if (keep || swap) return cached = 1;
+       bool memoizedRecursion(int first_start, int second_start, int length) {
+           int& cached = memo[first_start][second_start][length];
+           if (cached != -1) {
+               return cached == 1;
            }
-           return cached = 0;
+
+           if (equalRange(first_start, second_start, length)) {
+               cached = 1;
+               return true;
+           }
+           if (!sameCharacters(first_start, second_start, length)) {
+               cached = 0;
+               return false;
+           }
+
+           for (int split = 1; split < length; ++split) {
+               bool keep_order =
+                   memoizedRecursion(first_start, second_start, split) &&
+                   memoizedRecursion(first_start + split,
+                                     second_start + split,
+                                     length - split);
+
+               bool swap_order =
+                   memoizedRecursion(first_start,
+                                     second_start + length - split,
+                                     split) &&
+                   memoizedRecursion(first_start + split,
+                                     second_start,
+                                     length - split);
+
+               if (keep_order || swap_order) {
+                   cached = 1;
+                   return true;
+               }
+           }
+
+           cached = 0;
+           return false;
        }
 
-       bool bottomUp(const std::string& a, const std::string& b) {
-           int n = a.size();
-           std::vector dp(n, std::vector(n, std::vector<char>(n + 1)));
-           for (int i = 0; i < n; ++i)
-               for (int j = 0; j < n; ++j) dp[i][j][1] = a[i] == b[j];
-           for (int length = 2; length <= n; ++length)
-               for (int i = 0; i + length <= n; ++i)
-                   for (int j = 0; j + length <= n; ++j)
-                       for (int split = 1; split < length && !dp[i][j][length]; ++split)
-                           dp[i][j][length] =
-                               (dp[i][j][split] && dp[i + split][j + split][length - split]) ||
-                               (dp[i][j + length - split][split] && dp[i + split][j][length - split]);
+       bool intervalDp(const std::string& s1, const std::string& s2) {
+           int n = static_cast<int>(s1.size());
+           std::vector<std::vector<std::vector<char>>> dp(
+               n,
+               std::vector<std::vector<char>>(
+                   n,
+                   std::vector<char>(n + 1, false)));
+
+           for (int first_start = 0; first_start < n; ++first_start) {
+               for (int second_start = 0; second_start < n; ++second_start) {
+                   dp[first_start][second_start][1] =
+                       s1[first_start] == s2[second_start];
+               }
+           }
+
+           for (int length = 2; length <= n; ++length) {
+               for (int first_start = 0; first_start + length <= n; ++first_start) {
+                   for (int second_start = 0;
+                        second_start + length <= n;
+                        ++second_start) {
+                       for (int split = 1; split < length; ++split) {
+                           bool keep_order =
+                               dp[first_start][second_start][split] &&
+                               dp[first_start + split]
+                                 [second_start + split]
+                                 [length - split];
+
+                           bool swap_order =
+                               dp[first_start]
+                                 [second_start + length - split]
+                                 [split] &&
+                               dp[first_start + split]
+                                 [second_start]
+                                 [length - split];
+
+                           if (keep_order || swap_order) {
+                               dp[first_start][second_start][length] = true;
+                               break;
+                           }
+                       }
+                   }
+               }
+           }
+
            return dp[0][0][n];
        }
 
    public:
        bool isScramble(std::string s1, std::string s2) {
-           if (s1.size() != s2.size()) return false;
-           first = std::move(s1); second = std::move(s2);
-           int n = first.size();
-           memo.assign(n, std::vector(n, std::vector<int>(n + 1, -1)));
-           return memoDfs(0, 0, n);
+           if (s1.size() != s2.size()) {
+               return false;
+           }
+
+           first = s1;
+           second = s2;
+           int n = static_cast<int>(first.size());
+
+           buildPrefixCounts();
+           memo.assign(
+               n,
+               std::vector<std::vector<int>>(
+                   n,
+                   std::vector<int>(n + 1, -1)));
+
+           return memoizedRecursion(0, 0, n);
        }
    };
 
 题解
 ----
 
-为什么不能只比较字符频次
-~~~~~~~~~~~~~~~~~~~~~~
+递归切分
+~~~~~~~~
 
-Scramble 操作不会改变字符多重集，所以频次相同是必要条件。但切分树还要求每个对应子区间能同时匹配；``abcde`` 与 ``caebd`` 频次相同，却找不到满足所有层级的切分。
+一个扰乱过程可以看成一棵二叉树。树中每个节点保存一段字符串，并在某个位置切成左右两个非空部分。
+根节点对子节点只有两种安排：保持左右顺序，或交换左右顺序。
 
-三维状态保存什么
-~~~~~~~~~~~~~~~~
-
-``solve(i,j,length)`` 表示 ``s1[i:i+length]`` 能否变成 ``s2[j:j+length]``。两个区间长度始终相同，状态只需两个起点和一个长度；同一状态会从多个上层切分重复到达，因此需要缓存真假结果。
-
-切分点为何只有两类对应
-~~~~~~~~~~~~~~~~~~~~~~
-
-在 ``split`` 处分割第一个区间后，根节点只允许保持或交换两个孩子：
+令状态 ``solve(i, j, length)`` 表示：
 
 .. code-block:: text
 
-   不交换：A_left  -> B_left，  A_right -> B_right
-   交换：  A_left  -> B_right， A_right -> B_left
+   s1[i : i + length]
 
-不存在第三种对应。只要某个切分点的一类对应中两个子状态都为真，父状态就为真。
-
-下标转移如何得到
-~~~~~~~~~~~~~~~~
+能否扰乱成：
 
 .. code-block:: text
 
-   keep:
-     solve(i,         j,         split)
-     solve(i+split,   j+split,   length-split)
+   s2[j : j + length]
 
-   swap:
-     solve(i,         j+length-split, split)
-     solve(i+split,   j,              length-split)
+在 ``split`` 处分割第一个区间后，保持顺序时需要同时满足：
 
-交换时，第一个左区间长度为 ``split``，因此对应第二个区间末尾同样长度的部分。
+.. code-block:: text
 
-剪枝顺序为什么重要
-~~~~~~~~~~~~~~~~
+   solve(i,         j,         split)
+   solve(i + split, j + split, length - split)
 
-两个区间直接相等时立即成功，可省去所有切分。字符频次不同立即失败，因为任何后续交换都无法改变多重集。只有频次相同但内容不同的状态才枚举切分点。
+交换顺序时，第一个区间左侧应对应第二个区间末尾同样长的部分：
 
-.. list-table::
-   :header-rows: 1
+.. code-block:: text
 
-   * - 状态
-     - 处理
-   * - ``great`` 与 ``rgeat``
-     - 频次相同，尝试切分
-   * - ``gr`` 与 ``rg``
-     - 在 1 处分割，交换两个单字符后成立
-   * - ``eat`` 与 ``eat``
-     - 直接相等，立即成功
-   * - 父状态
-     - 两个子状态都成功，返回真
+   solve(i,         j + length - split, split)
+   solve(i + split, j,                  length - split)
 
-失败状态为何也必须缓存
-~~~~~~~~~~~~~~~~~~~~~~
+只要某个切分点的一种安排中两个子状态都成立，当前状态就成立。
 
-大量区间组合最终为假，并会从不同切分路径反复访问。缓存若只记录成功状态，指数级重复仍然存在；三值语义必须区分未知、假、真。
+必要条件剪枝
+~~~~~~~~~~~~
 
-自底向上遍历为何按长度递增
-~~~~~~~~~~~~~~~~~~~~~~~~
+扰乱操作只改变子串位置，不会改变字符多重集。两个对应区间的字符频次不同，当前状态必定失败。
 
-长度为 1 的状态由字符相等决定。长度 ``length`` 的转移只读取更短的 ``split`` 与 ``length-split``，因此按长度从小到大填表满足全部依赖。
+逐状态重新扫描区间会产生额外重复。前缀频次数组保存每个字符在任意前缀中的出现次数，区间频次可由两次前缀相减得到，
+每次剪枝只需比较 26 个字符。
 
-复杂度来源
-~~~~~~~~~~
+两个区间内容完全相同时，可以直接返回成功，不必继续枚举切分点。剪枝顺序因此是：
 
-状态数 ``O(n³)``，每个状态最多枚举 ``O(n)`` 个切分点，时间 ``O(n⁴)``；频次检查常数为 26。缓存或 DP 使用 ``O(n³)`` 空间，递归深度 ``O(n)``。
+.. code-block:: text
 
-九语言实现
-----------
+   区间完全相等 -> 成功
+   字符频次不同 -> 失败
+   其余情况     -> 枚举切分点
 
-C
-~
+重复状态
+~~~~~~~~
 
-.. code-block:: c
+不同的上层切分可能到达相同的 ``(i, j, length)``。朴素递归会反复求解这些区间，搜索树随长度快速膨胀。
 
-   static char*memo;static char*a,*b;static int n;
-   static int dfs(int i,int j,int len){int key=(i*n+j)*(n+1)+len;if(memo[key]!=-1)return memo[key];int count[26]={0},equal=1;for(int k=0;k<len;k++){count[a[i+k]-'a']++;count[b[j+k]-'a']--;if(a[i+k]!=b[j+k])equal=0;}if(equal)return memo[key]=1;for(int c=0;c<26;c++)if(count[c])return memo[key]=0;for(int s=1;s<len;s++)if((dfs(i,j,s)&&dfs(i+s,j+s,len-s))||(dfs(i,j+len-s,s)&&dfs(i+s,j,len-s)))return memo[key]=1;return memo[key]=0;}
-   bool isScramble(char*s1,char*s2){if(strlen(s1)!=strlen(s2))return false;a=s1;b=s2;n=strlen(a);memo=malloc((size_t)n*n*(n+1));memset(memo,-1,(size_t)n*n*(n+1));int ans=dfs(0,0,n);free(memo);return ans;}
+三维缓存为每个状态保存未知、失败、成功三种结果。失败状态同样必须缓存，否则大量无法匹配的区间仍会被重复搜索。
 
-Python
+区间动态规划
+~~~~~~~~~~~~
+
+记忆化搜索按需要访问状态。自底向上的写法使用同一个三维定义：
+
+.. code-block:: text
+
+   dp[i][j][length]
+
+长度为 1 时，只需比较两个字符。长度大于 1 的状态只依赖两个更短区间，因此按 ``length`` 从小到大填表即可。
+
+两种写法拥有相同的状态和转移。记忆化搜索能利用频次剪枝跳过大量不可达状态，通常更直接；区间 DP 没有递归调用，遍历顺序更固定。
+
+正确性
 ~~~~~~
 
-.. code-block:: python
+任意合法扰乱树的根节点必有一个切分点，并且根节点只可能保持或交换两个孩子。算法枚举全部切分点和这两种安排，
+因此合法扰乱不会遗漏。
 
-   class Solution:
-       def isScramble(self, a: str, b: str) -> bool:
-           from functools import lru_cache
-           @lru_cache(None)
-           def dfs(i,j,length):
-               x,y=a[i:i+length],b[j:j+length]
-               if x==y:return True
-               if sorted(x)!=sorted(y):return False
-               return any((dfs(i,j,s) and dfs(i+s,j+s,length-s)) or (dfs(i,j+length-s,s) and dfs(i+s,j,length-s)) for s in range(1,length))
-           return len(a)==len(b) and dfs(0,0,len(a))
+反过来，算法只有在某个切分点的两个子状态都成立时才返回成功。把两个子状态对应的合法扰乱树连接到当前根节点，
+即可构造当前区间的合法扰乱树，因此不会产生错误的成功结果。
 
-Java
-~~~~
+复杂度
+~~~~~~
 
-.. code-block:: java
+状态数为 ``O(n^3)``，每个状态最多枚举 ``O(n)`` 个切分点，记忆化搜索和区间 DP 的时间上界均为 ``O(n^4)``。
+前缀频次剪枝每次比较固定 26 个字符，不改变渐进复杂度。
 
-   class Solution {String a,b;int[][][]memo;boolean dfs(int i,int j,int len){if(memo[i][j][len]!=-1)return memo[i][j][len]==1;int[]count=new int[26];boolean equal=true;for(int k=0;k<len;k++){count[a.charAt(i+k)-'a']++;count[b.charAt(j+k)-'a']--;if(a.charAt(i+k)!=b.charAt(j+k))equal=false;}if(equal){memo[i][j][len]=1;return true;}for(int x:count)if(x!=0){memo[i][j][len]=0;return false;}for(int s=1;s<len;s++)if((dfs(i,j,s)&&dfs(i+s,j+s,len-s))||(dfs(i,j+len-s,s)&&dfs(i+s,j,len-s))){memo[i][j][len]=1;return true;}memo[i][j][len]=0;return false;}public boolean isScramble(String s1,String s2){if(s1.length()!=s2.length())return false;a=s1;b=s2;int n=a.length();memo=new int[n][n][n+1];for(int[][]x:memo)for(int[]y:x)Arrays.fill(y,-1);return dfs(0,0,n);}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn is_scramble(a:String,b:String)->bool{fn dfs(i:usize,j:usize,l:usize,a:&[u8],b:&[u8],memo:&mut Vec<Vec<Vec<i8>>>)->bool{if memo[i][j][l]!=-1{return memo[i][j][l]==1}if a[i..i+l]==b[j..j+l]{memo[i][j][l]=1;return true}let mut c=[0i32;26];for k in 0..l{c[(a[i+k]-b'a')as usize]+=1;c[(b[j+k]-b'a')as usize]-=1}if c.iter().any(|&x|x!=0){memo[i][j][l]=0;return false}for s in 1..l{if (dfs(i,j,s,a,b,memo)&&dfs(i+s,j+s,l-s,a,b,memo))||(dfs(i,j+l-s,s,a,b,memo)&&dfs(i+s,j,l-s,a,b,memo)){memo[i][j][l]=1;return true}}memo[i][j][l]=0;false}if a.len()!=b.len(){return false}let n=a.len();dfs(0,0,n,a.as_bytes(),b.as_bytes(),&mut vec![vec![vec![-1;n+1];n];n])}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func isScramble(a,b string)bool{if len(a)!=len(b){return false};n:=len(a);memo:=make(map[[3]int]bool);seen:=make(map[[3]int]bool);var dfs func(int,int,int)bool;dfs=func(i,j,l int)bool{k:=[3]int{i,j,l};if seen[k]{return memo[k]};seen[k]=true;if a[i:i+l]==b[j:j+l]{memo[k]=true;return true};count:=[26]int{};for x:=0;x<l;x++{count[a[i+x]-'a']++;count[b[j+x]-'a']--};for _,v:=range count{if v!=0{return false}};for s:=1;s<l;s++{if dfs(i,j,s)&&dfs(i+s,j+s,l-s)||dfs(i,j+l-s,s)&&dfs(i+s,j,l-s){memo[k]=true;return true}};return false};return dfs(0,0,n)}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function isScramble(a:string,b:string):boolean{if(a.length!==b.length)return false;const memo=new Map<string,boolean>();const dfs=(i:number,j:number,l:number):boolean=>{const key=`${i},${j},${l}`;if(memo.has(key))return memo.get(key)!;if(a.slice(i,i+l)===b.slice(j,j+l)){memo.set(key,true);return true;}const c=Array(26).fill(0);for(let k=0;k<l;k++){c[a.charCodeAt(i+k)-97]++;c[b.charCodeAt(j+k)-97]--;}if(c.some(x=>x!==0)){memo.set(key,false);return false;}for(let s=1;s<l;s++)if((dfs(i,j,s)&&dfs(i+s,j+s,l-s))||(dfs(i,j+l-s,s)&&dfs(i+s,j,l-s))){memo.set(key,true);return true;}memo.set(key,false);return false;};return dfs(0,0,a.length);}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {string a,b;Dictionary<(int,int,int),bool>memo=new();bool Dfs(int i,int j,int l){var k=(i,j,l);if(memo.TryGetValue(k,out bool v))return v;if(a.Substring(i,l)==b.Substring(j,l))return memo[k]=true;int[]c=new int[26];for(int x=0;x<l;x++){c[a[i+x]-'a']++;c[b[j+x]-'a']--;}if(c.Any(x=>x!=0))return memo[k]=false;for(int s=1;s<l;s++)if(Dfs(i,j,s)&&Dfs(i+s,j+s,l-s)||Dfs(i,j+l-s,s)&&Dfs(i+s,j,l-s))return memo[k]=true;return memo[k]=false;}public bool IsScramble(string s1,string s2){if(s1.Length!=s2.Length)return false;a=s1;b=s2;return Dfs(0,0,a.Length);}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function is_scramble(a::String,b::String)
-       x=collect(a);y=collect(b);length(x)!=length(y)&&return false;memo=Dict{NTuple{3,Int},Bool}()
-       function dfs(i,j,l)
-           key=(i,j,l);haskey(memo,key)&&return memo[key]
-           x[i:i+l-1]==y[j:j+l-1]&&return (memo[key]=true)
-           count=zeros(Int,26);for k in 0:l-1;count[Int(x[i+k])-96]+=1;count[Int(y[j+k])-96]-=1;end
-           any(!=(0),count)&&return (memo[key]=false)
-           for s in 1:l-1;if (dfs(i,j,s)&&dfs(i+s,j+s,l-s))||(dfs(i,j+l-s,s)&&dfs(i+s,j,l-s));return (memo[key]=true);end;end
-           memo[key]=false
-       end;dfs(1,1,length(x))
-   end
-
-R
-~
-
-.. code-block:: r
-
-   is_scramble <- function(a,b){x<-strsplit(a,"",fixed=TRUE)[[1]];y<-strsplit(b,"",fixed=TRUE)[[1]];if(length(x)!=length(y))return(FALSE);memo<-new.env(hash=TRUE,parent=emptyenv());dfs<-function(i,j,l){key<-paste(i,j,l,sep=",");if(exists(key,memo,inherits=FALSE))return(get(key,memo));if(identical(x[i:(i+l-1L)],y[j:(j+l-1L)])){assign(key,TRUE,memo);return(TRUE)};count<-integer(26);for(k in 0:(l-1L)){count[[utf8ToInt(x[[i+k]])-96L]]<-count[[utf8ToInt(x[[i+k]])-96L]]+1L;count[[utf8ToInt(y[[j+k]])-96L]]<-count[[utf8ToInt(y[[j+k]])-96L]]-1L};if(any(count!=0L)){assign(key,FALSE,memo);return(FALSE)};if(l>1L)for(s in 1:(l-1L))if((dfs(i,j,s)&&dfs(i+s,j+s,l-s))||(dfs(i,j+l-s,s)&&dfs(i+s,j,l-s))){assign(key,TRUE,memo);return(TRUE)};assign(key,FALSE,memo);FALSE};dfs(1L,1L,length(x))}
+三维缓存或 DP 表使用 ``O(n^3)`` 空间；记忆化搜索的递归深度为 ``O(n)``。朴素递归没有缓存，最坏呈指数增长。
