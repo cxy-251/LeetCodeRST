@@ -8,12 +8,15 @@
 :难度: Medium
 :主题: 单链表、稳定分区、双链拼接
 :原题: `LeetCode 0086 <https://leetcode.com/problems/partition-list/>`_
-:重点: 小于 ``x`` 的节点前置、两组内部稳定、完整节点序列、结果拼接
+:重点: 从保存节点引用，推导到常量空间的稳定双链分区与原链抽取
 
 题目重述
 --------
 
-给定单链表 ``head`` 和整数 ``x``，重新排列链表，使所有值小于 ``x`` 的节点出现在值大于等于 ``x`` 的节点之前。两个分区内部都必须保持节点在原链表中的相对顺序。
+给定单链表 ``head`` 和整数 ``x``，重新连接原链表节点，使所有值小于 ``x`` 的节点都位于值大于等于
+``x`` 的节点之前。
+
+两个分区内部必须保持原链表中的相对顺序。算法返回重排后的头节点，不要求按数值排序，也不能遗漏或复制节点。
 
 链表节点数在 ``0..200`` 范围内，节点值和 ``x`` 都在 ``-100..100`` 范围内。
 
@@ -25,14 +28,21 @@
    输入：5 -> 1 -> 4 -> 2 -> 3，x = 4
    输出：1 -> 2 -> 3 -> 5 -> 4
 
-小于 4 的节点按原顺序形成 ``1,2,3``；其余节点按原顺序形成 ``5,4``。
+小于 4 的节点按原顺序形成 ``1,2,3``，其余节点按原顺序形成 ``5,4``。
+
+.. code-block:: text
+
+   输入：1 -> 4 -> 2 -> 5 -> 3，x = 3
+   输出：1 -> 2 -> 4 -> 5 -> 3
+
+前段保留 ``1,2`` 的顺序，后段也保留 ``4,5,3`` 的顺序。
 
 .. code-block:: text
 
    输入：1 -> 2，x = 5
    输出：1 -> 2
 
-所有节点都属于前一分区，相对顺序不变。
+所有节点都属于前一分区，拼接后链表不变。
 
 C++ 实现
 --------
@@ -44,34 +54,81 @@ C++ 实现
    class Solution {
    private:
        ListNode* collectReferences(ListNode* head, int x) {
-           std::vector<ListNode*> before, after;
-           for (ListNode* node = head; node; node = node->next)
-               (node->val < x ? before : after).push_back(node);
-           ListNode dummy(0), *tail = &dummy;
-           for (ListNode* node : before) { tail->next = node; tail = node; }
-           for (ListNode* node : after) { tail->next = node; tail = node; }
+           std::vector<ListNode*> before;
+           std::vector<ListNode*> after;
+
+           for (ListNode* node = head; node; node = node->next) {
+               if (node->val < x) {
+                   before.push_back(node);
+               } else {
+                   after.push_back(node);
+               }
+           }
+
+           ListNode dummy(0);
+           ListNode* tail = &dummy;
+
+           for (ListNode* node : before) {
+               tail->next = node;
+               tail = node;
+           }
+           for (ListNode* node : after) {
+               tail->next = node;
+               tail = node;
+           }
+
            tail->next = nullptr;
            return dummy.next;
        }
 
+       ListNode* inPlaceSplice(ListNode* head, int x) {
+           ListNode dummy(0, head);
+           ListNode* lessTail = &dummy;
+
+           while (lessTail->next && lessTail->next->val < x) {
+               lessTail = lessTail->next;
+           }
+
+           ListNode* scanPrev = lessTail;
+           while (scanPrev->next) {
+               if (scanPrev->next->val >= x) {
+                   scanPrev = scanPrev->next;
+                   continue;
+               }
+
+               ListNode* moved = scanPrev->next;
+               scanPrev->next = moved->next;
+               moved->next = lessTail->next;
+               lessTail->next = moved;
+               lessTail = moved;
+           }
+
+           return dummy.next;
+       }
+
        ListNode* stableTwoLists(ListNode* head, int x) {
-           ListNode before_dummy(0), after_dummy(0);
-           ListNode* before_tail = &before_dummy;
-           ListNode* after_tail = &after_dummy;
+           ListNode beforeDummy(0);
+           ListNode afterDummy(0);
+           ListNode* beforeTail = &beforeDummy;
+           ListNode* afterTail = &afterDummy;
+
            while (head) {
                ListNode* next = head->next;
                head->next = nullptr;
+
                if (head->val < x) {
-                   before_tail->next = head;
-                   before_tail = head;
+                   beforeTail->next = head;
+                   beforeTail = head;
                } else {
-                   after_tail->next = head;
-                   after_tail = head;
+                   afterTail->next = head;
+                   afterTail = head;
                }
+
                head = next;
            }
-           before_tail->next = after_dummy.next;
-           return before_dummy.next;
+
+           beforeTail->next = afterDummy.next;
+           return beforeDummy.next;
        }
 
    public:
@@ -83,20 +140,33 @@ C++ 实现
 题解
 ----
 
-为什么交换值不是正确模型
-~~~~~~~~~~~~~~~~~~~~~~
+稳定分区模型
+~~~~~~~~~~~~
 
-题目要求稳定分区：每个分区内部的节点顺序必须与原链表一致。交换数值会改变节点承载的数据身份，也难以保证稳定性。更自然的做法是按原遍历顺序把节点追加到两条链。
+题目只要求按条件分为两组，不要求组内排序。交换节点值或把小节点不断插到链表头部，都会改变同一分区中的
+相对顺序。稳定做法是按原链表的扫描顺序，把节点追加到对应分区的尾部。
 
-两条链分别保存什么
-~~~~~~~~~~~~~~~~
+引用数组
+~~~~~~~~
 
-``before`` 保存已扫描节点中值小于 ``x`` 的节点，``after`` 保存其余节点。每条链只在尾部追加，因此同一分区中的节点顺序自动保持。
+最直接的方法把小于 ``x`` 和大于等于 ``x`` 的节点引用分别保存到两个数组，再按两个数组的顺序重连。
+这种方法容易验证稳定性，但需要 ``O(n)`` 额外空间。
 
-为什么先保存 next 再断链
-~~~~~~~~~~~~~~~~~~~~~~
+双链尾插
+~~~~~~~~
 
-当前节点的旧 ``next`` 仍指向原链表后缀，其中可能混合两个分区。若直接尾插而不断开，临时链会携带未分类后缀，最终拼接时可能出现错误跨边或环。因此处理顺序必须是：
+数组只承担“记住两个分区顺序”的作用。链表自身已经有顺序，因此可以用两组哨兵和尾指针直接构造：
+
+* ``beforeTail`` 指向小于 ``x`` 分区的尾节点；
+* ``afterTail`` 指向大于等于 ``x`` 分区的尾节点；
+* 当前节点只会被追加到其中一条链。
+
+每条链始终在尾部追加，所以同一分区中的节点顺序与输入一致。
+
+断开旧链接
+~~~~~~~~~~
+
+处理当前节点前先保存原后继，再把当前节点的 ``next`` 置空：
 
 .. code-block:: text
 
@@ -105,20 +175,25 @@ C++ 实现
    append current
    current = next
 
-状态跟踪
+旧 ``next`` 指向尚未分类的混合后缀。提前断开可保证两条临时链都只包含已经分类的节点，也避免最终拼接后
+残留旧链接形成错误跨接或环。
+
+状态演进
 ~~~~~~~~
+
+以 ``5 -> 1 -> 4 -> 2 -> 3``、``x = 4`` 为例：
 
 .. list-table::
    :header-rows: 1
 
    * - 读取节点
-     - before
-     - after
+     - 小于 ``x``
+     - 大于等于 ``x``
    * - 5
      - 空
      - ``5``
    * - 1
-     - 空
+     - ``1``
      - ``5``
    * - 4
      - ``1``
@@ -130,104 +205,25 @@ C++ 实现
      - ``1 -> 2 -> 3``
      - ``5 -> 4``
 
-为什么最终只需一次拼接
-~~~~~~~~~~~~~~~~~~~~~~
+扫描结束后执行 ``beforeTail->next = afterDummy.next``，结果即为两条稳定链的连接。
 
-扫描结束后，两条链已经分别稳定且正确以空链接结尾。令 ``before_tail.next = after_head`` 即可形成完整结果；若 ``before`` 为空，哨兵的 ``next`` 会直接指向 ``after``，无需特殊分支。
+原链抽取
+~~~~~~~~
 
-节点守恒如何保证
-~~~~~~~~~~~~~~~~
+``inPlaceSplice`` 不建立两条独立链。它先让 ``lessTail`` 越过开头已经连续满足 ``val < x`` 的节点，随后
+从后缀中逐个抽取小节点，并插到 ``lessTail`` 之后。
 
-每个原节点恰好被扫描一次，并根据 ``val < x`` 的互斥条件进入一条链。没有节点被复制、删除或重复追加。最终两链拼接后，结果包含全部原节点且仅包含一次。
+``scanPrev`` 只在当前后继属于后分区时推进；遇到小节点时，先从原位置摘除，再追加到小节点前缀尾部。
+抽取顺序就是扫描顺序，因此前后两个分区都保持稳定。
 
-为什么分区内部顺序稳定
-~~~~~~~~~~~~~~~~~~~~~~
+节点守恒
+~~~~~~~~
 
-原链表按从左到右顺序扫描，两个尾指针也按同一时间顺序追加各自满足条件的节点。任意两个同分区节点的先后关系不会改变。
+每个原节点恰好被扫描一次，并根据互斥条件 ``val < x`` 进入一个分区。算法只修改 ``next``，不复制、删除
+或新建结果数据节点。最终拼接后，全部原节点各出现一次。
 
 复杂度来源
 ~~~~~~~~~~
 
-每个节点处理一次，时间 ``O(n)``。双链方法只使用两个哨兵和尾指针，额外空间 ``O(1)``；引用数组方法需要 ``O(n)``。
-
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   struct ListNode*partition(struct ListNode*head,int x){struct ListNode before={0,NULL},after={0,NULL},*bt=&before,*at=&after;while(head){struct ListNode*next=head->next;head->next=NULL;if(head->val<x){bt->next=head;bt=head;}else{at->next=head;at=head;}head=next;}bt->next=after.next;return before.next;}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def partition(self, head, x):
-           before=ListNode();after=ListNode();bt,at=before,after
-           while head:
-               nxt=head.next;head.next=None
-               if head.val<x:bt.next=head;bt=head
-               else:at.next=head;at=head
-               head=nxt
-           bt.next=after.next
-           return before.next
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public ListNode partition(ListNode head,int x){ListNode before=new ListNode(),after=new ListNode(),bt=before,at=after;while(head!=null){ListNode next=head.next;head.next=null;if(head.val<x){bt.next=head;bt=head;}else{at.next=head;at=head;}head=next;}bt.next=after.next;return before.next;}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn partition(mut head:Option<Box<ListNode>>,x:i32)->Option<Box<ListNode>>{let mut before=Box::new(ListNode::new(0));let mut after=Box::new(ListNode::new(0));let mut bt=&mut before.next;let mut at=&mut after.next;while let Some(mut node)=head{head=node.next.take();if node.val<x{*bt=Some(node);bt=&mut bt.as_mut().unwrap().next;}else{*at=Some(node);at=&mut at.as_mut().unwrap().next;}}*bt=after.next;before.next}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func partition(head *ListNode,x int)*ListNode{before,after:=&ListNode{},&ListNode{};bt,at:=before,after;for head!=nil{next:=head.Next;head.Next=nil;if head.Val<x{bt.Next=head;bt=head}else{at.Next=head;at=head};head=next};bt.Next=after.Next;return before.Next}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function partition(head:ListNode|null,x:number):ListNode|null{const before=new ListNode(),after=new ListNode();let bt=before,at=after;while(head){const next=head.next;head.next=null;if(head.val<x){bt.next=head;bt=head;}else{at.next=head;at=head;}head=next;}bt.next=after.next;return before.next;}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public ListNode Partition(ListNode head,int x){var before=new ListNode();var after=new ListNode();var bt=before;var at=after;while(head!=null){var next=head.next;head.next=null;if(head.val<x){bt.next=head;bt=head;}else{at.next=head;at=head;}head=next;}bt.next=after.next;return before.next;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function partition_list(head,x)
-       before=ListNode(0,nothing);after=ListNode(0,nothing);bt=before;at=after
-       while head!==nothing
-           next=head.next;head.next=nothing
-           if head.val<x;bt.next=head;bt=head;else;at.next=head;at=head;end
-           head=next
-       end;bt.next=after.next;before.next
-   end
-
-R
-~
-
-.. code-block:: r
-
-   partition_list <- function(head,x){before<-new.env(parent=emptyenv());after<-new.env(parent=emptyenv());before$next<-NULL;after$next<-NULL;bt<-before;at<-after;while(!is.null(head)){next_node<-head$next;head$next<-NULL;if(head$val<x){bt$next<-head;bt<-head}else{at$next<-head;at<-head};head<-next_node};bt$next<-after$next;before$next}
+引用数组方法时间 ``O(n)``、额外空间 ``O(n)``。双链尾插和原链抽取都只扫描链表一次，时间 ``O(n)``，
+除固定数量的哨兵和指针外不使用额外存储，工作空间 ``O(1)``。
