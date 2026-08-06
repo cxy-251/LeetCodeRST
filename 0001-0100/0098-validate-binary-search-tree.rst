@@ -8,14 +8,20 @@
 :难度: Medium
 :主题: 二叉搜索树、中序遍历、递归边界、显式栈
 :原题: `LeetCode 0098 <https://leetcode.com/problems/validate-binary-search-tree/>`_
-:重点: 全局严格大小关系、重复值非法、祖先边界、中序严格递增
+:重点: 从局部父子比较的缺口，推导到全局边界约束与中序严格递增
 
 题目重述
 --------
 
-给定二叉树根节点 ``root``，判断它是否为合法二叉搜索树。任意节点左子树中的所有值都必须严格小于该节点值，右子树中的所有值都必须严格大于该节点值；重复值不合法。
+给定二叉树根节点 ``root``，判断它是否为合法二叉搜索树。
 
-树的节点数在 ``1..10^4`` 范围内，节点值处于 32 位有符号整数范围内。
+对树中的任意节点：
+
+* 左子树中的所有节点值都必须严格小于当前节点值；
+* 右子树中的所有节点值都必须严格大于当前节点值；
+* 整棵树中不允许通过相等值满足二叉搜索树关系。
+
+树的节点数在 ``1..10^4`` 范围内，节点值位于 32 位有符号整数范围内。
 
 自建示例
 --------
@@ -25,49 +31,86 @@
    输入（层序）：[8,3,10,null,null,6,12]
    输出：false
 
-值 6 位于根节点 8 的右子树，却小于 8；仅检查它与直接父节点 10 的关系会漏掉这个全局错误。
+节点 6 虽然小于直接父节点 10，却位于根节点 8 的右子树，因此违反了祖先 8 传下来的下界。
 
 .. code-block:: text
 
    输入（层序）：[8,3,10,1,6,9,12]
    输出：true
 
-每个节点都满足来自所有祖先的严格上下界。
+它的中序遍历为 ``1,3,6,8,9,10,12``，序列严格递增。
+
+.. code-block:: text
+
+   输入（层序）：[2,2,3]
+   输出：false
+
+左孩子与根节点相等。题目要求严格小于和严格大于，因此重复值非法。
 
 C++ 实现
 --------
 
 .. code-block:: cpp
 
-   #include <climits>
+   #include <limits>
    #include <vector>
 
    class Solution {
    private:
-       bool parentChildOnly(TreeNode* node) {
-           if (!node) return true;
-           if (node->left && node->left->val >= node->val) return false;
-           if (node->right && node->right->val <= node->val) return false;
-           return parentChildOnly(node->left) && parentChildOnly(node->right);
+       void collectInorder(TreeNode* node, std::vector<int>& values) {
+           if (!node) return;
+           collectInorder(node->left, values);
+           values.push_back(node->val);
+           collectInorder(node->right, values);
+       }
+
+       bool inorderArray(TreeNode* root) {
+           std::vector<int> values;
+           collectInorder(root, values);
+
+           for (int i = 1; i < static_cast<int>(values.size()); ++i) {
+               if (values[i] <= values[i - 1]) return false;
+           }
+           return true;
        }
 
        bool rangeDfs(TreeNode* node, long long lower, long long upper) {
            if (!node) return true;
-           if (node->val <= lower || node->val >= upper) return false;
-           return rangeDfs(node->left, lower, node->val) &&
-                  rangeDfs(node->right, node->val, upper);
+
+           long long value = node->val;
+           if (value <= lower || value >= upper) return false;
+
+           return rangeDfs(node->left, lower, value) &&
+                  rangeDfs(node->right, value, upper);
+       }
+
+       bool boundedRecursion(TreeNode* root) {
+           return rangeDfs(
+               root,
+               std::numeric_limits<long long>::lowest(),
+               std::numeric_limits<long long>::max()
+           );
        }
 
        bool inorderStack(TreeNode* root) {
            std::vector<TreeNode*> stack;
+           TreeNode* current = root;
            TreeNode* previous = nullptr;
-           while (root || !stack.empty()) {
-               while (root) { stack.push_back(root); root = root->left; }
-               root = stack.back(); stack.pop_back();
-               if (previous && root->val <= previous->val) return false;
-               previous = root;
-               root = root->right;
+
+           while (current || !stack.empty()) {
+               while (current) {
+                   stack.push_back(current);
+                   current = current->left;
+               }
+
+               current = stack.back();
+               stack.pop_back();
+
+               if (previous && current->val <= previous->val) return false;
+               previous = current;
+               current = current->right;
            }
+
            return true;
        }
 
@@ -80,145 +123,105 @@ C++ 实现
 题解
 ----
 
-父子比较为什么不足
-~~~~~~~~~~~~~~~~
-
-BST 条件约束整棵子树，不只是直接孩子。右子树中的所有后代都必须大于祖先根，左子树中的所有后代都必须小于祖先根。局部父子检查没有保存祖先边界，因此会把示例中的节点 6 误判为合法。
-
-开区间递归如何传播全局约束
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-递归状态 ``validate(node,lower,upper)`` 要求当前值严格位于开区间 ``(lower,upper)``：
-
-* 进入左子树时，上界收紧为当前值；
-* 进入右子树时，下界提升为当前值；
-* 祖先产生的另一侧边界继续保留。
-
-使用严格不等式会自然拒绝重复值。
-
-中序遍历为何等价
-~~~~~~~~~~~~~~~~
-
-合法 BST 的中序顺序是严格递增序列，因为左子树全部更小、根位于中间、右子树全部更大。反过来，若整棵树的中序序列严格递增，则任意节点之前的左子树值都更小，之后的右子树值都更大，因此全局 BST 条件成立。
-
-前驱状态保存什么
-~~~~~~~~~~~~~~~~
-
-显式栈按中序顺序逐个访问节点，``previous`` 保存直接中序前驱。若 ``current.val <= previous.val``，序列出现下降或重复，可立即失败。只检查相邻项足够，因为任意非严格递增序列必存在一对相邻违规元素。
-
-状态演化
-~~~~~~~~
-
-自建反例 ``[8,3,10,null,null,6,12]`` 的中序序列为 ``3,8,6,10,12``：
-
-.. list-table::
-   :header-rows: 1
-
-   * - 当前值
-     - 前驱
-     - 结果
-   * - 3
-     - 无
-     - 建立前驱
-   * - 8
-     - 3
-     - 递增
-   * - 6
-     - 8
-     - ``6 <= 8``，立即失败
-
-为什么不用数值哨兵
-~~~~~~~~~~~~~~~~~~
-
-若把前驱初始化为 ``INT_MIN``，首个真实节点也可能等于 ``INT_MIN``，第一次比较会错误失败。主实现用空节点指针表示“尚无前驱”；范围递归则用 64 位边界包围全部 32 位节点值。
-
-为什么检测完整
+局部比较的缺口
 ~~~~~~~~~~~~~~
 
-每个节点按中序访问一次。任何跨层违规都会破坏全局中序严格递增性，并在某个相邻位置暴露；重复值同样触发 ``<=``。若扫描完成未发现违规，全部对应约束都成立。
+只检查 ``node->left < node < node->right`` 无法验证整棵子树。祖先给出的约束会跨过多层节点继续生效：
 
-复杂度来源
+.. code-block:: text
+
+          8
+         / \
+        3  10
+          /  \
+         6   12
+
+节点 6 与父节点 10 的局部关系正确，但右子树中的所有节点还必须大于祖先 8。没有携带祖先信息的父子比较会漏掉这种错误。
+
+中序序列基线
+~~~~~~~~~~~~
+
+二叉搜索树的中序遍历顺序是“左子树、根、右子树”。合法 BST 的中序序列必然严格递增，因此最直接的方法是：
+
+#. 完整收集中序序列；
+#. 检查每个元素是否严格大于前一个元素。
+
+使用 ``<=`` 而不是 ``<``，可以同时拒绝下降和重复值。
+
+完整数组便于理解，但保存了所有节点值。实际判断只依赖当前值与中序前驱，因此可以把检查改成边遍历边比较。
+
+边界递归
+~~~~~~~~
+
+另一条推导路线是直接保存祖先约束。状态 ``rangeDfs(node, lower, upper)`` 要求当前节点值位于严格开区间
+``(lower, upper)``。
+
+进入左子树时，当前值成为新的上界：
+
+.. code-block:: text
+
+   left:  (lower, node.val)
+
+进入右子树时，当前值成为新的下界：
+
+.. code-block:: text
+
+   right: (node.val, upper)
+
+另一侧边界继续保留，因此根节点和所有更早祖先施加的限制都会传到后代。任一节点越界即可立即返回 ``false``。
+
+严格开区间
 ~~~~~~~~~~
 
-三种完整方法都访问每个节点一次，时间 ``O(n)``。递归边界法和显式栈法使用 ``O(h)`` 空间，``h`` 为树高；退化树最坏 ``O(n)``。
+边界必须使用严格不等式。节点值等于下界或上界时，同样违反 BST 定义：
 
-九语言实现
-----------
+.. code-block:: text
 
-C
-~
+   node.val <= lower  -> 非法
+   node.val >= upper  -> 非法
 
-.. code-block:: c
+节点值本身可能等于 ``INT_MIN`` 或 ``INT_MAX``。若直接使用 32 位极值作为初始边界，会错误排除合法边界值。实现使用
+64 位整数的最小值和最大值包围全部 32 位节点值。
 
-   bool isValidBST(struct TreeNode*root){struct TreeNode**st=malloc(10001*sizeof(*st)),*prev=NULL;int top=0;while(root||top){while(root){st[top++]=root;root=root->left;}root=st[--top];if(prev&&root->val<=prev->val){free(st);return false;}prev=root;root=root->right;}free(st);return true;}
-
-Python
+显式栈
 ~~~~~~
 
-.. code-block:: python
+主方法用显式栈模拟递归中序遍历：
 
-   class Solution:
-       def isValidBST(self, root) -> bool:
-           stack=[];previous=None
-           while root or stack:
-               while root:stack.append(root);root=root.left
-               root=stack.pop()
-               if previous is not None and root.val<=previous:return False
-               previous=root.val;root=root.right
-           return True
+#. 沿左指针不断压栈，直到没有更左节点；
+#. 弹出栈顶，它是下一个中序节点；
+#. 与中序前驱比较；
+#. 转向该节点的右子树，再重复同一过程。
 
-Java
-~~~~
+栈中保存的是左子树尚未处理完、因此根节点也尚未访问的祖先。弹出节点时，它的左子树已经全部访问，正好符合中序顺序。
 
-.. code-block:: java
+前驱状态
+~~~~~~~~
 
-   class Solution {public boolean isValidBST(TreeNode root){Deque<TreeNode>s=new ArrayDeque<>();TreeNode prev=null;while(root!=null||!s.isEmpty()){while(root!=null){s.push(root);root=root.left;}root=s.pop();if(prev!=null&&root.val<=prev.val)return false;prev=root;root=root.right;}return true;}}
+``previous`` 保存刚刚访问的中序节点。若当前值不大于前驱值，中序序列便不再严格递增：
 
-Rust
-~~~~
+.. code-block:: text
 
-.. code-block:: rust
+   current.val <= previous.val -> false
 
-   impl Solution {pub fn is_valid_bst(root:Option<Rc<RefCell<TreeNode>>>)->bool{let mut stack=vec![];let mut cur=root;let mut prev=None;while cur.is_some()||!stack.is_empty(){while let Some(node)=cur{cur=node.borrow().left.clone();stack.push(node);}let node=stack.pop().unwrap();let value=node.borrow().val;if prev.is_some_and(|x|value<=x){return false}prev=Some(value);cur=node.borrow().right.clone();}true}}
+不能把前驱值初始化为 ``INT_MIN``，因为树中首个节点可能真的等于 ``INT_MIN``。使用空指针表示“尚未访问任何节点”不会与合法数据冲突。
 
-Go
-~~
+完整性
+~~~~~~
 
-.. code-block:: go
+合法 BST 的左子树值全部小于根，右子树值全部大于根，递归应用后，中序序列必然严格递增。
 
-   func isValidBST(root *TreeNode)bool{stack:=[]*TreeNode{};var prev *TreeNode;for root!=nil||len(stack)>0{for root!=nil{stack=append(stack,root);root=root.Left};root=stack[len(stack)-1];stack=stack[:len(stack)-1];if prev!=nil&&root.Val<=prev.Val{return false};prev=root;root=root.Right};return true}
+反过来，若整棵树的中序序列严格递增，则任意节点左子树中的元素都出现在它之前，因此都更小；右子树中的元素都出现在它之后，因此都更大。于是每个节点都满足全局 BST 约束。
 
-TypeScript
-~~~~~~~~~~
+范围递归与中序检查验证的是同一性质：前者显式传播允许值域，后者把全局约束转换为遍历序列的严格单调性。
 
-.. code-block:: typescript
+复杂度
+~~~~~~
 
-   function isValidBST(root:TreeNode|null):boolean{const stack:TreeNode[]=[];let previous:number|undefined;while(root||stack.length){while(root){stack.push(root);root=root.left;}root=stack.pop()!;if(previous!==undefined&&root.val<=previous)return false;previous=root.val;root=root.right;}return true;}
+三种正确方法都访问每个节点一次，时间为 ``O(n)``。
 
-C#
-~~
+* 完整中序数组使用 ``O(n)`` 数组空间，并有 ``O(h)`` 递归栈；
+* 上下界递归使用 ``O(h)`` 调用栈；
+* 显式中序栈使用 ``O(h)`` 空间。
 
-.. code-block:: csharp
-
-   public class Solution {public bool IsValidBST(TreeNode root){var s=new Stack<TreeNode>();TreeNode prev=null;while(root!=null||s.Count>0){while(root!=null){s.Push(root);root=root.left;}root=s.Pop();if(prev!=null&&root.val<=prev.val)return false;prev=root;root=root.right;}return true;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function is_valid_bst(root)
-       stack=Any[];previous=nothing
-       while root!==nothing||!isempty(stack)
-           while root!==nothing;push!(stack,root);root=root.left;end
-           root=pop!(stack);previous!==nothing&&root.val<=previous&&return false;previous=root.val;root=root.right
-       end
-       true
-   end
-
-R
-~
-
-.. code-block:: r
-
-   is_valid_bst <- function(root){stack<-list();previous<-NULL;while(!is.null(root)||length(stack)>0L){while(!is.null(root)){stack[[length(stack)+1L]]<-root;root<-root$left};root<-stack[[length(stack)]];stack<-head(stack,-1L);if(!is.null(previous)&&root$val<=previous)return(FALSE);previous<-root$val;root<-root$right};TRUE}
+其中 ``h`` 为树高，退化树最坏为 ``O(n)``。
