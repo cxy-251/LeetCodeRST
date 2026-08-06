@@ -8,14 +8,21 @@
 :难度: Easy
 :主题: 数组、双指针、原地归并、逆向写入
 :原题: `LeetCode 0088 <https://leetcode.com/problems/merge-sorted-array/>`_
-:重点: 有效前缀、尾部预留空间、非递减归并、原地写入
+:重点: 从额外缓冲的正向归并，推导到利用尾部空槽逆向原地写入
 
 题目重述
 --------
 
-给定两个非递减整数数组 ``nums1`` 和 ``nums2``，以及有效元素数量 ``m``、``n``。``nums1`` 的总长度为 ``m + n``，前 ``m`` 项是有效元素，后 ``n`` 个位置用于容纳结果；``nums2`` 含有 ``n`` 个有效元素。把两组元素按非递减顺序合并到 ``nums1`` 中，函数不返回结果数组。
+给定两个按非递减顺序排列的整数数组 ``nums1`` 和 ``nums2``，以及整数 ``m``、``n``：
 
-约束为 ``0 <= m, n <= 200``、``1 <= m + n <= 200``、``-10^9 <= nums1[i], nums2[j] <= 10^9``。
+- ``nums1`` 的长度为 ``m + n``，其中前 ``m`` 个元素有效，后 ``n`` 个位置是预留空间；
+- ``nums2`` 的长度为 ``n``，全部元素有效。
+
+把两个有效序列合并为一个非递减序列，并直接写回 ``nums1``。函数不返回合并后的数组。
+``nums1`` 尾部预留位置原有的数值只是占位内容，不属于待合并元素。
+
+约束为 ``0 <= m, n <= 200``、``1 <= m + n <= 200``，数组元素范围为
+``[-10^9, 10^9]``。
 
 自建示例
 --------
@@ -28,7 +35,27 @@
 
    修改后：nums1 = [1,2,3,4,7,9]
 
-两个有效前缀被完整归并，原先预留槽位中的 0 不属于输入数据。
+两个有效前缀依次提供元素 ``1,4,7`` 和 ``2,3,9``，末尾三个 ``0`` 只是预留空间。
+
+.. code-block:: text
+
+   输入：
+   nums1 = [0,0,0], m = 0
+   nums2 = [-2,5,8], n = 3
+
+   修改后：nums1 = [-2,5,8]
+
+第一个有效序列为空，需要把 ``nums2`` 的全部元素写入 ``nums1``。
+
+.. code-block:: text
+
+   输入：
+   nums1 = [1,3,6], m = 3
+   nums2 = [],      n = 0
+
+   修改后：nums1 = [1,3,6]
+
+第二个序列为空时，``nums1`` 已经是最终结果。
 
 C++ 实现
 --------
@@ -42,28 +69,50 @@ C++ 实现
    private:
        void appendAndSort(std::vector<int>& nums1, int m,
                           const std::vector<int>& nums2, int n) {
-           for (int i = 0; i < n; ++i) nums1[m + i] = nums2[i];
+           for (int index = 0; index < n; ++index) {
+               nums1[m + index] = nums2[index];
+           }
            std::sort(nums1.begin(), nums1.end());
        }
 
-       void copyThenForward(std::vector<int>& nums1, int m,
-                            const std::vector<int>& nums2, int n) {
+       void copyThenMergeForward(std::vector<int>& nums1, int m,
+                                 const std::vector<int>& nums2, int n) {
            std::vector<int> first(nums1.begin(), nums1.begin() + m);
-           int i = 0, j = 0, write = 0;
-           while (i < m || j < n) {
-               if (j == n || (i < m && first[i] <= nums2[j])) nums1[write++] = first[i++];
-               else nums1[write++] = nums2[j++];
+           int first_index = 0;
+           int second_index = 0;
+           int write = 0;
+
+           while (first_index < m && second_index < n) {
+               if (first[first_index] <= nums2[second_index]) {
+                   nums1[write++] = first[first_index++];
+               } else {
+                   nums1[write++] = nums2[second_index++];
+               }
+           }
+
+           while (first_index < m) {
+               nums1[write++] = first[first_index++];
+           }
+           while (second_index < n) {
+               nums1[write++] = nums2[second_index++];
            }
        }
 
        void mergeBackward(std::vector<int>& nums1, int m,
                           const std::vector<int>& nums2, int n) {
-           int first = m - 1, second = n - 1, write = m + n - 1;
+           int first = m - 1;
+           int second = n - 1;
+           int write = m + n - 1;
+
            while (second >= 0) {
-               if (first >= 0 && nums1[first] > nums2[second])
-                   nums1[write--] = nums1[first--];
-               else
-                   nums1[write--] = nums2[second--];
+               if (first >= 0 && nums1[first] > nums2[second]) {
+                   nums1[write] = nums1[first];
+                   --first;
+               } else {
+                   nums1[write] = nums2[second];
+                   --second;
+               }
+               --write;
            }
        }
 
@@ -77,145 +126,83 @@ C++ 实现
 题解
 ----
 
-为什么正向写会覆盖输入
-~~~~~~~~~~~~~~~~~~~~
+直接利用排序
+~~~~~~~~~~~~
 
-若直接从下标 0 开始写，来自 ``nums2`` 的较小值可能覆盖 ``nums1`` 尚未比较的有效元素。复制有效前缀可以解决，但需要 ``O(m)`` 额外空间。
+最直接的方法是把 ``nums2`` 写入 ``nums1`` 的预留区域，再对整个数组排序。这样可以得到正确结果，
+但没有利用两个输入序列原本已经有序这一条件，时间为 ``O((m+n)log(m+n))``。
 
-尾部容量如何消除覆盖风险
-~~~~~~~~~~~~~~~~~~~~~~~~
+正向归并
+~~~~~~~~
 
-结果末尾应放置两个未合并前缀中的最大元素。``nums1`` 的尾部本来就是空槽，因此从右向左写时，写入位置始终位于 ``nums1`` 未读有效前缀之后。
+标准归并从两个序列的左端开始，每次取较小值写入结果。这里若直接覆盖 ``nums1[0]``，可能破坏
+``nums1`` 中尚未读取的有效元素。例如 ``nums1 = [4,7,0,0]``、``nums2 = [1,5]`` 时，先写入 1
+会覆盖仍需参与比较的 4。
 
-三个指针保存什么
-~~~~~~~~~~~~~~~~
+复制 ``nums1`` 的前 ``m`` 项后即可安全正向归并。每轮从两个未合并前缀的首元素中选较小者，
+时间降为 ``O(m+n)``，代价是保存副本所需的 ``O(m)`` 额外空间。
+
+尾部空槽
+~~~~~~~~
+
+``nums1`` 已在右侧预留 ``n`` 个位置。与其从左侧写最小值，不如从右侧写最大值：
 
 .. code-block:: text
 
-   first  = m - 1       # nums1 未合并前缀末尾
-   second = n - 1       # nums2 未合并前缀末尾
-   write  = m + n - 1   # 当前结果空槽
+   first  = m - 1
+   second = n - 1
+   write  = m + n - 1
 
-每轮比较两个尾值，把较大者写入 ``write``，并移动对应读指针。
+``first`` 和 ``second`` 分别指向两个未合并序列的最大元素，``write`` 指向当前最右空槽。
+比较两个尾值后，把较大者放到 ``write``，再向左移动对应指针。
 
 .. list-table::
    :header-rows: 1
 
-   * - first 值
-     - second 值
-     - 写入
-   * - 7
+   * - 未处理 nums1
+     - 未处理 nums2
+     - 本轮写入
+   * - ``[1,4,7]``
+     - ``[2,3,9]``
      - 9
-     - 最右侧写 9
-   * - 7
+   * - ``[1,4,7]``
+     - ``[2,3]``
+     - 7
+   * - ``[1,4]``
+     - ``[2,3]``
+     - 4
+   * - ``[1]``
+     - ``[2,3]``
      - 3
-     - 写 7
-   * - 4
-     - 3
-     - 写 4
-   * - 1
-     - 3
-     - 写 3
 
-为什么写入不会破坏 nums1 未读元素
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-只要 ``second >= 0``，就有 ``write = first + second + 1 > first``。因此当前写入位置严格在 ``nums1[0:first]`` 的右侧，无论写入来自哪个数组，都不会覆盖尚未比较的数据。
-
-为什么只需循环到 nums2 耗尽
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-若 ``nums2`` 已耗尽，``nums1`` 剩余元素本来就位于结果前缀正确位置，无需复制。若 ``nums1`` 先耗尽，循环会继续把 ``nums2`` 剩余元素依次写到前部。
-
-相等时选择哪侧是否重要
-~~~~~~~~~~~~~~~~~~~~~~
-
-只要求数值有序，不要求跨数组稳定性。相等时选择任一侧都正确；主实现选择 ``nums2``，随后 ``nums1`` 的相等值自然留在更左位置。
-
-为什么最终有序且完整
-~~~~~~~~~~~~~~~~~~~~
-
-每轮从两个有序未合并前缀中取全局最大值，填入当前最右空槽，因此已写后缀始终有序。每次恰好消费一个有效元素，最终全部 ``m+n`` 个元素都出现一次。
-
-复杂度来源
+写入不变量
 ~~~~~~~~~~
 
-拼接排序为 ``O((m+n)log(m+n))``。正向复制和逆向归并均为 ``O(m+n)``；逆向方法额外空间 ``O(1)``。
+循环开始时满足：
 
-九语言实现
-----------
+.. code-block:: text
 
-C
-~
+   write = first + second + 1
 
-.. code-block:: c
+只要 ``second >= 0``，就有 ``write > first``。因此写入位置始终严格位于 ``nums1`` 尚未读取的
+有效前缀右侧，不会覆盖未来仍要比较的元素。每轮同时减少 ``write`` 和某一个读指针，这个关系持续成立。
 
-   void merge(int*nums1,int nums1Size,int m,int*nums2,int nums2Size,int n){int i=m-1,j=n-1,w=m+n-1;while(j>=0){if(i>=0&&nums1[i]>nums2[j])nums1[w--]=nums1[i--];else nums1[w--]=nums2[j--];}}
+已写入的后缀包含当前已取出的最大元素，并保持非递减顺序。继续选择两个未处理尾值中的较大者，
+就能逐步把这个有序后缀向左扩展。
 
-Python
+剩余元素
+~~~~~~~~
+
+主循环只要求 ``second >= 0``：
+
+- ``nums2`` 先耗尽时，``nums1`` 剩余元素已经位于结果前缀的正确位置，无需搬动；
+- ``nums1`` 先耗尽时，条件 ``first >= 0`` 失败，循环会继续把 ``nums2`` 的剩余元素写到前部。
+
+相等时主实现选择 ``nums2`` 的元素写到更右侧。题目只要求数值有序，不要求两个数组之间保持稳定性，
+所以选择任一侧都不影响正确性。
+
+复杂度
 ~~~~~~
 
-.. code-block:: python
-
-   class Solution:
-       def merge(self, a: list[int], m: int, b: list[int], n: int) -> None:
-           i,j,write=m-1,n-1,m+n-1
-           while j>=0:
-               if i>=0 and a[i]>b[j]:a[write]=a[i];i-=1
-               else:a[write]=b[j];j-=1
-               write-=1
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public void merge(int[]a,int m,int[]b,int n){int i=m-1,j=n-1,w=m+n-1;while(j>=0)a[w--]=i>=0&&a[i]>b[j]?a[i--]:b[j--];}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn merge(a:&mut Vec<i32>,m:i32,b:&mut Vec<i32>,n:i32){let(mut i,mut j,mut w)=(m-1,n-1,m+n-1);while j>=0{if i>=0&&a[i as usize]>b[j as usize]{a[w as usize]=a[i as usize];i-=1}else{a[w as usize]=b[j as usize];j-=1}w-=1}}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func merge(a []int,m int,b []int,n int){i,j,w:=m-1,n-1,m+n-1;for j>=0{if i>=0&&a[i]>b[j]{a[w]=a[i];i--}else{a[w]=b[j];j--};w--}}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function merge(a:number[],m:number,b:number[],n:number):void{let i=m-1,j=n-1,w=m+n-1;while(j>=0){if(i>=0&&a[i]>b[j])a[w--]=a[i--];else a[w--]=b[j--];}}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public void Merge(int[]a,int m,int[]b,int n){int i=m-1,j=n-1,w=m+n-1;while(j>=0)a[w--]=i>=0&&a[i]>b[j]?a[i--]:b[j--];}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function merge_sorted!(a,m,b,n)
-       i=m;j=n;write=m+n
-       while j>=1
-           if i>=1&&a[i]>b[j];a[write]=a[i];i-=1;else;a[write]=b[j];j-=1;end
-           write-=1
-       end;a
-   end
-
-R
-~
-
-.. code-block:: r
-
-   merge_sorted <- function(a,m,b,n){i<-m;j<-n;write<-m+n;while(j>=1L){if(i>=1L&&a[[i]]>b[[j]]){a[[write]]<-a[[i]];i<-i-1L}else{a[[write]]<-b[[j]];j<-j-1L};write<-write-1L};a}
+拼接后排序的时间为 ``O((m+n)log(m+n))``。复制后正向归并和尾部逆向归并的时间均为
+``O(m+n)``；前者额外使用 ``O(m)`` 空间，后者只使用三个下标，额外空间为 ``O(1)``。
