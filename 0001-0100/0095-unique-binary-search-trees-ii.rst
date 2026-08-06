@@ -6,14 +6,16 @@
 
 :题号: 0095
 :难度: Medium
-:主题: 二叉搜索树、分治、Catalan 结构、树构造
+:主题: 二叉搜索树、分治、记忆化、Catalan 结构
 :原题: `LeetCode 0095 <https://leetcode.com/problems/unique-binary-search-trees-ii/>`_
-:重点: ``1..n`` 全部使用、不同树结构、BST 顺序、完整树集合
+:重点: 从枚举根节点拆分值域，推导到缓存重复区间并组合左右子树
 
 题目重述
 --------
 
-给定整数 ``n``，返回所有由数值 ``1..n`` 各使用一次构成、结构互不相同的二叉搜索树。每棵树都必须满足任意节点左子树中的值严格小于该节点，右子树中的值严格大于该节点。答案顺序不限。
+给定整数 ``n``，返回所有由数值 ``1..n`` 各使用一次构成、结构互不相同的二叉搜索树。
+
+每棵树都必须满足：任意节点左子树中的值严格小于该节点，右子树中的值严格大于该节点。答案顺序不限。
 
 约束为 ``1 <= n <= 8``。
 
@@ -25,7 +27,14 @@
    输入：n = 2
    输出（层序表示）：[[1,null,2],[2,1]]
 
-以 1 为根时，2 只能位于右子树；以 2 为根时，1 只能位于左子树，因此共有两棵不同的 BST。
+以 1 为根时，2 只能位于右子树；以 2 为根时，1 只能位于左子树。
+
+.. code-block:: text
+
+   输入：n = 3
+   输出数量：5
+
+以 1、2、3 为根时分别产生 2、1、2 棵树，总数为 5。
 
 C++ 实现
 --------
@@ -36,72 +45,183 @@ C++ 实现
 
    class Solution {
    private:
+       std::vector<std::vector<std::vector<TreeNode*>>> memo;
+       std::vector<std::vector<char>> computed;
+       std::vector<TreeNode*> empty_range{nullptr};
+
        TreeNode* cloneTree(TreeNode* node) {
-           if (!node) return nullptr;
-           return new TreeNode(node->val, cloneTree(node->left), cloneTree(node->right));
+           if (!node) {
+               return nullptr;
+           }
+           return new TreeNode(
+               node->val,
+               cloneTree(node->left),
+               cloneTree(node->right));
        }
 
-       void destroy(TreeNode* node) {
-           if (!node) return;
-           destroy(node->left); destroy(node->right); delete node;
+       void destroyTree(TreeNode* node) {
+           if (!node) {
+               return;
+           }
+           destroyTree(node->left);
+           destroyTree(node->right);
+           delete node;
        }
 
-       std::vector<TreeNode*> generate(int start, int end) {
-           if (start > end) return {nullptr};
+       std::vector<TreeNode*> directGenerate(int start, int end) {
+           if (start > end) {
+               return {nullptr};
+           }
+
            std::vector<TreeNode*> result;
            for (int root_value = start; root_value <= end; ++root_value) {
-               std::vector<TreeNode*> left = generate(start, root_value - 1);
-               std::vector<TreeNode*> right = generate(root_value + 1, end);
-               for (TreeNode* left_tree : left)
-                   for (TreeNode* right_tree : right)
+               auto left_trees = directGenerate(start, root_value - 1);
+               auto right_trees = directGenerate(root_value + 1, end);
+
+               for (TreeNode* left_tree : left_trees) {
+                   for (TreeNode* right_tree : right_trees) {
                        result.push_back(new TreeNode(
-                           root_value, cloneTree(left_tree), cloneTree(right_tree)));
-               for (TreeNode* tree : left) destroy(tree);
-               for (TreeNode* tree : right) destroy(tree);
+                           root_value,
+                           cloneTree(left_tree),
+                           cloneTree(right_tree)));
+                   }
+               }
+
+               for (TreeNode* tree : left_trees) {
+                   destroyTree(tree);
+               }
+               for (TreeNode* tree : right_trees) {
+                   destroyTree(tree);
+               }
+           }
+           return result;
+       }
+
+       const std::vector<TreeNode*>& generateRange(int start, int end) {
+           if (start > end) {
+               return empty_range;
+           }
+           if (computed[start][end]) {
+               return memo[start][end];
+           }
+
+           computed[start][end] = true;
+           auto& result = memo[start][end];
+
+           for (int root_value = start; root_value <= end; ++root_value) {
+               const auto& left_trees = generateRange(start, root_value - 1);
+               const auto& right_trees = generateRange(root_value + 1, end);
+
+               for (TreeNode* left_tree : left_trees) {
+                   for (TreeNode* right_tree : right_trees) {
+                       result.push_back(new TreeNode(
+                           root_value,
+                           cloneTree(left_tree),
+                           cloneTree(right_tree)));
+                   }
+               }
+           }
+           return result;
+       }
+
+       std::vector<TreeNode*> memoizedGenerate(int n) {
+           memo.assign(
+               n + 2,
+               std::vector<std::vector<TreeNode*>>(n + 2));
+           computed.assign(n + 2, std::vector<char>(n + 2));
+
+           generateRange(1, n);
+           std::vector<TreeNode*> result = std::move(memo[1][n]);
+
+           for (int start = 1; start <= n; ++start) {
+               for (int end = start; end <= n; ++end) {
+                   for (TreeNode* tree : memo[start][end]) {
+                       destroyTree(tree);
+                   }
+               }
            }
            return result;
        }
 
    public:
        std::vector<TreeNode*> generateTrees(int n) {
-           return generate(1, n);
+           return memoizedGenerate(n);
        }
    };
 
 题解
 ----
 
-为什么插入排列会重复结构
-~~~~~~~~~~~~~~~~~~~~~~
+排列建树
+~~~~~~~~
 
-可以枚举 ``1..n`` 的所有插入顺序并建立 BST，但不同排列可能得到同一结构。例如先插入某子树中的两个节点时，只要父子关系不变，多个顺序会汇聚到同一棵树。该方法至少枚举 ``n!`` 个排列，没有利用 BST 的值域约束。
+最直接的思路是枚举 ``1..n`` 的所有插入顺序，再依次插入二叉搜索树并去除重复结构。
 
-根值如何拆分问题
-~~~~~~~~~~~~~~~~
+该方法至少检查 ``n!`` 个排列，而且不同插入顺序可能得到同一棵树。它把大量时间花在重复结构上，没有利用连续值域对根节点的约束。
 
-对连续值域 ``[start,end]`` 选择根 ``root_value`` 后：
+根节点拆分
+~~~~~~~~~~
+
+考虑一个必须使用连续值域 ``[start, end]`` 的子问题。选择 ``root_value`` 作为根后，二叉搜索树性质立即确定两侧值域：
 
 .. code-block:: text
 
-   左子树只能使用 [start, root_value-1]
-   右子树只能使用 [root_value+1, end]
+   左子树使用 [start, root_value - 1]
+   右子树使用 [root_value + 1, end]
 
-左右值域互不重叠且都严格小于或大于根。任意合法左树与任意合法右树都能组合成一棵合法 BST，因此固定根的结果是两个结果集的笛卡尔积。
+左右值域互不重叠。任取一棵合法左树和一棵合法右树，都能与当前根组成合法结果，因此固定根的答案是两个子树集合的笛卡尔积。
 
-空区间为什么返回一个 null
-~~~~~~~~~~~~~~~~~~~~~~~~
+空区间
+~~~~~~
 
-空区间表示“这一侧没有子树”，它是一种合法选择。若返回空列表，叶节点的左结果数和右结果数都会为 0，笛卡尔积无法生成叶节点。返回 ``{nullptr}`` 使空侧贡献一个单位选择。
+当 ``start > end`` 时，应返回包含一个 ``nullptr`` 的集合，而不是空集合。
 
-``n=3`` 的根分组
-~~~~~~~~~~~~~~~~
+``nullptr`` 表示“这一侧没有子树”，是组合过程中的一个合法选择。若返回空集合，叶节点的左右结果数都为零，笛卡尔积将无法生成任何叶节点。
+
+.. code-block:: text
+
+   空左树集合  = {nullptr}
+   空右树集合  = {nullptr}
+   组合结果数  = 1 * 1 = 1
+
+区间分治
+~~~~~~~~
+
+直接分治为每个根递归生成左右区间，再枚举所有左右组合。不同根值产生不同根节点；根值相同时，不同的左树或右树组合又产生不同结构，因此结果不会重复。
+
+任意合法 BST 都有唯一根值。该根强制划分左右值域，递归又会生成其唯一的左右结构，所以所有合法树都会被覆盖。
+
+重复区间
+~~~~~~~~
+
+直接分治会反复生成相同区间。例如生成 ``[1,4]`` 时，区间 ``[1,2]`` 可能从多个上层根选择再次出现。
+
+记忆化以 ``(start, end)`` 为状态，第一次生成后保存该区间的全部树模板。后续访问同一区间直接复用模板集合，不再重复展开根节点与子区间。
+
+独立节点
+~~~~~~~~
+
+同一棵子树模板可能与多个另一侧模板组合。若直接把模板指针挂到多个根节点下，不同返回树会共享可变节点，修改或释放其中一棵树可能影响其他树。
+
+实现把缓存结果视为结构模板，每次组合时深复制左右子树：
+
+.. code-block:: text
+
+   new root(root_value, clone(left_template), clone(right_template))
+
+因此每棵生成树拥有独立节点集合。顶层缓存的所有权最终转移给返回结果，其余区间模板在返回前释放。
+
+根值分组
+~~~~~~~~
+
+``n = 3`` 时，各根节点的组合数量如下：
 
 .. list-table::
    :header-rows: 1
 
-   * - 根
-     - 左区间结构数
-     - 右区间结构数
+   * - 根值
+     - 左区间树数
+     - 右区间树数
      - 组合数
    * - 1
      - 1 个空树
@@ -116,116 +236,11 @@ C++ 实现
      - 1 个空树
      - 2
 
-为什么覆盖全部合法树
-~~~~~~~~~~~~~~~~~~~~
+固定根的数量是左右结果数之积，对所有根求和正是 Catalan 递推结构。
 
-任意非空 BST 都有唯一根值。BST 性质强制所有更小值位于左子树、更大值位于右子树；按区间长度归纳，算法能生成它的左右子树，并在该根值分支的笛卡尔积中组合出整棵树。
-
-为什么不会产生重复结构
-~~~~~~~~~~~~~~~~~~~~~~
-
-不同根值产生的树根不同。根值相同时，若两个组合不同，则左结构或右结构至少一侧不同；递归结果本身无重复，笛卡尔积中的每一对也只访问一次，因此整树唯一。
-
-为什么要深复制子树模板
-~~~~~~~~~~~~~~~~~~~~
-
-同一左树可能与多个右树组合。若直接把同一个节点对象挂到多个根下，结构虽然正确，却会共享可变子树。主实现把递归结果视为临时模板，每次组合都深复制左右模板；组合结束后销毁模板，使每棵最终结果拥有独立节点集合。
-
-记忆化的取舍
-~~~~~~~~~~~~
-
-相同区间会重复生成，可缓存结构模板以减少构造工作。但直接复用缓存节点会引入共享；若最终仍要求独立树，需要在输出组合时深复制。由于 ``n<=8`` 且输出本身已经很大，直接分治更容易说明资源所有权。
-
-复杂度来源
-~~~~~~~~~~
-
-结果数量是第 ``n`` 个 Catalan 数 ``C_n``，每棵树包含 ``n`` 个节点。仅构造独立输出就需要 ``Theta(n*C_n)`` 时间与返回空间；递归深度 ``O(n)``。模板深复制的成本与输出节点总量同阶。
-
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   static struct TreeNode*clone(struct TreeNode*x){if(!x)return NULL;struct TreeNode*n=malloc(sizeof(*n));n->val=x->val;n->left=clone(x->left);n->right=clone(x->right);return n;}
-   static void release(struct TreeNode*x){if(!x)return;release(x->left);release(x->right);free(x);}
-   static struct TreeNode**gen(int l,int r,int*size){if(l>r){struct TreeNode**a=malloc(sizeof(*a));a[0]=NULL;*size=1;return a;}int cap=64,n=0;struct TreeNode**out=malloc(cap*sizeof(*out));for(int root=l;root<=r;root++){int ls,rs;struct TreeNode**left=gen(l,root-1,&ls),**right=gen(root+1,r,&rs);for(int i=0;i<ls;i++)for(int j=0;j<rs;j++){if(n==cap){cap*=2;out=realloc(out,cap*sizeof(*out));}struct TreeNode*x=malloc(sizeof(*x));x->val=root;x->left=clone(left[i]);x->right=clone(right[j]);out[n++]=x;}for(int i=0;i<ls;i++)release(left[i]);for(int j=0;j<rs;j++)release(right[j]);free(left);free(right);}*size=n;return out;}
-   struct TreeNode**generateTrees(int n,int*returnSize){return gen(1,n,returnSize);}
-
-Python
+复杂度
 ~~~~~~
 
-.. code-block:: python
+设第 ``n`` 个 Catalan 数为 ``C_n``，它也是最终树的数量。每棵返回树包含 ``n`` 个节点，仅构造独立输出就需要 ``Theta(n * C_n)`` 时间与返回空间。
 
-   class Solution:
-       def generateTrees(self, n: int):
-           def clone(node):
-               return None if node is None else TreeNode(node.val, clone(node.left), clone(node.right))
-           def gen(left, right):
-               if left > right: return [None]
-               result = []
-               for root in range(left, right + 1):
-                   for a in gen(left, root - 1):
-                       for b in gen(root + 1, right):
-                           result.append(TreeNode(root, clone(a), clone(b)))
-               return result
-           return gen(1, n)
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {TreeNode clone(TreeNode x){return x==null?null:new TreeNode(x.val,clone(x.left),clone(x.right));}List<TreeNode>gen(int l,int r){if(l>r)return new ArrayList<>(Arrays.asList((TreeNode)null));List<TreeNode>o=new ArrayList<>();for(int root=l;root<=r;root++)for(TreeNode a:gen(l,root-1))for(TreeNode b:gen(root+1,r))o.add(new TreeNode(root,clone(a),clone(b)));return o;}public List<TreeNode> generateTrees(int n){return gen(1,n);}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn generate_trees(n:i32)->Vec<Option<Rc<RefCell<TreeNode>>>>{fn clone_tree(x:&Option<Rc<RefCell<TreeNode>>>)->Option<Rc<RefCell<TreeNode>>>{x.as_ref().map(|node|{let b=node.borrow();Rc::new(RefCell::new(TreeNode{val:b.val,left:clone_tree(&b.left),right:clone_tree(&b.right)}))})}fn gen(l:i32,r:i32)->Vec<Option<Rc<RefCell<TreeNode>>>>{if l>r{return vec![None]}let mut o=vec![];for root in l..=r{for a in gen(l,root-1){for b in gen(root+1,r){o.push(Some(Rc::new(RefCell::new(TreeNode{val:root,left:clone_tree(&a),right:clone_tree(&b)}))))}}}o}gen(1,n)}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func generateTrees(n int)[]*TreeNode{var clone func(*TreeNode)*TreeNode;clone=func(x *TreeNode)*TreeNode{if x==nil{return nil};return &TreeNode{Val:x.Val,Left:clone(x.Left),Right:clone(x.Right)}};var gen func(int,int)[]*TreeNode;gen=func(l,r int)[]*TreeNode{if l>r{return []*TreeNode{nil}};o:=[]*TreeNode{};for root:=l;root<=r;root++{for _,a:=range gen(l,root-1){for _,b:=range gen(root+1,r){o=append(o,&TreeNode{Val:root,Left:clone(a),Right:clone(b)})}}};return o};return gen(1,n)}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function generateTrees(n:number):(TreeNode|null)[]{const clone=(x:TreeNode|null):TreeNode|null=>x?new TreeNode(x.val,clone(x.left),clone(x.right)):null;const gen=(l:number,r:number):(TreeNode|null)[]=>{if(l>r)return[null];const o:(TreeNode|null)[]=[];for(let root=l;root<=r;root++)for(const a of gen(l,root-1))for(const b of gen(root+1,r))o.push(new TreeNode(root,clone(a),clone(b)));return o;};return gen(1,n);}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {TreeNode Clone(TreeNode x)=>x==null?null:new TreeNode(x.val,Clone(x.left),Clone(x.right));IList<TreeNode> Gen(int l,int r){if(l>r)return new List<TreeNode>{null};var o=new List<TreeNode>();for(int root=l;root<=r;root++)foreach(var a in Gen(l,root-1))foreach(var b in Gen(root+1,r))o.Add(new TreeNode(root,Clone(a),Clone(b)));return o;}public IList<TreeNode> GenerateTrees(int n)=>Gen(1,n);}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function generate_trees(n)
-       clone(x)=x===nothing ? nothing : TreeNode(x.val,clone(x.left),clone(x.right))
-       function gen(l,r)
-           l>r&&return Any[nothing];out=Any[]
-           for root in l:r,a in gen(l,root-1),b in gen(root+1,r);push!(out,TreeNode(root,clone(a),clone(b)));end
-           out
-       end
-       gen(1,n)
-   end
-
-R
-~
-
-.. code-block:: r
-
-   generate_trees <- function(n){clone<-function(x){if(is.null(x))return(NULL);y<-new.env();y$val<-x$val;y$left<-clone(x$left);y$right<-clone(x$right);y};gen<-function(l,r){if(l>r)return(list(NULL));out<-list();for(root in l:r)for(a in gen(l,root-1L))for(b in gen(root+1L,r)){x<-new.env();x$val<-root;x$left<-clone(a);x$right<-clone(b);out[[length(out)+1L]]<-x};out};gen(1L,n)}
+记忆化还保存较短区间的树模板，其节点总量仍为 ``O(n * C_n)``；递归深度为 ``O(n)``。直接分治会额外重复生成相同区间，实际工作量更高。
