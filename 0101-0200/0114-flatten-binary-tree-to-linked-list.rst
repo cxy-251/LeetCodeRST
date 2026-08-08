@@ -4,34 +4,30 @@
 题目信息
 --------
 
-:题号: 0114
+:题号: 0114. 二叉树展开为链表
 :难度: Medium
-:主题: 二叉树、原地修改、前序遍历、指针重连
+:主题: 二叉树、前序遍历、原地重连、反向递归
 :原题: `LeetCode 0114 <https://leetcode.com/problems/flatten-binary-tree-to-linked-list/>`_
-:重点: 原地展开、前序顺序、左指针清空、右指针串联
+:重点: 从保存前序节点序列后重连，推导到反向前序维护后继，再用局部前驱接续实现常量工作空间
 
 题目重述
 --------
 
-给定二叉树根节点 ``root``，直接修改这棵树，把它原地展开成一条只使用 ``right`` 指针连接的单向链。展开后每个节点的 ``left`` 都必须为 ``null``，沿 ``right`` 访问节点时，节点顺序必须与原树的前序遍历顺序完全一致。函数不返回新的链表头，根节点仍是展开后链的起点。
+给定二叉树根节点 ``root``，直接修改原树，把所有节点展开成一条只沿 ``right`` 指针连接的单向链。链中节点
+顺序必须与原树的前序遍历“根、左子树、右子树”一致，并且每个节点的 ``left`` 都必须置为 ``nullptr``。
 
-树中节点数在 ``0..2000`` 范围内，节点值在 ``-100..100`` 范围内。
+函数不返回新链表，原根仍是展开后链的起点；不能用新建节点替换输入节点。空树无需操作。树中节点总数在
+``0..2000`` 范围内，节点值在 ``-100..100`` 范围内。
 
 自建示例
 --------
 
-.. code-block:: text
-
-   输入：root = [8,4,12,2,6,10,null]
-   修改后：8 -> 4 -> 2 -> 6 -> 12 -> 10
-   输出结构（层序）：[8,null,4,null,2,null,6,null,12,null,10]
-   解释：原树的前序遍历为 8、4、2、6、12、10；展开后所有 left 指针均为空。
-
-.. code-block:: text
-
-   输入：root = []
-   修改后：[]
-   解释：空树无需修改。
+* 左右子树都存在：``root = [8,4,12,2,6,10,null]``，修改后右链为
+  ``8 -> 4 -> 2 -> 6 -> 12 -> 10``；
+* 左孩子内部仍有左支：``root = [1,2,5,3,null,null,6,4]``，修改后右链为
+  ``1 -> 2 -> 3 -> 4 -> 5 -> 6``；
+* 单节点：``root = [7]``，节点保持为链首且 ``left == nullptr``；
+* 空树：``root = []``，不执行任何重连。
 
 C++ 实现
 --------
@@ -42,30 +38,38 @@ C++ 实现
 
    class Solution {
    private:
-       void collect(TreeNode* node, std::vector<TreeNode*>& nodes) {
-           if (!node) return;
+       void collectPreorder(TreeNode* node, std::vector<TreeNode*>& nodes) {
+           if (!node) {
+               return;
+           }
            nodes.push_back(node);
-           collect(node->left, nodes);
-           collect(node->right, nodes);
+           collectPreorder(node->left, nodes);
+           collectPreorder(node->right, nodes);
        }
 
        void collectThenRelink(TreeNode* root) {
            std::vector<TreeNode*> nodes;
-           collect(root, nodes);
-           for (int i = 0; i < static_cast<int>(nodes.size()); ++i) {
-               nodes[i]->left = nullptr;
-               nodes[i]->right = i + 1 < static_cast<int>(nodes.size())
-                   ? nodes[i + 1] : nullptr;
+           collectPreorder(root, nodes);
+           for (int index = 0; index < static_cast<int>(nodes.size()); ++index) {
+               nodes[index]->left = nullptr;
+               nodes[index]->right = index + 1 < static_cast<int>(nodes.size()) ? nodes[index + 1] : nullptr;
            }
        }
 
-       void reversePreorder(TreeNode* node, TreeNode*& next) {
-           if (!node) return;
-           reversePreorder(node->right, next);
-           reversePreorder(node->left, next);
+       void linkInReversePreorder(TreeNode* node, TreeNode*& next) {
+           if (!node) {
+               return;
+           }
+           linkInReversePreorder(node->right, next);
+           linkInReversePreorder(node->left, next);
            node->right = next;
            node->left = nullptr;
            next = node;
+       }
+
+       void reversePreorderRelink(TreeNode* root) {
+           TreeNode* next = nullptr;
+           linkInReversePreorder(root, next);
        }
 
        void predecessorRelink(TreeNode* root) {
@@ -73,8 +77,9 @@ C++ 实现
            while (current) {
                if (current->left) {
                    TreeNode* predecessor = current->left;
-                   while (predecessor->right)
+                   while (predecessor->right) {
                        predecessor = predecessor->right;
+                   }
                    predecessor->right = current->right;
                    current->right = current->left;
                    current->left = nullptr;
@@ -92,156 +97,104 @@ C++ 实现
 题解
 ----
 
-前序顺序要求怎样的局部结构
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-当前节点之后必须先出现整棵左子树，再出现原右子树。若当前节点存在左孩子，应把左子树搬到 ``right``，并把原右子树接到左子树前序链的末尾。
-
-三次重连的顺序
+目标序列再重连
 ~~~~~~~~~~~~~~
 
-设 ``predecessor`` 为左子树中沿 ``right`` 不断前进的最右节点：
+最直接的正确方案是先执行前序遍历，把原节点指针依次保存到数组，再按数组顺序重写指针。若数组为
+``[p0,p1,...,pk]``，就令每个 ``pi.left = nullptr``、``pi.right = p(i+1)``，最后一个节点右指针为空。
+
+``collectThenRelink`` 将“确定目标顺序”和“修改结构”分成两个阶段。收集期间不改树，所以递归始终能找到
+原左右孩子；重连期间只操作已经保存的节点指针，不创建、遗漏或复制节点。这版逻辑清楚，但数组保存了完整
+前序序列，使用 ``O(n)`` 工作空间。
+
+原地处理的困难不是前序遍历本身，而是过早覆盖指针会丢失尚未访问的子树。要删除节点数组，必须在修改
+``node->right`` 之前，已经有另一种状态能保留它原本应接到的位置。
+
+反向前序后继
+~~~~~~~~~~~~
+
+目标链的前序顺序为“根、左、右”。反过来处理就是“右、左、根”。若递归先完成右子树、再完成左子树，
+处理当前节点时，变量 ``next`` 已经指向当前节点在最终前序链中的直接后继：有左子树时是左子树根，否则是
+右子树根，再否则是此前构造好的更后方节点或空指针。
+
+``linkInReversePreorder`` 因而执行：
 
 .. code-block:: text
 
-   predecessor.right = current.right
-   current.right = current.left
-   current.left = null
+   先递归 right
+   再递归 left
+   node.right = next
+   node.left = null
+   next = node
 
-第一步必须先保存原右子树入口。若先覆盖 ``current.right``，原右子树会丢失。
+右子树先被连成后缀，左子树随后接到这个后缀之前，当前根最后接到最前面。原先需要保存全部节点的数组被
+压缩为一个 ``next`` 指针和递归调用栈；调用顺序若改成先左后右，构造出的后继顺序就会颠倒。
+
+局部前驱接续
+~~~~~~~~~~~~
+
+还可以不等待递归回溯，而是在当前节点就把局部结构改成前序顺序。若 ``current`` 没有左孩子，它的下一个
+前序节点本来就是 ``current->right``，只需沿右链前进。
+
+若左孩子存在，当前节点之后应先访问整棵左子树，原右子树必须排在左子树之后。沿左子树的 ``right`` 指针
+找到最右节点 ``predecessor``；它的右指针当前为空，可暂存原右子树入口。三次重连按顺序为：
+
+.. code-block:: text
+
+   predecessor->right = current->right
+   current->right = current->left
+   current->left = nullptr
+
+第一步必须发生在覆盖 ``current->right`` 之前，否则原右子树入口会丢失。完成后，沿 ``current->right``
+首先进入原左子树；该子树以后进行同样重连时，只会把自己的左部分插到已有右后缀之前，不会丢弃后缀，因而
+原右子树最终仍位于整个左子树的前序节点之后。
+
+这里的 ``predecessor`` 是当前左子树沿已有右指针能到达的最右节点，不必预先就是左子树最终前序链的末尾。
+若它内部还有左支，后续局部重连会把已接上的原右子树继续向后传递。算法依赖的是“空右指针可保存后缀”，
+不是错误地假设当前右边界已经完成展平。
+
+重连走读
+~~~~~~~~
+
+对 ``[8,4,12,2,6,10,null]``：
 
 .. list-table::
    :header-rows: 1
 
-   * - 局部状态
-     - ``current.right``
-     - ``predecessor.right``
-   * - 重连前
-     - 原右子树 12
+   * - ``current``
+     - 左子树右边界
+     - 保存的旧右子树
+     - 重连后的局部右链
+   * - 8
+     - 6
+     - 12
+     - ``8 -> 4``，且 ``6 -> 12``
+   * - 4
+     - 2
+     - 6
+     - ``4 -> 2 -> 6``
+   * - 2
+     - 无左子树
+     - 不变
+     - ``2 -> 6``
+   * - 6
+     - 无左子树
+     - 不变
+     - ``6 -> 12``
+   * - 12
+     - 10
      - 空
-   * - 左尾接旧右
-     - 仍为 12
-     - 12
-   * - 左树搬到右侧
-     - 左子树 4
-     - 12
-   * - 清空左边
-     - 4
-     - 12
+     - ``12 -> 10``
 
-为什么左子树最右节点是连接点
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+外层循环每次沿已经形成的 ``right`` 前序链移动。所有左子树都在到达父节点时搬到这条链上，每次搬动后又
+清空父节点的 ``left``，所以最终不会跳过节点，也不会留下非空左指针。
 
-左子树在后续迭代中会被展平成前序链。当前左子树的最右节点是这棵子树展平后最后到达的节点；把原右子树接到这里，得到“左子树完整前序 + 原右子树”的顺序。
+主解与复杂度
+~~~~~~~~~~~~
 
-为什么节点不会丢失或重复
-~~~~~~~~~~~~~~~~~~~~~~~~
+公开入口采用前驱接续法，因为它复用原树中的空右指针保存后缀，不需要节点数组或递归栈。输入各子树原本
+互不相交，把左子树右边界连接到原右子树不会形成回指祖先的环。
 
-算法只改写三条已有指针，不创建或删除节点。原左子树成为当前节点右子树，原右子树由 ``predecessor.right`` 保留；两部分原本互不相交，因此节点集合保持不变。
-
-为什么最终无环
-~~~~~~~~~~~~~~
-
-输入是树，左子树与原右子树不相交。``predecessor`` 位于左子树中，连接到原右子树不会指回左子树祖先；随后清空 ``current.left``，消除旧入口。每轮都把局部树改成单向前序连接，不会形成闭环。
-
-逆前序递归如何工作
-~~~~~~~~~~~~~~~~~~
-
-按“右、左、根”顺序递归，并维护已经展平的后继 ``next``。处理当前节点时令 ``current.right = next``、``current.left = null``，再把 ``next`` 更新为当前节点。反向处理可在回溯时直接得到前序链。
-
-为什么迭代最终覆盖全部节点
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-每轮处理后，当前节点的 ``right`` 指向原前序序列中的下一个节点。令 ``current = current.right`` 会沿最终链继续；所有左子树都会在到达其父节点时被搬入右链，因此不会跳过节点。
-
-复杂度来源
-~~~~~~~~~~
-
-收集后重连为 ``O(n)`` 时间、``O(n)`` 数组。逆前序递归为 ``O(n)`` 时间、``O(h)`` 栈。前驱重连使用 ``O(1)`` 额外空间，右链查找按整棵树摊还为 ``O(n)``。
-
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   void flatten(struct TreeNode*root){for(struct TreeNode*cur=root;cur;cur=cur->right){if(cur->left){struct TreeNode*pre=cur->left;while(pre->right)pre=pre->right;pre->right=cur->right;cur->right=cur->left;cur->left=NULL;}}}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def flatten(self, root) -> None:
-           current = root
-           while current:
-               if current.left:
-                   predecessor = current.left
-                   while predecessor.right: predecessor = predecessor.right
-                   predecessor.right = current.right
-                   current.right = current.left
-                   current.left = None
-               current = current.right
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public void flatten(TreeNode root){for(TreeNode cur=root;cur!=null;cur=cur.right){if(cur.left!=null){TreeNode pre=cur.left;while(pre.right!=null)pre=pre.right;pre.right=cur.right;cur.right=cur.left;cur.left=null;}}}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn flatten(root:&mut Option<Rc<RefCell<TreeNode>>>){fn visit(node:Option<Rc<RefCell<TreeNode>>>,next:&mut Option<Rc<RefCell<TreeNode>>>){let Some(node)=node else{return};let(right,left)={let b=node.borrow();(b.right.clone(),b.left.clone())};visit(right,next);visit(left,next);{let mut b=node.borrow_mut();b.left=None;b.right=next.clone();}*next=Some(node);}let start=root.clone();let mut next=None;visit(start,&mut next);*root=next;}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func flatten(root *TreeNode){for cur:=root;cur!=nil;cur=cur.Right{if cur.Left!=nil{pre:=cur.Left;for pre.Right!=nil{pre=pre.Right};pre.Right=cur.Right;cur.Right=cur.Left;cur.Left=nil}}}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function flatten(root:TreeNode|null):void{for(let cur=root;cur;cur=cur.right){if(cur.left){let pre=cur.left;while(pre.right)pre=pre.right;pre.right=cur.right;cur.right=cur.left;cur.left=null;}}}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public void Flatten(TreeNode root){for(var cur=root;cur!=null;cur=cur.right){if(cur.left!=null){var pre=cur.left;while(pre.right!=null)pre=pre.right;pre.right=cur.right;cur.right=cur.left;cur.left=null;}}}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function flatten_tree(root)
-       cur=root
-       while cur!==nothing
-           if cur.left!==nothing
-               pre=cur.left
-               while pre.right!==nothing;pre=pre.right;end
-               pre.right=cur.right;cur.right=cur.left;cur.left=nothing
-           end
-           cur=cur.right
-       end
-       nothing
-   end
-
-R
-~
-
-.. code-block:: r
-
-   flatten_tree <- function(root){cur<-root;while(!is.null(cur)){if(!is.null(cur$left)){pre<-cur$left;while(!is.null(pre$right))pre<-pre$right;pre$right<-cur$right;cur$right<-cur$left;cur$left<-NULL};cur<-cur$right};invisible(NULL)}
+收集后重连时间 ``O(n)``、数组空间 ``O(n)``；反向前序时间 ``O(n)``、递归栈 ``O(h)``。前驱接续中，
+外层沿最终右链访问每个节点一次，内层沿右边界的总访问量为线性摊还，时间 ``O(n)``、额外空间 ``O(1)``。
+三种方法都只重用原节点，返回结构本身不新增空间。

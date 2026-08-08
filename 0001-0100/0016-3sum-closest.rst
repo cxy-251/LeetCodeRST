@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0016
+:题号: 0016. 最接近的三数之和
 :难度: Medium
 :主题: 数组、排序、双指针
 :原题: `LeetCode 0016 <https://leetcode.com/problems/3sum-closest/>`_

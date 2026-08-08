@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0042
+:题号: 0042. 接雨水
 :难度: Hard
 :主题: 数组、前后缀最大值、单调栈、双指针
 :原题: `LeetCode 0042 <https://leetcode.com/problems/trapping-rain-water/>`_

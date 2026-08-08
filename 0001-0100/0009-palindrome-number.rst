@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0009
+:题号: 0009. 回文数
 :难度: Easy
 :主题: 数学、整数、回文
 :原题: `LeetCode 0009 <https://leetcode.com/problems/palindrome-number/>`_

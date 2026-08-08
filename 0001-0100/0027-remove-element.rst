@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0027
+:题号: 0027. 移除元素
 :难度: Easy
 :主题: 数组、双指针、原地覆盖
 :原题: `LeetCode 0027 <https://leetcode.com/problems/remove-element/>`_

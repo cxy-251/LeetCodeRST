@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0085
+:题号: 0085. 最大矩形
 :难度: Hard
 :主题: 矩阵、动态柱高、单调栈
 :原题: `LeetCode 0085 <https://leetcode.com/problems/maximal-rectangle/>`_

@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0013
+:题号: 0013. 罗马数字转整数
 :难度: Easy
 :主题: 字符串、映射、相邻关系
 :原题: `LeetCode 0013 <https://leetcode.com/problems/roman-to-integer/>`_

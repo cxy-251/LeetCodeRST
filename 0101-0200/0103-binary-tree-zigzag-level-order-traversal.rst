@@ -4,33 +4,32 @@
 题目信息
 --------
 
-:题号: 0103
+:题号: 0103. 二叉树的锯齿形层序遍历
 :难度: Medium
-:主题: 二叉树、广度优先搜索、队列、交替方向
+:主题: 二叉树、广度优先搜索、队列、下标映射
 :原题: `LeetCode 0103 <https://leetcode.com/problems/binary-tree-zigzag-level-order-traversal/>`_
-:重点: 逐层输出、层内方向交替、空树结果
+:重点: 分离节点发现顺序与行内输出顺序，再把奇数层反转压缩为目标下标映射
 
 题目重述
 --------
 
-给定二叉树根节点 ``root``，返回节点值的锯齿形层序遍历结果。最上层按照从左到右的顺序输出，下一层改为从右到左，此后每深入一层就切换一次方向。每一层单独形成一个数组；空树返回空数组。
+给定二叉树根节点 ``root``，逐层返回所有节点值，但相邻层的行内方向必须交替：深度 ``0`` 从左到右，
+深度 ``1`` 从右到左，深度 ``2`` 再从左到右，依此类推。
 
-树中节点数在 ``0..2000`` 范围内，节点值在 ``-100..100`` 范围内。
+每个深度单独形成一个子数组，结果只包含实际存在的节点，不为空孩子保留占位。空树返回空数组；遍历过程
+不修改树。
+
+树中节点总数在 ``0..2000`` 范围内，节点值在 ``-100..100`` 范围内。
 
 自建示例
 --------
 
-.. code-block:: text
-
-   输入：root = [8,4,12,2,6,10,14,null,3]
-   输出：[[8],[12,4],[2,6,10,14],[3]]
-   解释：第一层从左到右；第二层从右到左；第三层重新从左到右；第四层只有一个节点。
-
-.. code-block:: text
-
-   输入：root = []
-   输出：[]
-   解释：空树没有可输出的层。
+* 多层稀疏树：``root = [8,4,12,2,6,10,14,null,3]``，返回
+  ``[[8],[12,4],[2,6,10,14],[3]]``；
+* 反向层含缺口：``root = [1,2,3,null,5,null,7]``，返回 ``[[1],[3,2],[5,7]]``。第二层反向输出，
+  第三层恢复从左到右，空孩子不占位置；
+* 单节点：``root = [9]``，返回 ``[[9]]``，方向切换不会产生额外空行；
+* 空树：``root = []``，返回 ``[]``。
 
 C++ 实现
 --------
@@ -38,219 +37,183 @@ C++ 实现
 .. code-block:: cpp
 
    #include <algorithm>
-   #include <deque>
    #include <queue>
    #include <utility>
    #include <vector>
 
    class Solution {
    private:
-       std::vector<std::vector<int>> reverseOddRows(TreeNode* root) {
-           if (!root) return {};
-           std::queue<TreeNode*> queue; queue.push(root);
-           std::vector<std::vector<int>> result;
-           bool reverse = false;
-           while (!queue.empty()) {
-               int size = queue.size();
-               std::vector<int> row;
-               for (int i = 0; i < size; ++i) {
-                   TreeNode* node = queue.front(); queue.pop();
-                   row.push_back(node->val);
-                   if (node->left) queue.push(node->left);
-                   if (node->right) queue.push(node->right);
-               }
-               if (reverse) std::reverse(row.begin(), row.end());
-               result.push_back(std::move(row)); reverse = !reverse;
+       std::vector<std::vector<int>> collectThenReverse(TreeNode* root) {
+           if (!root) {
+               return {};
            }
-           return result;
+           std::vector<std::vector<int>> levels;
+           std::queue<TreeNode*> pending;
+           pending.push(root);
+           bool leftToRight = true;
+           while (!pending.empty()) {
+               const int levelSize = static_cast<int>(pending.size());
+               std::vector<int> level;
+               level.reserve(levelSize);
+               for (int count = 0; count < levelSize; ++count) {
+                   TreeNode* node = pending.front();
+                   pending.pop();
+                   level.push_back(node->val);
+                   if (node->left) {
+                       pending.push(node->left);
+                   }
+                   if (node->right) {
+                       pending.push(node->right);
+                   }
+               }
+               if (!leftToRight) {
+                   std::reverse(level.begin(), level.end());
+               }
+               levels.push_back(std::move(level));
+               leftToRight = !leftToRight;
+           }
+           return levels;
        }
 
-       std::vector<std::vector<int>> dequeRows(TreeNode* root) {
-           if (!root) return {};
-           std::queue<TreeNode*> queue; queue.push(root);
-           std::vector<std::vector<int>> result;
-           bool left_to_right = true;
-           while (!queue.empty()) {
-               int size = queue.size(); std::deque<int> row;
-               for (int i = 0; i < size; ++i) {
-                   TreeNode* node = queue.front(); queue.pop();
-                   if (left_to_right) row.push_back(node->val); else row.push_front(node->val);
-                   if (node->left) queue.push(node->left);
-                   if (node->right) queue.push(node->right);
-               }
-               result.emplace_back(row.begin(), row.end());
-               left_to_right = !left_to_right;
+       std::vector<std::vector<int>> writeToTargetPositions(TreeNode* root) {
+           if (!root) {
+               return {};
            }
-           return result;
-       }
-
-       std::vector<std::vector<int>> targetPositions(TreeNode* root) {
-           if (!root) return {};
-           std::queue<TreeNode*> queue; queue.push(root);
-           std::vector<std::vector<int>> result;
-           bool left_to_right = true;
-           while (!queue.empty()) {
-               int size = queue.size();
-               std::vector<int> row(size);
-               for (int index = 0; index < size; ++index) {
-                   TreeNode* node = queue.front(); queue.pop();
-                   int target = left_to_right ? index : size - 1 - index;
-                   row[target] = node->val;
-                   if (node->left) queue.push(node->left);
-                   if (node->right) queue.push(node->right);
+           std::vector<std::vector<int>> levels;
+           std::queue<TreeNode*> pending;
+           pending.push(root);
+           bool leftToRight = true;
+           while (!pending.empty()) {
+               const int levelSize = static_cast<int>(pending.size());
+               std::vector<int> level(levelSize);
+               for (int index = 0; index < levelSize; ++index) {
+                   TreeNode* node = pending.front();
+                   pending.pop();
+                   const int targetIndex = leftToRight ? index : levelSize - 1 - index;
+                   level[targetIndex] = node->val;
+                   if (node->left) {
+                       pending.push(node->left);
+                   }
+                   if (node->right) {
+                       pending.push(node->right);
+                   }
                }
-               result.push_back(std::move(row));
-               left_to_right = !left_to_right;
+               levels.push_back(std::move(level));
+               leftToRight = !leftToRight;
            }
-           return result;
+           return levels;
        }
 
    public:
        std::vector<std::vector<int>> zigzagLevelOrder(TreeNode* root) {
-           return targetPositions(root);
+           return writeToTargetPositions(root);
        }
    };
 
 题解
 ----
 
-为什么不能反向处理父节点
-~~~~~~~~~~~~~~~~~~~~~~
+两个顺序
+~~~~~~~~
 
-锯齿要求只改变当前行的输出方向。若奇数层从右向左弹出父节点并据此生成孩子，下一层前沿也会被反转，必须增加复杂的入队规则才能恢复。稳定做法始终按普通 BFS 顺序处理节点。
+锯齿形要求同时处理两个不同的顺序：先确定哪些节点属于当前层，再决定这些节点在当前行中的排列方向。
+前者是节点发现顺序，后者是结果写入顺序。若把两者混在一起，反向层很容易破坏下一层的自然位置关系。
 
-目标位置如何计算
-~~~~~~~~~~~~~~~~
+例如根的左右孩子为 ``4``、``12``。深度 ``1`` 应输出 ``[12,4]``，但深度 ``2`` 仍要先考虑 ``4`` 的
+孩子，再考虑 ``12`` 的孩子。当前行从右向左展示，不表示下一层也应先从右侧父节点扩展。
 
-当前层长度为 ``size``，按队列顺序取出的下标为 ``index``：
+因此搜索空间仍按普通层序遍历划分：队列始终保存尚未处理的最浅节点，每轮固定当前层大小，父节点从左到右
+出队，每个父节点也始终先加入左孩子、再加入右孩子。锯齿方向只作用于当前行，不作用于树的扩展顺序。
+
+先收集再反转
+~~~~~~~~~~~~
+
+最直接的正确方案是先生成普通层序结果，再把深度为奇数的行反转。``collectThenReverse`` 将这两个阶段合并到
+同一次 BFS 中：每层先按队列顺序写入 ``level``，若 ``leftToRight`` 为假，再反转整行。
+
+这个方案不会漏节点。层大小快照保证一行只接收同一深度的节点；普通 BFS 保证反转前的顺序为从左到右；
+对整行反转恰好得到从右到左。方向状态在整行完成后才切换，因此同一层内不会处理中途改变规则。
+
+瓶颈不是渐进复杂度：所有被反转的行合计也只有不超过 ``n`` 个元素，时间仍为 ``O(n)``。多出的工作是
+奇数层先按错误的最终方向写一遍，再扫描并交换一遍。题目已经告诉我们当前层的目标方向，可以在首次写入时
+直接放到最终位置。
+
+目标下标映射
+~~~~~~~~~~~~
+
+队列按从左到右的自然顺序弹出当前层节点。设层大小为 ``levelSize``，当前弹出序号为 ``index``，其中
+``0 <= index < levelSize``。最终写入位置为：
 
 .. code-block:: text
 
-   左到右：target = index
-   右到左：target = size - 1 - index
+   从左到右：targetIndex = index
+   从右到左：targetIndex = levelSize - 1 - index
 
-因此方向状态只影响 ``row[target]``，孩子仍按先左后右加入队尾。
+第二个公式把序号 ``0,1,...,levelSize-1`` 映射为逆序的
+``levelSize-1,...,1,0``。它是同一组下标上的一一映射，所以每个节点值恰好写入一个槽位，每个槽位也恰好
+接收一个值，不需要插入、移动或反转。
 
-状态演化
+``writeToTargetPositions`` 先把 ``level`` 预分配为当前层大小，再按方向计算 ``targetIndex``。与直觉法相比，
+队列、层大小快照和孩子入队逻辑全部不变；只把“尾部追加后反转”替换为“直接写入最终下标”。这正是锯齿
+要求带来的最小状态变化。
+
+状态走读
 ~~~~~~~~
+
+对 ``[8,4,12,2,6,10,14,null,3]``，每层开始时的队列仍保持自然的从左到右顺序：
 
 .. list-table::
    :header-rows: 1
 
-   * - 层
-     - 队列顺序
-     - 目标下标
-     - 输出
+   * - 深度
+     - 队列中的当前层
+     - ``leftToRight``
+     - 写入下标
+     - 当前行
+     - 下一层队列
    * - 0
      - ``[8]``
+     - ``true``
      - ``[0]``
      - ``[8]``
+     - ``[4,12]``
    * - 1
      - ``[4,12]``
+     - ``false``
      - ``[1,0]``
      - ``[12,4]``
+     - ``[2,6,10,14]``
    * - 2
      - ``[2,6,10,14]``
+     - ``true``
      - ``[0,1,2,3]``
      - ``[2,6,10,14]``
+     - ``[3]``
+   * - 3
+     - ``[3]``
+     - ``false``
+     - ``[0]``
+     - ``[3]``
+     - ``[]``
 
-为什么下一层仍保持自然顺序
-~~~~~~~~~~~~~~~~~~~~~~~~
+深度 ``1`` 中，``4`` 先出队却写入下标 ``1``，``12`` 后出队写入下标 ``0``；与此同时，孩子仍由 ``4``
+开始按左、右方向入队，所以深度 ``2`` 的队列保持 ``[2,6,10,14]``。单节点层的正序和逆序映射都只有
+下标 ``0``，不会成为特殊情况。
 
-无论当前行写入方向如何，节点都按左到右出队，每个节点都先加入左孩子、再加入右孩子。因此队列中的下一层始终是普通层序顺序，方向切换不会污染遍历状态。
-
-行反转与双端队列的取舍
-~~~~~~~~~~~~~~~~~~~~~~
-
-先生成普通行再反转最简单，但奇数层多一次扫描。双端队列可在反向层头插值，但需要额外容器。预分配行并映射目标位置只做一次写入，状态最少。
-
-为什么不重不漏
+分支与主解选择
 ~~~~~~~~~~~~~~
 
-每个节点仍按标准 BFS 入队和出队一次。每层 ``target`` 是对 ``0..size-1`` 的双射，无论方向如何，每个槽位恰好写入一个节点值，因此行内不重复也不遗漏。
+空树在建立队列前返回 ``{}``。非空树中，``levelSize`` 必须在处理本层前保存，否则新入队的孩子会混入
+当前行。左右孩子分支只决定哪些实际节点进入下一层，不加入空占位；方向分支只选择写入下标。三类状态各自
+承担一个职责，互不污染。
 
-复杂度来源
+公开入口采用 ``writeToTargetPositions``。它与反转法具有相同的线性复杂度，但每个节点值只写入最终位置
+一次，不需要额外的奇数层扫描。双端队列头插也能避免反转，却要再把双端队列转换为返回所需的 ``vector``，
+没有比下标映射带来新的状态认识，因此不再保留为第三种实现。
+
+复杂度分析
 ~~~~~~~~~~
 
-时间 ``O(n)``，队列和当前行最多使用 ``O(w)`` 工作空间。反转法的总反转元素数仍不超过 ``n``，渐进时间相同。
-
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   int**zigzagLevelOrder(struct TreeNode*root,int*returnSize,int**returnCols){if(!root){*returnSize=0;*returnCols=NULL;return NULL;}struct TreeNode**q=malloc(2001*sizeof(*q));int**out=malloc(2001*sizeof(*out)),*sizes=malloc(2001*sizeof(int));int h=0,t=0,rows=0;bool forward=true;q[t++]=root;while(h<t){int n=t-h;int*row=malloc((size_t)n*sizeof(int));for(int i=0;i<n;i++){struct TreeNode*x=q[h++];row[forward?i:n-1-i]=x->val;if(x->left)q[t++]=x->left;if(x->right)q[t++]=x->right;}out[rows]=row;sizes[rows++]=n;forward=!forward;}free(q);*returnSize=rows;*returnCols=sizes;return out;}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def zigzagLevelOrder(self, root):
-           if root is None: return []
-           queue, head, result, forward = [root], 0, [], True
-           while head < len(queue):
-               end = len(queue); row = [0] * (end - head)
-               for index in range(end - head):
-                   node = queue[head]; head += 1
-                   row[index if forward else len(row)-1-index] = node.val
-                   if node.left: queue.append(node.left)
-                   if node.right: queue.append(node.right)
-               result.append(row); forward = not forward
-           return result
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public List<List<Integer>> zigzagLevelOrder(TreeNode root){List<List<Integer>>o=new ArrayList<>();if(root==null)return o;Queue<TreeNode>q=new ArrayDeque<>();q.add(root);boolean f=true;while(!q.isEmpty()){int n=q.size();Integer[]row=new Integer[n];for(int i=0;i<n;i++){TreeNode x=q.remove();row[f?i:n-1-i]=x.val;if(x.left!=null)q.add(x.left);if(x.right!=null)q.add(x.right);}o.add(Arrays.asList(row));f=!f;}return o;}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn zigzag_level_order(root:Option<Rc<RefCell<TreeNode>>>)->Vec<Vec<i32>>{let mut q=VecDeque::new();if let Some(r)=root{q.push_back(r)}else{return vec![]}let(mut o,mut f)=(vec![],true);while !q.is_empty(){let n=q.len();let mut row=vec![0;n];for i in 0..n{let x=q.pop_front().unwrap();let b=x.borrow();row[if f{i}else{n-1-i}]=b.val;if let Some(l)=b.left.clone(){q.push_back(l)}if let Some(r)=b.right.clone(){q.push_back(r)}}o.push(row);f=!f}o}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func zigzagLevelOrder(root *TreeNode)[][]int{if root==nil{return nil};q:=[]*TreeNode{root};head:=0;out:=[][]int{};forward:=true;for head<len(q){end:=len(q);n:=end-head;row:=make([]int,n);for i:=0;i<n;i++{x:=q[head];head++;p:=i;if !forward{p=n-1-i};row[p]=x.Val;if x.Left!=nil{q=append(q,x.Left)};if x.Right!=nil{q=append(q,x.Right)}};out=append(out,row);forward=!forward};return out}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function zigzagLevelOrder(root:TreeNode|null):number[][]{if(!root)return[];const q=[root],out:number[][]=[];let head=0,forward=true;while(head<q.length){const end=q.length,n=end-head,row=Array(n);for(let i=0;i<n;i++){const x=q[head++];row[forward?i:n-1-i]=x.val;if(x.left)q.push(x.left);if(x.right)q.push(x.right);}out.push(row);forward=!forward;}return out;}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public IList<IList<int>> ZigzagLevelOrder(TreeNode root){var o=new List<IList<int>>();if(root==null)return o;var q=new Queue<TreeNode>();q.Enqueue(root);bool f=true;while(q.Count>0){int n=q.Count;int[]row=new int[n];for(int i=0;i<n;i++){var x=q.Dequeue();row[f?i:n-1-i]=x.val;if(x.left!=null)q.Enqueue(x.left);if(x.right!=null)q.Enqueue(x.right);}o.Add(row);f=!f;}return o;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function zigzag_level_order(root)
-       root===nothing&&return Vector{Vector{Int}}();q=Any[root];head=1;out=Vector{Vector{Int}}();forward=true
-       while head<=length(q);last=length(q);n=last-head+1;row=zeros(Int,n);for i in 1:n;x=q[head];head+=1;row[forward ? i : n-i+1]=x.val;x.left!==nothing&&push!(q,x.left);x.right!==nothing&&push!(q,x.right);end;push!(out,row);forward=!forward;end;out
-   end
-
-R
-~
-
-.. code-block:: r
-
-   zigzag_level_order <- function(root){if(is.null(root))return(list());q<-list(root);head<-1L;out<-list();forward<-TRUE;while(head<=length(q)){last<-length(q);n<-last-head+1L;row<-integer(n);for(i in seq_len(n)){x<-q[[head]];head<-head+1L;row[[if(forward)i else n-i+1L]]<-x$val;if(!is.null(x$left))q[[length(q)+1L]]<-x$left;if(!is.null(x$right))q[[length(q)+1L]]<-x$right};out[[length(out)+1L]]<-row;forward<-!forward};out}
+两种方法都让每个节点入队、出队一次，时间为 ``O(n)``；反转法对奇数层的额外扫描总量仍为 ``O(n)``。
+队列最多保存一层与下一层的部分节点，工作空间为 ``O(w)``，其中 ``w`` 是最大层宽。每层向量最终属于返回
+结果，全部行合计保存 ``n`` 个值，其 ``O(n)`` 空间不计入工作空间。

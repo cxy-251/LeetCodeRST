@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0025
+:题号: 0025. K 个一组翻转链表
 :难度: Hard
 :主题: 链表、分组、区间反转、递归
 :原题: `LeetCode 0025 <https://leetcode.com/problems/reverse-nodes-in-k-group/>`_

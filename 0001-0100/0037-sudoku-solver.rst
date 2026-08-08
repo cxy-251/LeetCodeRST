@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0037
+:题号: 0037. 解数独
 :难度: Hard
 :主题: 矩阵、回溯、位掩码、约束搜索
 :原题: `LeetCode 0037 <https://leetcode.com/problems/sudoku-solver/>`_

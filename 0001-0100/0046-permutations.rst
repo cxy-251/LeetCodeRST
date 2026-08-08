@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0046
+:题号: 0046. 全排列
 :难度: Medium
 :主题: 数组、回溯、排列、原地交换
 :原题: `LeetCode 0046 <https://leetcode.com/problems/permutations/>`_

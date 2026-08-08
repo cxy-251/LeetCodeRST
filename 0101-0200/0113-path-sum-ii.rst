@@ -4,101 +4,80 @@
 题目信息
 --------
 
-:题号: 0113
+:题号: 0113. 路径总和 II
 :难度: Medium
 :主题: 二叉树、深度优先搜索、回溯、路径快照
 :原题: `LeetCode 0113 <https://leetcode.com/problems/path-sum-ii/>`_
-:重点: 全部根到叶路径、目标和、结果顺序不限
+:重点: 从逐分支复制完整路径，推导到共享路径缓冲区的追加与撤销，并只在叶节点命中时复制结果
 
 题目重述
 --------
 
-给定二叉树根节点 ``root`` 和整数 ``targetSum``，返回所有节点值之和恰好等于 ``targetSum`` 的根到叶路径。每条路径用从根到叶依次经过的节点值数组表示；叶节点必须同时没有左孩子和右孩子。没有合法路径时返回空数组，多条合法路径在结果中的排列顺序不限。
+给定二叉树根节点 ``root`` 和整数 ``targetSum``，返回所有节点值之和等于目标的根到叶路径。每条答案用
+从根到叶依次经过的节点值数组表示；叶节点必须同时没有左右孩子，内部节点处的前缀命中不能提交。
 
-树中节点数在 ``0..5000`` 范围内，节点值与 ``targetSum`` 均在 ``-1000..1000`` 范围内。
+没有合法路径时返回空数组，多条路径在外层结果中的顺序不限。树中节点总数在 ``0..5000`` 范围内，节点值
+与 ``targetSum`` 均在 ``-1000..1000`` 范围内，算法不修改树。
 
 自建示例
 --------
 
-.. code-block:: text
-
-   输入：root = [6,2,9,1,4,-3,12], targetSum = 12
-   输出：[[6,2,4],[6,9,-3]]
-   解释：两条完整根到叶路径的节点和都为 12；结果中两条路径的先后顺序可以交换。
-
-.. code-block:: text
-
-   输入：root = [3,1,5], targetSum = 3
-   输出：[]
-   解释：根节点值虽然等于目标，但根不是叶节点；两条完整路径的和分别为 4 和 8。
+* 两条答案：``root = [6,2,9,1,4,-3,12]``、``targetSum = 12``，可返回
+  ``[[6,2,4],[6,9,-3]]``；
+* 前缀命中：``root = [3,1,5]``、``targetSum = 3``，返回 ``[]``，根不是叶节点；
+* 负数路径：``root = [1,-2,-3,1,3,-2,null,-1]``、``targetSum = -1``，合法路径包括
+  ``[1,-2,1,-1]``；
+* 空树：``root = []``，返回 ``[]``。
 
 C++ 实现
 --------
 
 .. code-block:: cpp
 
-   #include <stack>
-   #include <tuple>
-   #include <utility>
    #include <vector>
 
    class Solution {
    private:
-       void copyPerBranch(TreeNode* node, long long remaining,
-                          std::vector<int> path,
-                          std::vector<std::vector<int>>& result) {
-           if (!node) return;
-           path.push_back(node->val);
-           remaining -= node->val;
-           if (!node->left && !node->right) {
-               if (remaining == 0) result.push_back(std::move(path));
+       void collectWithCopies(TreeNode* node, int remaining, std::vector<int> path,
+                              std::vector<std::vector<int>>& result) {
+           if (!node) {
                return;
            }
-           copyPerBranch(node->left, remaining, path, result);
-           copyPerBranch(node->right, remaining, std::move(path), result);
+           path.push_back(node->val);
+           const int nextRemaining = remaining - node->val;
+           if (!node->left && !node->right) {
+               if (nextRemaining == 0) {
+                   result.push_back(path);
+               }
+               return;
+           }
+           collectWithCopies(node->left, nextRemaining, path, result);
+           collectWithCopies(node->right, nextRemaining, path, result);
        }
 
-       void backtrack(TreeNode* node, long long remaining,
-                      std::vector<int>& path,
-                      std::vector<std::vector<int>>& result) {
-           if (!node) return;
+       void collectWithBacktracking(TreeNode* node, int remaining, std::vector<int>& path,
+                                    std::vector<std::vector<int>>& result) {
+           if (!node) {
+               return;
+           }
            path.push_back(node->val);
-           remaining -= node->val;
-
+           const int nextRemaining = remaining - node->val;
            if (!node->left && !node->right) {
-               if (remaining == 0) result.push_back(path);
+               if (nextRemaining == 0) {
+                   result.push_back(path);
+               }
            } else {
-               backtrack(node->left, remaining, path, result);
-               backtrack(node->right, remaining, path, result);
+               collectWithBacktracking(node->left, nextRemaining, path, result);
+               collectWithBacktracking(node->right, nextRemaining, path, result);
            }
            path.pop_back();
-       }
-
-       std::vector<std::vector<int>> iterative(TreeNode* root, long long target) {
-           if (!root) return {};
-           std::vector<std::vector<int>> result;
-           std::stack<std::tuple<TreeNode*, long long, std::vector<int>>> stack;
-           stack.push({root, target, {}});
-           while (!stack.empty()) {
-               auto [node, remaining, path] = std::move(stack.top());
-               stack.pop();
-               path.push_back(node->val);
-               remaining -= node->val;
-               if (!node->left && !node->right) {
-                   if (remaining == 0) result.push_back(std::move(path));
-                   continue;
-               }
-               if (node->right) stack.push({node->right, remaining, path});
-               if (node->left) stack.push({node->left, remaining, std::move(path)});
-           }
-           return result;
        }
 
    public:
        std::vector<std::vector<int>> pathSum(TreeNode* root, int targetSum) {
            std::vector<std::vector<int>> result;
            std::vector<int> path;
-           backtrack(root, static_cast<long long>(targetSum), path, result);
+           collectWithBacktracking(root, targetSum, path, result);
            return result;
        }
    };
@@ -106,150 +85,91 @@ C++ 实现
 题解
 ----
 
-从判定路径到枚举路径
-~~~~~~~~~~~~~~~~~~~~
+枚举对象
+~~~~~~~~
 
-如果只需要判断是否存在路径，找到一条即可短路；本题必须恢复全部见证，因此每个递归状态除节点和剩余目标外，
-还要维护从根到当前节点的值序列。
+每个叶节点唯一对应一条根到叶路径，因此原始搜索空间就是树中的全部叶节点。深度优先搜索沿唯一父链到达每个
+叶节点，在那里检查路径和；遍历所有叶节点便不会漏掉任何候选，也不会让同一路径被生成两次。
 
-共享路径的四步操作
-~~~~~~~~~~~~~~~~~~
+与只判断“是否存在”不同，本题必须返回每条见证路径。状态不能只保留剩余目标，还要知道从根到当前节点的
+完整值序列；找到一条答案后也不能逻辑或短路，因为另一子树中可能还有其他合法路径。
 
-进入节点后执行：
+逐分支复制
+~~~~~~~~~~
 
-#. ``path.push_back(node.val)``；
-#. 扣除当前值并递归孩子；
-#. 叶节点精确命中时复制 ``path`` 到结果；
-#. 返回父层前 ``path.pop_back()``。
+``collectWithCopies`` 让 ``path`` 按值传递。每个递归调用获得父路径的独立副本，追加当前值后再进入孩子，
+左右分支互不干扰，不需要显式撤销。这是最直接且正确的路径枚举实现。
 
-追加与撤销必须对称。这样左右兄弟分支共享同一缓冲区，却只看到属于自己的根到当前节点前缀。
+代价是相同前缀被反复复制。深度为 ``d`` 的节点收到长度约为 ``d`` 的路径副本；即使最终没有答案，这些复制
+也已发生。总工作可能达到所有节点深度之和，单侧树最坏为 ``O(n²)``。树结构已经让递归栈保存了当前父链，
+没有必要再为每个分支复制同一份前缀。
+
+共享路径回溯
+~~~~~~~~~~~~
+
+``collectWithBacktracking`` 在全部递归调用之间共享一个 ``path`` 缓冲区，并维护以下不变量：进入某个非空
+节点前，``path`` 恰好保存从根到其父节点的值；追加 ``node->val`` 后，它恰好表示根到当前节点的路径。
+
+每个状态按对称步骤工作：
+
+#. 进入节点时 ``push_back`` 当前值；
+#. 扣除当前值，处理叶节点或递归左右孩子；
+#. 离开节点前 ``pop_back``，恢复父状态的路径。
+
+撤销必须对所有出口执行，包括叶节点未命中时。代码把 ``pop_back`` 放在叶节点分支和递归分支之后，保证任何
+非空调用都恰好追加一次、撤销一次；右兄弟开始时不会看到左兄弟遗留的节点值。
+
+结果快照
+~~~~~~~~
+
+叶节点满足 ``nextRemaining == 0`` 时，``result.push_back(path)`` 必须复制当前路径。共享缓冲区随后还会
+弹出和追加；若结果只引用同一个可变对象，回溯会篡改已经记录的答案。复制发生在确实产生输出时，是无法删除
+的结果构造成本。
+
+内部节点即使剩余值为零也不能保存。路径必须结束于叶节点，后续孩子仍属于完整路径的一部分。节点值允许为
+负数，剩余值变为负数或零都不能作为剪枝条件。
+
+状态走读
+~~~~~~~~
+
+对第一条答案 ``6 -> 2 -> 4``，共享缓冲区变化如下：
 
 .. list-table::
    :header-rows: 1
 
    * - 动作
      - ``path``
-     - ``remaining``
+     - ``nextRemaining``
+     - 结果变化
    * - 进入 6
      - ``[6]``
      - 6
+     - 无
    * - 进入 2
      - ``[6,2]``
      - 4
+     - 无
    * - 进入叶 4
      - ``[6,2,4]``
-     - 0，复制快照
-   * - 离开叶 4
+     - 0
+     - 复制 ``[6,2,4]``
+   * - 离开 4
      - ``[6,2]``
-     - 父状态继续
+     - 回到父状态
+     - 已保存快照不变
+   * - 离开 2
+     - ``[6]``
+     - 回到父状态
+     - 继续搜索根的右子树
 
-为什么保存结果时必须复制
-~~~~~~~~~~~~~~~~~~~~~~~~
+根的右分支随后复用 ``[6]``，生成 ``[6,9,-3]``。两条结果拥有独立向量，外层返回顺序虽由 DFS 决定，
+但题目不要求特定顺序。
 
-``path`` 后续还会弹出和追加。若结果只保存同一个可变容器引用，回溯会同步修改已经记录的答案。``result.push_back(path)`` 创建独立值快照，使每条返回路径永久保持提交时内容。
+主解与输出复杂度
+~~~~~~~~~~~~~~~~
 
-为什么只能在叶节点提交
-~~~~~~~~~~~~~~~~~~~~~~
+公开入口采用共享缓冲区回溯，因为它只为当前递归路径保存一份可变前缀，并把复制推迟到真实答案产生时。
 
-路径必须结束于叶节点。内部节点即使扣除后剩余值为 0，后续仍必须沿某个孩子继续，因此不能提前保存。叶节点条件是左右孩子都为空。
-
-负数为什么禁止按剩余值剪枝
-~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-剩余目标小于零后，后续负值可能使其回到零；剩余目标为零后，后续正负值也可能抵消。只有结构边界和叶节点比较是安全判断。
-
-逐分支复制与回溯的取舍
-~~~~~~~~~~~~~~~~~~~~~~
-
-逐分支复制写法简单，每次递归都携带独立路径，但一条深度为 ``h`` 的路径会被反复复制，增加工作。回溯只维护一份长度不超过 ``h`` 的缓冲区，只有生成答案时才复制。
-
-为什么不重不漏
-~~~~~~~~~~~~~~
-
-DFS 对每个非空节点只沿唯一父路径到达。每个叶节点对应唯一根到叶路径，算法在该叶节点处精确检查一次，因此合法路径全部提交一次，不合法路径不会提交。
-
-输出敏感复杂度
-~~~~~~~~~~~~~~
-
-遍历树需要 ``O(n)`` 时间。设所有返回路径总长度为 ``K``，复制结果需要 ``O(K)``，总时间 ``O(n+K)``。工作路径和递归栈为 ``O(h)``，返回结果占 ``O(K)``。
-
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   static void dfs(struct TreeNode*x,long long remain,int*path,int depth,int***out,int**cols,int*size){if(!x)return;path[depth++]=x->val;remain-=x->val;if(!x->left&&!x->right){if(remain==0){int*row=malloc((size_t)depth*sizeof(int));memcpy(row,path,(size_t)depth*sizeof(int));(*out)[*size]=row;(*cols)[(*size)++]=depth;}return;}dfs(x->left,remain,path,depth,out,cols,size);dfs(x->right,remain,path,depth,out,cols,size);}int**pathSum(struct TreeNode*root,int target,int*returnSize,int**returnCols){int**out=malloc(5001*sizeof(int*));int*cols=malloc(5001*sizeof(int));int*path=malloc(5001*sizeof(int));int size=0;dfs(root,target,path,0,&out,&cols,&size);free(path);*returnSize=size;*returnCols=cols;return out;}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def pathSum(self, root, targetSum: int) -> list[list[int]]:
-           result, path = [], []
-           def dfs(node, remaining):
-               if node is None: return
-               path.append(node.val); remaining -= node.val
-               if node.left is None and node.right is None:
-                   if remaining == 0: result.append(path.copy())
-               else:
-                   dfs(node.left, remaining); dfs(node.right, remaining)
-               path.pop()
-           dfs(root, targetSum); return result
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {List<List<Integer>>out=new ArrayList<>();List<Integer>path=new ArrayList<>();void dfs(TreeNode x,long remain){if(x==null)return;path.add(x.val);remain-=x.val;if(x.left==null&&x.right==null){if(remain==0)out.add(new ArrayList<>(path));}else{dfs(x.left,remain);dfs(x.right,remain);}path.remove(path.size()-1);}public List<List<Integer>> pathSum(TreeNode root,int targetSum){dfs(root,targetSum);return out;}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn path_sum(root:Option<Rc<RefCell<TreeNode>>>,target_sum:i32)->Vec<Vec<i32>>{fn dfs(x:Option<Rc<RefCell<TreeNode>>>,remain:i64,path:&mut Vec<i32>,out:&mut Vec<Vec<i32>>){let Some(x)=x else{return};let b=x.borrow();path.push(b.val);let next=remain-b.val as i64;if b.left.is_none()&&b.right.is_none(){if next==0{out.push(path.clone())}}else{dfs(b.left.clone(),next,path,out);dfs(b.right.clone(),next,path,out)}path.pop();}let mut out=vec![];dfs(root,target_sum as i64,&mut vec![],&mut out);out}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func pathSum(root *TreeNode,targetSum int)[][]int{out:=[][]int{};path:=[]int{};var dfs func(*TreeNode,int64);dfs=func(x *TreeNode,remain int64){if x==nil{return};path=append(path,x.Val);remain-=int64(x.Val);if x.Left==nil&&x.Right==nil{if remain==0{row:=append([]int(nil),path...);out=append(out,row)}}else{dfs(x.Left,remain);dfs(x.Right,remain)};path=path[:len(path)-1]};dfs(root,int64(targetSum));return out}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function pathSum(root:TreeNode|null,targetSum:number):number[][]{const out:number[][]=[],path:number[]=[];const dfs=(x:TreeNode|null,remain:number)=>{if(!x)return;path.push(x.val);remain-=x.val;if(!x.left&&!x.right){if(remain===0)out.push([...path]);}else{dfs(x.left,remain);dfs(x.right,remain);}path.pop();};dfs(root,targetSum);return out;}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {List<IList<int>>o=new();List<int>p=new();void Dfs(TreeNode x,long remain){if(x==null)return;p.Add(x.val);remain-=x.val;if(x.left==null&&x.right==null){if(remain==0)o.Add(new List<int>(p));}else{Dfs(x.left,remain);Dfs(x.right,remain);}p.RemoveAt(p.Count-1);}public IList<IList<int>> PathSum(TreeNode root,int targetSum){Dfs(root,targetSum);return o;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function path_sum(root,target)
-       out=Vector{Vector{Int}}();path=Int[]
-       function dfs(x,remain);x===nothing&&return;push!(path,x.val);remain-=x.val;if x.left===nothing&&x.right===nothing;remain==0&&push!(out,copy(path));else;dfs(x.left,remain);dfs(x.right,remain);end;pop!(path);end
-       dfs(root,target);out
-   end
-
-R
-~
-
-.. code-block:: r
-
-   path_sum <- function(root,target){out<-list();path<-integer();dfs<-function(x,remain){if(is.null(x))return();path<<-c(path,x$val);remain<-remain-x$val;if(is.null(x$left)&&is.null(x$right)){if(remain==0)out[[length(out)+1L]]<<-path}else{dfs(x$left,remain);dfs(x$right,remain)};path<<-path[-length(path)]};dfs(root,target);out}
+遍历树本身需要 ``O(n)`` 时间。设所有返回路径长度之和为 ``K``，结果快照必须复制 ``K`` 个值，总时间为
+``O(n + K)``。递归栈与工作路径长度均为 ``O(h)``；返回结果占 ``O(K)`` 空间，不计入工作空间。逐分支复制
+法除结果外还可能产生 ``O(nh)`` 级别的累计复制工作。

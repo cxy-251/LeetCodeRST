@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0087
+:题号: 0087. 扰乱字符串
 :难度: Hard
 :主题: 字符串、记忆化搜索、区间动态规划
 :原题: `LeetCode 0087 <https://leetcode.com/problems/scramble-string/>`_

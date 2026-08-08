@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0047
+:题号: 0047. 全排列 II
 :难度: Medium
 :主题: 数组、回溯、排序、同层去重
 :原题: `LeetCode 0047 <https://leetcode.com/problems/permutations-ii/>`_

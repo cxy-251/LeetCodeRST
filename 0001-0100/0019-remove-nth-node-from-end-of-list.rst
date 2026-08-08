@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0019
+:题号: 0019. 删除链表的倒数第 N 个结点
 :难度: Medium
 :主题: 链表、双指针、虚拟头节点
 :原题: `LeetCode 0019 <https://leetcode.com/problems/remove-nth-node-from-end-of-list/>`_

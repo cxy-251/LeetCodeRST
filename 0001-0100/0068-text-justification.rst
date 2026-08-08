@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0068
+:题号: 0068. 文本左右对齐
 :难度: Hard
 :主题: 字符串、贪心、文本排版、商余分配
 :原题: `LeetCode 0068 <https://leetcode.com/problems/text-justification/>`_

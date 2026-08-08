@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0022
+:题号: 0022. 括号生成
 :难度: Medium
 :主题: 字符串、回溯、剪枝
 :原题: `LeetCode 0022 <https://leetcode.com/problems/generate-parentheses/>`_

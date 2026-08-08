@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0059
+:题号: 0059. 螺旋矩阵 II
 :难度: Medium
 :主题: 矩阵、模拟、边界收缩
 :原题: `LeetCode 0059 <https://leetcode.com/problems/spiral-matrix-ii/>`_

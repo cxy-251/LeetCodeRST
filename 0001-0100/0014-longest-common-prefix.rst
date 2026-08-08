@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0014
+:题号: 0014. 最长公共前缀
 :难度: Easy
 :主题: 字符串、前缀、纵向扫描
 :原题: `LeetCode 0014 <https://leetcode.com/problems/longest-common-prefix/>`_

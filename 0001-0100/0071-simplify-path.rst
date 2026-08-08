@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0071
+:题号: 0071. 简化路径
 :难度: Medium
 :主题: 字符串、栈、路径规范化
 :原题: `LeetCode 0071 <https://leetcode.com/problems/simplify-path/>`_

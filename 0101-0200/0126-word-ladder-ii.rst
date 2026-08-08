@@ -4,37 +4,32 @@
 题目信息
 --------
 
-:题号: 0126
+:题号: 0126. 单词接龙 II
 :难度: Hard
 :主题: 图、广度优先搜索、最短路径 DAG、回溯
 :原题: `LeetCode 0126 <https://leetcode.com/problems/word-ladder-ii/>`_
-:重点: 所有最短序列、单字符变换、同层多前驱、结果顺序不限
+:重点: 用 BFS 确定最短层并保留同层多前驱，再沿最短路径 DAG 恢复全部序列
 
 题目重述
 --------
 
-给定起始单词 ``beginWord``、目标单词 ``endWord`` 和字典 ``wordList``，返回从 ``beginWord`` 变换到 ``endWord`` 的所有最短单词序列。每一步必须恰好修改一个字母，修改后的单词必须出现在 ``wordList`` 中；``beginWord`` 本身可以不在字典中。每条序列都包含起点和终点，若无法到达则返回空数组，多个最短序列的返回顺序不限。
+给定起始单词 ``beginWord``、目标单词 ``endWord`` 和字典 ``wordList``，返回从起点变换到终点的所有最短
+序列。相邻单词必须恰好有一个位置的字母不同，每次变换后的单词都必须属于字典；``beginWord`` 可以不在
+字典中。每条答案都包含起点和终点，答案之间的顺序不限；若终点不在字典中或无法到达，返回空数组。
 
-所有单词长度相同且只包含小写英文字母。单词长度在 ``1..5`` 范围内，``wordList`` 长度在 ``1..500`` 范围内，字典中的单词互不相同，且 ``beginWord != endWord``。
+所有单词长度相同，只包含小写英文字母，字典内没有重复单词，且 ``beginWord != endWord``。
 
 自建示例
 --------
 
-.. code-block:: text
-
-   输入：beginWord = "red", endWord = "tax"
-         wordList = ["ted","tex","red","tax","tad","den","rex","pee"]
-   输出：[["red","ted","tad","tax"],
-         ["red","ted","tex","tax"],
-         ["red","rex","tex","tax"]]
-   解释：三条序列都只在相邻单词间改变一个字母，长度均为 4，并且不存在更短的合法序列；结果顺序可以不同。
-
-.. code-block:: text
-
-   输入：beginWord = "abc", endWord = "xyz"
-         wordList = ["xbc","xyc","ayz"]
-   输出：[]
-   解释：虽然字典中存在若干局部变换，但无法形成从 abc 到 xyz 的连续路径。
+* ``beginWord = "red"``、``endWord = "tax"``、字典为
+  ``["ted", "tex", "tad", "tax", "rex"]``，三条最短序列是
+  ``red -> ted -> tad -> tax``、``red -> ted -> tex -> tax`` 和
+  ``red -> rex -> tex -> tax``；
+* ``beginWord = "hit"``、``endWord = "cog"``，若字典没有 ``cog``，返回空数组，即使存在通向其他
+  单词的变换；
+* 若 ``aaa -> aab -> abb`` 与 ``aaa -> aba -> abb`` 都合法，则 ``abb`` 必须同时保留 ``aab`` 和
+  ``aba`` 两个上一层来源，否则会漏掉一条最短序列。
 
 C++ 实现
 --------
@@ -46,279 +41,243 @@ C++ 实现
    #include <string>
    #include <unordered_map>
    #include <unordered_set>
-   #include <utility>
    #include <vector>
 
    class Solution {
    private:
-       std::vector<std::string> neighbors(
+       std::vector<std::string> validNeighbors(
            const std::string& word,
            const std::unordered_set<std::string>& dictionary
        ) {
            std::vector<std::string> result;
            std::string candidate = word;
-           for (int i = 0; i < static_cast<int>(candidate.size()); ++i) {
-               char original = candidate[i];
+           for (int index = 0; index < static_cast<int>(candidate.size()); ++index) {
+               const char original = candidate[index];
                for (char ch = 'a'; ch <= 'z'; ++ch) {
-                   if (ch == original) continue;
-                   candidate[i] = ch;
-                   if (dictionary.count(candidate)) result.push_back(candidate);
+                   if (ch == original) {
+                       continue;
+                   }
+                   candidate[index] = ch;
+                   if (dictionary.count(candidate)) {
+                       result.push_back(candidate);
+                   }
                }
-               candidate[i] = original;
+               candidate[index] = original;
            }
            return result;
        }
 
-       std::vector<std::vector<std::string>> queueFullPaths(
+       std::vector<std::vector<std::string>> queueCompletePaths(
            const std::string& beginWord,
            const std::string& endWord,
            const std::unordered_set<std::string>& dictionary
        ) {
-           std::queue<std::vector<std::string>> queue;
-           queue.push({beginWord});
+           std::queue<std::vector<std::string>> paths;
+           paths.push({beginWord});
            std::unordered_set<std::string> unused = dictionary;
            unused.erase(beginWord);
-           std::vector<std::vector<std::string>> result;
-           while (!queue.empty() && result.empty()) {
-               int count = queue.size();
-               std::unordered_set<std::string> used_this_level;
-               while (count--) {
-                   auto path = std::move(queue.front()); queue.pop();
-                   for (const std::string& next : neighbors(path.back(), unused)) {
-                       auto extended = path; extended.push_back(next);
-                       if (next == endWord) result.push_back(std::move(extended));
-                       else queue.push(std::move(extended));
-                       used_this_level.insert(next);
+           std::vector<std::vector<std::string>> answer;
+
+           while (!paths.empty() && answer.empty()) {
+               int levelSize = static_cast<int>(paths.size());
+               std::unordered_set<std::string> usedThisLevel;
+               while (levelSize-- > 0) {
+                   std::vector<std::string> path = std::move(paths.front());
+                   paths.pop();
+                   for (const std::string& next : validNeighbors(path.back(), unused)) {
+                       std::vector<std::string> extended = path;
+                       extended.push_back(next);
+                       if (next == endWord) {
+                           answer.push_back(std::move(extended));
+                       } else {
+                           paths.push(std::move(extended));
+                       }
+                       usedThisLevel.insert(next);
                    }
                }
-               for (const auto& word : used_this_level) unused.erase(word);
+               for (const std::string& word : usedThisLevel) {
+                   unused.erase(word);
+               }
            }
-           return result;
+           return answer;
        }
 
-       void restore(const std::string& word, const std::string& beginWord,
-                    const std::unordered_map<std::string,std::vector<std::string>>& parents,
-                    std::vector<std::string>& reversed,
-                    std::vector<std::vector<std::string>>& result) {
-           reversed.push_back(word);
+       void restorePaths(
+           const std::string& word,
+           const std::string& beginWord,
+           const std::unordered_map<std::string, std::vector<std::string>>& parents,
+           std::vector<std::string>& reversedPath,
+           std::vector<std::vector<std::string>>& answer
+       ) {
+           reversedPath.push_back(word);
            if (word == beginWord) {
-               result.emplace_back(reversed.rbegin(), reversed.rend());
+               answer.emplace_back(reversedPath.rbegin(), reversedPath.rend());
            } else {
                auto found = parents.find(word);
-               if (found != parents.end())
-                   for (const std::string& parent : found->second)
-                       restore(parent, beginWord, parents, reversed, result);
+               if (found != parents.end()) {
+                   for (const std::string& parent : found->second) {
+                       restorePaths(parent, beginWord, parents, reversedPath, answer);
+                   }
+               }
            }
-           reversed.pop_back();
+           reversedPath.pop_back();
        }
 
-       std::vector<std::vector<std::string>> parentDag(
+       std::vector<std::vector<std::string>> buildShortestPathDag(
            const std::string& beginWord,
            const std::string& endWord,
            const std::vector<std::string>& wordList
        ) {
            std::unordered_set<std::string> dictionary(wordList.begin(), wordList.end());
-           if (!dictionary.count(endWord)) return {};
-           std::unordered_map<std::string,int> distance;
-           std::unordered_map<std::string,std::vector<std::string>> parents;
+           if (!dictionary.count(endWord)) {
+               return {};
+           }
+
+           std::unordered_map<std::string, int> distance{{beginWord, 0}};
+           std::unordered_map<std::string, std::vector<std::string>> parents;
            std::queue<std::string> queue;
-           distance[beginWord] = 0; queue.push(beginWord);
-           int target_distance = -1;
+           queue.push(beginWord);
+           int targetDistance = -1;
+
            while (!queue.empty()) {
-               std::string word = queue.front(); queue.pop();
-               int current_distance = distance[word];
-               if (target_distance != -1 && current_distance >= target_distance) continue;
-               for (const std::string& next : neighbors(word, dictionary)) {
+               const std::string word = queue.front();
+               queue.pop();
+               const int nextDistance = distance[word] + 1;
+               if (targetDistance != -1 && nextDistance > targetDistance) {
+                   continue;
+               }
+
+               for (const std::string& next : validNeighbors(word, dictionary)) {
                    auto found = distance.find(next);
                    if (found == distance.end()) {
-                       distance[next] = current_distance + 1;
+                       distance[next] = nextDistance;
                        parents[next].push_back(word);
                        queue.push(next);
-                       if (next == endWord) target_distance = current_distance + 1;
-                   } else if (found->second == current_distance + 1) {
+                       if (next == endWord) {
+                           targetDistance = nextDistance;
+                       }
+                   } else if (found->second == nextDistance) {
                        parents[next].push_back(word);
                    }
                }
            }
-           if (!distance.count(endWord)) return {};
-           std::vector<std::vector<std::string>> result;
-           std::vector<std::string> reversed;
-           restore(endWord, beginWord, parents, reversed, result);
-           return result;
+
+           if (!distance.count(endWord)) {
+               return {};
+           }
+           std::vector<std::vector<std::string>> answer;
+           std::vector<std::string> reversedPath;
+           restorePaths(endWord, beginWord, parents, reversedPath, answer);
+           return answer;
        }
 
    public:
        std::vector<std::vector<std::string>> findLadders(
-           std::string beginWord, std::string endWord,
+           std::string beginWord,
+           std::string endWord,
            std::vector<std::string>& wordList
        ) {
-           return parentDag(beginWord, endWord, wordList);
+           return buildShortestPathDag(beginWord, endWord, wordList);
        }
    };
 
 题解
 ----
 
-为什么 BFS 与回溯要分工
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-BFS 队列若直接保存完整路径，共享前缀会被复制到大量队列元素。更稳定的做法是 BFS 只计算最短距离，并记录每个节点来自上一层的全部前驱；随后 DFS 沿前驱边恢复最终路径。
-
-同层多前驱为何必须保留
+从单词序列还原成图问题
 ~~~~~~~~~~~~~~~~~~~~~~
 
-一个单词第一次被发现时确定最短距离，但同一 BFS 层中的其他节点可能以相同最短距离再次到达它。这些前驱对应不同最短序列，不能因为节点已经入队就全部丢弃。
+把每个合法单词看成节点，恰好相差一个字母的两个单词之间连一条边。每次变换的代价都为一，于是题目不是
+任意路径枚举，而是无权图中的“全部最短路径”。这两个限定缺一不可：DFS 能枚举路径，却可能先深入很长的
+分支；普通 BFS 能得到最短距离，却若只给每个节点记录一个来源，又无法恢复全部答案。
 
-.. code-block:: text
+邻居无需预先两两建图。对当前单词的每个位置尝试 ``a`` 到 ``z``，候选存在于哈希字典时，就得到一条真实
+边。这样按需生成至多 ``25L`` 个不同候选，避免为字典中全部单词对做比较和保存完整邻接表。
 
-   首次发现 next：
-       distance[next] = distance[word] + 1
-       parents[next] = [word]
-       next 入队
+方案一：BFS 队列直接保存完整路径
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   再次发现且距离相同：
-       parents[next].append(word)
-       不重复入队
+最接近原定义的方案把 ``[beginWord]`` 放入队列。BFS 每轮取出同样长度的路径，把每个合法邻居接到末尾；
+首次出现终点的这一层就是最短层，但必须处理完整层，才能收齐其他同长度答案。
 
-为什么目标出现后仍要完成当前层
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+``queueCompletePaths`` 还揭示了一个容易写错的细节：本层发现的单词不能立刻从 ``unused`` 删除。假设
+``aab`` 和 ``aba`` 位于同一层，它们都能到达 ``abb``；若第一条路径发现 ``abb`` 时就删除它，第二个
+前驱对应的答案会消失。因此代码先放进 ``usedThisLevel``，完成整层后再统一删除。删除更早层访问过的单词
+是安全的，因为重新到达它只会形成更长路径或环。
 
-首次发现终点只确定最短距离。当前层尚未处理的其他节点仍可能连接到终点或同距离节点，形成其他最短路径。可以停止扩展更深层，但必须处理完所有距离小于目标距离的节点。
+该方案正确且直接，但队列元素是路径而不是节点。大量候选共享同一前缀，代码仍要反复复制整条前缀；在
+到达终点之前，许多最终不会成为答案的完整路径也会占用内存。瓶颈不在找邻居，而在过早展开并复制输出。
 
-前驱边为何构成 DAG
-~~~~~~~~~~~~~~~~~~
+结构信息：最短路径只沿相邻层前进
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-只记录从距离 ``d`` 节点到距离 ``d+1`` 节点的边。沿前驱方向距离严格减一，不可能形成环；从终点回溯到距离 0 的起点时，每条路径长度相同且必为最短。
+BFS 首次发现节点时已经确定其最短距离。任何最短序列上的边都必须从距离 ``d`` 的节点走到距离 ``d+1``
+的节点；若走向同层或更浅层，已经消耗一条边却没有增加到起点的最短距离，整条序列不可能仍然最短。
+
+因此搜索阶段只需为每个节点保存：它的最短距离，以及所有能以相同最短距离到达它的上一层节点。共享前缀
+不再复制为多份路径，而被压缩为一张“最短路径 DAG”；真正的组合展开推迟到确定能到达终点之后。
+
+为何第一次发现后仍要接纳同层前驱
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+处理从 ``word`` 到 ``next`` 的边时，令候选距离为 ``distance[word] + 1``：
+
+* ``next`` 从未发现：候选距离就是其最短距离，记录 ``word`` 并让 ``next`` 入队一次；
+* ``next`` 已经以同一候选距离发现：不再重复入队，但追加 ``word``，因为它代表另一条最短路径；
+* ``next`` 的已知距离更小：这条边会生成更长路线，不记录。
+
+“节点只入队一次”压缩了搜索工作，“同距离前驱全部保留”保存了答案分叉，两者并不冲突。
+
+终点出现后的停止边界
+~~~~~~~~~~~~~~~~~~~~
+
+首次发现 ``endWord`` 时得到 ``targetDistance``，但不能立即终止：队列中其他距离
+``targetDistance - 1`` 的节点仍可能直接连到终点，或者补充其他最短层节点的前驱。代码继续处理所有
+``nextDistance <= targetDistance`` 的节点，只停止生成更深一层。这样收齐最短 DAG，又不探索不可能属于
+答案的更长后缀。
+
+具体走读
+~~~~~~~~
+
+对示例 ``red -> tax``，BFS 保留的核心状态为：
 
 .. list-table::
    :header-rows: 1
 
    * - 距离
-     - 单词
-     - 前驱
+     - 新发现节点
+     - 记录的前驱
    * - 0
-     - ``hit``
+     - ``red``
      - 无
    * - 1
-     - ``hot``
-     - ``hit``
+     - ``ted``、``rex``
+     - ``ted <- red``、``rex <- red``
    * - 2
-     - ``dot, lot``
-     - ``hot``
+     - ``tad``、``tex``
+     - ``tad <- ted``、``tex <- ted, rex``
    * - 3
-     - ``dog, log``
-     - ``dot, lot``
-   * - 4
-     - ``cog``
-     - ``dog, log``
+     - ``tax``
+     - ``tax <- tad, tex``
 
-为什么回溯不重不漏
-~~~~~~~~~~~~~~~~~~
+``tex`` 第一次由 ``ted`` 发现后已经入队；随后 ``rex`` 以相同距离到达它，只追加第二个前驱。回溯从
+``tax`` 选择 ``tad`` 或 ``tex``，选择 ``tex`` 后又可选择 ``ted`` 或 ``rex``，恰好恢复三条序列。
 
-每条最短序列在每个节点处选择一个真实上一层前驱，因而对应 DAG 中唯一反向路径；所有记录前驱都会被枚举，所以不漏。不同前驱选择至少在一个节点不同，生成的单词序列也不同，因此不重复。
+回溯为何不重不漏
+~~~~~~~~~~~~~~~~
 
-复杂度来源
-~~~~~~~~~~
+每条记录边都让距离严格减一，所以沿 ``parents`` 反向移动不可能成环，最终只能到达起点。任一最短序列
+在每一层都有一条对应前驱边，递归会枚举它，因此不漏；两次不同的前驱选择至少产生一个不同单词，因此不
+重复。``reversedPath`` 维护“终点到当前节点”的选择，抵达起点时反向复制为正序答案，返回后弹出当前节点，
+让兄弟分支复用同一缓冲区。
 
-设字典大小 ``N``、单词长度 ``L``。字符替换生成邻居需要尝试 ``26L`` 个候选，字符串哈希/复制带来 ``O(L)``，搜索期望 ``O(26NL²)``。前驱 DAG 空间为 ``O(N+E)``；回溯还需与全部输出字符总量成正比。
+主解选择与复杂度
+~~~~~~~~~~~~~~~~
 
-九语言实现
-----------
+公开入口采用 ``buildShortestPathDag``。相较完整路径 BFS，它增加了距离表和前驱表，却删除了搜索期间的
+路径前缀复制；只有确实属于最短答案的 DAG 才会在回溯阶段展开。完整路径方案保留为直觉基线，适合展示
+“整层延迟删除”的必要性，但不作为主解。
 
-C
-~
-
-.. code-block:: c
-
-   static char**words;static unsigned char**parent;static int*path,pathLen,beginId,total,outSize,outCap;static char***out;static int*widths;
-   static int oneDiff(const char*a,const char*b){int d=0;for(int i=0;a[i];i++)if(a[i]!=b[i]&&++d>1)return 0;return d==1;}
-   static void emit(void){if(outSize==outCap){outCap*=2;out=realloc(out,(size_t)outCap*sizeof(char**));widths=realloc(widths,(size_t)outCap*sizeof(int));}char**row=malloc((size_t)pathLen*sizeof(char*));for(int i=0;i<pathLen;i++){char*s=words[path[pathLen-1-i]];row[i]=malloc(strlen(s)+1);strcpy(row[i],s);}out[outSize]=row;widths[outSize++]=pathLen;}
-   static void restore(int v){path[pathLen++]=v;if(v==beginId)emit();else for(int u=0;u<total;u++)if(parent[v][u])restore(u);pathLen--;}
-   char***findLadders(char*begin,char*end,char**list,int n,int*returnSize,int**returnColumnSizes){int endId=-1;beginId=-1;words=malloc((size_t)(n+1)*sizeof(char*));for(int i=0;i<n;i++){words[i]=list[i];if(!strcmp(list[i],end))endId=i;if(!strcmp(list[i],begin))beginId=i;}if(endId<0){*returnSize=0;*returnColumnSizes=NULL;free(words);return NULL;}total=n;if(beginId<0){beginId=total;words[total++]=begin;}int*dist=malloc((size_t)total*sizeof(int)),*q=malloc((size_t)total*sizeof(int));parent=malloc((size_t)total*sizeof(unsigned char*));for(int i=0;i<total;i++){dist[i]=-1;parent[i]=calloc((size_t)total,1);}int h=0,t=0;dist[beginId]=0;q[t++]=beginId;while(h<t){int u=q[h++];for(int v=0;v<total;v++)if(oneDiff(words[u],words[v])){if(dist[v]<0){dist[v]=dist[u]+1;parent[v][u]=1;q[t++]=v;}else if(dist[v]==dist[u]+1)parent[v][u]=1;}}outCap=8;outSize=0;out=malloc((size_t)outCap*sizeof(char**));widths=malloc((size_t)outCap*sizeof(int));path=malloc((size_t)total*sizeof(int));pathLen=0;if(dist[endId]>=0)restore(endId);for(int i=0;i<total;i++)free(parent[i]);free(parent);free(dist);free(q);free(path);free(words);*returnSize=outSize;*returnColumnSizes=widths;return out;}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def findLadders(self, beginWord, endWord, wordList):
-           from collections import defaultdict, deque
-           dictionary = set(wordList)
-           if endWord not in dictionary: return []
-           distance, parents, queue = {beginWord: 0}, defaultdict(list), deque([beginWord])
-           target = None
-           while queue:
-               word = queue.popleft(); depth = distance[word]
-               if target is not None and depth >= target: continue
-               for i, old in enumerate(word):
-                   for ch in "abcdefghijklmnopqrstuvwxyz":
-                       if ch == old: continue
-                       nxt = word[:i] + ch + word[i+1:]
-                       if nxt not in dictionary: continue
-                       if nxt not in distance:
-                           distance[nxt] = depth + 1; parents[nxt].append(word); queue.append(nxt)
-                           if nxt == endWord: target = depth + 1
-                       elif distance[nxt] == depth + 1: parents[nxt].append(word)
-           result, path = [], []
-           def dfs(word):
-               path.append(word)
-               if word == beginWord: result.append(path[::-1])
-               else:
-                   for parent in parents[word]: dfs(parent)
-               path.pop()
-           if endWord in distance: dfs(endWord)
-           return result
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {Map<String,List<String>>parents=new HashMap<>();List<List<String>>out=new ArrayList<>();String begin;void dfs(String w,List<String>p){p.add(w);if(w.equals(begin)){List<String>r=new ArrayList<>(p);Collections.reverse(r);out.add(r);}else for(String x:parents.getOrDefault(w,List.of()))dfs(x,p);p.remove(p.size()-1);}public List<List<String>> findLadders(String b,String e,List<String>list){Set<String>d=new HashSet<>(list);if(!d.contains(e))return out;begin=b;Map<String,Integer>dist=new HashMap<>();Queue<String>q=new ArrayDeque<>();dist.put(b,0);q.add(b);int target=Integer.MAX_VALUE;while(!q.isEmpty()){String w=q.remove();int dep=dist.get(w);if(dep>=target)continue;char[]a=w.toCharArray();for(int i=0;i<a.length;i++){char old=a[i];for(char c='a';c<='z';c++){if(c==old)continue;a[i]=c;String n=new String(a);if(!d.contains(n))continue;if(!dist.containsKey(n)){dist.put(n,dep+1);parents.computeIfAbsent(n,k->new ArrayList<>()).add(w);q.add(n);if(n.equals(e))target=dep+1;}else if(dist.get(n)==dep+1)parents.computeIfAbsent(n,k->new ArrayList<>()).add(w);}a[i]=old;}}if(dist.containsKey(e))dfs(e,new ArrayList<>());return out;}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn find_ladders(begin:String,end:String,word_list:Vec<String>)->Vec<Vec<String>>{use std::collections::{HashMap,HashSet,VecDeque};let dict:HashSet<String>=word_list.into_iter().collect();if !dict.contains(&end){return vec![]}let mut dist=HashMap::new();let mut parents:HashMap<String,Vec<String>>=HashMap::new();let mut q=VecDeque::new();dist.insert(begin.clone(),0usize);q.push_back(begin.clone());let mut target=usize::MAX;while let Some(w)=q.pop_front(){let depth=dist[&w];if depth>=target{continue}let mut bytes=w.as_bytes().to_vec();for i in 0..bytes.len(){let old=bytes[i];for c in b'a'..=b'z'{if c==old{continue}bytes[i]=c;let n=String::from_utf8(bytes.clone()).unwrap();if !dict.contains(&n){continue}match dist.get(&n){None=>{dist.insert(n.clone(),depth+1);parents.entry(n.clone()).or_default().push(w.clone());q.push_back(n.clone());if n==end{target=depth+1}},Some(&d)if d==depth+1=>parents.entry(n).or_default().push(w.clone()),_=>{}}}bytes[i]=old;}}fn dfs(w:&str,b:&str,p:&HashMap<String,Vec<String>>,path:&mut Vec<String>,out:&mut Vec<Vec<String>>){path.push(w.to_string());if w==b{let mut r=path.clone();r.reverse();out.push(r)}else if let Some(v)=p.get(w){for x in v{dfs(x,b,p,path,out)}}path.pop();}let mut out=vec![];if dist.contains_key(&end){dfs(&end,&begin,&parents,&mut vec![],&mut out)}out}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func findLadders(begin,end string,list []string)[][]string{dict:=map[string]bool{};for _,w:=range list{dict[w]=true};if !dict[end]{return nil};dist:=map[string]int{begin:0};parents:=map[string][]string{};q:=[]string{begin};target:=int(^uint(0)>>1);for h:=0;h<len(q);h++{w:=q[h];d:=dist[w];if d>=target{continue};a:=[]byte(w);for i,old:=range a{for c:=byte('a');c<='z';c++{if c==old{continue};a[i]=c;n:=string(a);if !dict[n]{continue};nd,ok:=dist[n];if !ok{dist[n]=d+1;parents[n]=append(parents[n],w);q=append(q,n);if n==end{target=d+1}}else if nd==d+1{parents[n]=append(parents[n],w)}};a[i]=old}};out:=[][]string{};path:=[]string{};var dfs func(string);dfs=func(w string){path=append(path,w);if w==begin{r:=make([]string,len(path));for i:=range path{r[i]=path[len(path)-1-i]};out=append(out,r)}else{for _,p:=range parents[w]{dfs(p)}};path=path[:len(path)-1]};if _,ok:=dist[end];ok{dfs(end)};return out}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function findLadders(begin:string,end:string,list:string[]):string[][]{const dict=new Set(list);if(!dict.has(end))return[];const dist=new Map<string,number>([[begin,0]]),parents=new Map<string,string[]>(),q=[begin];let target=Infinity;for(let h=0;h<q.length;h++){const w=q[h],d=dist.get(w)!;if(d>=target)continue;for(let i=0;i<w.length;i++)for(let k=0;k<26;k++){const c=String.fromCharCode(97+k);if(c===w[i])continue;const n=w.slice(0,i)+c+w.slice(i+1);if(!dict.has(n))continue;if(!dist.has(n)){dist.set(n,d+1);parents.set(n,[w]);q.push(n);if(n===end)target=d+1;}else if(dist.get(n)===d+1)parents.get(n)!.push(w);}}const out:string[][]=[],path:string[]=[];const dfs=(w:string)=>{path.push(w);if(w===begin)out.push([...path].reverse());else for(const p of parents.get(w)??[])dfs(p);path.pop();};if(dist.has(end))dfs(end);return out;}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {Dictionary<string,List<string>>parents=new();List<IList<string>>outp=new();string begin;void Dfs(string w,List<string>p){p.Add(w);if(w==begin){var r=new List<string>(p);r.Reverse();outp.Add(r);}else if(parents.TryGetValue(w,out var ps))foreach(var x in ps)Dfs(x,p);p.RemoveAt(p.Count-1);}public IList<IList<string>> FindLadders(string b,string e,IList<string>list){var dict=new HashSet<string>(list);if(!dict.Contains(e))return outp;begin=b;var dist=new Dictionary<string,int>{{b,0}};var q=new Queue<string>();q.Enqueue(b);int target=int.MaxValue;while(q.Count>0){var w=q.Dequeue();int d=dist[w];if(d>=target)continue;var a=w.ToCharArray();for(int i=0;i<a.Length;i++){char old=a[i];for(char c='a';c<='z';c++){if(c==old)continue;a[i]=c;var n=new string(a);if(!dict.Contains(n))continue;if(!dist.ContainsKey(n)){dist[n]=d+1;parents[n]=new List<string>{w};q.Enqueue(n);if(n==e)target=d+1;}else if(dist[n]==d+1)parents[n].Add(w);}a[i]=old;}}if(dist.ContainsKey(e))Dfs(e,new List<string>());return outp;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function find_ladders(begin_word,end_word,word_list)
-       dict=Set(word_list);end_word in dict||return Vector{Vector{String}}();dist=Dict(begin_word=>0);parents=Dict{String,Vector{String}}();q=[begin_word];head=1;target=typemax(Int)
-       while head<=length(q);w=q[head];head+=1;d=dist[w];d>=target&&continue;a=collect(codeunits(w));for i in eachindex(a);old=a[i];for c in UInt8('a'):UInt8('z');c==old&&continue;a[i]=c;n=String(copy(a));n in dict||continue;if !haskey(dist,n);dist[n]=d+1;push!(get!(parents,n,String[]),w);push!(q,n);n==end_word&&(target=d+1);elseif dist[n]==d+1;push!(get!(parents,n,String[]),w);end;end;a[i]=old;end;end
-       out=Vector{Vector{String}}();path=String[];function dfs(w);push!(path,w);if w==begin_word;push!(out,reverse(copy(path)));else;for p in get(parents,w,String[]);dfs(p);end;end;pop!(path);end;haskey(dist,end_word)&&dfs(end_word);out
-   end
-
-R
-~
-
-.. code-block:: r
-
-   find_ladders <- function(begin,end,word_list){if(!(end%in%word_list))return(list());words<-unique(c(word_list,begin));n<-length(words);one<-function(a,b){sum(strsplit(a,"",fixed=TRUE)[[1L]]!=strsplit(b,"",fixed=TRUE)[[1L]])==1L};dist<-rep(NA_integer_,n);start<-match(begin,words);goal<-match(end,words);dist[[start]]<-0L;q<-start;head<-1L;parents<-vector("list",n);while(head<=length(q)){u<-q[[head]];head<-head+1L;for(v in seq_len(n))if(one(words[[u]],words[[v]])){if(is.na(dist[[v]])){dist[[v]]<-dist[[u]]+1L;parents[[v]]<-c(parents[[v]],u);q<-c(q,v)}else if(dist[[v]]==dist[[u]]+1L)parents[[v]]<-c(parents[[v]],u)}};out<-list();path<-integer();dfs<-function(v){path<<-c(path,v);if(v==start)out[[length(out)+1L]]<<-rev(words[path])else for(p in parents[[v]])dfs(p);path<<-path[-length(path)]};if(!is.na(dist[[goal]]))dfs(goal);out}
+设字典大小为 ``N``、单词长度为 ``L``。每个被发现节点至多出队一次，每次尝试 ``O(26L)`` 个字符串，
+构造和哈希字符串需要 ``O(L)``，搜索期望时间为 ``O(26NL^2)``。前驱 DAG 占用 ``O(N + E)`` 条记录；
+回溯时间和答案空间必然与所有返回序列的字符总量成正比，无法由只依赖 ``N`` 的多项式上界替代。

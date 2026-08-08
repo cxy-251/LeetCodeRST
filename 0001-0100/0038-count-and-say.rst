@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0038
+:题号: 0038. 外观数列
 :难度: Medium
 :主题: 字符串、游程编码、递推
 :原题: `LeetCode 0038 <https://leetcode.com/problems/count-and-say/>`_

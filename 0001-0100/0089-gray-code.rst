@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0089
+:题号: 0089. 格雷编码
 :难度: Medium
 :主题: 位运算、构造、二进制反射
 :原题: `LeetCode 0089 <https://leetcode.com/problems/gray-code/>`_

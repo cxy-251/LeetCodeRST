@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0002
+:题号: 0002. 两数相加
 :难度: Medium
 :主题: 链表、模拟、进位、节点构造
 :原题: `LeetCode 0002 <https://leetcode.com/problems/add-two-numbers/>`_

@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0072
+:题号: 0072. 编辑距离
 :难度: Medium
 :主题: 字符串、动态规划、状态压缩
 :原题: `LeetCode 0072 <https://leetcode.com/problems/edit-distance/>`_

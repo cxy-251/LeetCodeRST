@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0099
+:题号: 0099. 恢复二叉搜索树
 :难度: Medium
 :主题: 二叉搜索树、中序遍历、显式栈、Morris 遍历
 :原题: `LeetCode 0099 <https://leetcode.com/problems/recover-binary-search-tree/>`_

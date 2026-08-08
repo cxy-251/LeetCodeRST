@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0041
+:题号: 0041. 缺失的第一个正数
 :难度: Hard
 :主题: 数组、哈希集合、原地哈希、循环置换
 :原题: `LeetCode 0041 <https://leetcode.com/problems/first-missing-positive/>`_

@@ -4,219 +4,183 @@
 题目信息
 --------
 
-:题号: 0125
+:题号: 0125. 验证回文串
 :难度: Easy
-:主题: 字符串、双指针、ASCII、原串扫描
+:主题: 字符串、双指针、字符归一化
 :原题: `LeetCode 0125 <https://leetcode.com/problems/valid-palindrome/>`_
-:重点: 忽略非字母数字字符、忽略字母大小写、清洗后回文
+:重点: 分清逻辑序列与物理存储，按需寻找下一对有效字符，以双指针消除完整清洗副本
 
 题目重述
 --------
 
-给定字符串 ``s``，先删除其中所有不是英文字母或十进制数字的字符，再把字母统一按不区分大小写的方式比较。判断处理后的字符序列是否从左到右与从右到左完全相同。若清洗后为空字符串，也视为回文。
+给定字符串 ``s``，只保留英文字母和十进制数字，并把英文字母视为不区分大小写。判断保留下来的字符序列
+是否为回文，即从左向右读取与从右向左读取完全相同。
 
-字符串长度在 ``1..2 × 10^5`` 范围内，只包含可打印 ASCII 字符。
+原串只含可打印 ASCII 字符，长度在 ``[1, 2 * 10^5]`` 内。若删除无效字符后序列为空，也应返回
+``true``。
 
 自建示例
 --------
 
-.. code-block:: text
-
-   输入：s = "No 'x' in Nixon!"
-   输出：true
-   解释：删除空格和标点并忽略大小写后得到 "noxinnixon"，正读和反读相同。
-
-.. code-block:: text
-
-   输入：s = "Room 12, Moor 21"
-   输出：false
-   解释：清洗后得到 "room12moor21"，首尾字符分别是 r 和 1，不相同。
+* ``s = "A man, a plan, a canal: Panama"``：有效字符依次组成 ``amanaplanacanalpanama``，返回
+  ``true``；
+* ``s = "0P"``：数字 ``0`` 与字母 ``p`` 不相等，返回 ``false``；
+* ``s = ".,!"``：没有有效字符，清洗结果为空序列，返回 ``true``；
+* ``s = "a-b_Ca"``：两端 ``a/a`` 相等，随后比较 ``b/c``，返回 ``false``。
 
 C++ 实现
 --------
 
 .. code-block:: cpp
 
-   #include <algorithm>
    #include <string>
 
    class Solution {
    private:
-       bool valid(char ch) {
+       bool isAsciiLetterOrDigit(char ch) {
            return ('0' <= ch && ch <= '9') ||
                   ('A' <= ch && ch <= 'Z') ||
                   ('a' <= ch && ch <= 'z');
        }
 
-       char lowerAscii(char ch) {
-           return 'A' <= ch && ch <= 'Z' ? ch - 'A' + 'a' : ch;
+       char normalized(char ch) {
+           if ('A' <= ch && ch <= 'Z') {
+               return static_cast<char>(ch - 'A' + 'a');
+           }
+           return ch;
        }
 
-       bool cleanAndReverse(const std::string& s) {
+       bool buildNormalizedString(const std::string& s) {
            std::string cleaned;
-           for (char ch : s) if (valid(ch)) cleaned.push_back(lowerAscii(ch));
-           return std::equal(cleaned.begin(), cleaned.end(), cleaned.rbegin());
-       }
+           cleaned.reserve(s.size());
+           for (char ch : s) {
+               if (isAsciiLetterOrDigit(ch)) {
+                   cleaned.push_back(normalized(ch));
+               }
+           }
 
-       bool recursiveCompare(const std::string& s, int left, int right) {
-           while (left < right && !valid(s[left])) ++left;
-           while (left < right && !valid(s[right])) --right;
-           if (left >= right) return true;
-           return lowerAscii(s[left]) == lowerAscii(s[right]) &&
-                  recursiveCompare(s, left + 1, right - 1);
-       }
-
-       bool twoPointers(const std::string& s) {
-           int left = 0, right = static_cast<int>(s.size()) - 1;
+           int left = 0;
+           int right = static_cast<int>(cleaned.size()) - 1;
            while (left < right) {
-               while (left < right && !valid(s[left])) ++left;
-               while (left < right && !valid(s[right])) --right;
-               if (lowerAscii(s[left]) != lowerAscii(s[right])) return false;
-               ++left; --right;
+               if (cleaned[left] != cleaned[right]) {
+                   return false;
+               }
+               ++left;
+               --right;
+           }
+           return true;
+       }
+
+       bool compareInOriginalString(const std::string& s) {
+           int left = 0;
+           int right = static_cast<int>(s.size()) - 1;
+
+           while (left < right) {
+               while (left < right && !isAsciiLetterOrDigit(s[left])) {
+                   ++left;
+               }
+               while (left < right && !isAsciiLetterOrDigit(s[right])) {
+                   --right;
+               }
+
+               if (normalized(s[left]) != normalized(s[right])) {
+                   return false;
+               }
+               ++left;
+               --right;
            }
            return true;
        }
 
    public:
        bool isPalindrome(std::string s) {
-           return twoPointers(s);
+           return compareInOriginalString(s);
        }
    };
 
 题解
 ----
 
-清洗字符串不是必要状态
-~~~~~~~~~~~~~~~~~~~~~~
+先明确真正比较的对象
+~~~~~~~~~~~~~~~~~~~~
 
-直接方法先生成只含小写字母数字的字符串，再与逆序比较，需要 ``O(n)`` 额外空间。回文只关心左右对应字符，可以直接在原字符串上寻找下一对有效字符。
+回文定义作用在“清洗后的字符序列”上，而不是原字符串的物理相邻位置。标点和空格不参与序列；大写字母
+也不是另一个字符，而是要先映射到对应小写字母再比较。若直接拿 ``s[left]`` 与 ``s[right]`` 比较，
+``"a,a"`` 会在第一步比较 ``a`` 和 ``a`` 后碰到逗号；若只跳过空格，其他标点仍会制造错误。算法必须同时
+表达两件事：找到逻辑序列的下一项，以及比较归一化后的值。
 
-双指针状态
-~~~~~~~~~~
+方案一：显式构造逻辑序列
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-每轮执行：
+最直观的方法是扫描原串，把每个有效字符归一化后放入 ``cleaned``，再检查 ``cleaned`` 的首尾镜像位置。
+这正好对应题目定义，因此正确性直接：``cleaned`` 就是题目要求比较的序列，全部镜像位置相等当且仅当它是
+回文。
 
-#. 左指针向右跳过无效字符；
-#. 右指针向左跳过无效字符；
-#. 两端按 ASCII 小写形式比较；
-#. 相同则同时向内移动，不同立即失败。
+``buildNormalizedString`` 保留这一基线。它把“过滤和归一化”与“回文检查”分成两个清晰阶段，便于理解和
+调试；代价是即使首尾第一对字符就不相等，也已经扫描并复制了整个字符串，最坏还要保存 ``O(n)`` 个字符。
+
+结构信息：回文检查只按镜像位置取值
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+判断回文并不需要随机访问完整的 ``cleaned``，任一时刻只需要它最左和最右尚未比较的字符。原串中从左侧
+遇到的下一个有效字符，恰好就是逻辑序列的下一项；从右侧遇到的下一个有效字符，恰好就是逻辑序列的最后
+一项。因此可以让两个指针直接在原串上移动，遇到无效字符就各自跳过，找到一对有效字符后再归一化比较。
+
+这不是改变了清洗规则，而是把“先生成全部清洗结果”压缩为“需要哪一对就生成哪一对”。每个已经跨过的
+字符再也不会参与后续比较，所以无需保存它。
+
+双指针的不变量与删除规则
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+每轮外层循环开始时，``left`` 左侧和 ``right`` 右侧的逻辑字符已经成对验证相等。两段内层循环分别寻找
+剩余逻辑序列的首字符和尾字符：无效字符不会出现在清洗结果中，跳过它等价于从未存储它，不会漏掉候选。
+
+找到两端后：
+
+* 归一化值不同，当前就是清洗序列的一对镜像位置，回文条件已经被否定，可以立即返回；
+* 归一化值相同，这一对已经完成验证，同时向内移动后，不变量对下一轮继续成立；
+* 指针相遇或交错时，剩余逻辑序列至多有一个字符，不再存在未验证的镜像对，因此返回 ``true``。
+
+最后一条也覆盖清洗结果为空的情况。内层循环使用 ``left < right`` 作为边界，所以即使原串全是标点，也
+不会越过数组边界；两指针最终相遇，单个位置无需与自身之外的字符比较。
+
+具体走读
+~~~~~~~~
+
+以 ``s = "a-b_Ca"`` 为例：
 
 .. list-table::
    :header-rows: 1
 
-   * - 左端
-     - 右端
-     - 动作
-   * - ``A``
-     - ``a``
-     - 归一化后相等
-   * - 空格与标点
-     - 标点与空格
-     - 分别跳过
-   * - ``m``
-     - ``m``
-     - 相等并继续
+   * - 待处理区间
+     - 跳过字符
+     - 实际比较
+     - 结论
+   * - ``[0, 5]``
+     - 无
+     - ``a`` 与 ``a``
+     - 相等，删除这一对
+   * - ``[1, 4]``
+     - 左侧 ``-``
+     - ``b`` 与 ``C``，归一化为 ``b`` 与 ``c``
+     - 不等，立即返回 ``false``
 
-为什么左右跳过相互独立
-~~~~~~~~~~~~~~~~~~~~~~
+这里的下划线尚未访问，因为更外层的有效字符已经证明结果为假。显式清洗方案仍会处理它，原串双指针则
+自然省掉了与结论无关的后续工作。
 
-清洗序列的下一左字符由原串中最靠左的有效字符决定，下一右字符由最靠右的有效字符决定。无效字符不出现在清洗结果中，跳过它们不会改变任何应比较的字符对。
+代码对应与主解选择
+~~~~~~~~~~~~~~~~~~
 
-为什么显式限定 ASCII
-~~~~~~~~~~~~~~~~~~~~
+``isAsciiLetterOrDigit`` 明确实现题目的 ASCII 字符域，避免区域设置影响字符分类；``normalized`` 只转换
+大写英文字母，数字和小写字母保持不变。``compareInOriginalString`` 中两次跳过必须相互独立，因为左右两端
+可能有不同数量、不同种类的无效字符；先跳完两侧再比较，才得到清洗序列中真正对应的一对。
 
-题目字符域按 ASCII 定义时，显式判断 ``0-9``、``A-Z``、``a-z``，可以避免依赖本地化字符分类规则，并与 C++ 主实现的比较条件完全一致。
+公开入口采用原串双指针：它与显式清洗具有相同的线性扫描上界，却把工作空间从 ``O(n)`` 降到 ``O(1)``，
+并能在发现首个不匹配时提前结束。显式构造法保留为方案演进的起点，它的收益是概念分层更直接，适合验证
+规则；没有必要再保留递归版本，因为它不删除搜索工作，只把指针状态转移到调用栈并增加 ``O(n)`` 栈空间。
 
-空清洗序列为何返回真
-~~~~~~~~~~~~~~~~~~~~
-
-若没有有效字符，两个指针在跳过后交错或相遇，循环结束。空序列与其逆序相同，因此返回真；单个有效字符同理。
-
-为什么不重不漏
-~~~~~~~~~~~~~~
-
-每个指针只向中心移动。它们依次访问清洗序列的第一个与最后一个、第二个与倒数第二个字符，恰好覆盖全部镜像位置；任一不等立即证明非回文，全部相等则回文成立。
-
-复杂度来源
+复杂度分析
 ~~~~~~~~~~
 
-每个原字符最多被一个指针跨过一次，时间 ``O(n)``，额外空间 ``O(1)``。清洗方法为 ``O(n)`` 空间，递归方法使用 ``O(n)`` 栈。
-
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   static bool valid(char c){return(c>='0'&&c<='9')||(c>='A'&&c<='Z')||(c>='a'&&c<='z');}static char lower(char c){return c>='A'&&c<='Z'?c-'A'+'a':c;}bool isPalindrome(char*s){int l=0,r=(int)strlen(s)-1;while(l<r){while(l<r&&!valid(s[l]))l++;while(l<r&&!valid(s[r]))r--;if(lower(s[l])!=lower(s[r]))return false;l++;r--;}return true;}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def isPalindrome(self, s: str) -> bool:
-           def valid(ch): return "0" <= ch <= "9" or "A" <= ch <= "Z" or "a" <= ch <= "z"
-           def lower(ch): return chr(ord(ch)+32) if "A" <= ch <= "Z" else ch
-           left, right = 0, len(s)-1
-           while left < right:
-               while left < right and not valid(s[left]): left += 1
-               while left < right and not valid(s[right]): right -= 1
-               if lower(s[left]) != lower(s[right]): return False
-               left += 1; right -= 1
-           return True
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {boolean valid(char c){return c>='0'&&c<='9'||c>='A'&&c<='Z'||c>='a'&&c<='z';}char lower(char c){return c>='A'&&c<='Z'?(char)(c+32):c;}public boolean isPalindrome(String s){int l=0,r=s.length()-1;while(l<r){while(l<r&&!valid(s.charAt(l)))l++;while(l<r&&!valid(s.charAt(r)))r--;if(lower(s.charAt(l))!=lower(s.charAt(r)))return false;l++;r--;}return true;}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn is_palindrome(s:String)->bool{fn valid(c:u8)->bool{c.is_ascii_alphanumeric()}let b=s.as_bytes();let(mut l,mut r)=(0usize,b.len().saturating_sub(1));while l<r{while l<r&&!valid(b[l]){l+=1}while l<r&&!valid(b[r]){r-=1}if b[l].to_ascii_lowercase()!=b[r].to_ascii_lowercase(){return false}l+=1;r-=1}true}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func isPalindrome(s string)bool{valid:=func(c byte)bool{return c>='0'&&c<='9'||c>='A'&&c<='Z'||c>='a'&&c<='z'};lower:=func(c byte)byte{if c>='A'&&c<='Z'{return c+32};return c};l,r:=0,len(s)-1;for l<r{for l<r&&!valid(s[l]){l++};for l<r&&!valid(s[r]){r--};if lower(s[l])!=lower(s[r]){return false};l++;r--};return true}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function isPalindrome(s:string):boolean{const valid=(c:string)=>/[0-9A-Za-z]/.test(c),lower=(c:string)=>c>="A"&&c<="Z"?String.fromCharCode(c.charCodeAt(0)+32):c;let l=0,r=s.length-1;while(l<r){while(l<r&&!valid(s[l]))l++;while(l<r&&!valid(s[r]))r--;if(lower(s[l])!==lower(s[r]))return false;l++;r--;}return true;}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {bool Valid(char c)=>c>='0'&&c<='9'||c>='A'&&c<='Z'||c>='a'&&c<='z';char Lower(char c)=>c>='A'&&c<='Z'?(char)(c+32):c;public bool IsPalindrome(string s){int l=0,r=s.Length-1;while(l<r){while(l<r&&!Valid(s[l]))l++;while(l<r&&!Valid(s[r]))r--;if(Lower(s[l])!=Lower(s[r]))return false;l++;r--;}return true;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function is_palindrome(s::String)
-       a=collect(codeunits(s));valid(c)=UInt8('0')<=c<=UInt8('9')||UInt8('A')<=c<=UInt8('Z')||UInt8('a')<=c<=UInt8('z');lower(c)=UInt8('A')<=c<=UInt8('Z') ? c+0x20 : c
-       l=1;r=length(a);while l<r;while l<r&&!valid(a[l]);l+=1;end;while l<r&&!valid(a[r]);r-=1;end;lower(a[l])==lower(a[r])||return false;l+=1;r-=1;end;true
-   end
-
-R
-~
-
-.. code-block:: r
-
-   is_palindrome <- function(s){a<-strsplit(s,"",fixed=TRUE)[[1L]];valid<-function(c)grepl("^[0-9A-Za-z]$",c);l<-1L;r<-length(a);while(l<r){while(l<r&&!valid(a[[l]]))l<-l+1L;while(l<r&&!valid(a[[r]]))r<-r-1L;if(tolower(a[[l]])!=tolower(a[[r]]))return(FALSE);l<-l+1L;r<-r-1L};TRUE}
+两种方法的时间复杂度都是 ``O(n)``。显式构造法需要 ``O(n)`` 工作空间；主解中每个指针只朝中心移动，
+每个原字符最多被检查常数次，工作空间为 ``O(1)``。

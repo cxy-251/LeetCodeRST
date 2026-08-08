@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0040
+:题号: 0040. 组合总和 II
 :难度: Medium
 :主题: 数组、回溯、排序、同层去重
 :原题: `LeetCode 0040 <https://leetcode.com/problems/combination-sum-ii/>`_

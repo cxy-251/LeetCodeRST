@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0092
+:题号: 0092. 反转链表 II
 :难度: Medium
 :主题: 单链表、区间反转、哨兵节点
 :原题: `LeetCode 0092 <https://leetcode.com/problems/reverse-linked-list-ii/>`_

@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0093
+:题号: 0093. 复原 IP 地址
 :难度: Medium
 :主题: 字符串、回溯、固定分段、长度剪枝
 :原题: `LeetCode 0093 <https://leetcode.com/problems/restore-ip-addresses/>`_

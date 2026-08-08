@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0029
+:题号: 0029. 两数相除
 :难度: Medium
 :主题: 整数、倍增、二进制、贪心、溢出
 :原题: `LeetCode 0029 <https://leetcode.com/problems/divide-two-integers/>`_

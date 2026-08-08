@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0082
+:题号: 0082. 删除排序链表中的重复元素 II
 :难度: Medium
 :主题: 单链表、有序重复段、哨兵节点
 :原题: `LeetCode 0082 <https://leetcode.com/problems/remove-duplicates-from-sorted-list-ii/>`_

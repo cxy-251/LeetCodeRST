@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0096
+:题号: 0096. 不同的二叉搜索树
 :难度: Medium
 :主题: 二叉搜索树、动态规划、记忆化搜索、Catalan 数
 :原题: `LeetCode 0096 <https://leetcode.com/problems/unique-binary-search-trees/>`_

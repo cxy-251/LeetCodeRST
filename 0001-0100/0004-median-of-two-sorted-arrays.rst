@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0004
+:题号: 0004. 寻找两个正序数组的中位数
 :难度: Hard
 :主题: 数组、二分查找、分割、边界哨兵
 :原题: `LeetCode 0004 <https://leetcode.com/problems/median-of-two-sorted-arrays/>`_

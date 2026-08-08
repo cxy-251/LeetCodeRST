@@ -4,33 +4,29 @@
 题目信息
 --------
 
-:题号: 0104
+:题号: 0104. 二叉树的最大深度
 :难度: Easy
-:主题: 二叉树、递归、广度优先搜索、树高
+:主题: 二叉树、深度优先搜索、后序递归、广度优先搜索
 :原题: `LeetCode 0104 <https://leetcode.com/problems/maximum-depth-of-binary-tree/>`_
-:重点: 根到叶路径、节点数计深度、空树结果
+:重点: 从枚举根到叶路径，压缩为深度状态，再把全局最值改写成子树高度返回值
 
 题目重述
 --------
 
-给定二叉树根节点 ``root``，返回这棵树的最大深度。最大深度等于从根节点到最远叶节点的一条路径中包含的节点数量；空树的最大深度为 ``0``。
+给定二叉树根节点 ``root``，返回树的最大深度。深度按照节点数计算：从根到最远叶节点的路径包含多少个节点，
+最大深度就是多少。因此单节点树的深度为 ``1``，空树的深度为 ``0``。
 
-树中节点数在 ``0..10^4`` 范围内，节点值在 ``-100..100`` 范围内。
+树中节点总数在 ``0..10^4`` 范围内，节点值在 ``-100..100`` 范围内。节点值不影响深度，算法只读取树的
+结构，不修改节点或指针。
 
 自建示例
 --------
 
-.. code-block:: text
-
-   输入：root = [5,2,8,null,3,null,10,null,4]
-   输出：4
-   解释：路径 5 -> 2 -> 3 -> 4 包含 4 个节点，是最长的根到叶路径。
-
-.. code-block:: text
-
-   输入：root = []
-   输出：0
-   解释：空树没有节点，因此最大深度为 0。
+* 两侧高度不同：``root = [5,2,8,null,3,null,10,null,4]``，返回 ``4``。最长路径为
+  ``5 -> 2 -> 3 -> 4``；
+* 单侧链：``root = [1,null,2,null,3]``，返回 ``3``，不能因为每层只有一个节点而少计；
+* 单节点：``root = [7]``，返回 ``1``；
+* 空树：``root = []``，返回 ``0``。
 
 C++ 实现
 --------
@@ -39,72 +35,118 @@ C++ 实现
 
    #include <algorithm>
    #include <queue>
-   #include <utility>
 
    class Solution {
    private:
-       void depthDfs(TreeNode* node, int depth, int& best) {
-           if (!node) return;
-           best = std::max(best, depth);
-           depthDfs(node->left, depth + 1, best);
-           depthDfs(node->right, depth + 1, best);
+       void updateMaximumDepth(TreeNode* node, int depth, int& maximumDepth) {
+           if (!node) {
+               return;
+           }
+           maximumDepth = std::max(maximumDepth, depth);
+           updateMaximumDepth(node->left, depth + 1, maximumDepth);
+           updateMaximumDepth(node->right, depth + 1, maximumDepth);
        }
 
-       int levelBfs(TreeNode* root) {
-           if (!root) return 0;
-           std::queue<TreeNode*> queue; queue.push(root);
+       int topDownDepth(TreeNode* root) {
+           int maximumDepth = 0;
+           updateMaximumDepth(root, 1, maximumDepth);
+           return maximumDepth;
+       }
+
+       int breadthFirstDepth(TreeNode* root) {
+           if (!root) {
+               return 0;
+           }
+           std::queue<TreeNode*> pending;
+           pending.push(root);
            int depth = 0;
-           while (!queue.empty()) {
-               int size = queue.size(); ++depth;
-               for (int i = 0; i < size; ++i) {
-                   TreeNode* node = queue.front(); queue.pop();
-                   if (node->left) queue.push(node->left);
-                   if (node->right) queue.push(node->right);
+           while (!pending.empty()) {
+               const int levelSize = static_cast<int>(pending.size());
+               ++depth;
+               for (int count = 0; count < levelSize; ++count) {
+                   TreeNode* node = pending.front();
+                   pending.pop();
+                   if (node->left) {
+                       pending.push(node->left);
+                   }
+                   if (node->right) {
+                       pending.push(node->right);
+                   }
                }
            }
            return depth;
        }
 
-       int postorderHeight(TreeNode* node) {
-           if (!node) return 0;
-           return 1 + std::max(postorderHeight(node->left),
-                               postorderHeight(node->right));
+       int subtreeHeight(TreeNode* node) {
+           if (!node) {
+               return 0;
+           }
+           const int leftHeight = subtreeHeight(node->left);
+           const int rightHeight = subtreeHeight(node->right);
+           return 1 + std::max(leftHeight, rightHeight);
        }
 
    public:
        int maxDepth(TreeNode* root) {
-           return postorderHeight(root);
+           return subtreeHeight(root);
        }
    };
 
 题解
 ----
 
-路径问题如何变成子树高度
-~~~~~~~~~~~~~~~~~~~~~~
+原始路径空间
+~~~~~~~~~~~~
 
-从当前节点到最远叶节点的路径必然进入左子树或右子树中更深的一侧。因此定义 ``depth(node)`` 为以该节点为根的最大深度：
+最大深度来自某一条根到叶路径，因此最直观的正确方案是枚举所有这类路径：沿当前路径不断进入左右孩子，
+到叶节点时统计路径包含的节点数，再保留最大值。每个最远节点必然是叶节点，否则还可以继续走向它的孩子，
+得到更长路径；所以检查完所有叶节点不会遗漏答案。
+
+若为每个递归分支维护完整的节点数组，真正用于比较的却只有数组长度。路径中的节点值、访问方向和完整副本
+都不会影响最大深度。这道题首先要删除的工作不是某个搜索分支，而是路径表示中无关的内容。
+
+深度计数
+~~~~~~~~
+
+从根进入孩子时，路径节点数恰好加一，所以可以只携带整数 ``depth``。``updateMaximumDepth`` 进入根时使用
+深度 ``1``，每下降一层传入 ``depth + 1``，并用 ``maximumDepth`` 保存目前见过的最大值。
+
+代码在每个非空节点更新最大值，不必专门判断叶节点。非叶节点的深度不会超过其后代，提前参与比较只可能
+暂时更新较小值；遍历到最深节点时仍会得到最终答案。空树第一次调用便返回，初始最大值 ``0`` 保持不变。
+
+完整路径数组由一个深度整数替代，但这个自顶向下方案仍有可变的外部状态：子调用通过引用共同修改
+``maximumDepth``。还可以换一个观察方向，让每棵子树直接返回自己的答案。
+
+子树高度
+~~~~~~~~
+
+定义 ``height(node)`` 为以 ``node`` 为根的子树最大深度。空指针没有节点，高度为 ``0``；非空节点到最远
+叶节点的路径必须先计入当前节点，再进入左右子树中更高的一侧：
 
 .. code-block:: text
 
-   depth(null) = 0
-   depth(node) = 1 + max(depth(node.left), depth(node.right))
+   height(null) = 0
+   height(node) = 1 + max(height(node.left), height(node.right))
 
-为什么必须后序汇总
-~~~~~~~~~~~~~~~~~~
+这不是在根处猜测应走左边还是右边。``subtreeHeight`` 先求出两侧各自能达到的最大长度，再舍弃较短者；
+任意根到叶路径的第一步只能落在这两侧之一，因此较大值覆盖当前子树的全部候选。
 
-当前节点答案依赖两个孩子的深度，必须先递归求出左右结果再计算根值。空孩子贡献 0，因此叶节点自然得到 ``1 + max(0,0) = 1``。
+空指针返回 ``0`` 让叶节点自然得到 ``1 + max(0, 0) = 1``，无需额外叶节点分支。每层调用把子问题结果
+加一后返回，原来的全局最大值、当前深度参数和进入节点时的更新操作全部消失。公开入口采用这一后序递归，
+因为返回值就是当前子树的完整答案，状态边界最清楚。
 
-状态演化
-~~~~~~~~
+后序状态走读
+~~~~~~~~~~~~
+
+对 ``[5,2,8,null,3,null,10,null,4]``，结果从叶节点向根汇总：
 
 .. list-table::
    :header-rows: 1
 
    * - 节点
-     - 左深度
-     - 右深度
-     - 当前深度
+     - 左子树高度
+     - 右子树高度
+     - 返回高度
    * - 4
      - 0
      - 0
@@ -114,8 +156,8 @@ C++ 实现
      - 1
      - 2
    * - 2
-     - 2
      - 0
+     - 2
      - 3
    * - 10
      - 0
@@ -130,91 +172,21 @@ C++ 实现
      - 2
      - 4
 
-BFS 为什么也能计数
-~~~~~~~~~~~~~~~~~
+节点 ``5`` 不需要知道左侧最深路径经过哪些具体节点，只接收高度 ``3``；与右侧高度 ``2`` 比较后加一，
+便得到整棵树深度 ``4``。这体现了返回状态对完整路径的压缩。
 
-层序遍历每完成一层就令 ``depth++``。最后一批非空节点出队后，计数正好等于树的层数。BFS 不需要等待子树返回，但队列可能保存整层节点。
+按层计数
+~~~~~~~~
 
-携带深度 DFS 的取舍
-~~~~~~~~~~~~~~~~~~
+``breadthFirstDepth`` 提供不依赖递归的替代方案。队列每轮开始时保存当前层全部节点，固定 ``levelSize`` 后
+弹出这一层并加入下一层孩子；每完成一轮，深度加一。最后一层处理结束后队列为空，轮数恰好等于树的层数。
 
-另一种 DFS 在进入节点时携带当前深度并维护全局最大值。它与后序递归访问相同节点，后序写法直接返回子问题结果，不需要可变外部状态。
+BFS 与后序递归都访问全部节点，只是保存未完成工作的方式不同。后序法保存一条递归路径，空间取决于树高；
+BFS 保存层级前沿，空间取决于最大层宽。宽而浅的树更适合递归空间，极深的树则可以用 BFS 避免调用栈风险。
 
-为什么答案不会遗漏
-~~~~~~~~~~~~~~~~~~
-
-任意根到叶路径在根处选择左或右一个分支。递推同时计算两侧并取最大，按树高归纳覆盖所有路径；较短一侧不会影响最长答案，可以安全舍弃。
-
-复杂度来源
+复杂度分析
 ~~~~~~~~~~
 
-每个节点访问一次，时间 ``O(n)``。递归空间 ``O(h)``，退化树最坏 ``O(n)``；BFS 队列空间 ``O(w)``，其中 ``w`` 是最大层宽。
-
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   int maxDepth(struct TreeNode*root){if(!root)return 0;int a=maxDepth(root->left),b=maxDepth(root->right);return 1+(a>b?a:b);}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def maxDepth(self, root) -> int:
-           if root is None: return 0
-           return 1 + max(self.maxDepth(root.left), self.maxDepth(root.right))
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public int maxDepth(TreeNode root){return root==null?0:1+Math.max(maxDepth(root.left),maxDepth(root.right));}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn max_depth(root:Option<Rc<RefCell<TreeNode>>>)->i32{match root{None=>0,Some(x)=>{let b=x.borrow();1+Self::max_depth(b.left.clone()).max(Self::max_depth(b.right.clone()))}}}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func maxDepth(root *TreeNode)int{if root==nil{return 0};a,b:=maxDepth(root.Left),maxDepth(root.Right);if a>b{return a+1};return b+1}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function maxDepth(root:TreeNode|null):number{return root?1+Math.max(maxDepth(root.left),maxDepth(root.right)):0;}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public int MaxDepth(TreeNode root)=>root==null?0:1+Math.Max(MaxDepth(root.left),MaxDepth(root.right));}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   max_depth(root)=root===nothing ? 0 : 1+max(max_depth(root.left),max_depth(root.right))
-
-R
-~
-
-.. code-block:: r
-
-   max_depth <- function(root){if(is.null(root))return(0L);1L+max(max_depth(root$left),max_depth(root$right))}
+三种实现都访问每个节点一次，时间为 ``O(n)``。自顶向下与后序递归的调用栈为 ``O(h)``，其中 ``h`` 是
+树高；单侧链上最坏为 ``O(n)``。BFS 队列工作空间为 ``O(w)``，其中 ``w`` 是最大层宽。所有方法只返回
+一个整数，没有与节点数相关的结果空间。

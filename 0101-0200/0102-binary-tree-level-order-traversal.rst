@@ -4,33 +4,30 @@
 题目信息
 --------
 
-:题号: 0102
+:题号: 0102. 二叉树的层序遍历
 :难度: Medium
-:主题: 二叉树、广度优先搜索、队列、二维输出
+:主题: 二叉树、广度优先搜索、深度优先搜索、队列
 :原题: `LeetCode 0102 <https://leetcode.com/problems/binary-tree-level-order-traversal/>`_
-:重点: 层次划分、层内从左到右、空树结果
+:重点: 从逐层重复寻找节点，推导到携带深度的一次遍历，再用队列前沿直接维护层边界
 
 题目重述
 --------
 
-给定二叉树根节点 ``root``，按照从根到叶的顺序逐层访问所有节点，并返回一个二维数组。结果中的每个子数组对应树的一层；同一层中的节点值必须按照从左到右的顺序排列。空树返回空数组。
+给定二叉树根节点 ``root``，按照节点到根的距离从小到大返回所有节点值。返回结果是二维数组：第 ``d`` 个
+子数组保存深度为 ``d`` 的全部节点，同一层内必须按照树中从左到右的顺序排列。
 
-树中节点数在 ``0..2000`` 范围内，节点值在 ``-1000..1000`` 范围内。
+结果只包含实际存在的节点，不需要为空孩子保留占位。空树没有任何层，应返回空数组。遍历过程不修改树。
+
+树中节点总数在 ``0..2000`` 范围内，节点值在 ``-1000..1000`` 范围内。
 
 自建示例
 --------
 
-.. code-block:: text
-
-   输入：root = [8,4,12,null,6,10,14]
-   输出：[[8],[4,12],[6,10,14]]
-   解释：根节点单独构成第一层；第二层从左到右是 4、12；第三层依次是 6、10、14。
-
-.. code-block:: text
-
-   输入：root = []
-   输出：[]
-   解释：树中没有节点，因此没有任何层需要输出。
+* 稀疏结构：``root = [8,4,12,null,6,10,14]``，返回 ``[[8],[4,12],[6,10,14]]``。第三层的 ``6``
+  是节点 ``4`` 的右孩子，仍排在节点 ``12`` 的两个孩子之前；
+* 单侧延伸：``root = [5,null,7,null,9]``，返回 ``[[5],[7],[9]]``。每个深度都只有一个节点；
+* 单节点：``root = [3]``，返回 ``[[3]]``；
+* 空树：``root = []``，返回 ``[]``，不能返回包含一个空行的 ``[[]]``。
 
 C++ 实现
 --------
@@ -43,198 +40,208 @@ C++ 实现
 
    class Solution {
    private:
-       void depthFirst(TreeNode* node, int depth,
-                       std::vector<std::vector<int>>& result) {
-           if (!node) return;
-           if (depth == static_cast<int>(result.size())) result.push_back({});
-           result[depth].push_back(node->val);
-           depthFirst(node->left, depth + 1, result);
-           depthFirst(node->right, depth + 1, result);
+       void collectAtDepth(TreeNode* node, int currentDepth, int targetDepth, std::vector<int>& level) {
+           if (!node) {
+               return;
+           }
+           if (currentDepth == targetDepth) {
+               level.push_back(node->val);
+               return;
+           }
+           collectAtDepth(node->left, currentDepth + 1, targetDepth, level);
+           collectAtDepth(node->right, currentDepth + 1, targetDepth, level);
        }
 
-       std::vector<std::vector<int>> twoQueues(TreeNode* root) {
-           if (!root) return {};
-           std::queue<TreeNode*> current, next;
-           current.push(root);
-           std::vector<std::vector<int>> result;
-           while (!current.empty()) {
-               std::vector<int> row;
-               while (!current.empty()) {
-                   TreeNode* node = current.front(); current.pop();
-                   row.push_back(node->val);
-                   if (node->left) next.push(node->left);
-                   if (node->right) next.push(node->right);
+       std::vector<std::vector<int>> levelsByRepeatedDepthSearch(TreeNode* root) {
+           std::vector<std::vector<int>> levels;
+           for (int targetDepth = 0;; ++targetDepth) {
+               std::vector<int> level;
+               collectAtDepth(root, 0, targetDepth, level);
+               if (level.empty()) {
+                   break;
                }
-               result.push_back(std::move(row));
-               std::swap(current,next);
+               levels.push_back(std::move(level));
            }
-           return result;
+           return levels;
        }
 
-       std::vector<std::vector<int>> sizeSnapshot(TreeNode* root) {
-           if (!root) return {};
-           std::queue<TreeNode*> queue;
-           queue.push(root);
-           std::vector<std::vector<int>> result;
-           while (!queue.empty()) {
-               int level_size = queue.size();
-               std::vector<int> row;
-               row.reserve(level_size);
-               for (int i = 0; i < level_size; ++i) {
-                   TreeNode* node = queue.front(); queue.pop();
-                   row.push_back(node->val);
-                   if (node->left) queue.push(node->left);
-                   if (node->right) queue.push(node->right);
-               }
-               result.push_back(std::move(row));
+       void collectByDepth(TreeNode* node, int depth, std::vector<std::vector<int>>& levels) {
+           if (!node) {
+               return;
            }
-           return result;
+           if (depth == static_cast<int>(levels.size())) {
+               levels.emplace_back();
+           }
+           levels[depth].push_back(node->val);
+           collectByDepth(node->left, depth + 1, levels);
+           collectByDepth(node->right, depth + 1, levels);
+       }
+
+       std::vector<std::vector<int>> levelsByDepthFirstSearch(TreeNode* root) {
+           std::vector<std::vector<int>> levels;
+           collectByDepth(root, 0, levels);
+           return levels;
+       }
+
+       std::vector<std::vector<int>> levelsByBreadthFirstSearch(TreeNode* root) {
+           if (!root) {
+               return {};
+           }
+           std::vector<std::vector<int>> levels;
+           std::queue<TreeNode*> pending;
+           pending.push(root);
+           while (!pending.empty()) {
+               const int levelSize = static_cast<int>(pending.size());
+               std::vector<int> level;
+               level.reserve(levelSize);
+               for (int count = 0; count < levelSize; ++count) {
+                   TreeNode* node = pending.front();
+                   pending.pop();
+                   level.push_back(node->val);
+                   if (node->left) {
+                       pending.push(node->left);
+                   }
+                   if (node->right) {
+                       pending.push(node->right);
+                   }
+               }
+               levels.push_back(std::move(level));
+           }
+           return levels;
        }
 
    public:
        std::vector<std::vector<int>> levelOrder(TreeNode* root) {
-           return sizeSnapshot(root);
+           return levelsByBreadthFirstSearch(root);
        }
    };
 
 题解
 ----
 
-为什么需要广度优先前沿
-~~~~~~~~~~~~~~~~~~~~
+原始分层搜索
+~~~~~~~~~~~~
 
-题目要求先完成深度较小的全部节点，再处理下一层。队列保存尚未访问的节点前沿，先进先出顺序使同层父节点按从左到右处理。
+题目直接按深度组织输出，因此最直观的正确方案是一次只构造一层。先从根出发寻找深度 ``0`` 的节点，再从
+根寻找深度 ``1`` 的节点，随后依次处理 ``2``、``3``，直到某个深度没有节点。
 
-层大小快照保存什么
-~~~~~~~~~~~~~~~~~~
+``collectAtDepth`` 用 ``currentDepth`` 记录当前节点深度，到达 ``targetDepth`` 时保存节点值并停止向下。
+递归始终先访问左孩子再访问右孩子，所以同一目标深度的节点会按从左到右的顺序进入 ``level``。每个非空
+节点以及它的祖先链都会在对应深度的搜索中被覆盖，因此每一行都完整。
 
-每轮开始时，队列中已有的节点恰好属于当前层。保存 ``level_size`` 后只弹出这些节点；处理中加入的孩子位于队尾，属于下一层，不会混入当前行。
+当某次搜索得到空行时可以结束。若深度 ``d + 1`` 存在节点，它的父节点必定位于深度 ``d``；所以深度
+``d`` 为空就意味着所有更深层也为空。这个条件也让空树在第一次搜索后直接返回 ``[]``，而不是加入空行。
 
-.. code-block:: text
+重复路径瓶颈
+~~~~~~~~~~~~
 
-   处理前：queue = [当前层]
-   弹出 level_size 个节点，同时追加孩子
-   处理后：queue = [下一层]
+逐层搜索的问题不在正确性，而在于每一层都从根重新出发。寻找深度 ``d`` 的节点时，深度小于 ``d`` 的
+全部路径前缀只是通道，却会被再次访问。
 
-为什么孩子必须先左后右入队
-~~~~~~~~~~~~~~~~~~~~~~~~
+在高度为 ``h`` 的树中，每个节点可能作为后续多个目标深度的路径前缀，重复搜索的最坏时间为 ``O(nh)``。
+单侧链的第 ``d`` 层需要重新走过前 ``d`` 个节点，总访问量为 ``1 + 2 + ... + n = O(n²)``。输出分层
+确实需要知道深度，但没有必要为每个深度重新寻找节点。
 
-当前层父节点按从左到右出队。每个父节点先加入左孩子、再加入右孩子，便可保证下一层按父节点顺序以及同一父节点的左右顺序排列。稀疏树无需加入空节点占位。
+深度状态复用
+~~~~~~~~~~~~
 
-状态演化
+从父节点走到孩子时，孩子深度必然是父节点深度加一。把这个深度随递归状态向下传递，就能在第一次到达节点
+时直接确定它属于 ``levels[depth]``，不再保留“目标深度”外层循环，也不再重复经过祖先路径。
+
+``collectByDepth`` 首次到达深度 ``depth`` 时满足 ``depth == levels.size()``，此时创建新行；之后同层节点
+直接追加到已有行。二叉树不可能在尚未到达深度 ``d - 1`` 时先到达深度 ``d``，所以结果不会出现中间缺行，
+也不需要预先计算树高。
+
+DFS 会深入左子树后才进入右子树，但这不会破坏层内顺序。任取同一层的两个节点，在它们路径第一次分叉的
+祖先处，左侧节点进入左子树，右侧节点进入右子树；先左后右的递归会先访问整个左子树，因此左侧节点必先
+追加到对应行。若交换两次递归调用的顺序，结果就会变成每层从右到左。
+
+队列前沿
 ~~~~~~~~
+
+DFS 已把时间降到 ``O(n)``，但层边界仍由每个节点携带的 ``depth`` 和结果下标间接表达。题目要求先完成
+整层再进入下一层，队列可以让尚未处理的最浅节点形成一个显式前沿。
+
+开始处理某一层时，``pending`` 中已有的节点恰好全部属于当前层。保存此刻的 ``levelSize``，再只弹出这么
+多个节点；处理过程中加入队尾的孩子都比父节点深一层，留给下一轮。循环不变量是：每轮外层循环开始时，
+队列从头到尾正好是下一行需要输出的节点，且顺序为从左到右。
+
+``levelSize`` 必须在本层处理前固定。若内层也写成“只要队列非空就继续”，新加入的孩子会立刻被弹出，
+所有深度会混入同一个 ``level``。层大小快照不是为了统计节点总数，而是给不断增长的队列划出本轮的终点。
+
+层内顺序
+~~~~~~~~
+
+当前层父节点已经按从左到右排列。每个父节点出队时先加入左孩子、再加入右孩子，下一层便先按父节点位置、
+再按同一父节点的左右方向排列。空孩子不入队，因为返回值不需要占位；跳过空位置不会改变其余非空节点的
+相对次序。
+
+以 ``[8,4,12,null,6,10,14]`` 为例，队列边界和输出变化如下：
 
 .. list-table::
    :header-rows: 1
 
    * - 层
-     - 处理前队列
-     - 输出
-     - 处理后队列
+     - 开始时 ``pending``
+     - ``levelSize``
+     - 本层输出
+     - 结束时 ``pending``
    * - 0
      - ``[8]``
+     - 1
      - ``[8]``
      - ``[4,12]``
    * - 1
      - ``[4,12]``
+     - 2
      - ``[4,12]``
      - ``[6,10,14]``
    * - 2
      - ``[6,10,14]``
+     - 3
      - ``[6,10,14]``
-     - 空
+     - ``[]``
 
-为什么每行必须独立
-~~~~~~~~~~~~~~~~~~
+第二层处理中，弹出 ``4`` 后只加入它的右孩子 ``6``，此时队列暂时是 ``[12,6]``。快照值仍为 ``2``，
+所以接着弹出本层剩余的 ``12``，并把 ``10``、``14`` 放到 ``6`` 后面；``6`` 不会提前混入第二行，
+下一层顺序也自然成为 ``[6,10,14]``。
 
-每轮创建新的 ``row``，完成后移动进结果。若复用同一个缓冲区再清空，结果中的已有行会被意外覆盖；C++ 主解法为每层保留独立的行对象。
+代码演进与主解
+~~~~~~~~~~~~~~
 
-DFS 为什么也能得到正确顺序
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+``levelsByRepeatedDepthSearch`` 的目标深度循环让输出结构很直观，但每轮都重新遍历公共路径。
+``levelsByDepthFirstSearch`` 把目标深度改为节点自带的状态，删除外层循环和重复寻层，使每个节点只访问一次；
+代价是依赖递归栈，并通过 ``levels[depth]`` 间接聚合各层。
 
-先左后右的 DFS 可按深度追加到对应行。首次到达某深度时创建行，同层节点的访问顺序仍是从左到右。它需要递归栈，而 BFS 的状态更直接表达层边界。
+``levelsByBreadthFirstSearch`` 进一步让队列本身按照深度组织待处理节点。代码不再携带每个节点的深度，改用
+一次队列大小快照确定整层边界；先左后右入队同时维护下一层顺序。公开入口采用 BFS，因为它的处理批次与二维
+结果的行一一对应，并避免树高较大时的递归调用栈。
 
-复杂度来源
+另一种写法可以用两个队列分别保存当前层和下一层，但它与单队列加 ``levelSize`` 表达的是同一边界，既不
+减少访问次数，也不改善渐进空间，因此不再单列为一种 C++ 方案。
+
+复杂度分析
 ~~~~~~~~~~
 
-每个节点入队、出队一次，时间 ``O(n)``。队列最大占 ``O(w)``，其中 ``w`` 是最大层宽；DFS 使用 ``O(h)`` 调用栈。返回结果包含 ``n`` 个值。
+.. list-table::
+   :header-rows: 1
 
-九语言实现
-----------
+   * - 方法
+     - 时间复杂度
+     - 工作空间
+     - 主要状态
+   * - 逐层重复搜索
+     - ``O(nh)``
+     - ``O(h)``
+     - 目标深度与递归路径
+   * - 携带深度的 DFS
+     - ``O(n)``
+     - ``O(h)``
+     - 当前深度与调用栈
+   * - 单队列 BFS
+     - ``O(n)``
+     - ``O(w)``
+     - 当前层和下一层的队列前沿
 
-C
-~
-
-.. code-block:: c
-
-   int**levelOrder(struct TreeNode*root,int*returnSize,int**returnCols){if(!root){*returnSize=0;*returnCols=NULL;return NULL;}struct TreeNode**q=malloc(2001*sizeof(*q));int**out=malloc(2001*sizeof(*out));int*sizes=malloc(2001*sizeof(int));int head=0,tail=0,rows=0;q[tail++]=root;while(head<tail){int count=tail-head;int*row=malloc((size_t)count*sizeof(int));for(int i=0;i<count;i++){struct TreeNode*n=q[head++];row[i]=n->val;if(n->left)q[tail++]=n->left;if(n->right)q[tail++]=n->right;}out[rows]=row;sizes[rows++]=count;}free(q);*returnSize=rows;*returnCols=sizes;return out;}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def levelOrder(self, root):
-           if root is None: return []
-           queue, head, result = [root], 0, []
-           while head < len(queue):
-               end = len(queue); row = []
-               while head < end:
-                   node = queue[head]; head += 1; row.append(node.val)
-                   if node.left: queue.append(node.left)
-                   if node.right: queue.append(node.right)
-               result.append(row)
-           return result
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public List<List<Integer>> levelOrder(TreeNode root){List<List<Integer>>o=new ArrayList<>();if(root==null)return o;Queue<TreeNode>q=new ArrayDeque<>();q.add(root);while(!q.isEmpty()){int n=q.size();List<Integer>row=new ArrayList<>(n);for(int i=0;i<n;i++){TreeNode x=q.remove();row.add(x.val);if(x.left!=null)q.add(x.left);if(x.right!=null)q.add(x.right);}o.add(row);}return o;}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn level_order(root:Option<Rc<RefCell<TreeNode>>>)->Vec<Vec<i32>>{let mut out=vec![];let mut q=VecDeque::new();if let Some(r)=root{q.push_back(r)}else{return out}while !q.is_empty(){let n=q.len();let mut row=Vec::with_capacity(n);for _ in 0..n{let x=q.pop_front().unwrap();let b=x.borrow();row.push(b.val);if let Some(l)=b.left.clone(){q.push_back(l)}if let Some(r)=b.right.clone(){q.push_back(r)}}out.push(row)}out}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func levelOrder(root *TreeNode)[][]int{if root==nil{return nil};q:=[]*TreeNode{root};head:=0;out:=[][]int{};for head<len(q){end:=len(q);row:=make([]int,0,end-head);for head<end{x:=q[head];head++;row=append(row,x.Val);if x.Left!=nil{q=append(q,x.Left)};if x.Right!=nil{q=append(q,x.Right)}};out=append(out,row)};return out}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function levelOrder(root:TreeNode|null):number[][]{if(!root)return[];const q=[root],out:number[][]=[];let head=0;while(head<q.length){const end=q.length,row:number[]=[];while(head<end){const x=q[head++];row.push(x.val);if(x.left)q.push(x.left);if(x.right)q.push(x.right);}out.push(row);}return out;}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public IList<IList<int>> LevelOrder(TreeNode root){var o=new List<IList<int>>();if(root==null)return o;var q=new Queue<TreeNode>();q.Enqueue(root);while(q.Count>0){int n=q.Count;var row=new List<int>(n);for(int i=0;i<n;i++){var x=q.Dequeue();row.Add(x.val);if(x.left!=null)q.Enqueue(x.left);if(x.right!=null)q.Enqueue(x.right);}o.Add(row);}return o;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function level_order(root)
-       root===nothing&&return Vector{Vector{Int}}();q=Any[root];head=1;out=Vector{Vector{Int}}()
-       while head<=length(q);last=length(q);row=Int[];while head<=last;x=q[head];head+=1;push!(row,x.val);x.left!==nothing&&push!(q,x.left);x.right!==nothing&&push!(q,x.right);end;push!(out,row);end;out
-   end
-
-R
-~
-
-.. code-block:: r
-
-   level_order <- function(root){if(is.null(root))return(list());q<-list(root);head<-1L;out<-list();while(head<=length(q)){last<-length(q);row<-integer();while(head<=last){x<-q[[head]];head<-head+1L;row<-c(row,x$val);if(!is.null(x$left))q[[length(q)+1L]]<-x$left;if(!is.null(x$right))q[[length(q)+1L]]<-x$right};out[[length(out)+1L]]<-row};out}
+其中 ``n`` 是节点数，``h`` 是树高，``w`` 是最大层宽。DFS 和 BFS 都只访问每个节点一次；BFS 的每个节点
+也只入队、出队一次。复杂度表只统计工作空间，返回结果本身保存全部 ``n`` 个节点值，需要 ``O(n)`` 空间。

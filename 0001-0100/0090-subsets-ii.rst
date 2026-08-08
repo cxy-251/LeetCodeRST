@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0090
+:题号: 0090. 子集 II
 :难度: Medium
 :主题: 数组、回溯、排序、重复值去重
 :原题: `LeetCode 0090 <https://leetcode.com/problems/subsets-ii/>`_

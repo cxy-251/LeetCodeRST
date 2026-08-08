@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0045
+:题号: 0045. 跳跃游戏 II
 :难度: Medium
 :主题: 数组、动态规划、BFS 分层、区间贪心
 :原题: `LeetCode 0045 <https://leetcode.com/problems/jump-game-ii/>`_

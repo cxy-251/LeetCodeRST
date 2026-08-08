@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0066
+:题号: 0066. 加一
 :难度: Easy
 :主题: 数组、十进制进位、反向扫描
 :原题: `LeetCode 0066 <https://leetcode.com/problems/plus-one/>`_

@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0055
+:题号: 0055. 跳跃游戏
 :难度: Medium
 :主题: 数组、动态规划、贪心、可达区间
 :原题: `LeetCode 0055 <https://leetcode.com/problems/jump-game/>`_

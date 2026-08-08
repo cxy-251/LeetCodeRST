@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0053
+:题号: 0053. 最大子数组和
 :难度: Medium
 :主题: 数组、动态规划、前缀和
 :原题: `LeetCode 0053 <https://leetcode.com/problems/maximum-subarray/>`_

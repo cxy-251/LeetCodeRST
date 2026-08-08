@@ -4,33 +4,25 @@
 题目信息
 --------
 
-:题号: 0135
+:题号: 0135. 分发糖果
 :难度: Hard
-:主题: 贪心、双向扫描、局部约束
+:主题: 贪心、双向扫描、局部约束、状态压缩
 :原题: `LeetCode 0135 <https://leetcode.com/problems/candy/>`_
-:重点: 每人至少一颗、相邻高分者更多、最小总数
+:重点: 将每个孩子来自左右邻居的要求拆成两个最小下界，逐点取最大值，再滚动压缩一个方向
 
 题目重述
 --------
 
-给定整数数组 ``ratings``，按数组顺序表示一列孩子的评分。需要给每个孩子分配糖果，使每人至少得到 ``1`` 颗；若某个孩子的评分严格高于左侧或右侧相邻孩子，则他的糖果数也必须严格更多。评分相等的相邻孩子之间没有大小要求。返回满足全部约束所需的最少糖果总数。
-
-数组长度在 ``1..2 × 10^4`` 范围内，每个评分在 ``0..2 × 10^4`` 范围内。
+一列孩子按顺序给出评分 ``ratings``。每个孩子至少得到一颗糖；若某个孩子评分严格高于相邻孩子，他得到的
+糖也必须严格更多。相邻评分相等时没有大小关系。返回满足所有相邻约束的最少糖果总数。
 
 自建示例
 --------
 
-.. code-block:: text
-
-   输入：ratings = [1,3,2,2,1]
-   输出：7
-   解释：一种最小分配是 [1,2,1,2,1]；评分 3 比两侧都高，右侧的评分 2 也比末尾评分 1 高。
-
-.. code-block:: text
-
-   输入：ratings = [5,5,5]
-   输出：3
-   解释：相等评分之间没有更多糖果的要求，每人分 1 颗即可。
+* ``ratings = [1, 3, 2, 2, 1]``：最小分配为 ``[1, 2, 1, 2, 1]``，总数 ``7``；
+* ``ratings = [1, 2, 3, 2, 1]``：山峰需要分配 ``[1, 2, 3, 2, 1]``，总数 ``9``；
+* ``ratings = [5, 5, 5]``：相等评分不产生额外约束，每人一颗，总数 ``3``；
+* ``ratings = [4]``：只有一个孩子，返回 ``1``。
 
 C++ 实现
 --------
@@ -43,191 +35,166 @@ C++ 实现
 
    class Solution {
    private:
-       int repeatedRelaxation(const std::vector<int>& ratings) {
-           int n = ratings.size();
-           std::vector<int> candies(n, 1);
+       int repeatedlyRepairConstraints(const std::vector<int>& ratings) {
+           const int childCount = static_cast<int>(ratings.size());
+           std::vector<int> candies(childCount, 1);
            bool changed = true;
+
            while (changed) {
                changed = false;
-               for (int i = 0; i + 1 < n; ++i) {
-                   if (ratings[i] > ratings[i + 1] && candies[i] <= candies[i + 1]) {
-                       candies[i] = candies[i + 1] + 1; changed = true;
+               for (int index = 0; index + 1 < childCount; ++index) {
+                   if (ratings[index] > ratings[index + 1] &&
+                       candies[index] <= candies[index + 1]) {
+                       candies[index] = candies[index + 1] + 1;
+                       changed = true;
                    }
-                   if (ratings[i] < ratings[i + 1] && candies[i] >= candies[i + 1]) {
-                       candies[i + 1] = candies[i] + 1; changed = true;
+                   if (ratings[index] < ratings[index + 1] &&
+                       candies[index] >= candies[index + 1]) {
+                       candies[index + 1] = candies[index] + 1;
+                       changed = true;
                    }
                }
            }
            return std::accumulate(candies.begin(), candies.end(), 0);
        }
 
-       int twoArrays(const std::vector<int>& ratings) {
-           int n = ratings.size();
-           std::vector<int> left(n, 1), right(n, 1);
-           for (int i = 1; i < n; ++i)
-               if (ratings[i] > ratings[i - 1]) left[i] = left[i - 1] + 1;
-           for (int i = n - 2; i >= 0; --i)
-               if (ratings[i] > ratings[i + 1]) right[i] = right[i + 1] + 1;
+       int twoDirectionalArrays(const std::vector<int>& ratings) {
+           const int childCount = static_cast<int>(ratings.size());
+           std::vector<int> fromLeft(childCount, 1);
+           std::vector<int> fromRight(childCount, 1);
+
+           for (int index = 1; index < childCount; ++index) {
+               if (ratings[index] > ratings[index - 1]) {
+                   fromLeft[index] = fromLeft[index - 1] + 1;
+               }
+           }
+           for (int index = childCount - 2; index >= 0; --index) {
+               if (ratings[index] > ratings[index + 1]) {
+                   fromRight[index] = fromRight[index + 1] + 1;
+               }
+           }
+
            int total = 0;
-           for (int i = 0; i < n; ++i) total += std::max(left[i], right[i]);
+           for (int index = 0; index < childCount; ++index) {
+               total += std::max(fromLeft[index], fromRight[index]);
+           }
            return total;
        }
 
-       int oneArray(const std::vector<int>& ratings) {
-           int n = ratings.size();
-           std::vector<int> candies(n, 1);
-           for (int i = 1; i < n; ++i)
-               if (ratings[i] > ratings[i - 1]) candies[i] = candies[i - 1] + 1;
-           int right = 1, total = candies[n - 1];
-           for (int i = n - 2; i >= 0; --i) {
-               right = ratings[i] > ratings[i + 1] ? right + 1 : 1;
-               total += std::max(candies[i], right);
+       int oneArrayAndRollingRight(const std::vector<int>& ratings) {
+           const int childCount = static_cast<int>(ratings.size());
+           std::vector<int> fromLeft(childCount, 1);
+           for (int index = 1; index < childCount; ++index) {
+               if (ratings[index] > ratings[index - 1]) {
+                   fromLeft[index] = fromLeft[index - 1] + 1;
+               }
+           }
+
+           int rightRequirement = 1;
+           int total = fromLeft[childCount - 1];
+           for (int index = childCount - 2; index >= 0; --index) {
+               if (ratings[index] > ratings[index + 1]) {
+                   ++rightRequirement;
+               } else {
+                   rightRequirement = 1;
+               }
+               total += std::max(fromLeft[index], rightRequirement);
            }
            return total;
        }
 
    public:
        int candy(std::vector<int>& ratings) {
-           return oneArray(ratings);
+           return oneArrayAndRollingRight(ratings);
        }
    };
 
 题解
 ----
 
-为何拆成两个方向
-~~~~~~~~~~~~~~~~
+原始做法：从全一分配反复修补
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-从左向右只能处理 ``ratings[i] > ratings[i-1]`` 的约束；从右向左只能处理 ``ratings[i] > ratings[i+1]``。两个方向分别给出每个位置必须达到的最小糖果下界。
+先给每人一颗，再扫描每对相邻孩子：高评分者若没有更多糖，就把他的糖数提高到低评分者加一。持续扫描到
+没有变化，最终一定满足约束。``repeatedlyRepairConstraints`` 只会增加糖数，并且每次只增加到当前约束
+要求的最低值，因此它能作为直觉正确的基线。
 
-左侧与右侧下界
-~~~~~~~~~~~~~~
+瓶颈是约束会沿长坡传播。对严格递减评分，左到右扫描先修补靠左位置后，右侧变化又会迫使前面在下一轮继续
+增加；同一位置可能被访问和修改多次，最坏需要 ``O(n^2)`` 工作。问题不是局部规则难检查，而是一个扫描
+方向无法让两侧依赖都处于已知状态。
 
-.. code-block:: text
+把一条双向规则拆成两个单向下界
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   left[i]  = rating 向左严格上升时的最小长度
-   right[i] = rating 向右严格上升时的最小长度
-   answer[i] = max(left[i], right[i])
+每个孩子可能同时受到左右邻居约束。先只考虑左邻居，定义 ``fromLeft[i]`` 为满足以下条件的最少糖数：
 
-逐点最大值为何足够
+* 每人至少一颗；
+* 若 ``ratings[i] > ratings[i-1]``，则当前位置比左侧多一颗。
+
+从左向右时依赖已经算好，所以严格上升就取前一值加一，否则回到一。类似地，``fromRight[i]`` 从右向左
+计算，只负责评分高于右邻居的约束。相等评分在该方向没有“更多”要求，必须重置为一，不能让前一段坡度
+跨过平台传播。
+
+为何逐点取最大值而不是相加
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+任意合法分配都必须同时不小于左右两个下界，所以位置 ``i`` 至少需要
+``max(fromLeft[i], fromRight[i])``。反过来，取这个最大值后：若评分高于左邻居，``fromLeft`` 保证当前值
+大于左侧最终值所需的左向链长度；若评分高于右邻居，``fromRight`` 对称保证。两个方向的全部约束因此同时
+成立。
+
+这个逐点下界本身可行，所以不只是必要下界，也是全局最小分配。相加会重复计算同一颗糖：在山峰
+``[1, 2, 3, 2, 1]`` 中，峰值左右要求都是三颗，满足两侧只需三颗，不是六颗。
+
+具体走读平台与山峰
 ~~~~~~~~~~~~~~~~~~
 
-任意合法分配都必须同时不小于左右下界，所以必须至少达到两者最大值。取最大值后，左向约束由 ``left`` 保证，右向约束由 ``right`` 保证，因此该逐点下界本身可行，也就是全局最小。
+对 ``ratings = [1, 3, 2, 2, 1]``：
 
 .. list-table::
    :header-rows: 1
 
    * - 评分
-     - 左下界
-     - 右下界
-     - 最终
-   * - 4
-     - 1
-     - 2
-     - 2
-   * - 1
-     - 1
-     - 1
-     - 1
-   * - 2
-     - 2
-     - 1
-     - 2
-   * - 5
-     - 3
-     - 2
-     - 3
-   * - 3
-     - 1
-     - 1
-     - 1
+     - 左向下界
+     - 右向下界
+     - 最终取值
+   * - ``1``
+     - ``1``
+     - ``1``
+     - ``1``
+   * - ``3``
+     - ``2``
+     - ``2``
+     - ``2``
+   * - ``2``
+     - ``1``
+     - ``1``
+     - ``1``
+   * - ``2``
+     - ``1``
+     - ``2``
+     - ``2``
+   * - ``1``
+     - ``1``
+     - ``1``
+     - ``1``
 
-相等评分为何重置为 1
-~~~~~~~~~~~~~~~~~~~~
+中间两个评分相等的 ``2`` 之间没有糖数关系，所以第一段下降在平台处结束；右侧那个 ``2`` 只因高于末尾
+``1`` 才需要两颗。
 
-相等评分之间没有约束，不能把前一段上升或下降长度传播过去。每个方向遇到不严格上升时，下界回到最小值 1。
+右向数组怎样压缩为一个变量
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-复杂度来源
-~~~~~~~~~~
+合并答案时本来就要从右向左。计算 ``fromRight[i]`` 只依赖刚算出的 ``fromRight[i+1]``，而更右侧状态在
+加入总和后不会再次使用，所以整张右向数组可以压缩为 ``rightRequirement``。严格下降时加一，否则重置为
+一，再与已保存的 ``fromLeft[i]`` 取最大值。
 
-双向扫描为 ``O(n)`` 时间。双数组使用 ``O(n)`` 空间；主实现复用左下界数组并滚动维护右下界，仍为 ``O(n)`` 空间，但状态更少。
+最后一个孩子没有右邻居，右向下界为一；代码先把他的左向值加入 ``total``，再从倒数第二个位置开始滚动。
+这避免访问越界，也覆盖单元素数组：循环不执行，结果就是一。
 
-九语言实现
-----------
+主解选择与复杂度
+~~~~~~~~~~~~~~~~
 
-C
-~
-
-.. code-block:: c
-
-   int candy(int*r,int n){int*c=malloc((size_t)n*sizeof(int));c[0]=1;for(int i=1;i<n;i++)c[i]=r[i]>r[i-1]?c[i-1]+1:1;int right=1,total=c[n-1];for(int i=n-2;i>=0;i--){right=r[i]>r[i+1]?right+1:1;total+=c[i]>right?c[i]:right;}free(c);return total;}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def candy(self, ratings: list[int]) -> int:
-           n=len(ratings); c=[1]*n
-           for i in range(1,n):
-               if ratings[i]>ratings[i-1]: c[i]=c[i-1]+1
-           right=1; total=c[-1]
-           for i in range(n-2,-1,-1):
-               right=right+1 if ratings[i]>ratings[i+1] else 1
-               total+=max(c[i],right)
-           return total
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public int candy(int[]r){int n=r.length;int[]c=new int[n];Arrays.fill(c,1);for(int i=1;i<n;i++)if(r[i]>r[i-1])c[i]=c[i-1]+1;int right=1,total=c[n-1];for(int i=n-2;i>=0;i--){right=r[i]>r[i+1]?right+1:1;total+=Math.max(c[i],right);}return total;}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn candy(r:Vec<i32>)->i32{let n=r.len();let mut c=vec![1;n];for i in 1..n{if r[i]>r[i-1]{c[i]=c[i-1]+1;}}let(mut right,mut total)=(1,c[n-1]);for i in(0..n-1).rev(){right=if r[i]>r[i+1]{right+1}else{1};total+=c[i].max(right);}total}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func candy(r []int)int{n:=len(r);c:=make([]int,n);c[0]=1;for i:=1;i<n;i++{c[i]=1;if r[i]>r[i-1]{c[i]=c[i-1]+1}};right,total:=1,c[n-1];for i:=n-2;i>=0;i--{if r[i]>r[i+1]{right++}else{right=1};if c[i]>right{total+=c[i]}else{total+=right}};return total}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function candy(r:number[]):number{const n=r.length,c=Array(n).fill(1);for(let i=1;i<n;i++)if(r[i]>r[i-1])c[i]=c[i-1]+1;let right=1,total=c[n-1];for(let i=n-2;i>=0;i--){right=r[i]>r[i+1]?right+1:1;total+=Math.max(c[i],right);}return total;}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public int Candy(int[]r){int n=r.Length;var c=Enumerable.Repeat(1,n).ToArray();for(int i=1;i<n;i++)if(r[i]>r[i-1])c[i]=c[i-1]+1;int right=1,total=c[n-1];for(int i=n-2;i>=0;i--){right=r[i]>r[i+1]?right+1:1;total+=Math.Max(c[i],right);}return total;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function candy(r)
-       n=length(r);c=ones(Int,n)
-       for i in 2:n;if r[i]>r[i-1];c[i]=c[i-1]+1;end;end
-       right=1;total=c[n]
-       for i in n-1:-1:1;right=r[i]>r[i+1] ? right+1 : 1;total+=max(c[i],right);end;total
-   end
-
-R
-~
-
-.. code-block:: r
-
-   candy <- function(r){n<-length(r);c<-rep(1L,n);if(n>1L)for(i in 2:n)if(r[[i]]>r[[i-1L]])c[[i]]<-c[[i-1L]]+1L;right<-1L;total<-c[[n]];if(n>1L)for(i in (n-1L):1L){right<-if(r[[i]]>r[[i+1L]])right+1L else 1L;total<-total+max(c[[i]],right)};total}
+公开入口采用左向数组加滚动右状态，时间 ``O(n)``、空间 ``O(n)``。双数组方案同为线性时间，但使用两份
+``O(n)`` 状态，保留它是为了直接展示两个独立下界；滚动版本进一步删除右数组。反复修补只需一个糖果数组，
+却可能花 ``O(n^2)`` 时间，因此仅作为原始搜索方式。返回结果按题目约束可用 ``int`` 表示。

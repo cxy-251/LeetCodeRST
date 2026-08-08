@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0024
+:题号: 0024. 两两交换链表中的节点
 :难度: Medium
 :主题: 链表、数组、递归、指针重连
 :原题: `LeetCode 0024 <https://leetcode.com/problems/swap-nodes-in-pairs/>`_

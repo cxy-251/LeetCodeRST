@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0069
+:题号: 0069. x 的平方根
 :难度: Easy
 :主题: 数学、二分查找、牛顿迭代、整数边界
 :原题: `LeetCode 0069 <https://leetcode.com/problems/sqrtx/>`_

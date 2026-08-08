@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0001
+:题号: 0001. 两数之和
 :难度: Easy
 :主题: 数组、哈希表、排序、双指针
 :原题: `LeetCode 0001 <https://leetcode.com/problems/two-sum/>`_

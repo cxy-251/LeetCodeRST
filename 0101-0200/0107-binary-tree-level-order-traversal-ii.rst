@@ -4,33 +4,28 @@
 题目信息
 --------
 
-:题号: 0107
+:题号: 0107. 二叉树的层序遍历 II
 :难度: Medium
-:主题: 二叉树、广度优先搜索、深度优先搜索、结果顺序
+:主题: 二叉树、广度优先搜索、层边界、结果变换
 :原题: `LeetCode 0107 <https://leetcode.com/problems/binary-tree-level-order-traversal-ii/>`_
-:重点: 自底向上排列、层内从左到右、空树结果
+:重点: 区分树的访问顺序与结果的层排列，把自底向上重复寻层改为一次 BFS 加外层反转
 
 题目重述
 --------
 
-给定二叉树根节点 ``root``，返回节点值自底向上的层序遍历结果。最深层排在结果最前面，根节点所在层排在最后；每一层内部的节点值仍按照从左到右的顺序排列。空树返回空数组。
+给定二叉树根节点 ``root``，按深度分组返回全部节点值，但结果中的层要自底向上排列：最深层放在最前，根
+所在层放在最后。每一层内部仍保持从左到右的顺序，不能随层顺序一起反转。
 
-树中节点数在 ``0..2000`` 范围内，节点值在 ``-1000..1000`` 范围内。
+结果只包含非空节点；空树没有层，返回空数组。树中节点总数在 ``0..2000`` 范围内，节点值在
+``-1000..1000`` 范围内，遍历不修改树。
 
 自建示例
 --------
 
-.. code-block:: text
-
-   输入：root = [8,4,12,null,6,10,14]
-   输出：[[6,10,14],[4,12],[8]]
-   解释：先输出最深的第三层，再输出第二层，最后输出根节点所在层；每层内部仍保持从左到右。
-
-.. code-block:: text
-
-   输入：root = []
-   输出：[]
-   解释：空树没有任何层。
+* 稀疏树：``root = [8,4,12,null,6,10,14]``，返回 ``[[6,10,14],[4,12],[8]]``；
+* 各层单节点：``root = [1,null,2,null,3]``，返回 ``[[3],[2],[1]]``；
+* 单节点：``root = [5]``，返回 ``[[5]]``；
+* 空树：``root = []``，返回 ``[]``，不能返回 ``[[]]``。
 
 C++ 实现
 --------
@@ -38,201 +33,158 @@ C++ 实现
 .. code-block:: cpp
 
    #include <algorithm>
-   #include <deque>
    #include <queue>
    #include <utility>
    #include <vector>
 
    class Solution {
    private:
-       void depthRows(TreeNode* node, int depth,
-                      std::vector<std::vector<int>>& rows) {
-           if (!node) return;
-           if (depth == static_cast<int>(rows.size())) rows.push_back({});
-           rows[depth].push_back(node->val);
-           depthRows(node->left, depth + 1, rows);
-           depthRows(node->right, depth + 1, rows);
+       int treeHeight(TreeNode* node) {
+           if (!node) {
+               return 0;
+           }
+           return 1 + std::max(treeHeight(node->left), treeHeight(node->right));
        }
 
-       std::vector<std::vector<int>> frontInsertion(TreeNode* root) {
-           if (!root) return {};
-           std::queue<TreeNode*> queue; queue.push(root);
-           std::deque<std::vector<int>> rows;
-           while (!queue.empty()) {
-               int size = queue.size(); std::vector<int> row;
-               for (int i = 0; i < size; ++i) {
-                   TreeNode* node = queue.front(); queue.pop();
-                   row.push_back(node->val);
-                   if (node->left) queue.push(node->left);
-                   if (node->right) queue.push(node->right);
-               }
-               rows.push_front(std::move(row));
+       void collectAtDepth(TreeNode* node, int currentDepth, int targetDepth, std::vector<int>& level) {
+           if (!node) {
+               return;
            }
-           return {rows.begin(),rows.end()};
+           if (currentDepth == targetDepth) {
+               level.push_back(node->val);
+               return;
+           }
+           collectAtDepth(node->left, currentDepth + 1, targetDepth, level);
+           collectAtDepth(node->right, currentDepth + 1, targetDepth, level);
        }
 
-       std::vector<std::vector<int>> bfsThenReverse(TreeNode* root) {
-           if (!root) return {};
-           std::queue<TreeNode*> queue; queue.push(root);
-           std::vector<std::vector<int>> result;
-           while (!queue.empty()) {
-               int size = queue.size(); std::vector<int> row;
-               row.reserve(size);
-               for (int i = 0; i < size; ++i) {
-                   TreeNode* node = queue.front(); queue.pop();
-                   row.push_back(node->val);
-                   if (node->left) queue.push(node->left);
-                   if (node->right) queue.push(node->right);
-               }
-               result.push_back(std::move(row));
+       std::vector<std::vector<int>> repeatedBottomUpSearch(TreeNode* root) {
+           std::vector<std::vector<int>> levels;
+           for (int targetDepth = treeHeight(root) - 1; targetDepth >= 0; --targetDepth) {
+               std::vector<int> level;
+               collectAtDepth(root, 0, targetDepth, level);
+               levels.push_back(std::move(level));
            }
-           std::reverse(result.begin(),result.end());
-           return result;
+           return levels;
+       }
+
+       std::vector<std::vector<int>> breadthFirstThenReverse(TreeNode* root) {
+           if (!root) {
+               return {};
+           }
+           std::vector<std::vector<int>> levels;
+           std::queue<TreeNode*> pending;
+           pending.push(root);
+           while (!pending.empty()) {
+               const int levelSize = static_cast<int>(pending.size());
+               std::vector<int> level;
+               level.reserve(levelSize);
+               for (int count = 0; count < levelSize; ++count) {
+                   TreeNode* node = pending.front();
+                   pending.pop();
+                   level.push_back(node->val);
+                   if (node->left) {
+                       pending.push(node->left);
+                   }
+                   if (node->right) {
+                       pending.push(node->right);
+                   }
+               }
+               levels.push_back(std::move(level));
+           }
+           std::reverse(levels.begin(), levels.end());
+           return levels;
        }
 
    public:
        std::vector<std::vector<int>> levelOrderBottom(TreeNode* root) {
-           return bfsThenReverse(root);
+           return breadthFirstThenReverse(root);
        }
    };
 
 题解
 ----
 
-为什么先生成普通层序
-~~~~~~~~~~~~~~~~~~
+按目标顺序寻层
+~~~~~~~~~~~~~~
 
-队列前沿按深度递增，层内按从左到右排列。自底向上的要求只改变最终层的排列方向，
-因此可以先完成普通层序，再只反转外层结果，避免把层内顺序混在一起处理。
+若把“自底向上输出”直接当作访问要求，最直观的正确做法是先求树高 ``h``，再依次从根寻找深度
+``h - 1,h - 2,...,0`` 的节点。``collectAtDepth`` 到达目标深度时记录节点，并始终先递归左孩子，所以
+即使层的处理顺序反过来，每一行内部仍是从左到右。
 
-只反转外层意味着什么
-~~~~~~~~~~~~~~~~~~~~
+``repeatedBottomUpSearch`` 完整覆盖所有深度，因此不会漏节点；空树高度为 ``0``，初始目标深度为 ``-1``，
+循环不会执行，自然返回空结果。
 
-结果是二维数组。目标把 ``[level0,level1,...,levelLast]`` 变为相反层序，但每个 ``level`` 内部不变。对每行调用反转会错误地改变左右顺序。
+问题在于每取一层都从根重新出发。高层节点会作为通往许多目标层的公共前缀反复访问；单侧链需要走
+``n + (n - 1) + ... + 1`` 个节点，最坏时间为 ``O(n²)``。一般写成 ``O(nh)``，其中 ``h`` 是树高。
+
+访问与输出分离
+~~~~~~~~~~~~~~
+
+题目只约束最终二维数组中各层的排列，并未要求算法先访问叶节点。树从根提供入口，普通 BFS 能在一次遍历中
+最直接地确定层边界和层内从左到右顺序；完成后再调整行对象的位置，就能删除重复寻层。
+
+``breadthFirstThenReverse`` 在每轮开始时保存 ``levelSize``，只弹出当前层节点；父节点按从左到右出队，
+孩子按左、右顺序入队，因此生成的是自然的自顶向下层序：
 
 .. code-block:: text
 
-   reverse([[3],[9,20],[15,7]])
-   = [[15,7],[9,20],[3]]
+   [[根层], [第二层], ..., [最深层]]
 
-状态演化
+最终只对外层 ``levels`` 调用一次 ``reverse``，得到：
+
+.. code-block:: text
+
+   [[最深层], ..., [第二层], [根层]]
+
+每个内层向量作为一个整体交换位置，内部元素完全不动。若逐行反转，``[4,12]`` 会错误变成 ``[12,4]``；
+这说明“层顺序反向”和“层内顺序反向”是两个不同操作。
+
+状态走读
 ~~~~~~~~
+
+对 ``[8,4,12,null,6,10,14]``，BFS 与最终变换如下：
 
 .. list-table::
    :header-rows: 1
 
-   * - BFS 轮次
+   * - 阶段
+     - 当前层队列
      - 新行
-     - 自然结果
-   * - 0
+     - ``levels``
+   * - 第 0 层
+     - ``[8]``
      - ``[8]``
      - ``[[8]]``
-   * - 1
+   * - 第 1 层
+     - ``[4,12]``
      - ``[4,12]``
      - ``[[8],[4,12]]``
-   * - 2
+   * - 第 2 层
+     - ``[6,10,14]``
      - ``[6,10,14]``
      - ``[[8],[4,12],[6,10,14]]``
-   * - 结束
-     - 反转外层
+   * - 外层反转
+     - 队列已空
+     - 不改行内容
      - ``[[6,10,14],[4,12],[8]]``
 
-为什么最终反转优于数组头插
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+节点 ``6`` 虽然是左侧父节点 ``4`` 的右孩子，仍在 ``10``、``14`` 之前入队。最终反转只移动它所在的
+整行，不改变这一层内由树结构决定的左右顺序。
 
-若底层容器是动态数组，每发现一层就插到索引 0 会搬移已有层引用，退化为 ``O(h²)`` 层移动。先尾插再一次反转只需 ``O(h)``。双端队列头插也可保持线性，但增加容器转换。
-
-DFS 如何适配
+结果组织选择
 ~~~~~~~~~~~~
 
-DFS 先按深度写入自然行，再反转外层即可。先左后右保证层内顺序；BFS 更直接保存当前层边界，DFS 使用 ``O(h)`` 调用栈。
+也可以在发现一层时把行插到结果开头。若使用 ``vector`` 头插，每次都要搬移已有行对象，``h`` 层最坏产生
+``O(h²)`` 次行对象移动；使用 ``deque`` 可常数时间头插，却还要转换为题目要求的 ``vector``。尾部追加全部
+行再做一次外层反转只需 ``O(h)`` 次行交换，容器和状态都更简单，因此作为主解。
 
-为什么结果完整
-~~~~~~~~~~~~~~
+先左后右的 DFS 也能按深度聚合自然顺序的行，再反转外层；它与 BFS 的主要差别是用 ``O(h)`` 调用栈保存
+路径，而 BFS 用队列直接表示当前层。当前题核心是层边界，公开实现选择 BFS。
 
-普通 BFS 每个节点恰好加入其深度对应行。外层反转是层下标的双射，只改变层位置，不改变任何行内容，因此节点不重不漏且满足自底向上顺序。
-
-复杂度来源
+复杂度分析
 ~~~~~~~~~~
 
-遍历时间 ``O(n)``，外层反转 ``O(h)``，总时间 ``O(n)``。BFS 工作空间 ``O(w)``，返回结果包含全部节点值。
-
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   int**levelOrderBottom(struct TreeNode*root,int*returnSize,int**returnCols){if(!root){*returnSize=0;*returnCols=NULL;return NULL;}struct TreeNode**q=malloc(2001*sizeof(*q));int**out=malloc(2001*sizeof(*out));int*sizes=malloc(2001*sizeof(int));int h=0,t=0,rows=0;q[t++]=root;while(h<t){int n=t-h;int*row=malloc((size_t)n*sizeof(int));for(int i=0;i<n;i++){struct TreeNode*x=q[h++];row[i]=x->val;if(x->left)q[t++]=x->left;if(x->right)q[t++]=x->right;}out[rows]=row;sizes[rows++]=n;}for(int i=0;i<rows/2;i++){int*j=out[i];out[i]=out[rows-1-i];out[rows-1-i]=j;int z=sizes[i];sizes[i]=sizes[rows-1-i];sizes[rows-1-i]=z;}free(q);*returnSize=rows;*returnCols=sizes;return out;}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def levelOrderBottom(self, root):
-           if root is None: return []
-           queue, head, result = [root], 0, []
-           while head < len(queue):
-               end = len(queue); row = []
-               while head < end:
-                   node = queue[head]; head += 1; row.append(node.val)
-                   if node.left: queue.append(node.left)
-                   if node.right: queue.append(node.right)
-               result.append(row)
-           result.reverse(); return result
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public List<List<Integer>> levelOrderBottom(TreeNode root){List<List<Integer>>o=new ArrayList<>();if(root==null)return o;Queue<TreeNode>q=new ArrayDeque<>();q.add(root);while(!q.isEmpty()){int n=q.size();List<Integer>row=new ArrayList<>(n);for(int i=0;i<n;i++){TreeNode x=q.remove();row.add(x.val);if(x.left!=null)q.add(x.left);if(x.right!=null)q.add(x.right);}o.add(row);}Collections.reverse(o);return o;}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn level_order_bottom(root:Option<Rc<RefCell<TreeNode>>>)->Vec<Vec<i32>>{let mut q=VecDeque::new();if let Some(r)=root{q.push_back(r)}else{return vec![]}let mut o=vec![];while !q.is_empty(){let n=q.len();let mut row=vec![];for _ in 0..n{let x=q.pop_front().unwrap();let b=x.borrow();row.push(b.val);if let Some(l)=b.left.clone(){q.push_back(l)}if let Some(r)=b.right.clone(){q.push_back(r)}}o.push(row)}o.reverse();o}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func levelOrderBottom(root *TreeNode)[][]int{if root==nil{return nil};q:=[]*TreeNode{root};head:=0;out:=[][]int{};for head<len(q){end:=len(q);row:=[]int{};for head<end{x:=q[head];head++;row=append(row,x.Val);if x.Left!=nil{q=append(q,x.Left)};if x.Right!=nil{q=append(q,x.Right)}};out=append(out,row)};for i,j:=0,len(out)-1;i<j;i,j=i+1,j-1{out[i],out[j]=out[j],out[i]};return out}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function levelOrderBottom(root:TreeNode|null):number[][]{if(!root)return[];const q=[root],out:number[][]=[];let head=0;while(head<q.length){const end=q.length,row:number[]=[];while(head<end){const x=q[head++];row.push(x.val);if(x.left)q.push(x.left);if(x.right)q.push(x.right);}out.push(row);}return out.reverse();}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public IList<IList<int>> LevelOrderBottom(TreeNode root){var o=new List<IList<int>>();if(root==null)return o;var q=new Queue<TreeNode>();q.Enqueue(root);while(q.Count>0){int n=q.Count;var row=new List<int>();for(int i=0;i<n;i++){var x=q.Dequeue();row.Add(x.val);if(x.left!=null)q.Enqueue(x.left);if(x.right!=null)q.Enqueue(x.right);}o.Add(row);}o.Reverse();return o;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function level_order_bottom(root)
-       root===nothing&&return Vector{Vector{Int}}();q=Any[root];head=1;out=Vector{Vector{Int}}()
-       while head<=length(q);last=length(q);row=Int[];while head<=last;x=q[head];head+=1;push!(row,x.val);x.left!==nothing&&push!(q,x.left);x.right!==nothing&&push!(q,x.right);end;push!(out,row);end;reverse!(out);out
-   end
-
-R
-~
-
-.. code-block:: r
-
-   level_order_bottom <- function(root){if(is.null(root))return(list());q<-list(root);head<-1L;out<-list();while(head<=length(q)){last<-length(q);row<-integer();while(head<=last){x<-q[[head]];head<-head+1L;row<-c(row,x$val);if(!is.null(x$left))q[[length(q)+1L]]<-x$left;if(!is.null(x$right))q[[length(q)+1L]]<-x$right};out[[length(out)+1L]]<-row};rev(out)}
+重复寻层法时间为 ``O(nh)``，递归栈为 ``O(h)``。主解访问每个节点一次，外层反转只处理 ``h`` 个行对象，
+总时间为 ``O(n)``；队列工作空间为 ``O(w)``，其中 ``w`` 是最大层宽。返回结果保存全部 ``n`` 个节点值，
+其 ``O(n)`` 空间不计入工作空间。

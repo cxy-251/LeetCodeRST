@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0054
+:题号: 0054. 螺旋矩阵
 :难度: Medium
 :主题: 矩阵、模拟、边界收缩
 :原题: `LeetCode 0054 <https://leetcode.com/problems/spiral-matrix/>`_

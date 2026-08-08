@@ -4,33 +4,28 @@
 题目信息
 --------
 
-:题号: 0111
+:题号: 0111. 二叉树的最小深度
 :难度: Easy
-:主题: 二叉树、广度优先搜索、叶节点、最短路径
+:主题: 二叉树、根到叶路径、广度优先搜索、提前结束
 :原题: `LeetCode 0111 <https://leetcode.com/problems/minimum-depth-of-binary-tree/>`_
-:重点: 最近叶节点、单孩子节点、空树
+:重点: 区分空孩子与叶节点，修正递归最小值状态，再利用 BFS 的深度顺序在首个叶节点停止
 
 题目重述
 --------
 
-给定二叉树根节点 ``root``，返回这棵树的最小深度。最小深度等于从根节点到最近叶节点的一条路径中包含的节点数量；叶节点必须同时没有左孩子和右孩子。空树的最小深度为 ``0``，单孩子节点不能把缺失的孩子位置视为叶节点。
+给定二叉树根节点 ``root``，返回从根到最近叶节点的路径所包含的节点数。叶节点必须同时没有左孩子和右孩子；
+只有一个孩子的节点不是叶节点，缺失的孩子位置也不能当作一条已结束路径。空树的最小深度为 ``0``。
 
-树中节点数在 ``0..10^5`` 范围内，节点值在 ``-1000..1000`` 范围内。
+树中节点总数在 ``0..10^5`` 范围内，节点值在 ``-1000..1000`` 范围内。节点值不影响答案，算法不修改树。
 
 自建示例
 --------
 
-.. code-block:: text
-
-   输入：root = [6,2,9,null,4,8,12,null,null,7]
-   输出：3
-   解释：节点 4 和 12 都是深度为 3 的叶节点，根到最近叶节点的路径包含 3 个节点。
-
-.. code-block:: text
-
-   输入：root = [5,null,7,null,9]
-   输出：3
-   解释：节点 5 和 7 都只有右孩子，并不是叶节点；最近的叶节点是 9。
+* 多个最近叶：``root = [6,2,9,null,4,8,12,null,null,7]``，返回 ``3``，节点 ``4``、``12`` 都是
+  深度 ``3`` 的叶节点；
+* 单侧链：``root = [5,null,7,null,9]``，返回 ``3``，缺失的左孩子不能使 ``5`` 或 ``7`` 提前结束；
+* 单节点：``root = [3]``，返回 ``1``；
+* 空树：``root = []``，返回 ``0``。
 
 C++ 实现
 --------
@@ -42,38 +37,40 @@ C++ 实现
 
    class Solution {
    private:
-       int recursiveDepth(TreeNode* node) {
-           if (!node) return 0;
-           if (!node->left) return 1 + recursiveDepth(node->right);
-           if (!node->right) return 1 + recursiveDepth(node->left);
-           return 1 + std::min(recursiveDepth(node->left),
-                               recursiveDepth(node->right));
-       }
-
-       int depthFirstWithBest(TreeNode* node, int depth, int& best) {
-           if (!node || depth >= best) return best;
-           if (!node->left && !node->right) {
-               best = depth;
-               return best;
+       int recursiveMinimumDepth(TreeNode* node) {
+           if (!node) {
+               return 0;
            }
-           depthFirstWithBest(node->left, depth + 1, best);
-           depthFirstWithBest(node->right, depth + 1, best);
-           return best;
+           if (!node->left) {
+               return 1 + recursiveMinimumDepth(node->right);
+           }
+           if (!node->right) {
+               return 1 + recursiveMinimumDepth(node->left);
+           }
+           return 1 + std::min(recursiveMinimumDepth(node->left), recursiveMinimumDepth(node->right));
        }
 
-       int breadthFirst(TreeNode* root) {
-           if (!root) return 0;
-           std::queue<TreeNode*> queue;
-           queue.push(root);
+       int breadthFirstMinimumDepth(TreeNode* root) {
+           if (!root) {
+               return 0;
+           }
+           std::queue<TreeNode*> pending;
+           pending.push(root);
            int depth = 1;
-           while (!queue.empty()) {
-               int level_size = static_cast<int>(queue.size());
-               for (int i = 0; i < level_size; ++i) {
-                   TreeNode* node = queue.front();
-                   queue.pop();
-                   if (!node->left && !node->right) return depth;
-                   if (node->left) queue.push(node->left);
-                   if (node->right) queue.push(node->right);
+           while (!pending.empty()) {
+               const int levelSize = static_cast<int>(pending.size());
+               for (int count = 0; count < levelSize; ++count) {
+                   TreeNode* node = pending.front();
+                   pending.pop();
+                   if (!node->left && !node->right) {
+                       return depth;
+                   }
+                   if (node->left) {
+                       pending.push(node->left);
+                   }
+                   if (node->right) {
+                       pending.push(node->right);
+                   }
                }
                ++depth;
            }
@@ -82,154 +79,82 @@ C++ 实现
 
    public:
        int minDepth(TreeNode* root) {
-           return breadthFirst(root);
+           return breadthFirstMinimumDepth(root);
        }
    };
 
 题解
 ----
 
-为什么 ``min(left, right)`` 不能直接使用
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+原始路径搜索
+~~~~~~~~~~~~
 
-空孩子的递归深度是 0，但空位置不是叶节点。若节点只有右孩子，直接计算 ``1 + min(0, right_depth)`` 会错误得到 1。单孩子节点只有一条合法根到叶方向，必须沿非空孩子继续。
+最小深度来自某条根到叶路径。最直接的正确思路是枚举所有根到叶路径：沿孩子继续搜索，只在节点同时没有
+左右孩子时记录当前路径长度，最后取所有叶深度的最小值。检查全部叶节点显然覆盖所有合法终点。
 
-递归状态如何处理三种节点
-~~~~~~~~~~~~~~~~~~~~~~~~
+关键在“合法终点”。空指针只表示某个孩子不存在，并不是树中的叶节点。若当前节点只有右孩子，根到叶路径
+仍必须进入右侧；不能沿缺失的左侧走一步便宣告路径结束。
 
-* 空节点返回 0；
-* 只有一个孩子时，返回 ``1 + 非空孩子深度``；
-* 两个孩子都存在时，才返回 ``1 + min(left, right)``。
+递归最小值陷阱
+~~~~~~~~~~~~~~
 
-BFS 为什么更直接
-~~~~~~~~~~~~~~~~
+最大深度可以统一写成 ``1 + max(leftDepth, rightDepth)``，因为空孩子深度 ``0`` 不会抢走非空侧的较大值。
+最小深度若机械改成 ``1 + min(...)`` 就会出错：对 ``[5,null,7,null,9]``，根的左侧返回 ``0``，公式
+立即得到 ``1``，却没有到达任何叶节点。
 
-广度优先搜索按深度从小到大处理节点。某一层之前的所有节点已经确认不是叶节点，因此当前层第一次遇到真实叶节点时，不可能存在更浅答案，可以立即返回当前深度。
+``recursiveMinimumDepth`` 因此区分三类非空节点：
+
+* 左孩子为空时，只能沿右孩子继续；若两侧都空，右递归返回 ``0``，当前叶节点自然得到 ``1``；
+* 右孩子为空时，只能沿左孩子继续；
+* 两个孩子都存在时，两侧都有合法叶路径，才能取较小深度。
+
+这版递归不需要保存完整路径，只让每棵子树返回到最近叶节点的距离，已经把路径数组压缩为一个整数。它仍可能
+为了比较两侧而访问整棵树；而最小值问题还提供了更强的信息：只要按深度递增访问，第一个叶节点就是答案。
+
+按层提前结束
+~~~~~~~~~~~~~~
+
+``breadthFirstMinimumDepth`` 使用队列按层处理节点。每轮开始时，队列中的 ``levelSize`` 个节点处于同一深度；
+只弹出这批节点，处理中加入的孩子留到下一轮。完成整层后才递增 ``depth``。
+
+当弹出一个同时没有左右孩子的节点时，可以立即返回当前深度。此时所有更浅节点已经检查完且都不是叶节点，
+队列中剩余节点与当前节点同深或更深，尚未入队的节点只会更深，所以不可能再出现更小答案。
+
+对第一个示例，状态为：
 
 .. list-table::
    :header-rows: 1
 
    * - 深度
-     - 处理前队列
-     - 叶节点判断
+     - 本层队列
+     - 检查结果
+     - 下一层队列
    * - 1
      - ``[6]``
-     - 根有孩子，继续
+     - 根不是叶节点
+     - ``[2,9]``
    * - 2
      - ``[2,9]``
-     - 两者都非叶，继续
+     - 两者都至少有一个孩子
+     - ``[4,8,12]``
    * - 3
      - ``[4,8,12]``
-     - 4 无左右孩子，立即返回 3
+     - ``4`` 是叶节点，立即返回 3
+     - 不再生成
 
-为什么必须保存层大小
-~~~~~~~~~~~~~~~~~~~~
+``4`` 后面即使还有同层节点，也不需要继续比较；它们最多提供相同深度，不可能改善最小值。
 
-进入一轮时，队列中的全部节点属于同一深度。保存 ``level_size`` 后只弹出这些节点；处理中加入的孩子属于下一层。若直接依据不断增长的队列长度循环，深度边界会被破坏。
+分支顺序与主解
+~~~~~~~~~~~~~~
 
-DFS 剪枝何时有效
-~~~~~~~~~~~~~~~~
+BFS 必须先判断当前节点是否为叶，再把非空孩子入队。若把“一侧为空”误当叶条件，单侧链会提前返回；若不
+固定层大小便持续弹出不断增长的队列，``depth`` 将失去层边界。
 
-深度优先搜索可以维护当前已知最小叶深 ``best``。当当前深度已经不小于 ``best`` 时，继续向下只会得到更深路径，可停止该分支。它的效果依赖先访问到较浅叶节点的时机；BFS 则天然按最短深度推进。
+公开入口采用 BFS。它直接利用“最浅叶”的目标顺序，并避免最多 ``10^5`` 个节点形成单侧链时的深递归栈；
+递归方法仍保留，因为它清楚展示了空孩子为何不能参与普通最小值比较。
 
-为什么首个 BFS 叶节点一定最优
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-队列按层推进，深度严格不下降。当前节点是叶节点时，所有尚未出队节点深度不小于当前深度，所有尚未入队节点更深。因此当前根到叶路径长度就是全局最小值。
-
-复杂度来源
+复杂度分析
 ~~~~~~~~~~
 
-最坏需要访问全部 ``n`` 个节点，时间 ``O(n)``。BFS 保存最大层宽，空间 ``O(w)``；递归 DFS 使用 ``O(h)`` 调用栈。BFS 在浅层出现叶节点时可提前结束。
-
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   int minDepth(struct TreeNode*root){if(!root)return 0;struct TreeNode**q=malloc(100001*sizeof(*q));int head=0,tail=0,depth=1;q[tail++]=root;while(head<tail){int count=tail-head;while(count--){struct TreeNode*x=q[head++];if(!x->left&&!x->right){free(q);return depth;}if(x->left)q[tail++]=x->left;if(x->right)q[tail++]=x->right;}depth++;}free(q);return 0;}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   from collections import deque
-
-   class Solution:
-       def minDepth(self, root) -> int:
-           if root is None: return 0
-           queue, depth = deque([root]), 1
-           while queue:
-               for _ in range(len(queue)):
-                   node = queue.popleft()
-                   if node.left is None and node.right is None: return depth
-                   if node.left: queue.append(node.left)
-                   if node.right: queue.append(node.right)
-               depth += 1
-           return 0
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public int minDepth(TreeNode root){if(root==null)return 0;ArrayDeque<TreeNode>q=new ArrayDeque<>();q.add(root);int depth=1;while(!q.isEmpty()){int n=q.size();while(n-->0){TreeNode x=q.remove();if(x.left==null&&x.right==null)return depth;if(x.left!=null)q.add(x.left);if(x.right!=null)q.add(x.right);}depth++;}return 0;}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn min_depth(root:Option<Rc<RefCell<TreeNode>>>)->i32{let Some(root)=root else{return 0};let mut q=VecDeque::from([root]);let mut depth=1;while !q.is_empty(){let n=q.len();for _ in 0..n{let node=q.pop_front().unwrap();let b=node.borrow();if b.left.is_none()&&b.right.is_none(){return depth}if let Some(x)=b.left.clone(){q.push_back(x)}if let Some(x)=b.right.clone(){q.push_back(x)}}depth+=1;}0}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func minDepth(root *TreeNode)int{if root==nil{return 0};q:=[]*TreeNode{root};head,depth:=0,1;for head<len(q){end:=len(q);for head<end{x:=q[head];head++;if x.Left==nil&&x.Right==nil{return depth};if x.Left!=nil{q=append(q,x.Left)};if x.Right!=nil{q=append(q,x.Right)}};depth++};return 0}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function minDepth(root:TreeNode|null):number{if(!root)return 0;const q:TreeNode[]=[root];let head=0,depth=1;while(head<q.length){const end=q.length;while(head<end){const x=q[head++];if(!x.left&&!x.right)return depth;if(x.left)q.push(x.left);if(x.right)q.push(x.right);}depth++;}return 0;}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public int MinDepth(TreeNode root){if(root==null)return 0;var q=new Queue<TreeNode>();q.Enqueue(root);int depth=1;while(q.Count>0){int n=q.Count;while(n-->0){var x=q.Dequeue();if(x.left==null&&x.right==null)return depth;if(x.left!=null)q.Enqueue(x.left);if(x.right!=null)q.Enqueue(x.right);}depth++;}return 0;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function min_depth(root)
-       root===nothing&&return 0
-       q=Any[root];head=1;depth=1
-       while head<=length(q)
-           stop=length(q)
-           while head<=stop
-               x=q[head];head+=1
-               x.left===nothing&&x.right===nothing&&return depth
-               x.left!==nothing&&push!(q,x.left);x.right!==nothing&&push!(q,x.right)
-           end
-           depth+=1
-       end
-       0
-   end
-
-R
-~
-
-.. code-block:: r
-
-   min_depth <- function(root){if(is.null(root))return(0L);q<-list(root);head<-1L;depth<-1L;while(head<=length(q)){stop<-length(q);while(head<=stop){x<-q[[head]];head<-head+1L;if(is.null(x$left)&&is.null(x$right))return(depth);if(!is.null(x$left))q[[length(q)+1L]]<-x$left;if(!is.null(x$right))q[[length(q)+1L]]<-x$right};depth<-depth+1L};0L}
+两种方法最坏都访问全部 ``n`` 个节点，时间为 ``O(n)``。递归工作空间为树高 ``O(h)``；BFS 队列为最大
+层宽 ``O(w)``。BFS 遇到最近叶节点时提前结束，实际访问量可能明显小于 ``n``。返回值只占常数空间。

@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0052
+:题号: 0052. N 皇后 II
 :难度: Hard
 :主题: 数组、回溯、约束状态、位掩码
 :原题: `LeetCode 0052 <https://leetcode.com/problems/n-queens-ii/>`_

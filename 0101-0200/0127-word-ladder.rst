@@ -4,35 +4,28 @@
 题目信息
 --------
 
-:题号: 0127
+:题号: 0127. 单词接龙
 :难度: Hard
-:主题: 图、广度优先搜索、哈希集合、字符串
+:主题: 图、广度优先搜索、双向搜索、哈希集合
 :原题: `LeetCode 0127 <https://leetcode.com/problems/word-ladder/>`_
-:重点: 最短序列长度、单字符变换、起点计入长度、不可达返回零
+:重点: 把单词变换建模为无权最短路，按需生成邻居，并用双向 BFS 缩小搜索前沿
 
 题目重述
 --------
 
-给定起始单词 ``beginWord``、目标单词 ``endWord`` 和字典 ``wordList``。每一步必须恰好修改一个字母，并且修改后的单词必须存在于 ``wordList`` 中；``beginWord`` 本身可以不在字典中。返回从起点到终点的最短变换序列所包含的单词数量，起点和终点都计入长度；若无法到达 ``endWord``，返回 ``0``。
+给定 ``beginWord``、``endWord`` 和字典 ``wordList``。每次必须恰好修改一个字母，修改后得到的单词必须
+在字典中；起点本身可以不在字典中。返回最短变换序列包含的单词数量，起点和终点都计数；无法到达时返回
+``0``。
 
-所有单词长度相同且只包含小写英文字母。单词长度在 ``1..10`` 范围内，``wordList`` 长度在 ``1..5000`` 范围内，字典中的单词互不相同，且 ``beginWord != endWord``。
+所有单词长度相同，只包含小写英文字母，字典中的单词互不相同，且 ``beginWord != endWord``。
 
 自建示例
 --------
 
-.. code-block:: text
-
-   输入：beginWord = "cold", endWord = "warm"
-         wordList = ["cord","card","ward","warm","bold","bald"]
-   输出：5
-   解释：最短序列之一是 cold -> cord -> card -> ward -> warm，共包含 5 个单词。
-
-.. code-block:: text
-
-   输入：beginWord = "abc", endWord = "xyz"
-         wordList = ["xbc","xyc","ayz"]
-   输出：0
-   解释：字典中的单词无法连成一条从 abc 到 xyz 的完整变换路径。
+* ``cold`` 到 ``warm``，字典为 ``["cord", "card", "ward", "warm", "bold"]``：最短序列
+  ``cold -> cord -> card -> ward -> warm`` 含五个单词，返回 ``5``；
+* ``hit`` 到 ``cog``，字典为 ``["hot", "dot", "dog"]``：终点不在字典中，返回 ``0``；
+* ``aaa`` 到 ``aab``，且字典含 ``aab``：两词直接相连，返回 ``2``，不是变换次数 ``1``。
 
 C++ 实现
 --------
@@ -47,243 +40,233 @@ C++ 实现
 
    class Solution {
    private:
-       bool oneDifference(const std::string& a, const std::string& b) {
+       bool differsByOne(const std::string& first, const std::string& second) {
            int differences = 0;
-           for (int i = 0; i < static_cast<int>(a.size()); ++i)
-               if (a[i] != b[i] && ++differences > 1) return false;
+           for (int index = 0; index < static_cast<int>(first.size()); ++index) {
+               if (first[index] != second[index]) {
+                   ++differences;
+                   if (differences > 1) {
+                       return false;
+                   }
+               }
+           }
            return differences == 1;
        }
 
-       int pairwiseGraph(const std::string& beginWord,
-                         const std::string& endWord,
-                         const std::vector<std::string>& wordList) {
-           int end_index = -1, n = wordList.size();
-           for (int i = 0; i < n; ++i) if (wordList[i] == endWord) end_index = i;
-           if (end_index == -1) return 0;
-           std::vector<std::vector<int>> graph(n + 1);
-           for (int i = 0; i <= n; ++i)
-               for (int j = i + 1; j <= n; ++j) {
-                   const std::string& a = i == n ? beginWord : wordList[i];
-                   const std::string& b = j == n ? beginWord : wordList[j];
-                   if (oneDifference(a,b)) { graph[i].push_back(j); graph[j].push_back(i); }
-               }
-           std::queue<int> queue; queue.push(n);
-           std::vector<int> distance(n + 1, 0); distance[n] = 1;
-           while (!queue.empty()) {
-               int node = queue.front(); queue.pop();
-               if (node == end_index) return distance[node];
-               for (int next : graph[node]) if (!distance[next]) {
-                   distance[next] = distance[node] + 1; queue.push(next);
-               }
-           }
-           return 0;
-       }
-
-       int singleBfs(const std::string& beginWord,
-                     const std::string& endWord,
-                     const std::vector<std::string>& wordList) {
+       int scanDictionaryForEveryNode(
+           const std::string& beginWord,
+           const std::string& endWord,
+           const std::vector<std::string>& wordList
+       ) {
            std::unordered_set<std::string> unused(wordList.begin(), wordList.end());
-           if (!unused.count(endWord)) return 0;
-           std::queue<std::string> queue; queue.push(beginWord);
+           if (!unused.count(endWord)) {
+               return 0;
+           }
+           std::queue<std::string> queue;
+           queue.push(beginWord);
            unused.erase(beginWord);
-           int length = 1;
+           int sequenceLength = 1;
+
            while (!queue.empty()) {
-               int count = queue.size();
-               while (count--) {
-                   std::string word = queue.front(); queue.pop();
-                   if (word == endWord) return length;
-                   for (int i = 0; i < static_cast<int>(word.size()); ++i) {
-                       char original = word[i];
-                       for (char ch = 'a'; ch <= 'z'; ++ch) {
-                           if (ch == original) continue;
-                           word[i] = ch;
-                           if (unused.erase(word)) queue.push(word);
+               int levelSize = static_cast<int>(queue.size());
+               while (levelSize-- > 0) {
+                   const std::string word = queue.front();
+                   queue.pop();
+                   if (word == endWord) {
+                       return sequenceLength;
+                   }
+                   for (auto it = unused.begin(); it != unused.end();) {
+                       if (differsByOne(word, *it)) {
+                           queue.push(*it);
+                           it = unused.erase(it);
+                       } else {
+                           ++it;
                        }
-                       word[i] = original;
                    }
                }
-               ++length;
+               ++sequenceLength;
            }
            return 0;
        }
 
-       int bidirectionalBfs(const std::string& beginWord,
-                            const std::string& endWord,
-                            const std::vector<std::string>& wordList) {
+       int bfsWithGeneratedNeighbors(
+           const std::string& beginWord,
+           const std::string& endWord,
+           const std::vector<std::string>& wordList
+       ) {
            std::unordered_set<std::string> unused(wordList.begin(), wordList.end());
-           if (!unused.count(endWord)) return 0;
-           std::unordered_set<std::string> front{beginWord}, back{endWord};
-           unused.erase(beginWord); unused.erase(endWord);
-           int length = 2;
-           while (!front.empty() && !back.empty()) {
-               if (front.size() > back.size()) front.swap(back);
-               std::unordered_set<std::string> next_front;
-               for (std::string word : front)
-                   for (int i = 0; i < static_cast<int>(word.size()); ++i) {
-                       char original = word[i];
-                       for (char ch = 'a'; ch <= 'z'; ++ch) {
-                           if (ch == original) continue;
-                           word[i] = ch;
-                           if (back.count(word)) return length;
-                           if (unused.erase(word)) next_front.insert(word);
-                       }
-                       word[i] = original;
+           if (!unused.count(endWord)) {
+               return 0;
+           }
+           std::queue<std::string> queue;
+           queue.push(beginWord);
+           unused.erase(beginWord);
+           int sequenceLength = 1;
+
+           while (!queue.empty()) {
+               int levelSize = static_cast<int>(queue.size());
+               while (levelSize-- > 0) {
+                   std::string word = queue.front();
+                   queue.pop();
+                   if (word == endWord) {
+                       return sequenceLength;
                    }
-               front = std::move(next_front); ++length;
+                   for (int index = 0; index < static_cast<int>(word.size()); ++index) {
+                       const char original = word[index];
+                       for (char ch = 'a'; ch <= 'z'; ++ch) {
+                           word[index] = ch;
+                           if (unused.erase(word)) {
+                               queue.push(word);
+                           }
+                       }
+                       word[index] = original;
+                   }
+               }
+               ++sequenceLength;
+           }
+           return 0;
+       }
+
+       int bidirectionalBfs(
+           const std::string& beginWord,
+           const std::string& endWord,
+           const std::vector<std::string>& wordList
+       ) {
+           std::unordered_set<std::string> unused(wordList.begin(), wordList.end());
+           if (!unused.count(endWord)) {
+               return 0;
+           }
+
+           std::unordered_set<std::string> front{beginWord};
+           std::unordered_set<std::string> back{endWord};
+           unused.erase(beginWord);
+           unused.erase(endWord);
+           int sequenceLength = 2;
+
+           while (!front.empty() && !back.empty()) {
+               if (front.size() > back.size()) {
+                   front.swap(back);
+               }
+               std::unordered_set<std::string> nextFront;
+               for (std::string word : front) {
+                   for (int index = 0; index < static_cast<int>(word.size()); ++index) {
+                       const char original = word[index];
+                       for (char ch = 'a'; ch <= 'z'; ++ch) {
+                           word[index] = ch;
+                           if (back.count(word)) {
+                               return sequenceLength;
+                           }
+                           if (unused.erase(word)) {
+                               nextFront.insert(word);
+                           }
+                       }
+                       word[index] = original;
+                   }
+               }
+               front = std::move(nextFront);
+               ++sequenceLength;
            }
            return 0;
        }
 
    public:
-       int ladderLength(std::string beginWord, std::string endWord,
-                        std::vector<std::string>& wordList) {
-           return singleBfs(beginWord, endWord, wordList);
+       int ladderLength(
+           std::string beginWord,
+           std::string endWord,
+           std::vector<std::string>& wordList
+       ) {
+           return bidirectionalBfs(beginWord, endWord, wordList);
        }
    };
 
 题解
 ----
 
-为什么这是无权最短路
+从原始搜索空间开始
+~~~~~~~~~~~~~~~~~~
+
+一个状态是当前单词，一步选择是修改某个位置为另一个字母。若不做约束，长度为 ``L`` 的小写单词共有
+``26^L`` 个；题目给出的字典把可进入状态限制为有限集合。把合法单词看成节点，恰好相差一个字母的两个
+节点之间连边，每条边都代表一次等价的变换，问题就成为无权图最短路。
+
+DFS 适合寻找“是否存在路径”，却不能保证第一条到达终点的路径最短，还要处理环和全局最优值。BFS 按距
+起点的边数逐层扩展，因此首次到达终点时，所有更短层都已检查，得到的必是最短长度。
+
+方案一：对每个节点扫描剩余字典
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+最直接的邻居查找方式，是从当前单词出发，逐个比较所有尚未访问的字典单词。``differsByOne`` 统计不同
+位置，恰好一个不同时就是邻居；``scanDictionaryForEveryNode`` 将发现的单词立即入队并从 ``unused`` 删除。
+
+删除是安全的，因为本题只求长度，不需要像“单词接龙 II”那样保留同层多前驱。一个单词第一次被 BFS
+发现时距离已经最短；以后再到达只会得到相同或更长距离，不可能改善最终答案。入队即删还能阻止同一层把
+它重复加入队列。
+
+该方案把图定义直接翻译成比较，但若最终访问 ``N`` 个单词，每个节点又扫描大部分字典，重复工作接近
+``O(N^2L)``：绝大多数比较只是再次确认两个单词不是邻居。
+
+方案二：反过来生成所有可能邻居
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+题目提供了比“两词是否相邻”更强的结构：邻居必须只改一个位置，而每个位置只有 26 种字母。对当前单词
+依次替换每个字符，再用哈希集合判断候选是否存在，只需检查 ``O(26L)`` 个模式，不再扫描整个字典。
+
+``bfsWithGeneratedNeighbors`` 中 ``unused.erase(word)`` 同时完成成员判断与访问标记：返回非零表示候选原本
+存在且是第一次发现，于是入队；返回零表示候选不在字典或已经访问，不再处理。循环也会尝试原字母，但原
+单词早已从 ``unused`` 删除，因此不会产生自环。
+
+BFS 层数映射到返回值
 ~~~~~~~~~~~~~~~~~~~~
 
-每个合法单词是节点，恰好相差一个字符的单词之间有边，每条边代价相同。BFS 按边数从小到大访问节点，因此首次到达终点即得到最短路径。
+``sequenceLength`` 表示当前队列层中任一单词对应的序列长度。初始队列只有起点，所以从 ``1`` 开始；完成
+整层后增加一。若 ``aaa`` 在第一层生成 ``aab``，``aab`` 位于第二层，出队时返回 ``2``。这里返回的是
+单词数，不是边数，初始化为零会造成统一的少一错误。
 
-邻居为何按需生成
-~~~~~~~~~~~~~~~~
+方案三：从两端压缩搜索前沿
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-对当前单词每个位置尝试 ``a..z``，候选仍在未访问字典中时就是邻居。这样无需比较全部单词对，也无需保存完整邻接表。
+单向 BFS 的距离已经最优，但当每个节点有许多邻居、最短路径较深时，前沿会呈指数式膨胀。因为变换关系
+是无向的，可以同时维护起点侧 ``front`` 和终点侧 ``back``；每扩展一层，就让已计入的序列长度增加一，
+生成候选落入另一侧当前前沿时，两段路径接合。
 
-为什么入队时立即删除
-~~~~~~~~~~~~~~~~~~~~
+代码始终扩展节点数较少的一侧。``front.swap(back)`` 只交换搜索方向，不改变两侧已经扩展的总层数；
+``sequenceLength`` 记录的是两侧深度之和加上两个端点，因此仍在每轮统一递增。未访问集合由两侧共享，任一
+单词被某侧发现后立即删除，避免两棵搜索树内部重复展开。
 
-节点第一次被发现时来自当前最浅层，距离已经最短。立即从 ``unused`` 删除，可阻止同层其他节点重复入队；
-本题只求长度，不需要为同一个单词保存多个等长前驱。
+具体走读
+~~~~~~~~
+
+以 ``cold`` 到 ``warm`` 为例，忽略无关分支：
 
 .. list-table::
    :header-rows: 1
 
-   * - 序列长度
-     - 当前层
-     - 下一层
-   * - 1
-     - ``hit``
-     - ``hot``
+   * - 待连接长度
+     - 扩展前沿
+     - 生成结果
    * - 2
-     - ``hot``
-     - ``dot, lot``
+     - 起点侧 ``{cold}``
+     - ``{cord, bold}``
    * - 3
-     - ``dot, lot``
-     - ``dog, log``
+     - 终点侧 ``{warm}``
+     - ``{ward}``
    * - 4
-     - ``dog, log``
-     - ``cog``
+     - 终点侧 ``{ward}``
+     - ``{card}``
    * - 5
-     - ``cog``
-     - 返回 5
+     - 较小的一侧生成 ``cord`` 或 ``card``
+     - 命中另一前沿，返回 ``5``
 
-返回值为什么从 1 开始
-~~~~~~~~~~~~~~~~~~~~~~
+实际扩展哪一侧由集合大小决定，不要求严格交替。关键不变量是：``front``、``back`` 分别代表两棵 BFS 树
+尚待连接的最浅边界；只有整层生成完才用 ``nextFront`` 替换当前边界。
 
-题目返回序列中的单词数量，起点本身算一个单词。队列初始层长度为 1，每跨一条边增加 1，因此到达终点时直接返回层长度。
+主解选择与复杂度
+~~~~~~~~~~~~~~~~
 
-双向 BFS 如何减少前沿
-~~~~~~~~~~~~~~~~~~~~~
+公开入口采用双向 BFS。它比单向方案多维护一个前沿并增加相遇长度的推理成本，但在常见分支较多的图中能
+显著减少实际访问节点；若更重视实现简洁，``bfsWithGeneratedNeighbors`` 是同样正确的稳健方案。逐词扫描
+只保留为原始基线，因为它没有利用单字符变化结构。
 
-从起点和终点同时搜索，每轮扩展节点更少的一侧；若生成的候选落入另一侧前沿，两部分最短路径相接。它不改变最坏阶数，但常显著减少访问节点。
-
-为什么首次终点最优
-~~~~~~~~~~~~~~~~~~
-
-BFS 队列中节点距离不下降。终点首次出队或首次由当前层生成时，任何尚未发现路径至少同样长；无权图中不存在更短但更晚出现的路径。
-
-复杂度来源
-~~~~~~~~~~
-
-设字典大小 ``N``、单词长度 ``L``。每个节点至多入队一次，每次尝试 ``26L`` 个候选，字符串构造/哈希为 ``O(L)``，期望时间 ``O(26NL²)``，空间 ``O(NL)``。两两建图基准为 ``O(N²L)``。
-
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   static int one(char*a,char*b){int d=0;for(int i=0;a[i];i++)if(a[i]!=b[i]&&++d>1)return 0;return d==1;}int ladderLength(char*begin,char*end,char**list,int n){int goal=-1;for(int i=0;i<n;i++)if(!strcmp(list[i],end))goal=i;if(goal<0)return 0;int*dist=calloc((size_t)n+1,sizeof(int)),*q=malloc((size_t)(n+1)*sizeof(int));int h=0,t=0;dist[n]=1;q[t++]=n;while(h<t){int u=q[h++];if(u==goal){int out=dist[u];free(dist);free(q);return out;}char*word=u==n?begin:list[u];for(int v=0;v<n;v++)if(!dist[v]&&one(word,list[v])){dist[v]=dist[u]+1;q[t++]=v;}}free(dist);free(q);return 0;}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def ladderLength(self, beginWord, endWord, wordList):
-           from collections import deque
-           unused = set(wordList)
-           if endWord not in unused: return 0
-           queue, length = deque([beginWord]), 1
-           unused.discard(beginWord)
-           while queue:
-               for _ in range(len(queue)):
-                   word = queue.popleft()
-                   if word == endWord: return length
-                   for i, old in enumerate(word):
-                       for ch in "abcdefghijklmnopqrstuvwxyz":
-                           if ch == old: continue
-                           nxt = word[:i] + ch + word[i+1:]
-                           if nxt in unused: unused.remove(nxt); queue.append(nxt)
-               length += 1
-           return 0
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public int ladderLength(String b,String e,List<String>list){Set<String>u=new HashSet<>(list);if(!u.contains(e))return 0;Queue<String>q=new ArrayDeque<>();q.add(b);u.remove(b);int len=1;while(!q.isEmpty()){for(int count=q.size();count>0;count--){String w=q.remove();if(w.equals(e))return len;char[]a=w.toCharArray();for(int i=0;i<a.length;i++){char old=a[i];for(char c='a';c<='z';c++){if(c==old)continue;a[i]=c;String n=new String(a);if(u.remove(n))q.add(n);}a[i]=old;}}len++;}return 0;}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn ladder_length(begin:String,end:String,list:Vec<String>)->i32{use std::collections::{HashSet,VecDeque};let mut unused:HashSet<String>=list.into_iter().collect();if !unused.contains(&end){return 0}let mut q=VecDeque::from([begin.clone()]);unused.remove(&begin);let mut steps=1;while !q.is_empty(){for _ in 0..q.len(){let w=q.pop_front().unwrap();if w==end{return steps}let mut a=w.into_bytes();for i in 0..a.len(){let old=a[i];for c in b'a'..=b'z'{if c==old{continue}a[i]=c;let n=String::from_utf8(a.clone()).unwrap();if unused.remove(&n){q.push_back(n)}}a[i]=old;}}steps+=1;}0}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func ladderLength(begin,end string,list []string)int{unused:=map[string]bool{};for _,w:=range list{unused[w]=true};if !unused[end]{return 0};q:=[]string{begin};delete(unused,begin);steps:=1;for h:=0;h<len(q);steps++{count:=len(q)-h;for ;count>0;count--{w:=q[h];h++;if w==end{return steps};a:=[]byte(w);for i,old:=range a{for c:=byte('a');c<='z';c++{if c==old{continue};a[i]=c;n:=string(a);if unused[n]{delete(unused,n);q=append(q,n)}};a[i]=old}}};return 0}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function ladderLength(begin:string,end:string,list:string[]):number{const unused=new Set(list);if(!unused.has(end))return 0;const q=[begin];unused.delete(begin);let head=0,steps=1;while(head<q.length){let count=q.length-head;while(count--){const w=q[head++];if(w===end)return steps;for(let i=0;i<w.length;i++)for(let k=0;k<26;k++){const c=String.fromCharCode(97+k);if(c===w[i])continue;const n=w.slice(0,i)+c+w.slice(i+1);if(unused.delete(n))q.push(n);}}steps++;}return 0;}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public int LadderLength(string b,string e,IList<string>list){var u=new HashSet<string>(list);if(!u.Contains(e))return 0;var q=new Queue<string>();q.Enqueue(b);u.Remove(b);int steps=1;while(q.Count>0){for(int count=q.Count;count>0;count--){var w=q.Dequeue();if(w==e)return steps;var a=w.ToCharArray();for(int i=0;i<a.Length;i++){char old=a[i];for(char c='a';c<='z';c++){if(c==old)continue;a[i]=c;var n=new string(a);if(u.Remove(n))q.Enqueue(n);}a[i]=old;}}steps++;}return 0;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function ladder_length(begin_word,end_word,word_list)
-       unused=Set(word_list);end_word in unused||return 0;q=[begin_word];delete!(unused,begin_word);head=1;steps=1
-       while head<=length(q);count=length(q)-head+1;for _ in 1:count;w=q[head];head+=1;w==end_word&&return steps;a=collect(codeunits(w));for i in eachindex(a);old=a[i];for c in UInt8('a'):UInt8('z');c==old&&continue;a[i]=c;n=String(copy(a));if n in unused;delete!(unused,n);push!(q,n);end;end;a[i]=old;end;end;steps+=1;end;0
-   end
-
-R
-~
-
-.. code-block:: r
-
-   ladder_length <- function(begin,end,word_list){if(!(end%in%word_list))return(0L);words<-unique(c(word_list,begin));n<-length(words);one<-function(a,b)sum(strsplit(a,"",fixed=TRUE)[[1L]]!=strsplit(b,"",fixed=TRUE)[[1L]])==1L;start<-match(begin,words);goal<-match(end,words);dist<-rep(0L,n);dist[[start]]<-1L;q<-start;head<-1L;while(head<=length(q)){u<-q[[head]];head<-head+1L;if(u==goal)return(dist[[u]]);for(v in seq_len(n))if(dist[[v]]==0L&&one(words[[u]],words[[v]])){dist[[v]]<-dist[[u]]+1L;q<-c(q,v)}};0L}
+设访问节点数为 ``N``、单词长度为 ``L``。逐词扫描最坏时间 ``O(N^2L)``。按需生成邻居时，每个节点尝试
+``26L`` 个候选，字符串构造和哈希需要 ``O(L)``，期望时间 ``O(26NL^2)``，空间 ``O(NL)``。双向 BFS
+不改变最坏渐进上界，但通常把搜索深度从约 ``d`` 分摊到两端，实际前沿远小于单向搜索。

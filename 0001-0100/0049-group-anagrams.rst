@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0049
+:题号: 0049. 字母异位词分组
 :难度: Medium
 :主题: 字符串、哈希表、规范键、字符频次
 :原题: `LeetCode 0049 <https://leetcode.com/problems/group-anagrams/>`_

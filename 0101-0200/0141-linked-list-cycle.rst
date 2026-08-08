@@ -4,33 +4,26 @@
 题目信息
 --------
 
-:题号: 0141
+:题号: 0141. 环形链表
 :难度: Easy
-:主题: 链表、Floyd 快慢指针、对象身份
+:主题: 链表、Floyd 快慢指针、对象身份、环检测
 :原题: `LeetCode 0141 <https://leetcode.com/problems/linked-list-cycle/>`_
-:重点: 节点身份重复、环检测、``pos`` 非函数参数、常量空间进阶
+:重点: 从“节点身份重复”定义环，再用两个不同速度的指针把访问集合压缩为常量状态
 
 题目重述
 --------
 
-给定一条可能含环的单链表头节点 ``head``，判断从 ``head`` 沿 ``next`` 指针不断前进时，是否会再次到达某个已经访问过的节点。节点值重复不代表存在环，必须依据节点对象身份和链接结构判断。测试描述中的 ``pos`` 只表示链表尾节点连接到哪个零基位置，不是传给函数的参数。
-
-链表节点数在 ``0..10^4`` 范围内，节点值在 ``-10^5..10^5`` 范围内。仅使用 ``O(1)`` 额外空间是本题的进阶要求。
+给定单链表头节点 ``head``，判断沿 ``next`` 不断前进时是否会再次到达同一个节点对象。节点值相同不代表
+有环，必须比较节点身份。测试说明中的 ``pos`` 只是描述尾节点连回哪个位置，并不是函数参数。进阶要求只
+使用 ``O(1)`` 额外空间。
 
 自建示例
 --------
 
-.. code-block:: text
-
-   输入：head = [8,3,5,1], pos = 1
-   输出：true
-   解释：尾节点 1 的 next 指向下标 1 的节点 3，沿链继续会重复到达同一个节点对象。
-
-.. code-block:: text
-
-   输入：head = [4,4,4], pos = -1
-   输出：false
-   解释：三个节点的值虽然相同，但它们是不同对象，并且尾节点指向 null，因此链表无环。
+* ``8 -> 3 -> 5 -> 1``，尾节点的 ``next`` 指回节点 ``3``：沿链会重复访问同一个 ``3``，返回
+  ``true``；
+* 三个不同节点的值都为 ``4``，但最后指向 ``nullptr``：返回 ``false``；
+* 单节点的 ``next`` 指向自身：返回 ``true``；空链和单节点无环链都返回 ``false``。
 
 C++ 实现
 --------
@@ -41,136 +34,107 @@ C++ 实现
 
    class Solution {
    private:
-       bool identitySet(ListNode* head) {
+       bool rememberVisitedNodes(ListNode* head) {
            std::unordered_set<ListNode*> visited;
-           for (ListNode* node = head; node; node = node->next)
-               if (!visited.insert(node).second) return true;
+           for (ListNode* node = head;
+                node != nullptr;
+                node = node->next) {
+               if (!visited.insert(node).second) {
+                   return true;
+               }
+           }
            return false;
        }
 
-       bool floyd(ListNode* head) {
+       bool meetWithDifferentSpeeds(ListNode* head) {
            ListNode* slow = head;
            ListNode* fast = head;
-           while (fast && fast->next) {
+
+           while (fast != nullptr && fast->next != nullptr) {
                slow = slow->next;
                fast = fast->next->next;
-               if (slow == fast) return true;
+               if (slow == fast) {
+                   return true;
+               }
            }
            return false;
        }
 
    public:
        bool hasCycle(ListNode* head) {
-           return floyd(head);
+           return meetWithDifferentSpeeds(head);
        }
    };
 
 题解
 ----
 
-为什么比较节点身份
+先把“有环”翻译为可检测事件
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+从头沿唯一的 ``next`` 路径前进，只有两种结局：到达 ``nullptr``，说明路径有限且无环；或者再次到达某个
+已经见过的节点对象，此后路径会永久重复，说明存在环。最直接的 ``rememberVisitedNodes`` 把每个节点地址
+放入集合；插入失败就表示同一地址第二次出现。
+
+集合必须存 ``ListNode*``，不能存 ``val``。两个不同节点即使值相同仍可依次出现在一条普通链上；环的定义
+是引用结构回到同一对象，而不是数据重复。该方案一次扫描即可判定，时间 ``O(n)``，但最坏保存 ``O(n)``
+个地址。
+
+不用保存历史，能否制造一个必然相遇的状态
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+若链表有环，进入环后的运动只剩有限个模环长位置。让 ``slow`` 每轮走一步，``fast`` 每轮走两步；两者都
+进入环后，快指针相对慢指针每轮前进一步。若环长为 ``lambda``，相对距离按模 ``lambda`` 依次增加一，
+最多 ``lambda`` 轮必有一次变为零，即两个指针指向同一节点。
+
+这里不需要知道环从哪里开始或环有多长。两个指针的位置把“是否访问过”问题转化为“速度差是否在有限环上
+追平”，从而删除访问集合。
+
+有环时为何两者都会进入环
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+从头到环入口的链只有有限长度。慢指针最终进入环；快指针沿同一条 ``next`` 路径移动且不会遇到空指针，
+所以也会进入。一旦进入，``next`` 永远留在环内。快指针可能在慢指针入环前已经绕行若干次，但这只改变
+初始相对位置，不影响每轮相对前进一步的结论。
+
+无环时为何不会误报
 ~~~~~~~~~~~~~~~~~~
 
-环表示同一个节点对象被再次到达。两个不同节点即使 ``val`` 相同，也不构成环；因此哈希集合存节点地址，快慢指针比较指针身份。
+有限无环链最终指向 ``nullptr``。快指针每轮走两步，因此迟早出现 ``fast == nullptr`` 或
+``fast->next == nullptr``，循环结束并返回假。循环守卫必须同时检查这两个条件，才能安全执行
+``fast->next->next``。
 
-无环时为什么必然停止
-~~~~~~~~~~~~~~~~~~~~
+指针从同一点出发为何不立即判真
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-快指针每轮前进两步。有限无环链的末端是空引用，所以某轮开始时 ``fast`` 或 ``fast.next`` 必为空，循环安全结束。
-
-有环时为什么必然相遇
-~~~~~~~~~~~~~~~~~~~~
-
-慢指针进入环后，快指针也在环内。每轮快指针相对慢指针前进一步；若环长为 ``lambda``，相对位置按模 ``lambda`` 依次变化，最多 ``lambda`` 轮就会变为零。
+初始化时 ``slow == fast == head`` 只是人为把两个观察者放在起点，不是“沿链再次访问”。代码先各自移动，
+再比较；否则任何非空链在零步时都会被误判为有环。
 
 .. list-table::
    :header-rows: 1
 
-   * - 方法
-     - 时间
-     - 额外空间
-   * - 身份哈希集合
-     - ``O(n)``
-     - ``O(n)``
-   * - Floyd 快慢指针
-     - ``O(n)``
-     - ``O(1)``
+   * - 输入结构
+     - 第一次移动后
+     - 结果路径
+   * - 空链
+     - 守卫失败，不移动
+     - 返回 ``false``
+   * - 单节点无环
+     - ``fast->next`` 为空，守卫失败
+     - 返回 ``false``
+   * - 单节点自环
+     - ``slow``、``fast`` 都仍指向该节点
+     - 移动后相等，返回 ``true``
+   * - 多节点有环
+     - 两者以速度差一在环中追逐
+     - 最迟一圈内相遇
 
-九语言实现
-----------
+代码对应与主解选择
+~~~~~~~~~~~~~~~~~~
 
-C
-~
+``slow``、``fast`` 始终是从头沿真实 ``next`` 路径可达的节点，不会产生伪造相遇；指针相等表示对象身份
+相同，而非值相等。相遇即可证明存在闭合路径，无需再定位入口。
 
-.. code-block:: c
-
-   bool hasCycle(struct ListNode*head){struct ListNode*slow=head,*fast=head;while(fast&&fast->next){slow=slow->next;fast=fast->next->next;if(slow==fast)return true;}return false;}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def hasCycle(self, head):
-           slow = fast = head
-           while fast and fast.next:
-               slow, fast = slow.next, fast.next.next
-               if slow is fast: return True
-           return False
-
-Java
-~~~~
-
-.. code-block:: java
-
-   public class Solution {public boolean hasCycle(ListNode head){ListNode slow=head,fast=head;while(fast!=null&&fast.next!=null){slow=slow.next;fast=fast.next.next;if(slow==fast)return true;}return false;}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn has_cycle(head:Link)->bool{fn next(x:&Link)->Link{x.as_ref().and_then(|n|n.borrow().next.clone())}let mut slow=head.clone();let mut fast=head;loop{slow=next(&slow);fast=next(&next(&fast));match(&slow,&fast){(Some(a),Some(b))if std::rc::Rc::ptr_eq(a,b)=>return true,(None,_)|(_,None)=>return false,_=>{}}}}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func hasCycle(head *ListNode)bool{slow,fast:=head,head;for fast!=nil&&fast.Next!=nil{slow=slow.Next;fast=fast.Next.Next;if slow==fast{return true}};return false}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function hasCycle(head:ListNode|null):boolean{let slow=head,fast=head;while(fast&&fast.next){slow=slow!.next;fast=fast.next.next;if(slow===fast)return true;}return false;}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public bool HasCycle(ListNode head){var slow=head;var fast=head;while(fast!=null&&fast.next!=null){slow=slow.next;fast=fast.next.next;if(object.ReferenceEquals(slow,fast))return true;}return false;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function has_cycle(head)
-       slow=head;fast=head
-       while fast!==nothing&&fast.next!==nothing
-           slow=slow.next;fast=fast.next.next
-           slow===fast&&return true
-       end
-       false
-   end
-
-R
-~
-
-.. code-block:: r
-
-   has_cycle <- function(head){slow<-head;fast<-head;while(!is.null(fast)&&!is.null(fast$next)){slow<-slow$next;fast<-fast$next$next;if(identical(slow,fast))return(TRUE)};FALSE}
+公开入口采用 Floyd 快慢指针，时间 ``O(n)``、额外空间 ``O(1)``。地址集合方案同为线性时间，定义对应
+最直接，适合先建立正确性；快慢指针则利用单链表每个节点只有一个后继的结构，将全部访问历史压缩为两个
+位置。两种方案都不修改链表。

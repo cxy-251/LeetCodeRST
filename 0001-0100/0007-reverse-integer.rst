@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0007
+:题号: 0007. 整数反转
 :难度: Medium
 :主题: 数学、整数、溢出边界
 :原题: `LeetCode 0007 <https://leetcode.com/problems/reverse-integer/>`_

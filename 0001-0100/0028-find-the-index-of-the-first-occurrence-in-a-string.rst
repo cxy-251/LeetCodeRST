@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0028
+:题号: 0028. 找出字符串中第一个匹配项的下标
 :难度: Easy
 :主题: 字符串、模式匹配、前缀函数、KMP
 :原题: `LeetCode 0028 <https://leetcode.com/problems/find-the-index-of-the-first-occurrence-in-a-string/>`_

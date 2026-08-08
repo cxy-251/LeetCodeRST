@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0077
+:题号: 0077. 组合
 :难度: Medium
 :主题: 回溯、组合、容量剪枝
 :原题: `LeetCode 0077 <https://leetcode.com/problems/combinations/>`_

@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0064
+:题号: 0064. 最小路径和
 :难度: Medium
 :主题: 动态规划、网格、最小代价、滚动数组
 :原题: `LeetCode 0064 <https://leetcode.com/problems/minimum-path-sum/>`_

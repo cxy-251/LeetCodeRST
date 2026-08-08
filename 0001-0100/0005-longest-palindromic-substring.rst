@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0005
+:题号: 0005. 最长回文子串
 :难度: Medium
 :主题: 字符串、回文、动态规划、中心扩展、Manacher
 :原题: `LeetCode 0005 <https://leetcode.com/problems/longest-palindromic-substring/>`_

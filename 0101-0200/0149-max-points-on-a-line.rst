@@ -4,33 +4,25 @@
 题目信息
 --------
 
-:题号: 0149
+:题号: 0149. 直线上最多的点数
 :难度: Hard
-:主题: 几何、最大公约数、哈希计数
+:主题: 几何、斜率规范化、最大公约数、哈希计数
 :原题: `LeetCode 0149 <https://leetcode.com/problems/max-points-on-a-line/>`_
-:重点: 任意直线、点互不重复、共线判定、最大点数
+:重点: 固定锚点把直线比较降为方向分组，用约分后的整数对精确表示同一无向斜率
 
 题目重述
 --------
 
-给定二维平面上的整数点数组 ``points``，返回能够同时落在同一条直线上的最大点数。直线可以是水平线、竖直线，也可以具有任意其他斜率；答案只统计输入数组中的点。
-
-``points`` 的长度在 ``1..300`` 范围内，每个点都表示为 ``[x, y]``，其中 ``x`` 和 ``y`` 均在 ``-10^4..10^4`` 范围内。输入中的所有点互不重复。
+给定二维平面上一组互不重复的整数点 ``points``，返回能同时位于同一条直线上的最大点数。直线可以水平、
+竖直或具有任意有理斜率；只统计输入点。
 
 自建示例
 --------
 
-.. code-block:: text
-
-   输入：points = [[-2,-1],[0,0],[2,1],[4,2],[0,3]]
-   输出：4
-   解释：前四个点都满足 y = x / 2，位于同一条直线上；点 [0,3] 不在该直线上。
-
-.. code-block:: text
-
-   输入：points = [[3,-2],[3,1],[3,5],[-1,5],[6,5]]
-   输出：3
-   解释：三个横坐标为 3 的点位于同一条竖直线上；同时也有三个纵坐标为 5 的点，最大共线点数仍为 3。
+* ``[[-2,-1], [0,0], [2,1], [4,2], [0,3]]``：前四点都满足 ``y = x / 2``，返回 ``4``；
+* ``[[3,-2], [3,1], [3,5], [-1,5], [6,5]]``：竖线 ``x=3`` 与水平线 ``y=5`` 都含三个点，
+  返回 ``3``；
+* ``[[0,0], [-2,-1], [2,1]]``：从锚点看两个方向相反，但属于同一条直线，必须放入同一方向桶。
 
 C++ 实现
 --------
@@ -39,181 +31,202 @@ C++ 实现
 
    #include <algorithm>
    #include <cstdint>
-   #include <cstdlib>
    #include <numeric>
    #include <unordered_map>
    #include <utility>
    #include <vector>
 
-   struct PairHash {
-       std::size_t operator()(const std::pair<int,int>& p) const {
-           return (static_cast<std::uint64_t>(static_cast<std::uint32_t>(p.first)) << 32) ^
-                  static_cast<std::uint32_t>(p.second);
+   struct DirectionHash {
+       std::size_t operator()(
+           const std::pair<int, int>& direction
+       ) const noexcept {
+           const std::uint64_t first = static_cast<std::uint32_t>(
+               direction.first
+           );
+           const std::uint64_t second = static_cast<std::uint32_t>(
+               direction.second
+           );
+           return static_cast<std::size_t>((first << 32) ^ second);
        }
    };
 
    class Solution {
    private:
-       int crossProduct(const std::vector<std::vector<int>>& points) {
-           int n=points.size(),best=std::min(n,2);
-           for(int i=0;i<n;++i)for(int j=i+1;j<n;++j){
-               int count=0;
-               long long dx=points[j][0]-points[i][0];
-               long long dy=points[j][1]-points[i][1];
-               for(int k=0;k<n;++k)
-                   if(dx*(points[k][1]-points[i][1])==dy*(points[k][0]-points[i][0]))++count;
-               best=std::max(best,count);
+       int verifyEveryLine(
+           const std::vector<std::vector<int>>& points
+       ) {
+           const int pointCount = static_cast<int>(points.size());
+           if (pointCount <= 2) {
+               return pointCount;
+           }
+           int best = 2;
+
+           for (int first = 0; first < pointCount; ++first) {
+               for (int second = first + 1;
+                    second < pointCount;
+                    ++second) {
+                   const long long deltaX =
+                       points[second][0] - points[first][0];
+                   const long long deltaY =
+                       points[second][1] - points[first][1];
+                   int onLine = 0;
+
+                   for (int candidate = 0;
+                        candidate < pointCount;
+                        ++candidate) {
+                       const long long candidateX =
+                           points[candidate][0] - points[first][0];
+                       const long long candidateY =
+                           points[candidate][1] - points[first][1];
+                       if (deltaX * candidateY == deltaY * candidateX) {
+                           ++onLine;
+                       }
+                   }
+                   best = std::max(best, onLine);
+               }
            }
            return best;
        }
 
-       std::pair<int,int> direction(int dx,int dy) {
-           if(dx==0)return {1,0};
-           if(dy==0)return {0,1};
-           int divisor=std::gcd(std::abs(dx),std::abs(dy));
-           dx/=divisor;dy/=divisor;
-           if(dx<0){dx=-dx;dy=-dy;}
-           return {dy,dx};
+       std::pair<int, int> normalizedDirection(int deltaX, int deltaY) {
+           if (deltaX == 0) {
+               return {1, 0};
+           }
+           if (deltaY == 0) {
+               return {0, 1};
+           }
+
+           const int divisor = std::gcd(deltaX, deltaY);
+           deltaX /= divisor;
+           deltaY /= divisor;
+           if (deltaX < 0) {
+               deltaX = -deltaX;
+               deltaY = -deltaY;
+           }
+           return {deltaY, deltaX};
        }
 
-       int directionHash(const std::vector<std::vector<int>>& points) {
-           int n=points.size(),best=1;
-           for(int anchor=0;anchor<n;++anchor){
-               std::unordered_map<std::pair<int,int>,int,PairHash> count;
-               int local=0;
-               for(int j=anchor+1;j<n;++j){
-                   auto key=direction(points[j][0]-points[anchor][0],
-                                      points[j][1]-points[anchor][1]);
-                   local=std::max(local,++count[key]);
+       int countDirectionsFromEveryAnchor(
+           const std::vector<std::vector<int>>& points
+       ) {
+           const int pointCount = static_cast<int>(points.size());
+           int best = pointCount == 0 ? 0 : 1;
+
+           for (int anchor = 0; anchor < pointCount; ++anchor) {
+               std::unordered_map<
+                   std::pair<int, int>,
+                   int,
+                   DirectionHash
+               > frequency;
+               int largestBucket = 0;
+
+               for (int other = 0; other < pointCount; ++other) {
+                   if (other == anchor) {
+                       continue;
+                   }
+                   const int deltaX =
+                       points[other][0] - points[anchor][0];
+                   const int deltaY =
+                       points[other][1] - points[anchor][1];
+                   const auto direction = normalizedDirection(deltaX, deltaY);
+                   largestBucket = std::max(
+                       largestBucket,
+                       ++frequency[direction]
+                   );
                }
-               best=std::max(best,local+1);
+               best = std::max(best, largestBucket + 1);
            }
            return best;
        }
 
    public:
        int maxPoints(std::vector<std::vector<int>>& points) {
-           return directionHash(points);
+           return countDirectionsFromEveryAnchor(points);
        }
    };
 
 题解
 ----
 
-为什么固定锚点
-~~~~~~~~~~~~~~
+原始搜索：两点定线，再验证所有点
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-任意包含至少两个点的最优直线都包含某个输入点。固定该点为锚点后，其他点与锚点的方向相同，当且仅当它们位于同一条过锚点直线上。
+任意两个不同点唯一确定一条直线。最直接的 ``verifyEveryLine`` 枚举点对 ``A``、``B``，再检查每个候选
+``P`` 是否满足叉积等式：
 
-方向如何规范化
-~~~~~~~~~~~~~~
+.. code-block:: text
 
-方向向量 ``(dy,dx)`` 先除以 ``gcd(|dy|,|dx|)``。随后要求 ``dx>0``；若 ``dx<0``，两个分量同时取反。竖线统一为 ``(1,0)``，横线统一为 ``(0,1)``。
+   (Bx - Ax) * (Py - Ay) == (By - Ay) * (Px - Ax)
 
-为什么不能使用 double 斜率
+等式不需要除法，水平线和竖直线都适用；代码用 ``long long`` 计算乘积，避免坐标差相乘溢出。这种方法
+正确，但同一条含 ``k`` 个点的直线会被它的许多点对反复定义，每次又扫描全部 ``n`` 个点，时间
+``O(n^3)``。
+
+固定锚点后，直线只剩方向
 ~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-数学上相等的有理数经过浮点除法后可能因舍入得到不同比特模式；竖线还需要无穷大，水平线会遇到 ``0`` 与 ``-0``。约分后的整数对是精确等价类。
+固定输入点 ``A``。所有经过 ``A`` 的直线可按方向分组：若 ``B-A`` 与 ``C-A`` 是同一无向方向，那么
+``A``、``B``、``C`` 共线；方向不同则对应不同的过 ``A`` 直线。于是一次扫描其他点并统计最大方向桶，就
+得到“经过当前锚点的最多点数”；桶计的是其他点，最后还要加锚点自身。
 
-锚点覆盖为什么完整
+遍历每个锚点即可覆盖全局最优直线。任取最优线上的一个输入点作锚点，其余同线点都会落在同一个方向桶，
+所以不会漏解。与点对定线相比，共线关系从“每对重复验证全部点”压缩为“每个锚点给其他点分桶”，期望
+时间降为 ``O(n^2)``。
+
+为什么不能直接用 ``double`` 斜率作键
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+斜率 ``deltaY / deltaX`` 本质是有理数。数学上相等的比例经过浮点除法后依赖舍入表示；竖线还要处理除零，
+水平线可能出现正零与负零。即使当前坐标范围下许多例子恰好通过，浮点键也没有提供精确的等价类证明。
+
+整数方向向量可以精确规范化。先用 ``gcd(deltaX, deltaY)`` 同时约分，得到互质分量；再规定非竖直方向的
+``deltaX`` 必须为正，若为负就同时翻转两个分量。这样 ``(2,1)``、``(4,2)`` 与 ``(-2,-1)`` 都统一为
+``(deltaY, deltaX) = (1,2)``。
+
+水平线与竖直线为何单独规范
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+同一竖线上，从锚点向上可能得到 ``(0, positive)``，向下得到 ``(0, negative)``；它们必须属于同一条线，
+统一键设为 ``(1,0)``。水平线对称统一为 ``(0,1)``。先处理这两类也避免最大公约数和符号规则出现零分量
+歧义。
+
+.. list-table::
+   :header-rows: 1
+
+   * - 原始 ``(deltaX, deltaY)``
+     - 规范键 ``(deltaY, deltaX)``
+     - 含义
+   * - ``(4, 2)``
+     - ``(1, 2)``
+     - 斜率 ``1/2``
+   * - ``(-2, -1)``
+     - ``(1, 2)``
+     - 反方向但同一直线
+   * - ``(0, 5)``、``(0, -3)``
+     - ``(1, 0)``
+     - 竖直线
+   * - ``(6, 0)``、``(-4, 0)``
+     - ``(0, 1)``
+     - 水平线
+
+哈希状态与具体走读
 ~~~~~~~~~~~~~~~~~~
 
-若最优直线含 ``k`` 个点，选择其中下标最小的点作为锚点时，其余 ``k-1`` 个点都会被扫描并落入同一个方向桶，所以全局最大值不会遗漏。
+对锚点 ``[0,0]`` 和其他点 ``[-2,-1]``、``[2,1]``、``[4,2]``、``[0,3]``，前三个方向都规范为
+``(1,2)``，该桶计数为三；竖直点进入 ``(1,0)`` 桶。当前锚点所在最大直线含 ``3 + 1 = 4`` 个点。
 
-复杂度来源
-~~~~~~~~~~
+输入保证点互不重复，所以不会出现 ``deltaX == 0 && deltaY == 0`` 的“重复点”状态；若约束允许重复点，
+必须另设计数并把它加到每个锚点答案，不能把零向量归入某个方向桶。这里不为不存在的状态增加代码分支。
 
-共有 ``O(n)`` 个锚点，每个锚点扫描 ``O(n)`` 个点，哈希期望时间 ``O(n²)``、空间 ``O(n)``。三点叉积基准为 ``O(n³)``。
+``DirectionHash`` 只负责把规范整数对组合成哈希值；方向相等性仍由 ``std::pair`` 的精确整数比较决定，哈希
+碰撞不会错误合并不同方向，容器会继续检查键相等。
 
-九语言实现
-----------
+正确性与复杂度
+~~~~~~~~~~~~~~
 
-C
-~
+固定锚点时，同一规范键的点与锚点共线；任意经过锚点的共线点又具有成比例方向，经约分和符号统一后键相同，
+所以桶与过锚点直线一一对应。遍历全部锚点后，全局最大值必被统计。
 
-.. code-block:: c
-
-   static int gcd2(int a,int b){a=abs(a);b=abs(b);while(b){int t=a%b;a=b;b=t;}return a;}int maxPoints(int**p,int n,int*cols){if(n<3)return n;int best=1,cap=1024;unsigned long long*keys=malloc((size_t)cap*sizeof(*keys));unsigned short*count=malloc((size_t)cap*sizeof(*count));unsigned char*used=malloc((size_t)cap);for(int i=0;i<n;i++){memset(used,0,(size_t)cap);int local=0;for(int j=i+1;j<n;j++){int dx=p[j][0]-p[i][0],dy=p[j][1]-p[i][1];if(dx==0){dy=1;}else if(dy==0){dx=1;}else{int g=gcd2(dx,dy);dx/=g;dy/=g;if(dx<0){dx=-dx;dy=-dy;}}unsigned long long key=((unsigned long long)(unsigned)dy<<32)|(unsigned)dx;int s=(int)((key^(key>>32))*2654435761u)&(cap-1);while(used[s]&&keys[s]!=key)s=(s+1)&(cap-1);if(!used[s]){used[s]=1;keys[s]=key;count[s]=0;}if(++count[s]>local)local=count[s];}if(local+1>best)best=local+1;}free(keys);free(count);free(used);return best;}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def maxPoints(self, points):
-           from collections import defaultdict
-           from math import gcd
-           best=1
-           for i,(x,y) in enumerate(points):
-               count=defaultdict(int);local=0
-               for x2,y2 in points[i+1:]:
-                   dx,dy=x2-x,y2-y
-                   if dx==0: key=(1,0)
-                   elif dy==0: key=(0,1)
-                   else:
-                       g=gcd(abs(dx),abs(dy));dx//=g;dy//=g
-                       if dx<0: dx,dy=-dx,-dy
-                       key=(dy,dx)
-                   count[key]+=1;local=max(local,count[key])
-               best=max(best,local+1)
-           return best
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {int gcd(int a,int b){a=Math.abs(a);b=Math.abs(b);while(b!=0){int t=a%b;a=b;b=t;}return a;}public int maxPoints(int[][]p){int best=1;for(int i=0;i<p.length;i++){Map<Long,Integer>m=new HashMap<>();int local=0;for(int j=i+1;j<p.length;j++){int dx=p[j][0]-p[i][0],dy=p[j][1]-p[i][1];if(dx==0)dy=1;else if(dy==0)dx=1;else{int g=gcd(dx,dy);dx/=g;dy/=g;if(dx<0){dx=-dx;dy=-dy;}}long k=((long)dy<<32)^(dx&0xffffffffL);int c=m.getOrDefault(k,0)+1;m.put(k,c);local=Math.max(local,c);}best=Math.max(best,local+1);}return best;}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn max_points(p:Vec<Vec<i32>>)->i32{fn gcd(mut a:i32,mut b:i32)->i32{a=a.abs();b=b.abs();while b!=0{let t=a%b;a=b;b=t}a}let mut best=1;for i in 0..p.len(){let mut m=std::collections::HashMap::new();let mut local=0;for j in i+1..p.len(){let(mut dx,mut dy)=(p[j][0]-p[i][0],p[j][1]-p[i][1]);if dx==0{dy=1}else if dy==0{dx=1}else{let g=gcd(dx,dy);dx/=g;dy/=g;if dx<0{dx=-dx;dy=-dy}}let c=m.entry((dy,dx)).or_insert(0);*c+=1;local=local.max(*c)}best=best.max(local+1)}best}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func maxPoints(p [][]int)int{gcd:=func(a,b int)int{if a<0{a=-a};if b<0{b=-b};for b!=0{a,b=b,a%b};return a};best:=1;for i:=range p{m:=map[[2]int]int{};local:=0;for j:=i+1;j<len(p);j++{dx,dy:=p[j][0]-p[i][0],p[j][1]-p[i][1];if dx==0{dy=1}else if dy==0{dx=1}else{g:=gcd(dx,dy);dx/=g;dy/=g;if dx<0{dx=-dx;dy=-dy}};k:=[2]int{dy,dx};m[k]++;if m[k]>local{local=m[k]}};if local+1>best{best=local+1}};return best}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function maxPoints(p:number[][]):number{const gcd=(a:number,b:number)=>{a=Math.abs(a);b=Math.abs(b);while(b)[a,b]=[b,a%b];return a};let best=1;for(let i=0;i<p.length;i++){const m=new Map<string,number>();let local=0;for(let j=i+1;j<p.length;j++){let dx=p[j][0]-p[i][0],dy=p[j][1]-p[i][1];if(dx===0)dy=1;else if(dy===0)dx=1;else{const g=gcd(dx,dy);dx/=g;dy/=g;if(dx<0){dx=-dx;dy=-dy}}const k=`${dy}/${dx}`,c=(m.get(k)||0)+1;m.set(k,c);local=Math.max(local,c)}best=Math.max(best,local+1)}return best;}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {int Gcd(int a,int b){a=Math.Abs(a);b=Math.Abs(b);while(b!=0){int t=a%b;a=b;b=t;}return a;}public int MaxPoints(int[][]p){int best=1;for(int i=0;i<p.Length;i++){var m=new Dictionary<(int,int),int>();int local=0;for(int j=i+1;j<p.Length;j++){int dx=p[j][0]-p[i][0],dy=p[j][1]-p[i][1];if(dx==0)dy=1;else if(dy==0)dx=1;else{int g=Gcd(dx,dy);dx/=g;dy/=g;if(dx<0){dx=-dx;dy=-dy;}}var k=(dy,dx);m[k]=m.GetValueOrDefault(k)+1;local=Math.Max(local,m[k]);}best=Math.Max(best,local+1);}return best;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function max_points(p)
-       best=1
-       for i in eachindex(p);m=Dict{Tuple{Int,Int},Int}();local=0
-           for j in i+1:length(p);dx=p[j][1]-p[i][1];dy=p[j][2]-p[i][2]
-               if dx==0;dy=1;elseif dy==0;dx=1;else;g=gcd(abs(dx),abs(dy));dx÷=g;dy÷=g;if dx<0;dx=-dx;dy=-dy;end;end
-               k=(dy,dx);m[k]=get(m,k,0)+1;local=max(local,m[k])
-           end
-           best=max(best,local+1)
-       end
-       best
-   end
-
-R
-~
-
-.. code-block:: r
-
-   max_points <- function(p){gcd<-function(a,b){a<-abs(a);b<-abs(b);while(b!=0){tmp<-a%%b;a<-b;b<-tmp};a};best<-1L;for(i in seq_len(nrow(p))){m<-new.env(hash=TRUE,parent=emptyenv());local<-0L;if(i<nrow(p))for(j in (i+1L):nrow(p)){dx<-p[j,1]-p[i,1];dy<-p[j,2]-p[i,2];if(dx==0)dy<-1 else if(dy==0)dx<-1 else{g<-gcd(dx,dy);dx<-dx/g;dy<-dy/g;if(dx<0){dx<--dx;dy<--dy}};k<-paste(dy,dx,sep="/");v<-if(exists(k,m,inherits=FALSE))get(k,m)+1L else 1L;assign(k,v,m);local<-max(local,v)};best<-max(best,local+1L)};best}
+主解共有 ``n`` 个锚点，每个扫描 ``n-1`` 个点；最大公约数和哈希操作按坐标位宽计为常数，期望时间
+``O(n^2)``、单个锚点的哈希空间 ``O(n)``。三点叉积基线时间 ``O(n^3)``、额外空间 ``O(1)``，保留它用于
+展示重复定义同一直线的瓶颈；主解选择精确整数方向哈希。

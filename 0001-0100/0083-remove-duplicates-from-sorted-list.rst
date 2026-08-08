@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0083
+:题号: 0083. 删除排序链表中的重复元素
 :难度: Easy
 :主题: 单链表、有序去重、连续重复段
 :原题: `LeetCode 0083 <https://leetcode.com/problems/remove-duplicates-from-sorted-list/>`_

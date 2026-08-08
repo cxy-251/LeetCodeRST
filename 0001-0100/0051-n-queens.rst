@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0051
+:题号: 0051. N 皇后
 :难度: Hard
 :主题: 数组、回溯、约束传播、位掩码
 :原题: `LeetCode 0051 <https://leetcode.com/problems/n-queens/>`_

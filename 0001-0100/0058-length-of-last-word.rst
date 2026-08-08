@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0058
+:题号: 0058. 最后一个单词的长度
 :难度: Easy
 :主题: 字符串、扫描、双指针
 :原题: `LeetCode 0058 <https://leetcode.com/problems/length-of-last-word/>`_

@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0032
+:题号: 0032. 最长有效括号
 :难度: Hard
 :主题: 字符串、栈、动态规划、双向扫描
 :原题: `LeetCode 0032 <https://leetcode.com/problems/longest-valid-parentheses/>`_

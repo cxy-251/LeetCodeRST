@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0050
+:题号: 0050. Pow(x, n)
 :难度: Medium
 :主题: 数学、递归、二进制、快速幂
 :原题: `LeetCode 0050 <https://leetcode.com/problems/powx-n/>`_

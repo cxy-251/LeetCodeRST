@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0080
+:题号: 0080. 删除有序数组中的重复项 II
 :难度: Medium
 :主题: 有序数组、双指针、原地覆盖
 :原题: `LeetCode 0080 <https://leetcode.com/problems/remove-duplicates-from-sorted-array-ii/>`_

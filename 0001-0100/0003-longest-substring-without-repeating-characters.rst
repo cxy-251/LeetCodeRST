@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0003
+:题号: 0003. 无重复字符的最长子串
 :难度: Medium
 :主题: 字符串、滑动窗口、哈希表
 :原题: `LeetCode 0003 <https://leetcode.com/problems/longest-substring-without-repeating-characters/>`_

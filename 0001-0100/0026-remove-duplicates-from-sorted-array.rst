@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0026
+:题号: 0026. 删除有序数组中的重复项
 :难度: Easy
 :主题: 数组、双指针、原地覆盖
 :原题: `LeetCode 0026 <https://leetcode.com/problems/remove-duplicates-from-sorted-array/>`_

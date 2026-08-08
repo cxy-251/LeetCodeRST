@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0073
+:题号: 0073. 矩阵置零
 :难度: Medium
 :主题: 矩阵、原地标记、分阶段更新
 :原题: `LeetCode 0073 <https://leetcode.com/problems/set-matrix-zeroes/>`_

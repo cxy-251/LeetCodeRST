@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0076
+:题号: 0076. 最小覆盖子串
 :难度: Hard
 :主题: 字符串、滑动窗口、频次计数
 :原题: `LeetCode 0076 <https://leetcode.com/problems/minimum-window-substring/>`_

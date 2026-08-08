@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0008
+:题号: 0008. 字符串转换整数（atoi）
 :难度: Medium
 :主题: 字符串、解析、状态机、溢出边界
 :原题: `LeetCode 0008 <https://leetcode.com/problems/string-to-integer-atoi/>`_

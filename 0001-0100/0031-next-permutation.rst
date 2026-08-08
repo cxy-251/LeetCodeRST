@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0031
+:题号: 0031. 下一个排列
 :难度: Medium
 :主题: 数组、字典序、贪心、双指针
 :原题: `LeetCode 0031 <https://leetcode.com/problems/next-permutation/>`_

@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0033
+:题号: 0033. 搜索旋转排序数组
 :难度: Medium
 :主题: 数组、二分查找、旋转有序数组
 :原题: `LeetCode 0033 <https://leetcode.com/problems/search-in-rotated-sorted-array/>`_

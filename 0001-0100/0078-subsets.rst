@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0078
+:题号: 0078. 子集
 :难度: Medium
 :主题: 回溯、位掩码、迭代扩展、幂集
 :原题: `LeetCode 0078 <https://leetcode.com/problems/subsets/>`_

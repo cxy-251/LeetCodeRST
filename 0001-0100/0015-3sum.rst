@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0015
+:题号: 0015. 三数之和
 :难度: Medium
 :主题: 数组、排序、双指针、去重
 :原题: `LeetCode 0015 <https://leetcode.com/problems/3sum/>`_

@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0056
+:题号: 0056. 合并区间
 :难度: Medium
 :主题: 数组、排序、区间、贪心
 :原题: `LeetCode 0056 <https://leetcode.com/problems/merge-intervals/>`_

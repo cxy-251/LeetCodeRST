@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0036
+:题号: 0036. 有效的数独
 :难度: Medium
 :主题: 矩阵、集合、位掩码
 :原题: `LeetCode 0036 <https://leetcode.com/problems/valid-sudoku/>`_

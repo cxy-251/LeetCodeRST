@@ -4,33 +4,30 @@
 题目信息
 --------
 
-:题号: 0124
+:题号: 0124. 二叉树中的最大路径和
 :难度: Hard
-:主题: 二叉树、后序遍历、树形动态规划、路径端点
+:主题: 二叉树、路径端点、后序遍历、树形动态规划
 :原题: `LeetCode 0124 <https://leetcode.com/problems/binary-tree-maximum-path-sum/>`_
-:重点: 任意起止节点、父子相邻、节点不可重复、非空路径
+:重点: 用路径的唯一最高节点分类候选，区分可同时接两侧的完整路径与只能向父节点延伸一侧的返回收益
 
 题目重述
 --------
 
-给定一棵非空二叉树，返回其中任意一条非空路径的最大节点值总和。路径可以从任意节点开始并在任意节点结束；路径中相邻节点必须由一条父子边连接，同一节点不能重复经过。路径不要求经过根节点，也不要求终点是叶节点。
+给定一棵非空二叉树，返回任意一条非空路径的最大节点值总和。路径可从任意节点开始、在任意节点结束；相邻
+节点必须由一条父子边连接，同一节点不能重复经过。路径不要求经过根，也不要求端点是叶节点。
 
-树中节点数在 ``1..3 × 10^4`` 范围内，节点值在 ``-1000..1000`` 范围内。
+树中节点总数在 ``1..3 * 10^4`` 范围内，节点值在 ``-1000..1000`` 范围内。所有值为负时也必须选择至少
+一个真实节点，不能用空路径得到 ``0``。
 
 自建示例
 --------
 
-.. code-block:: text
-
-   输入：root = [5,-2,8,4,-6,-3,10]
-   输出：25
-   解释：路径 4 -> -2 -> 5 -> 8 -> 10 合法，节点值总和为 25，是最大路径和。
-
-.. code-block:: text
-
-   输入：root = [-8,-3,-11]
-   输出：-3
-   解释：路径必须非空；所有节点值都为负数时，选择值最大的单节点 -3 最优。
+* 跨过根的路径：``root = [5,-2,8,4,-6,-3,10]``，返回 ``25``，路径为
+  ``4 -> -2 -> 5 -> 8 -> 10``；
+* 最优路径位于子树：``root = [-10,9,20,null,null,15,7]``，返回 ``42``，路径 ``15 -> 20 -> 7``
+  不经过整棵树根；
+* 全负树：``root = [-8,-3,-11]``，返回 ``-3``；
+* 单节点：``root = [6]``，返回 ``6``。
 
 C++ 实现
 --------
@@ -39,218 +36,160 @@ C++ 实现
 
    #include <algorithm>
    #include <climits>
-   #include <stack>
-   #include <unordered_map>
-   #include <utility>
 
    class Solution {
    private:
-       int downward(TreeNode* node) {
-           if (!node) return 0;
-           return node->val + std::max({0, downward(node->left), downward(node->right)});
-       }
-
-       void enumerateHighest(TreeNode* node, int& best) {
-           if (!node) return;
-           int left = std::max(0, downward(node->left));
-           int right = std::max(0, downward(node->right));
-           best = std::max(best, node->val + left + right);
-           enumerateHighest(node->left, best);
-           enumerateHighest(node->right, best);
-       }
-
-       int postorderGain(TreeNode* node, int& best) {
-           if (!node) return 0;
-           int left = std::max(0, postorderGain(node->left, best));
-           int right = std::max(0, postorderGain(node->right, best));
-           best = std::max(best, node->val + left + right);
-           return node->val + std::max(left, right);
-       }
-
-       int iterativePostorder(TreeNode* root) {
-           std::stack<std::pair<TreeNode*, bool>> stack;
-           std::unordered_map<TreeNode*, int> gain;
-           stack.push({root, false});
-           int best = INT_MIN;
-           while (!stack.empty()) {
-               auto [node, visited] = stack.top(); stack.pop();
-               if (!node) continue;
-               if (!visited) {
-                   stack.push({node, true});
-                   stack.push({node->right, false});
-                   stack.push({node->left, false});
-               } else {
-                   int left = node->left ? std::max(0, gain[node->left]) : 0;
-                   int right = node->right ? std::max(0, gain[node->right]) : 0;
-                   best = std::max(best, node->val + left + right);
-                   gain[node] = node->val + std::max(left, right);
-               }
+       int bestDownwardChain(TreeNode* node) {
+           if (!node) {
+               return 0;
            }
-           return best;
+           const int leftGain = bestDownwardChain(node->left);
+           const int rightGain = bestDownwardChain(node->right);
+           return node->val + std::max({0, leftGain, rightGain});
+       }
+
+       void enumerateHighestNodes(TreeNode* node, int& maximumPath) {
+           if (!node) {
+               return;
+           }
+           const int leftGain = std::max(0, bestDownwardChain(node->left));
+           const int rightGain = std::max(0, bestDownwardChain(node->right));
+           maximumPath = std::max(maximumPath, node->val + leftGain + rightGain);
+           enumerateHighestNodes(node->left, maximumPath);
+           enumerateHighestNodes(node->right, maximumPath);
+       }
+
+       int postorderGain(TreeNode* node, int& maximumPath) {
+           if (!node) {
+               return 0;
+           }
+           const int leftGain = std::max(0, postorderGain(node->left, maximumPath));
+           const int rightGain = std::max(0, postorderGain(node->right, maximumPath));
+           maximumPath = std::max(maximumPath, node->val + leftGain + rightGain);
+           return node->val + std::max(leftGain, rightGain);
        }
 
    public:
        int maxPathSum(TreeNode* root) {
-           int best = INT_MIN;
-           postorderGain(root, best);
-           return best;
+           int maximumPath = INT_MIN;
+           postorderGain(root, maximumPath);
+           return maximumPath;
        }
    };
 
 题解
 ----
 
-一条路径为何有唯一最高节点
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+端点对与最高节点
+~~~~~~~~~~~~~~~~
 
-树中任意两端点之间的简单路径唯一。路径上深度最小的节点是唯一最高节点；从该节点看，路径最多由左侧一条向下链、当前节点、右侧一条向下链组成。
+原始候选可以看成任选两个节点作为端点，取树中连接它们的唯一路径，再计算路径和。直接枚举端点对已经有
+``O(n²)`` 个候选，若每次还重新寻找并累加中间节点，工作会更大。
 
-为什么需要两个不同量
-~~~~~~~~~~~~~~~~~~~~
+树上任意简单路径都有一个唯一的最高节点：路径中深度最小的节点，也就是两个端点的最近公共祖先；若一个
+端点是另一个祖先，最高节点就是该端点。从最高节点看，路径最多由三部分组成：左子树中的一条向下链、当前
+节点、右子树中的一条向下链。某一侧也可以为空。
 
-当前节点可以同时连接左右收益，形成在这里闭合的完整候选：
+于是无需直接枚举端点对。可以改为枚举每个节点作为路径最高点，并只询问它的左右子树各自能提供多大的向下
+收益。每条路径会归入其唯一最高节点，不重不漏。
+
+重复求向下收益
+~~~~~~~~~~~~~~
+
+定义 ``bestDownwardChain(node)`` 为从 ``node`` 开始、沿孩子方向选择至多一侧延伸的最大非空路径和。当前
+节点必须保留，左右孩子最多选择收益较大且为正的一侧。
+
+``enumerateHighestNodes`` 对每个候选最高节点分别调用这个函数求左右收益，逻辑正确，却会反复扫描相同子树。
+单侧树中，根计算长度 ``n`` 的向下链，下一节点又计算长度 ``n - 1``，最坏时间 ``O(n²)``。子树收益应在
+首次完成时直接返回给父节点。
+
+两种不同结果
+~~~~~~~~~~~~
+
+后序处理 ``node`` 时，左右孩子各返回一条能向上连接的最佳向下链。当前节点需要产生两个不同量。
+
+以当前节点为最高点的完整候选可以同时使用两侧：
 
 .. code-block:: text
 
-   candidate = node.val + left_gain + right_gain
+   complete = node.value + leftGain + rightGain
 
-向父节点返回时只能选择一侧：
+但向父节点返回的链只能选择一侧：
 
 .. code-block:: text
 
-   return_gain = node.val + max(left_gain, right_gain)
+   upward = node.value + max(leftGain, rightGain)
 
-若同时把两侧返回，父节点继续连接后会在当前节点产生三叉结构，不再是一条路径。
+若把左右两侧都向父节点返回，父节点再连接后会在 ``node`` 处形成三个分支，不再是一条简单路径。完整候选
+负责更新全局答案，单侧收益负责参与祖先候选，这两个状态不能混用。
 
-负收益为什么截断为零
-~~~~~~~~~~~~~~~~~~~~
+负收益截断
+~~~~~~~~~~
 
-子树向下收益为负时，把它接入路径只会降低总和。完整候选和向上收益都可选择不使用该孩子，因此取 ``max(0,gain)``。当前节点本身不能省略，因为返回状态和候选路径都必须非空。
+若孩子返回的向下收益为负，把它接入当前路径只会减小总和。路径端点允许停在当前节点，所以父节点可以完全
+不使用该侧，代码将孩子收益截断为 ``max(0, gain)``。
+
+当前节点本身不能截断为空。``postorderGain`` 返回的链必须从当前真实节点开始，完整候选也至少包含当前节点。
+全局 ``maximumPath`` 初始化为 ``INT_MIN``，并在每个非空节点更新；全负树因此选择值最大的单节点，而不会
+错误返回空路径的 ``0``。
+
+后序状态走读
+~~~~~~~~~~~~
+
+对 ``[5,-2,8,4,-6,-3,10]``：
 
 .. list-table::
    :header-rows: 1
 
    * - 节点
-     - 左收益
-     - 右收益
+     - 截断后左收益
+     - 截断后右收益
      - 完整候选
      - 向上返回
-   * - 15
+   * - 4
      - 0
      - 0
-     - 15
-     - 15
-   * - 7
+     - 4
+     - 4
+   * - -6
      - 0
      - 0
-     - 7
-     - 7
-   * - 20
-     - 15
-     - 7
-     - 42
-     - 35
-   * - -10
-     - 9
-     - 35
-     - 34
+     - -6
+     - -6
+   * - -2
+     - 4
+     - 0
+     - 2
+     - 2
+   * - -3
+     - 0
+     - 0
+     - -3
+     - -3
+   * - 10
+     - 0
+     - 0
+     - 10
+     - 10
+   * - 8
+     - 0
+     - 10
+     - 18
+     - 18
+   * - 5
+     - 2
+     - 18
      - 25
+     - 23
 
-全局答案为什么不能初始化为零
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+节点 ``5`` 的完整候选同时接入两侧得到全局答案 ``25``，但只向不存在的父节点返回较大一侧形成的 ``23``。
+即使最终返回值未再使用，这一区分保证同一函数在所有子树中语义一致。
 
-全负树的最佳路径是值最大的单节点。若 ``best=0``，会错误地选择空路径。初始化为最小整数，并在每个真实节点更新一次，保证结果非空。
+主解与复杂度
+~~~~~~~~~~~~
 
-后序遍历为何恰好满足依赖
-~~~~~~~~~~~~~~~~~~~~~~~~
+公开入口采用一次后序遍历。每个节点只接收左右孩子结果、更新一次完整候选并返回一次单侧收益，重复求链的
+工作全部删除。任意路径在其唯一最高节点处都会被考虑，生成的候选又都由真实父子边组成。
 
-当前节点需要左右孩子的最大向下收益，必须先处理孩子。每个节点计算一次收益并更新一次全局候选，避免基准方法在每个最高节点重新扫描子树。
-
-为什么覆盖全部路径
-~~~~~~~~~~~~~~~~~~
-
-任意路径按其唯一最高节点分类。处理该节点时，左右递归收益分别给出两侧可选的最佳向下链，算法生成的候选不小于该路径；候选本身又由真实树边组成，是合法路径。因此所有候选最大值等于全局最优。
-
-复杂度来源
-~~~~~~~~~~
-
-重复计算向下收益的基准最坏 ``O(n²)``。后序主解法访问每个节点一次，时间 ``O(n)``，递归栈 ``O(h)``；显式后序使用 ``O(n)`` 收益表。
-
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   static int best;static int gain(struct TreeNode*x){if(!x)return 0;int l=gain(x->left),r=gain(x->right);if(l<0)l=0;if(r<0)r=0;int candidate=x->val+l+r;if(candidate>best)best=candidate;return x->val+(l>r?l:r);}int maxPathSum(struct TreeNode*root){best=INT_MIN;gain(root);return best;}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def maxPathSum(self, root) -> int:
-           best = float("-inf")
-           def gain(node):
-               nonlocal best
-               if node is None: return 0
-               left, right = max(0, gain(node.left)), max(0, gain(node.right))
-               best = max(best, node.val + left + right)
-               return node.val + max(left, right)
-           gain(root); return int(best)
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {int best=Integer.MIN_VALUE;int gain(TreeNode x){if(x==null)return 0;int l=Math.max(0,gain(x.left)),r=Math.max(0,gain(x.right));best=Math.max(best,x.val+l+r);return x.val+Math.max(l,r);}public int maxPathSum(TreeNode root){gain(root);return best;}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn max_path_sum(root:Option<Rc<RefCell<TreeNode>>>)->i32{fn gain(x:Option<Rc<RefCell<TreeNode>>>,best:&mut i32)->i32{match x{None=>0,Some(n)=>{let b=n.borrow();let l=gain(b.left.clone(),best).max(0);let r=gain(b.right.clone(),best).max(0);*best=(*best).max(b.val+l+r);b.val+l.max(r)}}}let mut best=i32::MIN;gain(root,&mut best);best}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func maxPathSum(root *TreeNode)int{best:=-int(^uint(0)>>1)-1;var gain func(*TreeNode)int;gain=func(x *TreeNode)int{if x==nil{return 0};l,r:=gain(x.Left),gain(x.Right);if l<0{l=0};if r<0{r=0};if x.Val+l+r>best{best=x.Val+l+r};if l>r{return x.Val+l};return x.Val+r};gain(root);return best}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function maxPathSum(root:TreeNode|null):number{let best=-Infinity;const gain=(x:TreeNode|null):number=>{if(!x)return 0;const l=Math.max(0,gain(x.left)),r=Math.max(0,gain(x.right));best=Math.max(best,x.val+l+r);return x.val+Math.max(l,r);};gain(root);return best;}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {int best=int.MinValue;int Gain(TreeNode x){if(x==null)return 0;int l=Math.Max(0,Gain(x.left)),r=Math.Max(0,Gain(x.right));best=Math.Max(best,x.val+l+r);return x.val+Math.Max(l,r);}public int MaxPathSum(TreeNode root){Gain(root);return best;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function max_path_sum(root)
-       best=Ref(typemin(Int))
-       function gain(x);x===nothing&&return 0;l=max(0,gain(x.left));r=max(0,gain(x.right));best[]=max(best[],x.val+l+r);x.val+max(l,r);end
-       gain(root);best[]
-   end
-
-R
-~
-
-.. code-block:: r
-
-   max_path_sum <- function(root){best<--.Machine$integer.max;gain<-function(x){if(is.null(x))return(0L);l<-max(0L,gain(x$left));r<-max(0L,gain(x$right));best<<-max(best,x$val+l+r);x$val+max(l,r)};gain(root);best}
+主解时间 ``O(n)``，递归栈 ``O(h)``，单侧树最坏为 ``O(n)``；按最高节点重复求收益的基线最坏时间
+``O(n²)``。路径和范围适合 32 位整数，返回值只占常数空间。

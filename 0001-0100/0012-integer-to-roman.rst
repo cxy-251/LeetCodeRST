@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0012
+:题号: 0012. 整数转罗马数字
 :难度: Medium
 :主题: 字符串、查表、贪心
 :原题: `LeetCode 0012 <https://leetcode.com/problems/integer-to-roman/>`_

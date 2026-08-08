@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0075
+:题号: 0075. 颜色分类
 :难度: Medium
 :主题: 数组、计数、双指针、原地分区
 :原题: `LeetCode 0075 <https://leetcode.com/problems/sort-colors/>`_

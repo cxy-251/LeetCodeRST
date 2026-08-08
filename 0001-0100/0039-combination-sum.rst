@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0039
+:题号: 0039. 组合总和
 :难度: Medium
 :主题: 数组、回溯、组合搜索、剪枝
 :原题: `LeetCode 0039 <https://leetcode.com/problems/combination-sum/>`_

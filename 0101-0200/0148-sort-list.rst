@@ -4,216 +4,230 @@
 题目信息
 --------
 
-:题号: 0148
+:题号: 0148. 排序链表
 :难度: Medium
-:主题: 链表、归并排序、自底向上迭代
+:主题: 链表、归并排序、自底向上合并、常量辅助空间
 :原题: `LeetCode 0148 <https://leetcode.com/problems/sort-list/>`_
-:重点: 非递减排序、节点完整保留、空链处理、时间与空间进阶要求
+:重点: 利用链表常数时间断链与归并，把二次插入查找降为 n log n，并用迭代轮次删除递归栈
 
 题目重述
 --------
 
-给定单链表头节点 ``head``，将链表中的全部节点按节点值从小到大排列，并返回排序后的头节点。结果链表必须保留原链表中的所有节点和值；输入为空时返回空。
-
-链表节点数在 ``0..5 * 10^4`` 范围内，节点值在 ``-10^5..10^5`` 范围内。进阶要求是在 ``O(n log n)`` 时间和 ``O(1)`` 额外空间内完成排序。
+给定单链表 ``head``，把所有节点按 ``val`` 非递减排列并返回新头节点。结果必须由全部原节点重新连接而成；
+空链返回空。进阶目标为 ``O(n log n)`` 时间和 ``O(1)`` 额外空间。
 
 自建示例
 --------
 
-.. code-block:: text
-
-   输入：head = [7,-1,3,3,0]
-   输出：[-1,0,3,3,7]
-   解释：所有节点按非递减顺序排列，两个值为 3 的节点都保留在结果链表中。
-
-.. code-block:: text
-
-   输入：head = []
-   输出：[]
-   解释：空链表没有可排序节点，因此返回空链表。
+* ``7 -> -1 -> 3 -> 3 -> 0`` 排序为 ``-1 -> 0 -> 3 -> 3 -> 7``，两个值为 ``3`` 的节点都保留；
+* 逆序链 ``4 -> 3 -> 2 -> 1`` 经过宽度 ``1``、``2`` 的两轮归并后成为有序链；
+* 空链和单节点链已经有序，直接返回。
 
 C++ 实现
 --------
 
 .. code-block:: cpp
 
-   #include <algorithm>
-   #include <vector>
-
    class Solution {
    private:
-       ListNode* arraySort(ListNode* head) {
-           std::vector<ListNode*> nodes;
-           for (ListNode* p=head; p; p=p->next) nodes.push_back(p);
-           std::stable_sort(nodes.begin(),nodes.end(),[](ListNode* a,ListNode* b){return a->val<b->val;});
-           for (int i=1;i<static_cast<int>(nodes.size());++i) nodes[i-1]->next=nodes[i];
-           if (!nodes.empty()) nodes.back()->next=nullptr;
-           return nodes.empty()?nullptr:nodes[0];
-       }
+       ListNode* mergeSortedRuns(ListNode* left, ListNode* right) {
+           ListNode sentinel(0);
+           ListNode* tail = &sentinel;
 
-       ListNode* split(ListNode* head, int size) {
-           while (head && --size) head=head->next;
-           if (!head) return nullptr;
-           ListNode* second=head->next;
-           head->next=nullptr;
-           return second;
-       }
-
-       ListNode* merge(ListNode* left,ListNode* right,ListNode*& tail) {
-           ListNode dummy(0),*current=&dummy;
-           while (left&&right) {
-               if (left->val<=right->val) {current->next=left;left=left->next;}
-               else {current->next=right;right=right->next;}
-               current=current->next;
+           while (left != nullptr && right != nullptr) {
+               if (left->val <= right->val) {
+                   tail->next = left;
+                   left = left->next;
+               } else {
+                   tail->next = right;
+                   right = right->next;
+               }
+               tail = tail->next;
            }
-           current->next=left?left:right;
-           while (current->next) current=current->next;
-           tail=current;
-           return dummy.next;
+           tail->next = left == nullptr ? right : left;
+           return sentinel.next;
        }
 
-       ListNode* bottomUp(ListNode* head) {
-           int length=0;
-           for (ListNode* p=head;p;p=p->next) ++length;
-           ListNode dummy(0);dummy.next=head;
-           for (int width=1;width<length;width*=2) {
-               ListNode* previous=&dummy;
-               ListNode* current=dummy.next;
-               while (current) {
-                   ListNode* left=current;
-                   ListNode* right=split(left,width);
-                   current=split(right,width);
-                   ListNode* tail=nullptr;
-                   previous->next=merge(left,right,tail);
-                   previous=tail;
+       ListNode* topDownMergeSort(ListNode* head) {
+           if (head == nullptr || head->next == nullptr) {
+               return head;
+           }
+
+           ListNode* slow = head;
+           ListNode* fast = head->next;
+           while (fast != nullptr && fast->next != nullptr) {
+               slow = slow->next;
+               fast = fast->next->next;
+           }
+           ListNode* right = slow->next;
+           slow->next = nullptr;
+
+           ListNode* sortedLeft = topDownMergeSort(head);
+           ListNode* sortedRight = topDownMergeSort(right);
+           return mergeSortedRuns(sortedLeft, sortedRight);
+       }
+
+       ListNode* cutRun(ListNode* head, int runLength) {
+           while (head != nullptr && runLength > 1) {
+               head = head->next;
+               --runLength;
+           }
+           if (head == nullptr) {
+               return nullptr;
+           }
+           ListNode* nextRun = head->next;
+           head->next = nullptr;
+           return nextRun;
+       }
+
+       ListNode* mergeRunsAndReturnTail(
+           ListNode* left,
+           ListNode* right,
+           ListNode*& mergedTail
+       ) {
+           ListNode sentinel(0);
+           ListNode* tail = &sentinel;
+
+           while (left != nullptr && right != nullptr) {
+               if (left->val <= right->val) {
+                   tail->next = left;
+                   left = left->next;
+               } else {
+                   tail->next = right;
+                   right = right->next;
+               }
+               tail = tail->next;
+           }
+           tail->next = left == nullptr ? right : left;
+           while (tail->next != nullptr) {
+               tail = tail->next;
+           }
+           mergedTail = tail;
+           return sentinel.next;
+       }
+
+       ListNode* bottomUpMergeSort(ListNode* head) {
+           int nodeCount = 0;
+           for (ListNode* node = head;
+                node != nullptr;
+                node = node->next) {
+               ++nodeCount;
+           }
+
+           ListNode sentinel(0);
+           sentinel.next = head;
+           for (int width = 1; width < nodeCount; width *= 2) {
+               ListNode* previousTail = &sentinel;
+               ListNode* current = sentinel.next;
+
+               while (current != nullptr) {
+                   ListNode* left = current;
+                   ListNode* right = cutRun(left, width);
+                   current = cutRun(right, width);
+
+                   ListNode* mergedTail = nullptr;
+                   previousTail->next = mergeRunsAndReturnTail(
+                       left,
+                       right,
+                       mergedTail
+                   );
+                   previousTail = mergedTail;
                }
            }
-           return dummy.next;
+           return sentinel.next;
        }
 
    public:
        ListNode* sortList(ListNode* head) {
-           return bottomUp(head);
+           return bottomUpMergeSort(head);
        }
    };
 
 题解
 ----
 
-为什么选择归并排序
+为什么插入排序不够
 ~~~~~~~~~~~~~~~~~~
 
-链表顺序访问和断链都是常数时间，归并只需比较两个表头；快速排序难以原地随机分区，插入排序最坏为 ``O(n²)``。归并天然适合链表。
+链表插入一个节点只需改常数条边，但找到插入位置仍要从有序前缀扫描。逆序输入中，第 ``i`` 个节点检查
+``O(i)`` 个前驱，总时间 ``O(n^2)``。也可以把所有节点地址放进数组后调用排序，再重连链表；时间能达到
+``O(n log n)``，却需要 ``O(n)`` 指针数组，没有利用链表自身可拆分、可顺序归并的结构。
 
-每轮 run 不变量
-~~~~~~~~~~~~~~~
+归并排序的两个核心动作都适合链表：把一条链从中间断开只需改一个 ``next``，合并两条有序链只需比较当前
+表头并移动指针，不需要数组式随机访问或整体搬移。因此可以同时达到稳定的 ``O(n log n)`` 时间。
 
-进入 ``width`` 轮时，链表由若干长度不超过 ``width`` 的有序 run 组成。每次切出相邻两段并稳定合并，轮末得到长度不超过 ``2*width`` 的有序 run。
+方案一：自顶向下分治
+~~~~~~~~~~~~~~~~~~~~
 
-切分为什么必须断链
-~~~~~~~~~~~~~~~~~~
+``topDownMergeSort`` 用快慢指针找到中间位置，先把 ``slow->next`` 保存为右半头，再置空断链。两半独立
+递归排序后，``mergeSortedRuns`` 每次取较小表头接到结果尾部，某侧耗尽后直接接上另一侧剩余有序链。
 
-``split`` 找到 run 的最后节点，保存下一段表头后把 ``next`` 置空。若不断开，合并会越过当前边界读取后续节点，导致重复连接或环。
+递归的不变量清楚：函数返回时，输入节点集合不变且已排序。单节点是天然有序的终点；两个有序半链稳定
+归并后整体有序。每层总共处理 ``n`` 个节点，分割深度 ``O(log n)``，时间 ``O(n log n)``。
 
-尾 run 如何处理
-~~~~~~~~~~~~~~~
+该方案需要 ``O(log n)`` 递归栈。若严格追求 ``O(1)`` 辅助空间，仍要保留归并思想，但把递归层改写为
+显式的段宽轮次，而且不能用一个长度为 ``log n`` 的任务栈。
 
-节点数不一定是 ``2*width`` 的倍数。右 run 可能为空，或长度不足 ``width``；稳定合并把非空剩余链直接接上，因此无需特判。
+自底向上的轮次不变量
+~~~~~~~~~~~~~~~~~~~~
 
-为什么稳定
-~~~~~~~~~~
+第一轮把每个单节点视为长度一的有序 run，两两合并成长度不超过二的有序 run；随后段宽 ``width`` 每轮
+翻倍。进入某轮时，整条链已经由长度不超过 ``width`` 的有序 run 顺次组成；把相邻两段合并后，轮末得到
+长度不超过 ``2 * width`` 的有序 run。段宽最终覆盖节点总数时，整链有序。
 
-两侧表头值相等时使用 ``<=`` 选择左 run。左 run 中的节点在输入顺序上早于右 run，所以跨 run 的相等节点保持原相对顺序。
+.. list-table::
+   :header-rows: 1
 
-复杂度来源
-~~~~~~~~~~
+   * - ``width``
+     - 轮前有序段
+     - 轮后有序段
+   * - ``1``
+     - 每个节点各自一段
+     - 相邻两个节点归并
+   * - ``2``
+     - 每段长度最多二
+     - 相邻两段归并为长度最多四
+   * - ``4``
+     - 每段长度最多四
+     - 继续归并，直至覆盖整链
 
-宽度翻倍产生 ``O(log n)`` 轮，每轮访问全部节点，时间 ``O(n log n)``。C++ 主解仅使用固定数量指针，核心额外空间 ``O(1)``。
+切出两段时为什么必须立刻断链
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-九语言实现
-----------
+一次内层循环依次执行：
 
-C
-~
+.. code-block:: text
 
-.. code-block:: c
+   left = current
+   right = cutRun(left, width)
+   current = cutRun(right, width)
 
-   static struct ListNode*split(struct ListNode*h,int n){while(h&&--n)h=h->next;if(!h)return NULL;struct ListNode*r=h->next;h->next=NULL;return r;}static struct ListNode*merge(struct ListNode*a,struct ListNode*b,struct ListNode**tail){struct ListNode dummy={0,NULL},*p=&dummy;while(a&&b){if(a->val<=b->val){p->next=a;a=a->next;}else{p->next=b;b=b->next;}p=p->next;}p->next=a?a:b;while(p->next)p=p->next;*tail=p;return dummy.next;}struct ListNode*sortList(struct ListNode*head){int n=0;for(struct ListNode*p=head;p;p=p->next)n++;struct ListNode dummy={0,head};for(int w=1;w<n;w*=2){struct ListNode*prev=&dummy,*cur=dummy.next;while(cur){struct ListNode*a=cur,*b=split(a,w);cur=split(b,w);struct ListNode*tail;prev->next=merge(a,b,&tail);prev=tail;}}return dummy.next;}
+第一次 ``cutRun`` 走到左段最后节点，保存右段头后把左尾置空；第二次同理断开右段，并返回下一对 run 的
+起点。若不断链，归并左段时会越过名义边界继续读入右段甚至后续节点，导致节点重复参与、错误连接或成环。
 
-Python
-~~~~~~
+链尾可能不足 ``width``，甚至没有右段。``cutRun`` 遇到空就返回空；归并函数会把唯一非空段直接接上，
+无需为末尾残段另写分支。
 
-.. code-block:: python
+归并与尾指针如何接回主链
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-   class Solution:
-       def sortList(self, head):
-           def merge(a,b):
-               dummy=tail=ListNode()
-               while a and b:
-                   if a.val<=b.val: tail.next,a=a,a.next
-                   else: tail.next,b=b,b.next
-                   tail=tail.next
-               tail.next=a or b
-               return dummy.next
-           def sort(node):
-               if not node or not node.next:return node
-               slow,fast=node,node.next
-               while fast and fast.next:slow,fast=slow.next,fast.next.next
-               right=slow.next;slow.next=None
-               return merge(sort(node),sort(right))
-           return sort(head)
+``previousTail`` 是本轮已经合并部分的最后节点。归并返回新段头，同时通过 ``mergedTail`` 返回新段尾；
+先令 ``previousTail->next`` 接新头，再把 ``previousTail`` 移到新尾，下一对 run 就能紧跟其后。
 
-Java
-~~~~
+归并中相等时选择左段节点。左段在本轮原顺序上先于右段，因此相等节点跨段仍保持原相对顺序；递归到每轮
+都成立，整个排序稳定。``mergeRunsAndReturnTail`` 在接上剩余链后走到真实尾部，这个额外尾扫描仍只遍历
+本轮节点常数次，不改变每轮 ``O(n)`` 上界。
 
-.. code-block:: java
+具体走读 ``4 -> 3 -> 2 -> 1``
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   class Solution {ListNode merge(ListNode a,ListNode b){ListNode d=new ListNode(),t=d;while(a!=null&&b!=null){if(a.val<=b.val){t.next=a;a=a.next;}else{t.next=b;b=b.next;}t=t.next;}t.next=a!=null?a:b;return d.next;}public ListNode sortList(ListNode h){if(h==null||h.next==null)return h;ListNode slow=h,fast=h.next;while(fast!=null&&fast.next!=null){slow=slow.next;fast=fast.next.next;}ListNode r=slow.next;slow.next=null;return merge(sortList(h),sortList(r));}}
+宽度一时切出 ``[4]`` 与 ``[3]``，合并为 ``[3,4]``；再把 ``[2]``、``[1]`` 合并为 ``[1,2]``，轮末为
+``3 -> 4 -> 1 -> 2``。宽度二时切出这两段并合并，依次选择 ``1, 2, 3, 4``，得到整条有序链。所有动作
+只改变原节点 ``next``，没有复制节点或值。
 
-Rust
-~~~~
+主解选择与复杂度
+~~~~~~~~~~~~~~~~
 
-.. code-block:: rust
-
-   impl Solution {pub fn sort_list(head:Option<Box<ListNode>>)->Option<Box<ListNode>>{fn len(h:&Option<Box<ListNode>>)->usize{let(mut n,mut p)=(0,h.as_ref());while let Some(x)=p{n+=1;p=x.next.as_ref()}n}fn split(mut h:Option<Box<ListNode>>,n:usize)->(Option<Box<ListNode>>,Option<Box<ListNode>>){if n==0{return(None,h)}let mut p=&mut h;for _ in 1..n{p=&mut p.as_mut().unwrap().next}let r=p.as_mut().unwrap().next.take();(h,r)}fn merge(a:Option<Box<ListNode>>,b:Option<Box<ListNode>>)->Option<Box<ListNode>>{match(a,b){(None,x)|(x,None)=>x,(Some(mut x),Some(mut y))=>if x.val<=y.val{x.next=merge(x.next.take(),Some(y));Some(x)}else{y.next=merge(Some(x),y.next.take());Some(y)}}}fn sort(h:Option<Box<ListNode>>)->Option<Box<ListNode>>{let n=len(&h);if n<2{return h}let(a,b)=split(h,n/2);merge(sort(a),sort(b))}sort(head)}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func sortList(h *ListNode)*ListNode{if h==nil||h.Next==nil{return h};slow,fast:=h,h.Next;for fast!=nil&&fast.Next!=nil{slow=slow.Next;fast=fast.Next.Next};r:=slow.Next;slow.Next=nil;a,b:=sortList(h),sortList(r);d:=&ListNode{};t:=d;for a!=nil&&b!=nil{if a.Val<=b.Val{t.Next=a;a=a.Next}else{t.Next=b;b=b.Next};t=t.Next};if a!=nil{t.Next=a}else{t.Next=b};return d.Next}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function sortList(h:ListNode|null):ListNode|null{if(!h||!h.next)return h;let slow=h,fast=h.next;while(fast&&fast.next){slow=slow.next!;fast=fast.next.next;}const r=slow.next;slow.next=null;let a=sortList(h),b=sortList(r),d=new ListNode(),t=d;while(a&&b){if(a.val<=b.val){t.next=a;a=a.next}else{t.next=b;b=b.next}t=t.next}t.next=a||b;return d.next;}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public ListNode SortList(ListNode h){if(h==null||h.next==null)return h;var slow=h;var fast=h.next;while(fast!=null&&fast.next!=null){slow=slow.next;fast=fast.next.next;}var r=slow.next;slow.next=null;return Merge(SortList(h),SortList(r));}ListNode Merge(ListNode a,ListNode b){var d=new ListNode();var t=d;while(a!=null&&b!=null){if(a.val<=b.val){t.next=a;a=a.next;}else{t.next=b;b=b.next;}t=t.next;}t.next=a??b;return d.next;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function sort_list(h)
-       (h===nothing||h.next===nothing)&&return h;slow=h;fast=h.next
-       while fast!==nothing&&fast.next!==nothing;slow=slow.next;fast=fast.next.next;end
-       r=slow.next;slow.next=nothing;a=sort_list(h);b=sort_list(r);d=ListNode(0,nothing);t=d
-       while a!==nothing&&b!==nothing;if a.val<=b.val;t.next=a;a=a.next;else;t.next=b;b=b.next;end;t=t.next;end
-       t.next=a===nothing ? b : a;d.next
-   end
-
-R
-~
-
-.. code-block:: r
-
-   sort_list <- function(h){if(is.null(h)||is.null(h$next))return(h);slow<-h;fast<-h$next;while(!is.null(fast)&&!is.null(fast$next)){slow<-slow$next;fast<-fast$next$next};r<-slow$next;slow$next<-NULL;a<-sort_list(h);b<-sort_list(r);d<-new.env();d$next<-NULL;t<-d;while(!is.null(a)&&!is.null(b)){if(a$val<=b$val){t$next<-a;a<-a$next}else{t$next<-b;b<-b$next};t<-t$next};t$next<-if(is.null(a))b else a;d$next}
+公开入口采用自底向上归并，满足进阶要求：``O(log n)`` 轮，每轮访问所有节点常数次，时间
+``O(n log n)``；除哨兵和固定指针外不分配随 ``n`` 增长的状态，辅助空间 ``O(1)``。自顶向下版本同样
+稳定且更易从分治定义理解，代价是 ``O(log n)`` 调用栈，因此作为有真实实现取舍的方案保留。

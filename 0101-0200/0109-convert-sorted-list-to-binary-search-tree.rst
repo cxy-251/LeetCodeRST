@@ -4,33 +4,28 @@
 题目信息
 --------
 
-:题号: 0109
+:题号: 0109. 有序链表转换二叉搜索树
 :难度: Medium
 :主题: 链表、二叉搜索树、分治、中序模拟
 :原题: `LeetCode 0109 <https://leetcode.com/problems/convert-sorted-list-to-binary-search-tree/>`_
-:重点: 非递减链表、高度平衡、中序顺序、多个合法结果
+:重点: 识别链表缺少随机访问这一瓶颈，用中序构造顺序让单向游标恰好在需要根值时到达中点
 
 题目重述
 --------
 
-给定一个按非递减顺序排列的单链表 ``head``，构造并返回一棵高度平衡的二叉搜索树。树的中序遍历必须与链表中的值序列一致；高度平衡表示任意节点的左右子树高度差不超过 ``1``。链表为空时返回空树，满足条件的树可能不唯一。
+给定一个按非递减顺序排列的单链表 ``head``，构造并返回一棵高度平衡的二叉搜索树。输出树的中序值序列应
+与链表值序列一致；高度平衡表示每个节点的左右子树高度差不超过 ``1``。
 
-链表节点数在 ``0..2 × 10^4`` 范围内，节点值在 ``-10^5..10^5`` 范围内。
+链表为空时返回空树，满足要求的树结构可能不唯一。节点总数在 ``0..2 * 10^4`` 范围内，节点值在
+``-10^5..10^5`` 范围内。算法只读取链表，不修改原有 ``next`` 关系。
 
 自建示例
 --------
 
-.. code-block:: text
-
-   输入：head = [-6,-1,2,7,13]
-   输出（层序，合法答案之一）：[2,-1,13,-6,null,7]
-   解释：输出树的中序遍历为 [-6,-1,2,7,13]，并且每个节点的左右子树高度差不超过 1。
-
-.. code-block:: text
-
-   输入：head = []
-   输出：[]
-   解释：空链表对应空树。
+* 奇数长度：``head = [-6,-1,2,7,13]``，一种合法层序结果为 ``[2,-1,13,-6,null,7]``；
+* 偶数长度：``head = [1,3,5,7]``，选择 ``5`` 为根可得到 ``[5,3,7,1]``，选择另一个中点也可合法；
+* 单节点：``head = [4]``，返回只含节点 ``4`` 的树；
+* 空链表：``head = []``，返回空树。
 
 C++ 实现
 --------
@@ -41,184 +36,156 @@ C++ 实现
 
    class Solution {
    private:
-       TreeNode* arrayBuild(const std::vector<int>& values, int left, int right) {
-           if (left > right) return nullptr;
-           int middle = left + (right - left) / 2;
-           return new TreeNode(values[middle],arrayBuild(values,left,middle-1),
-                               arrayBuild(values,middle+1,right));
-       }
-
-       TreeNode* splitByMiddle(ListNode* head, ListNode* end) {
-           if (head == end) return nullptr;
-           ListNode *slow = head, *fast = head;
-           while (fast != end && fast->next != end) {
-               slow = slow->next; fast = fast->next->next;
+       TreeNode* buildFromArray(const std::vector<int>& values, int left, int right) {
+           if (left > right) {
+               return nullptr;
            }
-           TreeNode* root = new TreeNode(slow->val);
-           root->left = splitByMiddle(head,slow);
-           root->right = splitByMiddle(slow->next,end);
+           const int middle = left + (right - left) / 2;
+           TreeNode* root = new TreeNode(values[middle]);
+           root->left = buildFromArray(values, left, middle - 1);
+           root->right = buildFromArray(values, middle + 1, right);
            return root;
        }
 
-       TreeNode* inorderSimulation(ListNode*& cursor, int count) {
-           if (count <= 0) return nullptr;
-           int left_count = count / 2;
-           TreeNode* left = inorderSimulation(cursor,left_count);
+       TreeNode* buildByFindingMiddle(ListNode* begin, ListNode* end) {
+           if (begin == end) {
+               return nullptr;
+           }
+           ListNode* slow = begin;
+           ListNode* fast = begin;
+           while (fast != end && fast->next != end) {
+               slow = slow->next;
+               fast = fast->next->next;
+           }
+           TreeNode* root = new TreeNode(slow->val);
+           root->left = buildByFindingMiddle(begin, slow);
+           root->right = buildByFindingMiddle(slow->next, end);
+           return root;
+       }
+
+       TreeNode* buildByInorderSimulation(ListNode*& cursor, int count) {
+           if (count == 0) {
+               return nullptr;
+           }
+           const int leftCount = count / 2;
+           TreeNode* leftRoot = buildByInorderSimulation(cursor, leftCount);
            TreeNode* root = new TreeNode(cursor->val);
            cursor = cursor->next;
-           root->left = left;
-           root->right = inorderSimulation(cursor,count-left_count-1);
+           root->left = leftRoot;
+           root->right = buildByInorderSimulation(cursor, count - leftCount - 1);
            return root;
        }
 
    public:
        TreeNode* sortedListToBST(ListNode* head) {
            int count = 0;
-           for (ListNode* node = head; node; node = node->next) ++count;
-           return inorderSimulation(head,count);
+           for (ListNode* node = head; node; node = node->next) {
+               ++count;
+           }
+           ListNode* cursor = head;
+           return buildByInorderSimulation(cursor, count);
        }
    };
 
 题解
 ----
 
-为什么不能直接复用数组中点
-~~~~~~~~~~~~~~~~~~~~~~~~
+数组方法的缺口
+~~~~~~~~~~~~~~
 
-链表没有常数时间随机访问。对每个子链表重新使用快慢指针寻找中点虽然正确，但各层会重复扫描节点，总时间 ``O(n log n)``。
+对有序数组，选择中点为根、递归处理左右区间，就能同时保持中序顺序和高度平衡。链表值同样有序，根也应取
+当前片段的中间值；区别在于单链表只能沿 ``next`` 前进，无法通过下标在常数时间到达中点。
 
-中序构造如何避开随机访问
-~~~~~~~~~~~~~~~~~~~~~~~~
+最直接的正确方案是先把全部值复制到数组，再调用中点分治。``buildFromArray`` 的每个状态都能随机访问
+``values[middle]``，构造时间为 ``O(n)``；但转换数组额外保存了整份 ``O(n)`` 值，而返回树最终只需要这些
+值各出现一次。
 
-BST 的中序遍历应按链表顺序消费值。先统计节点总数，再令递归状态 ``build(count)`` 构造接下来 ``count`` 个值形成的平衡树：
+重复寻找中点
+~~~~~~~~~~~~
 
-#. 构造前 ``count/2`` 个值的左子树；
-#. 当前链表游标指向根值，创建根并前进一步；
-#. 用剩余值构造右子树。
+若不使用数组，可以把子链表表示为半开区间 ``[begin, end)``，每次用快慢指针找到中点。``fast`` 每次走
+两步、``slow`` 每次走一步；快指针抵达边界时，慢指针位于中间节点。根左侧区间为 ``[begin, slow)``，
+右侧区间为 ``[slow->next, end)``。
 
-为什么左子树完成后游标恰好指向根
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+``buildByFindingMiddle`` 不复制值，也不切断链表，因此空间状态很小。然而每层递归都要从当前区间开头重新走
+到中点。树被中点划分得近似平衡，每个递归层合计扫描 ``O(n)`` 个链表节点，共 ``O(log n)`` 层，总时间
+为 ``O(n log n)``。瓶颈是为获得随机访问效果而重复顺序扫描。
 
-左递归严格消费 ``left_count`` 个链表节点。进入状态时游标位于区间首值，因此返回后它恰好移动到该区间的第 ``left_count+1`` 个值，也就是选择的中点根。
+构造顺序转换
+~~~~~~~~~~~~
+
+最终树的中序遍历必须按链表顺序出现。与其先找根再构造孩子，可以反过来模拟中序构造过程：先构造左子树，
+再用当前链表节点创建根，最后构造右子树。这样链表游标始终只向前走。
+
+定义 ``build(count)`` 为“从 ``cursor`` 指向的位置开始，消费接下来的 ``count`` 个链表节点，构造一棵平衡
+子树”。状态按以下顺序执行：
+
+#. 左子树消费 ``leftCount = count / 2`` 个值；
+#. 左递归返回后，``cursor`` 指向当前区间中点，用它创建根并前进一步；
+#. 右子树消费剩余的 ``count - leftCount - 1`` 个值。
+
+递归调用发生在根节点创建之前并不影响最终父子关系。左递归先返回 ``leftRoot``，根创建后再把这个指针接到
+``root->left``；构造时间顺序与树中父节点是否先存在是两回事。
+
+游标不变量
+~~~~~~~~~~
+
+进入 ``build(count)`` 时，``cursor`` 指向当前子树中序序列的第一个未消费值；返回时，它恰好前进
+``count`` 次，指向下一段序列的开头。左递归按定义消费 ``leftCount`` 个节点，所以返回时游标自然落在根值，
+不需要寻找中点。
+
+对 ``[-6,-1,2,7,13]``，构造状态如下：
 
 .. list-table::
    :header-rows: 1
 
-   * - 构造规模
+   * - 状态规模
      - 左规模
-     - 根值
+     - 左递归后根值
      - 右规模
+     - 返回后下一个值
    * - 5
      - 2
-     - 0
      - 2
-   * - 左侧规模 2
+     - 2
+     - 链表结束
+   * - 左侧 2
      - 1
      - -1
      - 0
-   * - 右侧规模 2
+     - 2
+   * - 左侧 1
+     - 0
+     - -6
+     - 0
+     - -1
+   * - 右侧 2
      - 1
      - 13
      - 0
+     - 链表结束
+   * - 右侧的左 1
+     - 0
+     - 7
+     - 0
+     - 13
 
-为什么树保持平衡
-~~~~~~~~~~~~~~~
+每创建一个树节点只消费一次当前链表节点。先左、根、右的构造顺序也保证输出树的中序值序列与原链表完全
+相同；无需复制值，也不会改变任何原链表节点的 ``next``。
 
-每个状态将 ``count`` 拆为 ``floor(count/2)`` 和 ``count-floor(count/2)-1``，两侧规模差最多 1。按规模归纳，子树平衡且高度差不超过 1，因此当前节点也平衡。
-
-为什么中序序列不变
-~~~~~~~~~~~~~~~~~~
-
-构造顺序正是左子树、根、右子树；链表游标只向前移动，并且每创建一个树节点消费一个链表值。因此树的中序遍历与原链表值序列完全相同。
-
-三种方法的取舍
-~~~~~~~~~~~~~
-
-转数组后按中点递归需要 ``O(n)`` 数组空间；快慢指针不需要数组，但每层都要重新寻找中点；
-中序模拟仅使用递归栈和一个顺序游标，同时保持线性时间。
-
-复杂度来源
+平衡与主解
 ~~~~~~~~~~
 
-长度统计和构造各扫描一次，时间 ``O(n)``。递归深度 ``O(log n)``，不计返回树时额外空间 ``O(log n)``。C++ 主实现只读取链表值并前移游标，不修改输入链表链接。
+每个 ``count`` 被拆成 ``floor(count / 2)`` 个左节点、一个根和余下右节点，两侧规模差最多 ``1``。两侧又
+递归执行同样划分，因此构造高度为 ``O(log n)``，每个节点的左右子树高度差不超过 ``1``。偶数规模选择的
+中点由 ``leftCount`` 决定，换另一中点也可能得到不同但合法的树。
 
-九语言实现
-----------
+公开入口采用中序模拟。它先用一次顺序扫描得到节点数，再用第二次顺序消费完成构造，删除了数组副本和每层
+快慢指针扫描。
 
-C
-~
-
-.. code-block:: c
-
-   static struct TreeNode*build(struct ListNode**cursor,int count){if(count<=0)return NULL;int left=count/2;struct TreeNode*l=build(cursor,left);struct TreeNode*x=malloc(sizeof(*x));x->val=(*cursor)->val;*cursor=(*cursor)->next;x->left=l;x->right=build(cursor,count-left-1);return x;}struct TreeNode*sortedListToBST(struct ListNode*head){int n=0;for(struct ListNode*x=head;x;x=x->next)n++;return build(&head,n);}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def sortedListToBST(self, head):
-           count, node = 0, head
-           while node: count += 1; node = node.next
-           cursor = head
-           def build(size):
-               nonlocal cursor
-               if size <= 0: return None
-               left = build(size // 2)
-               root = TreeNode(cursor.val); cursor = cursor.next; root.left = left
-               root.right = build(size - size//2 - 1); return root
-           return build(count)
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {ListNode cursor;TreeNode build(int n){if(n<=0)return null;TreeNode left=build(n/2);TreeNode x=new TreeNode(cursor.val);cursor=cursor.next;x.left=left;x.right=build(n-n/2-1);return x;}public TreeNode sortedListToBST(ListNode head){int n=0;for(ListNode x=head;x!=null;x=x.next)n++;cursor=head;return build(n);}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn sorted_list_to_bst(mut head:Option<Box<ListNode>>)->Option<Rc<RefCell<TreeNode>>>{fn length(mut x:&Option<Box<ListNode>>)->usize{let mut n=0;while let Some(node)=x{n+=1;x=&node.next}n}fn build(cursor:&mut Option<Box<ListNode>>,size:usize)->Option<Rc<RefCell<TreeNode>>>{if size==0{return None}let left=build(cursor,size/2);let mut list_node=cursor.take().unwrap();let value=list_node.val;*cursor=list_node.next.take();let mut root=TreeNode::new(value);root.left=left;root.right=build(cursor,size-size/2-1);Some(Rc::new(RefCell::new(root)))}let n=length(&head);build(&mut head,n)}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func sortedListToBST(head *ListNode)*TreeNode{n:=0;for x:=head;x!=nil;x=x.Next{n++};cursor:=head;var build func(int)*TreeNode;build=func(size int)*TreeNode{if size<=0{return nil};left:=build(size/2);x:=&TreeNode{Val:cursor.Val};cursor=cursor.Next;x.Left=left;x.Right=build(size-size/2-1);return x};return build(n)}
-
-TypeScript
+复杂度分析
 ~~~~~~~~~~
 
-.. code-block:: typescript
-
-   function sortedListToBST(head:ListNode|null):TreeNode|null{let n=0,cursor=head;for(let x=head;x;x=x.next)n++;const build=(size:number):TreeNode|null=>{if(size<=0)return null;const left=build(Math.floor(size/2));const x=new TreeNode(cursor!.val);cursor=cursor!.next;x.left=left;x.right=build(size-Math.floor(size/2)-1);return x;};return build(n);}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {ListNode cursor;TreeNode Build(int n){if(n<=0)return null;TreeNode left=Build(n/2);var x=new TreeNode(cursor.val);cursor=cursor.next;x.left=left;x.right=Build(n-n/2-1);return x;}public TreeNode SortedListToBST(ListNode head){int n=0;for(var x=head;x!=null;x=x.next)n++;cursor=head;return Build(n);}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function sorted_list_to_bst(head)
-       n=0;x=head;while x!==nothing;n+=1;x=x.next;end;cursor=Ref(head)
-       function build(size);size<=0&&return nothing;left=build(size÷2);x=TreeNode(cursor[].val);cursor[]=cursor[].next;x.left=left;x.right=build(size-size÷2-1);x;end
-       build(n)
-   end
-
-R
-~
-
-.. code-block:: r
-
-   sorted_list_to_bst <- function(head){n<-0L;x<-head;while(!is.null(x)){n<-n+1L;x<-x$next};cursor<-head;build<-function(size){if(size<=0L)return(NULL);left<-build(size%/%2L);x<-new.env();x$val<-cursor$val;cursor<<-cursor$next;x$left<-left;x$right<-build(size-size%/%2L-1L);x};build(n)}
+转数组法时间 ``O(n)``、数组工作空间 ``O(n)``；重复找中点法时间 ``O(n log n)``、递归栈 ``O(log n)``；
+中序模拟的计数与构造各扫描一次，总时间 ``O(n)``，递归栈 ``O(log n)``。返回树的 ``O(n)`` 节点不计入
+工作空间。

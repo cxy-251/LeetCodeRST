@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0063
+:题号: 0063. 不同路径 II
 :难度: Medium
 :主题: 动态规划、网格、障碍、滚动数组
 :原题: `LeetCode 0063 <https://leetcode.com/problems/unique-paths-ii/>`_

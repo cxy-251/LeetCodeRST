@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0035
+:题号: 0035. 搜索插入位置
 :难度: Easy
 :主题: 数组、二分查找、下界
 :原题: `LeetCode 0035 <https://leetcode.com/problems/search-insert-position/>`_

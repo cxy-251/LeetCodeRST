@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0006
+:题号: 0006. Z 字形变换
 :难度: Medium
 :主题: 字符串、模拟、周期、索引映射
 :原题: `LeetCode 0006 <https://leetcode.com/problems/zigzag-conversion/>`_

@@ -4,33 +4,27 @@
 题目信息
 --------
 
-:题号: 0139
+:题号: 0139. 单词拆分
 :难度: Medium
-:主题: 动态规划、字符串匹配、位置图可达性
+:主题: 字符串、动态规划、记忆化搜索、位置可达性
 :原题: `LeetCode 0139 <https://leetcode.com/problems/word-break/>`_
-:重点: 完整切分、字典词可重复使用、布尔可达性
+:重点: 用切分位置表示已完整覆盖的前缀，将指数切分树压缩为有限位置状态，并只从可达位置传播
 
 题目重述
 --------
 
-给定非空字符串 ``s`` 和字符串字典 ``wordDict``，判断能否把 ``s`` 按原顺序完整切分成一个或多个非空字典单词。每次使用单词不会消耗它，因此同一个字典词可以在切分中重复出现。只需返回是否存在至少一种合法切分。
-
-``s`` 的长度在 ``1..300`` 范围内，``wordDict`` 长度在 ``1..1000`` 范围内，每个字典词长度在 ``1..20`` 范围内；字符串只包含小写英文字母，字典中的单词互不相同。
+给定非空字符串 ``s`` 和字典 ``wordDict``，判断能否把 ``s`` 按原顺序完整切分成一个或多个非空字典词。
+每次使用不会消耗字典词，所以同一个词可以在不同位置重复使用。只需返回是否存在至少一种合法切分，不必
+输出具体方案。
 
 自建示例
 --------
 
-.. code-block:: text
-
-   输入：s = "mintmint", wordDict = ["mint"]
-   输出：true
-   解释：可以切分为 "mint" | "mint"，同一个字典词允许重复使用。
-
-.. code-block:: text
-
-   输入：s = "applepenx", wordDict = ["apple","pen"]
-   输出：false
-   解释：前八个字符可以切成 "apple" | "pen"，但末尾的 "x" 无法由任何字典词覆盖。
+* ``s = "mintmint"``、``wordDict = ["mint"]``：可切为 ``mint | mint``，返回 ``true``；
+* ``s = "applepenx"``、字典为 ``["apple", "pen"]``：前八个字符可覆盖，但末尾 ``x`` 无法覆盖，
+  返回 ``false``；
+* ``s = "cars"``、字典为 ``["car", "ca", "rs"]``：``ca | rs`` 可行，不能因先尝试 ``car`` 失败
+  就否定其他切点。
 
 C++ 实现
 --------
@@ -38,178 +32,177 @@ C++ 实现
 .. code-block:: cpp
 
    #include <string>
-   #include <unordered_set>
    #include <vector>
 
    class Solution {
    private:
-       bool plainDfs(const std::string& s, int start,
-                     const std::unordered_set<std::string>& dictionary) {
-           if (start == static_cast<int>(s.size())) return true;
-           for (int end = start + 1; end <= static_cast<int>(s.size()); ++end)
-               if (dictionary.count(s.substr(start, end - start)) &&
-                   plainDfs(s, end, dictionary)) return true;
+       bool matchesAt(
+           const std::string& s,
+           int start,
+           const std::string& word
+       ) {
+           const int wordLength = static_cast<int>(word.size());
+           return start + wordLength <= static_cast<int>(s.size()) &&
+                  s.compare(start, wordLength, word) == 0;
+       }
+
+       bool searchEveryCut(
+           const std::string& s,
+           int start,
+           const std::vector<std::string>& words
+       ) {
+           if (start == static_cast<int>(s.size())) {
+               return true;
+           }
+           for (const std::string& word : words) {
+               if (matchesAt(s, start, word) &&
+                   searchEveryCut(
+                       s,
+                       start + static_cast<int>(word.size()),
+                       words
+                   )) {
+                   return true;
+               }
+           }
            return false;
        }
 
-       bool memoDfs(const std::string& s, int start,
-                    const std::unordered_set<std::string>& dictionary,
-                    std::vector<int>& memo) {
-           if (start == static_cast<int>(s.size())) return true;
-           if (memo[start] != -1) return memo[start];
-           for (int end = start + 1; end <= static_cast<int>(s.size()); ++end)
-               if (dictionary.count(s.substr(start, end - start)) &&
-                   memoDfs(s, end, dictionary, memo)) return memo[start] = 1;
-           return memo[start] = 0;
-       }
+       bool searchWithMemo(
+           const std::string& s,
+           int start,
+           const std::vector<std::string>& words,
+           std::vector<int>& memo
+       ) {
+           if (start == static_cast<int>(s.size())) {
+               return true;
+           }
+           if (memo[start] != -1) {
+               return memo[start] == 1;
+           }
 
-       bool prefixDp(const std::string& s,
-                     const std::vector<std::string>& words) {
-           int n = s.size();
-           std::vector<char> reachable(n + 1);
-           reachable[0] = true;
-           for (int start = 0; start < n; ++start) {
-               if (!reachable[start]) continue;
-               for (const std::string& word : words) {
-                   int end = start + word.size();
-                   if (end <= n && s.compare(start, word.size(), word) == 0)
-                       reachable[end] = true;
+           for (const std::string& word : words) {
+               const int next = start + static_cast<int>(word.size());
+               if (matchesAt(s, start, word) &&
+                   searchWithMemo(s, next, words, memo)) {
+                   memo[start] = 1;
+                   return true;
                }
            }
-           return reachable[n];
+           memo[start] = 0;
+           return false;
+       }
+
+       bool propagateReachablePrefixes(
+           const std::string& s,
+           const std::vector<std::string>& words
+       ) {
+           const int length = static_cast<int>(s.size());
+           std::vector<bool> reachable(length + 1, false);
+           reachable[0] = true;
+
+           for (int start = 0; start < length; ++start) {
+               if (!reachable[start]) {
+                   continue;
+               }
+               for (const std::string& word : words) {
+                   if (matchesAt(s, start, word)) {
+                       const int end =
+                           start + static_cast<int>(word.size());
+                       reachable[end] = true;
+                   }
+               }
+           }
+           return reachable[length];
        }
 
    public:
-       bool wordBreak(std::string s, std::vector<std::string>& wordDict) {
-           return prefixDp(s, wordDict);
+       bool wordBreak(
+           std::string s,
+           std::vector<std::string>& wordDict
+       ) {
+           return propagateReachablePrefixes(s, wordDict);
        }
    };
 
 题解
 ----
 
-字符边界图
-~~~~~~~~~~
+原始选择空间：下一段取哪个字典词
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-字符串有 ``n+1`` 个切分位置。若字典词 ``word`` 与 ``s[start:end]`` 相同，就存在一条 ``start -> end`` 的有向边。题目等价于判断顶点 ``n`` 是否从 0 可达。
+从位置 ``start`` 开始，可以尝试所有与当前后缀前缀匹配的字典词；选择一个后，进入它末尾之后的新位置。
+``searchEveryCut`` 正是这棵选择树。抵达字符串末尾说明每一段都来自字典，返回真；一个分支失败后还要尝试
+其他词，因为不同长度的匹配词会产生不同切点。
 
-状态定义
-~~~~~~~~
+这比枚举所有 ``n-1`` 个切缝再验证更早删除了非字典片段，但仍可能指数增长。例如许多短词都能匹配
+``"aaaa..."`` 的前缀，不同切分前缀会反复到达相同 ``start``，再完整尝试相同后缀。
 
-``reachable[i]`` 表示前 ``i`` 个字符能被字典词完整覆盖。初始化 ``reachable[0]=true``，空前缀是传播的单位元，不代表公开答案中使用空单词。
+后缀只由位置决定
+~~~~~~~~~~~~~~~~
+
+到达 ``start`` 后，未来能否完成只取决于 ``s[start..]`` 和固定字典，不取决于此前用了哪些词。字典词不是
+消耗品，所以状态中也不需要“剩余词集合”。``searchWithMemo`` 为每个位置保存三种状态：``-1`` 尚未计算、
+``0`` 不可完成、``1`` 可以完成。每个后缀只展开一次，指数路径树被压缩为至多 ``n`` 个位置状态。
+
+短路分支也有明确含义：找到一个匹配词且其后缀可完成，就足以把当前状态记为真；只有所有匹配词都失败，
+才能记为假。
+
+字符边界构成一张有向无环图
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+字符串有 ``0..n`` 共 ``n+1`` 个边界位置。若字典词 ``word`` 在 ``start`` 处匹配，就存在一条
+``start -> start + word.length`` 的边。边总是向更大下标前进，因此图无环；题目等价于判断节点 ``n`` 是否
+从节点 ``0`` 可达。
+
+记忆化搜索从终点反问后缀能否完成；主解则按下标拓扑顺序正向传播。令 ``reachable[i]`` 表示前 ``i`` 个
+字符能否被若干字典词完整覆盖。空前缀 ``reachable[0] = true`` 是传播起点，并不表示字典含空词；题目
+字符串非空，最终仍需沿至少一条非空单词边才能到达 ``n``。
+
+为什么只能从可达起点传播
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+某个词即使在位置 ``start`` 与后缀匹配，若 ``s[0..start-1]`` 无法完整切分，这条局部匹配也不能属于从
+零出发的完整方案。代码先检查 ``reachable[start]``，只从已有合法前缀延伸；匹配成功后把词尾边界标为
+可达。不可达位置无需尝试全部字典词，既是正确剪枝，也删除无效字符串比较。
+
+具体走读词的重复使用
+~~~~~~~~~~~~~~~~~~~~
+
+对 ``s = "mintmint"``、字典 ``["mint"]``：
 
 .. list-table::
    :header-rows: 1
 
-   * - 起点
-     - 状态
-     - 匹配词
-     - 新状态
-   * - 0
-     - 可达
-     - ``"mint"``
-     - 4 可达
-   * - 4
-     - 可达
-     - ``"mint"``
-     - 8 可达
-   * - 8
-     - 终点
-     - —
-     - 返回真
+   * - 起始边界
+     - 当前状态
+     - 匹配与传播
+   * - ``0``
+     - ``reachable[0] = true``
+     - ``mint`` 匹配，标记 ``reachable[4]``
+   * - ``1..3``
+     - 不可达
+     - 全部跳过
+   * - ``4``
+     - ``reachable[4] = true``
+     - 再次尝试同一个 ``mint``，标记 ``reachable[8]``
+   * - ``8``
+     - 终点可达
+     - 返回 ``true``
 
-为什么只从可达位置传播
-~~~~~~~~~~~~~~~~~~~~~~
+字典词只定义边的匹配规则，每个可达位置都会重新遍历字典，所以重复使用自然发生，不需要复制词或维护
+使用次数。
 
-即使某个后缀能匹配字典词，若它之前的前缀无法完整切分，该边也不能属于从 0 出发的合法路径。跳过不可达起点既正确，也避免无效比较。
+代码顺序与边界
+~~~~~~~~~~~~~~
 
-为什么字典词可以重复使用
-~~~~~~~~~~~~~~~~~~~~~~~~
+``matchesAt`` 先检查单词不会越过字符串末尾，再调用定长 ``compare``，避免构造临时子串。正向 DP 按
+``start`` 递增处理；所有入边都来自更小下标，所以访问一个位置时，它的可达性已经不会再被更晚位置改变。
+即使终点提前标真，继续扫描也不影响结果；也可据此增加提前返回，但不是正确性所必需。
 
-字典只提供边标签，不是一次性资源。每个可达位置都可以重新尝试全部词，因此同一词可在不同位置多次出现。
+主解选择与复杂度
+~~~~~~~~~~~~~~~~
 
-为什么最终状态足够
-~~~~~~~~~~~~~~~~~~
-
-每次传播只沿真实字典词覆盖的连续片段前进，所以任何可达状态对应合法切分；任意合法切分又是一系列字典边，按拓扑顺序会逐步把终点标为可达。
-
-复杂度来源
-~~~~~~~~~~
-
-设字符串长度 ``n``、字典词数 ``D``、最大词长 ``L``。定点比较的最坏时间 ``O(nDL)``，状态数组 ``O(n)``。按所有切点枚举子串的常见实现为 ``O(n²)`` 次匹配。
-
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   bool wordBreak(char*s,char**words,int count){int n=strlen(s);bool*r=calloc((size_t)n+1,sizeof(bool));r[0]=true;for(int start=0;start<n;start++)if(r[start])for(int j=0;j<count;j++){int len=strlen(words[j]);if(start+len<=n&&!strncmp(s+start,words[j],(size_t)len))r[start+len]=true;}bool out=r[n];free(r);return out;}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def wordBreak(self, s: str, wordDict: list[str]) -> bool:
-           reachable=[False]*(len(s)+1); reachable[0]=True
-           for start in range(len(s)):
-               if not reachable[start]: continue
-               for word in wordDict:
-                   if s.startswith(word,start): reachable[start+len(word)]=True
-           return reachable[-1]
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public boolean wordBreak(String s,List<String>words){boolean[]r=new boolean[s.length()+1];r[0]=true;for(int st=0;st<s.length();st++)if(r[st])for(String w:words)if(st+w.length()<=s.length()&&s.startsWith(w,st))r[st+w.length()]=true;return r[s.length()];}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn word_break(s:String,words:Vec<String>)->bool{let b=s.as_bytes();let mut r=vec![false;b.len()+1];r[0]=true;for st in 0..b.len(){if !r[st]{continue}for w in &words{let x=w.as_bytes();if st+x.len()<=b.len()&&&b[st..st+x.len()]==x{r[st+x.len()]=true;}}}r[b.len()]}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func wordBreak(s string,words []string)bool{r:=make([]bool,len(s)+1);r[0]=true;for st:=0;st<len(s);st++{if !r[st]{continue};for _,w:=range words{if st+len(w)<=len(s)&&s[st:st+len(w)]==w{r[st+len(w)]=true}}};return r[len(s)]}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function wordBreak(s:string,words:string[]):boolean{const r=Array(s.length+1).fill(false);r[0]=true;for(let st=0;st<s.length;st++)if(r[st])for(const w of words)if(s.startsWith(w,st))r[st+w.length]=true;return r[s.length];}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public bool WordBreak(string s,IList<string>words){var r=new bool[s.Length+1];r[0]=true;for(int st=0;st<s.Length;st++)if(r[st])foreach(var w in words)if(st+w.Length<=s.Length&&s.AsSpan(st,w.Length).SequenceEqual(w))r[st+w.Length]=true;return r[s.Length];}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function word_break(s,words)
-       a=collect(codeunits(s));r=falses(length(a)+1);r[1]=true
-       for st in 0:length(a)-1;r[st+1]||continue;for w in words;b=collect(codeunits(w));if st+length(b)<=length(a)&&a[st+1:st+length(b)]==b;r[st+length(b)+1]=true;end;end;end;r[end]
-   end
-
-R
-~
-
-.. code-block:: r
-
-   word_break <- function(s,words){n<-nchar(s,type="bytes");reachable<-rep(FALSE,n+1L);reachable[[1L]]<-TRUE;if(n>0L)for(st in 0:(n-1L))if(reachable[[st+1L]])for(w in words){len<-nchar(w,type="bytes");if(st+len<=n&&substr(s,st+1L,st+len)==w)reachable[[st+len+1L]]<-TRUE};reachable[[n+1L]]}
+公开入口采用前缀可达 DP，避免递归深度，状态含义也直接对应“完整覆盖”。设字符串长度为 ``n``、字典词数
+为 ``D``、最大词长为 ``L``，最多从 ``n`` 个可达位置尝试 ``D`` 个词，每次比较 ``O(L)``，最坏时间
+``O(nDL)``、空间 ``O(n)``。记忆化搜索具有相同数量的位置状态和类似匹配上界，但使用递归栈；无记忆 DFS
+最坏为指数时间。三种代码保留的是从路径枚举、状态合并到迭代可达性的真实演进。

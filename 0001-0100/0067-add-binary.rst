@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0067
+:题号: 0067. 二进制求和
 :难度: Easy
 :主题: 字符串、二进制、双指针、进位
 :原题: `LeetCode 0067 <https://leetcode.com/problems/add-binary/>`_

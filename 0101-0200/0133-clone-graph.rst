@@ -4,34 +4,25 @@
 题目信息
 --------
 
-:题号: 0133
+:题号: 0133. 克隆图
 :难度: Medium
-:主题: 图、深度优先搜索、广度优先搜索、深拷贝
+:主题: 图、深度优先搜索、广度优先搜索、对象映射
 :原题: `LeetCode 0133 <https://leetcode.com/problems/clone-graph/>`_
-:重点: 节点一一映射、环、共享邻居、副本完全独立
+:重点: 用原节点身份建立唯一副本映射，先登记再展开邻居，从而同时处理环、共享节点和深拷贝
 
 题目重述
 --------
 
-给定连通无向图中的一个节点 ``node``，返回整张图的深拷贝。每个原节点必须对应一个新创建的副本节点，副本具有相同的 ``val``，并且副本之间的邻接关系与原图完全一致；返回图中的任何节点或邻接引用都不能指向原图对象。输入为空时返回空。
-
-图中节点数在 ``0..100`` 范围内。非空图中节点值为 ``1..n`` 且互不相同，节点值与其在邻接表中的一基编号一致；图连通，不含自环和重复边。
+给定连通无向图中的一个节点 ``node``，返回整张图的深拷贝。每个原节点都要对应一个新创建的节点，值相同；
+原图中的每条邻接关系都要在副本节点之间重建。返回图不能包含任何指向原节点的引用。输入为空时返回
+``nullptr``。
 
 自建示例
 --------
 
-.. code-block:: text
-
-   输入：node = 1
-         adjList = [[2,3],[1,3],[1,2,4],[3]]
-   输出副本的 adjList：[[2,3],[1,3],[1,2,4],[3]]
-   解释：副本保持全部无向边，但四个副本节点都是新对象；修改副本不会改变原图。
-
-.. code-block:: text
-
-   输入：node = null
-   输出：null
-   解释：空图没有节点需要复制。
+* 三角形 ``1 -- 2 -- 3 -- 1``：副本也必须形成三角形，但三个节点都使用新地址；
+* 若 ``1`` 和 ``2`` 都邻接 ``3``，两个副本的邻接表必须指向同一个 ``clone(3)``，不能各创建一份；
+* ``node = nullptr``：图为空，直接返回空指针。
 
 C++ 实现
 --------
@@ -43,31 +34,50 @@ C++ 实现
 
    class Solution {
    private:
-       Node* dfs(Node* node, std::unordered_map<Node*,Node*>& copies) {
-           if (!node) return nullptr;
-           auto found = copies.find(node);
-           if (found != copies.end()) return found->second;
-           Node* copy = new Node(node->val);
-           copies[node] = copy;
-           for (Node* neighbor : node->neighbors)
-               copy->neighbors.push_back(dfs(neighbor, copies));
+       Node* cloneWithDfs(
+           Node* original,
+           std::unordered_map<Node*, Node*>& copies
+       ) {
+           if (original == nullptr) {
+               return nullptr;
+           }
+           auto found = copies.find(original);
+           if (found != copies.end()) {
+               return found->second;
+           }
+
+           Node* copy = new Node(original->val);
+           copies[original] = copy;
+           for (Node* originalNeighbor : original->neighbors) {
+               copy->neighbors.push_back(
+                   cloneWithDfs(originalNeighbor, copies)
+               );
+           }
            return copy;
        }
 
-       Node* bfs(Node* node) {
-           if (!node) return nullptr;
-           std::unordered_map<Node*,Node*> copies;
-           std::queue<Node*> queue;
+       Node* cloneWithBfs(Node* node) {
+           if (node == nullptr) {
+               return nullptr;
+           }
+
+           std::unordered_map<Node*, Node*> copies;
+           std::queue<Node*> pending;
            copies[node] = new Node(node->val);
-           queue.push(node);
-           while (!queue.empty()) {
-               Node* current = queue.front(); queue.pop();
-               for (Node* neighbor : current->neighbors) {
-                   if (!copies.count(neighbor)) {
-                       copies[neighbor] = new Node(neighbor->val);
-                       queue.push(neighbor);
+           pending.push(node);
+
+           while (!pending.empty()) {
+               Node* original = pending.front();
+               pending.pop();
+               for (Node* originalNeighbor : original->neighbors) {
+                   if (!copies.count(originalNeighbor)) {
+                       copies[originalNeighbor] =
+                           new Node(originalNeighbor->val);
+                       pending.push(originalNeighbor);
                    }
-                   copies[current]->neighbors.push_back(copies[neighbor]);
+                   copies[original]->neighbors.push_back(
+                       copies[originalNeighbor]
+                   );
                }
            }
            return copies[node];
@@ -75,130 +85,86 @@ C++ 实现
 
    public:
        Node* cloneGraph(Node* node) {
-           std::unordered_map<Node*,Node*> copies;
-           return dfs(node, copies);
+           std::unordered_map<Node*, Node*> copies;
+           return cloneWithDfs(node, copies);
        }
    };
 
 题解
 ----
 
-为什么值不能作为通用身份
-~~~~~~~~~~~~~~~~~~~~~~~~
+深拷贝需要同时复制节点与关系
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-深拷贝要保持节点对象的一一对应。即使官方值唯一，算法本质仍应按原节点地址或引用建立映射；值相同的扩展输入也不能合并为同一副本。
+若只新建入口节点，再把原邻接表直接赋给它，返回图中的边仍指向原节点，只是浅拷贝。若对每条邻接引用都
+无条件递归创建新节点，问题又变成沿所有图路径展开：无向边会让 ``1 -> 2`` 之后立刻沿 ``2 -> 1`` 返回，
+形成无限递归；即使图无环，两个路径汇合到同一节点时也会创建两份副本，破坏共享关系。
 
-为什么先登记再递归
-~~~~~~~~~~~~~~~~~~
+真正需要维持的不变量是：每个原节点对象恰好对应一个副本对象。于是核心状态不是“哪些值见过”，而是
+``copies[original] = copy`` 的对象身份映射。原节点只作为遍历和哈希键使用，所有新边都必须连接映射右侧的
+副本。
 
-遇到原节点时先创建副本并写入映射，再递归邻居。若邻居通过环回到当前节点，映射已经存在，直接返回同一副本，递归不会无限循环。
+为什么不能把 ``val`` 当作通用身份
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+当前题目数据可能保证节点值唯一，但深拷贝的结构语义由节点对象决定，而不是标签决定。若扩展输入允许两个
+不同节点拥有相同值，按值建表会错误地把它们合并。使用 ``Node*`` 作为键直接表达“这是同一个原对象”，
+也让算法不依赖偶然的值域约束。
+
+递归主解：先登记节点，再复制边
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``cloneWithDfs`` 对首次遇到的 ``original`` 分成两个阶段：先分配只带相同 ``val`` 的空副本并写入映射，
+再依次处理原邻接表。这个顺序是环处理的关键，而不只是实现细节。
+
+以三角形 ``1 -> 2 -> 3 -> 1`` 为例：
 
 .. list-table::
    :header-rows: 1
 
-   * - 原节点
-     - 动作
-     - 映射状态
-   * - 1
-     - 创建 clone(1)
-     - ``1 -> clone(1)``
-   * - 2
-     - 创建 clone(2)
-     - 增加 ``2 -> clone(2)``
-   * - 再遇到 1
-     - 直接复用
-     - 不创建重复节点
+   * - 当前调用
+     - 映射变化
+     - 邻居处理
+   * - ``clone(1)``
+     - 先登记 ``1 -> copy1``
+     - 递归到 ``2``
+   * - ``clone(2)``
+     - 先登记 ``2 -> copy2``
+     - 遇到 ``1`` 时直接取得 ``copy1``，再继续 ``3``
+   * - ``clone(3)``
+     - 先登记 ``3 -> copy3``
+     - 遇到 ``1``、``2`` 都复用已有副本
 
-边如何复制
+如果登记发生在递归邻居之后，从 ``2`` 回到 ``1`` 时映射中还没有 ``1``，递归无法终止。现在每个节点首次
+出现时创建一次，后续出现立即返回同一指针，既是访问标记，也是共享副本查询。
+
+边与邻接顺序怎样恢复
+~~~~~~~~~~~~~~~~~~~~
+
+对原节点邻接表中的每个 ``originalNeighbor``，递归返回其唯一副本，再追加到当前 ``copy->neighbors``。
+因此每条原邻接项产生一条对应的副本邻接项；遍历顺序与原表相同，共享邻居通过映射落到同一对象。无向边
+会在两个端点的邻接表中各处理一次，这正是输入表示中的两条邻接记录，不应额外去重。
+
+显式队列替代方案
+~~~~~~~~~~~~~~~~
+
+``cloneWithBfs`` 把递归帧换成队列。节点第一次作为邻居被发现时，立即创建副本、登记映射并把原节点入队；
+无论邻居是新发现还是已有，随后都把 ``copies[originalNeighbor]`` 接到当前副本的邻接表。这里“必要时创建”
+必须先于“建立当前边”，否则新邻居还没有可连接的副本。
+
+BFS 与 DFS 产生的对象地址和访问顺序不同，但都遵守同一映射不变量，复制后的图结构等价。BFS 避免递归
+深度风险，代价是显式队列；DFS 更贴近“取得邻居副本并返回”的递归定义。公开入口选择 DFS，BFS 作为
+遍历机制上的等价替代保留，认知增量在于展示创建状态与待展开状态可以分离。
+
+为什么结果确实是深拷贝
+~~~~~~~~~~~~~~~~~~~~~~
+
+每个映射值都由 ``new Node`` 创建，不是原指针；每次追加邻接关系也只追加映射值。由入口可达的每个原节点
+都会被遍历并建立映射，图又保证连通，所以整个图都被复制。原节点没有写操作，也不会出现在返回结构中；
+修改副本值或邻接表不会改变原图。
+
+复杂度分析
 ~~~~~~~~~~
 
-对原节点邻接表中的每个邻居，递归取得对应副本，再按原顺序追加到当前副本邻接表。这样既保留边，也保留共享邻居和邻接顺序。
-
-为什么实现是深拷贝
-~~~~~~~~~~~~~~~~~~
-
-每个原节点首次访问时都分配一个新对象；返回图中的每条边只连接映射值，即副本节点。原图节点仅作为哈希键和只读遍历对象，不会出现在返回结构中。
-
-复杂度来源
-~~~~~~~~~~
-
-每个节点创建一次，每条邻接表边读取一次，时间 ``O(V+E)``，映射与递归栈或队列使用 ``O(V)`` 空间。
-
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   struct Pair{struct Node*old,*copy;};static struct Node*find(struct Pair*p,int n,struct Node*x){for(int i=0;i<n;i++)if(p[i].old==x)return p[i].copy;return NULL;}static struct Node*clone(struct Node*x,struct Pair**pairs,int*size,int*cap){if(!x)return NULL;struct Node*seen=find(*pairs,*size,x);if(seen)return seen;if(*size==*cap){*cap*=2;*pairs=realloc(*pairs,(size_t)*cap*sizeof(struct Pair));}struct Node*y=malloc(sizeof(struct Node));y->val=x->val;y->numNeighbors=x->numNeighbors;y->neighbors=malloc((size_t)x->numNeighbors*sizeof(struct Node*));(*pairs)[(*size)++]=(struct Pair){x,y};for(int i=0;i<x->numNeighbors;i++)y->neighbors[i]=clone(x->neighbors[i],pairs,size,cap);return y;}struct Node*cloneGraph(struct Node*node){int size=0,cap=8;struct Pair*pairs=malloc((size_t)cap*sizeof(struct Pair));struct Node*out=clone(node,&pairs,&size,&cap);free(pairs);return out;}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def cloneGraph(self, node):
-           copies={}
-           def dfs(x):
-               if x is None: return None
-               if x in copies: return copies[x]
-               copies[x]=Node(x.val)
-               copies[x].neighbors=[dfs(y) for y in x.neighbors]
-               return copies[x]
-           return dfs(node)
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {Map<Node,Node>copies=new HashMap<>();public Node cloneGraph(Node node){if(node==null)return null;if(copies.containsKey(node))return copies.get(node);Node copy=new Node(node.val);copies.put(node,copy);for(Node next:node.neighbors)copy.neighbors.add(cloneGraph(next));return copy;}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn clone_graph(node:Option<std::rc::Rc<std::cell::RefCell<Node>>>)->Option<std::rc::Rc<std::cell::RefCell<Node>>>{use std::{cell::RefCell,collections::HashMap,rc::Rc};fn dfs(x:Rc<RefCell<Node>>,m:&mut HashMap<usize,Rc<RefCell<Node>>>)->Rc<RefCell<Node>>{let key=Rc::as_ptr(&x)as usize;if let Some(y)=m.get(&key){return y.clone()}let y=Rc::new(RefCell::new(Node::new(x.borrow().val)));m.insert(key,y.clone());let neighbors=x.borrow().neighbors.clone();for n in neighbors{let c=dfs(n,m);y.borrow_mut().neighbors.push(c);}y}node.map(|x|dfs(x,&mut HashMap::new()))}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func cloneGraph(node *Node)*Node{copies:=map[*Node]*Node{};var dfs func(*Node)*Node;dfs=func(x *Node)*Node{if x==nil{return nil};if y:=copies[x];y!=nil{return y};y:=&Node{Val:x.Val};copies[x]=y;for _,n:=range x.Neighbors{y.Neighbors=append(y.Neighbors,dfs(n))};return y};return dfs(node)}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function cloneGraph(node:Node|null):Node|null{const copies=new Map<Node,Node>();const dfs=(x:Node|null):Node|null=>{if(!x)return null;if(copies.has(x))return copies.get(x)!;const y=new Node(x.val);copies.set(x,y);y.neighbors=x.neighbors.map(n=>dfs(n)!);return y;};return dfs(node);}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {Dictionary<Node,Node>copies=new();public Node CloneGraph(Node node){if(node==null)return null;if(copies.TryGetValue(node,out var seen))return seen;var copy=new Node(node.val);copies[node]=copy;foreach(var next in node.neighbors)copy.neighbors.Add(CloneGraph(next));return copy;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function clone_graph(node)
-       node===nothing&&return nothing;copies=IdDict{Any,Any}()
-       function dfs(x);haskey(copies,x)&&return copies[x];y=GraphNode(x.val,GraphNode[]);copies[x]=y;for n in x.neighbors;push!(y.neighbors,dfs(n));end;y;end
-       dfs(node)
-   end
-
-R
-~
-
-.. code-block:: r
-
-   clone_graph <- function(node){if(is.null(node))return(NULL);old<-list();copies<-list();find<-function(x){for(i in seq_along(old))if(identical(old[[i]],x))return(i);0L};dfs<-function(x){i<-find(x);if(i>0L)return(copies[[i]]);y<-new.env(parent=emptyenv());y$val<-x$val;y$neighbors<-list();old[[length(old)+1L]]<<-x;copies[[length(copies)+1L]]<<-y;for(n in x$neighbors)y$neighbors[[length(y$neighbors)+1L]]<-dfs(n);y};dfs(node)}
+每个节点只创建并展开一次，每条邻接表记录只读取和追加一次，时间 ``O(V + E)``。映射使用 ``O(V)``
+空间；DFS 递归栈最坏 ``O(V)``，BFS 队列最坏同为 ``O(V)``。新建的副本图属于返回结果，不计工作空间。

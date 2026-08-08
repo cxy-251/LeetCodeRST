@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0044
+:题号: 0044. 通配符匹配
 :难度: Hard
 :主题: 字符串、递归、记忆化搜索、动态规划
 :原题: `LeetCode 0044 <https://leetcode.com/problems/wildcard-matching/>`_

@@ -4,33 +4,31 @@
 题目信息
 --------
 
-:题号: 0112
+:题号: 0112. 路径总和
 :难度: Easy
-:主题: 二叉树、深度优先搜索、根到叶路径、短路
+:主题: 二叉树、根到叶路径、深度优先搜索、剩余目标
 :原题: `LeetCode 0112 <https://leetcode.com/problems/path-sum/>`_
-:重点: 完整根到叶路径、节点和、空树
+:重点: 从保存完整路径压缩为剩余目标，严格限定叶节点成功条件，并利用存在性目标短路搜索
 
 题目重述
 --------
 
-给定二叉树根节点 ``root`` 和整数 ``targetSum``，判断是否存在一条从根节点开始、在某个叶节点结束的向下路径，使路径上所有节点值之和恰好等于 ``targetSum``。叶节点必须同时没有左孩子和右孩子；内部节点处的前缀和即使命中目标，也不算完整路径。空树返回 ``false``。
+给定二叉树根节点 ``root`` 和整数 ``targetSum``，判断是否存在一条从根开始、在叶节点结束的向下路径，使
+路径中所有节点值之和恰好等于 ``targetSum``。
 
-树中节点数在 ``0..5000`` 范围内，节点值与 ``targetSum`` 均在 ``-1000..1000`` 范围内。
+叶节点必须同时没有左孩子和右孩子；内部节点处的前缀和即使等于目标，也不能提前算作成功。空树没有根到叶
+路径，返回 ``false``。树中节点总数在 ``0..5000`` 范围内，节点值与 ``targetSum`` 均在
+``-1000..1000`` 范围内，算法不修改树。
 
 自建示例
 --------
 
-.. code-block:: text
-
-   输入：root = [6,2,9,1,4,-3,12], targetSum = 12
-   输出：true
-   解释：根到叶路径 6 -> 2 -> 4 的节点和为 12。
-
-.. code-block:: text
-
-   输入：root = [6,2,null,4], targetSum = 8
-   输出：false
-   解释：前缀 6 -> 2 的和为 8，但节点 2 还有孩子，不是叶节点；唯一完整路径的和为 12。
+* 存在目标路径：``root = [6,2,9,1,4,-3,12]``、``targetSum = 12``，返回 ``true``，路径为
+  ``6 -> 2 -> 4``；
+* 前缀命中但未到叶：``root = [6,2,null,4]``、``targetSum = 8``，返回 ``false``。``6 -> 2`` 的和
+  是 ``8``，但节点 ``2`` 还有孩子；
+* 负数抵消：``root = [2,-3,4]``、``targetSum = -1``，返回 ``true``，不能按剩余值正负剪枝；
+* 空树：``root = []``，返回 ``false``。
 
 C++ 实现
 --------
@@ -42,175 +40,124 @@ C++ 实现
 
    class Solution {
    private:
-       bool prefixDfs(TreeNode* node, long long sum, long long target) {
-           if (!node) return false;
-           sum += node->val;
-           if (!node->left && !node->right) return sum == target;
-           return prefixDfs(node->left, sum, target) ||
-                  prefixDfs(node->right, sum, target);
+       bool recursiveRemaining(TreeNode* node, int remaining) {
+           if (!node) {
+               return false;
+           }
+           const int nextRemaining = remaining - node->val;
+           if (!node->left && !node->right) {
+               return nextRemaining == 0;
+           }
+           return recursiveRemaining(node->left, nextRemaining) ||
+                  recursiveRemaining(node->right, nextRemaining);
        }
 
-       bool remainingDfs(TreeNode* node, long long remaining) {
-           if (!node) return false;
-           if (!node->left && !node->right) return remaining == node->val;
-           remaining -= node->val;
-           return remainingDfs(node->left, remaining) ||
-                  remainingDfs(node->right, remaining);
-       }
-
-       bool iterative(TreeNode* root, long long target) {
-           if (!root) return false;
-           std::stack<std::pair<TreeNode*, long long>> stack;
-           stack.push({root, target});
-           while (!stack.empty()) {
-               auto [node, remaining] = stack.top();
-               stack.pop();
-               if (!node->left && !node->right && remaining == node->val)
+       bool iterativeRemaining(TreeNode* root, int targetSum) {
+           if (!root) {
+               return false;
+           }
+           std::stack<std::pair<TreeNode*, int>> pending;
+           pending.push({root, targetSum});
+           while (!pending.empty()) {
+               const auto [node, remaining] = pending.top();
+               pending.pop();
+               const int nextRemaining = remaining - node->val;
+               if (!node->left && !node->right && nextRemaining == 0) {
                    return true;
-               long long next = remaining - node->val;
-               if (node->right) stack.push({node->right, next});
-               if (node->left) stack.push({node->left, next});
+               }
+               if (node->right) {
+                   pending.push({node->right, nextRemaining});
+               }
+               if (node->left) {
+                   pending.push({node->left, nextRemaining});
+               }
            }
            return false;
        }
 
    public:
        bool hasPathSum(TreeNode* root, int targetSum) {
-           return remainingDfs(root, static_cast<long long>(targetSum));
+           return recursiveRemaining(root, targetSum);
        }
    };
 
 题解
 ----
 
-为什么状态可以只保存剩余目标
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+原始路径枚举
+~~~~~~~~~~~~
 
-进入节点前，``remaining`` 表示从当前节点到某个叶节点仍需得到的总和。选择当前节点后，孩子状态统一为 ``remaining - node.val``。历史路径无需保存，因为后续判断只依赖当前节点和剩余值。
+答案存在于某一条根到叶路径，最直接的正确方案是深度优先枚举全部路径：进入节点时把值加入当前路径，到叶
+节点时求和并与 ``targetSum`` 比较，回到父节点时撤销当前节点。所有合法终点都会被检查，因此不会漏解。
 
-叶节点为何是唯一成功位置
-~~~~~~~~~~~~~~~~~~~~~~~~
+但后续分支并不关心祖先节点分别是什么，只关心它们的和。保存节点数组、在叶节点重新累加、回溯删除路径尾
+三项工作都超过了布尔判断所需的信息。沿树向下时，路径和只需一个整数状态。
 
-题目要求完整根到叶路径。内部节点即使当前累计和已经等于目标，也不能停止；后续至少还要经过一个孩子。只有左右孩子都为空时，``remaining == node.val`` 才表示完整路径精确命中。
+剩余目标
+~~~~~~~~
+
+可以携带当前前缀和，也可以把等式移项后维护剩余目标。进入节点前令 ``remaining`` 表示当前路径尚需提供的
+总和；选择 ``node`` 后，传给孩子的状态为：
+
+.. code-block:: text
+
+   nextRemaining = remaining - node.value
+
+完整路径命中等价于在叶节点得到 ``nextRemaining == 0``。``recursiveRemaining`` 因而不再保存路径，也不在
+每个叶节点重新求和；每个递归分支只复制一个独立的整数。
+
+叶节点边界
+~~~~~~~~~~
+
+目标相等只能在叶节点判断成功。第二个示例进入节点 ``2`` 后剩余值变成 ``0``，但该节点还有孩子，路径尚未
+完成；继续进入 ``4`` 后剩余值变成 ``-4``，最终返回假。
+
+空指针也不是叶节点。递归到空孩子返回 ``false``，避免把只有一个孩子的内部节点通过空分支误判为完整路径。
+代码先计算当前节点后的剩余值，再以“左右孩子都空”确认合法终点。
+
+节点值允许为负数，不能根据 ``nextRemaining`` 的正负或是否已经为零剪枝。剩余值为负时，后续负节点仍可能
+精确满足目标；剩余值为零时，后续正负值也可能抵消。安全的提前结束只有叶节点命中，或某个分支已经返回真。
+
+状态走读
+~~~~~~~~
+
+对 ``targetSum = 12`` 的第一个示例，目标路径状态如下：
 
 .. list-table::
    :header-rows: 1
 
-   * - 节点
-     - 进入前剩余
-     - 传给孩子
+   * - 当前节点
+     - 进入前 ``remaining``
+     - 扣除节点后
+     - 分支含义
    * - 6
      - 12
      - 6
+     - 还需子路径和为 6
    * - 2
      - 6
      - 4
-   * - 4（叶）
+     - 还需子路径和为 4
+   * - 4
      - 4
-     - 精确命中
+     - 0
+     - 叶节点精确命中
 
-为什么不能按剩余值正负剪枝
-~~~~~~~~~~~~~~~~~~~~~~~~~~
+逻辑或先搜索左子树。左侧一旦找到上述路径，存在性结论已经确定，右子树无需访问；本题只问是否存在，不需要
+比较路径优劣，所以短路不会丢失必要答案。
 
-节点值允许为负数。剩余值变成负数后，后续负节点仍可能使路径和正确；剩余值为零时，后续正负节点也可能抵消。因此除空节点和叶节点判断外，没有基于符号的安全剪枝。
-
-前缀和与剩余目标如何等价
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-前缀法维护 ``sum + node.val``，叶节点比较 ``sum == target``；剩余法维护 ``target - 已经过节点和``，叶节点比较 ``remaining == node.val``。两者只是同一等式移项，剩余法状态更紧凑。
-
-显式栈保存什么
-~~~~~~~~~~~~~~
-
-每个栈元素是 ``(node, remaining_before_node)``。压入孩子前扣除当前节点值，使每条分支拥有独立数值状态。树没有回边，不需要访问集合。
-
-短路为什么安全
-~~~~~~~~~~~~~~
-
-布尔目标只要求存在一条路径。左子树返回真后，全局答案已经确定，右子树无需访问；逻辑或短路不会漏掉“更优”方案，因为本题没有比较大小。
-
-数值宽度
-~~~~~~~~
-
-平台节点值和目标为 32 位整数，路径累加可能跨越中间边界。C++ 主实现使用 ``long long``，避免累计过程溢出。
-
-复杂度来源
+显式栈替代
 ~~~~~~~~~~
 
-最坏访问全部 ``n`` 个节点，时间 ``O(n)``。递归或显式栈保存一条或多条尚未处理路径，最坏空间 ``O(h)``；短路命中时可提前结束。
+递归调用栈实际保存的是尚待处理的 ``(node, remaining)`` 状态。``iterativeRemaining`` 把同一状态放入显式
+栈：弹出节点后扣除当前值，再把孩子与新的剩余值一起压入。树没有回边，每个节点只有唯一父路径，因此不需要
+访问集合。
 
-九语言实现
-----------
+代码先压右孩子、再压左孩子，只是让后进先出的栈优先模拟递归的左分支；交换顺序不影响正确性。公开入口采用
+递归版，因为它最直接表达“当前路径满足或左、右任一分支满足”的状态定义；显式栈适合避免深递归的场景。
 
-C
-~
-
-.. code-block:: c
-
-   static bool dfs(struct TreeNode*x,long long remain){if(!x)return false;if(!x->left&&!x->right)return remain==x->val;remain-=x->val;return dfs(x->left,remain)||dfs(x->right,remain);}bool hasPathSum(struct TreeNode*root,int targetSum){return dfs(root,targetSum);}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def hasPathSum(self, root, targetSum: int) -> bool:
-           if root is None: return False
-           if root.left is None and root.right is None: return targetSum == root.val
-           remaining = targetSum - root.val
-           return self.hasPathSum(root.left, remaining) or self.hasPathSum(root.right, remaining)
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {boolean dfs(TreeNode x,long remain){if(x==null)return false;if(x.left==null&&x.right==null)return remain==x.val;remain-=x.val;return dfs(x.left,remain)||dfs(x.right,remain);}public boolean hasPathSum(TreeNode root,int targetSum){return dfs(root,targetSum);}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn has_path_sum(root:Option<Rc<RefCell<TreeNode>>>,target_sum:i32)->bool{fn dfs(x:Option<Rc<RefCell<TreeNode>>>,remain:i64)->bool{let Some(x)=x else{return false};let b=x.borrow();if b.left.is_none()&&b.right.is_none(){return remain==b.val as i64}let next=remain-b.val as i64;dfs(b.left.clone(),next)||dfs(b.right.clone(),next)}dfs(root,target_sum as i64)}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func hasPathSum(root *TreeNode,targetSum int)bool{var dfs func(*TreeNode,int64)bool;dfs=func(x *TreeNode,remain int64)bool{if x==nil{return false};if x.Left==nil&&x.Right==nil{return remain==int64(x.Val)};remain-=int64(x.Val);return dfs(x.Left,remain)||dfs(x.Right,remain)};return dfs(root,int64(targetSum))}
-
-TypeScript
+复杂度分析
 ~~~~~~~~~~
 
-.. code-block:: typescript
-
-   function hasPathSum(root:TreeNode|null,targetSum:number):boolean{if(!root)return false;if(!root.left&&!root.right)return targetSum===root.val;const remain=targetSum-root.val;return hasPathSum(root.left,remain)||hasPathSum(root.right,remain);}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {bool Dfs(TreeNode x,long remain){if(x==null)return false;if(x.left==null&&x.right==null)return remain==x.val;remain-=x.val;return Dfs(x.left,remain)||Dfs(x.right,remain);}public bool HasPathSum(TreeNode root,int targetSum)=>Dfs(root,targetSum);}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function has_path_sum(root,target)
-       root===nothing&&return false
-       root.left===nothing&&root.right===nothing&&return target==root.val
-       remain=target-root.val
-       has_path_sum(root.left,remain)||has_path_sum(root.right,remain)
-   end
-
-R
-~
-
-.. code-block:: r
-
-   has_path_sum <- function(root,target){if(is.null(root))return(FALSE);if(is.null(root$left)&&is.null(root$right))return(target==root$val);remain<-target-root$val;has_path_sum(root$left,remain)||has_path_sum(root$right,remain)}
+最坏访问全部 ``n`` 个节点，时间 ``O(n)``；提前命中时会短路。递归栈或显式 DFS 栈最多保存 ``O(h)`` 个
+路径状态，其中 ``h`` 是树高。路径数组已被删除，返回值只占常数空间。按题目范围，路径和在 32 位整数内。

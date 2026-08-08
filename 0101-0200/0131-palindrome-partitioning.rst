@@ -4,33 +4,26 @@
 题目信息
 --------
 
-:题号: 0131
+:题号: 0131. 分割回文串
 :难度: Medium
-:主题: 字符串、区间动态规划、回溯、路径枚举
+:主题: 字符串、回溯、区间动态规划、结果枚举
 :原题: `LeetCode 0131 <https://leetcode.com/problems/palindrome-partitioning/>`_
-:重点: 连续非空片段、全部回文切分、完整覆盖、结果顺序不限
+:重点: 用起始下标表示未覆盖后缀，回溯枚举合法下一段，并预处理区间回文性以删除跨分支重复比较
 
 题目重述
 --------
 
-给定只包含小写英文字母的字符串 ``s``，在若干字符边界处切分它，使得到的每个片段都是非空回文串。返回所有能够按原顺序完整覆盖 ``s`` 的合法切分方案；每个方案是片段数组，多个方案的返回顺序不限。
-
-约束为 ``1 <= s.length <= 16``。
+给定字符串 ``s``，在字符之间选择若干切点，把它分成一组连续、非空片段。返回所有满足“每个片段都是
+回文串”的完整切分方案。片段必须保持原顺序并恰好覆盖整个字符串，答案顺序不限。
 
 自建示例
 --------
 
-.. code-block:: text
-
-   输入：s = "abba"
-   输出：[["a","b","b","a"],["a","bb","a"],["abba"]]
-   解释：这三种方案中的每个片段都是回文串，并且都按原顺序完整覆盖字符串；结果顺序可以不同。
-
-.. code-block:: text
-
-   输入：s = "abc"
-   输出：[["a","b","c"]]
-   解释：不存在长度大于 1 的回文片段，因此只能把每个字符单独作为一段。
+* ``s = "abba"``：合法方案为 ``["a", "b", "b", "a"]``、``["a", "bb", "a"]`` 和
+  ``["abba"]``；
+* ``s = "abc"``：没有长度大于一的回文片段，唯一方案是 ``["a", "b", "c"]``；
+* ``s = "aaa"``：``["a", "a", "a"]``、``["a", "aa"]``、``["aa", "a"]``、``["aaa"]``
+  都合法，说明相同内容出现在不同位置时仍代表不同切分选择。
 
 C++ 实现
 --------
@@ -43,192 +36,175 @@ C++ 实现
    class Solution {
    private:
        bool isPalindrome(const std::string& s, int left, int right) {
-           while (left < right) if (s[left++] != s[right--]) return false;
+           while (left < right) {
+               if (s[left] != s[right]) {
+                   return false;
+               }
+               ++left;
+               --right;
+           }
            return true;
        }
 
-       void directDfs(const std::string& s, int start,
-                      std::vector<std::string>& path,
-                      std::vector<std::vector<std::string>>& result) {
-           if (start == static_cast<int>(s.size())) { result.push_back(path); return; }
+       void searchWithRepeatedChecks(
+           const std::string& s,
+           int start,
+           std::vector<std::string>& path,
+           std::vector<std::vector<std::string>>& answer
+       ) {
+           if (start == static_cast<int>(s.size())) {
+               answer.push_back(path);
+               return;
+           }
            for (int end = start; end < static_cast<int>(s.size()); ++end) {
-               if (!isPalindrome(s, start, end)) continue;
+               if (!isPalindrome(s, start, end)) {
+                   continue;
+               }
                path.push_back(s.substr(start, end - start + 1));
-               directDfs(s, end + 1, path, result);
+               searchWithRepeatedChecks(s, end + 1, path, answer);
                path.pop_back();
            }
        }
 
-       std::vector<std::vector<char>> buildPalindromeTable(const std::string& s) {
-           int n = s.size();
-           std::vector<std::vector<char>> palindrome(n, std::vector<char>(n));
-           for (int left = n - 1; left >= 0; --left)
-               for (int right = left; right < n; ++right)
-                   palindrome[left][right] = s[left] == s[right] &&
-                       (right - left <= 2 || palindrome[left + 1][right - 1]);
+       std::vector<std::vector<bool>> buildPalindromeTable(
+           const std::string& s
+       ) {
+           const int length = static_cast<int>(s.size());
+           std::vector<std::vector<bool>> palindrome(
+               length,
+               std::vector<bool>(length, false)
+           );
+
+           for (int left = length - 1; left >= 0; --left) {
+               for (int right = left; right < length; ++right) {
+                   const bool shortInterval = right - left <= 2;
+                   palindrome[left][right] =
+                       s[left] == s[right] &&
+                       (shortInterval || palindrome[left + 1][right - 1]);
+               }
+           }
            return palindrome;
        }
 
-       void tableDfs(const std::string& s, int start,
-                     const std::vector<std::vector<char>>& palindrome,
-                     std::vector<std::string>& path,
-                     std::vector<std::vector<std::string>>& result) {
-           if (start == static_cast<int>(s.size())) { result.push_back(path); return; }
+       void searchWithTable(
+           const std::string& s,
+           int start,
+           const std::vector<std::vector<bool>>& palindrome,
+           std::vector<std::string>& path,
+           std::vector<std::vector<std::string>>& answer
+       ) {
+           if (start == static_cast<int>(s.size())) {
+               answer.push_back(path);
+               return;
+           }
+
            for (int end = start; end < static_cast<int>(s.size()); ++end) {
-               if (!palindrome[start][end]) continue;
+               if (!palindrome[start][end]) {
+                   continue;
+               }
                path.push_back(s.substr(start, end - start + 1));
-               tableDfs(s, end + 1, palindrome, path, result);
+               searchWithTable(s, end + 1, palindrome, path, answer);
                path.pop_back();
            }
        }
 
    public:
        std::vector<std::vector<std::string>> partition(std::string s) {
-           auto palindrome = buildPalindromeTable(s);
-           std::vector<std::vector<std::string>> result;
+           const auto palindrome = buildPalindromeTable(s);
+           std::vector<std::vector<std::string>> answer;
            std::vector<std::string> path;
-           tableDfs(s, 0, palindrome, path, result);
-           return result;
+           searchWithTable(s, 0, palindrome, path, answer);
+           return answer;
        }
    };
 
 题解
 ----
 
-位置 DAG 如何表达切分
-~~~~~~~~~~~~~~~~~~~~~
+从所有切缝的选择开始
+~~~~~~~~~~~~~~~~~~~~
 
-把字符边界 ``0..n`` 视为顶点。若 ``s[start..end]`` 是回文，就有一条 ``start -> end+1`` 的边。每条从 0 到 ``n`` 的路径恰好对应一组完整切分。
+长度为 ``n`` 的字符串有 ``n-1`` 个字符间隙，每个间隙都可以切或不切，因此原始切分空间有
+``2^(n-1)`` 种。先生成所有切点组合，再逐段验证回文虽然完整，却会保留大量早已包含非回文段的无效后缀
+选择；例如前一段确定为 ``"ab"`` 后，无论后面怎样切都不可能成为合法答案。
 
-回文表如何递推
-~~~~~~~~~~~~~~
+更有效的搜索状态是 ``start``：``s[0..start-1]`` 已被 ``path`` 中的回文片段完整、无重叠地覆盖，
+``s[start..n-1]`` 仍待切分。下一步只需枚举第一段的结束位置 ``end``；若 ``s[start..end]`` 不是回文，
+整类以它开头的切分直接删除，只有合法片段才进入递归。
 
-区间 ``[left,right]`` 是回文，当且仅当两端字符相同，并且内部区间也是回文：
+位置图解释为何不会重漏
+~~~~~~~~~~~~~~~~~~~~~~
+
+把 ``0..n`` 这 ``n+1`` 个字符边界看成节点。若 ``s[start..end]`` 是回文，就有一条从 ``start`` 到
+``end+1`` 的有向边。下标每次严格增大，所以这是一张 DAG；从 ``0`` 到 ``n`` 的每条路径恰好对应一组
+合法切分。
+
+任意合法方案的第一段都有唯一终点，外层循环会选择它，之后对剩余后缀重复同样论证，因此不会漏；两个
+不同方案至少有一个切点不同，对应的边序列也不同，因此不会重复。
+
+方案一：搜索时现查回文
+~~~~~~~~~~~~~~~~~~~~~~
+
+``searchWithRepeatedChecks`` 在需要区间时用双指针从两端向内比较。这比生成所有切分后再验证更早剪枝，且
+代码与回文定义直接对应。不过同一区间的回文性可能被不同路径反复询问；一次检查最长 ``O(n)``，而它只由
+两个端点决定，与此前选过哪些片段无关。
+
+例如 ``"aaaa..."`` 具有大量合法前缀，不同切分分支会多次来到相同 ``start``，再对同一批
+``[start, end]`` 区间执行完全相同的字符比较。这部分判断可以在搜索前一次性共享。
+
+区间状态怎样从短区间生成长区间
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+令 ``palindrome[left][right]`` 表示闭区间 ``s[left..right]`` 是否回文。两端相等，并且内部也是回文时，
+整个区间才是回文：
 
 .. code-block:: text
 
    palindrome[left][right] =
        s[left] == s[right] &&
-       (right-left <= 2 || palindrome[left+1][right-1])
+       (right - left <= 2 || palindrome[left + 1][right - 1])
 
-因此 ``left`` 必须从右向左计算，保证内部状态已经存在。
+长度一和长度二可直接由两端判断；代码把长度三也放进 ``right - left <= 2``，因为两端相等时中间单字符
+必为回文。对更长区间，依赖项的左端更大，所以 ``left`` 必须从右向左；同一 ``left`` 下，``right`` 从
+左向右即可。若反向计算 ``left``，读取 ``palindrome[left+1][right-1]`` 时可能仍是默认值。
 
-路径状态
-~~~~~~~~
+回溯路径的不变量
+~~~~~~~~~~~~~~~~
 
-以下以自建示例 ``s = "abba"`` 展示从左到右选择片段的过程：
+``searchWithTable`` 进入函数时，``path`` 恰好覆盖 ``[0, start)``。选择 ``[start, end]`` 后追加对应子串，
+不变量对 ``end+1`` 成立；子调用返回后必须弹出同一片段，恢复父状态再尝试下一个终点。到达 ``start == n``
+时没有未覆盖字符，此时复制 ``path`` 才形成一条完整答案。
+
+具体走读 ``abba``：
 
 .. list-table::
    :header-rows: 1
 
-   * - 起点
-     - 可选回文
-     - 路径
-   * - 0
+   * - ``start`` 与当前路径
+     - 表中可选下一段
+     - 后续结果
+   * - ``0``，``[]``
      - ``"a"``、``"abba"``
-     - 选择 ``"abba"`` 可直接到达末端
-   * - 1（已选 ``"a"``）
+     - 产生一个后缀分支和一个直接完成分支
+   * - ``1``，``["a"]``
      - ``"b"``、``"bb"``
-     - 分成两条后缀分支
-   * - 3（已选 ``"a","bb"``）
+     - 分别进入 ``start=2`` 与 ``start=3``
+   * - ``3``，``["a", "bb"]``
      - ``"a"``
-     - 到达末端并保存 ``["a","bb","a"]``
+     - 到达 ``4``，保存 ``["a", "bb", "a"]``
+   * - ``4``，``["abba"]``
+     - 无需再选
+     - 复制完整方案
 
-为什么追加与撤销必须对称
-~~~~~~~~~~~~~~~~~~~~~~~~
+表中 ``"ab"``、``"abb"`` 为假，所以搜索树根本不会生成以这些非回文前缀开头的分支。
 
-进入子树前把当前片段追加到共享路径；返回后删除同一片段。到达末端时复制当前路径，结果不会被之后的撤销修改。
+主解选择与复杂度
+~~~~~~~~~~~~~~~~
 
-为什么不重不漏
-~~~~~~~~~~~~~~
+公开入口采用“区间 DP 预处理 + 回溯”。它用 ``O(n^2)`` 时间和空间换取每次回文判断 ``O(1)``，删除了
+跨分支的重复字符比较；直接检查法省去表空间，更适合字符串很短且合法分支稀少的场景，因此作为有明确
+取舍的基线保留。
 
-任意合法方案的每段都是表中一条边，回溯会按其终点顺序走到末端，因此不漏。不同方案至少有一个切点不同，对应不同位置路径，因此不会重复。
-
-复杂度来源
-~~~~~~~~~~
-
-回文表需要 ``O(n²)`` 时间和空间。合法方案数可能达到指数级；枚举与复制结果的时间必须与全部输出字符总量成正比，递归深度最多 ``O(n)``。
-
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   static int pal(const char*s,int l,int r){while(l<r)if(s[l++]!=s[r--])return 0;return 1;}
-   static void dfs(char*s,int n,int start,char**path,int depth,char****out,int**cols,int*size,int*cap){if(start==n){if(*size==*cap){*cap*=2;*out=realloc(*out,(size_t)*cap*sizeof(char**));*cols=realloc(*cols,(size_t)*cap*sizeof(int));}char**row=malloc((size_t)depth*sizeof(char*));for(int i=0;i<depth;i++){row[i]=malloc(strlen(path[i])+1);strcpy(row[i],path[i]);}(*out)[*size]=row;(*cols)[(*size)++]=depth;return;}for(int e=start;e<n;e++)if(pal(s,start,e)){int len=e-start+1;path[depth]=malloc((size_t)len+1);memcpy(path[depth],s+start,(size_t)len);path[depth][len]='\0';dfs(s,n,e+1,path,depth+1,out,cols,size,cap);free(path[depth]);}}
-   char***partition(char*s,int*returnSize,int**returnColumnSizes){int n=strlen(s),cap=4,size=0;char***out=malloc((size_t)cap*sizeof(char**));int*cols=malloc((size_t)cap*sizeof(int));char**path=malloc((size_t)n*sizeof(char*));dfs(s,n,0,path,0,&out,&cols,&size,&cap);free(path);*returnSize=size;*returnColumnSizes=cols;return out;}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def partition(self, s: str) -> list[list[str]]:
-           n=len(s); p=[[False]*n for _ in range(n)]
-           for l in range(n-1,-1,-1):
-               for r in range(l,n): p[l][r]=s[l]==s[r] and (r-l<=2 or p[l+1][r-1])
-           out=[]; path=[]
-           def dfs(start):
-               if start==n: out.append(path.copy()); return
-               for end in range(start,n):
-                   if p[start][end]: path.append(s[start:end+1]); dfs(end+1); path.pop()
-           dfs(0); return out
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public List<List<String>> partition(String s){int n=s.length();boolean[][]p=new boolean[n][n];for(int l=n-1;l>=0;l--)for(int r=l;r<n;r++)p[l][r]=s.charAt(l)==s.charAt(r)&&(r-l<=2||p[l+1][r-1]);List<List<String>>o=new ArrayList<>();dfs(s,0,p,new ArrayList<>(),o);return o;}void dfs(String s,int st,boolean[][]p,List<String>path,List<List<String>>o){if(st==s.length()){o.add(new ArrayList<>(path));return;}for(int e=st;e<s.length();e++)if(p[st][e]){path.add(s.substring(st,e+1));dfs(s,e+1,p,path,o);path.remove(path.size()-1);}}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn partition(s:String)->Vec<Vec<String>>{fn dfs(s:&[u8],st:usize,p:&Vec<Vec<bool>>,path:&mut Vec<String>,o:&mut Vec<Vec<String>>){if st==s.len(){o.push(path.clone());return}for e in st..s.len(){if p[st][e]{path.push(String::from_utf8(s[st..=e].to_vec()).unwrap());dfs(s,e+1,p,path,o);path.pop();}}}let b=s.as_bytes();let n=b.len();let mut p=vec![vec![false;n];n];for l in(0..n).rev(){for r in l..n{p[l][r]=b[l]==b[r]&&(r-l<=2||p[l+1][r-1]);}}let mut o=vec![];dfs(b,0,&p,&mut vec![],&mut o);o}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func partition(s string)[][]string{n:=len(s);p:=make([][]bool,n);for i:=range p{p[i]=make([]bool,n)};for l:=n-1;l>=0;l--{for r:=l;r<n;r++{p[l][r]=s[l]==s[r]&&(r-l<=2||p[l+1][r-1])}};o:=[][]string{};path:=[]string{};var dfs func(int);dfs=func(st int){if st==n{row:=append([]string{},path...);o=append(o,row);return};for e:=st;e<n;e++{if p[st][e]{path=append(path,s[st:e+1]);dfs(e+1);path=path[:len(path)-1]}}};dfs(0);return o}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function partition(s:string):string[][]{const n=s.length,p=Array.from({length:n},()=>Array(n).fill(false)),out:string[][]=[],path:string[]=[];for(let l=n-1;l>=0;l--)for(let r=l;r<n;r++)p[l][r]=s[l]===s[r]&&(r-l<=2||p[l+1][r-1]);const dfs=(st:number)=>{if(st===n){out.push([...path]);return;}for(let e=st;e<n;e++)if(p[st][e]){path.push(s.slice(st,e+1));dfs(e+1);path.pop();}};dfs(0);return out;}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public IList<IList<string>> Partition(string s){int n=s.Length;var p=new bool[n,n];for(int l=n-1;l>=0;l--)for(int r=l;r<n;r++)p[l,r]=s[l]==s[r]&&(r-l<=2||p[l+1,r-1]);var o=new List<IList<string>>();var path=new List<string>();void Dfs(int st){if(st==n){o.Add(new List<string>(path));return;}for(int e=st;e<n;e++)if(p[st,e]){path.Add(s.Substring(st,e-st+1));Dfs(e+1);path.RemoveAt(path.Count-1);}}Dfs(0);return o;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function partition_palindromes(s::String)
-       a=collect(s);n=length(a);p=falses(n,n)
-       for l in n:-1:1,r in l:n;p[l,r]=a[l]==a[r]&&(r-l<=2||p[l+1,r-1]);end
-       out=Vector{Vector{String}}();path=String[]
-       function dfs(st);st>n&&(push!(out,copy(path));return);for e in st:n;if p[st,e];push!(path,String(a[st:e]));dfs(e+1);pop!(path);end;end;end
-       dfs(1);out
-   end
-
-R
-~
-
-.. code-block:: r
-
-   partition_palindromes <- function(s){a<-strsplit(s,"",fixed=TRUE)[[1L]];n<-length(a);p<-matrix(FALSE,n,n);for(l in n:1L)for(r in l:n)p[l,r]<-a[l]==a[r]&&(r-l<=2L||p[l+1L,r-1L]);out<-list();path<-character();dfs<-function(st){if(st>n){out[[length(out)+1L]]<<-path;return()};for(e in st:n)if(p[st,e]){path<<-c(path,paste0(a[st:e],collapse=""));dfs(e+1L);path<<-head(path,-1L)}};dfs(1L);out}
+合法方案数本身可能是指数级，任何返回全部答案的算法都无法避开输出成本。预处理为 ``O(n^2)``；搜索中
+每条路径深度最多 ``n``，创建子串和复制答案的总时间与实际生成内容成正比。除返回结果和回文表外，递归栈
+与当前路径占 ``O(n)``。

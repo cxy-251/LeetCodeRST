@@ -4,37 +4,37 @@
 题目信息
 --------
 
-:题号: 0146
+:题号: 0146. LRU 缓存
 :难度: Medium
-:主题: 哈希表、双向链表、数据结构设计
+:主题: 设计、哈希表、双向链表、数据结构不变量
 :原题: `LeetCode 0146 <https://leetcode.com/problems/lru-cache/>`_
-:重点: 最近使用顺序、读取也会刷新、更新已有键、容量超限淘汰
+:重点: 让哈希表回答键定位，让双向链表维护使用顺序，并保持两种结构对每个缓存项的一一对应
 
 题目重述
 --------
 
-设计一个固定容量的最近最少使用缓存 ``LRUCache``。构造函数 ``LRUCache(capacity)`` 设置缓存容量；``get(key)`` 在键存在时返回对应值，并把该键标记为最近使用，不存在时返回 ``-1``；``put(key, value)`` 在键已存在时更新其值并刷新为最近使用，在键不存在时插入新键。若插入后条目数超过容量，必须删除最久没有被成功 ``get`` 或 ``put`` 访问的键。
+设计容量固定的最近最少使用缓存 ``LRUCache``：
 
-``capacity`` 在 ``1..3000`` 范围内，``key`` 在 ``0..10^4`` 范围内，``value`` 在 ``0..10^5`` 范围内；``get`` 与 ``put`` 的调用总数不超过 ``2 * 10^5``。两种操作都要求平均 ``O(1)`` 时间。
+* ``get(key)``：键存在时返回值，并把它更新为最近使用；不存在返回 ``-1``，顺序不变；
+* ``put(key, value)``：已有键就更新值并刷新为最近使用；新键则插入。插入后超过容量时，删除最久没有被
+  成功 ``get`` 或 ``put`` 的键。
+
+两种操作都要求平均 ``O(1)`` 时间。容量至少为一。
 
 自建示例
 --------
 
 .. code-block:: text
 
-   输入：
-   ["LRUCache","put","put","get","put","get","get"]
-   [[2],[4,40],[7,70],[4],[9,90],[7],[9]]
-   输出：[null,null,null,40,null,-1,90]
-   解释：get(4) 使键 4 成为最近使用项；随后插入键 9 时淘汰较久未使用的键 7，因此 get(7) 返回 -1。
+   LRUCache cache(2)
+   put(4, 40)    顺序：[4]
+   put(7, 70)    顺序：[7, 4]
+   get(4) -> 40  顺序：[4, 7]
+   put(9, 90)    顺序：[9, 4]，淘汰 7
+   get(7) -> -1  顺序仍为 [9, 4]
 
-.. code-block:: text
-
-   输入：
-   ["LRUCache","put","put","get"]
-   [[1],[3,8],[3,11],[3]]
-   输出：[null,null,null,11]
-   解释：第二次 put 更新已有键 3 的值，不会增加缓存条目数；get(3) 返回更新后的 11。
+容量为一时连续执行 ``put(3, 8)``、``put(3, 11)`` 只是更新同一条目，不应先淘汰再创建；随后
+``get(3)`` 返回 ``11``。
 
 C++ 实现
 --------
@@ -44,174 +44,193 @@ C++ 实现
    #include <unordered_map>
 
    class LRUCache {
+   private:
        struct Node {
-           int key, value;
+           int key;
+           int value;
            Node* previous;
            Node* next;
-           Node(int k, int v): key(k), value(v), previous(nullptr), next(nullptr) {}
+
+           Node(int nodeKey, int nodeValue)
+               : key(nodeKey),
+                 value(nodeValue),
+                 previous(nullptr),
+                 next(nullptr) {}
        };
 
-       int capacity;
-       std::unordered_map<int,Node*> index;
-       Node* head;
-       Node* tail;
+       int capacity_;
+       std::unordered_map<int, Node*> index_;
+       Node* mostRecentSentinel_;
+       Node* leastRecentSentinel_;
 
        void detach(Node* node) {
            node->previous->next = node->next;
            node->next->previous = node->previous;
        }
 
-       void addFront(Node* node) {
-           node->next = head->next;
-           node->previous = head;
-           head->next->previous = node;
-           head->next = node;
+       void insertAsMostRecent(Node* node) {
+           node->previous = mostRecentSentinel_;
+           node->next = mostRecentSentinel_->next;
+           mostRecentSentinel_->next->previous = node;
+           mostRecentSentinel_->next = node;
        }
 
-       void touch(Node* node) {
+       void markAsMostRecent(Node* node) {
            detach(node);
-           addFront(node);
+           insertAsMostRecent(node);
        }
 
    public:
-       LRUCache(int capacity): capacity(capacity) {
-           head = new Node(0,0);
-           tail = new Node(0,0);
-           head->next = tail;
-           tail->previous = head;
+       LRUCache(int capacity)
+           : capacity_(capacity),
+             mostRecentSentinel_(new Node(0, 0)),
+             leastRecentSentinel_(new Node(0, 0)) {
+           mostRecentSentinel_->next = leastRecentSentinel_;
+           leastRecentSentinel_->previous = mostRecentSentinel_;
        }
 
        int get(int key) {
-           auto found = index.find(key);
-           if (found == index.end()) return -1;
-           touch(found->second);
-           return found->second->value;
+           auto found = index_.find(key);
+           if (found == index_.end()) {
+               return -1;
+           }
+           Node* node = found->second;
+           markAsMostRecent(node);
+           return node->value;
        }
 
        void put(int key, int value) {
-           auto found = index.find(key);
-           if (found != index.end()) {
-               found->second->value = value;
-               touch(found->second);
+           auto found = index_.find(key);
+           if (found != index_.end()) {
+               Node* node = found->second;
+               node->value = value;
+               markAsMostRecent(node);
                return;
            }
-           Node* node = new Node(key,value);
-           index[key] = node;
-           addFront(node);
-           if (static_cast<int>(index.size()) > capacity) {
-               Node* victim = tail->previous;
+
+           Node* node = new Node(key, value);
+           index_[key] = node;
+           insertAsMostRecent(node);
+
+           if (static_cast<int>(index_.size()) > capacity_) {
+               Node* victim = leastRecentSentinel_->previous;
                detach(victim);
-               index.erase(victim->key);
+               index_.erase(victim->key);
                delete victim;
            }
        }
 
        ~LRUCache() {
-           Node* node = head;
-           while (node) { Node* next = node->next; delete node; node = next; }
+           Node* node = mostRecentSentinel_;
+           while (node != nullptr) {
+               Node* next = node->next;
+               delete node;
+               node = next;
+           }
        }
    };
 
 题解
 ----
 
-为什么单一结构不够
-~~~~~~~~~~~~~~~~~~
+先列出每次操作真正需要什么
+~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-哈希表能按键常数时间定位，却不维护使用先后；普通链表能维护顺序，但按键查找需要线性扫描。组合后，映射值直接指向链表节点。
+``get`` 需要按键找到条目，并把它移到“最新”位置；``put`` 还需要在容量超限时立刻找到“最旧”条目。于是
+至少有三类基本操作：
 
-链表不变量
-~~~~~~~~~~
+* 按键定位任意条目；
+* 已知条目时从顺序中删除并移到最前；
+* 直接取得并删除顺序末尾。
 
-两个哨兵之间保存全部缓存项：``head.next`` 是最近使用项，``tail.previous`` 是最久未使用项。每个缓存键在哈希表和链表中各出现一次，二者形成一一对应。
+若只用哈希表，可给每个键附带递增时间戳，查找和刷新是平均 ``O(1)``，但淘汰时必须扫描所有条目寻找最小
+时间戳，耗时 ``O(capacity)``。若只用按新旧排列的普通序列，末尾淘汰很快，按键查找和把中间条目移到
+最前又需要线性扫描。单一结构各自只解决了一半问题。
 
-刷新与淘汰
-~~~~~~~~~~
+组合结构怎样分工
+~~~~~~~~~~~~~~~~
 
-哈希表先得到节点地址；双向链表已知节点时可以常数时间摘除，再插到表头。所有成功访问都刷新表头，因此容量超限时删除 ``tail.previous`` 即可。失败的 ``get`` 不改变顺序。
+哈希表 ``index_`` 保存 ``key -> Node*``，负责平均常数时间定位。双向链表按使用时间排列，越靠近
+``mostRecentSentinel_`` 越新，越靠近 ``leastRecentSentinel_`` 越旧。已知节点地址后，双向链表能通过
+``previous``、``next`` 在常数时间摘除中间节点；单链表做不到，因为它还要寻找前驱。
 
-复杂度来源
-~~~~~~~~~~
+两个哨兵不代表缓存项，只固定边界：
 
-哈希查找平均 ``O(1)``，链表摘除、插入和表尾定位都是 ``O(1)``；空间 ``O(capacity)``。线性序列或时间戳基准在刷新或淘汰时需要扫描缓存。
+.. code-block:: text
 
-九语言实现
-----------
+   mostRecentSentinel
+       <-> 最近使用项 <-> ... <-> 最久未使用项
+       <-> leastRecentSentinel
 
-C
-~
+空缓存时两个哨兵直接相连。插入首项、删除末项与处理中间节点使用完全相同的四个指针更新，不需要分别处理
+空表、头节点和尾节点分支。
 
-.. code-block:: c
+必须始终保持的三个不变量
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-   typedef struct LNode{int key,value;struct LNode*prev,*next;}LNode;typedef struct{int cap,size;LNode**index,*head,*tail;}LRUCache;static void detach(LNode*n){n->prev->next=n->next;n->next->prev=n->prev;}static void front(LRUCache*c,LNode*n){n->next=c->head->next;n->prev=c->head;c->head->next->prev=n;c->head->next=n;}LRUCache*lRUCacheCreate(int cap){LRUCache*c=malloc(sizeof(*c));c->cap=cap;c->size=0;c->index=calloc(10001,sizeof(LNode*));c->head=calloc(1,sizeof(LNode));c->tail=calloc(1,sizeof(LNode));c->head->next=c->tail;c->tail->prev=c->head;return c;}int lRUCacheGet(LRUCache*c,int key){LNode*n=c->index[key];if(!n)return -1;detach(n);front(c,n);return n->value;}void lRUCachePut(LRUCache*c,int key,int value){LNode*n=c->index[key];if(n){n->value=value;detach(n);front(c,n);return;}n=malloc(sizeof(*n));n->key=key;n->value=value;c->index[key]=n;front(c,n);c->size++;if(c->size>c->cap){LNode*v=c->tail->prev;detach(v);c->index[v->key]=NULL;free(v);c->size--;}}void lRUCacheFree(LRUCache*c){LNode*n=c->head;while(n){LNode*next=n->next;free(n);n=next;}free(c->index);free(c);}
+#. 每个真实缓存键在哈希表中出现一次，也在两个哨兵之间出现一次；``index_[key]`` 正好指向该链表节点；
+#. ``mostRecentSentinel_->next`` 是最近成功访问的条目，``leastRecentSentinel_->previous`` 是最久未访问项；
+#. 哈希表大小等于真实链表节点数，并且不超过容量（一次新插入的检查过程中可暂时多一）。
 
-Python
-~~~~~~
+``detach`` 只接受真实节点，用两次跨接把它从当前位置删除；``insertAsMostRecent`` 把节点插到头哨兵之后。
+``markAsMostRecent`` 组合两者，因此命中节点原本就在最前也无需特判：先摘除再插回，结果不变量不变。
 
-.. code-block:: python
+``get`` 的分支意义
+~~~~~~~~~~~~~~~~~
 
-   from collections import OrderedDict
-   class LRUCache:
-       def __init__(self, capacity): self.capacity=capacity; self.data=OrderedDict()
-       def get(self, key):
-           if key not in self.data: return -1
-           self.data.move_to_end(key); return self.data[key]
-       def put(self, key, value):
-           if key in self.data: self.data.move_to_end(key)
-           self.data[key]=value
-           if len(self.data)>self.capacity: self.data.popitem(last=False)
+哈希未命中时返回 ``-1``，这次访问没有对应缓存项，不能改变新旧顺序。命中时先取得节点指针，移动到最新
+位置，再返回值。移动与返回的先后在单线程结果上等价，但代码把“成功访问必刷新”集中在返回之前，不会
+遗漏副作用。
 
-Java
-~~~~
+对示例中的 ``get(4)``，原顺序 ``[7, 4]`` 先摘下 ``4`` 得到 ``[7]``，再插到头部得到 ``[4, 7]``；
+随后淘汰依据已经正确改变。
 
-.. code-block:: java
+``put`` 必须先区分覆盖与新增
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-   class LRUCache {private final int cap;private final LinkedHashMap<Integer,Integer>data=new LinkedHashMap<>(16,0.75f,true);LRUCache(int capacity){cap=capacity;}public int get(int key){return data.getOrDefault(key,-1);}public void put(int key,int value){data.put(key,value);if(data.size()>cap){Iterator<Integer>it=data.keySet().iterator();it.next();it.remove();}}}
+已有键的 ``put`` 只更新现有节点的 ``value`` 并刷新位置，条目数不变，所以不能执行容量淘汰。新键才分配
+节点、同时写入哈希并插到最新位置。若此时哈希大小超过容量，``leastRecentSentinel_->previous`` 就是唯一
+应淘汰节点：先从链表摘除，再用节点内保存的 ``key`` 从哈希删除，最后释放节点。
 
-Rust
-~~~~
+删除必须同时作用于两种结构。只删哈希会让链表留下不可定位的旧节点；只删链表会让后续 ``get`` 取得悬空
+或已淘汰节点。节点同时保存 ``key`` 和 ``value``，正是为了从表尾选中 victim 后能反向删除哈希项。
 
-.. code-block:: rust
+完整操作走读
+~~~~~~~~~~~~
 
-   struct Node{key:i32,value:i32,prev:Option<usize>,next:Option<usize>}struct LRUCache{cap:usize,map:std::collections::HashMap<i32,usize>,nodes:Vec<Node>,head:Option<usize>,tail:Option<usize>}impl LRUCache{fn new(capacity:i32)->Self{Self{cap:capacity as usize,map:std::collections::HashMap::new(),nodes:vec![],head:None,tail:None}}fn detach(&mut self,i:usize){let(p,n)=(self.nodes[i].prev,self.nodes[i].next);if let Some(x)=p{self.nodes[x].next=n}else{self.head=n}if let Some(x)=n{self.nodes[x].prev=p}else{self.tail=p}}fn front(&mut self,i:usize){self.nodes[i].prev=None;self.nodes[i].next=self.head;if let Some(h)=self.head{self.nodes[h].prev=Some(i)}else{self.tail=Some(i)}self.head=Some(i)}fn get(&mut self,key:i32)->i32{let Some(&i)=self.map.get(&key)else{return -1};let value=self.nodes[i].value;self.detach(i);self.front(i);value}fn put(&mut self,key:i32,value:i32){if let Some(&i)=self.map.get(&key){self.nodes[i].value=value;self.detach(i);self.front(i);return}let i=if self.nodes.len()<self.cap{self.nodes.push(Node{key,value,prev:None,next:None});self.nodes.len()-1}else{let i=self.tail.unwrap();self.detach(i);self.map.remove(&self.nodes[i].key);self.nodes[i].key=key;self.nodes[i].value=value;i};self.front(i);self.map.insert(key,i);}}
+.. list-table::
+   :header-rows: 1
 
-Go
-~~
+   * - 操作
+     - 链表顺序（新到旧）
+     - 哈希变化
+   * - ``put(4, 40)``
+     - ``[4]``
+     - 增加 ``4 -> node4``
+   * - ``put(7, 70)``
+     - ``[7, 4]``
+     - 增加键 ``7``
+   * - ``get(4)``
+     - ``[4, 7]``
+     - 映射不变，只移动节点
+   * - ``put(9, 90)``
+     - 先 ``[9, 4, 7]``，再淘汰尾部成为 ``[9, 4]``
+     - 增加 ``9``，删除 ``7``
+   * - ``get(7)``
+     - ``[9, 4]``
+     - 未命中，不变
 
-.. code-block:: go
+析构与边界状态
+~~~~~~~~~~~~~~
 
-   type entry struct{key,value int;prev,next *entry};type LRUCache struct{cap int;items map[int]*entry;head,tail *entry};func Constructor(capacity int)LRUCache{h,t:=&entry{},&entry{};h.next=t;t.prev=h;return LRUCache{capacity,map[int]*entry{},h,t}};func(c *LRUCache)detach(n *entry){n.prev.next=n.next;n.next.prev=n.prev};func(c *LRUCache)front(n *entry){n.next=c.head.next;n.prev=c.head;c.head.next.prev=n;c.head.next=n};func(c *LRUCache)Get(key int)int{n:=c.items[key];if n==nil{return -1};c.detach(n);c.front(n);return n.value};func(c *LRUCache)Put(key,value int){if n:=c.items[key];n!=nil{n.value=value;c.detach(n);c.front(n);return};n:=&entry{key:key,value:value};c.items[key]=n;c.front(n);if len(c.items)>c.cap{v:=c.tail.prev;c.detach(v);delete(c.items,v.key)}}
+析构函数沿 ``next`` 删除整条链，包括两个哨兵和所有尚存数据节点，防止手工 ``new`` 的内存泄漏。容量至少
+为一，所以新插入后需要淘汰时，尾哨兵前必有真实节点；代码不会把哨兵当 victim。哨兵没有放入哈希，它们
+的占位键值也不会与用户键冲突。
 
-TypeScript
-~~~~~~~~~~
+复杂度与方案选择
+~~~~~~~~~~~~~~~~
 
-.. code-block:: typescript
-
-   class LRUCache{private data=new Map<number,number>();constructor(private capacity:number){}get(key:number):number{if(!this.data.has(key))return -1;const value=this.data.get(key)!;this.data.delete(key);this.data.set(key,value);return value;}put(key:number,value:number):void{this.data.delete(key);this.data.set(key,value);if(this.data.size>this.capacity){const oldest=this.data.keys().next().value!;this.data.delete(oldest);}}}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class LRUCache {readonly int cap;readonly Dictionary<int,LinkedListNode<(int key,int value)>>map=new();readonly LinkedList<(int key,int value)>order=new();public LRUCache(int capacity){cap=capacity;}public int Get(int key){if(!map.TryGetValue(key,out var n))return -1;order.Remove(n);order.AddFirst(n);return n.Value.value;}public void Put(int key,int value){if(map.TryGetValue(key,out var n)){n.Value=(key,value);order.Remove(n);order.AddFirst(n);return;}n=order.AddFirst((key,value));map[key]=n;if(map.Count>cap){var v=order.Last!;order.RemoveLast();map.Remove(v.Value.key);}}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   mutable struct LNode;key::Int;value::Int;prev::Any;next::Any;end
-   mutable struct LRUCache;cap::Int;map::Dict{Int,LNode};head::LNode;tail::LNode;end
-   function LRUCache(cap);h=LNode(0,0,nothing,nothing);t=LNode(0,0,h,nothing);h.next=t;LRUCache(cap,Dict{Int,LNode}(),h,t);end
-   detach!(n)=(n.prev.next=n.next;n.next.prev=n.prev)
-   function front!(c,n);n.next=c.head.next;n.prev=c.head;c.head.next.prev=n;c.head.next=n;end
-   function get!(c::LRUCache,key);haskey(c.map,key)||return -1;n=c.map[key];detach!(n);front!(c,n);n.value;end
-   function put!(c::LRUCache,key,value);if haskey(c.map,key);n=c.map[key];n.value=value;detach!(n);front!(c,n);return;end;n=LNode(key,value,nothing,nothing);c.map[key]=n;front!(c,n);if length(c.map)>c.cap;v=c.tail.prev;detach!(v);delete!(c.map,v.key);end;end
-
-R
-~
-
-.. code-block:: r
-
-   new_lru <- function(cap){c<-new.env();c$cap<-cap;c$size<-0L;c$map<-new.env(hash=TRUE,parent=emptyenv());c$head<-NULL;c$tail<-NULL;c};detach<-function(c,n){if(is.null(n$prev))c$head<-n$next else n$prev$next<-n$next;if(is.null(n$next))c$tail<-n$prev else n$next$prev<-n$prev};front<-function(c,n){n$prev<-NULL;n$next<-c$head;if(!is.null(c$head))c$head$prev<-n else c$tail<-n;c$head<-n};lru_get<-function(c,key){k<-as.character(key);if(!exists(k,c$map,inherits=FALSE))return(-1L);n<-get(k,c$map);detach(c,n);front(c,n);n$value};lru_put<-function(c,key,value){k<-as.character(key);if(exists(k,c$map,inherits=FALSE)){n<-get(k,c$map);n$value<-value;detach(c,n);front(c,n);return(invisible(NULL))};n<-new.env();n$key<-key;n$value<-value;assign(k,n,c$map);front(c,n);c$size<-c$size+1L;if(c$size>c$cap){v<-c$tail;detach(c,v);rm(list=as.character(v$key),envir=c$map);c$size<-c$size-1L};invisible(NULL)}
+哈希查找、插入和删除平均 ``O(1)``；已知节点的双向链表摘除、头插和尾部定位都是严格 ``O(1)``，所以
+``get``、``put`` 均满足平均 ``O(1)``。空间为至多 ``capacity`` 个节点和哈希项，即 ``O(capacity)``。
+主解采用哈希表与双向链表组合，因为它恰好覆盖三类所需操作；时间戳扫描与单序列方案只作为瓶颈推导，
+没有额外认知收益值得保留第二份较长 C++ 实现。

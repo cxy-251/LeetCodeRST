@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0061
+:题号: 0061. 旋转链表
 :难度: Medium
 :主题: 链表、双指针、模运算
 :原题: `LeetCode 0061 <https://leetcode.com/problems/rotate-list/>`_

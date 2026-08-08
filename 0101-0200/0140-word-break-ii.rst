@@ -4,242 +4,244 @@
 题目信息
 --------
 
-:题号: 0140
+:题号: 0140. 单词拆分 II
 :难度: Hard
-:主题: 字符串、记忆化搜索、DAG 路径枚举、回溯
+:主题: 字符串、记忆化搜索、可行性剪枝、DAG 路径枚举
 :原题: `LeetCode 0140 <https://leetcode.com/problems/word-break-ii/>`_
-:重点: 所有完整句子、字典词可重复使用、空格连接、结果顺序不限
+:重点: 区分“后缀能否完成”与“后缀有哪些句子”，缓存共享后缀的全部结果并用空句子作为组合单位元
 
 题目重述
 --------
 
-给定非空字符串 ``s`` 和字符串字典 ``wordDict``，在 ``s`` 的字符之间插入空格，使每个得到的非空片段都属于字典。返回所有能够按原顺序完整覆盖 ``s`` 的句子；字典中的同一个单词可以重复使用。若不存在合法切分，返回空数组，多个句子的返回顺序不限。
-
-``s`` 的长度在 ``1..20`` 范围内，``wordDict`` 长度在 ``1..1000`` 范围内，每个字典词长度在 ``1..10`` 范围内；字符串只包含小写英文字母，字典中的单词互不相同，并且所有合法句子的总长度不超过 ``10^5``。
+给定非空字符串 ``s`` 和字典 ``wordDict``，在字符之间插入空格，使每个非空片段都是字典词。返回所有能
+按原顺序完整覆盖 ``s`` 的句子，顺序不限；同一个字典词可以重复使用。若不存在合法切分，返回空数组。
 
 自建示例
 --------
 
-.. code-block:: text
-
-   输入：s = "pinepine", wordDict = ["pine","pin","e"]
-   输出：["pine pine","pin e pine","pine pin e","pin e pin e"]
-   解释：四个句子都按原顺序完整覆盖 s；单词 "pine"、"pin" 和 "e" 可以在同一句中重复使用，结果顺序可以不同。
-
-.. code-block:: text
-
-   输入：s = "catsx", wordDict = ["cat","cats"]
-   输出：[]
-   解释：前缀可以匹配字典词，但末尾字符 x 无法被任何字典词覆盖。
+* ``s = "pinepine"``、字典为 ``["pine", "pin", "e"]``：答案为 ``"pine pine"``、
+  ``"pine pin e"``、``"pin e pine"``、``"pin e pin e"``；
+* ``s = "catsx"``、字典为 ``["cat", "cats"]``：两个可行前缀最终都停在 ``x``，返回空数组；
+* ``s = "aaaa"``、字典为 ``["a", "aa"]``：不同切点会产生多条句子，且两个词都可重复使用。
 
 C++ 实现
 --------
 
 .. code-block:: cpp
 
-   #include <utility>
    #include <string>
-   #include <unordered_map>
    #include <vector>
 
    class Solution {
    private:
-       void plainDfs(const std::string& s, int start,
-                     const std::vector<std::string>& words,
-                     std::vector<std::string>& path,
-                     std::vector<std::string>& result) {
+       bool matchesAt(
+           const std::string& s,
+           int start,
+           const std::string& word
+       ) {
+           const int wordLength = static_cast<int>(word.size());
+           return start + wordLength <= static_cast<int>(s.size()) &&
+                  s.compare(start, wordLength, word) == 0;
+       }
+
+       void enumerateCompletePaths(
+           const std::string& s,
+           int start,
+           const std::vector<std::string>& words,
+           std::vector<std::string>& path,
+           std::vector<std::string>& answer
+       ) {
            if (start == static_cast<int>(s.size())) {
                std::string sentence;
-               for (int i = 0; i < static_cast<int>(path.size()); ++i) {
-                   if (i) sentence += ' ';
-                   sentence += path[i];
+               for (int index = 0;
+                    index < static_cast<int>(path.size());
+                    ++index) {
+                   if (index > 0) {
+                       sentence += ' ';
+                   }
+                   sentence += path[index];
                }
-               result.push_back(std::move(sentence));
+               answer.push_back(sentence);
                return;
            }
-           for (const std::string& word : words)
-               if (start + static_cast<int>(word.size()) <= static_cast<int>(s.size()) &&
-                   s.compare(start, word.size(), word) == 0) {
-                   path.push_back(word);
-                   plainDfs(s, start + word.size(), words, path, result);
-                   path.pop_back();
+
+           for (const std::string& word : words) {
+               if (!matchesAt(s, start, word)) {
+                   continue;
                }
+               path.push_back(word);
+               enumerateCompletePaths(
+                   s,
+                   start + static_cast<int>(word.size()),
+                   words,
+                   path,
+                   answer
+               );
+               path.pop_back();
+           }
        }
 
-       const std::vector<std::string>& memoDfs(
-           const std::string& s, int start,
-           const std::vector<std::string>& words,
-           std::unordered_map<int,std::vector<std::string>>& memo
+       std::vector<bool> buildCanFinish(
+           const std::string& s,
+           const std::vector<std::string>& words
        ) {
-           auto found = memo.find(start);
-           if (found != memo.end()) return found->second;
-           std::vector<std::string> sentences;
-           if (start == static_cast<int>(s.size())) {
-               sentences.push_back("");
-           } else {
+           const int length = static_cast<int>(s.size());
+           std::vector<bool> canFinish(length + 1, false);
+           canFinish[length] = true;
+
+           for (int start = length - 1; start >= 0; --start) {
                for (const std::string& word : words) {
-                   int end = start + word.size();
-                   if (end > static_cast<int>(s.size()) ||
-                       s.compare(start, word.size(), word) != 0) continue;
-                   for (const std::string& tail : memoDfs(s, end, words, memo))
-                       sentences.push_back(tail.empty() ? word : word + " " + tail);
+                   const int end = start + static_cast<int>(word.size());
+                   if (matchesAt(s, start, word) && canFinish[end]) {
+                       canFinish[start] = true;
+                       break;
+                   }
                }
            }
-           return memo.emplace(start, std::move(sentences)).first->second;
+           return canFinish;
        }
 
-       std::vector<std::string> suffixDp(
-           const std::string& s, const std::vector<std::string>& words
+       const std::vector<std::string>& sentencesFrom(
+           const std::string& s,
+           int start,
+           const std::vector<std::string>& words,
+           const std::vector<bool>& canFinish,
+           std::vector<std::vector<std::string>>& memo,
+           std::vector<bool>& computed
        ) {
-           int n = s.size();
-           std::vector<std::vector<std::string>> sentences(n + 1);
-           sentences[n].push_back("");
-           for (int start = n - 1; start >= 0; --start)
-               for (const std::string& word : words) {
-                   int end = start + word.size();
-                   if (end > n || s.compare(start, word.size(), word) != 0) continue;
-                   for (const std::string& tail : sentences[end])
-                       sentences[start].push_back(tail.empty() ? word : word + " " + tail);
+           if (computed[start]) {
+               return memo[start];
+           }
+           computed[start] = true;
+
+           if (start == static_cast<int>(s.size())) {
+               memo[start].push_back("");
+               return memo[start];
+           }
+
+           for (const std::string& word : words) {
+               const int end = start + static_cast<int>(word.size());
+               if (!matchesAt(s, start, word) || !canFinish[end]) {
+                   continue;
                }
-           return sentences[0];
+               for (const std::string& tail :
+                    sentencesFrom(s, end, words, canFinish, memo, computed)) {
+                   if (tail.empty()) {
+                       memo[start].push_back(word);
+                   } else {
+                       memo[start].push_back(word + " " + tail);
+                   }
+               }
+           }
+           return memo[start];
+       }
+
+       std::vector<std::string> memoizedSentences(
+           const std::string& s,
+           const std::vector<std::string>& words
+       ) {
+           const std::vector<bool> canFinish = buildCanFinish(s, words);
+           if (!canFinish[0]) {
+               return {};
+           }
+           std::vector<std::vector<std::string>> memo(s.size() + 1);
+           std::vector<bool> computed(s.size() + 1, false);
+           return sentencesFrom(s, 0, words, canFinish, memo, computed);
        }
 
    public:
        std::vector<std::string> wordBreak(
-           std::string s, std::vector<std::string>& wordDict
+           std::string s,
+           std::vector<std::string>& wordDict
        ) {
-           std::unordered_map<int,std::vector<std::string>> memo;
-           return memoDfs(s, 0, wordDict, memo);
+           return memoizedSentences(s, wordDict);
        }
    };
 
 题解
 ----
 
-布尔可达性与句子枚举
+本题为什么不能只缓存一个布尔值
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+字符边界仍构成一张 DAG：字典词在 ``start`` 匹配时，产生一条到词尾 ``end`` 的边。上一题只问终点是否
+可达，每个位置保存一个真假值即可；本题必须输出所有从 ``0`` 到 ``n`` 的路径及边标签。把同一位置压成
+``true`` 会丢失它之后有多少种词序列，也无法与不同前缀组合成完整句子。
+
+原始方案 ``enumerateCompletePaths`` 用 ``path`` 保存已选单词。到达末尾才插入空格构造句子，返回后撤销
+末词并尝试兄弟分支。它不重不漏，但多个前缀可能到达同一后缀位置，并反复搜索完全相同的后缀树；更糟的
+是，像 ``catsx`` 这样的输入会从多个可行前缀重复深入一个注定失败的尾部。
+
+先用布尔状态删除死后缀
+~~~~~~~~~~~~~~~~~~~~~~
+
+``canFinish[start]`` 表示 ``s[start..]`` 是否至少存在一种完整拆分。终点设为真；从右向左计算时，只要有
+一个词在当前位置匹配且其结尾 ``canFinish[end]`` 为真，当前位置就为真。
+
+这张表不负责保存答案，只充当必要剪枝。枚举时若某个匹配词落到 ``canFinish[end] == false``，以该词开头
+的所有路径都无法到达终点，可以整棵删除。若 ``canFinish[0]`` 为假，主过程甚至无需创建任何句子状态。
+
+后缀状态必须保存什么
 ~~~~~~~~~~~~~~~~~~~~
 
-如果只需要判断位置是否可达，一个布尔值就足够；本题必须保留从每个位置到终点的所有不同路径及其单词标签，
-因此状态载荷是句子列表，而不是单个真假值。
-
-后缀状态
-~~~~~~~~
-
-定义 ``sentences[start]`` 为能够完整覆盖 ``s[start:n]`` 的全部句子。若首词 ``word`` 匹配当前位置，就与 ``sentences[end]`` 中每个尾句组合。
+定义 ``sentencesFrom(start)`` 为能完整覆盖 ``s[start..n-1]`` 的全部句子。若 ``word`` 在 ``start`` 匹配，
+就把它与 ``sentencesFrom(end)`` 中每个尾句组合：
 
 .. code-block:: text
 
-   word + (tail 为空 ? "" : " " + tail)
+   tail 为空：word
+   tail 非空：word + " " + tail
 
-为什么终点是 [""]
-~~~~~~~~~~~~~~~~~~
+同一 ``start`` 的结果只由后缀和字典决定，与到达这里的前缀无关。``computed`` 区分“尚未计算”与“已经
+计算但答案为空”；后者非常重要，空列表本身也是一个需要缓存的失败结果，不能因 ``memo[start].empty()``
+就反复计算。
 
-空字符串不是公开答案，而是组合单位元。末词到达终点时，只有一个空尾句与它组合，得到词本身；若终点是空列表，末词没有组合对象，所有答案都会消失。
+为什么终点状态是只含空串的列表
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+``sentencesFrom(n) = [""]``，不是空列表。空串不是公开答案，而是字符串组合的单位元：最后一个字典词
+正好到达末尾时，需要有一个尾句与它组合，才能产生该词本身。若终点状态为 ``[]``，组合循环执行零次，
+所有末词都会消失；若直接把空串拼接，又会多出尾部空格，所以代码用 ``tail.empty()`` 分支。
+
+具体走读共享后缀
+~~~~~~~~~~~~~~~~
+
+对 ``pinepine``，后半段从位置 ``4`` 开始的结果先算成：
+
+.. code-block:: text
+
+   sentencesFrom(4) = ["pine", "pin e"]
+
+根位置既可选 ``pine`` 到达 ``4``，也可选 ``pin``、``e`` 后到达同一位置。缓存让后半段只展开一次，但
+每个不同前缀仍会与这两条尾句分别组合，所以得到四个完整句子，而不是把共享后缀错误合并成一条。
 
 .. list-table::
    :header-rows: 1
 
-   * - 后缀
-     - 状态
-   * - ``""``
-     - ``[""]``
-   * - ``"aa"``
-     - ``["a a","aa"]``
-   * - ``"aaaa"``
-     - 五个完整句子
+   * - 根前缀
+     - 复用的尾句
+     - 完整句子
+   * - ``pine``
+     - ``pine``、``pin e``
+     - ``pine pine``、``pine pin e``
+   * - ``pin e``
+     - ``pine``、``pin e``
+     - ``pin e pine``、``pin e pin e``
 
-为什么记忆化不会漏掉共享后缀
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-同一位置之后的可行句子只由后缀内容决定，与到达它的前缀无关。首次完整构造后缓存，其他前缀直接复用全部尾句；共享并不合并不同前缀，组合后仍生成不同完整句子。
-
-为什么结果不重不漏
+代码顺序与主解选择
 ~~~~~~~~~~~~~~~~~~
 
-每个合法句子对应位置 DAG 中一条从 0 到 ``n`` 的路径，递归会按其首词和后续边完整枚举；不同单词边序列产生不同空格切法。字典词互不重复，因此不会从相同边重复生成同一句子。
+``matchesAt`` 先做长度边界检查，再定长比较，不构造临时子串。递归边总去往更大下标，所以把
+``computed[start]`` 在展开前置真不会遇到图环；子状态完成后再逐句组合。字典词每到一个位置都会重新尝试，
+因此重复使用自然成立，不需要资源计数。
 
-复杂度来源
+公开入口采用“可行性表 + 后缀句子记忆化”。相较直接回溯，它增加布尔表和各后缀句子缓存，收益是删除死
+后缀并复用共享后缀；代价是中间位置的句子也会占内存。在输出很少、共享后缀不多时，带 ``canFinish``
+剪枝的路径回溯可能更省缓存空间，因此记忆化并非没有代价。
+
+复杂度分析
 ~~~~~~~~~~
 
-路径数量可指数增长，任何算法都至少需要与最终输出字符总量成正比。记忆化避免重复展开同一后缀，但还会保存各后缀的中间句子；空间为这些缓存与输出总量之和，递归深度最多 ``O(n)``。
-
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   static void dfs(char*s,int n,int start,char**words,int count,char**path,int depth,char***out,int*size,int*cap){if(start==n){int len=depth-1;for(int i=0;i<depth;i++)len+=strlen(path[i]);char*sentence=malloc((size_t)len+1);sentence[0]='\0';for(int i=0;i<depth;i++){if(i)strcat(sentence," ");strcat(sentence,path[i]);}if(*size==*cap){*cap*=2;*out=realloc(*out,(size_t)*cap*sizeof(char*));}(*out)[(*size)++]=sentence;return;}for(int i=0;i<count;i++){int len=strlen(words[i]);if(start+len<=n&&!strncmp(s+start,words[i],(size_t)len)){path[depth]=words[i];dfs(s,n,start+len,words,count,path,depth+1,out,size,cap);}}}
-   char**wordBreak(char*s,char**words,int count,int*returnSize){int cap=8,size=0,n=strlen(s);char**out=malloc((size_t)cap*sizeof(char*));char**path=malloc((size_t)(n+1)*sizeof(char*));dfs(s,n,0,words,count,path,0,&out,&size,&cap);free(path);*returnSize=size;return out;}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def wordBreak(self, s: str, wordDict: list[str]) -> list[str]:
-           memo={len(s): [""]}
-           def dfs(start):
-               if start in memo: return memo[start]
-               out=[]
-               for word in wordDict:
-                   if s.startswith(word,start):
-                       for tail in dfs(start+len(word)): out.append(word if not tail else word+" "+tail)
-               memo[start]=out; return out
-           return dfs(0)
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {Map<Integer,List<String>>memo=new HashMap<>();public List<String> wordBreak(String s,List<String>w){memo.put(s.length(),List.of(""));return dfs(s,0,w);}List<String>dfs(String s,int st,List<String>w){if(memo.containsKey(st))return memo.get(st);List<String>o=new ArrayList<>();for(String x:w)if(st+x.length()<=s.length()&&s.startsWith(x,st))for(String tail:dfs(s,st+x.length(),w))o.add(tail.isEmpty()?x:x+" "+tail);memo.put(st,o);return o;}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn word_break(s:String,words:Vec<String>)->Vec<String>{fn dfs(st:usize,s:&str,w:&Vec<String>,m:&mut std::collections::HashMap<usize,Vec<String>>)->Vec<String>{if let Some(v)=m.get(&st){return v.clone()}let mut o=vec![];for x in w{if s[st..].starts_with(x){for tail in dfs(st+x.len(),s,w,m){o.push(if tail.is_empty(){x.clone()}else{format!("{} {}",x,tail)});}}}m.insert(st,o.clone());o}let mut m=std::collections::HashMap::new();m.insert(s.len(),vec![String::new()]);dfs(0,&s,&words,&mut m)}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func wordBreak(s string,words []string)[]string{memo:=map[int][]string{len(s):[]string{""}};var dfs func(int)[]string;dfs=func(st int)[]string{if v,ok:=memo[st];ok{return v};o:=[]string{};for _,w:=range words{if st+len(w)<=len(s)&&s[st:st+len(w)]==w{for _,tail:=range dfs(st+len(w)){if tail==""{o=append(o,w)}else{o=append(o,w+" "+tail)}}}};memo[st]=o;return o};return dfs(0)}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function wordBreak(s:string,words:string[]):string[]{const memo=new Map<number,string[]>([[s.length,[""]]]);const dfs=(st:number):string[]=>{if(memo.has(st))return memo.get(st)!;const out:string[]=[];for(const w of words)if(s.startsWith(w,st))for(const tail of dfs(st+w.length))out.push(tail?`${w} ${tail}`:w);memo.set(st,out);return out;};return dfs(0);}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {Dictionary<int,IList<string>>memo=new();public IList<string> WordBreak(string s,IList<string>w){memo[s.Length]=new List<string>{""};return Dfs(s,0,w);}IList<string>Dfs(string s,int st,IList<string>w){if(memo.TryGetValue(st,out var seen))return seen;var o=new List<string>();foreach(var x in w)if(st+x.Length<=s.Length&&s.AsSpan(st,x.Length).SequenceEqual(x.AsSpan()))foreach(var tail in Dfs(s,st+x.Length,w))o.Add(tail.Length==0?x:x+" "+tail);memo[st]=o;return o;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function word_break_sentences(s,words)
-       a=collect(codeunits(s));memo=Dict(length(a)+1=>[""])
-       function dfs(st);haskey(memo,st)&&return memo[st];out=String[];for w in words;b=collect(codeunits(w));if st+length(b)-1<=length(a)&&a[st:st+length(b)-1]==b;for tail in dfs(st+length(b));push!(out,isempty(tail) ? w : w*" "*tail);end;end;end;memo[st]=out;out;end
-       dfs(1)
-   end
-
-R
-~
-
-.. code-block:: r
-
-   word_break_sentences <- function(s,words){n<-nchar(s,type="bytes");memo<-new.env(hash=TRUE,parent=emptyenv());assign(as.character(n),"",memo);dfs<-function(st){key<-as.character(st);if(exists(key,memo,inherits=FALSE))return(get(key,memo));out<-character();for(w in words){len<-nchar(w,type="bytes");if(st+len<=n&&substr(s,st+1L,st+len)==w)for(tail in dfs(st+len))out<-c(out,if(tail=="")w else paste(w,tail))};assign(key,out,memo);out};dfs(0L)}
+设字符串长度 ``n``、字典词数 ``D``、最大词长 ``L``。可行性预处理最多做 ``O(nDL)`` 字符比较。合法
+句子数可能指数增长，生成与复制字符串的时间至少与全部输出字符总量成正比；后缀缓存还可能保存这些答案
+的共享尾部版本。递归深度最多 ``O(n)``，布尔表为 ``O(n)``，其余空间由记忆化句子和最终输出主导。

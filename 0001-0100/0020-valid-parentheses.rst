@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0020
+:题号: 0020. 有效的括号
 :难度: Easy
 :主题: 字符串、栈、括号匹配
 :原题: `LeetCode 0020 <https://leetcode.com/problems/valid-parentheses/>`_

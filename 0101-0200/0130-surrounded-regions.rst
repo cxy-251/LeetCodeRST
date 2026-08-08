@@ -4,45 +4,34 @@
 题目信息
 --------
 
-:题号: 0130
+:题号: 0130. 被围绕的区域
 :难度: Medium
-:主题: 网格、广度优先搜索、连通分量、原地修改
+:主题: 网格、连通分量、多源广度优先搜索、原地标记
 :原题: `LeetCode 0130 <https://leetcode.com/problems/surrounded-regions/>`_
-:重点: 四方向连通、边界保护、封闭区域、原地翻转
+:重点: 将“每个区域是否封闭”反转为“哪些 O 能从边界到达”，先保护安全补集再统一翻转
 
 题目重述
 --------
 
-给定一个只包含字符 ``'X'`` 和 ``'O'`` 的矩形网格 ``board``，直接修改该网格。由上下左右相邻的 ``'O'`` 组成一个区域；若该区域中的任何格子都不在网格边界上，则整个区域被 ``'X'`` 包围，需要把其中所有 ``'O'`` 改为 ``'X'``。只要区域与任意边界 ``'O'`` 连通，该区域就必须保持不变。
-
-网格行数和列数都在 ``1..200`` 范围内。
+给定只含 ``'X'`` 和 ``'O'`` 的矩形网格 ``board``。上下左右相邻的 ``'O'`` 属于同一区域；一个区域只有
+在其中所有格子都不位于边界时才被 ``'X'`` 完全围绕，需要把该区域的全部 ``'O'`` 原地改为 ``'X'``。
+只要区域通过若干个 ``'O'`` 与任意边界格相连，整个区域都必须保留。
 
 自建示例
 --------
 
 .. code-block:: text
 
-   输入：board =
-   [["X","X","X","X","X"],
-    ["X","O","O","X","X"],
-    ["X","X","O","O","X"],
-    ["X","O","X","X","X"],
-    ["X","O","X","X","X"]]
+   输入：                   修改后：
+   X X X X X               X X X X X
+   X O O X X               X X X X X
+   X X O O X               X X X X X
+   X O X X X               X O X X X
+   X O X X X               X O X X X
 
-   修改后：
-   [["X","X","X","X","X"],
-    ["X","X","X","X","X"],
-    ["X","X","X","X","X"],
-    ["X","O","X","X","X"],
-    ["X","O","X","X","X"]]
+上方四个 ``O`` 组成封闭区域；左下两个 ``O`` 与底边相连，即使其中一个不在边界也必须保留。
 
-   解释：上方四个 O 组成的区域不接触边界，因此被翻转；左下区域与底边相连，必须保留。
-
-.. code-block:: text
-
-   输入：board = [["O","X","O","O"]]
-   修改后：[["O","X","O","O"]]
-   解释：单行网格中的每个格子都位于边界，没有 O 会被包围。
+单行网格 ``[O, X, O, O]`` 中每个位置都属于边界，因此没有任何 ``O`` 可以翻转。
 
 C++ 实现
 --------
@@ -55,209 +44,187 @@ C++ 实现
 
    class Solution {
    private:
-       void componentDecision(std::vector<std::vector<char>>& board) {
-           int rows = board.size(), cols = board[0].size();
-           std::vector<std::vector<char>> visited(rows, std::vector<char>(cols));
-           int dr[4] = {1,-1,0,0}, dc[4] = {0,0,1,-1};
-           for (int sr = 0; sr < rows; ++sr) for (int sc = 0; sc < cols; ++sc) {
-               if (board[sr][sc] != 'O' || visited[sr][sc]) continue;
-               std::queue<std::pair<int,int>> queue; queue.push({sr,sc});
-               visited[sr][sc] = true;
-               std::vector<std::pair<int,int>> cells;
-               bool touches_boundary = false;
-               while (!queue.empty()) {
-                   auto [r,c] = queue.front(); queue.pop(); cells.push_back({r,c});
-                   if (r == 0 || r == rows-1 || c == 0 || c == cols-1) touches_boundary = true;
-                   for (int k = 0; k < 4; ++k) {
-                       int nr=r+dr[k], nc=c+dc[k];
-                       if (nr>=0&&nr<rows&&nc>=0&&nc<cols&&board[nr][nc]=='O'&&!visited[nr][nc]) {
-                           visited[nr][nc]=true; queue.push({nr,nc});
+       void decideEveryComponent(std::vector<std::vector<char>>& board) {
+           const int rows = static_cast<int>(board.size());
+           const int columns = static_cast<int>(board[0].size());
+           const int directions[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+           std::vector<std::vector<bool>> visited(
+               rows,
+               std::vector<bool>(columns, false)
+           );
+
+           for (int startRow = 0; startRow < rows; ++startRow) {
+               for (int startColumn = 0; startColumn < columns; ++startColumn) {
+                   if (board[startRow][startColumn] != 'O' ||
+                       visited[startRow][startColumn]) {
+                       continue;
+                   }
+
+                   std::queue<std::pair<int, int>> pending;
+                   std::vector<std::pair<int, int>> component;
+                   pending.push({startRow, startColumn});
+                   visited[startRow][startColumn] = true;
+                   bool touchesBoundary = false;
+
+                   while (!pending.empty()) {
+                       auto [row, column] = pending.front();
+                       pending.pop();
+                       component.push_back({row, column});
+                       if (row == 0 || row == rows - 1 ||
+                           column == 0 || column == columns - 1) {
+                           touchesBoundary = true;
+                       }
+
+                       for (const auto& direction : directions) {
+                           const int nextRow = row + direction[0];
+                           const int nextColumn = column + direction[1];
+                           if (nextRow < 0 || nextRow >= rows ||
+                               nextColumn < 0 || nextColumn >= columns ||
+                               board[nextRow][nextColumn] != 'O' ||
+                               visited[nextRow][nextColumn]) {
+                               continue;
+                           }
+                           visited[nextRow][nextColumn] = true;
+                           pending.push({nextRow, nextColumn});
+                       }
+                   }
+
+                   if (!touchesBoundary) {
+                       for (auto [row, column] : component) {
+                           board[row][column] = 'X';
                        }
                    }
                }
-               if (!touches_boundary) for (auto [r,c] : cells) board[r][c]='X';
            }
        }
 
-       void boundaryDfs(std::vector<std::vector<char>>& board, int row, int col) {
-           if (row < 0 || row >= static_cast<int>(board.size()) ||
-               col < 0 || col >= static_cast<int>(board[0].size()) ||
-               board[row][col] != 'O') return;
-           board[row][col] = '#';
-           boundaryDfs(board,row+1,col); boundaryDfs(board,row-1,col);
-           boundaryDfs(board,row,col+1); boundaryDfs(board,row,col-1);
-       }
+       void protectBoundaryComponents(std::vector<std::vector<char>>& board) {
+           if (board.empty() || board[0].empty()) {
+               return;
+           }
+           const int rows = static_cast<int>(board.size());
+           const int columns = static_cast<int>(board[0].size());
+           const int directions[4][2] = {{1, 0}, {-1, 0}, {0, 1}, {0, -1}};
+           std::queue<std::pair<int, int>> pending;
 
-       void boundaryBfs(std::vector<std::vector<char>>& board) {
-           if (board.empty() || board[0].empty()) return;
-           int rows = board.size(), cols = board[0].size();
-           std::queue<std::pair<int,int>> queue;
-           auto add = [&](int row, int col) {
-               if (board[row][col] == 'O') {
-                   board[row][col] = '#';
-                   queue.push({row,col});
+           auto protect = [&](int row, int column) {
+               if (board[row][column] == 'O') {
+                   board[row][column] = '#';
+                   pending.push({row, column});
                }
            };
-           for (int row = 0; row < rows; ++row) { add(row,0); add(row,cols-1); }
-           for (int col = 0; col < cols; ++col) { add(0,col); add(rows-1,col); }
-           int dr[4] = {1,-1,0,0}, dc[4] = {0,0,1,-1};
-           while (!queue.empty()) {
-               auto [row,col] = queue.front(); queue.pop();
-               for (int k = 0; k < 4; ++k) {
-                   int nr=row+dr[k], nc=col+dc[k];
-                   if (nr>=0&&nr<rows&&nc>=0&&nc<cols&&board[nr][nc]=='O') add(nr,nc);
+
+           for (int row = 0; row < rows; ++row) {
+               protect(row, 0);
+               protect(row, columns - 1);
+           }
+           for (int column = 0; column < columns; ++column) {
+               protect(0, column);
+               protect(rows - 1, column);
+           }
+
+           while (!pending.empty()) {
+               auto [row, column] = pending.front();
+               pending.pop();
+               for (const auto& direction : directions) {
+                   const int nextRow = row + direction[0];
+                   const int nextColumn = column + direction[1];
+                   if (nextRow >= 0 && nextRow < rows &&
+                       nextColumn >= 0 && nextColumn < columns) {
+                       protect(nextRow, nextColumn);
+                   }
                }
            }
-           for (auto& row : board) for (char& cell : row)
-               cell = cell == '#' ? 'O' : 'X';
+
+           for (auto& row : board) {
+               for (char& cell : row) {
+                   if (cell == 'O') {
+                       cell = 'X';
+                   } else if (cell == '#') {
+                       cell = 'O';
+                   }
+               }
+           }
        }
 
    public:
        void solve(std::vector<std::vector<char>>& board) {
-           boundaryBfs(board);
+           protectBoundaryComponents(board);
        }
    };
 
 题解
 ----
 
-为什么从边界反向搜索
-~~~~~~~~~~~~~~~~~~~~
+原始问题为何容易产生重复搜索
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-直接判断每个 ``O`` 分量是否被包围，需要收集分量并记录是否碰到边界。反向思考更简单：边界 ``O`` 必然安全，与它们连通的所有 ``O`` 也安全；搜索后剩余的 ``O`` 才是应翻转的补集。
+对一个内部 ``O``，最直接的问题是：“从这里沿 ``O`` 能否走到边界？”可以为每个格子单独做 DFS 或 BFS，
+但同一区域中的每个起点都会重新走过几乎相同的格子；在一大片 ``O`` 中，搜索量可能从网格大小
+``mn`` 膨胀到 ``O((mn)^2)``。而且在确定无法到边界之前不能提前翻转途中的格子，否则后续搜索看到的图已
+被改变。
 
-多源 BFS 如何初始化
-~~~~~~~~~~~~~~~~~~~
+方案一：以连通分量为单位作决定
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-把四条边上的所有 ``O`` 作为起点。加入队列时立即改为临时字符 ``#``，它同时表示“安全”和“已访问”。角点可能被边界循环检查两次，但第一次已经改成 ``#``，不会重复入队。
+``decideEveryComponent`` 使用全局 ``visited``，每个未访问 ``O`` 只启动一次 BFS。搜索时同时收集
+``component``，并记录是否碰到任意边界；完成整个分量后，只有 ``touchesBoundary == false`` 才统一翻转。
+
+这个方案把逐格重复判断压缩为逐分量判断，每个格子只搜索一次，时间已是 ``O(mn)``。不过每个分量仍需
+保存格子列表，等到“是否接触边界”确定后再决定是否回写；还要同时维护 ``visited`` 和原网格两套状态。
+
+结构反转：应翻转集合的补集更容易找到
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+一个区域“不被围绕”当且仅当它含有边界 ``O``。等价地，一个 ``O`` 应被保留，当且仅当存在一条全由
+``O`` 组成的四方向路径把它连接到边界。所有安全格子因此可以从四条边上的 ``O`` 同时出发，一次连通搜索
+直接得到；搜索结束后仍未标记的 ``O`` 恰好就是封闭区域。
+
+这使算法不再为每个分量记录一个布尔结论和完整成员列表，而是先给安全补集打标记，最后对全网格做一次
+确定性转换。
+
+三种字符就是三个阶段状态
+~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+输入只允许 ``X`` 和 ``O``，所以搜索期间可借用 ``#`` 表示“原本是 ``O``，并且已经证明与边界连通”：
 
 .. list-table::
    :header-rows: 1
 
-   * - 阶段
-     - ``O``
-     - ``#``
-   * - 初始
-     - 全部候选区域
-     - 无
-   * - 边界入队
-     - 未确认区域
-     - 边界安全单元格
-   * - BFS 扩张
-     - 未与边界连通
-     - 全部安全区域
-   * - 最终扫描
+   * - 搜索阶段字符
+     - 含义
+     - 最终动作
+   * - ``X``
+     - 原本就是阻挡格
+     - 保持 ``X``
+   * - ``O``
+     - 尚未证明安全；搜索结束仍为此状态即封闭
      - 改为 ``X``
+   * - ``#``
+     - 已从边界到达的安全格
      - 恢复为 ``O``
 
-为什么入队即标记
-~~~~~~~~~~~~~~~~
+``protect`` 在入队时立即把 ``O`` 改为 ``#``。这样同一格子被不同邻居看到时，只有第一次能够入队；角点
+虽然会被行边界循环和列边界循环各检查一次，也不会重复进入队列。若推迟到出队才标记，一个格子可能在
+处理前被多个邻居重复加入。
 
-若等到出队才标记，同一个安全格子可能被多个邻居重复加入。入队时改为 ``#``，保证每个格子最多进入队列一次，并防止边界重复起点造成重复工作。
+具体走读空边界与内部通道
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-两阶段改写为何安全
-~~~~~~~~~~~~~~~~~~
+在自建网格中，初始化边界时只有左下角一组中的底边 ``O`` 入队并变为 ``#``。BFS 向上找到与它相邻的
+另一个 ``O``，也标成 ``#``；上方封闭区域与这条通道之间隔着 ``X``，始终保持 ``O``。最终扫描将上方
+四格翻为 ``X``，把两个 ``#`` 恢复为 ``O``。
 
-搜索阶段不能直接把内部 ``O`` 改为 ``X``，因为尚未知道它是否通过更长通道连接边界。先只标记已证实安全的格子，完成全部连通搜索后再统一翻转补集，判断不会被中途修改污染。
+若网格只有一行或一列，每个格子都在边界上。所有 ``O`` 会在初始化或随后的扩展中变为 ``#``，最终全部
+恢复，因此自然得到“没有被围绕区域”，无需尺寸特判。空网格检查则必须发生在读取 ``board[0]`` 之前。
 
-单行单列为何全部保留
-~~~~~~~~~~~~~~~~~~~~
+正确性、主解选择与复杂度
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-单行或单列中的每个位置都属于边界。初始化会把所有 ``O`` 标成 ``#``，最终全部恢复，不存在完全被包围的区域。
+从边界多源 BFS 标记的每个格子，都有一条由搜索父关系构成的 ``O`` 路径连接边界，所以确实不能翻转；
+任意应保留的 ``O`` 也有这样一条路径，BFS 会从路径的边界端逐格到达它，所以不会漏标。于是未标记 ``O``
+与“被围绕区域”完全相同，最终转换正确。
 
-为什么结果正确
-~~~~~~~~~~~~~~
-
-任意与边界连通的 ``O`` 都存在一条从边界起点出发的四方向路径，BFS 会沿该路径标记它；任意被标记格子也由真实 ``O`` 邻接路径到达边界，因此确实安全。未标记 ``O`` 恰好无法到达边界，全部应翻转。
-
-复杂度来源
-~~~~~~~~~~
-
-每个格子最多入队一次并在最终阶段再扫描一次，时间 ``O(mn)``。队列最坏 ``O(mn)``；递归 DFS 最坏也需 ``O(mn)`` 调用栈。临时字符复用输入网格，不需要访问矩阵。
-
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   static void addSafe(char**board,int r,int c,int*qr,int*qc,int*tail){if(board[r][c]=='O'){board[r][c]='#';qr[*tail]=r;qc[*tail]=c;(*tail)++;}}
-   void solve(char**board,int rows,int*columnSizes){if(!rows||!columnSizes[0])return;int cols=columnSizes[0],cap=rows*cols,*qr=malloc((size_t)cap*sizeof(int)),*qc=malloc((size_t)cap*sizeof(int)),head=0,tail=0;for(int r=0;r<rows;r++){addSafe(board,r,0,qr,qc,&tail);addSafe(board,r,cols-1,qr,qc,&tail);}for(int c=0;c<cols;c++){addSafe(board,0,c,qr,qc,&tail);addSafe(board,rows-1,c,qr,qc,&tail);}int dr[4]={1,-1,0,0},dc[4]={0,0,1,-1};while(head<tail){int r=qr[head],c=qc[head++];for(int k=0;k<4;k++){int nr=r+dr[k],nc=c+dc[k];if(nr>=0&&nr<rows&&nc>=0&&nc<cols)addSafe(board,nr,nc,qr,qc,&tail);}}for(int r=0;r<rows;r++)for(int c=0;c<cols;c++)board[r][c]=board[r][c]=='#'?'O':'X';free(qr);free(qc);}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def solve(self, board: list[list[str]]) -> None:
-           from collections import deque
-           if not board or not board[0]: return
-           rows, cols, queue = len(board), len(board[0]), deque()
-           def add(r, c):
-               if board[r][c] == "O": board[r][c] = "#"; queue.append((r,c))
-           for r in range(rows): add(r,0); add(r,cols-1)
-           for c in range(cols): add(0,c); add(rows-1,c)
-           while queue:
-               r,c = queue.popleft()
-               for dr,dc in ((1,0),(-1,0),(0,1),(0,-1)):
-                   nr,nc=r+dr,c+dc
-                   if 0<=nr<rows and 0<=nc<cols: add(nr,nc)
-           for r in range(rows):
-               for c in range(cols): board[r][c] = "O" if board[r][c] == "#" else "X"
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public void solve(char[][]b){if(b.length==0)return;int m=b.length,n=b[0].length;Queue<int[]>q=new ArrayDeque<>();java.util.function.BiConsumer<Integer,Integer>add=(r,c)->{if(b[r][c]=='O'){b[r][c]='#';q.add(new int[]{r,c});}};for(int r=0;r<m;r++){add.accept(r,0);add.accept(r,n-1);}for(int c=0;c<n;c++){add.accept(0,c);add.accept(m-1,c);}int[][]d={{1,0},{-1,0},{0,1},{0,-1}};while(!q.isEmpty()){int[]x=q.remove();for(int[]v:d){int r=x[0]+v[0],c=x[1]+v[1];if(r>=0&&r<m&&c>=0&&c<n)add.accept(r,c);}}for(int r=0;r<m;r++)for(int c=0;c<n;c++)b[r][c]=b[r][c]=='#'?'O':'X';}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn solve(board:&mut Vec<Vec<char>>){use std::collections::VecDeque;if board.is_empty(){return}let(m,n)=(board.len(),board[0].len());let mut q=VecDeque::new();fn add(b:&mut Vec<Vec<char>>,q:&mut VecDeque<(usize,usize)>,r:usize,c:usize){if b[r][c]=='O'{b[r][c]='#';q.push_back((r,c));}}for r in 0..m{add(board,&mut q,r,0);add(board,&mut q,r,n-1)}for c in 0..n{add(board,&mut q,0,c);add(board,&mut q,m-1,c)}while let Some((r,c))=q.pop_front(){for(dr,dc)in[(1,0),(-1,0),(0,1),(0,-1)]{let(nr,nc)=(r as i32+dr,c as i32+dc);if nr>=0&&nr<m as i32&&nc>=0&&nc<n as i32{add(board,&mut q,nr as usize,nc as usize)}}}for row in board{for x in row{*x=if *x=='#'{'O'}else{'X'}}}}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func solve(b [][]byte){if len(b)==0{return};m,n:=len(b),len(b[0]);q:=[][2]int{};add:=func(r,c int){if b[r][c]=='O'{b[r][c]='#';q=append(q,[2]int{r,c})}};for r:=0;r<m;r++{add(r,0);add(r,n-1)};for c:=0;c<n;c++{add(0,c);add(m-1,c)};d:=[][2]int{{1,0},{-1,0},{0,1},{0,-1}};for h:=0;h<len(q);h++{for _,v:=range d{r,c:=q[h][0]+v[0],q[h][1]+v[1];if r>=0&&r<m&&c>=0&&c<n{add(r,c)}}};for r:=range b{for c:=range b[r]{if b[r][c]=='#'{b[r][c]='O'}else{b[r][c]='X'}}}}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function solve(b:string[][]):void{if(!b.length)return;const m=b.length,n=b[0].length,q:[number,number][]=[];const add=(r:number,c:number)=>{if(b[r][c]==="O"){b[r][c]="#";q.push([r,c]);}};for(let r=0;r<m;r++){add(r,0);add(r,n-1);}for(let c=0;c<n;c++){add(0,c);add(m-1,c);}for(let h=0;h<q.length;h++){const[r,c]=q[h];for(const[dr,dc]of[[1,0],[-1,0],[0,1],[0,-1]]){const nr=r+dr,nc=c+dc;if(nr>=0&&nr<m&&nc>=0&&nc<n)add(nr,nc);}}for(let r=0;r<m;r++)for(let c=0;c<n;c++)b[r][c]=b[r][c]==="#"?"O":"X";}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public void Solve(char[][]b){if(b.Length==0)return;int m=b.Length,n=b[0].Length;var q=new Queue<(int,int)>();void Add(int r,int c){if(b[r][c]=='O'){b[r][c]='#';q.Enqueue((r,c));}}for(int r=0;r<m;r++){Add(r,0);Add(r,n-1);}for(int c=0;c<n;c++){Add(0,c);Add(m-1,c);}int[,]d={{1,0},{-1,0},{0,1},{0,-1}};while(q.Count>0){var(r,c)=q.Dequeue();for(int k=0;k<4;k++){int nr=r+d[k,0],nc=c+d[k,1];if(nr>=0&&nr<m&&nc>=0&&nc<n)Add(nr,nc);}}for(int r=0;r<m;r++)for(int c=0;c<n;c++)b[r][c]=b[r][c]=='#'?'O':'X';}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function solve_surrounded!(b)
-       isempty(b)&&return b;m=length(b);n=length(b[1]);q=Tuple{Int,Int}[];head=1;function add(r,c);if b[r][c]=='O';b[r][c]='#';push!(q,(r,c));end;end
-       for r in 1:m;add(r,1);add(r,n);end;for c in 1:n;add(1,c);add(m,c);end
-       while head<=length(q);r,c=q[head];head+=1;for(dr,dc)in((1,0),(-1,0),(0,1),(0,-1));nr,nc=r+dr,c+dc;if 1<=nr<=m&&1<=nc<=n;add(nr,nc);end;end;end
-       for r in 1:m,c in 1:n;b[r][c]=b[r][c]=='#' ? 'O' : 'X';end;b
-   end
-
-R
-~
-
-.. code-block:: r
-
-   solve_surrounded <- function(board){if(!length(board))return(board);m<-nrow(board);n<-ncol(board);q<-matrix(integer(),ncol=2);add<-function(r,c){if(board[r,c]=="O"){board[r,c]<<-"#";q<<-rbind(q,c(r,c))}};for(r in seq_len(m)){add(r,1L);add(r,n)};for(c in seq_len(n)){add(1L,c);add(m,c)};head<-1L;dirs<-matrix(c(1,0,-1,0,0,1,0,-1),ncol=2,byrow=TRUE);while(head<=nrow(q)){r<-q[head,1];c<-q[head,2];head<-head+1L;for(k in 1:4){nr<-r+dirs[k,1];nc<-c+dirs[k,2];if(nr>=1&&nr<=m&&nc>=1&&nc<=n)add(nr,nc)}};board[board=="O"]<-"X";board[board=="#"]<-"O";board}
+公开入口采用边界反向搜索：它和逐分量方案都是 ``O(mn)`` 时间，却利用网格字符原地记录访问状态，只需
+队列最坏 ``O(mn)`` 空间，不再分配访问矩阵和分量列表。逐分量方案保留为直觉演进，因为它直接表达原始
+判定；多源方案则把“先收集、后决定”变成“先保护、再翻转补集”。

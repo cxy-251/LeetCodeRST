@@ -4,33 +4,28 @@
 题目信息
 --------
 
-:题号: 0128
+:题号: 0128. 最长连续序列
 :难度: Medium
-:主题: 数组、哈希集合、连续整数、去重
+:主题: 数组、哈希集合、连续段、摊还分析
 :原题: `LeetCode 0128 <https://leetcode.com/problems/longest-consecutive-sequence/>`_
-:重点: 数值连续、忽略原下标顺序、重复值去重、线性时间
+:重点: 用集合摆脱原下标顺序，只从连续段唯一左端扩展，使全部内层扫描总量保持线性
 
 题目重述
 --------
 
-给定未排序整数数组 ``nums``，返回其中最长连续整数序列的长度。连续序列由数值依次相差 ``1`` 的不同整数组成，与这些值在原数组中的排列顺序无关；重复出现的相同数值只能算作一个连续整数。空数组返回 ``0``，算法需要达到 ``O(n)`` 时间复杂度。
-
-数组长度在 ``0..10^5`` 范围内，元素值在 ``-10^9..10^9`` 范围内。
+给定未排序整数数组 ``nums``，找出其中可以组成的最长连续整数序列长度。连续指的是数值依次增加 ``1``，
+与元素在原数组中的排列位置无关；重复值不能重复增加长度。空数组返回 ``0``，并要求算法达到 ``O(n)``
+时间复杂度。
 
 自建示例
 --------
 
-.. code-block:: text
-
-   输入：nums = [14,7,9,8,20,10,7,13,12]
-   输出：4
-   解释：最长连续序列是 7、8、9、10，重复的 7 不会增加长度。
-
-.. code-block:: text
-
-   输入：nums = [-4,-2,-3,1,0]
-   输出：3
-   解释：连续序列 -4、-3、-2 的长度为 3；原数组中的出现顺序不影响结果。
+* ``nums = [14, 7, 9, 8, 20, 10, 7, 13, 12]``：连续段有 ``7..10``、``12..14`` 和
+  ``20``，最长长度为 ``4``；第二个 ``7`` 不增加长度；
+* ``nums = [1, 2, 0, -1, 8]``：原数组顺序混乱，但数值 ``-1, 0, 1, 2`` 连续，返回 ``4``；
+* ``nums = []``：没有连续段，返回 ``0``；
+* ``nums = [INT_MIN, INT_MIN + 1, INT_MAX]``：最长长度为 ``2``，边界值的前驱和后继判断不能发生
+  有符号整数溢出。
 
 C++ 实现
 --------
@@ -38,184 +33,158 @@ C++ 实现
 .. code-block:: cpp
 
    #include <algorithm>
+   #include <climits>
    #include <unordered_set>
    #include <vector>
 
    class Solution {
    private:
-       int sorting(std::vector<int> nums) {
-           if (nums.empty()) return 0;
-           std::sort(nums.begin(), nums.end());
-           int best = 1, current = 1;
-           for (int i = 1; i < static_cast<int>(nums.size()); ++i) {
-               if (nums[i] == nums[i - 1]) continue;
-               if (nums[i] == nums[i - 1] + 1) ++current;
-               else current = 1;
-               best = std::max(best, current);
+       int sortAndScan(std::vector<int> nums) {
+           if (nums.empty()) {
+               return 0;
            }
-           return best;
+           std::sort(nums.begin(), nums.end());
+           int currentLength = 1;
+           int bestLength = 1;
+
+           for (int index = 1; index < static_cast<int>(nums.size()); ++index) {
+               if (nums[index] == nums[index - 1]) {
+                   continue;
+               }
+               if (static_cast<long long>(nums[index - 1]) + 1 == nums[index]) {
+                   ++currentLength;
+               } else {
+                   currentLength = 1;
+               }
+               bestLength = std::max(bestLength, currentLength);
+           }
+           return bestLength;
        }
 
        int expandFromEveryValue(const std::vector<int>& nums) {
            std::unordered_set<int> values(nums.begin(), nums.end());
-           int best = 0;
+           int bestLength = 0;
            for (int value : values) {
-               int length = 1;
-               while (values.count(value + length)) ++length;
-               best = std::max(best, length);
+               int current = value;
+               int currentLength = 1;
+               while (current != INT_MAX && values.count(current + 1)) {
+                   ++current;
+                   ++currentLength;
+               }
+               bestLength = std::max(bestLength, currentLength);
            }
-           return best;
+           return bestLength;
        }
 
-       int expandFromStarts(const std::vector<int>& nums) {
+       int expandOnlyFromStarts(const std::vector<int>& nums) {
            std::unordered_set<int> values(nums.begin(), nums.end());
-           int best = 0;
+           int bestLength = 0;
+
            for (int value : values) {
-               if (values.count(value - 1)) continue;
-               int current = value, length = 1;
-               while (values.count(current + 1)) { ++current; ++length; }
-               best = std::max(best, length);
+               const bool hasPredecessor =
+                   value != INT_MIN && values.count(value - 1);
+               if (hasPredecessor) {
+                   continue;
+               }
+
+               int current = value;
+               int currentLength = 1;
+               while (current != INT_MAX && values.count(current + 1)) {
+                   ++current;
+                   ++currentLength;
+               }
+               bestLength = std::max(bestLength, currentLength);
            }
-           return best;
+           return bestLength;
        }
 
    public:
        int longestConsecutive(std::vector<int>& nums) {
-           return expandFromStarts(nums);
+           return expandOnlyFromStarts(nums);
        }
    };
 
 题解
 ----
 
-集合解决了哪两个问题
+先去掉原数组顺序这个干扰
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+题目寻找的是数值集合中的连续段，而不是原数组中的连续子数组。``[3, 1, 2]`` 能组成 ``1, 2, 3``；
+``[1, 1, 2]`` 的两个 ``1`` 也只能代表同一个整数。因此状态只需要回答“值 ``x`` 是否出现”，下标和出现
+次数都不是答案所需信息。
+
+方案一：排序后恢复数值顺序
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+最直观的方法复制并排序数组，让相邻数值真正相邻。扫描时跳过重复值；当前值等于前一不同值加一就延长
+当前段，否则开始长度为一的新段。``sortAndScan`` 直接、稳定，正确性来自排序后的全序，但排序耗时
+``O(n log n)``，没有满足题目希望的线性时间。
+
+方案二：集合查询后继
 ~~~~~~~~~~~~~~~~~~~~
 
-哈希集合提供期望 ``O(1)`` 成员查询，并自动消除重复值。题目只关心整数是否存在，不关心它在数组中的次数和位置。
+哈希集合同时完成两次压缩：相同值只保留一份，任意整数是否存在可以期望 ``O(1)`` 查询。于是可以对每个
+值不断询问 ``value + 1``、``value + 2`` 是否存在。``expandFromEveryValue`` 得到的每次扩展都是真实连续
+段，却仍有隐藏的二次重复：对于长度为 ``k`` 的段，它会从第一个值扫描 ``k`` 个，从第二个扫描 ``k-1``
+个，直到段尾，总工作为 ``1 + 2 + ... + k = O(k^2)``。
 
-连续段起点如何识别
-~~~~~~~~~~~~~~~~~~
+结构信息：每个连续段只有一个合法起点
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-值 ``x`` 是某段起点，当且仅当 ``x-1`` 不在集合中。若前驱存在，``x`` 位于某段内部，从它再次向右扩张只会重复工作。
+若 ``x - 1`` 也在集合中，``x`` 一定处于某段内部；从它向右扩展得到的所有内容，都会在该段更小的值启动
+时被覆盖。只有前驱不存在的值才可能是完整连续段的左端。因此主解先做前驱测试，内部值直接跳过，只从
+唯一左端一路查询后继。
+
+这个判断删除的不是候选答案，而是同一答案的重复入口。任意连续段 ``a, a+1, ..., b`` 都满足：``a-1``
+不存在，所以算法一定从 ``a`` 启动；对任意 ``x > a``，``x-1`` 存在，所以不会再次启动。
+
+具体走读
+~~~~~~~~
+
+对集合 ``{7, 8, 9, 10, 12, 13, 14, 20}``：
 
 .. list-table::
    :header-rows: 1
 
-   * - 值
-     - ``x-1`` 是否存在
+   * - 当前值
+     - 前驱状态
      - 动作
-   * - 100
-     - 否
-     - 扫描长度 1
-   * - 4
-     - 是，存在 3
-     - 跳过
-   * - 1
-     - 否
-     - 扫描 1,2,3,4，长度 4
-   * - 200
-     - 否
-     - 扫描长度 1
+   * - ``8``、``9``、``10``
+     - 前驱存在
+     - 都是 ``7..10`` 的内部值，跳过
+   * - ``7``
+     - ``6`` 不存在
+     - 扩展 ``7, 8, 9, 10``，长度 ``4``
+   * - ``12``
+     - ``11`` 不存在
+     - 扩展 ``12, 13, 14``，长度 ``3``
+   * - ``20``
+     - ``19`` 不存在
+     - 单点段，长度 ``1``
 
-为什么总扩张次数是线性的
-~~~~~~~~~~~~~~~~~~~~~~~~
+哈希集合的遍历顺序不确定，不影响结论。即使先看到内部值也只会跳过；段左端迟早会被遍历并负责完整计数。
 
-每个连续段只从唯一最小值启动。向右循环访问该段每个后续整数一次；不同连续段互不重叠，所以所有内层循环总访问次数不超过集合大小，而不是每个起点各扫描 ``n`` 次。
-
-重复值为何不影响结果
+为何嵌套循环仍是线性
 ~~~~~~~~~~~~~~~~~~~~
 
-集合中每个整数只保留一次。``[1,2,2,3]`` 转成 ``{1,2,3}``，连续段元素数量仍为 3；重复下标不是新的连续整数。
+代码表面上有 ``for`` 加 ``while``，但不能简单相乘。每个不同整数要么接受一次前驱检查，要么在所属连续
+段从左端扩展时被访问；不同连续段互不重叠。所有 ``while`` 的成功次数之和不超过集合大小，所以构建集合、
+外层检查和全部扩展的期望总时间都是 ``O(n)``。
 
-排序方法为何不满足目标
-~~~~~~~~~~~~~~~~~~~~~~
+边界状态与代码对应
+~~~~~~~~~~~~~~~~~~
 
-排序后跳过重复并线性计数很直接，但排序需要 ``O(n log n)``。哈希起点法用 ``O(n)`` 空间换取期望 ``O(n)`` 时间。
+``value - 1`` 在 ``value == INT_MIN`` 时会溢出，``current + 1`` 在 ``INT_MAX`` 时同理。主解分别先判断
+``value != INT_MIN`` 与 ``current != INT_MAX``，再执行算术；这不是改变连续定义，而是说明 32 位整数域的
+两端不可能再有可表示的前驱或后继。排序基线则把加一提升到 ``long long`` 后比较。
 
-为什么结果正确
-~~~~~~~~~~~~~~
+``bestLength`` 从零开始，使空集合自然返回零；非空段从长度一开始，再为每个真实后继增加一。公开入口选择
+``expandOnlyFromStarts``：它以 ``O(n)`` 额外集合空间换取期望线性时间。排序法适合空间或哈希行为受限的场景，
+但时间为 ``O(n log n)``；从每个值扩展只用于暴露重复工作，不应作为实际方案。
 
-任意最长连续段有唯一最小值，且该值前驱不存在，因此算法一定从它启动并一直扫描到段末，不会漏掉。每次扫描只沿集合中真实存在的连续整数，得到的长度也一定对应合法段。
-
-复杂度来源
+复杂度分析
 ~~~~~~~~~~
 
-建立集合期望 ``O(n)``，起点检查与全部扩张总计期望 ``O(n)``，空间 ``O(n)``。最坏哈希退化取决于语言容器实现；排序基准为 ``O(n log n)``。
-
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   typedef struct{int*key;unsigned char*used;int cap;}Set;static unsigned hashInt(int x){return(unsigned)x*2654435761u;}static void put(Set*s,int x){int i=(int)(hashInt(x)&(s->cap-1));while(s->used[i]&&s->key[i]!=x)i=(i+1)&(s->cap-1);s->used[i]=1;s->key[i]=x;}static bool has(Set*s,int x){int i=(int)(hashInt(x)&(s->cap-1));while(s->used[i]){if(s->key[i]==x)return true;i=(i+1)&(s->cap-1);}return false;}int longestConsecutive(int*nums,int n){if(!n)return 0;Set s;for(s.cap=1;s.cap<n*4;s.cap<<=1);s.key=malloc((size_t)s.cap*sizeof(int));s.used=calloc((size_t)s.cap,1);for(int i=0;i<n;i++)put(&s,nums[i]);int best=0;for(int i=0;i<s.cap;i++)if(s.used[i]&&!has(&s,s.key[i]-1)){int x=s.key[i],len=1;while(has(&s,x+1)){x++;len++;}if(len>best)best=len;}free(s.key);free(s.used);return best;}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def longestConsecutive(self, nums: list[int]) -> int:
-           values, best = set(nums), 0
-           for value in values:
-               if value - 1 in values: continue
-               current, length = value, 1
-               while current + 1 in values: current += 1; length += 1
-               best = max(best, length)
-           return best
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public int longestConsecutive(int[]nums){Set<Integer>s=new HashSet<>();for(int x:nums)s.add(x);int best=0;for(int x:s)if(!s.contains(x-1)){int y=x,len=1;while(s.contains(y+1)){y++;len++;}best=Math.max(best,len);}return best;}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn longest_consecutive(nums:Vec<i32>)->i32{use std::collections::HashSet;let s:HashSet<i32>=nums.into_iter().collect();let mut best=0;for &x in &s{if s.contains(&(x-1)){continue}let(mut y,mut len)=(x,1);while s.contains(&(y+1)){y+=1;len+=1}best=best.max(len);}best}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func longestConsecutive(nums []int)int{s:=map[int]bool{};for _,x:=range nums{s[x]=true};best:=0;for x:=range s{if s[x-1]{continue};y,len:=x,1;for s[y+1]{y++;len++};if len>best{best=len}};return best}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function longestConsecutive(nums:number[]):number{const s=new Set(nums);let best=0;for(const x of s){if(s.has(x-1))continue;let y=x,len=1;while(s.has(y+1)){y++;len++;}best=Math.max(best,len);}return best;}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public int LongestConsecutive(int[]nums){var s=new HashSet<int>(nums);int best=0;foreach(int x in s){if(s.Contains(x-1))continue;int y=x,len=1;while(s.Contains(y+1)){y++;len++;}best=Math.Max(best,len);}return best;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function longest_consecutive(nums::Vector{Int})
-       s=Set(nums);best=0
-       for x in s;x-1 in s&&continue;y=x;len=1;while y+1 in s;y+=1;len+=1;end;best=max(best,len);end
-       best
-   end
-
-R
-~
-
-.. code-block:: r
-
-   longest_consecutive <- function(nums){values<-unique(nums);if(!length(values))return(0L);set<-new.env(hash=TRUE,parent=emptyenv());for(x in values)assign(as.character(x),TRUE,set);has<-function(x)exists(as.character(x),set,inherits=FALSE);best<-0L;for(x in values){if(has(x-1L))next;y<-x;len<-1L;while(has(y+1L)){y<-y+1L;len<-len+1L};best<-max(best,len)};best}
+主解期望时间 ``O(n)``、空间 ``O(n)``；哈希表极端碰撞时的最坏性能取决于容器实现。排序方案时间
+``O(n log n)``，由于代码排序输入副本，工作空间为 ``O(n)``。

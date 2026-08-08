@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0095
+:题号: 0095. 不同的二叉搜索树 II
 :难度: Medium
 :主题: 二叉搜索树、分治、记忆化、Catalan 结构
 :原题: `LeetCode 0095 <https://leetcode.com/problems/unique-binary-search-trees-ii/>`_

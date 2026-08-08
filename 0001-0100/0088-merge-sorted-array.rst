@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0088
+:题号: 0088. 合并两个有序数组
 :难度: Easy
 :主题: 数组、双指针、原地归并、逆向写入
 :原题: `LeetCode 0088 <https://leetcode.com/problems/merge-sorted-array/>`_

@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0030
+:题号: 0030. 串联所有单词的子串
 :难度: Hard
 :主题: 字符串、哈希计数、滑动窗口
 :原题: `LeetCode 0030 <https://leetcode.com/problems/substring-with-concatenation-of-all-words/>`_

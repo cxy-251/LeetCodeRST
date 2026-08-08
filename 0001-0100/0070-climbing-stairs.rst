@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0070
+:题号: 0070. 爬楼梯
 :难度: Easy
 :主题: 动态规划、计数、斐波那契、矩阵快速幂
 :原题: `LeetCode 0070 <https://leetcode.com/problems/climbing-stairs/>`_

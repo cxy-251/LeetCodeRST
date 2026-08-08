@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0021
+:题号: 0021. 合并两个有序链表
 :难度: Easy
 :主题: 链表、排序、归并、递归、双指针
 :原题: `LeetCode 0021 <https://leetcode.com/problems/merge-two-sorted-lists/>`_

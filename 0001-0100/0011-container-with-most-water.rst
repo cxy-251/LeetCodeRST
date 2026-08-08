@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0011
+:题号: 0011. 盛最多水的容器
 :难度: Medium
 :主题: 数组、双指针、贪心
 :原题: `LeetCode 0011 <https://leetcode.com/problems/container-with-most-water/>`_

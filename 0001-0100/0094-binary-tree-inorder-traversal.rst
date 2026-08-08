@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0094
+:题号: 0094. 二叉树的中序遍历
 :难度: Easy
 :主题: 二叉树、深度优先遍历、显式栈、Morris 遍历
 :原题: `LeetCode 0094 <https://leetcode.com/problems/binary-tree-inorder-traversal/>`_

@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0065
+:题号: 0065. 有效数字
 :难度: Hard
 :主题: 字符串、语法解析、有限状态机
 :原题: `LeetCode 0065 <https://leetcode.com/problems/valid-number/>`_

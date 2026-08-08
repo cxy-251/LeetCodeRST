@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0079
+:题号: 0079. 单词搜索
 :难度: Medium
 :主题: 矩阵、深度优先搜索、回溯
 :原题: `LeetCode 0079 <https://leetcode.com/problems/word-search/>`_

@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0060
+:题号: 0060. 第 k 个排列
 :难度: Hard
 :主题: 排列、字典序、阶乘分组、秩选择
 :原题: `LeetCode 0060 <https://leetcode.com/problems/permutation-sequence/>`_

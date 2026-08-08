@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0048
+:题号: 0048. 旋转图像
 :难度: Medium
 :主题: 矩阵、坐标映射、原地置换
 :原题: `LeetCode 0048 <https://leetcode.com/problems/rotate-image/>`_

@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0098
+:题号: 0098. 验证二叉搜索树
 :难度: Medium
 :主题: 二叉搜索树、中序遍历、递归边界、显式栈
 :原题: `LeetCode 0098 <https://leetcode.com/problems/validate-binary-search-tree/>`_

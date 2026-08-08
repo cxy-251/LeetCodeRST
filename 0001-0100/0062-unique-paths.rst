@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0062
+:题号: 0062. 不同路径
 :难度: Medium
 :主题: 动态规划、滚动数组、组合计数
 :原题: `LeetCode 0062 <https://leetcode.com/problems/unique-paths/>`_

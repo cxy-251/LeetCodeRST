@@ -4,207 +4,172 @@
 题目信息
 --------
 
-:题号: 0137
+:题号: 0137. 只出现一次的数字 II
 :难度: Medium
-:主题: 数组、位运算、有限状态机、模计数
+:主题: 数组、位运算、模计数、有限状态机
 :原题: `LeetCode 0137 <https://leetcode.com/problems/single-number-ii/>`_
-:重点: 唯一单次出现、其余恰好三次、完整 32 位比特模式
+:重点: 把每一位的出现次数压缩为模三状态，再用两个位掩码并行维护全部 32 位的状态转移
 
 题目重述
 --------
 
-给定非空整数数组 ``nums``，其中恰有一个元素只出现一次，其余每个元素都恰好出现三次。返回只出现一次的元素。线性时间和常量额外空间是本题的进阶要求。
-
-数组长度在 ``1..3 × 10^4`` 范围内，每个元素都在 32 位有符号整数范围内。
+给定非空整数数组 ``nums``，恰有一个元素只出现一次，其余每个元素都恰好出现三次。返回这个单次元素。
+进阶目标是在 ``O(n)`` 时间内只使用常量额外空间。输入与答案都按 32 位有符号整数解释。
 
 自建示例
 --------
 
-.. code-block:: text
-
-   输入：nums = [6,-9,6,12,12,6,12]
-   输出：-9
-   解释：6 和 12 都各出现三次，只有 -9 出现一次。
-
-.. code-block:: text
-
-   输入：nums = [-2147483648,7,7,7]
-   输出：-2147483648
-   解释：7 出现三次，32 位最小整数是唯一只出现一次的元素。
+* ``nums = [6, -9, 6, 12, 12, 6, 12]``：``6``、``12`` 各出现三次，返回 ``-9``；
+* ``nums = [-2147483648, 7, 7, 7]``：答案只有最高位为一，返回 32 位最小整数；
+* ``nums = [0, 4, 4, 4]``：单次元素可以为零，返回 ``0``。
 
 C++ 实现
 --------
 
 .. code-block:: cpp
 
-   #include <algorithm>
    #include <cstdint>
+   #include <unordered_map>
    #include <vector>
 
    class Solution {
    private:
-       int sorting(std::vector<int> nums) {
-           std::sort(nums.begin(), nums.end());
-           for (int i = 0; i < static_cast<int>(nums.size()); i += 3)
-               if (i + 1 == static_cast<int>(nums.size()) || nums[i] != nums[i + 1]) return nums[i];
-           return nums.back();
-       }
-
-       int bitCounting(const std::vector<int>& nums) {
-           std::uint32_t result = 0;
-           for (int bit = 0; bit < 32; ++bit) {
-               int count = 0;
-               for (int value : nums) count += (static_cast<std::uint32_t>(value) >> bit) & 1u;
-               if (count % 3) result |= 1u << bit;
-           }
-           return static_cast<std::int32_t>(result);
-       }
-
-       int finiteStateMachine(const std::vector<int>& nums) {
-           std::uint32_t ones = 0, twos = 0;
+       int countCompleteValues(const std::vector<int>& nums) {
+           std::unordered_map<int, int> frequency;
            for (int value : nums) {
-               std::uint32_t x = static_cast<std::uint32_t>(value);
-               ones = (ones ^ x) & ~twos;
-               twos = (twos ^ x) & ~ones;
+               ++frequency[value];
            }
-           return static_cast<std::int32_t>(ones);
+           for (const auto& [value, count] : frequency) {
+               if (count == 1) {
+                   return value;
+               }
+           }
+           return 0;
+       }
+
+       int countEveryBitModuloThree(const std::vector<int>& nums) {
+           long long signedResult = 0;
+           for (int bit = 0; bit < 32; ++bit) {
+               int oneCount = 0;
+               for (int value : nums) {
+                   const std::uint32_t bits =
+                       static_cast<std::uint32_t>(value);
+                   oneCount += static_cast<int>((bits >> bit) & 1U);
+               }
+               if (oneCount % 3 == 0) {
+                   continue;
+               }
+               if (bit == 31) {
+                   signedResult -= 1LL << 31;
+               } else {
+                   signedResult += 1LL << bit;
+               }
+           }
+           return static_cast<int>(signedResult);
+       }
+
+       int runBitwiseStateMachines(const std::vector<int>& nums) {
+           int seenOnce = 0;
+           int seenTwice = 0;
+
+           for (int value : nums) {
+               seenOnce = (seenOnce ^ value) & ~seenTwice;
+               seenTwice = (seenTwice ^ value) & ~seenOnce;
+           }
+           return seenOnce;
        }
 
    public:
        int singleNumber(std::vector<int>& nums) {
-           return finiteStateMachine(nums);
+           return runBitwiseStateMachines(nums);
        }
    };
 
 题解
 ----
 
-单个位需要什么状态
-~~~~~~~~~~~~~~~~~~
+为什么上一题的整体异或不再成立
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-某一位读到的 1 的数量只需保留模 3 余数：
+相同值出现两次时 ``x ^ x = 0``，但出现三次时 ``x ^ x ^ x = x``。若把本题全部元素直接异或，每个三次
+值反而会残留一次，与真正答案混在一起。哈希计数当然仍然正确：``countCompleteValues`` 为每个完整整数保存
+频次，再找频次一；它的 ``O(n)`` 键值状态却没有利用重复次数固定为三这一信息。
+
+三次重复提供的新结构不再是奇偶性，而是“每一位上 1 的个数对三取模”。
+
+方案一：独立统计每个二进制位
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+考虑固定的第 ``bit`` 位。任意三次出现的整数在此位要么贡献零个一，要么贡献三个一，模三后都为零；单次
+元素若该位为一，只额外贡献一个。因此把该位在全数组中的一数量对三取模，结果恰好是答案的这一位。
+
+``countEveryBitModuloThree`` 对 32 位各扫描一次，使用 ``uint32_t`` 查看原值的完整比特模式。最低 31 位
+按正权 ``2^bit`` 加入；最高位若为一，则按二进制补码的权值 ``-2^31`` 加入。这样
+``0x80000000`` 会重建为 ``-2147483648``，没有对有符号负数右移，也没有把无符号最高位结果强制转换为
+超出范围的正数。
+
+该方案已经是 ``O(32n) = O(n)`` 时间和 ``O(1)`` 空间，但对数组做了 32 遍。还可以把 32 个模三计数器
+的同类状态合并到位掩码中，一次输入同时推进全部位。
+
+单个位只需要三个状态
+~~~~~~~~~~~~~~~~~~~~~~
+
+对某一位，只关心目前读到的一数量模三的余数：
 
 .. code-block:: text
 
-   0 -> 1 -> 2 -> 0
+   读到 1：0 -> 1 -> 2 -> 0
+   读到 0：状态保持不变
 
-用 ``ones`` 表示余数 1 的位，用 ``twos`` 表示余数 2 的位；两者在同一位不会同时为 1。
+用 ``seenOnce`` 的该位为一表示余数一，用 ``seenTwice`` 的该位为一表示余数二；余数零时两者都为零。二者
+不能在同一位同时为一。由于 C++ 的按位运算对整数的所有位并行执行，一对 32 位整数就能同时表示 32 个
+独立状态机。
 
-状态转移
-~~~~~~~~
+两条更新语句怎样实现状态转移
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 .. code-block:: text
 
-   ones = (ones ^ x) & ~twos
-   twos = (twos ^ x) & ~ones
+   seenOnce  = (seenOnce  ^ value) & ~seenTwice
+   seenTwice = (seenTwice ^ value) & ~seenOnce
 
-异或先尝试翻转当前状态，随后用另一状态的补集清除非法重叠。一个输入位连续出现三次后，``ones`` 和 ``twos`` 都回到 0。
+针对 ``value`` 中当前为一的一位：第一次出现时，第一行把 ``seenOnce`` 从零翻为一；第二次出现时，第一行
+先把它清零，第二行再把 ``seenTwice`` 置一；第三次出现时，已有 ``seenTwice`` 使第一行不能置一，第二行
+则通过异或清零。若输入位为零，两次异或都不改变状态。第二行必须读取更新后的 ``seenOnce``，才能区分
+“刚进入余数一”和“刚离开余数一”。
 
 .. list-table::
    :header-rows: 1
 
-   * - 同一位累计次数
-     - ``ones``
-     - ``twos``
-   * - 0
-     - 0
-     - 0
-   * - 1
-     - 1
-     - 0
-   * - 2
-     - 0
-     - 1
-   * - 3
-     - 0
-     - 0
+   * - 同一位累计读到一的次数
+     - ``seenOnce`` 位
+     - ``seenTwice`` 位
+   * - ``0 mod 3``
+     - ``0``
+     - ``0``
+   * - ``1 mod 3``
+     - ``1``
+     - ``0``
+   * - ``2 mod 3``
+     - ``0``
+     - ``1``
+   * - 再读一次，回到 ``0 mod 3``
+     - ``0``
+     - ``0``
 
-为什么最终 ones 是答案
+交错顺序为何不影响结论
 ~~~~~~~~~~~~~~~~~~~~~~
 
-三次出现的值在每一位上贡献 0 或 3 个 1，模 3 后全部归零。唯一值的每个 1 位只出现一次，最终恰好保存在 ``ones`` 中。
+不同整数的相同位只是在同一个模三计数器上依次加零或加一，加法模三与输入排列无关。完整 32 位又由互不
+干扰的位状态机构成，所以三份相同值不必相邻。数组扫描结束后，所有三次元素在每一位的贡献都回到余数零；
+单次元素的每个一位停在 ``seenOnce``，每个零位保持零，因此 ``seenOnce`` 的完整比特模式就是答案。
 
-负数与符号位
-~~~~~~~~~~~~
+负数也无需为状态机特判。最高位与其他 31 位经过完全相同的三态循环；返回 ``int`` 时它仍是原答案的
+32 位有符号表示。
 
-算法对完整 32 位比特模式操作，最高位与其他位完全相同。C++ 使用无符号中间状态，避免移位与溢出歧义，最后再解释为有符号 32 位整数。
+主解选择与复杂度
+~~~~~~~~~~~~~~~~
 
-复杂度来源
-~~~~~~~~~~
-
-逐位计数是 ``O(32n)``，状态机是 ``O(n)``；两者额外空间均为 ``O(1)``。状态机常数更小。
-
-九语言实现
-----------
-
-C
-~
-
-.. code-block:: c
-
-   int singleNumber(int*nums,int n){uint32_t ones=0,twos=0;for(int i=0;i<n;i++){uint32_t x=(uint32_t)nums[i];ones=(ones^x)&~twos;twos=(twos^x)&~ones;}return(int32_t)ones;}
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def singleNumber(self, nums: list[int]) -> int:
-           mask=(1<<32)-1; ones=twos=0
-           for value in nums:
-               x=value&mask; ones=((ones^x)&~twos)&mask; twos=((twos^x)&~ones)&mask
-           return ones if ones < 1<<31 else ones-(1<<32)
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public int singleNumber(int[]nums){int ones=0,twos=0;for(int x:nums){ones=(ones^x)&~twos;twos=(twos^x)&~ones;}return ones;}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn single_number(nums:Vec<i32>)->i32{let(mut ones,mut twos)=(0u32,0u32);for v in nums{let x=v as u32;ones=(ones^x)&!twos;twos=(twos^x)&!ones;}ones as i32}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func singleNumber(nums []int)int{ones,twos:=0,0;for _,x:=range nums{ones=(ones^x)&^twos;twos=(twos^x)&^ones};return ones}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function singleNumber(nums:number[]):number{let ones=0,twos=0;for(const x of nums){ones=(ones^x)&~twos;twos=(twos^x)&~ones;}return ones;}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public int SingleNumber(int[]nums){int ones=0,twos=0;foreach(int x in nums){ones=(ones^x)&~twos;twos=(twos^x)&~ones;}return ones;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function single_number_ii(nums)
-       ones=UInt32(0);twos=UInt32(0)
-       for value in nums;x=reinterpret(UInt32,Int32(value));ones=(ones⊻x)&~twos;twos=(twos⊻x)&~ones;end
-       Int(reinterpret(Int32,ones))
-   end
-
-R
-~
-
-.. code-block:: r
-
-   single_number_ii <- function(nums){bits<-numeric(32L);for(value in nums){u<-if(value<0)value+2^32 else value;for(b in 0:31)bits[[b+1L]]<-(bits[[b+1L]]+floor(u/2^b)%%2)%%3};u<-sum((bits%%3)*2^(0:31));if(u>=2^31)u-2^32 else u}
+公开入口采用位状态机：只扫描数组一次，时间 ``O(n)``，维护两个整数，空间 ``O(1)``。逐位计数同为常量
+空间和线性渐进时间，状态更直观但需要 32 遍扫描，保留它作为从数学条件到并行状态机的中间方案。完整值
+哈希计数最通用，却需 ``O(n)`` 空间，因此不满足进阶目标。

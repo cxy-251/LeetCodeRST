@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0023
+:题号: 0023. 合并 K 个升序链表
 :难度: Hard
 :主题: 链表、归并、分治、优先队列
 :原题: `LeetCode 0023 <https://leetcode.com/problems/merge-k-sorted-lists/>`_

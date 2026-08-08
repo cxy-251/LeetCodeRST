@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0017
+:题号: 0017. 电话号码的字母组合
 :难度: Medium
 :主题: 字符串、回溯、笛卡尔积
 :原题: `LeetCode 0017 <https://leetcode.com/problems/letter-combinations-of-a-phone-number/>`_

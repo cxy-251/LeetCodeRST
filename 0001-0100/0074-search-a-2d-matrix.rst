@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0074
+:题号: 0074. 搜索二维矩阵
 :难度: Medium
 :主题: 矩阵、二分查找、坐标映射
 :原题: `LeetCode 0074 <https://leetcode.com/problems/search-a-2d-matrix/>`_

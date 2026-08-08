@@ -4,33 +4,24 @@
 题目信息
 --------
 
-:题号: 0144
+:题号: 0144. 二叉树的前序遍历
 :难度: Easy
-:主题: 二叉树、深度优先搜索、显式栈、Morris 遍历
+:主题: 二叉树、深度优先搜索、显式栈、Morris 线索化
 :原题: `LeetCode 0144 <https://leetcode.com/problems/binary-tree-preorder-traversal/>`_
-:重点: 根左右顺序、空树结果、节点逐个输出、遍历顺序保持
+:重点: 从递归的根左右顺序提取待处理子树状态，再用临时回边进一步消除栈并保证树结构恢复
 
 题目重述
 --------
 
-给定二叉树根节点 ``root``，返回这棵树的前序遍历结果。对于每棵非空子树，必须先访问根节点，再遍历左子树，最后遍历右子树。每个节点都按结构位置访问一次，即使多个节点值相同，也要分别出现在结果中；空树返回空数组。
-
-树中节点数在 ``0..100`` 范围内，节点值在 ``-100..100`` 范围内。
+给定二叉树根节点 ``root``，返回前序遍历结果。对每棵非空子树，先访问根节点，再完整遍历左子树，最后完整
+遍历右子树；每个结构节点访问一次，即使节点值相同也要分别输出。空树返回空数组。
 
 自建示例
 --------
 
-.. code-block:: text
-
-   输入：root = [6,2,9,null,4,7,null]
-   输出：[6,2,4,9,7]
-   解释：先访问根节点 6，再按前序访问左子树中的 2、4，最后访问右子树中的 9、7。
-
-.. code-block:: text
-
-   输入：root = []
-   输出：[]
-   解释：树中没有节点，因此前序遍历结果为空数组。
+* ``root = [6, 2, 9, null, 4, 7, null]``：访问顺序为 ``6, 2, 4, 9, 7``；
+* 只有右链 ``1 -> 2 -> 3``：每个节点没有左子树，结果为 ``[1, 2, 3]``；
+* 空树返回 ``[]``，单节点树返回只含根值的数组。
 
 C++ 实现
 --------
@@ -42,46 +33,65 @@ C++ 实现
 
    class Solution {
    private:
-       void recursive(TreeNode* node, std::vector<int>& result) {
-           if (!node) return;
+       void recursivePreorder(
+           TreeNode* node,
+           std::vector<int>& result
+       ) {
+           if (node == nullptr) {
+               return;
+           }
            result.push_back(node->val);
-           recursive(node->left, result);
-           recursive(node->right, result);
+           recursivePreorder(node->left, result);
+           recursivePreorder(node->right, result);
        }
 
-       std::vector<int> explicitStack(TreeNode* root) {
+       std::vector<int> preorderWithStack(TreeNode* root) {
            std::vector<int> result;
-           if (!root) return result;
+           if (root == nullptr) {
+               return result;
+           }
+
            std::stack<TreeNode*> pending;
            pending.push(root);
            while (!pending.empty()) {
-               TreeNode* node = pending.top(); pending.pop();
+               TreeNode* node = pending.top();
+               pending.pop();
                result.push_back(node->val);
-               if (node->right) pending.push(node->right);
-               if (node->left) pending.push(node->left);
+
+               if (node->right != nullptr) {
+                   pending.push(node->right);
+               }
+               if (node->left != nullptr) {
+                   pending.push(node->left);
+               }
            }
            return result;
        }
 
-       std::vector<int> morris(TreeNode* root) {
+       std::vector<int> preorderWithMorrisThreads(TreeNode* root) {
            std::vector<int> result;
            TreeNode* current = root;
-           while (current) {
-               if (!current->left) {
+
+           while (current != nullptr) {
+               if (current->left == nullptr) {
                    result.push_back(current->val);
                    current = current->right;
+                   continue;
+               }
+
+               TreeNode* predecessor = current->left;
+               while (predecessor->right != nullptr &&
+                      predecessor->right != current) {
+                   predecessor = predecessor->right;
+               }
+
+               if (predecessor->right == nullptr) {
+                   result.push_back(current->val);
+                   predecessor->right = current;
+                   current = current->left;
                } else {
-                   TreeNode* predecessor = current->left;
-                   while (predecessor->right && predecessor->right != current)
-                       predecessor = predecessor->right;
-                   if (!predecessor->right) {
-                       result.push_back(current->val);
-                       predecessor->right = current;
-                       current = current->left;
-                   } else {
-                       predecessor->right = nullptr;
-                       current = current->right;
-                   }
+                   predecessor->right = nullptr;
+                   current = current->right;
                }
            }
            return result;
@@ -89,111 +99,94 @@ C++ 实现
 
    public:
        std::vector<int> preorderTraversal(TreeNode* root) {
-           return explicitStack(root);
+           return preorderWithStack(root);
        }
    };
 
 题解
 ----
 
-显式栈保存什么
-~~~~~~~~~~~~~~
+递归为什么天然得到前序
+~~~~~~~~~~~~~~~~~~~~~~
 
-栈中保存已经发现、但尚未访问的子树根。弹出节点时立即记录它，正好对应前序中的“根先访问”。
+``recursivePreorder`` 进入非空节点后立即记录根值，随后依次调用左、右孩子。函数调用栈隐式保存了尚未处理
+的工作：进入左子树时，当前节点的右子树和返回位置仍留在栈帧中。每个节点只有唯一父路径，因此无需访问
+集合；空指针分支只表示没有子树，不产生输出。
 
-为什么先压右后压左
-~~~~~~~~~~~~~~~~~~
+这种写法最贴近定义，时间 ``O(n)``，但高度为 ``h`` 的树需要 ``O(h)`` 调用栈。要改成迭代，必须显式保存
+相同的“已经发现但尚未访问的子树根”。
 
-栈后进先出。要让左孩子下一次先被弹出，就必须先压右孩子，再压左孩子；否则会得到根、右、左顺序。
+显式栈的不变量与压入顺序
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-递归与迭代为何等价
-~~~~~~~~~~~~~~~~~~
+``pending`` 中保存待执行前序遍历的子树根，栈顶是下一棵应处理的子树。弹出 ``node`` 时先输出它，完成
+“根”；随后把孩子加入待处理集合。由于栈后进先出，必须先压右孩子、再压左孩子，左孩子才会下一次弹出：
 
-递归调用栈隐式保存“左子树完成后还要访问右子树”的续点。显式栈把这些续点直接保存为节点引用，两者访问同一组结构位置。
+.. code-block:: text
 
-Morris 方法的边界
+   弹出 root，输出 root
+   压入 root.right
+   压入 root.left
+   下一次弹出 root.left
+
+当左子树继续压入自己的节点时，它们始终位于原右子树之上，所以完整左子树会先完成。若反过来先压左再压
+右，得到的是根、右、左，不是前序。
+
+具体走读待处理栈
 ~~~~~~~~~~~~~~~~
 
-Morris 用左子树最右节点的空 ``right`` 临时指回当前节点，访问完成后必须恢复。它把核心工作空间降为 ``O(1)``，但会短暂修改树；只读要求严格时优先使用显式栈。
+对 ``[6, 2, 9, null, 4, 7, null]``，栈顶写在右侧：
 
-复杂度来源
-~~~~~~~~~~
+.. list-table::
+   :header-rows: 1
 
-每个节点访问一次，时间 ``O(n)``。递归和显式栈最坏使用 ``O(h)`` 至 ``O(n)`` 空间；返回数组本身需要 ``O(n)``，不计入算法工作空间。
+   * - 弹出并输出
+     - 压栈动作
+     - 操作后待处理栈
+   * - ``6``
+     - 先 ``9``，后 ``2``
+     - ``[9, 2]``
+   * - ``2``
+     - 只有右孩子 ``4``
+     - ``[9, 4]``
+   * - ``4``
+     - 无孩子
+     - ``[9]``
+   * - ``9``
+     - 压左孩子 ``7``
+     - ``[7]``
+   * - ``7``
+     - 无孩子
+     - 空
 
-九语言实现
-----------
+输出恰为 ``6, 2, 4, 9, 7``。这里栈保存的是待访问节点，不是已访问节点，也不需要额外阶段标记，因为前序
+在第一次遇到根时就输出。
 
-C
-~
+如何连显式栈也省掉
+~~~~~~~~~~~~~~~~~~
 
-.. code-block:: c
+处理一个有左子树的节点后，遍历必须在左子树结束时回到当前节点，再进入右子树。递归栈和显式栈都在保存
+这个“返回当前节点”的续点。Morris 遍历利用左子树最右节点 ``predecessor`` 原本为空的 ``right``，临时
+令它指回 ``current``，把返回地址编码进树的空指针。
 
-   int*preorderTraversal(struct TreeNode*root,int*returnSize){int cap=16,size=0;int*out=malloc((size_t)cap*sizeof(int));struct TreeNode**stack=malloc((size_t)cap*sizeof(struct TreeNode*));int top=0;if(root)stack[top++]=root;while(top){struct TreeNode*n=stack[--top];if(size==cap){cap*=2;out=realloc(out,(size_t)cap*sizeof(int));stack=realloc(stack,(size_t)cap*sizeof(struct TreeNode*));}out[size++]=n->val;if(n->right)stack[top++]=n->right;if(n->left)stack[top++]=n->left;}free(stack);*returnSize=size;return out;}
+第一次找到 ``predecessor->right == nullptr`` 时，说明当前根尚未处理：前序应立刻输出根，建立临时回边，
+再进入左孩子。以后沿左子树遍历到最右端，会通过回边重新到达 ``current``；第二次查找发现
+``predecessor->right == current``，说明左子树已经完成，此时删除回边并进入原右子树，根不能再次输出。
 
-Python
-~~~~~~
+没有左孩子的节点可直接输出并走右边。这个右指针可能是真实右孩子，也可能是祖先建立的临时线索；两种
+情况都代表前序中的正确下一步。
 
-.. code-block:: python
+临时修改为何不会破坏树
+~~~~~~~~~~~~~~~~~~~~~~
 
-   class Solution:
-       def preorderTraversal(self, root):
-           out=[]; stack=[root] if root else []
-           while stack:
-               node=stack.pop();out.append(node.val)
-               if node.right: stack.append(node.right)
-               if node.left: stack.append(node.left)
-           return out
+每条 Morris 线索只写入原本为空的 ``predecessor->right``，并且同一当前节点第二次到达时立即恢复为空。
+正常遍历结束后所有线索都成对建立和删除，原树结构完全恢复。寻找前驱会沿部分右链两次，但每条相关边只
+被常数次经过，总时间仍为 ``O(n)``，不是嵌套循环表面上的 ``O(n^2)``。
 
-Java
-~~~~
+主解选择与复杂度
+~~~~~~~~~~~~~~~~
 
-.. code-block:: java
-
-   class Solution {public List<Integer> preorderTraversal(TreeNode root){List<Integer>out=new ArrayList<>();Deque<TreeNode>s=new ArrayDeque<>();if(root!=null)s.push(root);while(!s.isEmpty()){TreeNode n=s.pop();out.add(n.val);if(n.right!=null)s.push(n.right);if(n.left!=null)s.push(n.left);}return out;}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn preorder_traversal(root:Option<std::rc::Rc<std::cell::RefCell<TreeNode>>>)->Vec<i32>{let mut out=vec![];let mut stack=vec![];if let Some(r)=root{stack.push(r)}while let Some(node)=stack.pop(){let n=node.borrow();out.push(n.val);if let Some(r)=n.right.clone(){stack.push(r)}if let Some(l)=n.left.clone(){stack.push(l)}}out}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func preorderTraversal(root *TreeNode)[]int{out:=[]int{};stack:=[]*TreeNode{};if root!=nil{stack=append(stack,root)};for len(stack)>0{n:=stack[len(stack)-1];stack=stack[:len(stack)-1];out=append(out,n.Val);if n.Right!=nil{stack=append(stack,n.Right)};if n.Left!=nil{stack=append(stack,n.Left)}};return out}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function preorderTraversal(root:TreeNode|null):number[]{const out:number[]=[],stack:TreeNode[]=[];if(root)stack.push(root);while(stack.length){const n=stack.pop()!;out.push(n.val);if(n.right)stack.push(n.right);if(n.left)stack.push(n.left);}return out;}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public IList<int> PreorderTraversal(TreeNode root){var o=new List<int>();var s=new Stack<TreeNode>();if(root!=null)s.Push(root);while(s.Count>0){var n=s.Pop();o.Add(n.val);if(n.right!=null)s.Push(n.right);if(n.left!=null)s.Push(n.left);}return o;}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function preorder_traversal(root)
-       out=Int[];stack=Any[];root!==nothing&&push!(stack,root)
-       while !isempty(stack);n=pop!(stack);push!(out,n.val);n.right!==nothing&&push!(stack,n.right);n.left!==nothing&&push!(stack,n.left);end
-       out
-   end
-
-R
-~
-
-.. code-block:: r
-
-   preorder_traversal <- function(root){out<-integer();stack<-if(is.null(root))list()else list(root);while(length(stack)){n<-stack[[length(stack)]];stack<-stack[-length(stack)];out<-c(out,n$val);if(!is.null(n$right))stack[[length(stack)+1L]]<-n$right;if(!is.null(n$left))stack[[length(stack)+1L]]<-n$left};out}
+公开入口采用显式栈：时间 ``O(n)``，工作空间最坏 ``O(h)`` 至 ``O(n)``，不修改输入树，状态也最易审查。
+递归版同为 ``O(h)`` 栈但更简洁；Morris 版将输出数组之外的空间降为 ``O(1)``，代价是遍历期间暂时改变
+指针，对只读、并发访问或可能中途异常退出的环境不合适。三种方案分别展示隐式续点、显式续点和树内续点，
+具有真实的状态演进。

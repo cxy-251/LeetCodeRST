@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0084
+:题号: 0084. 柱状图中最大的矩形
 :难度: Hard
 :主题: 数组、单调栈、区间边界
 :原题: `LeetCode 0084 <https://leetcode.com/problems/largest-rectangle-in-histogram/>`_

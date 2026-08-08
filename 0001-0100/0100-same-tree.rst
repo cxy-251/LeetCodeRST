@@ -4,7 +4,7 @@
 题目信息
 --------
 
-:题号: 0100
+:题号: 0100. 相同的树
 :难度: Easy
 :主题: 二叉树、递归、广度优先搜索、深度优先搜索
 :原题: `LeetCode 0100 <https://leetcode.com/problems/same-tree/>`_

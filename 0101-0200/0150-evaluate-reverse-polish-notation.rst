@@ -4,33 +4,25 @@
 题目信息
 --------
 
-:题号: 0150
+:题号: 0150. 逆波兰表达式求值
 :难度: Medium
-:主题: 栈、表达式求值、整数除法
+:主题: 栈、表达式树、后缀表达式、整数除法
 :原题: `LeetCode 0150 <https://leetcode.com/problems/evaluate-reverse-polish-notation/>`_
-:重点: 二元操作数次序、负数字面量、向零截断、有效表达式保证
+:重点: 用操作数栈保存已完成子表达式，按右后左的弹栈顺序执行二元运算，并准确区分负数与减号
 
 题目重述
 --------
 
-给定字符串数组 ``tokens``，其中各元素按逆波兰表达式的顺序组成一个有效算术表达式，计算并返回其整数结果。每个 token 要么是一个整数，要么是二元运算符 ``+``、``-``、``*``、``/``。遇到运算符时，它作用于前面最近得到的两个子表达式结果；较早的结果是左操作数，较晚的结果是右操作数。
-
-除法结果向零截断，输入保证不会除以零，并且最终结果及所有中间计算都能用 32 位有符号整数表示。``tokens`` 的长度在 ``1..10^4`` 范围内，数字 token 的值在 ``-200..200`` 范围内。
+给定字符串数组 ``tokens``，它构成一个有效的逆波兰表达式。每个 token 是整数或二元运算符 ``+``、``-``、
+``*``、``/``；运算符作用于它前面最近完成的两个子表达式，较早者为左操作数、较晚者为右操作数。返回
+整数结果。除法向零截断；输入保证不除零，所有中间值和最终值都在 32 位有符号整数范围内。
 
 自建示例
 --------
 
-.. code-block:: text
-
-   输入：tokens = ["18","5","-","4","/"]
-   输出：3
-   解释：先计算 18 - 5 = 13，再计算 13 / 4 = 3；整数除法向零截断。
-
-.. code-block:: text
-
-   输入：tokens = ["7","-3","*","2","+"]
-   输出：-19
-   解释：token "-3" 是负整数，不是减法运算符；先计算 7 * (-3) = -21，再加 2 得到 -19。
+* ``["18", "5", "-", "4", "/"]``：先算 ``18-5=13``，再算 ``13/4=3``，返回 ``3``；
+* ``["7", "-3", "*", "2", "+"]``：``-3`` 是数字，结果为 ``7*(-3)+2=-19``；
+* ``["4", "13", "5", "/", "+"]``：先完成右侧子表达式 ``13/5=2``，再与 ``4`` 相加，返回 ``6``。
 
 C++ 实现
 --------
@@ -43,157 +35,149 @@ C++ 实现
    class Solution {
    private:
        bool isOperator(const std::string& token) {
-           return token.size()==1 &&
-                  (token[0]=='+'||token[0]=='-'||token[0]=='*'||token[0]=='/');
+           return token.size() == 1 &&
+                  (token[0] == '+' || token[0] == '-' ||
+                   token[0] == '*' || token[0] == '/');
        }
 
-       int apply(int left,int right,char op) {
-           if(op=='+')return left+right;
-           if(op=='-')return left-right;
-           if(op=='*')return left*right;
-           return left/right;
-       }
-
-       int reverseRecursive(const std::vector<std::string>& tokens,int& index) {
-           const std::string token=tokens[index--];
-           if(!isOperator(token))return std::stoi(token);
-           int right=reverseRecursive(tokens,index);
-           int left=reverseRecursive(tokens,index);
-           return apply(left,right,token[0]);
-       }
-
-       int operandStack(const std::vector<std::string>& tokens) {
-           std::vector<int> stack;
-           for(const std::string& token:tokens) {
-               if(!isOperator(token))stack.push_back(std::stoi(token));
-               else {
-                   int right=stack.back();stack.pop_back();
-                   int left=stack.back();stack.pop_back();
-                   stack.push_back(apply(left,right,token[0]));
-               }
+       int apply(int left, int right, char operation) {
+           if (operation == '+') {
+               return left + right;
            }
-           return stack.back();
+           if (operation == '-') {
+               return left - right;
+           }
+           if (operation == '*') {
+               return left * right;
+           }
+           return left / right;
+       }
+
+       int evaluateFromEnd(
+           const std::vector<std::string>& tokens,
+           int& index
+       ) {
+           const std::string& token = tokens[index];
+           --index;
+           if (!isOperator(token)) {
+               return std::stoi(token);
+           }
+
+           const int right = evaluateFromEnd(tokens, index);
+           const int left = evaluateFromEnd(tokens, index);
+           return apply(left, right, token[0]);
+       }
+
+       int evaluateWithOperandStack(
+           const std::vector<std::string>& tokens
+       ) {
+           std::vector<int> operands;
+           operands.reserve(tokens.size());
+
+           for (const std::string& token : tokens) {
+               if (!isOperator(token)) {
+                   operands.push_back(std::stoi(token));
+                   continue;
+               }
+
+               const int right = operands.back();
+               operands.pop_back();
+               const int left = operands.back();
+               operands.pop_back();
+               operands.push_back(apply(left, right, token[0]));
+           }
+           return operands.back();
        }
 
    public:
        int evalRPN(std::vector<std::string>& tokens) {
-           return operandStack(tokens);
+           return evaluateWithOperandStack(tokens);
        }
    };
 
 题解
 ----
 
-栈中保存什么
-~~~~~~~~~~~~
+逆波兰顺序编码了怎样的表达式树
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-扫描任意合法前缀后，栈从底到顶保存若干已经完整求值、但尚未被后续运算符组合的子表达式结果。数字新增一个结果；二元运算符合并栈顶两个结果。
+普通二元表达式树的后序遍历是“左子树、右子树、根运算符”。逆波兰表达式正是这个顺序：数字是叶子，每个
+运算符在自己的两个子表达式都完整出现后才出现。因此不需要括号或优先级规则；读取运算符时，前面最近的
+两个尚未被组合的结果就是它的左右孩子。
 
-为什么先弹右操作数
-~~~~~~~~~~~~~~~~~~
+一种直接模拟是反复在 token 序列中寻找可计算的运算符，把它和前两个结果替换成一个数字。计算本身正确，
+但数组删除、插入以及反复寻找位置会移动或扫描大量 token，最坏产生二次工作。栈可以只保留仍待父运算符
+使用的子表达式结果。
 
-在逆波兰表达式中，``left right operator`` 表示 ``left operator right``。右子表达式更晚完成，位于栈顶，因此第一次弹出得到 ``right``，第二次才是 ``left``。加法和乘法会掩盖写反问题，减法和除法不会。
+操作数栈的不变量
+~~~~~~~~~~~~~~~~
 
-如何识别负数
-~~~~~~~~~~~~
+扫描任意合法前缀后，``operands`` 从底到顶保存若干已经完整求值、但尚未被后续运算符消费的子表达式结果。
+读到数字时，它独立构成一个完成的叶子结果，压栈；读到运算符时，栈顶两个结果正是其右、左子表达式，弹出
+并合成为一个新结果，再压回栈。
 
-只有完整 token 恰好是四个单字符之一时才是运算符。``"-3"``、``"+12"`` 都是数字，不能仅检查首字符。
+一次运算让栈元素数减少一：弹出两个、压回一个。完整有效表达式结束时，所有子树已组合为根，栈中恰好只
+剩最终值。题目保证表达式有效，所以执行运算符时至少有两个操作数，代码不需要把非法输入分支混入核心
+状态。
 
-反向递归为何先求右侧
-~~~~~~~~~~~~~~~~~~~~
+为什么第一次弹出的是右操作数
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-从 token 末尾读取时，先遇到当前根运算符；其前面紧邻的是右子表达式的末尾，所以递归顺序必须是先右、后左。
+后缀片段 ``left right operator`` 表示 ``left operator right``。右子表达式更晚完成，所以结果位于栈顶；
+第一次 ``pop`` 必须赋给 ``right``，第二次才是 ``left``。加法、乘法满足交换律，可能掩盖写反错误；减法
+和除法会直接产生不同结果。
 
-除法语义
-~~~~~~~~
+对 ``["18", "5", "-", "4", "/"]``：
 
-C++ 的有符号整数除法按向零截断，因此主解法中的 ``left / right`` 与题目语义一致。
+.. list-table::
+   :header-rows: 1
 
-复杂度来源
-~~~~~~~~~~
+   * - token
+     - 操作前栈
+     - 操作后栈
+   * - ``18``
+     - ``[]``
+     - ``[18]``
+   * - ``5``
+     - ``[18]``
+     - ``[18, 5]``
+   * - ``-``
+     - ``[18, 5]``
+     - 先弹 ``right=5``、再弹 ``left=18``，压入 ``13``
+   * - ``4``
+     - ``[13]``
+     - ``[13, 4]``
+   * - ``/``
+     - ``[13, 4]``
+     - 计算 ``13/4``，得到 ``[3]``
 
-每个 token 处理一次，时间 ``O(n)``。操作数栈最坏 ``O(n)``；反向递归的调用栈最坏也为 ``O(n)``。
+负数字面量怎样与减号区分
+~~~~~~~~~~~~~~~~~~~~~~~~
 
-九语言实现
-----------
+不能只看 token 的首字符：``"-3"`` 以减号开头却是整数，``"+12"`` 同理。只有 token 长度恰好为一，且
+唯一字符属于四个运算符时，才按运算符处理；其余 token 交给 ``stoi``。单独的 ``"-"`` 是运算符，
+``"-3"`` 不是。
 
-C
-~
+反向递归展示了另一种状态解释
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-.. code-block:: c
+从 token 末尾读取，首先遇到整棵表达式树的根运算符。它前面紧邻的是右子表达式的末尾，所以
+``evaluateFromEnd`` 必须先递归求右子树，再递归求左子树，最后调用同一个 ``apply(left, right)``。数字
+直接作为叶子返回，引用参数 ``index`` 表示下一个尚未归属某棵子树的 token。
 
-   int evalRPN(char**tokens,int n){int*stack=malloc((size_t)n*sizeof(int)),top=0;for(int i=0;i<n;i++){char*t=tokens[i];int op=t[1]=='\0'&&strchr("+-*/",t[0])!=NULL;if(!op)stack[top++]=atoi(t);else{int right=stack[--top],left=stack[--top];stack[top++]=t[0]=='+'?left+right:t[0]=='-'?left-right:t[0]=='*'?left*right:left/right;}}int out=stack[0];free(stack);return out;}
+反向递归与正向栈访问同一表达式树，只是一个从根向叶解析，一个从叶向根归约。递归深度在极端倾斜表达式中
+可达 ``O(n)``；显式操作数栈没有调用栈风险，因此作为主解。
 
-Python
-~~~~~~
+除法与边界语义
+~~~~~~~~~~~~~~
 
-.. code-block:: python
+C++ 有符号整数除法向零截断，与题目一致：``13/4 == 3``，``-13/4 == -3``。输入保证右操作数非零且
+所有中间结果不溢出，所以 ``apply`` 不需要额外饱和或异常分支。结果为负与负数字面量识别是两件独立事情：
+栈中只保存已经解析好的整数。
 
-   class Solution:
-       def evalRPN(self, tokens):
-           stack=[]
-           for token in tokens:
-               if token not in {"+","-","*","/"}: stack.append(int(token));continue
-               right,left=stack.pop(),stack.pop()
-               if token=="+": value=left+right
-               elif token=="-": value=left-right
-               elif token=="*": value=left*right
-               else: value=(1 if left*right>=0 else -1)*(abs(left)//abs(right))
-               stack.append(value)
-           return stack[-1]
+主解选择与复杂度
+~~~~~~~~~~~~~~~~
 
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {public int evalRPN(String[]tokens){Deque<Integer>s=new ArrayDeque<>();for(String t:tokens){if(!(t.length()==1&&"+-*/".contains(t)))s.push(Integer.parseInt(t));else{int r=s.pop(),l=s.pop();s.push(t.equals("+")?l+r:t.equals("-")?l-r:t.equals("*")?l*r:l/r);}}return s.pop();}}
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   impl Solution {pub fn eval_rpn(tokens:Vec<String>)->i32{let mut s=vec![];for t in tokens{if matches!(t.as_str(),"+"|"-"|"*"|"/"){let r=s.pop().unwrap();let l=s.pop().unwrap();s.push(match t.as_str(){"+"=>l+r,"-"=>l-r,"*"=>l*r,_=>l/r});}else{s.push(t.parse().unwrap())}}s[0]}}
-
-Go
-~~
-
-.. code-block:: go
-
-   func evalRPN(tokens []string)int{s:=[]int{};for _,t:=range tokens{if len(t)==1&&strings.Contains("+-*/",t){r,l:=s[len(s)-1],s[len(s)-2];s=s[:len(s)-2];v:=0;if t=="+"{v=l+r}else if t=="-"{v=l-r}else if t=="*"{v=l*r}else{v=l/r};s=append(s,v)}else{v,_:=strconv.Atoi(t);s=append(s,v)}};return s[0]}
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function evalRPN(tokens:string[]):number{const s:number[]=[];for(const t of tokens){if(!["+","-","*","/"].includes(t)){s.push(Number(t));continue;}const r=s.pop()!,l=s.pop()!;s.push(t==="+"?l+r:t==="-"?l-r:t==="*"?l*r:Math.trunc(l/r));}return s[0];}
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {public int EvalRPN(string[]tokens){var s=new Stack<int>();foreach(var t in tokens){if(t.Length!=1||!"+-*/".Contains(t)){s.Push(int.Parse(t));continue;}int r=s.Pop(),l=s.Pop();s.Push(t=="+"?l+r:t=="-"?l-r:t=="*"?l*r:l/r);}return s.Pop();}}
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function eval_rpn(tokens)
-       s=Int[]
-       for t in tokens
-           if t in ("+","-","*","/");r=pop!(s);l=pop!(s);push!(s,t=="+" ? l+r : t=="-" ? l-r : t=="*" ? l*r : div(l,r))
-           else;push!(s,parse(Int,t));end
-       end
-       s[1]
-   end
-
-R
-~
-
-.. code-block:: r
-
-   eval_rpn <- function(tokens){s<-numeric();for(t in tokens){if(!(t%in%c("+","-","*","/"))){s<-c(s,as.numeric(t));next};r<-s[length(s)];l<-s[length(s)-1L];s<-head(s,-2L);v<-switch(t,"+"=l+r,"-"=l-r,"*"=l*r,"/"=trunc(l/r));s<-c(s,v)};as.integer(s[[1L]])}
+公开入口采用操作数栈。每个 token 解析、压栈或弹栈常数次，除数字转换所需字符时间外，总扫描为
+``O(n)``；栈最坏 ``O(n)``。反向递归同为线性时间和最坏 ``O(n)`` 调用栈，保留它用于说明逆波兰表达式与
+表达式树后序的对应，但迭代栈的状态和执行边界更稳健。
