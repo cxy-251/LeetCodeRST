@@ -4,113 +4,67 @@
 题目信息
 --------
 
-:题号: 0217
+:题号: 0217. 存在重复元素
 :难度: Easy
-:主题: 数组、哈希集合、排序
+:主题: 数组、哈希集合、排序、重复检测
 :原题: `LeetCode 0217 <https://leetcode.com/problems/contains-duplicate/>`_
-:重点: 任意值至少出现两次、下标必须不同、存在性判断、负数和零同样参与
+:重点: 已见值状态、先判断再记录、哈希期望复杂度与排序取舍
 
 题目重述
 --------
 
-给定整数数组 ``nums``，若数组中存在某个数值至少出现两次，返回 ``true``；若每个数值都只出现一次，返回 ``false``。重复要求来自两个不同数组位置，数值可以是负数、零或正数。
-
-数组长度位于 ``[1, 10^5]``，每个元素位于 ``[-10^9, 10^9]``。题目只判断是否存在任意重复值，不要求返回重复元素、出现次数或下标；函数无需修改输入数组。
+给定整数数组 ``nums``，判断是否存在两个不同下标 ``i``、``j``，使 ``nums[i] == nums[j]``。只需返回布尔值，不要求返回
+重复值或下标；数组可能为空或只有一个元素，输入不需要修改。
 
 自建示例
 --------
 
-重复值相隔多个位置：
+``[4,1,7,4]`` 返回 ``true``：扫描到最后一个 4 时，前面已经出现过同值。
+``[4,1,7]`` 返回 ``false``；``[5]`` 也返回 ``false``，因为没有两个不同位置可以组成一对。
 
-.. code-block:: text
+重复值的位置而不是数值大小决定答案：``[-2,9,-2]`` 也应返回 ``true``；不需要排序后比较差值，也不能只比较相邻下标。
 
-   输入：nums = [6, 2, 9, 6]
-   输出：true
-   解释：数值 6 分别出现在下标 0 和 3，因此数组中存在重复元素。
+从成对枚举到已见值索引
+----------------------
 
-所有元素互不相同：
+枚举所有 ``i < j`` 并比较 ``nums[i]`` 与 ``nums[j]`` 最直接，也不会漏掉任何一对；但每个元素会和许多已经看过的元素重复比较，
+最坏要做 ``n(n-1)/2`` 次，时间为 ``O(n^2)``。
 
-.. code-block:: text
+排序后相等值一定相邻，扫描相邻元素即可在 ``O(n log n)`` 时间找到重复，但排序会改变输入，或需要复制整个数组。题目只问一个值
+是否已经出现，并不要求值的全序，因而可以把“已经看过的不同值”直接存进哈希集合：一次查询就替代与所有旧下标的比较。
 
-   输入：nums = [3, -2, 8, 0]
-   输出：false
-   解释：四个数值各出现一次，没有任何两个不同下标保存相同值。
+两条路线的差异如下：
 
-集合算法
---------
+.. list-table::
+   :header-rows: 1
 
-从左到右扫描数组，维护集合 ``seen``：
+   * - 方法
+     - 时间
+     - 额外空间
+     - 牺牲或保留的性质
+   * - 两两比较
+     - ``O(n^2)``
+     - ``O(1)``
+     - 保留所有候选关系，重复比较最多
+   * - 排序后相邻比较
+     - ``O(n log n)``
+     - 原地或 ``O(n)`` 副本
+     - 获得全序，但可能改变输入
+   * - 已见值哈希集合
+     - 期望 ``O(n)``
+     - ``O(n)``
+     - 只保留存在性，删除无关的顺序和次数
 
-* 扫描第 ``i`` 个元素前，``seen`` 保存 ``nums[0..i-1]`` 中出现过的所有不同值；
-* 若 ``nums[i]`` 已在 ``seen`` 中，则存在更早下标 ``j<i`` 使两值相等，立即返回 ``true``；
-* 否则把 ``nums[i]`` 加入集合并继续；
-* 扫描结束仍未命中，返回 ``false``。
+集合状态与转移
+--------------
 
-伪代码：
+处理下标 ``i`` 前，集合 ``seen`` 恰好包含 ``nums[0..i-1]`` 中出现过的不同值。读取 ``nums[i]`` 时先查询集合：
 
-.. code-block:: text
+* 已存在：此前有另一个下标保存相同值，重复关系已经成立，立即返回 ``true``；
+* 不存在：把当前值加入集合，使不变量延伸到下一个下标。
 
-   seen = empty set
-   for value in nums:
-       if value in seen:
-           return true
-       insert value into seen
-   return false
-
-核心不变量
-----------
-
-扫描位置 ``i`` 之前：
-
-.. code-block:: text
-
-   seen = set(nums[0:i])
-
-并且前缀 ``nums[0:i]`` 中没有重复值。若此前已有重复，算法已经提前返回，不会进入当前状态。
-
-处理 ``nums[i]``：
-
-* 已存在于集合：它与某个前缀元素相等，发现重复；
-* 不存在于集合：插入后集合变成 ``set(nums[0:i+1])``，且新前缀仍无重复。
-
-正确性证明
-----------
-
-**引理一：集合不变量始终成立。**
-
-初始前缀为空，集合为空。若当前值不在集合中，插入后集合恰好增加该值，对应扩展后的前缀不同值集合。
-
-**引理二：算法返回 ``true`` 时数组确实包含重复值。**
-
-命中集合说明当前值等于某个更早位置的值，两个下标不同。
-
-**引理三：数组包含重复值时算法一定返回 ``true``。**
-
-取某个重复值第二次出现的位置。第一次出现后它已经在集合中，因此第二次扫描时一定命中。
-
-**定理：算法当且仅当数组包含重复值时返回 ``true``。**
-
-由引理二和引理三直接得到。
-
-复杂度
-------
-
-* 哈希集合平均查询和插入为 ``O(1)``，总时间复杂度为平均 ``O(n)``；
-* 最坏情况下没有重复，需要保存全部 ``n`` 个不同值，额外空间为 ``O(n)``；
-* 发现重复后提前返回，实际工作量可能小于 ``n``；
-* 输入数组保持不变。
-
-排序替代方案
-------------
-
-先排序，再检查相邻元素：
-
-* 时间复杂度通常为 ``O(n log n)``；
-* 若允许原地排序，核心额外空间可较小；
-* 会改变输入数组顺序；
-* 若使用复制后排序，还需要 ``O(n)`` 副本空间。
-
-集合方案优先保证平均线性时间和输入不变；排序方案适合哈希不可用或输入变异可接受的场景。
+当前值必须先查再记。若先把它插入再查询，集合只表达“包含当前元素”，就无法区分同一个元素和两个不同下标，可能把首个元素
+错误地判为重复。由于问题没有下标距离限制，值一旦进入 ``seen`` 就不会过期。
 
 C++ 实现
 --------
@@ -129,288 +83,58 @@ C++ 实现
        }
    };
 
-代码分析
---------
+题解
+----
 
-扫描到当前值时，``seen`` 恰好保存此前所有位置出现过的值；插入失败说明该值已经在更早位置出现，得到一对不同下标，立即返回真。插入成功则把当前值纳入后续检查。扫描结束仍未发现失败插入时，每个值只出现一次，返回假。这个状态只关心“是否出现过”，不需要保存每个下标。
-
-例如 ``[4,1,7,4]`` 在最后一个元素处第二次插入 4 失败，因此返回真；``[4,1,7]`` 的三次插入都成功，返回假。哈希集合平均查询和插入为常数时间，每个元素处理一次，平均时间复杂度为 ``O(n)``，额外空间复杂度为 ``O(n)``；输入顺序和元素值均不被修改。
-
-十语言实现
-----------
-
-C
-~
-
-C 标准库没有哈希集合。本实现使用开放寻址和线性探测。容量保持为二的幂，并至少大于元素数量的两倍，避免表装满。
-
-.. code-block:: c
-
-   #include <stdbool.h>
-   #include <stdint.h>
-   #include <stdlib.h>
-
-   static uint64_t mix64(uint64_t value) {
-       value ^= value >> 30;
-       value *= UINT64_C(0xbf58476d1ce4e5b9);
-       value ^= value >> 27;
-       value *= UINT64_C(0x94d049bb133111eb);
-       value ^= value >> 31;
-       return value;
-   }
-
-   bool containsDuplicate(int *nums, int numsSize) {
-       if (numsSize < 2) return false;
-
-       size_t capacity = 1;
-       while (capacity < (size_t)numsSize * 2) {
-           capacity <<= 1;
-       }
-
-       int *keys = (int *)malloc(capacity * sizeof(int));
-       unsigned char *used = (unsigned char *)calloc(capacity, 1);
-       if (keys == NULL || used == NULL) {
-           free(keys);
-           free(used);
-           return false;
-       }
-
-       for (int i = 0; i < numsSize; ++i) {
-           size_t index = (size_t)(
-               mix64((uint64_t)(int64_t)nums[i]) & (capacity - 1)
-           );
-
-           while (used[index] != 0) {
-               if (keys[index] == nums[i]) {
-                   free(keys);
-                   free(used);
-                   return true;
-               }
-               index = (index + 1) & (capacity - 1);
-           }
-
-           used[index] = 1;
-           keys[index] = nums[i];
-       }
-
-       free(keys);
-       free(used);
-       return false;
-   }
-
-分配失败时返回 ``false``，这是布尔接口无法表达资源错误的限制；工程接口应提供错误通道。
-
-C++
-~~~
-
-.. code-block:: cpp
-
-   class Solution {
-   public:
-       bool containsDuplicate(const std::vector<int>& nums) {
-           std::unordered_set<int> seen;
-           seen.reserve(nums.size());
-
-           for (int value : nums) {
-               if (!seen.insert(value).second) {
-                   return true;
-               }
-           }
-           return false;
-       }
-   };
-
-需要 ``<unordered_set>`` 与 ``<vector>``。参数使用常量引用，输入不修改。
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   class Solution:
-       def containsDuplicate(self, nums: list[int]) -> bool:
-           seen: set[int] = set()
-           for value in nums:
-               if value in seen:
-                   return True
-               seen.add(value)
-           return False
-
-Python 整数和集合对象有运行时对象开销，但渐近空间仍为 ``O(n)``。
-
-Java
-~~~~
-
-.. code-block:: java
-
-   class Solution {
-       public boolean containsDuplicate(int[] nums) {
-           Set<Integer> seen = new HashSet<>();
-           for (int value : nums) {
-               if (!seen.add(value)) {
-                   return true;
-               }
-           }
-           return false;
-       }
-   }
-
-需要 ``java.util.HashSet`` 与 ``java.util.Set``。``Integer`` 装箱增加实际内存成本。
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   use std::collections::HashSet;
-
-   impl Solution {
-       pub fn contains_duplicate(nums: Vec<i32>) -> bool {
-           let mut seen = HashSet::with_capacity(nums.len());
-           for value in nums {
-               if !seen.insert(value) {
-                   return true;
-               }
-           }
-           false
-       }
-   }
-
-``Vec`` 按值传入，循环消费数组元素；整数实现 ``Copy``，集合保存值副本。
-
-Go
-~~
-
-.. code-block:: go
-
-   func containsDuplicate(nums []int) bool {
-       seen := make(map[int]struct{}, len(nums))
-       for _, value := range nums {
-           if _, exists := seen[value]; exists {
-               return true
-           }
-           seen[value] = struct{}{}
-       }
-       return false
-   }
-
-``struct{}{}`` 作为集合占位值，不携带额外业务数据。
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   function containsDuplicate(nums: number[]): boolean {
-       const seen = new Set<number>();
-       for (const value of nums) {
-           if (seen.has(value)) {
-               return true;
-           }
-           seen.add(value);
-       }
-       return false;
-   }
-
-官方整数范围可由 ``number`` 精确表示；输入数组不修改。
-
-C#
-~~
-
-.. code-block:: csharp
-
-   public class Solution {
-       public bool ContainsDuplicate(int[] nums) {
-           var seen = new HashSet<int>();
-           foreach (int value in nums) {
-               if (!seen.Add(value)) {
-                   return true;
-               }
-           }
-           return false;
-       }
-   }
-
-需要 ``System.Collections.Generic``。``HashSet<int>`` 直接保存值类型。
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   function contains_duplicate(nums::Vector{Int})::Bool
-       seen = Set{Int}()
-       sizehint!(seen, length(nums))
-
-       for value in nums
-           if value in seen
-               return true
-           end
-           push!(seen, value)
-       end
-       false
-   end
-
-``sizehint!`` 只提供容量提示，不改变集合语义。
-
-R
-~
-
-R 的 environment 哈希键必须是字符串，因此将整数值转换为稳定十进制键。前缀 ``v:`` 避免与环境保留绑定命名混淆。
-
-.. code-block:: r
-
-   contains_duplicate <- function(nums) {
-     seen <- new.env(hash = TRUE, parent = emptyenv())
-
-     for (value in nums) {
-       key <- paste0("v:", format(value, scientific = FALSE, trim = TRUE))
-       if (exists(key, envir = seen, inherits = FALSE)) {
-         return(TRUE)
-       }
-       assign(key, TRUE, envir = seen)
-     }
-     FALSE
-   }
-
-官方整数处于精确表示范围；输入向量不修改。
-
-关键易错点
-----------
-
-* 只比较相邻输入元素，却没有先排序；
-* 把出现次数“恰好两次”误写成重复条件；
-* 遇到第一个元素就先判断集合大小，没有建立正确前缀状态；
-* 用集合长度小于数组长度作为答案，却额外构造整套集合，失去提前返回；
-* 声称哈希集合最坏时间一定为 ``O(n)``；
-* 使用原地排序方案却声称输入不修改；
-* C 哈希表容量可能装满，导致线性探测无法终止；
-* R 直接把任意整数文本当环境键而不考虑名称约束和格式稳定性。
-
-知识联系
---------
-
-本题是“前缀状态 + 当前元素”模式的最小实例。后续问题会增加约束：
-
-* ``0219 Contains Duplicate II``：重复值还必须满足下标距离；
-* ``0220 Contains Duplicate III``：同时限制下标距离和数值距离；
-* ``0001 Two Sum``：集合升级为“值到下标”的映射；
-* 流式去重：集合状态持续跨数据批次保存。
-
-自检问题
---------
-
-#. 集合在扫描位置 ``i`` 前精确表示什么？
-#. 为什么第二次出现某值时一定会命中？
-#. 集合方案为什么可以提前返回？
-#. 排序方案在什么条件下更合适？
-#. C 的开放寻址表为什么需要保留空槽？
-
-参考答案
+状态走读
 ~~~~~~~~
 
-#. 前缀 ``nums[0:i]`` 中出现过的所有不同值。
-#. 第一次出现后已经插入集合，第二次查询时该值仍存在。
-#. 任意一个重复已经足以确定最终布尔答案。
-#. 哈希不可用、输入允许重排，或后续还需要有序数组时。
-#. 线性探测依赖遇到未使用槽判断查找失败；表装满会失去终止条件。
+对 ``nums = [4,1,7,4]``，集合的变化说明“查询结果”和“写入状态”之间的顺序：
+
+.. list-table::
+   :header-rows: 1
+
+   * - 当前值
+     - 查询前 ``seen``
+     - 插入结果
+     - 结论
+   * - 4
+     - ``{}``
+     - ``{4}``
+     - 首次出现，继续
+   * - 1
+     - ``{4}``
+     - ``{4,1}``
+     - 首次出现，继续
+   * - 7
+     - ``{4,1}``
+     - ``{4,1,7}``
+     - 首次出现，继续
+   * - 4
+     - ``{4,1,7}``
+     - 插入失败
+     - 找到不同下标，返回 ``true``
+
+``unordered_set::insert`` 返回一对结果，其中 ``second`` 表示是否真的插入了新值；``second == false`` 正好代表值已在此前状态中，
+代码无需先做一次 ``find`` 再做一次 ``insert``。集合只保存存在性，不保存次数，因为第二次出现已经足够决定答案。
+
+为什么没有提前排序
+~~~~~~~~~~~~~~~~~~~~
+
+排序把问题变成“相邻是否相等”，但它为了获得全局顺序做了题目没有要求的工作；如果函数合同要求保持输入不变，必须复制整个数组。
+哈希集合直接索引值，不关心负数、数值范围或输入顺序，适合“是否存在”这种存在性查询。代价是哈希操作的 ``O(1)`` 是期望值，
+不能把它写成严格最坏界限；若应用场景需要可证明的最坏时间，应选择排序路线。
+
+代码分析
+~~~~~~~~
+
+``reserve`` 只减少哈希表扩容，不改变状态语义；``insert(value).second`` 把“是否已见”和“写入新值”合并为一次操作。
+公共入口不排序也不修改输入，空数组和单元素数组自然走完整循环后返回 ``false``。重复值出现第三次时，第二次已经返回，
+所以算法不会为了统计次数继续扫描；若调用者只关心结果，这个短路删除了后续无关工作。
+
+复杂度与边界
+~~~~~~~~~~~~
+
+哈希查找和插入的期望时间为 ``O(1)``，总时间期望 ``O(n)``，集合额外空间为 ``O(n)``；极端哈希碰撞时严格最坏时间可能退化。
+排序替代法时间 ``O(n log n)``，若不改输入还需 ``O(n)`` 复制空间。空数组、单元素、负数、0、重复出现多次都由同一不变量处理；
+没有下标距离限制意味着集合不需要滑动窗口或删除过期元素。

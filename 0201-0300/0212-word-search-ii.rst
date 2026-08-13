@@ -4,189 +4,49 @@
 题目信息
 --------
 
-:题号: 0212
+:题号: 0212. 单词搜索 II
 :难度: Hard
 :主题: Trie、二维棋盘、深度优先搜索、回溯
 :原题: `LeetCode 0212 <https://leetcode.com/problems/word-search-ii/>`_
-:重点: 四邻接路径、同一路径格子不可复用、返回所有不同单词、输出顺序不限
+:重点: 四邻接路径、路径内不可复用格子、共享前缀剪枝、结果去重
 
 题目重述
 --------
 
-给定一个由小写英文字母组成的 ``m x n`` 棋盘 ``board``，以及一个互不相同的单词列表 ``words``，返回其中所有能够在棋盘中找到的单词。单词必须从某个格子开始，通过连续选择上、下、左、右相邻格依次拼出；不允许对角线移动，同一条单词路径中同一个格子不能使用两次。
+给定一个由小写英文字母组成的 ``m x n`` 棋盘 ``board``，以及一个单词数组 ``words``，返回其中能够在棋盘中找到的所有
+单词，返回顺序不限。一个单词必须从任意格子开始，随后每次移动到上、下、左、右的相邻格，按访问顺序拼出字符；不能
+对角移动，同一条路径中同一个格子不能使用两次。输入单词互不相同，结果中每个找到的单词也只能出现一次。
 
-``m`` 和 ``n`` 均位于 ``[1, 12]``；``words`` 的数量位于 ``[1, 3 * 10^4]``，每个单词长度位于 ``[1, 10]``。棋盘和单词都只包含小写英文字母，输入单词互不相同。返回结果中每个找到的单词只出现一次，排列顺序不作要求；函数正常结束后不应改变调用者看到的棋盘内容。
+棋盘行列数最多为 12，单词数量最多为 ``3 * 10^4``，单词长度最多为 10。搜索过程可以临时改变棋盘来标记访问状态，
+但递归返回时应恢复字符，避免一个起点或一条分支污染其他路径。
 
 自建示例
 --------
 
-共享前缀和多条独立路径：
+共享前缀由不同路径继续：
 
 .. code-block:: text
 
-   输入：board = [["c","a","t"],
-                   ["r","r","e"],
-                   ["d","o","g"]]
-        words = ["cat", "car", "care", "dog", "card"]
-   输出：["cat", "car", "care", "dog"]
-   解释：cat 沿第一行找到；car 和 care 共用 c-a-r 前缀；dog 沿最后一行找到。card 的最后一步需要从 r 对角移动到 d，因此不合法。输出顺序可以不同。
+   board = [[c,a,t],
+            [r,r,e],
+            [d,o,g]]
+   words = ["cat", "car", "care", "dog", "card"]
+   输出 = ["cat", "car", "care", "dog"]（顺序不限）
+
+``cat`` 沿第一行找到，``car`` 和 ``care`` 共用 ``c-a-r`` 前缀，``dog`` 在底行找到；``card`` 要从 ``r`` 对角走到
+``d``，不满足四邻接规则。
 
 同一格不能在一条路径中重复使用：
 
 .. code-block:: text
 
-   输入：board = [["a","b"],
-                   ["c","d"]]
-        words = ["abd", "aba", "acdb"]
-   输出：["abd", "acdb"]
-   解释：abd 可沿 a-b-d 拼出，acdb 可沿 a-c-d-b 拼出；aba 需要再次使用唯一的 a 格子，因此不能找到。
+   board = [[a,b],
+            [c,d]]
+   words = ["abd", "aba", "acdb"]
+   输出 = ["abd", "acdb"]
 
-问题抽象与解法选择
-------------------
-
-逐个单词独立做棋盘 DFS 会反复搜索相同前缀。主解法先把全部单词放入 Trie，再从每个棋盘格启动联合 DFS：
-
-* 棋盘路径给出当前字符序列；
-* Trie 节点判断该序列是否仍是某个候选词前缀；
-* 当前字符没有子链接时立即剪枝；
-* 到达终止词索引时提交单词并清空索引；
-* 当前格临时标记为已使用，递归退出后恢复。
-
-.. list-table::
-   :header-rows: 1
-
-   * - 方法
-     - 主要工作量
-     - 额外存储
-     - 取舍
-   * - Trie + 棋盘 DFS
-     - ``O(S + Q + Z)``
-     - Trie、递归栈、输出
-     - 主解法；共享前缀并及时剪枝
-   * - 每个单词独立 DFS
-     - 最坏接近 ``O(Wmn·3^L)``
-     - 单词级递归栈
-     - 相同前缀被反复搜索
-   * - 枚举全部棋盘简单路径
-     - 指数级
-     - 巨量路径字符串
-     - 先生成大量无关路径
-
-``S`` 是输入单词字符总数，``Q`` 是联合 DFS 实际进入的合法状态数，``Z`` 是输出字符总量；
-``m``、``n`` 是棋盘行列数，``L`` 是最大单词长度，``W`` 是单词数量。
-
-Trie 节点模型
--------------
-
-每个节点保存：
-
-``children[26]``
-   当前前缀追加某个小写字母后的子链接。
-
-``word_index``
-   当前路径若是尚未输出的完整单词，保存它在 ``words`` 中的索引；否则保存空哨兵。
-
-重复单词插入时，终止节点只保留第一次出现的索引。第一次找到后清空 ``word_index``，后续路径仍能经过该节点，却不会重复输出。
-清空终止索引不会删除任何节点或子链接，因此当前词作为前缀时，更长单词仍可继续搜索。
-
-联合 DFS 状态与不变量
----------------------
-
-递归状态可写成：
-
-.. code-block:: text
-
-   dfs(row, column, trie_parent, current_path_visited)
-
-实现不复制访问集合，而把当前棋盘格临时改成不属于 ``a..z`` 的 ``#``。每个成功进入的调用保持：
-
-#. 坐标位于棋盘内，当前格尚未在本路径使用；
-#. 从起点到当前格的棋盘字符，与从 Trie 根到当前子节点的路径标签完全相同；
-#. 路径只包含四邻接移动；
-#. 路径中的格子互不重复；
-#. 被 ``#`` 标记的格恰好属于当前递归路径；
-#. Trie 只可能清除终止索引，不删除子链接；
-#. 返回前恢复当前格，调用者看到的棋盘与调用前一致。
-
-状态转移
-~~~~~~~~
-
-设当前字符为 ``c``，父 Trie 节点为 ``parent``：
-
-#. 越界或当前格为 ``#`` 时返回；
-#. ``parent.children[c]`` 不存在时返回；
-#. 进入对应子节点；
-#. 子节点带有终止索引时提交单词并清空索引；
-#. 把当前格改成 ``#``；
-#. 依次探索四个邻格；
-#. 恢复原字符。
-
-为什么 Trie 剪枝安全
-~~~~~~~~~~~~~~~~~~~~
-
-若当前路径追加 ``c`` 后没有 Trie 子链接，它已不是任何输入单词前缀。继续追加字符不能修复已经不匹配的前缀，因此立即返回不会漏解。
-
-为什么必须恢复
-~~~~~~~~~~~~~~
-
-标记只属于当前路径。若不恢复，同一起点的兄弟分支、后续起点和其他单词都会错误失去该格。找到单词也不能提前跳过恢复；当前节点下还可能存在更长共享前缀单词。
-
-正确性证明
-----------
-
-引理一：Trie 路径恰好表示输入单词前缀
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-插入时逐字符复用或创建唯一子链接。对前缀长度归纳可知，从根到任一节点的标签组成唯一字符串；该节点存在当且仅当该字符串是某个输入单词的前缀。终止索引只放在完整单词末尾。
-
-引理二：每个有效 DFS 状态都对应合法棋盘路径
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-起点只含一个未使用格。递归只进入四邻格，并在进入后标记当前格；已标记格不能再次进入。因此每个状态都对应四邻接且格子互不重复的路径。Trie 转移使用真实棋盘字符，所以两条路径标签一致。
-
-引理三：Trie 剪枝不会排除答案
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-无对应子链接意味着当前字符串不是任何候选词前缀。任何更长字符串仍保留这一错误前缀，不能成为输入单词，因此该分支没有答案。
-
-引理四：四方向展开覆盖全部合法延伸
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-任意合法下一步只能是上、下、左、右中一个未使用且在界内的格。算法恰好枚举这四类，并拒绝越界或已标记格，所以既不加入非法移动，也不遗漏合法下一步。
-
-引理五：每个提交结果都是真实单词
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-算法只在 Trie 终止节点提交。由引理二，当前路径可由棋盘合法拼出；由引理一，终止索引对应完整输入单词，因此输出没有伪结果。
-
-引理六：每个真实答案都会被提交
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-设单词 ``w`` 有一条合法棋盘路径。外层循环会从首格启动；``w`` 的每个前缀都在 Trie 中，不会被引理三剪枝；每个下一格由引理四枚举。到达末格时进入终止节点并提交 ``w``。
-
-引理七：清空终止索引只去重
-~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-清空 ``word_index`` 不改变节点和子链接。同词再次到达时不再提交；更长单词仍能经过该节点进入后续子树，因此不会因去重漏掉共享前缀答案。
-
-引理八：标记不会污染其他分支
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-每个调用保存原字符，探索前写入 ``#``，全部子调用结束后恢复。对递归深度归纳，函数返回时棋盘与调用前相同，因此兄弟分支和不同起点相互独立。
-
-定理：算法返回且仅返回棋盘中存在的不同输入单词
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-引理五保证无伪结果，引理六保证无遗漏，引理七保证去重且不破坏长词，引理八保证全部搜索共享同一原始棋盘。结论成立。
-
-复杂度与真实资源
-----------------
-
-Trie 构建扫描全部单词字符，时间 ``O(S)``。设创建 ``N`` 个 Trie 节点，固定数组实现保存 ``26N`` 个链接槽位，持久存储为 ``O(26N)``，常简写为 ``O(N)``，但常数不可忽略。
-
-搜索时间按实际进入状态数 ``Q`` 计，为 ``O(Q)``。忽略棋盘边界和 Trie 剪枝时，一个起点的第一步最多有 4 个方向，之后因前一格已使用，粗略最多 3 个方向，最大长度 ``L`` 的上界可写成 ``O(mn·4·3^(L-1))``。真实工作量同时受棋盘形状、Trie 前缀和最大路径长度限制。
-
-递归深度最多 ``min(L,mn)``，调用栈 ``O(L)``；棋盘原地标记只需固定状态；输出载荷为 ``O(Z)``。C 和 Rust 复制结果字符串；R 建 Trie 时 ``strsplit`` 物化字符向量；Julia ``codeunits`` 在官方 ASCII 字符域上提供字节包装视图。
+``abd`` 的路径是 ``a-b-d``，``acdb`` 的路径是 ``a-c-d-b``；``aba`` 若从唯一的 ``a`` 出发，最后必须再次回到起点，
+因此不能找到。棋盘标记若不在回溯时恢复，第二条合法路径也会被误删。
 
 C++ 实现
 --------
@@ -196,959 +56,164 @@ C++ 实现
    class Solution {
    private:
        struct Node {
-           std::array<Node*, 26> child{};
+           std::array<std::unique_ptr<Node>, 26> children{};
            std::string word;
        };
 
-       static void release(Node* node) {
-           if (node == nullptr) return;
-           for (Node* child : node->child) release(child);
-           delete node;
-       }
+       Node root_;
 
-       static void insert(Node* root, const std::string& word) {
-           Node* node = root;
+       void insert(const std::string& word) {
+           Node* node = &root_;
            for (char character : word) {
-               int index = character - 'a';
-               if (node->child[index] == nullptr) {
-                   node->child[index] = new Node();
+               const int index = character - 'a';
+               if (node->children[index] == nullptr) {
+                   node->children[index] = std::make_unique<Node>();
                }
-               node = node->child[index];
+               node = node->children[index].get();
            }
            node->word = word;
        }
 
-       void search(std::vector<std::vector<char>>& board, int row, int column,
-                   Node* node, std::vector<std::string>& answer) {
-           char character = board[row][column];
+       void searchFrom(int row, int column, Node* parent,
+                      std::vector<std::vector<char>>& board,
+                      std::vector<std::string>& answer) {
+           if (row < 0 || row >= static_cast<int>(board.size()) ||
+               column < 0 || column >= static_cast<int>(board[0].size())) {
+               return;
+           }
+
+           const char character = board[row][column];
            if (character == '#') return;
+           Node* node = parent->children[character - 'a'].get();
+           if (node == nullptr) return;
 
-           Node* next = node->child[character - 'a'];
-           if (next == nullptr) return;
-
-           if (!next->word.empty()) {
-               answer.push_back(next->word);
-               next->word.clear();
+           if (!node->word.empty()) {
+               answer.push_back(node->word);
+               node->word.clear();
            }
 
            board[row][column] = '#';
-           static constexpr int directions[4][2] = {
-               {-1, 0}, {1, 0}, {0, -1}, {0, 1}
-           };
-           for (const auto& direction : directions) {
-               int nextRow = row + direction[0];
-               int nextColumn = column + direction[1];
-               if (nextRow >= 0 && nextRow < static_cast<int>(board.size()) &&
-                   nextColumn >= 0 &&
-                   nextColumn < static_cast<int>(board[0].size())) {
-                   search(board, nextRow, nextColumn, next, answer);
-               }
-           }
+           searchFrom(row + 1, column, node, board, answer);
+           searchFrom(row - 1, column, node, board, answer);
+           searchFrom(row, column + 1, node, board, answer);
+           searchFrom(row, column - 1, node, board, answer);
            board[row][column] = character;
        }
 
    public:
-       std::vector<std::string> findWords(
-           std::vector<std::vector<char>>& board,
-           std::vector<std::string>& words) {
-           if (board.empty() || board[0].empty()) return {};
-
-           Node* root = new Node();
-           for (const std::string& word : words) insert(root, word);
+       std::vector<std::string> findWords(std::vector<std::vector<char>>& board,
+                                          std::vector<std::string>& words) {
+           for (const std::string& word : words) insert(word);
 
            std::vector<std::string> answer;
+           if (board.empty() || board[0].empty()) return answer;
            for (int row = 0; row < static_cast<int>(board.size()); ++row) {
                for (int column = 0;
                     column < static_cast<int>(board[0].size()); ++column) {
-                   search(board, row, column, root, answer);
+                   searchFrom(row, column, &root_, board, answer);
                }
            }
-           release(root);
            return answer;
        }
    };
 
+题解
+----
+
+逐个单词搜索的原始空间
+~~~~~~~~~~~~~~~~~~~~~~
+
+最直接的方案是对每个 ``word`` 单独做棋盘 DFS：从每个格子尝试作为首字母，匹配成功后递归四个方向，并用
+``visited`` 防止同一路径重复使用格子。它逐个检查了所有目标词，所以正确；一旦某个字符不匹配，也能停止当前路径。
+
+但它重复搜索了不同单词的相同前缀。若字典同时含 ``car``、``care``、``card``，三个 DFS 都会先从棋盘走出
+``c-a-r``，直到末端才知道后缀不同。设棋盘为 ``m x n``、单词数为 ``W``、最大长度为 ``L``，这种方法最坏接近
+``O(Wmn * 4 * 3^(L-1))``；首步最多四个方向，之后因为上一格已使用，最多三个方向。
+
+先生成所有棋盘路径再查字典也没有解决问题：它会生成大量不属于任何单词前缀的字符串，路径数量本身就是指数级。
+真正需要共享的是“当前棋盘路径是否仍可能成为某个词的前缀”。
+
+Trie 与棋盘 DFS 合并两层搜索
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+把所有单词先插入 Trie。Trie 节点表示一个词前缀，边表示追加的字符，终止节点保存对应完整单词。联合 DFS 同时维护：
+
+* 棋盘路径决定当前字符；
+* Trie 子节点决定这个字符是否仍有词可接；
+* 终止单词决定何时写入结果；
+* 临时棋盘标记决定当前路径能否再次进入某格。
+
+因此同一个 ``c-a-r`` 状态只需走一次；若当前字符没有对应子节点，当前路径已经不是任何目标词的前缀，继续添加字符也
+不可能挽救它，分支可以立刻剪枝。找到一个词后清空终止节点的 ``word`` 字段，只抑制重复输出，不删除子节点，
+所以 ``car`` 被找到后仍可继续找到它下面的 ``care``。
+
+递归状态与不变量
+~~~~~~~~~~~~~~~~
+
+``searchFrom(row, column, parent)`` 的入口含义是：将棋盘格 ``(row,column)`` 的字符接到 ``parent`` 所代表的前缀后面。
+成功进入函数后保持以下不变量：
+
+* 坐标在棋盘内，当前格尚未被本条递归路径使用；
+* 从本次起点到当前格的字符序列，恰好等于 Trie 根到当前 ``node`` 的路径；
+* 路径只经过四邻接移动，已标记格正好是当前递归栈上的格子；
+* 找到的终止词只会被清空输出标记，不会改变 Trie 的前缀结构；
+* 函数返回时当前格恢复为进入前的字符，其他起点看到的棋盘保持不变。
+
+转移顺序不能任意调换：先检查越界、``'#'`` 和 Trie 子节点，避免无效路径写入状态；再提交完整词；随后把当前格改成
+``'#'``，递归四个方向，最后恢复原字符。标记必须发生在递归之前，否则相邻回到当前格会形成非法环；恢复必须发生在
+所有子调用之后，否则同一条路径的兄弟方向和后续起点会错误地认为该格已使用。
+
+状态走读
+~~~~~~~~
+
+对前面棋盘中的 ``car`` 路径，从左上角 ``c`` 开始时，Trie 和棋盘状态如下：
+
+.. list-table::
+   :header-rows: 1
+
+   * - 递归阶段
+     - Trie 前缀
+     - 棋盘标记
+     - 下一步
+   * - 起点
+     - ``c``
+     - ``(0,0)`` 标为 ``#``
+     - 可走右侧 ``a`` 或下侧 ``r``；只有 ``a`` 是 Trie 子节点
+   * - 第二格
+     - ``ca``
+     - ``(0,1)`` 也标为 ``#``
+     - 向下到 ``r``，得到 ``car``
+   * - 终点
+     - ``car``
+     - 三个格子均在当前路径
+     - ``node->word`` 非空，提交 ``car`` 并清空它
+   * - 回溯
+     - 返回 ``ca``、再返回 ``c``
+     - 依次恢复 ``a``、``c``
+     - 其他起点仍能使用这些格子，``care`` 也可沿 ``r-e`` 继续
+
+如果从 ``car`` 终点继续尝试 ``card``，Trie 仍有 ``d`` 子节点时会继续 DFS；如果下一格是对角线位置，四次递归都不会
+进入它，路径被正确拒绝。清空 ``car`` 的终止字符串不影响 ``care`` 节点的子树，正是“去重但不剪掉长词”的区别。
+
 代码分析
---------
+~~~~~~~~
 
-Trie 把所有单词的共享前缀合并起来，棋盘 DFS 只有在当前路径仍是某个单词前缀时才继续。进入一个格子前读取它的字符，随后临时写成 ``'#'``，所以同一条路径不会重复使用该格子；递归返回后恢复原字符，其他起点和路径仍能正常使用棋盘。
+``Node`` 用 ``word`` 保存终止词，避免递归返回时重新拼接当前路径字符串；这也让找到结果后的去重成为一次 ``clear``。
+``children`` 使用智能指针管理 Trie 所有权，``insert`` 只为缺失边创建节点，公共前缀不会重复分配。
 
-当 DFS 到达带有 ``word`` 的 Trie 节点时，当前路径就是一个完整单词。把该字段清空后再继续搜索，可以避免同一单词从不同起点或不同路径重复加入结果，同时不影响其他单词的共享前缀。以单词 ``"oath"`` 为例，只有路径按 ``o -> a -> t -> h`` 依次命中 Trie 时才加入，遇到不在 Trie 中的分支会立即回退。
+``searchFrom`` 把当前字符从棋盘读出后立即查 ``parent`` 的对应边；没有额外的“当前 Trie 节点字符串”，因为递归链已经
+隐含了完整前缀。棋盘用 ``'#'`` 做临时访问标记，输入保证只有小写字母，所以这个哨兵不会与真实字符混淆；恢复动作放在
+四个方向之后，保证原地标记不改变题目的可观察输入。
 
-设所有单词字符总数为 ``S``，Trie 节点数为 ``N``，最大单词长度为 ``L``。建树时间为 ``O(S)``、持久空间为 ``O(N)``；搜索时间取决于实际 DFS 状态数，未剪枝的粗略上界为 ``O(mn * 4 * 3^(L-1))``，Trie 前缀会显著缩小它。递归深度为 ``O(min(L,mn))``，除结果载荷外棋盘原地标记和局部状态占 ``O(L)``。
+公共入口先建立一次 Trie，再从每个格子启动联合搜索。它没有在找到一个词后删除 Trie 节点：节点可能仍是更长词的前缀，
+只清空终止词字段即可完成结果去重。
 
-核心语言实现
-------------
+复杂度与边界
+~~~~~~~~~~~~
 
-C
-~
+设所有单词字符总数为 ``S``，Trie 节点数为 ``T``，棋盘 DFS 实际进入的合法状态数为 ``Q``，输出字符总量为 ``Z``。
+建 Trie 时间为 ``O(S)``，固定 26 个子指针占 ``O(26T)`` 空间，常数字母表下记为 ``O(T)``；搜索时间按实际状态数
+计为 ``O(Q)``。不考虑剪枝时，单一起点长度为 ``L`` 的路径上界约为 ``4 * 3^(L-1)``，真实状态还会受 Trie 前缀限制。
 
-.. code-block:: c
-
-   #include <stdbool.h>
-   #include <stddef.h>
-   #include <stdint.h>
-   #include <stdlib.h>
-   #include <string.h>
-
-   typedef struct TrieNode {
-       struct TrieNode *children[26];
-       int word_index;
-   } TrieNode;
-
-   typedef struct SearchContext {
-       char **board;
-       int rows;
-       int columns;
-       char **words;
-       char **result;
-       int result_count;
-       bool failed;
-   } SearchContext;
-
-   static TrieNode *new_trie_node(void) {
-       TrieNode *node = calloc(1, sizeof(TrieNode));
-       if (node != NULL) node->word_index = -1;
-       return node;
-   }
-
-   static void free_trie(TrieNode *node) {
-       if (node == NULL) return;
-       for (int i = 0; i < 26; ++i) free_trie(node->children[i]);
-       free(node);
-   }
-
-   static bool valid_word(const char *word) {
-       for (size_t i = 0; word[i] != '\0'; ++i) {
-           if (word[i] < 'a' || word[i] > 'z') return false;
-       }
-       return true;
-   }
-
-   static bool insert_word(TrieNode *root, const char *word, int word_index) {
-       if (word[0] == '\0') return true;
-       if (!valid_word(word)) return false;
-
-       TrieNode *current = root;
-       size_t position = 0U;
-       while (word[position] != '\0') {
-           int index = word[position] - 'a';
-           if (current->children[index] == NULL) break;
-           current = current->children[index];
-           ++position;
-       }
-
-       if (word[position] == '\0') {
-           if (current->word_index < 0) current->word_index = word_index;
-           return true;
-       }
-
-       int first_index = word[position] - 'a';
-       TrieNode *head = NULL;
-       TrieNode *tail = NULL;
-       for (; word[position] != '\0'; ++position) {
-           TrieNode *node = new_trie_node();
-           if (node == NULL) {
-               free_trie(head);
-               return false;
-           }
-           if (head == NULL) {
-               head = node;
-           } else {
-               int index = word[position] - 'a';
-               tail->children[index] = node;
-           }
-           tail = node;
-       }
-       tail->word_index = word_index;
-       current->children[first_index] = head;
-       return true;
-   }
-
-   static char *copy_word(const char *word) {
-       size_t length = strlen(word);
-       char *copy = malloc(length + 1U);
-       if (copy != NULL) memcpy(copy, word, length + 1U);
-       return copy;
-   }
-
-   static void search_from(
-       SearchContext *context,
-       int row,
-       int column,
-       TrieNode *parent
-   ) {
-       if (context->failed || row < 0 || row >= context->rows ||
-           column < 0 || column >= context->columns) return;
-
-       char letter = context->board[row][column];
-       if (letter == '#' || letter < 'a' || letter > 'z') return;
-       TrieNode *node = parent->children[letter - 'a'];
-       if (node == NULL) return;
-
-       if (node->word_index >= 0) {
-           char *copy = copy_word(context->words[node->word_index]);
-           if (copy == NULL) {
-               context->failed = true;
-               return;
-           }
-           context->result[context->result_count++] = copy;
-           node->word_index = -1;
-       }
-
-       context->board[row][column] = '#';
-       search_from(context, row - 1, column, node);
-       search_from(context, row + 1, column, node);
-       search_from(context, row, column - 1, node);
-       search_from(context, row, column + 1, node);
-       context->board[row][column] = letter;
-   }
-
-   char **findWords(
-       char **board,
-       int boardSize,
-       int *boardColSize,
-       char **words,
-       int wordsSize,
-       int *returnSize
-   ) {
-       *returnSize = 0;
-       if (boardSize <= 0 || wordsSize <= 0 || boardColSize == NULL ||
-           boardColSize[0] <= 0) return NULL;
-
-       int columns = boardColSize[0];
-       for (int row = 0; row < boardSize; ++row) {
-           if (boardColSize[row] != columns) return NULL;
-       }
-       if ((size_t)wordsSize > SIZE_MAX / sizeof(char *)) return NULL;
-
-       TrieNode *root = new_trie_node();
-       char **result = calloc((size_t)wordsSize, sizeof(char *));
-       if (root == NULL || result == NULL) {
-           free_trie(root);
-           free(result);
-           return NULL;
-       }
-
-       for (int i = 0; i < wordsSize; ++i) {
-           if (!insert_word(root, words[i], i)) {
-               free_trie(root);
-               free(result);
-               return NULL;
-           }
-       }
-
-       SearchContext context = {
-           board, boardSize, columns, words, result, 0, false
-       };
-       for (int row = 0; row < boardSize && !context.failed; ++row) {
-           for (int column = 0; column < columns && !context.failed; ++column) {
-               search_from(&context, row, column, root);
-           }
-       }
-
-       free_trie(root);
-       if (context.failed) {
-           for (int i = 0; i < context.result_count; ++i) free(result[i]);
-           free(result);
-           return NULL;
-       }
-       if (context.result_count == 0) {
-           free(result);
-           return NULL;
-       }
-       *returnSize = context.result_count;
-       return result;
-   }
-
-C 的返回数组和每个结果字符串都由调用者释放。Trie 在返回前释放，所以结果必须复制。缺失后缀先在主树外完整构造，分配失败会释放临时链，主 Trie 不留下半条路径。
-
-C++
-~~~
-
-.. code-block:: cpp
-
-   #include <array>
-   #include <memory>
-   #include <string>
-   #include <vector>
-
-   class Solution {
-       struct TrieNode {
-           std::array<std::unique_ptr<TrieNode>, 26> children{};
-           int word_index = -1;
-       };
-
-       static void insert(TrieNode& root, const std::string& word, int index) {
-           if (word.empty()) return;
-           TrieNode* current = &root;
-           for (char letter : word) {
-               int child_index = letter - 'a';
-               if (!current->children[child_index]) {
-                   current->children[child_index] = std::make_unique<TrieNode>();
-               }
-               current = current->children[child_index].get();
-           }
-           if (current->word_index < 0) current->word_index = index;
-       }
-
-       static void dfs(
-           std::vector<std::vector<char>>& board,
-           int row,
-           int column,
-           TrieNode& parent,
-           const std::vector<std::string>& words,
-           std::vector<std::string>& result
-       ) {
-           int rows = static_cast<int>(board.size());
-           int columns = static_cast<int>(board[0].size());
-           if (row < 0 || row >= rows || column < 0 || column >= columns) return;
-           char letter = board[row][column];
-           if (letter == '#') return;
-           TrieNode* node = parent.children[letter - 'a'].get();
-           if (node == nullptr) return;
-
-           if (node->word_index >= 0) {
-               result.push_back(words[node->word_index]);
-               node->word_index = -1;
-           }
-           board[row][column] = '#';
-           dfs(board, row - 1, column, *node, words, result);
-           dfs(board, row + 1, column, *node, words, result);
-           dfs(board, row, column - 1, *node, words, result);
-           dfs(board, row, column + 1, *node, words, result);
-           board[row][column] = letter;
-       }
-
-   public:
-       std::vector<std::string> findWords(
-           std::vector<std::vector<char>>& board,
-           std::vector<std::string>& words
-       ) {
-           if (board.empty() || board[0].empty() || words.empty()) return {};
-           TrieNode root;
-           for (int i = 0; i < static_cast<int>(words.size()); ++i) {
-               insert(root, words[i], i);
-           }
-           std::vector<std::string> result;
-           for (int row = 0; row < static_cast<int>(board.size()); ++row) {
-               for (int column = 0;
-                    column < static_cast<int>(board[0].size()); ++column) {
-                   dfs(board, row, column, root, words, result);
-               }
-           }
-           return result;
-       }
-   };
-
-Python
-~~~~~~
-
-.. code-block:: python
-
-   from typing import List, Optional
-
-
-   class TrieNode:
-       def __init__(self) -> None:
-           self.children: List[Optional["TrieNode"]] = [None] * 26
-           self.word_index = -1
-
-
-   class Solution:
-       def findWords(self, board: List[List[str]], words: List[str]) -> List[str]:
-           if not board or not board[0] or not words:
-               return []
-
-           root = TrieNode()
-           for word_index, word in enumerate(words):
-               if not word:
-                   continue
-               current = root
-               for letter in word:
-                   index = ord(letter) - ord("a")
-                   if current.children[index] is None:
-                       current.children[index] = TrieNode()
-                   current = current.children[index]
-               if current.word_index < 0:
-                   current.word_index = word_index
-
-           rows, columns = len(board), len(board[0])
-           result: List[str] = []
-
-           def dfs(row: int, column: int, parent: TrieNode) -> None:
-               if row < 0 or row >= rows or column < 0 or column >= columns:
-                   return
-               letter = board[row][column]
-               if letter == "#":
-                   return
-               node = parent.children[ord(letter) - ord("a")]
-               if node is None:
-                   return
-               if node.word_index >= 0:
-                   result.append(words[node.word_index])
-                   node.word_index = -1
-
-               board[row][column] = "#"
-               dfs(row - 1, column, node)
-               dfs(row + 1, column, node)
-               dfs(row, column - 1, node)
-               dfs(row, column + 1, node)
-               board[row][column] = letter
-
-           for row in range(rows):
-               for column in range(columns):
-                   dfs(row, column, root)
-           return result
-
-Java
-~~~~
-
-.. code-block:: java
-
-   import java.util.ArrayList;
-   import java.util.List;
-
-   class Solution {
-       private static final class TrieNode {
-           final TrieNode[] children = new TrieNode[26];
-           int wordIndex = -1;
-       }
-
-       public List<String> findWords(char[][] board, String[] words) {
-           List<String> result = new ArrayList<>();
-           if (board.length == 0 || board[0].length == 0 || words.length == 0) {
-               return result;
-           }
-           TrieNode root = new TrieNode();
-           for (int i = 0; i < words.length; ++i) {
-               if (words[i].isEmpty()) continue;
-               TrieNode current = root;
-               for (int j = 0; j < words[i].length(); ++j) {
-                   int index = words[i].charAt(j) - 'a';
-                   if (current.children[index] == null) {
-                       current.children[index] = new TrieNode();
-                   }
-                   current = current.children[index];
-               }
-               if (current.wordIndex < 0) current.wordIndex = i;
-           }
-           for (int row = 0; row < board.length; ++row) {
-               for (int column = 0; column < board[0].length; ++column) {
-                   dfs(board, row, column, root, words, result);
-               }
-           }
-           return result;
-       }
-
-       private void dfs(
-           char[][] board, int row, int column, TrieNode parent,
-           String[] words, List<String> result
-       ) {
-           if (row < 0 || row >= board.length ||
-               column < 0 || column >= board[0].length) return;
-           char letter = board[row][column];
-           if (letter == '#') return;
-           TrieNode node = parent.children[letter - 'a'];
-           if (node == null) return;
-           if (node.wordIndex >= 0) {
-               result.add(words[node.wordIndex]);
-               node.wordIndex = -1;
-           }
-           board[row][column] = '#';
-           dfs(board, row - 1, column, node, words, result);
-           dfs(board, row + 1, column, node, words, result);
-           dfs(board, row, column - 1, node, words, result);
-           dfs(board, row, column + 1, node, words, result);
-           board[row][column] = letter;
-       }
-   }
-
-Rust
-~~~~
-
-.. code-block:: rust
-
-   struct TrieNode {
-       children: [Option<Box<TrieNode>>; 26],
-       word_index: Option<usize>,
-   }
-
-   impl TrieNode {
-       fn new() -> Self {
-           Self {
-               children: std::array::from_fn(|_| None),
-               word_index: None,
-           }
-       }
-   }
-
-   impl Solution {
-       pub fn find_words(
-           mut board: Vec<Vec<char>>,
-           words: Vec<String>,
-       ) -> Vec<String> {
-           if board.is_empty() || board[0].is_empty() || words.is_empty() {
-               return Vec::new();
-           }
-           let mut root = TrieNode::new();
-           for (word_index, word) in words.iter().enumerate() {
-               if word.is_empty() { continue; }
-               let mut current = &mut root;
-               for byte in word.bytes() {
-                   let index = (byte - b'a') as usize;
-                   current = current.children[index]
-                       .get_or_insert_with(|| Box::new(TrieNode::new()))
-                       .as_mut();
-               }
-               if current.word_index.is_none() {
-                   current.word_index = Some(word_index);
-               }
-           }
-
-           let rows = board.len();
-           let columns = board[0].len();
-           let mut result = Vec::new();
-           for row in 0..rows {
-               for column in 0..columns {
-                   Self::dfs(
-                       &mut board, row as i32, column as i32,
-                       &mut root, &words, &mut result,
-                   );
-               }
-           }
-           result
-       }
-
-       fn dfs(
-           board: &mut Vec<Vec<char>>,
-           row: i32,
-           column: i32,
-           parent: &mut TrieNode,
-           words: &[String],
-           result: &mut Vec<String>,
-       ) {
-           if row < 0 || column < 0 ||
-               row as usize >= board.len() ||
-               column as usize >= board[0].len() {
-               return;
-           }
-           let r = row as usize;
-           let c = column as usize;
-           let letter = board[r][c];
-           if letter == '#' { return; }
-           let index = (letter as u8 - b'a') as usize;
-           let Some(node) = parent.children[index].as_deref_mut() else {
-               return;
-           };
-
-           if let Some(word_index) = node.word_index.take() {
-               result.push(words[word_index].clone());
-           }
-           board[r][c] = '#';
-           Self::dfs(board, row - 1, column, node, words, result);
-           Self::dfs(board, row + 1, column, node, words, result);
-           Self::dfs(board, row, column - 1, node, words, result);
-           Self::dfs(board, row, column + 1, node, words, result);
-           board[r][c] = letter;
-       }
-   }
-
-Go
-~~
-
-.. code-block:: go
-
-   type trieNode struct {
-       children  [26]*trieNode
-       wordIndex int
-   }
-
-   func newTrieNode() *trieNode {
-       return &trieNode{wordIndex: -1}
-   }
-
-   func findWords(board [][]byte, words []string) []string {
-       if len(board) == 0 || len(board[0]) == 0 || len(words) == 0 {
-           return []string{}
-       }
-       root := newTrieNode()
-       for wordIndex, word := range words {
-           if len(word) == 0 { continue }
-           current := root
-           for i := 0; i < len(word); i++ {
-               index := int(word[i] - 'a')
-               if current.children[index] == nil {
-                   current.children[index] = newTrieNode()
-               }
-               current = current.children[index]
-           }
-           if current.wordIndex < 0 { current.wordIndex = wordIndex }
-       }
-
-       rows, columns := len(board), len(board[0])
-       result := make([]string, 0)
-       var dfs func(int, int, *trieNode)
-       dfs = func(row int, column int, parent *trieNode) {
-           if row < 0 || row >= rows || column < 0 || column >= columns {
-               return
-           }
-           letter := board[row][column]
-           if letter == '#' { return }
-           node := parent.children[int(letter-'a')]
-           if node == nil { return }
-           if node.wordIndex >= 0 {
-               result = append(result, words[node.wordIndex])
-               node.wordIndex = -1
-           }
-           board[row][column] = '#'
-           dfs(row-1, column, node)
-           dfs(row+1, column, node)
-           dfs(row, column-1, node)
-           dfs(row, column+1, node)
-           board[row][column] = letter
-       }
-
-       for row := 0; row < rows; row++ {
-           for column := 0; column < columns; column++ {
-               dfs(row, column, root)
-           }
-       }
-       return result
-   }
-
-TypeScript
-~~~~~~~~~~
-
-.. code-block:: typescript
-
-   class TrieNode {
-     children: Array<TrieNode | null> = Array<TrieNode | null>(26).fill(null);
-     wordIndex = -1;
-   }
-
-   function findWords(board: string[][], words: string[]): string[] {
-     if (board.length === 0 || board[0].length === 0 || words.length === 0) {
-       return [];
-     }
-     const root = new TrieNode();
-     for (let wordIndex = 0; wordIndex < words.length; wordIndex += 1) {
-       const word = words[wordIndex];
-       if (word.length === 0) continue;
-       let current = root;
-       for (let i = 0; i < word.length; i += 1) {
-         const index = word.charCodeAt(i) - 97;
-         if (current.children[index] === null) {
-           current.children[index] = new TrieNode();
-         }
-         current = current.children[index] as TrieNode;
-       }
-       if (current.wordIndex < 0) current.wordIndex = wordIndex;
-     }
-
-     const rows = board.length;
-     const columns = board[0].length;
-     const result: string[] = [];
-     const dfs = (row: number, column: number, parent: TrieNode): void => {
-       if (row < 0 || row >= rows || column < 0 || column >= columns) return;
-       const letter = board[row][column];
-       if (letter === "#") return;
-       const node = parent.children[letter.charCodeAt(0) - 97];
-       if (node === null) return;
-       if (node.wordIndex >= 0) {
-         result.push(words[node.wordIndex]);
-         node.wordIndex = -1;
-       }
-       board[row][column] = "#";
-       dfs(row - 1, column, node);
-       dfs(row + 1, column, node);
-       dfs(row, column - 1, node);
-       dfs(row, column + 1, node);
-       board[row][column] = letter;
-     };
-
-     for (let row = 0; row < rows; row += 1) {
-       for (let column = 0; column < columns; column += 1) {
-         dfs(row, column, root);
-       }
-     }
-     return result;
-   }
-
-C#
-~~
-
-.. code-block:: csharp
-
-   using System.Collections.Generic;
-
-   public class Solution {
-       private sealed class TrieNode {
-           public readonly TrieNode[] Children = new TrieNode[26];
-           public int WordIndex = -1;
-       }
-
-       public IList<string> FindWords(char[][] board, string[] words) {
-           var result = new List<string>();
-           if (board.Length == 0 || board[0].Length == 0 || words.Length == 0) {
-               return result;
-           }
-           var root = new TrieNode();
-           for (int wordIndex = 0; wordIndex < words.Length; ++wordIndex) {
-               string word = words[wordIndex];
-               if (word.Length == 0) continue;
-               TrieNode current = root;
-               foreach (char letter in word) {
-                   int index = letter - 'a';
-                   if (current.Children[index] == null) {
-                       current.Children[index] = new TrieNode();
-                   }
-                   current = current.Children[index];
-               }
-               if (current.WordIndex < 0) current.WordIndex = wordIndex;
-           }
-           for (int row = 0; row < board.Length; ++row) {
-               for (int column = 0; column < board[0].Length; ++column) {
-                   Dfs(board, row, column, root, words, result);
-               }
-           }
-           return result;
-       }
-
-       private static void Dfs(
-           char[][] board, int row, int column, TrieNode parent,
-           string[] words, List<string> result
-       ) {
-           if (row < 0 || row >= board.Length ||
-               column < 0 || column >= board[0].Length) return;
-           char letter = board[row][column];
-           if (letter == '#') return;
-           TrieNode node = parent.Children[letter - 'a'];
-           if (node == null) return;
-           if (node.WordIndex >= 0) {
-               result.Add(words[node.WordIndex]);
-               node.WordIndex = -1;
-           }
-           board[row][column] = '#';
-           Dfs(board, row - 1, column, node, words, result);
-           Dfs(board, row + 1, column, node, words, result);
-           Dfs(board, row, column - 1, node, words, result);
-           Dfs(board, row, column + 1, node, words, result);
-           board[row][column] = letter;
-       }
-   }
-
-Julia
-~~~~~
-
-.. code-block:: julia
-
-   mutable struct WordTrieNode
-       children::Vector{Union{Nothing,WordTrieNode}}
-       word_index::Int
-
-       function WordTrieNode()
-           children = Union{Nothing,WordTrieNode}[nothing for _ in 1:26]
-           new(children, 0)
-       end
-   end
-
-   function find_words!(board::Matrix{Char}, words::Vector{String})
-       isempty(board) && return String[]
-       isempty(words) && return String[]
-
-       root = WordTrieNode()
-       for (word_index, word) in pairs(words)
-           isempty(word) && continue
-           current = root
-           for byte in codeunits(word)
-               index = Int(byte - UInt8('a')) + 1
-               child = current.children[index]
-               if child === nothing
-                   child = WordTrieNode()
-                   current.children[index] = child
-               end
-               current = child::WordTrieNode
-           end
-           current.word_index == 0 && (current.word_index = word_index)
-       end
-
-       rows, columns = size(board)
-       result = String[]
-       function dfs!(row::Int, column::Int, parent::WordTrieNode)
-           if row < 1 || row > rows || column < 1 || column > columns
-               return
-           end
-           letter = board[row, column]
-           letter == '#' && return
-           index = Int(UInt8(letter) - UInt8('a')) + 1
-           child = parent.children[index]
-           child === nothing && return
-           node = child::WordTrieNode
-           if node.word_index != 0
-               push!(result, words[node.word_index])
-               node.word_index = 0
-           end
-           board[row, column] = '#'
-           dfs!(row - 1, column, node)
-           dfs!(row + 1, column, node)
-           dfs!(row, column - 1, node)
-           dfs!(row, column + 1, node)
-           board[row, column] = letter
-       end
-
-       for row in 1:rows, column in 1:columns
-           dfs!(row, column, root)
-       end
-       result
-   end
-
-Julia 使用一基矩阵索引。函数名带 ``!`` 表明内部临时写棋盘；正常返回前会逐层恢复。
-
-R
-~
-
-.. code-block:: r
-
-   new_word_trie_node <- function() {
-     node <- new.env(parent = emptyenv())
-     node$children <- vector("list", 26L)
-     node$word_index <- 0L
-     node
-   }
-
-   find_words <- function(board, words) {
-     if (length(board) == 0L || nrow(board) == 0L || ncol(board) == 0L ||
-         length(words) == 0L) {
-       return(character(0L))
-     }
-
-     root <- new_word_trie_node()
-     for (word_index in seq_along(words)) {
-       chars <- strsplit(words[[word_index]], "", fixed = TRUE)[[1L]]
-       if (length(chars) == 0L) next
-       current <- root
-       for (letter in chars) {
-         index <- utf8ToInt(letter) - utf8ToInt("a") + 1L
-         child <- current$children[[index]]
-         if (is.null(child)) {
-           child <- new_word_trie_node()
-           current$children[[index]] <- child
-         }
-         current <- child
-       }
-       if (current$word_index == 0L) current$word_index <- word_index
-     }
-
-     state <- new.env(parent = emptyenv())
-     state$board <- board
-     state$result <- character(length(words))
-     state$result_count <- 0L
-     rows <- nrow(board)
-     columns <- ncol(board)
-
-     dfs <- function(row, column, parent) {
-       if (row < 1L || row > rows || column < 1L || column > columns) return(NULL)
-       letter <- state$board[row, column]
-       if (identical(letter, "#")) return(NULL)
-       index <- utf8ToInt(letter) - utf8ToInt("a") + 1L
-       node <- parent$children[[index]]
-       if (is.null(node)) return(NULL)
-
-       if (node$word_index != 0L) {
-         state$result_count <- state$result_count + 1L
-         state$result[[state$result_count]] <- words[[node$word_index]]
-         node$word_index <- 0L
-       }
-
-       state$board[row, column] <- "#"
-       dfs(row - 1L, column, node)
-       dfs(row + 1L, column, node)
-       dfs(row, column - 1L, node)
-       dfs(row, column + 1L, node)
-       state$board[row, column] <- letter
-       NULL
-     }
-
-     for (row in seq_len(rows)) {
-       for (column in seq_len(columns)) {
-         dfs(row, column, root)
-       }
-     }
-
-     if (state$result_count == 0L) {
-       character(0L)
-     } else {
-       state$result[seq_len(state$result_count)]
-     }
-   }
-
-R 使用 environment 保存 Trie 节点和递归共享状态。``state$board <- board`` 后的子赋值重新绑定 environment 内的矩阵，便携合同是不修改调用者变量；``#`` 不属于官方字符域，可安全作为临时标记。
-
-静态审查记录
-------------
-
-本章未运行、未编译、未对拍、未穷举或测试任何题解代码。完成的静态检查包括：
-
-* 人工推演经典棋盘、共享前缀、重复输入、同词多路径、单格重复诱惑、对角线伪路径和空输入；
-* 证明 Trie 剪枝只排除不可能前缀，四方向展开覆盖全部合法下一步；
-* 证明路径标记实施单格单次使用，递归恢复使兄弟分支与不同起点互不污染；
-* 证明清除终止索引只去重，不删除共享节点或更长单词路径；
-* 核对所有实现找到短词后仍继续搜索子树；
-* 核对 C 事务式 Trie 插入、整树释放、结果字符串复制、失败清理和棋盘恢复；
-* 核对 Rust 可变子节点借用与棋盘递归参数；
-* 核对 C++/Java/Go/TypeScript/C# 的二维边界和哨兵恢复；
-* 核对 Julia/R 一基索引、Julia ASCII ``codeunits`` 和 R environment 共享状态；
-* 核对复杂度分开报告 Trie、实际 DFS 状态、递归栈和输出载荷。
-
-剩余风险：十语言实现未经过目标平台编译或执行；递归深度受运行时调用栈限制；固定 26 槽节点的真实字节成本依赖对象布局；C 的 ``NULL/0`` 同时可能表示无结果或资源失败。
-
-关键易错点
-----------
-
-* 为每个词独立搜索，却声称已合并前缀工作；
-* 允许对角线移动；
-* 使用全局 visited，导致格子被永久占用；
-* 找到单词后不恢复当前格；
-* 找到短词后删除整个 Trie 节点，遗漏长词；
-* 不清除终止索引，导致重复输出；
-* 清除索引后立即返回，遗漏当前节点下更长词；
-* 把复杂度统一写成 ``O(mn)``；
-* C 返回指向已释放 Trie 的字符串；
-* R 使用普通嵌套列表并假设深层赋值具有共享引用语义。
-
-知识更新与关联题
-----------------
-
-* ``0200 Number of Islands``：同为四邻接 DFS，但只处理连通分量；
-* ``0208 Implement Trie``：提供路径、终止标记和生命周期基础；
-* ``0211 Design Add and Search Words``：Trie 分支搜索，本题把模式位置替换为棋盘坐标与路径访问集合；
-* ``0079 Word Search``：只搜索一个单词，不需要 Trie 合并候选前缀；
-* ``0425 Word Squares``：Trie 前缀查询与组合搜索，约束不同。
-
-自检问题与答案
---------------
-
-**问题 1：为什么没有 Trie 子链接时可以停止？**
-
-当前棋盘路径已经不是任何输入词前缀；继续追加字符不能修复已不匹配的前缀。
-
-**问题 2：为什么发现单词后不能删除当前节点？**
-
-当前词可能是更长词的前缀。只清空终止索引即可去重，节点和子链接仍供长词使用。
-
-**问题 3：为什么标记必须恢复？**
-
-访问限制只属于当前路径。恢复后兄弟分支和其他起点才能合法再次使用该格。
-
-**问题 4：多条路径如何只输出一次？**
-
-第一次到达终止节点后清空 ``word_index``，后续路径仍可经过节点，但不会再次提交。
-
-**问题 5：为什么粗略上界含 ``4·3^(L-1)``？**
-
-第一步最多四个方向；之后前一格已使用，忽略其他边界时最多剩三个新方向。Trie 剪枝通常显著降低实际工作量。
-
-**问题 6：为什么不会漏掉真实单词路径？**
-
-外层会选择其首格；每个单词前缀都在 Trie 中；DFS 枚举全部合法四邻格，所以会沿路径到达终止节点。
+递归栈最多 ``O(min(L, mn))``，棋盘标记不另建矩阵；返回结果占 ``O(Z)``。空棋盘返回空结果；单格棋盘只会检查一次；
+长度相同的重复路径不会重复输出，因为终止词第一次命中后被清空；共享前缀的更长单词仍可继续搜索。

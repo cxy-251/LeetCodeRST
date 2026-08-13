@@ -1,72 +1,63 @@
 0220. Contains Duplicate III
-============================
+===========================
 
 题目信息
 --------
 
-:题号: 0220
+:题号: 0220. 存在重复元素 III
 :难度: Hard
-:主题: 数组、滑动窗口、有序集合、桶
+:主题: 滑动窗口、有序集合、区间查询、整数溢出
 :原题: `LeetCode 0220 <https://leetcode.com/problems/contains-duplicate-iii/>`_
-:重点: 不同下标、下标距离与数值距离同时受限、差值溢出、零阈值
+:重点: 同时满足下标和值差限制、``lower_bound`` 区间查询、宽类型边界
 
 题目重述
 --------
 
-给定整数数组 ``nums``、非负整数 ``indexDiff`` 和 ``valueDiff``，判断是否存在两个不同的零基下标 ``i``、``j``，使 ``|i-j| <= indexDiff``，并且 ``|nums[i]-nums[j]| <= valueDiff``。两个条件必须由同一对下标同时满足。
+给定整数数组 ``nums``、非负整数 ``indexDiff`` 和 ``valueDiff``，判断是否存在不同下标 ``i``、``j``，满足：
 
-``nums`` 的长度范围为 ``[1, 10^5]``，元素位于 ``[-10^9, 10^9]``；``indexDiff`` 位于 ``[0, 10^5]``，``valueDiff`` 位于 ``[0, 10^9]``。数值相减时可能超出较窄整数类型的安全范围。函数返回布尔值，不修改输入数组。
+.. code-block:: text
+
+   |i - j| <= indexDiff
+   |nums[i] - nums[j]| <= valueDiff
+
+只返回真假，不修改数组。数组元素可能接近 32 位整数上下界，所以差值计算不能在 ``int`` 中直接相减后再比较。
 
 自建示例
 --------
 
-两个限制同时成立：
+下标窗口与值窗口必须同时成立：
 
 .. code-block:: text
 
-   输入：nums = [12, 4, 10], indexDiff = 2, valueDiff = 2
-   输出：true
-   解释：下标 0 和 2 的距离为 2，对应数值 12 和 10 的差为 2，均未超过给定上限。
+   nums = [1,5,9,1,5,9], indexDiff = 2, valueDiff = 3
+   输出 = false
 
-只有数值条件成立：
+重复的 1 相距 3，超过下标限制；相邻窗口内的值差至少为 4，也不满足值限制。
 
-.. code-block:: text
+``nums = [8,2,5,8]``、``indexDiff = 3``、``valueDiff = 0`` 返回 ``true``，首尾两个 8 同值且距离 3。
+若当前值是 ``INT_MAX``、窗口中旧值是 ``INT_MIN``，数学差值远超 ``int`` 可表示范围，代码仍必须安全地判断为不相近。
 
-   输入：nums = [7, 1, 8], indexDiff = 1, valueDiff = 1
-   输出：false
-   解释：7 与 8 的数值差为 1，但它们的下标距离为 2；相邻位置之间又没有满足数值差限制的组合。
+两个约束的交集
+--------------
 
-有序窗口
---------
+全局枚举所有下标对需要 ``O(n^2)``，每一对同时检查两个条件。先利用下标限制：扫描到 ``i`` 时，未来可能的旧下标只有
+``[i-indexDiff, i-1]``；窗口之外的元素以后只会更远，可以永久删除。
 
-处理下标 ``i`` 时，先把最近 ``indexDiff`` 个历史位置作为候选集合。候选值按有序结构保存，
-这样可以直接寻找不小于 ``nums[i] - valueDiff`` 的第一个值；若它不超过
-``nums[i] + valueDiff``，就找到了同时满足数值限制的历史元素。
+在窗口内，当前值 ``x`` 的合法旧值必须落在闭区间 ``[x-valueDiff, x+valueDiff]``。哈希集合只能回答“是否相等”，
+不能找值域邻居；有序集合能用 ``lower_bound(lower)`` 找到第一个不小于下界的值。若这个最小候选不超过上界，就存在合法值；
+如果它已经大于上界，集合中其他候选只会更大，因此无需继续检查。
 
-数值区间应在宽整数中计算：
+状态不变量与操作顺序
+--------------------
 
-.. code-block:: text
+处理 ``nums[i]`` 前，``window`` 保存且只保存下标 ``[max(0,i-indexDiff), i-1]`` 的值。每轮顺序为：
 
-   low  = nums[i] - valueDiff
-   high = nums[i] + valueDiff
-   candidate = window.lower_bound(low)
-   candidate 存在且 candidate <= high  ->  成功
+1. 删除刚刚离开下一轮窗口的下标 ``i-indexDiff-1``；
+2. 在剩余窗口中查询当前值的合法值域；
+3. 查询失败后才插入当前值。
 
-检查之后再加入当前值，并在 ``i >= indexDiff`` 时移除 ``nums[i-indexDiff]``。
-这样下标距离恰好为 ``indexDiff`` 的元素仍会参与当前检查，下一轮才离开窗口。
-``indexDiff=0`` 时没有两个不同下标能够满足距离条件，可以直接返回 ``false``。
-
-正确性说明
-----------
-
-循环开始处理 ``i`` 前，``window`` 包含且只包含下标
-``max(0, i-indexDiff)`` 到 ``i-1`` 的值。对这个集合做 ``lower_bound(low)``：
-若返回值大于 ``high`` 或不存在，集合中没有落在闭区间 ``[low,high]`` 的数；
-否则返回值本身与当前值的差不超过 ``valueDiff``，且其下标与 ``i`` 的距离不超过
-``indexDiff``，两个条件同时成立。
-
-处理完当前元素后维护窗口不变量。若整个扫描没有找到候选，则每个位置都排除了所有允许的历史位置，
-所以不存在题目要求的下标对；反之，任意合法下标对在较晚下标被处理时必在窗口中并被检查到。
+若先插入再查询，当前元素会和自己配对；若晚删一个位置，会接受距离 ``indexDiff+1`` 的候选；若早删一个位置，会漏掉恰好距离
+``indexDiff`` 的合法配对。所有边界 ``x ± valueDiff`` 先提升到 ``long long``，避免有符号溢出改变区间方向。
 
 C++ 实现
 --------
@@ -75,34 +66,84 @@ C++ 实现
 
    class Solution {
    public:
-       bool containsNearbyAlmostDuplicate(
-           std::vector<int>& nums, int indexDiff, int valueDiff) {
+       bool containsNearbyAlmostDuplicate(std::vector<int>& nums,
+                                           int indexDiff, int valueDiff) {
            if (indexDiff <= 0 || valueDiff < 0) return false;
 
            std::set<long long> window;
-           for (int i = 0; i < static_cast<int>(nums.size()); ++i) {
-               const long long value = nums[i];
-               const long long low = value - static_cast<long long>(valueDiff);
-               const long long high = value + static_cast<long long>(valueDiff);
-
-               auto it = window.lower_bound(low);
-               if (it != window.end() && *it <= high) return true;
-
-               window.insert(value);
-               if (i >= indexDiff) {
-                   window.erase(static_cast<long long>(nums[i - indexDiff]));
+           for (int index = 0; index < static_cast<int>(nums.size()); ++index) {
+               if (index > indexDiff) {
+                   window.erase(static_cast<long long>(
+                       nums[index - indexDiff - 1]));
                }
+
+               const long long value = nums[index];
+               const long long lower = value - static_cast<long long>(valueDiff);
+               const long long upper = value + static_cast<long long>(valueDiff);
+               auto candidate = window.lower_bound(lower);
+               if (candidate != window.end() && *candidate <= upper) return true;
+               window.insert(value);
            }
            return false;
        }
    };
 
-代码分析
---------
+题解
+----
 
-``std::set`` 同时提供去重和有序查找；当前值自身尚未插入，因此不会把同一位置误当成配对。
-它只保存每个值的一份代表，但这不会破坏本算法的不变量：如果窗口中已经有同值的更早位置，
-当前值在插入前就会满足 ``|nums[i]-nums[j]|=0``，并立即返回真；能够继续扫描的路径上，活动窗口中不会存在两个相同值。
-因此删除最旧位置时按值 ``erase`` 不会误删仍需保留的另一份代表。每次操作为 ``O(log w)``，其中 ``w`` 不超过
-``min(n,indexDiff)``，总时间为 ``O(n log w)``，额外空间为 ``O(w)``。使用 ``long long``
-计算上下界，避免 ``int`` 加减 ``valueDiff`` 时溢出；输入本身不被改写。
+状态走读
+~~~~~~~~
+
+对 ``nums=[1,5,9,1]``、``indexDiff=2``、``valueDiff=3``，窗口和查询区间如下：
+
+.. list-table::
+   :header-rows: 1
+
+   * - 当前值
+     - 删除后窗口
+     - 当前允许值域
+     - 结论
+   * - 1（下标 0）
+     - ``{}``
+     - ``[-2,4]``
+     - 无候选，插入 1
+   * - 5（下标 1）
+     - ``{1}``
+     - ``[2,8]``
+     - 集合中没有不小于 2 的值，返回尾迭代器，插入 5
+   * - 9（下标 2）
+     - ``{1,5}``
+     - ``[6,12]``
+     - 第一个不小于 6 的值不存在，插入 9
+   * - 1（下标 3）
+     - 删除下标 0 后为 ``{5,9}``
+     - ``[-2,4]``
+     - 没有候选，首个 1 已过期
+
+表中第二行的 ``lower_bound(2)`` 实际返回尾部，说明值 1 虽然存在，却不在当前值域内；有序集合查询的是邻近范围，不是全局相等。
+
+为什么只看 lower_bound
+~~~~~~~~~~~~~~~~~~~~~~
+
+集合按升序排列。``lower_bound(lower)`` 是所有不小于下界的值中最小者：若它大于 ``upper``，后面每个值都更大；若它不大于
+``upper``，它本身已经满足闭区间条件。因而一次迭代器查询覆盖了整个值域，不需要向前后线性扫描。
+
+``std::set`` 而不是 ``std::multiset`` 也足够：如果窗口里已经存在相同值，当前值的允许区间必然包含它，查询会立即返回；只有在
+未找到合法配对时才插入，所以到达插入语句的路径上窗口没有两个会形成答案的重复值。删除一个过期值不会误删仍在窗口中的同值代表。
+
+方案取舍与代码分析
+~~~~~~~~~~~~~~~~~~
+
+暴力枚举最容易验证但为每个下标对重复检查；排序不能直接使用，因为窗口随扫描移动，频繁删除和插入会破坏一次性排序；
+哈希分桶可以把值域划分成宽度 ``valueDiff+1`` 的桶，期望线性时间，但负数整除、桶内邻居和溢出边界使状态更复杂。
+主解使用有序集合，以 ``O(log w)`` 的确定性操作直接表达“窗口内的值域区间查询”，其中 ``w`` 是窗口大小。
+
+删除索引使用 ``index > indexDiff``，正好在当前元素与最旧保留元素的距离已经超过限制时移除它。查询在插入前进行，
+让状态永远表示“历史元素”而不是包括当前元素的候选集合；宽类型转换发生在减法之前，而不是得到溢出结果后再转换。
+
+复杂度与边界
+~~~~~~~~~~~~
+
+窗口大小 ``w <= min(n,indexDiff)``。每个元素至多一次查找、插入和删除，每次为 ``O(log w)``，总时间 ``O(n log w)``，
+额外空间 ``O(w)``。``indexDiff=0`` 没有两个不同下标可配对；``valueDiff=0`` 退化为窗口内精确重复检测；负值、最大最小整数
+通过 ``long long`` 区间计算处理，不会因溢出把一个极远的值误判为相近。
