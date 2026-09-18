@@ -19,6 +19,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Full history is needed to restore per-file mtimes below.
+          fetch-depth: 0
 
       - name: Install uv
         uses: astral-sh/setup-uv@v3
@@ -29,8 +32,47 @@ jobs:
       - name: Install dependencies
         run: uv sync
 
+      - name: Restore file mtimes from git history
+        # actions/checkout sets every file's mtime to checkout time, which
+        # would make Sphinx think all ~4000 pages changed on every run and
+        # defeat the doctree cache below. Set each tracked file's mtime to
+        # its last commit time instead, so unchanged files stay unchanged.
+        run: |
+          python3 - <<'EOF'
+          import subprocess, os
+          from datetime import datetime
+
+          log = subprocess.run(
+              ["git", "log", "--name-only", "--diff-filter=AM", "--format=%x00%cI"],
+              capture_output=True, text=True, check=True,
+          ).stdout
+
+          seen = set()
+          epoch = None
+          for line in log.split("\n"):
+              if line.startswith("\x00"):
+                  # %cI is strict ISO 8601 but some commits used a UTC "Z"
+                  # suffix instead of "+00:00", which older fromisoformat()
+                  # versions reject.
+                  epoch = datetime.fromisoformat(line[1:].replace("Z", "+00:00")).timestamp()
+                  continue
+              if not line or line in seen:
+                  continue
+              seen.add(line)
+              if epoch is not None and os.path.isfile(line):
+                  os.utime(line, (epoch, epoch))
+          EOF
+
+      - name: Restore Sphinx doctree cache
+        uses: actions/cache@v4
+        with:
+          path: _build/doctrees
+          key: sphinx-doctrees-${{ github.sha }}
+          restore-keys: |
+            sphinx-doctrees-
+
       - name: Build Sphinx site
-        run: uv run sphinx-build -b html . _build/html
+        run: uv run sphinx-build -b html -d _build/doctrees -j auto . _build/html
 
       - name: Disable Jekyll processing
         run: touch _build/html/.nojekyll
