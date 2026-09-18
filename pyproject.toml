@@ -1,0 +1,9 @@
+[project]
+name = "leetcodest-docs"
+version = "0.1.0"
+description = "LeetCodeRST Sphinx site"
+requires-python = ">=3.12"
+dependencies = [
+    "furo>=2024.1.29",
+    "sphinx>=7.0",
+]
